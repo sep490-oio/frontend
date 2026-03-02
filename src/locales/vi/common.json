@@ -44,7 +44,21 @@
     "passwordRequired": "Vui lòng nhập mật khẩu",
     "passwordMinLength": "Mật khẩu phải có ít nhất {{min}} ký tự",
     "fullNameRequired": "Vui lòng nhập họ và tên",
-    "passwordMismatch": "Mật khẩu không khớp"
+    "passwordMismatch": "Mật khẩu không khớp",
+    "userName": "Tên đăng nhập",
+    "userNameRequired": "Vui lòng nhập tên đăng nhập",
+    "firstName": "Họ",
+    "firstNameRequired": "Vui lòng nhập họ",
+    "lastName": "Tên",
+    "lastNameRequired": "Vui lòng nhập tên",
+    "registerSuccess": "Đăng ký thành công! Vui lòng kiểm tra email để xác nhận tài khoản.",
+    "confirmEmailTitle": "Xác nhận email",
+    "confirmEmailSuccess": "Email đã được xác nhận. Bạn có thể đăng nhập ngay bây giờ.",
+    "confirmEmailFailed": "Xác nhận email thất bại. Link có thể đã hết hạn.",
+    "emailNotConfirmed": "Email chưa được xác nhận. Vui lòng kiểm tra hộp thư.",
+    "invalidCredentials": "Sai email hoặc mật khẩu.",
+    "emailTaken": "Email này đã được sử dụng.",
+    "userNameTaken": "Tên đăng nhập này đã được sử dụng."
   },
   "common": {
     "loading": "Đang tải...",

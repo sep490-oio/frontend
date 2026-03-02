@@ -92,7 +92,7 @@ export function OrderPaymentInfo({ order }: OrderPaymentInfoProps) {
           </Text>
           <div>
             <Text style={{ fontSize: 13 }}>
-              {order.shippingAddress.address}, {order.shippingAddress.city}
+              {[order.shippingAddress.street, order.shippingAddress.ward, order.shippingAddress.district, order.shippingAddress.city].filter(Boolean).join(', ')}
             </Text>
           </div>
         </div>

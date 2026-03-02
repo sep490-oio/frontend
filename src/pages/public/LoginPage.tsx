@@ -2,9 +2,10 @@
  * LoginPage — user login form.
  *
  * Uses React Hook Form + Zod for validation.
- * On successful login, stores credentials in Redux and redirects to dashboard.
- *
- * Currently uses mock auth (no backend) — will swap to real API later.
+ * On successful login:
+ *   1. POST /api/auth/login → receive tokens
+ *   2. GET /api/users/me    → receive user data
+ *   3. Store credentials in Redux → redirect to intended page
  */
 import { Card, Button, Form, Input, Typography, message, Divider } from 'antd';
 import { MailOutlined, LockOutlined } from '@ant-design/icons';
@@ -13,40 +14,20 @@ import { useTranslation } from 'react-i18next';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import axios from 'axios';
 import { useAppDispatch } from '@/app/hooks';
 import { setCredentials } from '@/features/auth/authSlice';
-import type { User } from '@/types';
+import { login, getMe, mapApiUserToUser, getOrCreateDeviceId } from '@/services/authService';
 
 const { Title, Text } = Typography;
 
-/** Zod schema — defines validation rules for the login form */
+/** Zod schema — validates the email + password fields */
 const loginSchema = z.object({
-  email: z.string().min(1, 'auth.emailRequired').email('auth.emailInvalid'),
+  account: z.string().min(1, 'auth.emailRequired').email('auth.emailInvalid'),
   password: z.string().min(1, 'auth.passwordRequired'),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
-
-/**
- * Mock login — simulates a successful login response.
- * Replace this with a real API call when the backend is ready.
- */
-function mockLogin(email: string): { user: User; accessToken: string; refreshToken: string } {
-  return {
-    user: {
-      id: 'mock-user-1',
-      email,
-      fullName: 'Nguyễn Văn A',
-      avatarUrl: null,
-      roles: ['bidder'],
-      isEmailVerified: true,
-      hasSellerPermission: false,
-      createdAt: new Date().toISOString(),
-    },
-    accessToken: 'mock-access-token',
-    refreshToken: 'mock-refresh-token',
-  };
-}
 
 export function LoginPage() {
   const { t } = useTranslation();
@@ -63,18 +44,50 @@ export function LoginPage() {
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { account: '', password: '' },
   });
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      // TODO: Replace with real API call: const response = await api.post('/auth/login', data);
-      const response = mockLogin(data.email);
-      dispatch(setCredentials(response));
-      message.success(t('dashboard.welcome', { name: response.user.fullName }));
+      const deviceId = getOrCreateDeviceId();
+
+      // Step 1: Authenticate — receive JWT tokens
+      const tokenDto = await login({
+        account: data.account,
+        password: data.password,
+        deviceId,
+      });
+
+      // Step 2: Fetch user profile with the fresh access token
+      const userDto = await getMe(tokenDto.accessToken);
+      const user = mapApiUserToUser(userDto, tokenDto.accessToken);
+
+      // Step 3: Persist credentials in Redux + localStorage
+      dispatch(
+        setCredentials({
+          user,
+          accessToken: tokenDto.accessToken,
+          refreshToken: tokenDto.refreshToken,
+        })
+      );
+
+      message.success(t('dashboard.welcome', { name: user.fullName }));
       navigate(from, { replace: true });
-    } catch {
-      message.error(t('common.error'));
+    } catch (err) {
+      // Show specific messages for known HTTP status codes
+      if (axios.isAxiosError(err)) {
+        const status = err.response?.status;
+        if (status === 401) {
+          message.error(t('auth.invalidCredentials'));
+        } else if (status === 403) {
+          // Backend returns 403 when email is not yet confirmed
+          message.error(t('auth.emailNotConfirmed'));
+        } else {
+          message.error(t('common.error'));
+        }
+      } else {
+        message.error(t('common.error'));
+      }
     }
   };
 
@@ -86,12 +99,13 @@ export function LoginPage() {
         </Title>
 
         <form onSubmit={handleSubmit(onSubmit)}>
+          {/* Email field — the backend accepts this as the 'account' field */}
           <Form.Item
-            validateStatus={errors.email ? 'error' : ''}
-            help={errors.email?.message ? t(errors.email.message) : undefined}
+            validateStatus={errors.account ? 'error' : ''}
+            help={errors.account?.message ? t(errors.account.message) : undefined}
           >
             <Controller
-              name="email"
+              name="account"
               control={control}
               render={({ field }) => (
                 <Input

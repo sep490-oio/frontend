@@ -12,26 +12,12 @@
  * all provider setup in one file.
  */
 import { Provider } from 'react-redux';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { ConfigProvider, App as AntdApp } from 'antd';
 import { BrowserRouter } from 'react-router-dom';
 import viVN from 'antd/locale/vi_VN';
 import { store } from './store';
-
-// ─── TanStack Query Client ──────────────────────────────────────────
-// Configure default behavior for all queries across the app.
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      // Don't refetch when the browser tab regains focus (less aggressive)
-      refetchOnWindowFocus: false,
-      // Retry failed requests once before showing error
-      retry: 1,
-      // Cache data for 5 minutes before considering it stale
-      staleTime: 5 * 60 * 1000,
-    },
-  },
-});
+import { queryClient } from './queryClient';
 
 // ─── Ant Design Theme ────────────────────────────────────────────────
 // Custom theme tokens to give the platform a branded look.

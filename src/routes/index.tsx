@@ -32,6 +32,7 @@ import { MyBidsPage } from '@/pages/mybids/MyBidsPage';
 import { SellerProfilePage } from '@/pages/seller/SellerProfilePage';
 import { OrdersPage } from '@/pages/orders/OrdersPage';
 import { OrderDetailPage } from '@/pages/orders/OrderDetailPage';
+import { ConfirmEmailPage } from '@/pages/public/ConfirmEmailPage';
 
 /** Temporary placeholder for pages not yet built */
 function ComingSoon({ title }: { title: string }) {
@@ -49,6 +50,7 @@ export function AppRoutes() {
         <Route path="/browse" element={<BrowsePage />} />
         <Route path="/auction/:id" element={<AuctionDetailPage />} />
         <Route path="/seller/:id" element={<SellerProfilePage />} />
+        <Route path="/confirm-email" element={<ConfirmEmailPage />} />
       </Route>
 
       {/* ─── Authenticated Routes (login required) ──────────────── */}

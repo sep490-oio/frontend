@@ -38,18 +38,24 @@ export interface UserProfile {
 /**
  * Shipping/billing address. Users can have multiple addresses
  * with one marked as default per type.
+ *
+ * Vietnamese address hierarchy: street → ward → district → city
  */
 export interface UserAddress {
   id: string;
-  userId: string;
   type: AddressType;
-  address: string | null;
-  /** Ward/commune — Vietnamese administrative division */
-  wards: string | null;
+  recipientName: string | null;
+  /** Street number + street name (e.g. "123 Nguyễn Huệ") */
+  street: string | null;
+  /** Phường/Xã — ward or commune level */
+  ward: string | null;
+  /** Quận/Huyện — district level */
+  district: string | null;
+  /** Tỉnh/Thành phố — province or city level */
   city: string | null;
+  postalCode: string | null;
+  phoneNumber: string | null;
   isDefault: boolean;
-  createdAt: string;
-  modifiedAt: string;
 }
 
 // ─── Seller Profile ─────────────────────────────────────────────────

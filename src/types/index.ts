@@ -66,20 +66,72 @@ export interface User {
 // ─── Auth ────────────────────────────────────────────────────────────
 
 export interface LoginRequest {
-  email: string;
+  /** Accepts email or username (backend uses 'account' field) */
+  account: string;
   password: string;
+  /** UUID persisted per-browser in localStorage — used for session tracking */
+  deviceId: string;
 }
 
 export interface RegisterRequest {
+  userName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
-  fullName: string;
 }
 
 export interface AuthResponse {
   user: User;
   accessToken: string;
   refreshToken: string;
+}
+
+// ─── API DTOs (raw backend response shapes) ──────────────────────────
+// These match the backend spec exactly. They are mapped to our frontend
+// types (User, UserProfile, etc.) inside authService / userService.
+
+export interface ApiSessionExpirationDto {
+  sessionId: string;
+  deviceId: string;
+  slidingExpiresAt: string;
+  absoluteExpiresAt: string;
+  isNearingAbsoluteExpiration: boolean;
+  remainingAbsoluteTime: string;
+}
+
+/** Returned by POST /auth/login and POST /auth/refresh */
+export interface ApiAuthTokenDto {
+  accessToken: string;
+  refreshToken: string;
+  accessTokenExpiresAt: string;
+  refreshTokenExpiresAt: string;
+  session: ApiSessionExpirationDto;
+}
+
+/** Nested inside ApiUserDto */
+export interface ApiUserProfileDto {
+  firstName: string | null;
+  lastName: string | null;
+  displayName: string | null;
+  fullName: string | null;
+  avatarUrl: string | null;
+  dateOfBirth: string | null;
+  gender: string | null;
+}
+
+/** Returned by POST /auth/register and GET /api/users/me */
+export interface ApiUserDto {
+  id: string;
+  userName: string;
+  email: string;
+  emailConfirmed: boolean;
+  phoneNumber: string | null;
+  phoneNumberConfirmed: boolean;
+  twoFactorEnabled: boolean;
+  status: string;
+  createdAt: string;
+  profile: ApiUserProfileDto | null;
 }
 
 // ─── API ─────────────────────────────────────────────────────────────

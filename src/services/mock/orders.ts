@@ -39,26 +39,28 @@ export const AUCTION_TO_ORDER_MAP: Record<string, string> = {
 
 const MOCK_SHIPPING_ADDRESS: UserAddress = {
   id: mockId('address', 1),
-  userId: CURRENT_USER_ID,
   type: 'shipping',
-  address: '123 Nguyễn Huệ, Phường Bến Nghé',
-  wards: 'Phường Bến Nghé',
-  city: 'Quận 1, TP. Hồ Chí Minh',
+  recipientName: 'Nguyễn Văn A',
+  street: '123 Nguyễn Huệ',
+  ward: 'Phường Bến Nghé',
+  district: 'Quận 1',
+  city: 'TP. Hồ Chí Minh',
+  postalCode: null,
+  phoneNumber: '0901234567',
   isDefault: true,
-  createdAt: mockDate(-90),
-  modifiedAt: mockDate(-90),
 };
 
 const MOCK_BILLING_ADDRESS: UserAddress = {
   id: mockId('address', 2),
-  userId: CURRENT_USER_ID,
   type: 'billing',
-  address: '123 Nguyễn Huệ, Phường Bến Nghé',
-  wards: 'Phường Bến Nghé',
-  city: 'Quận 1, TP. Hồ Chí Minh',
+  recipientName: 'Nguyễn Văn A',
+  street: '123 Nguyễn Huệ',
+  ward: 'Phường Bến Nghé',
+  district: 'Quận 1',
+  city: 'TP. Hồ Chí Minh',
+  postalCode: null,
+  phoneNumber: '0901234567',
   isDefault: true,
-  createdAt: mockDate(-90),
-  modifiedAt: mockDate(-90),
 };
 
 // ─── Mock Item Summaries (embedded in orders) ─────────────────────────

@@ -44,7 +44,21 @@
     "passwordRequired": "Please enter your password",
     "passwordMinLength": "Password must be at least {{min}} characters",
     "fullNameRequired": "Please enter your full name",
-    "passwordMismatch": "Passwords do not match"
+    "passwordMismatch": "Passwords do not match",
+    "userName": "Username",
+    "userNameRequired": "Please enter a username",
+    "firstName": "First name",
+    "firstNameRequired": "Please enter your first name",
+    "lastName": "Last name",
+    "lastNameRequired": "Please enter your last name",
+    "registerSuccess": "Registration successful! Please check your email to confirm your account.",
+    "confirmEmailTitle": "Confirm Email",
+    "confirmEmailSuccess": "Email confirmed. You can now log in.",
+    "confirmEmailFailed": "Email confirmation failed. The link may have expired.",
+    "emailNotConfirmed": "Email not confirmed. Please check your inbox.",
+    "invalidCredentials": "Invalid email or password.",
+    "emailTaken": "This email is already in use.",
+    "userNameTaken": "This username is already taken."
   },
   "common": {
     "loading": "Loading...",
