@@ -8,6 +8,7 @@ import { api } from './api';
 import type {
   ApiUserDto,
   ApiUserProfileDto,
+  AddressType,
   ChangePasswordRequest,
   SetPhoneNumberRequest,
   ConfirmPhoneRequest,
@@ -56,7 +57,7 @@ export async function updateProfile(data: {
 // ─── Addresses ───────────────────────────────────────────────────────
 
 export interface AddAddressRequest {
-  type: string;
+  type: AddressType;
   recipientName: string;
   street: string;
   ward?: string;

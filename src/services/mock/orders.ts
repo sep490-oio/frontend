@@ -39,7 +39,7 @@ export const AUCTION_TO_ORDER_MAP: Record<string, string> = {
 
 const MOCK_SHIPPING_ADDRESS: UserAddress = {
   id: mockId('address', 1),
-  type: 'shipping',
+  type: 'home',
   recipientName: 'Nguyễn Văn A',
   street: '123 Nguyễn Huệ',
   ward: 'Phường Bến Nghé',
@@ -52,7 +52,7 @@ const MOCK_SHIPPING_ADDRESS: UserAddress = {
 
 const MOCK_BILLING_ADDRESS: UserAddress = {
   id: mockId('address', 2),
-  type: 'billing',
+  type: 'home',
   recipientName: 'Nguyễn Văn A',
   street: '123 Nguyễn Huệ',
   ward: 'Phường Bến Nghé',
