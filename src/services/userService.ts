@@ -1,26 +1,39 @@
 /**
- * User Service — profile and address API calls.
+ * User Service — profile, address, and account security API calls.
  *
  * All calls go through the main `api` Axios instance, which automatically
  * attaches the Bearer token and handles silent refresh on 401.
- *
- * Note: GET /api/users/me/profile returns 204 (backend bug confirmed in audit).
- * We use GET /api/users/me instead, which returns UserDto with a nested profile.
- * The getProfile() function is included but marked as potentially broken.
  */
 import { api } from './api';
-import type { ApiUserDto, ApiUserProfileDto } from '@/types';
-import type { UserAddress } from '@/types/user';
+import type {
+  ApiUserDto,
+  ApiUserProfileDto,
+  ChangePasswordRequest,
+  SetPhoneNumberRequest,
+  ConfirmPhoneRequest,
+  ApiPaginatedResponse,
+  UserSessionDto,
+  LoginHistoryDto,
+} from '@/types';
+import type { UserAddress, UserProfile } from '@/types/user';
 
 // ─── Profile ─────────────────────────────────────────────────────────
 
 /**
  * GET /api/users/me
  * Returns the full user object including the nested profile.
- * Prefer this over getProfile() until the profile endpoint bug is fixed.
  */
 export async function getMe(): Promise<ApiUserDto> {
   const response = await api.get<ApiUserDto>('/api/users/me');
+  return response.data;
+}
+
+/**
+ * GET /api/users/me/profile
+ * Returns just the profile data (personal info, avatar, etc.).
+ */
+export async function getProfile(): Promise<UserProfile> {
+  const response = await api.get<UserProfile>('/api/users/me/profile');
   return response.data;
 }
 
@@ -109,4 +122,78 @@ export async function deleteAddress(addressId: string): Promise<void> {
  */
 export async function setDefaultAddress(addressId: string): Promise<void> {
   await api.patch(`/api/users/me/addresses/${addressId}/default`);
+}
+
+// ─── Account Security ───────────────────────────────────────────────
+
+/**
+ * PUT /api/users/me/password
+ * Changes the user's password. Requires the current password for verification.
+ */
+export async function changePassword(data: ChangePasswordRequest): Promise<void> {
+  await api.put('/api/users/me/password', data);
+}
+
+/**
+ * PUT /api/users/me/phone
+ * Sets or updates the user's phone number. Triggers a verification SMS.
+ */
+export async function setPhoneNumber(data: SetPhoneNumberRequest): Promise<void> {
+  await api.put('/api/users/me/phone', data);
+}
+
+/**
+ * POST /api/users/me/phone/confirm
+ * Confirms the phone number using the verification code from SMS.
+ */
+export async function confirmPhone(data: ConfirmPhoneRequest): Promise<void> {
+  await api.post('/api/users/me/phone/confirm', data);
+}
+
+/**
+ * POST /api/users/me/two-factor/enable
+ * Enables two-factor authentication for the user's account.
+ */
+export async function enableTwoFactor(provider: string): Promise<void> {
+  await api.post('/api/users/me/two-factor/enable', { provider });
+}
+
+/**
+ * POST /api/users/me/two-factor/disable
+ * Disables two-factor authentication.
+ */
+export async function disableTwoFactor(): Promise<void> {
+  await api.post('/api/users/me/two-factor/disable');
+}
+
+// ─── Sessions & Login History ───────────────────────────────────────
+
+/**
+ * GET /api/users/me/sessions
+ * Returns a paginated list of active sessions across devices.
+ */
+export async function getSessions(
+  page = 1,
+  pageSize = 10
+): Promise<ApiPaginatedResponse<UserSessionDto>> {
+  const response = await api.get<ApiPaginatedResponse<UserSessionDto>>(
+    '/api/users/me/sessions',
+    { params: { PageNumber: page, PageSize: pageSize } }
+  );
+  return response.data;
+}
+
+/**
+ * GET /api/users/me/login-history
+ * Returns a paginated list of past login attempts (success + failure).
+ */
+export async function getLoginHistory(
+  page = 1,
+  pageSize = 10
+): Promise<ApiPaginatedResponse<LoginHistoryDto>> {
+  const response = await api.get<ApiPaginatedResponse<LoginHistoryDto>>(
+    '/api/users/me/login-history',
+    { params: { PageNumber: page, PageSize: pageSize } }
+  );
+  return response.data;
 }

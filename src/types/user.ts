@@ -16,7 +16,6 @@ import type { Gender, AddressType, VerificationStatus, UserStatus, ReviewStatus 
  * Includes personal info that isn't in the core User type.
  */
 export interface UserProfile {
-  userId: string;
   firstName: string | null;
   lastName: string | null;
   displayName: string | null;
@@ -27,9 +26,6 @@ export interface UserProfile {
   phoneNumberConfirmed: boolean;
   emailConfirmed: boolean;
   status: UserStatus;
-  /** User's default auto-bid increment (0 = use auction default) */
-  defaultAutoBidIncrement: number;
-  autoBidEnabled: boolean;
   createdAt: string; // ISO datetime
 }
 
