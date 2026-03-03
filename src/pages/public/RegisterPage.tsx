@@ -11,7 +11,7 @@
  */
 import { useState } from 'react';
 import { Card, Button, Form, Input, Typography, Alert, Divider } from 'antd';
-import { MailOutlined, LockOutlined, UserOutlined } from '@ant-design/icons';
+import { MailOutlined, LockOutlined, UserOutlined,EyeOutlined,EyeInvisibleOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useForm, Controller } from 'react-hook-form';
@@ -116,156 +116,254 @@ export function RegisterPage() {
   }
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 24 }}>
-      <Card style={{ width: '100%', maxWidth: 420, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-        <Title level={3} style={{ textAlign: 'center', marginBottom: 32 }}>
-          {t('auth.registerTitle')}
-        </Title>
+  <div
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+     
+      padding: '24px 16px',
+    }}
+  >
+    <div style={{ width: '100%', maxWidth: 420 }}>
+      {/* Header */}
+      <Title
+        level={2}
+        style={{
+          textAlign: 'center',
+          marginBottom: 8,
+          fontWeight: 700,
+          color: '#1a1a1a',
+        }}
+      >
+        Create Account
+      </Title>
 
-        {/* Root-level error (network failure, unknown server error) */}
-        {errors.root && (
-          <Alert
-            type="error"
-            title={t(errors.root.message ?? 'common.error')}
-            showIcon
-            style={{ marginBottom: 16 }}
-          />
+      <Text
+        type="secondary"
+        style={{
+          display: 'block',
+          textAlign: 'center',
+          fontSize: 16,
+          marginBottom: 32,
+        }}
+      >
+        Join the luxury auction marketplace
+      </Text>
+
+      {/* Form container */}
+      <div
+        style={{
+          background: '#fff',
+          borderRadius: 12,
+          padding: '40px 32px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+          border: '1px solid #eee',
+        }}
+      >
+        {/* Success state sau khi register */}
+        {registered ? (
+          <>
+            <Alert
+              type="success"
+              message={t('auth.registerSuccess')}
+              showIcon
+              style={{ marginBottom: 24 }}
+            />
+            <Text style={{ display: 'block', textAlign: 'center', fontSize: 15 }}>
+              Please check your email to confirm your account.
+            </Text>
+            <div style={{ textAlign: 'center', marginTop: 24 }}>
+              <Link to="/login">
+                <Button type="default" size="large" style={{ borderRadius: 8, minWidth: 180 }}>
+                  Sign In
+                </Button>
+              </Link>
+            </div>
+          </>
+        ) : (
+          <>
+            <Text
+              strong
+              style={{
+                display: 'block',
+                fontSize: 18,
+                marginBottom: 24,
+                textAlign: 'center',
+              }}
+            >
+              Sign Up
+            </Text>
+
+            <Text
+              type="secondary"
+              style={{
+                display: 'block',
+                textAlign: 'center',
+                marginBottom: 32,
+              }}
+            >
+              Create your account to start bidding or selling
+            </Text>
+
+            {/* Root error */}
+            {errors.root && (
+              <Alert
+                type="error"
+                message={t(errors.root.message ?? 'common.error')}
+                showIcon
+                style={{ marginBottom: 24 }}
+              />
+            )}
+
+            <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+              <Form.Item
+                label="Full Name"
+                validateStatus={errors.userName ? 'error' : ''}
+                help={errors.userName?.message ? t(errors.userName.message) : undefined}
+              >
+                <Controller
+                  name="userName"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      {...field}
+                      prefix={<UserOutlined style={{ color: '#888' }} />}
+                      placeholder="John Doe"
+                      size="large"
+                      style={{ borderRadius: 8 }}
+                    />
+                  )}
+                />
+              </Form.Item>
+
+              <Form.Item
+                label="Email"
+                validateStatus={errors.email ? 'error' : ''}
+                help={errors.email?.message ? t(errors.email.message) : undefined}
+              >
+                <Controller
+                  name="email"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      {...field}
+                      prefix={<MailOutlined style={{ color: '#888' }} />}
+                      placeholder="you@example.com"
+                      size="large"
+                      style={{ borderRadius: 8 }}
+                    />
+                  )}
+                />
+              </Form.Item>
+
+              <Form.Item
+                label="Password"
+                validateStatus={errors.password ? 'error' : ''}
+                help={
+                  errors.password?.message
+                    ? t(errors.password.message, { min: 8 })
+                    : undefined
+                }
+                style={{ marginBottom: 12 }}
+              >
+                <Controller
+                  name="password"
+                  control={control}
+                  render={({ field }) => (
+                    <Input.Password
+                      {...field}
+                      prefix={<LockOutlined style={{ color: '#888' }} />}
+                      iconRender={(visible) => (visible ? <EyeOutlined /> : <EyeInvisibleOutlined />)}
+                      placeholder="••••••••"
+                      size="large"
+                      style={{ borderRadius: 8 }}
+                    />
+                  )}
+                />
+              </Form.Item>
+
+              <Form.Item
+                label="Confirm Password"
+                validateStatus={errors.confirmPassword ? 'error' : ''}
+                help={
+                  errors.confirmPassword?.message
+                    ? t(errors.confirmPassword.message)
+                    : undefined
+                }
+              >
+                <Controller
+                  name="confirmPassword"
+                  control={control}
+                  render={({ field }) => (
+                    <Input.Password
+                      {...field}
+                      prefix={<LockOutlined style={{ color: '#888' }} />}
+                      iconRender={(visible) => (visible ? <EyeOutlined /> : <EyeInvisibleOutlined />)}
+                      placeholder="••••••••"
+                      size="large"
+                      style={{ borderRadius: 8 }}
+                    />
+                  )}
+                />
+              </Form.Item>
+
+              <Form.Item style={{ marginTop: 32 }}>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={isSubmitting}
+                  block
+                  size="large"
+                  style={{
+                    height: 48,
+                    borderRadius: 8,
+                    background: '#000',
+                    border: 'none',
+                    fontSize: 16,
+                    fontWeight: 600,
+                  }}
+                >
+                  Create Account
+                </Button>
+              </Form.Item>
+            </Form>
+
+            <Divider style={{ margin: '32px 0' }} />
+
+            <div style={{ textAlign: 'center' }}>
+              <Text type="secondary" style={{ fontSize: 14, display: 'block', marginBottom: 12 }}>
+                ALREADY HAVE AN ACCOUNT?
+              </Text>
+              <Link to="/login">
+                <Button
+                  type="default"
+                  size="large"
+                  style={{ borderRadius: 8, minWidth: 180 }}
+                >
+                  Sign In
+                </Button>
+              </Link>
+            </div>
+          </>
         )}
+      </div>
 
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <Form.Item
-            validateStatus={errors.userName ? 'error' : ''}
-            help={errors.userName?.message ? t(errors.userName.message) : undefined}
-          >
-            <Controller
-              name="userName"
-              control={control}
-              render={({ field }) => (
-                <Input
-                  {...field}
-                  prefix={<UserOutlined />}
-                  placeholder={t('auth.userName')}
-                  size="large"
-                />
-              )}
-            />
-          </Form.Item>
-
-          {/* First name + Last name side by side */}
-          <div style={{ display: 'flex', gap: 8 }}>
-            <Form.Item
-              style={{ flex: 1 }}
-              validateStatus={errors.firstName ? 'error' : ''}
-              help={errors.firstName?.message ? t(errors.firstName.message) : undefined}
-            >
-              <Controller
-                name="firstName"
-                control={control}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    prefix={<UserOutlined />}
-                    placeholder={t('auth.firstName')}
-                    size="large"
-                  />
-                )}
-              />
-            </Form.Item>
-
-            <Form.Item
-              style={{ flex: 1 }}
-              validateStatus={errors.lastName ? 'error' : ''}
-              help={errors.lastName?.message ? t(errors.lastName.message) : undefined}
-            >
-              <Controller
-                name="lastName"
-                control={control}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    placeholder={t('auth.lastName')}
-                    size="large"
-                  />
-                )}
-              />
-            </Form.Item>
-          </div>
-
-          <Form.Item
-            validateStatus={errors.email ? 'error' : ''}
-            help={errors.email?.message ? t(errors.email.message) : undefined}
-          >
-            <Controller
-              name="email"
-              control={control}
-              render={({ field }) => (
-                <Input
-                  {...field}
-                  prefix={<MailOutlined />}
-                  placeholder={t('auth.email')}
-                  size="large"
-                />
-              )}
-            />
-          </Form.Item>
-
-          <Form.Item
-            validateStatus={errors.password ? 'error' : ''}
-            help={
-              errors.password?.message
-                ? t(errors.password.message, { min: 8 })
-                : undefined
-            }
-          >
-            <Controller
-              name="password"
-              control={control}
-              render={({ field }) => (
-                <Input.Password
-                  {...field}
-                  prefix={<LockOutlined />}
-                  placeholder={t('auth.password')}
-                  size="large"
-                />
-              )}
-            />
-          </Form.Item>
-
-          <Form.Item
-            validateStatus={errors.confirmPassword ? 'error' : ''}
-            help={
-              errors.confirmPassword?.message
-                ? t(errors.confirmPassword.message)
-                : undefined
-            }
-          >
-            <Controller
-              name="confirmPassword"
-              control={control}
-              render={({ field }) => (
-                <Input.Password
-                  {...field}
-                  prefix={<LockOutlined />}
-                  placeholder={t('auth.confirmPassword')}
-                  size="large"
-                />
-              )}
-            />
-          </Form.Item>
-
-          <Form.Item>
-            <Button type="primary" htmlType="submit" loading={isSubmitting} block size="large">
-              {t('auth.registerButton')}
-            </Button>
-          </Form.Item>
-        </form>
-
-        <Divider />
-
-        <Text style={{ display: 'block', textAlign: 'center' }}>
-          {t('auth.hasAccount')} <Link to="/login">{t('auth.loginButton')}</Link>
-        </Text>
-      </Card>
+      {/* Footer */}
+      <Text
+        type="secondary"
+        style={{
+          display: 'block',
+          textAlign: 'center',
+          marginTop: 24,
+          fontSize: 13,
+        }}
+      >
+        By creating an account, you agree to our{' '}
+        <Link to="/terms">Terms of Service</Link> and{' '}
+        <Link to="/privacy">Privacy Policy</Link>
+      </Text>
     </div>
-  );
+  </div>
+);
 }
