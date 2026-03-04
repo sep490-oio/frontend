@@ -29,14 +29,17 @@ import {
   Flex,
   Button,
 } from 'antd';
+import { PageContainer } from '@/design-system/components/PageContainer';
+import { PageTitle } from '@/design-system/typography';
 import { MenuOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import type { AuctionFilters, AuctionStatus } from '@/types';
+import type { AuctionFilters } from '@/types';
 import { useAuctions, useCategories } from '@/hooks/useAuctions';
 import { AuctionCard } from '@/components/auction/AuctionCard';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 
-const { Title, Text } = Typography;
+
+const { Text } = Typography;
 
 
 /** Sort options for the sort dropdown */
@@ -59,7 +62,6 @@ export function BrowsePage() {
   // ─── Filter state ────────────────────────────────────────────
   const [searchText, setSearchText] = useState('');
   const [categoryId, setCategoryId] = useState<string | undefined>();
-  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortValue, setSortValue] = useState('endingSoon');
   const [page, setPage] = useState(1);
 
@@ -80,18 +82,9 @@ export function BrowsePage() {
     if (debouncedSearch) f.search = debouncedSearch;
     if (categoryId) f.categoryId = categoryId;
 
-    // Map status filter to AuctionStatus values
-    if (statusFilter === 'active') {
-      f.status = ['active'] as AuctionStatus[];
-    } else if (statusFilter === 'qualifying') {
-      f.status = ['qualifying'] as AuctionStatus[];
-    } else if (statusFilter === 'ended') {
-      f.status = ['ended', 'sold', 'cancelled', 'failed'] as AuctionStatus[];
-    }
-    // 'all' → no status filter
 
     return f;
-  }, [debouncedSearch, categoryId, statusFilter, selectedSort, page]);
+  }, [debouncedSearch, categoryId, selectedSort, page]);
 
   // ─── Data fetching ───────────────────────────────────────────
   const { data, isLoading } = useAuctions(filters);
@@ -106,44 +99,19 @@ export function BrowsePage() {
   };
 
 return (
-
-    <div style={{ maxWidth: 1440  , margin: '0 auto' }}>
-      <div style={{ textAlign: 'center', marginBottom: 40 }}>
-        <Title
-          level={1}
-          style={{
-            fontSize: 36,
-            fontWeight: 700,
-            marginBottom: 8,
-            color: '#000',
-          }}
-        >
-          Browse Auctions
-        </Title>
-        <Text
-          style={{
-            fontSize: 16,
-            color: '#E5E7E0',
-            display: 'block',
-          }}
-        >
-          Discover authenticated luxury items from verified sellers
-        </Text>
-      </div>
+    <PageContainer>
+      <div className="container">
+        <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-2xl)' }}>
+          <PageTitle>{t('browse.title') || 'Browse Auctions'}</PageTitle>
+          <Text type="secondary" style={{ fontSize: 'var(--font-size-lg)', display: 'block' }}>
+            {t('browse.subtitle') || 'Discover authenticated luxury items from verified sellers'}
+          </Text>
+        </div>
 
       {/* Search + Sort + Filters bar */}
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 16,
-          marginBottom: 32,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
+      <div className="stack-on-mobile" style={{ gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-2xl)', alignItems: 'center', justifyContent: 'center' }}>
         <Input
-          placeholder="Search by brand, model, or keyword..."
+          placeholder={t('browse.searchPlaceholder') || 'Search by brand, model, or keyword...'}
           value={searchText}
           onChange={(e) => {
             setSearchText(e.target.value);
@@ -151,15 +119,7 @@ return (
           }}
           allowClear
           size="large"
-          style={{
-            flex: 1,
-            maxWidth: 600,
-            height: 48,
-            borderRadius: 8,
-            fontSize: 16,
-            background: '#fff',
-            border: '1px solid #d9d9d9',
-          }}
+          className="browse-search-input"
         />
 
         <Select
@@ -170,28 +130,20 @@ return (
             value: o.value,
           }))}
           size="large"
-          style={{
-            width: 180,
-            height: 48,
-            borderRadius: 8,
-          }}
-          placeholder="ending-soon"
+          style={{ width: 180 }}
+          placeholder={t('browse.sortPlaceholder') || undefined}
         />
 
         <Button
           icon={<MenuOutlined />}
           size="large"
-          style={{
-            height: 48,
-            borderRadius: 8,
-            padding: '0 16px',
-          }}
+          className="browse-filter-button"
         >
-          Filters
+          {t('browse.filters') || 'Filters'}
         </Button>
       </div>
 
-      <div style={{ marginBottom: 40, textAlign: 'center' }}>
+      <div style={{ marginBottom: 'var(--spacing-2xl)', textAlign: 'center' }}>
         <Space wrap size={[8, 12]}>
           <Button
             type={categoryId === undefined ? 'primary' : 'default'}
@@ -199,19 +151,9 @@ return (
               setCategoryId(undefined);
               setPage(1);
             }}
-            style={{
-              borderRadius: 9999,
-              padding: '0 24px',
-              height: 40,
-              fontSize: 15,
-              fontWeight: 600,
-              background: categoryId === undefined ? '#000' : '#fff',
-              color: categoryId === undefined ? '#fff' : '#000',
-              border: categoryId === undefined ? 'none' : '1px solid #d9d9d9',
-              boxShadow: categoryId === undefined ? 'none' : '0 1px 2px rgba(0,0,0,0.05)',
-            }}
+            className="category-pill"
           >
-            All Categories
+            {t('browse.allCategories') || 'All Categories'}
           </Button>
 
           {categories?.map((cat) => (
@@ -222,17 +164,7 @@ return (
                 setCategoryId(cat.id);
                 setPage(1);
               }}
-              style={{
-                borderRadius: 9999,
-                padding: '0 20px',
-                height: 40,
-                fontSize: 15,
-                fontWeight: 500,
-                background: categoryId === cat.id ? '#000' : '#fff',
-                color: categoryId === cat.id ? '#fff' : '#000',
-                border: categoryId === cat.id ? 'none' : '1px solid #d9d9d9',
-                boxShadow: categoryId === cat.id ? 'none' : '0 1px 2px rgba(0,0,0,0.05)',
-              }}
+              className="category-pill"
             >
               {cat.name}
             </Button>
@@ -249,8 +181,10 @@ return (
         <Empty
           description={
             <Space direction="vertical" size={8}>
-              <Text>No auctions found</Text>
-              <Text type="secondary">Try adjusting filters or search term</Text>
+              <Text>{t('browse.noResults') || 'No auctions found'}</Text>
+              <Text type="secondary">
+                {t('browse.tryAdjustFilters') || 'Try adjusting filters or search term'}
+              </Text>
             </Space>
           }
           style={{ margin: '120px 0' }}
@@ -278,7 +212,7 @@ return (
           )}
         </>
       )}
-    </div>
-
+      </div>
+    </PageContainer>
 );
 }
