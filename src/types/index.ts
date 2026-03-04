@@ -27,9 +27,11 @@ export * from './dashboard';
 // and are imported everywhere.
 
 // ─── Roles ───────────────────────────────────────────────────────────
-// Matches the 9 roles defined in Alignment Analysis (Decision #7)
+// Backend currently has 4 roles: user, bidder, seller, admin.
+// Frontend keeps additional roles (moderator, etc.) for future use.
 
 export type UserRole =
+  | 'user'
   | 'guest'
   | 'bidder'
   | 'seller'
@@ -75,8 +77,10 @@ export interface LoginRequest {
 
 export interface RegisterRequest {
   userName: string;
-  firstName: string;
-  lastName: string;
+  /** Optional — BE confirmed firstName is not required */
+  firstName?: string;
+  /** Optional — BE confirmed lastName is not required */
+  lastName?: string;
   email: string;
   password: string;
 }
@@ -127,8 +131,10 @@ export interface ApiUserDto {
   email: string;
   emailConfirmed: boolean;
   phoneNumber: string | null;
+  countryCode: string | null;
   phoneNumberConfirmed: boolean;
   twoFactorEnabled: boolean;
+  twoFactorProvider: string;
   status: string;
   createdAt: string;
   profile: ApiUserProfileDto | null;
@@ -148,6 +154,71 @@ export interface ApiError {
   message: string;
   errors?: Record<string, string[]>;
   statusCode: number;
+}
+
+// ─── Pagination ──────────────────────────────────────────────────────
+
+/** Metadata returned by all paginated backend endpoints */
+export interface PageMetadata {
+  totalCount: number;
+  pageSize: number;
+  currentPage: number;
+  totalPages: number;
+  hasPrevious: boolean;
+  hasNext: boolean;
+}
+
+/**
+ * Wrapper for paginated responses from real backend endpoints.
+ *
+ * Named differently from the mock PaginatedResponse in auction.ts
+ * to avoid conflicts while the mock layer is still active.
+ * When auctions switch to the real API, consolidate into one type.
+ */
+export interface ApiPaginatedResponse<T> {
+  items: T[];
+  metadata: PageMetadata;
+}
+
+// ─── Account Security DTOs ──────────────────────────────────────────
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface SetPhoneNumberRequest {
+  phoneNumber: string;
+  countryCode?: string;
+}
+
+export interface ConfirmPhoneRequest {
+  verificationCode: string;
+}
+
+/** Returned by GET /api/users/me/sessions */
+export interface UserSessionDto {
+  sessionId: string;
+  deviceId: string;
+  userAgent: string;
+  ipAddress: string;
+  isActive: boolean;
+  isCurrentDevice: boolean;
+  createdAt: string;
+  lastRotatedAt: string;
+  slidingExpiresAt: string;
+  absoluteExpiresAt: string;
+  isNearingAbsoluteExpiration: boolean;
+  remainingAbsoluteTime: string;
+}
+
+/** Returned by GET /api/users/me/login-history */
+export interface LoginHistoryDto {
+  id: string;
+  ipAddress: string;
+  userAgent: string;
+  loginAt: string;
+  status: string;
 }
 
 // ─── UI ──────────────────────────────────────────────────────────────

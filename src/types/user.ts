@@ -7,30 +7,23 @@
  * (e.g., UserProfile includes the user's addresses).
  */
 
-import type { Gender, AddressType, VerificationStatus, UserStatus, ReviewStatus } from './enums';
+import type { Gender, AddressType, VerificationStatus, ReviewStatus } from './enums';
 
 // ─── User Profile ───────────────────────────────────────────────────
 
 /**
- * Extended user profile — returned by GET /users/:id/profile.
- * Includes personal info that isn't in the core User type.
+ * User profile — returned by GET /users/me/profile.
+ * Matches BE's UserProfileDto exactly.
+ * Fields like phoneNumber, emailConfirmed, status live on ApiUserDto (GET /users/me), not here.
  */
 export interface UserProfile {
-  userId: string;
   firstName: string | null;
   lastName: string | null;
   displayName: string | null;
+  fullName: string | null; // Computed by BE from firstName + lastName
   avatarUrl: string | null;
   dateOfBirth: string | null; // ISO date string
   gender: Gender | null;
-  phoneNumber: string | null;
-  phoneNumberConfirmed: boolean;
-  emailConfirmed: boolean;
-  status: UserStatus;
-  /** User's default auto-bid increment (0 = use auction default) */
-  defaultAutoBidIncrement: number;
-  autoBidEnabled: boolean;
-  createdAt: string; // ISO datetime
 }
 
 // ─── User Address ───────────────────────────────────────────────────
