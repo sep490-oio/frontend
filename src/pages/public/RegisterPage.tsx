@@ -11,28 +11,31 @@
  */
 import { useState } from 'react';
 import {
-  Card,
+  Alert,
   Button,
+  Card,
+  Col,
+  Divider,
   Form,
   Input,
+  Layout,
+  Row,
   Typography,
-  Alert,
-  Divider,
-  Space,
 } from 'antd';
 import {
-  MailOutlined,
   LockOutlined,
+  MailOutlined,
   UserOutlined,
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useForm, Controller } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import axios from 'axios';
 import { register } from '@/services/authService';
 
+const { Header, Content, Footer } = Layout;
 const { Title, Text, Paragraph } = Typography;
 
 const registerSchema = z
@@ -105,267 +108,374 @@ export function RegisterPage() {
     }
   };
 
+  const pageStyle: React.CSSProperties = {
+    minHeight: '100vh',
+    background: '#F5F5F5',
+  };
+
+  const headerStyle: React.CSSProperties = {
+    background: 'transparent',
+    padding: '0 40px',
+    height: 72,
+    lineHeight: '72px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  };
+
+  const logoStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    fontFamily: "'Space Grotesk', sans-serif",
+    fontWeight: 700,
+    fontSize: 20,
+    letterSpacing: '-0.5px',
+    color: '#000',
+  };
+
+  const navStyle: React.CSSProperties = {
+    display: 'flex',
+    gap: 32,
+    listStyle: 'none',
+    margin: 0,
+    padding: 0,
+  };
+
+  const navLinkStyle: React.CSSProperties = {
+    fontSize: 11,
+    textTransform: 'uppercase',
+    letterSpacing: '0.15em',
+    fontWeight: 500,
+    color: '#8c8c8c',
+    textDecoration: 'none',
+  };
+
+  const contentStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '48px 24px',
+    flex: 1,
+  };
+
+  const cardStyle: React.CSSProperties = {
+    width: '100%',
+    maxWidth: 520,
+    borderRadius: 0,
+    boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
+    border: '1px solid #e8e8e8',
+  };
+
+  const cardBodyStyle: React.CSSProperties = {
+    padding: '48px 56px',
+  };
+
+  const titleStyle: React.CSSProperties = {
+    fontFamily: "'Space Grotesk', sans-serif",
+    fontWeight: 700,
+    fontSize: 32,
+    letterSpacing: '-1px',
+    textTransform: 'uppercase',
+    color: '#000',
+    marginBottom: 4,
+  };
+
+  const submitButtonStyle: React.CSSProperties = {
+    height: 52,
+    fontSize: 13,
+    fontWeight: 700,
+    letterSpacing: '0.15em',
+    textTransform: 'uppercase',
+    background: '#000',
+    border: 'none',
+    borderRadius: 0,
+  };
+
+  const footerStyle: React.CSSProperties = {
+    background: 'transparent',
+    padding: '24px 40px',
+    borderTop: '1px solid #e8e8e8',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 16,
+  };
+
+  const footerTextStyle: React.CSSProperties = {
+    fontSize: 10,
+    textTransform: 'uppercase',
+    letterSpacing: '0.2em',
+    color: '#bfbfbf',
+  };
+
+  const inputStyle: React.CSSProperties = {
+    borderRadius: 0,
+    borderTop: 'none',
+    borderLeft: 'none',
+    borderRight: 'none',
+    borderBottom: '1px solid #d9d9d9',
+    boxShadow: 'none',
+    paddingLeft: 0,
+    background: 'transparent',
+  };
+
   if (registered) {
     return (
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh',
-          padding: '24px 16px',
-          background: '#f8f9fa',
-        }}
-      >
-        <Card
-          style={{
-            width: '100%',
-            maxWidth: 460,
-            borderRadius: 12,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
-            padding: '32px 40px',
-          }}
-        >
-          <Alert
-            type="success"
-            message={t('auth.registerSuccess')}
-            showIcon
-            style={{ marginBottom: 24, borderRadius: 8 }}
-          />
-          <Text strong style={{ display: 'block', textAlign: 'center' }}>
-            <Link to="/login">{t('auth.loginButton')}</Link>
-          </Text>
-        </Card>
-      </div>
+      <Layout style={pageStyle}>
+        <Content style={contentStyle}>
+          <Card style={{ ...cardStyle, maxWidth: 460 }} styles={{ body: cardBodyStyle }}>
+            <Alert
+              type="success"
+              message={t('auth.registerSuccess')}
+              showIcon
+              style={{ marginBottom: 24 }}
+            />
+            <Text strong style={{ display: 'block', textAlign: 'center' }}>
+              <Link to="/login">{t('auth.loginButton')}</Link>
+            </Text>
+          </Card>
+        </Content>
+      </Layout>
     );
   }
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh',
-        padding: '24px 16px',
-        background: '#f8f9fa', 
-      }}
-    >
-      <Card
-        style={{
-          width: '100%',
-          maxWidth: 460,
-          borderRadius: 16,
-          boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
-          padding: '40px 48px',
-        }}
-      >
-        <Title
-          level={2}
-          style={{
-            textAlign: 'center',
-            marginBottom: 8,
-            fontWeight: 600,
-            color: '#1a1a1a',
-          }}
-        >
-          {t('auth.registerTitle') || 'Create Account'}
-        </Title>
+    <Layout style={pageStyle}>
 
-        <Paragraph
-          type="secondary"
-          style={{ textAlign: 'center', marginBottom: 32 }}
-        >
-          Join the luxury auction marketplace
-        </Paragraph>
 
-        {errors.root && (
-          <Alert
-            type="error"
-            message={t(errors.root.message ?? 'common.error')}
-            showIcon
-            style={{ marginBottom: 24, borderRadius: 8 }}
-          />
-        )}
 
-        <form onSubmit={handleSubmit(onSubmit)}>
+      {/* Main content */}
+      <Content style={contentStyle}>
+        <Card style={cardStyle} styles={{ body: cardBodyStyle }}>
+          {/* Page heading */}
+          <Title level={2} style={titleStyle}>
+            {t('auth.registerTitle') || 'Create Account'}
+          </Title>
+          <Paragraph type="secondary" style={{ marginBottom: 40, fontSize: 13 }}>
+            Join the premier destination for designer art toys.
+          </Paragraph>
 
-          {/* userName field — often treated as display/login name in luxury platforms */}
-          <Form.Item
-            validateStatus={errors.userName ? 'error' : undefined}
-            help={errors.userName?.message ? t(errors.userName.message) : undefined}
-            style={{ marginBottom: 20 }}
-          >
-            <Controller
-              name="userName"
-              control={control}
-              render={({ field }) => (
-                <Input
-                  {...field}
-                  prefix={<UserOutlined />}
-                  placeholder={t('auth.userName')}
-                  size="large"
-                  style={{ borderRadius: 8 }}
-                />
-              )}
+          {/* Root error */}
+          {errors.root && (
+            <Alert
+              type="error"
+              message={t(errors.root.message ?? 'common.error')}
+              showIcon
+              style={{ marginBottom: 24 }}
             />
-          </Form.Item>
+          )}
 
-          {/* Full Name – visual grouping, but inputs remain separate */}
-          <Text strong style={{ display: 'block', marginBottom: 8 }}>
-            Full Name
-          </Text>
-          <Space.Compact block style={{ marginBottom: 20 }}>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <Form.Item
-                style={{ flex: 1, marginBottom: 0 }}
-                validateStatus={errors.firstName ? 'error' : undefined}
-                help={errors.firstName?.message ? t(errors.firstName.message) : undefined}
-              >
-                <Controller
-                  name="firstName"
-                  control={control}
-                  render={({ field }) => (
-                    <Input
-                      {...field}
-                      prefix={<UserOutlined />}
-                      placeholder={t('auth.firstName')}
-                      size="large"
-                      style={{ borderRadius: 8 }}
-                    />
-                  )}
-                />
-              </Form.Item>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            {/* Username */}
+            <Form.Item
+              validateStatus={errors.userName ? 'error' : undefined}
+              help={errors.userName?.message ? t(errors.userName.message) : undefined}
+              style={{ marginBottom: 24 }}
+            >
+              <Controller
+                name="userName"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    prefix={<UserOutlined style={{ color: '#bfbfbf' }} />}
+                    placeholder={t('auth.userName')}
+                    size="large"
+                    variant="borderless"
+                    style={inputStyle}
+                  />
+                )}
+              />
+            </Form.Item>
 
-              <Form.Item
-                style={{ flex: 1, marginBottom: 0 }}
-                validateStatus={errors.lastName ? 'error' : undefined}
-                help={errors.lastName?.message ? t(errors.lastName.message) : undefined}
-              >
-                <Controller
-                  name="lastName"
-                  control={control}
-                  render={({ field }) => (
-                    <Input
-                      {...field}
-                      placeholder={t('auth.lastName')}
-                      size="large"
-                      style={{ borderRadius: 8 }}
-                    />
-                  )}
-                />
-              </Form.Item>
-            </div>
-          </Space.Compact>
-
-          <Form.Item
-            validateStatus={errors.email ? 'error' : undefined}
-            help={errors.email?.message ? t(errors.email.message) : undefined}
-            style={{ marginBottom: 20 }}
-          >
-            <Controller
-              name="email"
-              control={control}
-              render={({ field }) => (
-                <Input
-                  {...field}
-                  prefix={<MailOutlined />}
-                  placeholder={t('auth.email')}
-                  size="large"
-                  style={{ borderRadius: 8 }}
-                />
-              )}
-            />
-          </Form.Item>
-
-          <Form.Item
-            validateStatus={errors.password ? 'error' : undefined}
-            help={
-              errors.password?.message
-                ? t(errors.password.message, { min: 8 })
-                : undefined
-            }
-            style={{ marginBottom: 20 }}
-          >
-            <Controller
-              name="password"
-              control={control}
-              render={({ field }) => (
-                <Input.Password
-                  {...field}
-                  prefix={<LockOutlined />}
-                  placeholder={t('auth.password')}
-                  size="large"
-                  style={{ borderRadius: 8 }}
-                />
-              )}
-            />
-          </Form.Item>
-
-          <Form.Item
-            validateStatus={errors.confirmPassword ? 'error' : undefined}
-            help={
-              errors.confirmPassword?.message
-                ? t(errors.confirmPassword.message)
-                : undefined
-            }
-            style={{ marginBottom: 32 }}
-          >
-            <Controller
-              name="confirmPassword"
-              control={control}
-              render={({ field }) => (
-                <Input.Password
-                  {...field}
-                  prefix={<LockOutlined />}
-                  placeholder={t('auth.confirmPassword')}
-                  size="large"
-                  style={{ borderRadius: 8 }}
-                />
-              )}
-            />
-          </Form.Item>
-
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={isSubmitting}
-              block
-              size="large"
+            {/* Full Name – side-by-side */}
+            <Text
               style={{
-                height: 52,
-                fontSize: 18,
-                fontWeight: 500,
-                borderRadius: 8,
-                background: '#000', // dark luxury button
-                border: 'none',
+                display: 'block',
+                fontSize: 10,
+                textTransform: 'uppercase',
+                letterSpacing: '0.15em',
+                fontWeight: 700,
+                color: '#8c8c8c',
+                marginBottom: 8,
               }}
             >
-              {t('auth.registerButton') || 'Create Account'}
-            </Button>
-          </Form.Item>
-        </form>
+              Full Name
+            </Text>
+            <Row gutter={16} style={{ marginBottom: 24 }}>
+              <Col span={12}>
+                <Form.Item
+                  validateStatus={errors.firstName ? 'error' : undefined}
+                  help={errors.firstName?.message ? t(errors.firstName.message) : undefined}
+                  style={{ marginBottom: 0 }}
+                >
+                  <Controller
+                    name="firstName"
+                    control={control}
+                    render={({ field }) => (
+                      <Input
+                        {...field}
+                        prefix={<UserOutlined style={{ color: '#bfbfbf' }} />}
+                        placeholder={t('auth.firstName')}
+                        size="large"
+                        variant="borderless"
+                        style={inputStyle}
+                      />
+                    )}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  validateStatus={errors.lastName ? 'error' : undefined}
+                  help={errors.lastName?.message ? t(errors.lastName.message) : undefined}
+                  style={{ marginBottom: 0 }}
+                >
+                  <Controller
+                    name="lastName"
+                    control={control}
+                    render={({ field }) => (
+                      <Input
+                        {...field}
+                        placeholder={t('auth.lastName')}
+                        size="large"
+                        variant="borderless"
+                        style={inputStyle}
+                      />
+                    )}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
 
-        <Divider plain style={{ margin: '24px 0' }}>
-          <Text type="secondary">ALREADY HAVE AN ACCOUNT?</Text>
-        </Divider>
+            {/* Email */}
+            <Form.Item
+              validateStatus={errors.email ? 'error' : undefined}
+              help={errors.email?.message ? t(errors.email.message) : undefined}
+              style={{ marginBottom: 24 }}
+            >
+              <Controller
+                name="email"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    prefix={<MailOutlined style={{ color: '#bfbfbf' }} />}
+                    placeholder={t('auth.email')}
+                    size="large"
+                    variant="borderless"
+                    style={inputStyle}
+                  />
+                )}
+              />
+            </Form.Item>
 
-        <Text style={{ display: 'block', textAlign: 'center', fontSize: 15 }}>
-          <Link to="/login" style={{ color: '#1890ff', fontWeight: 500 }}>
-            {t('auth.loginButton') || 'Sign In'}
-          </Link>
-        </Text>
+            {/* Password + Confirm Password — side by side */}
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  validateStatus={errors.password ? 'error' : undefined}
+                  help={
+                    errors.password?.message
+                      ? t(errors.password.message, { min: 8 })
+                      : undefined
+                  }
+                  style={{ marginBottom: 24 }}
+                >
+                  <Controller
+                    name="password"
+                    control={control}
+                    render={({ field }) => (
+                      <Input.Password
+                        {...field}
+                        prefix={<LockOutlined style={{ color: '#bfbfbf' }} />}
+                        placeholder={t('auth.password')}
+                        size="large"
+                        variant="borderless"
+                        style={inputStyle}
+                      />
+                    )}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  validateStatus={errors.confirmPassword ? 'error' : undefined}
+                  help={
+                    errors.confirmPassword?.message
+                      ? t(errors.confirmPassword.message)
+                      : undefined
+                  }
+                  style={{ marginBottom: 24 }}
+                >
+                  <Controller
+                    name="confirmPassword"
+                    control={control}
+                    render={({ field }) => (
+                      <Input.Password
+                        {...field}
+                        prefix={<LockOutlined style={{ color: '#bfbfbf' }} />}
+                        placeholder={t('auth.confirmPassword')}
+                        size="large"
+                        variant="borderless"
+                        style={inputStyle}
+                      />
+                    )}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
 
-        <Paragraph
-          type="secondary"
-          style={{ textAlign: 'center', marginTop: 32, fontSize: 13 }}
-        >
-          By creating an account, you agree to our{' '}
-          <Link to="/terms">Terms of Service</Link> and{' '}
-          <Link to="/privacy">Privacy Policy</Link>
-        </Paragraph>
-      </Card>
-    </div>
+            {/* Submit */}
+            <Form.Item style={{ marginBottom: 0, marginTop: 8 }}>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={isSubmitting}
+                block
+                size="large"
+                style={submitButtonStyle}
+              >
+                {t('auth.registerButton') || 'Register'}
+              </Button>
+            </Form.Item>
+          </form>
+
+          {/* Terms notice */}
+          <Paragraph
+            type="secondary"
+            style={{ textAlign: 'center', marginTop: 20, fontSize: 11 }}
+          >
+            By registering, you agree to our{' '}
+            <Link to="/terms">Terms</Link> and{' '}
+            <Link to="/privacy">Privacy Policy</Link>.
+          </Paragraph>
+
+          <Divider style={{ margin: '24px 0' }} />
+
+          {/* Login link */}
+          <Text style={{ display: 'block', textAlign: 'center', fontSize: 13, color: '#8c8c8c' }}>
+            Already have an account?{' '}
+            <Link to="/login" style={{ color: '#000', fontWeight: 700 }}>
+              {t('auth.loginButton') || 'Log in instead'}
+            </Link>
+          </Text>
+        </Card>
+      </Content>
+
+      {/* Footer */}
+      <Footer style={footerStyle}>
+        <Text style={footerTextStyle}>© 2024 Nest &amp; Field Art Toys</Text>
+        <div style={{ display: 'flex', gap: 24 }}>
+          {['Twitter', 'Instagram', 'Discord'].map((platform) => (
+            <a key={platform} href="#" style={navLinkStyle}>
+              {platform}
+            </a>
+          ))}
+        </div>
+      </Footer>
+    </Layout>
   );
 }
