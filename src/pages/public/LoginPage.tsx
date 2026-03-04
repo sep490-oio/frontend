@@ -110,7 +110,7 @@ export function LoginPage() {
           color: '#1a1a1a',
         }}
       >
-        Welcome Back
+        {t('auth.loginTitle')}
       </Title>
 
       <Text
@@ -169,7 +169,7 @@ export function LoginPage() {
                   {...field}
                   prefix={<LockOutlined style={{ color: '#888' }} />}
                   iconRender={(visible) => (visible ? <EyeOutlined /> : <EyeInvisibleOutlined />)}
-                  placeholder="••••••••"
+                  placeholder={t('auth.password')}
                   size="large"
                   style={{ borderRadius: 8 }}
                 />
@@ -199,7 +199,7 @@ export function LoginPage() {
                 fontWeight: 600,
               }}
             >
-              Sign In
+              {t('auth.loginButton')}
             </Button>
           </Form.Item>
         </Form>
@@ -212,7 +212,7 @@ export function LoginPage() {
           </Text>
           <Link to="/register">
             <Button type="default" size="large" style={{ borderRadius: 8, minWidth: 180 }}>
-              Create Account
+              {t('auth.registerButton')}
             </Button>
           </Link>
         </div>
