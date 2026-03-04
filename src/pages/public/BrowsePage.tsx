@@ -101,38 +101,19 @@ export function BrowsePage() {
 return (
     <PageContainer>
       <div className="container">
-               <div
-          style={{
-            display: 'flex',
-            alignItems: 'flex-end',
-            justifyContent: 'space-between',
-            gap: 'var(--spacing-lg)',
-            marginBottom: 'var(--spacing-2xl)',
-            flexWrap: 'wrap',
-          }}
-        >
+        <div className="browse-filter-header">
           {/* Left: big editorial title */}
-          <div style={{ flex: '1 1 auto' }}>
-            <div style={{ lineHeight: 1, fontSize: 'var(--font-size-2xl)', marginBottom: 'var(--spacing-sm)' }}>
-              <PageTitle>
-                {t('browse.title') || 'Live\nAuctions'}
-              </PageTitle>
-            </div>
-            <Text type="secondary" style={{ fontSize: 'var(--font-size-sm)', display: 'block', maxWidth: 260 }}>
+          <div className="browse-title-section">
+            <PageTitle>
+              {t('browse.title') || 'Live\nAuctions'}
+            </PageTitle>
+            <Text type="secondary" className="browse-subtitle">
               {t('browse.subtitle') || 'Curated high-end designer toys and collectible figurines from global independent artists.'}
             </Text>
           </div>
 
           {/* Right: compact inline filter controls */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--spacing-sm)',
-              flexShrink: 0,
-              flexWrap: 'wrap',
-            }}
-          >
+          <div className="browse-filter-controls">
             {/* Category pill select */}
             <Select
               value={categoryId ?? '__all__'}
@@ -141,7 +122,7 @@ return (
                 setPage(1);
               }}
               size="small"
-              style={{ minWidth: 140 }}
+              className="browse-category-select"
               options={[
                 { label: t('browse.allCategories') || 'CATEGORY: ALL', value: '__all__' },
                 ...(categories ?? []).map((cat) => ({
@@ -160,7 +141,7 @@ return (
                 value: o.value,
               }))}
               size="small"
-              style={{ minWidth: 160 }}
+              className="browse-sort-select"
               placeholder={t('browse.sortPlaceholder') || `SORT: ENDING SOON`}
             />
 
@@ -184,7 +165,6 @@ return (
               allowClear
               size="small"
               className="browse-search-input"
-              style={{ width: 180 }}
             />
           </div>
         </div>
@@ -203,7 +183,7 @@ return (
               </Text>
             </Space>
           }
-          style={{ margin: '120px 0' }}
+          className="browse-empty-state"
         />
       ) : (
         <>
@@ -216,7 +196,7 @@ return (
           </Row>
 
           {data.totalPages > 1 && (
-            <Flex justify="center" style={{ marginTop: 48 }}>
+            <Flex justify="center" className="browse-pagination-container">
               <Pagination
                 current={data.page}
                 total={data.totalItems}

@@ -92,72 +92,17 @@ export function LoginPage() {
     }
   };
 
-  // design-system‑aligned styles adapted from RegisterPage
-  const pageStyle: React.CSSProperties = {
-    minHeight: '60vh',
-    background: '#F8F8F8',
-  };
-
-  const contentStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '48px 24px',
-    flex: 1,
-  };
-
-  const cardStyle: React.CSSProperties = {
-    width: '100%',
-    maxWidth: 520,
-    borderRadius: 0,
-    boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
-    border: '1px solid #e8e8e8',
-  };
-
-  const cardBodyStyle: React.CSSProperties = {
-    padding: '48px 56px',
-  };
-
-  const titleStyle: React.CSSProperties = {
-    fontFamily: "'Space Grotesk', sans-serif",
-    fontWeight: 700,
-    fontSize: 32,
-    letterSpacing: '-1px',
-    textTransform: 'uppercase',
-    color: '#000',
-    marginBottom: 4,
-  };
-
-  const inputStyle: React.CSSProperties = {
-    borderRadius: 0,
-    borderTop: 'none',
-    borderLeft: 'none',
-    borderRight: 'none',
-    borderBottom: '1px solid #d9d9d9',
-    boxShadow: 'none',
-    paddingLeft: 0,
-    background: 'transparent',
-  };
-
-  const submitButtonStyle: React.CSSProperties = {
-    height: 52,
-    fontSize: 13,
-    fontWeight: 700,
-    letterSpacing: '0.15em',
-    textTransform: 'uppercase',
-    background: '#000',
-    border: 'none',
-    borderRadius: 0,
-  };
+  // design-system-aligned CSS classes are applied via className
+  // No need for style constants anymore
 
   return (
-    <Layout style={pageStyle}>
-      <Content style={contentStyle}>
-        <Card style={cardStyle} bodyStyle={cardBodyStyle}>
-          <Title level={2} style={titleStyle}>
+    <Layout className="login-page">
+      <Content className="login-content">
+        <Card className="login-card" classNames={{ body: 'login-card-body' }}>
+          <Title level={2} className="login-title">
             {t('auth.loginTitle')}
           </Title>
-          <Paragraph type="secondary" style={{ marginBottom: 40, fontSize: 13 }}>
+          <Paragraph className="login-subtitle">
             {t('auth.loginSubtitle') || 'Sign in to your luxury auction account'}
           </Paragraph>
           <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
@@ -175,7 +120,7 @@ export function LoginPage() {
                     prefix={<MailOutlined style={{ color: '#888' }} />}
                     placeholder="you@example.com"
                     size="large"
-                    style={inputStyle}
+                    className="login-input"
                   />
                 )}
               />
@@ -196,12 +141,12 @@ export function LoginPage() {
                     iconRender={(visible) => (visible ? <EyeOutlined /> : <EyeInvisibleOutlined />)}
                     placeholder={t('auth.password')}
                     size="large"
-                    style={inputStyle}
+                    className="login-input"
                   />
                 )}
               />
             </Form.Item>
-            <div style={{ textAlign: 'right', marginBottom: 24 }}>
+            <div className="login-forgot-password">
               <Link to="/forgot-password" style={{ color: '#000', fontWeight: 500 }}>
                 {t('auth.forgotPassword') || 'Forgot password?'}
               </Link>
@@ -214,27 +159,27 @@ export function LoginPage() {
                 loading={isSubmitting}
                 block
                 size="large"
-                style={submitButtonStyle}
+                className="login-button"
               >
                 {t('auth.loginButton')}
               </Button>
             </Form.Item>
           </Form>
 
-          <Divider style={{ margin: '32px 0 24px' }} />
+          <Divider className="login-divider" />
 
-          <div style={{ textAlign: 'center' }}>
-            <Text type="secondary" style={{ fontSize: 14, display: 'block', marginBottom: 8 }}>
+          <div className="login-signup-section">
+            <Text className="login-signup-text">
               {t('auth.noAccount') || "DON'T HAVE AN ACCOUNT?"}
             </Text>
             <Link to="/register">
-              <Button type="default" size="large" style={{ height: 52, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', borderRadius: 0 }}>
+              <Button type="default" size="large" className="login-signup-button">
                 {t('auth.registerButton')}
               </Button>
             </Link>
           </div>
 
-          <Text type="secondary" style={{ display: 'block', textAlign: 'center', marginTop: 24, fontSize: 13 }}>
+          <Text className="login-agreement-text">
             {t('auth.agreement') || 'By continuing, you agree to our'}{' '}
             <Link to="/terms">{t('auth.terms') || 'Terms of Service'}</Link>{' '}
             {t('auth.and') || 'and'}{' '}

@@ -1,4 +1,4 @@
-import { Tag, Space, Typography, Rate } from 'antd';
+import { Tag, Space, Typography } from 'antd';
 import {
   ClockCircleOutlined,
   FireOutlined,
@@ -14,8 +14,6 @@ import { useTranslation } from 'react-i18next';
 import type { AuctionListItem } from '@/types';
 import {
   formatVND,
-  formatCountdown,
-  CONDITION_KEYS,
 } from '@/utils/formatters';
 
 const { Text, Paragraph } = Typography;
@@ -138,18 +136,9 @@ export function AuctionCard({ auction }: AuctionCardProps) {
     <div
       className="auction-card"
       onClick={() => navigate(`/auction/${auction.id}`)}
-      style={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        cursor: 'pointer',
-        background: '#fff',
-        border: '1px solid #e8e8e8',
-        overflow: 'hidden',
-      }}
     >
       {/* ── Image area with top overlay ── */}
-      <div className="auction-card-cover" style={{ position: 'relative', flex: 1, minHeight: 0 }}>
+      <div className="auction-card-cover">
         <img
           alt={auction.itemTitle}
           src={
@@ -157,40 +146,16 @@ export function AuctionCard({ auction }: AuctionCardProps) {
             'https://picsum.photos/400/400?grayscale'
           }
           className="auction-card-image"
-          style={{
-            width: '100%',
-            height: '100%',
-            minHeight: 220,
-            objectFit: 'cover',
-            display: 'block',
-          }}
         />
 
         {/* Top-left: dynamic status badge + optional feature/sealed badges */}
-        <div
-          className="auction-card-badges"
-          style={{
-            position: 'absolute',
-            top: 'var(--spacing-sm)',
-            left: 'var(--spacing-sm)',
-            display: 'flex',
-            gap: 'var(--spacing-xs)',
-          }}
-        >
+        <div className="auction-card-badges">
           {/* Primary status badge — always shown */}
           <Tag
+            className="auction-card-badge-tag"
             style={{
-              borderRadius: 0,
-              fontSize: 10,
-              textTransform: 'uppercase',
-              letterSpacing: '0.1em',
-              fontWeight: 700,
-              border: 'none',
               background: statusBadge.color,
               color: statusBadge.textColor,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
             }}
           >
             {statusBadge.icon}
@@ -200,14 +165,10 @@ export function AuctionCard({ auction }: AuctionCardProps) {
           {/* Featured badge */}
           {auction.isFeatured && (
             <Tag
+              className="auction-card-badge-tag"
               style={{
-                borderRadius: 0,
-                fontSize: 10,
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
                 background: '#000',
                 color: '#fff',
-                border: 'none',
               }}
             >
               <FireOutlined /> {t('auction.featured')}
@@ -216,49 +177,20 @@ export function AuctionCard({ auction }: AuctionCardProps) {
 
           {/* Sealed badge */}
           {isSealed && (
-            <Tag
-              style={{
-                borderRadius: 0,
-                fontSize: 10,
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-              }}
-            >
+            <Tag className="auction-card-badge-tag">
               <LockOutlined /> {t('auction.typeSealed')}
             </Tag>
           )}
         </div>
 
         {/* Top-right: TIME LEFT label + countdown */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 'var(--spacing-sm)',
-            right: 'var(--spacing-sm)',
-            textAlign: 'right',
-          }}
-        >
-          <div
-            style={{
-              fontSize: 10,
-              textTransform: 'uppercase',
-              letterSpacing: '0.15em',
-              fontWeight: 600,
-              color: '#8c8c8c',
-              lineHeight: 1.2,
-              marginBottom: 2,
-            }}
-          >
+        <div className="auction-card-countdown-box">
+          <div className="auction-card-countdown-label">
             {t('auction.timeLeft', 'TIME LEFT')}
           </div>
           <div
-            style={{
-              fontSize: 'var(--font-size-lg)',
-              fontWeight: 800,
-              letterSpacing: '-0.5px',
-              color: statusBadge.color,
-              lineHeight: 1,
-            }}
+            className="auction-card-countdown-value"
+            style={{ color: statusBadge.color }}
           >
             {isLive
               ? formatLiveCountdown(msLeft)
@@ -268,52 +200,28 @@ export function AuctionCard({ auction }: AuctionCardProps) {
       </div>
 
       {/* ── Bottom info bar ── */}
-      <div
-        style={{
-          padding: 'var(--spacing-md) var(--spacing-lg)',
-          background: '#fff',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-end',
-          gap: 'var(--spacing-md)',
-          borderTop: '1px solid #f0f0f0',
-          flexShrink: 0,
-        }}
-      >
+      <div className="auction-card-info-bar">
         {/* Left: Title + artist/seller */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="auction-card-title-section">
           <Paragraph
             strong
             ellipsis={{ rows: 1 }}
-            style={{
-              margin: 0,
-              fontSize: 'var(--font-size-lg)',
-              fontWeight: 800,
-              textTransform: 'uppercase',
-              letterSpacing: '-0.3px',
-              lineHeight: 1.1,
-              fontFamily: "'Space Grotesk', sans-serif",
-            }}
+            className="auction-card-title"
           >
             {auction.itemTitle}
           </Paragraph>
 
           <div
+            className="auction-card-seller-link"
             role="link"
             tabIndex={0}
             onClick={(e) => {
               e.stopPropagation();
               navigate(`/seller/${auction.sellerId}`);
             }}
-            style={{ marginTop: 4, cursor: 'pointer' }}
           >
             <Space size={4} align="center">
-              <Text
-                style={{
-                  fontSize: 'var(--font-size-sm)',
-                  color: '#8c8c8c',
-                }}
-              >
+              <Text className="auction-card-seller-name">
                 {auction.sellerName}
               </Text>
               {auction.sellerTrustScore >= 80 && (
@@ -324,41 +232,20 @@ export function AuctionCard({ auction }: AuctionCardProps) {
         </div>
 
         {/* Right: Price + bid count */}
-        <div style={{ textAlign: 'right', flexShrink: 0 }}>
-          <div
-            style={{
-              fontSize: 10,
-              textTransform: 'uppercase',
-              letterSpacing: '0.15em',
-              fontWeight: 600,
-              color: '#8c8c8c',
-              marginBottom: 2,
-            }}
-          >
+        <div className="auction-card-price-section">
+          <div className="auction-card-price-label">
             {auction.currentPrice !== null
               ? t('auction.currentPrice', 'CURRENT BID')
               : t('auction.startingPrice', 'STARTING')}
           </div>
 
-          <Text
-            style={{
-              fontSize: 'var(--font-size-xl)',
-              fontWeight: 800,
-              letterSpacing: '-0.5px',
-              display: 'block',
-              lineHeight: 1.1,
-            }}
-          >
+          <Text className="auction-card-price-value">
             {formatVND(auction.currentPrice ?? auction.startingPrice)}
           </Text>
 
           <Text
             type="secondary"
-            style={{
-              fontSize: 'var(--font-size-sm)',
-              display: 'block',
-              marginTop: 2,
-            }}
+            className="auction-card-bid-count"
           >
             {t('auction.bidCount', { count: auction.bidCount })}
           </Text>
