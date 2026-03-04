@@ -33,6 +33,7 @@ import { SellerProfilePage } from '@/pages/seller/SellerProfilePage';
 import { OrdersPage } from '@/pages/orders/OrdersPage';
 import { OrderDetailPage } from '@/pages/orders/OrderDetailPage';
 import { ConfirmEmailPage } from '@/pages/public/ConfirmEmailPage';
+import { ProfilePage } from '@/pages/profile/ProfilePage';
 
 /** Temporary placeholder for pages not yet built */
 function ComingSoon({ title }: { title: string }) {
@@ -68,7 +69,7 @@ export function AppRoutes() {
         <Route path="/orders" element={<OrdersPage />} />
         <Route path="/orders/:id" element={<OrderDetailPage />} />
         <Route path="/notifications" element={<ComingSoon title="Notifications" />} />
-        <Route path="/profile" element={<ComingSoon title="Profile" />} />
+        <Route path="/profile" element={<ProfilePage />} />
         <Route path="/settings" element={<ComingSoon title="Settings" />} />
 
         {/* Seller pages (require seller permission — enforced at component level) */}
