@@ -27,8 +27,9 @@ import {
   Empty,
   Space,
   Flex,
+  Button,
 } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { MenuOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import type { AuctionFilters, AuctionStatus } from '@/types';
 import { useAuctions, useCategories } from '@/hooks/useAuctions';
@@ -37,13 +38,6 @@ import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 
 const { Title, Text } = Typography;
 
-/** Status options for the filter dropdown */
-const STATUS_OPTIONS: { value: string; labelKey: string }[] = [
-  { value: 'all', labelKey: 'browse.statusAll' },
-  { value: 'active', labelKey: 'browse.statusLive' },
-  { value: 'qualifying', labelKey: 'browse.statusQualifying' },
-  { value: 'ended', labelKey: 'browse.statusEnded' },
-];
 
 /** Sort options for the sort dropdown */
 const SORT_OPTIONS: {
@@ -104,21 +98,6 @@ export function BrowsePage() {
   const { data: categories } = useCategories();
 
   // Build category options for Select — parent as group, children as options
-  const categoryOptions = useMemo(() => {
-    if (!categories) return [];
-    return categories.map((parent) => ({
-      label: parent.name,
-      options: [
-        // Include parent itself as an option (selects all children)
-        { label: parent.name, value: parent.id },
-        // Child categories
-        ...(parent.children?.map((child) => ({
-          label: `  ${child.name}`,
-          value: child.id,
-        })) ?? []),
-      ],
-    }));
-  }, [categories]);
 
   // Reset page to 1 when any filter changes
   const handleFilterChange = (setter: (v: string) => void) => (value: string) => {
@@ -126,58 +105,63 @@ export function BrowsePage() {
     setPage(1);
   };
 
-  return (
-    <div>
-      {/* ─── Page Header ─────────────────────────────────────── */}
-      <div style={{ marginBottom: 24 }}>
-        <Title level={3} style={{ marginBottom: 4 }}>
-          {t('browse.title')}
+return (
+
+    <div style={{ maxWidth: 1440  , margin: '0 auto' }}>
+      <div style={{ textAlign: 'center', marginBottom: 40 }}>
+        <Title
+          level={1}
+          style={{
+            fontSize: 36,
+            fontWeight: 700,
+            marginBottom: 8,
+            color: '#000',
+          }}
+        >
+          Browse Auctions
         </Title>
-        <Text type="secondary">{t('browse.subtitle')}</Text>
+        <Text
+          style={{
+            fontSize: 16,
+            color: '#666',
+            display: 'block',
+          }}
+        >
+          Discover authenticated luxury items from verified sellers
+        </Text>
       </div>
 
-      {/* ─── Filter Bar ──────────────────────────────────────── */}
-      <Flex
-        gap={12}
-        wrap="wrap"
-        style={{ marginBottom: 24 }}
+      {/* Search + Sort + Filters bar */}
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 16,
+          marginBottom: 32,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
       >
-        {/* Search input */}
         <Input
-          placeholder={t('browse.searchPlaceholder')}
-          prefix={<SearchOutlined />}
+          placeholder="Search by brand, model, or keyword..."
           value={searchText}
           onChange={(e) => {
             setSearchText(e.target.value);
             setPage(1);
           }}
           allowClear
-          style={{ flex: '1 1 240px', maxWidth: 360 }}
+          size="large"
+          style={{
+            flex: 1,
+            maxWidth: 600,
+            height: 48,
+            borderRadius: 8,
+            fontSize: 16,
+            background: '#fff',
+            border: '1px solid #d9d9d9',
+          }}
         />
 
-        {/* Category filter */}
-        <Select
-          placeholder={t('browse.categoryAll')}
-          value={categoryId}
-          onChange={handleFilterChange(setCategoryId)}
-          allowClear
-          onClear={() => { setCategoryId(undefined); setPage(1); }}
-          options={categoryOptions}
-          style={{ flex: '0 1 200px', minWidth: 160 }}
-        />
-
-        {/* Status filter */}
-        <Select
-          value={statusFilter}
-          onChange={handleFilterChange(setStatusFilter)}
-          options={STATUS_OPTIONS.map((o) => ({
-            label: t(o.labelKey),
-            value: o.value,
-          }))}
-          style={{ flex: '0 1 180px', minWidth: 160 }}
-        />
-
-        {/* Sort */}
         <Select
           value={sortValue}
           onChange={handleFilterChange(setSortValue)}
@@ -185,45 +169,104 @@ export function BrowsePage() {
             label: t(o.labelKey),
             value: o.value,
           }))}
-          style={{ flex: '0 1 220px', minWidth: 180 }}
+          size="large"
+          style={{
+            width: 180,
+            height: 48,
+            borderRadius: 8,
+          }}
+          placeholder="ending-soon"
         />
-      </Flex>
 
-      {/* ─── Result count ────────────────────────────────────── */}
-      {data && !isLoading && (
-        <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
-          {t('browse.totalItems', { total: data.totalItems })}
-        </Text>
-      )}
+        <Button
+          icon={<MenuOutlined />}
+          size="large"
+          style={{
+            height: 48,
+            borderRadius: 8,
+            padding: '0 16px',
+          }}
+        >
+          Filters
+        </Button>
+      </div>
 
-      {/* ─── Auction Grid ────────────────────────────────────── */}
+      <div style={{ marginBottom: 40, textAlign: 'center' }}>
+        <Space wrap size={[8, 12]}>
+          <Button
+            type={categoryId === undefined ? 'primary' : 'default'}
+            onClick={() => {
+              setCategoryId(undefined);
+              setPage(1);
+            }}
+            style={{
+              borderRadius: 9999,
+              padding: '0 24px',
+              height: 40,
+              fontSize: 15,
+              fontWeight: 600,
+              background: categoryId === undefined ? '#000' : '#fff',
+              color: categoryId === undefined ? '#fff' : '#000',
+              border: categoryId === undefined ? 'none' : '1px solid #d9d9d9',
+              boxShadow: categoryId === undefined ? 'none' : '0 1px 2px rgba(0,0,0,0.05)',
+            }}
+          >
+            All Categories
+          </Button>
+
+          {categories?.map((cat) => (
+            <Button
+              key={cat.id}
+              type={categoryId === cat.id ? 'primary' : 'default'}
+              onClick={() => {
+                setCategoryId(cat.id);
+                setPage(1);
+              }}
+              style={{
+                borderRadius: 9999,
+                padding: '0 20px',
+                height: 40,
+                fontSize: 15,
+                fontWeight: 500,
+                background: categoryId === cat.id ? '#000' : '#fff',
+                color: categoryId === cat.id ? '#fff' : '#000',
+                border: categoryId === cat.id ? 'none' : '1px solid #d9d9d9',
+                boxShadow: categoryId === cat.id ? 'none' : '0 1px 2px rgba(0,0,0,0.05)',
+              }}
+            >
+              {cat.name}
+            </Button>
+          ))}
+        </Space>
+      </div>
+
+
       {isLoading ? (
-        <Flex justify="center" style={{ padding: 80 }}>
+        <Flex justify="center" align="center" style={{ minHeight: 400 }}>
           <Spin size="large" />
         </Flex>
       ) : !data || data.items.length === 0 ? (
         <Empty
           description={
-            <Space direction="vertical" size={4}>
-              <Text>{t('browse.noResults')}</Text>
-              <Text type="secondary">{t('browse.noResultsHint')}</Text>
+            <Space direction="vertical" size={8}>
+              <Text>No auctions found</Text>
+              <Text type="secondary">Try adjusting filters or search term</Text>
             </Space>
           }
-          style={{ padding: 80 }}
+          style={{ margin: '120px 0' }}
         />
       ) : (
         <>
-          <Row gutter={[16, 16]}>
+          <Row gutter={[24, 32]}>
             {data.items.map((auction) => (
-              <Col key={auction.id} xs={24} sm={12} lg={8}>
+              <Col key={auction.id} xs={24} sm={12} md={8} lg={6}>
                 <AuctionCard auction={auction} />
               </Col>
             ))}
           </Row>
 
-          {/* ─── Pagination ──────────────────────────────────── */}
           {data.totalPages > 1 && (
-            <Flex justify="center" style={{ marginTop: 32 }}>
+            <Flex justify="center" style={{ marginTop: 48 }}>
               <Pagination
                 current={data.page}
                 total={data.totalItems}
@@ -236,5 +279,6 @@ export function BrowsePage() {
         </>
       )}
     </div>
-  );
+
+);
 }
