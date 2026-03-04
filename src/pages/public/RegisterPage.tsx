@@ -109,8 +109,8 @@ export function RegisterPage() {
   };
 
   const pageStyle: React.CSSProperties = {
-    minHeight: '100vh',
-    background: '#F5F5F5',
+    minHeight: '60vh',
+    background: '#F8F8F8',
   };
 
 

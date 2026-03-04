@@ -101,77 +101,93 @@ export function BrowsePage() {
 return (
     <PageContainer>
       <div className="container">
-        <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-2xl)' }}>
-          <PageTitle>{t('browse.title') || 'Browse Auctions'}</PageTitle>
-          <Text type="secondary" style={{ fontSize: 'var(--font-size-lg)', display: 'block' }}>
-            {t('browse.subtitle') || 'Discover authenticated luxury items from verified sellers'}
-          </Text>
-        </div>
-
-      {/* Search + Sort + Filters bar */}
-      <div className="stack-on-mobile" style={{ gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-2xl)', alignItems: 'center', justifyContent: 'center' }}>
-        <Input
-          placeholder={t('browse.searchPlaceholder') || 'Search by brand, model, or keyword...'}
-          value={searchText}
-          onChange={(e) => {
-            setSearchText(e.target.value);
-            setPage(1);
+               <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'space-between',
+            gap: 'var(--spacing-lg)',
+            marginBottom: 'var(--spacing-2xl)',
+            flexWrap: 'wrap',
           }}
-          allowClear
-          size="large"
-          className="browse-search-input"
-        />
-
-        <Select
-          value={sortValue}
-          onChange={handleFilterChange(setSortValue)}
-          options={SORT_OPTIONS.map((o) => ({
-            label: t(o.labelKey),
-            value: o.value,
-          }))}
-          size="large"
-          style={{ width: 180 }}
-          placeholder={t('browse.sortPlaceholder') || undefined}
-        />
-
-        <Button
-          icon={<MenuOutlined />}
-          size="large"
-          className="browse-filter-button"
         >
-          {t('browse.filters') || 'Filters'}
-        </Button>
-      </div>
+          {/* Left: big editorial title */}
+          <div style={{ flex: '1 1 auto' }}>
+            <div style={{ lineHeight: 1, fontSize: 'var(--font-size-2xl)', marginBottom: 'var(--spacing-sm)' }}>
+              <PageTitle>
+                {t('browse.title') || 'Live\nAuctions'}
+              </PageTitle>
+            </div>
+            <Text type="secondary" style={{ fontSize: 'var(--font-size-sm)', display: 'block', maxWidth: 260 }}>
+              {t('browse.subtitle') || 'Curated high-end designer toys and collectible figurines from global independent artists.'}
+            </Text>
+          </div>
 
-      <div style={{ marginBottom: 'var(--spacing-2xl)', textAlign: 'center' }}>
-        <Space wrap size={[8, 12]}>
-          <Button
-            type={categoryId === undefined ? 'primary' : 'default'}
-            onClick={() => {
-              setCategoryId(undefined);
-              setPage(1);
+          {/* Right: compact inline filter controls */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--spacing-sm)',
+              flexShrink: 0,
+              flexWrap: 'wrap',
             }}
-            className="category-pill"
           >
-            {t('browse.allCategories') || 'All Categories'}
-          </Button>
-
-          {categories?.map((cat) => (
-            <Button
-              key={cat.id}
-              type={categoryId === cat.id ? 'primary' : 'default'}
-              onClick={() => {
-                setCategoryId(cat.id);
+            {/* Category pill select */}
+            <Select
+              value={categoryId ?? '__all__'}
+              onChange={(val) => {
+                setCategoryId(val === '__all__' ? undefined : val);
                 setPage(1);
               }}
-              className="category-pill"
-            >
-              {cat.name}
-            </Button>
-          ))}
-        </Space>
-      </div>
+              size="small"
+              style={{ minWidth: 140 }}
+              options={[
+                { label: t('browse.allCategories') || 'CATEGORY: ALL', value: '__all__' },
+                ...(categories ?? []).map((cat) => ({
+                  label: cat.name,
+                  value: cat.id,
+                })),
+              ]}
+            />
 
+            {/* Sort select */}
+            <Select
+              value={sortValue}
+              onChange={handleFilterChange(setSortValue)}
+              options={SORT_OPTIONS.map((o) => ({
+                label: t(o.labelKey),
+                value: o.value,
+              }))}
+              size="small"
+              style={{ minWidth: 160 }}
+              placeholder={t('browse.sortPlaceholder') || `SORT: ENDING SOON`}
+            />
+
+            {/* Price / extra filter button */}
+            <Button
+              icon={<MenuOutlined />}
+              size="small"
+              className="browse-filter-button"
+            >
+              {t('browse.priceFilter') || 'PRICE: ANY'}
+            </Button>
+
+            {/* Search input — compact */}
+            <Input
+              placeholder={t('browse.searchPlaceholder') || 'Search…'}
+              value={searchText}
+              onChange={(e) => {
+                setSearchText(e.target.value);
+                setPage(1);
+              }}
+              allowClear
+              size="small"
+              className="browse-search-input"
+              style={{ width: 180 }}
+            />
+          </div>
+        </div>
 
       {isLoading ? (
         <Flex justify="center" align="center" style={{ minHeight: 400 }}>
