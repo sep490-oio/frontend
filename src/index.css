@@ -644,3 +644,170 @@ a:hover {
   color: #8c8c8c;
   text-decoration: none;
 }
+
+/* ───────────────── Profile page helpers ────────────────────── */
+
+.profile-info-tab {
+  max-width: 720px;
+}
+
+.profile-avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: var(--spacing-xl);
+}
+
+.profile-avatar-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-readonly-section {
+  margin-bottom: var(--spacing-xl);
+  padding-bottom: var(--spacing-lg);
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.profile-readonly-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: var(--spacing-md);
+}
+
+.profile-field-label {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-weight: 700;
+  color: #8c8c8c;
+  margin-bottom: var(--spacing-sm);
+}
+
+.profile-form-item {
+  margin-bottom: var(--spacing-md);
+}
+
+.profile-input {
+  border-radius: 0 !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: 1px solid #d9d9d9 !important;
+  box-shadow: none !important;
+  padding-left: 0 !important;
+  background: transparent !important;
+}
+
+.profile-select .ant-select-selector {
+  border-radius: 0 !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: 1px solid #d9d9d9 !important;
+  box-shadow: none !important;
+  padding-left: 0 !important;
+  background: transparent !important;
+}
+
+.profile-save-button {
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  border-radius: 0 !important;
+}
+
+.profile-tag {
+  border-radius: 0;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.profile-tag-confirmed {
+  background: #f6ffed;
+  color: #52c41a;
+  border-color: #b7eb8f;
+}
+
+.profile-tag-unconfirmed {
+  background: #fff7e6;
+  color: #fa8c16;
+  border-color: #ffd591;
+}
+
+.profile-tag-warning {
+  background: #fff7e6;
+  color: #fa8c16;
+  border-color: #ffd591;
+}
+
+.profile-tag-failed {
+  background: #fff2f0;
+  color: #ff4d4f;
+  border-color: #ffccc7;
+}
+
+/* ───────────────── Address card helpers ────────────────────── */
+
+.address-card {
+  border-radius: 0;
+  border: 1px solid #e8e8e8;
+}
+
+.address-card-body {
+  padding: var(--spacing-md);
+}
+
+.address-card-tag {
+  border-radius: 0;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.address-card-tag-default {
+  background: #f6ffed;
+  color: #52c41a;
+  border-color: #b7eb8f;
+}
+
+.address-card-action {
+  border-radius: 0;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* ───────────────── Security section helpers ────────────────── */
+
+.security-section {
+  margin-bottom: var(--spacing-lg);
+}
+
+/* ───────────────── Sessions / History helpers ──────────────── */
+
+.sessions-table .ant-table {
+  border-radius: 0;
+}
+
+.sessions-table .ant-table-thead > tr > th {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: #8c8c8c;
+  background: #fafafa;
+}
+
+.sessions-card {
+  border-radius: 0;
+  border: 1px solid #e8e8e8;
+  margin-bottom: var(--spacing-sm);
+}
+
+.sessions-card-list {
+  margin-bottom: var(--spacing-md);
+}
