@@ -123,7 +123,7 @@ return (
         <Text
           style={{
             fontSize: 16,
-            color: '#666',
+            color: '#E5E7E0',
             display: 'block',
           }}
         >

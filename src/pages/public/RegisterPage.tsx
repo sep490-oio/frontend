@@ -35,7 +35,7 @@ import { z } from 'zod';
 import axios from 'axios';
 import { register } from '@/services/authService';
 
-const { Header, Content, Footer } = Layout;
+const { Content, Footer } = Layout;
 const { Title, Text, Paragraph } = Typography;
 
 const registerSchema = z
@@ -113,34 +113,8 @@ export function RegisterPage() {
     background: '#F5F5F5',
   };
 
-  const headerStyle: React.CSSProperties = {
-    background: 'transparent',
-    padding: '0 40px',
-    height: 72,
-    lineHeight: '72px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  };
 
-  const logoStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    fontFamily: "'Space Grotesk', sans-serif",
-    fontWeight: 700,
-    fontSize: 20,
-    letterSpacing: '-0.5px',
-    color: '#000',
-  };
 
-  const navStyle: React.CSSProperties = {
-    display: 'flex',
-    gap: 32,
-    listStyle: 'none',
-    margin: 0,
-    padding: 0,
-  };
 
   const navLinkStyle: React.CSSProperties = {
     fontSize: 11,
