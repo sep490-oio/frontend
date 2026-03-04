@@ -41,8 +41,8 @@ const { Title, Text, Paragraph } = Typography;
 const registerSchema = z
   .object({
     userName: z.string().min(1, 'auth.userNameRequired'),
-    firstName: z.string().min(1, 'auth.firstNameRequired'),
-    lastName: z.string().min(1, 'auth.lastNameRequired'),
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
     email: z.string().min(1, 'auth.emailRequired').email('auth.emailInvalid'),
     password: z.string().min(8, 'auth.passwordMinLength'),
     confirmPassword: z.string().min(1, 'auth.passwordRequired'),

@@ -22,9 +22,9 @@ import { login, getMe, mapApiUserToUser, getOrCreateDeviceId } from '@/services/
 const { Text, Title, Paragraph } = Typography;
 const { Content } = Layout;
 
-/** Zod schema — validates the email + password fields */
+/** Zod schema — validates the account (username or email) + password fields */
 const loginSchema = z.object({
-  account: z.string().min(1, 'auth.emailRequired').email('auth.emailInvalid'),
+  account: z.string().min(1, 'auth.accountRequired'),
   password: z.string().min(1, 'auth.passwordRequired'),
 });
 
