@@ -7,8 +7,8 @@
  *   2. GET /api/users/me    → receive user data
  *   3. Store credentials in Redux → redirect to intended page
  */
-import { Button, Form, Input, Typography, message, Divider } from 'antd';
-import { MailOutlined, LockOutlined,EyeOutlined,EyeInvisibleOutlined } from '@ant-design/icons';
+import { Button, Form, Input, Typography, message, Divider, Layout, Card } from 'antd';
+import { MailOutlined, LockOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useForm, Controller } from 'react-hook-form';
@@ -19,11 +19,12 @@ import { useAppDispatch } from '@/app/hooks';
 import { setCredentials } from '@/features/auth/authSlice';
 import { login, getMe, mapApiUserToUser, getOrCreateDeviceId } from '@/services/authService';
 
-const { Title, Text } = Typography;
+const { Text, Title, Paragraph } = Typography;
+const { Content } = Layout;
 
-/** Zod schema — validates the email + password fields */
+/** Zod schema — validates the account (username or email) + password fields */
 const loginSchema = z.object({
-  account: z.string().min(1, 'auth.emailRequired').email('auth.emailInvalid'),
+  account: z.string().min(1, 'auth.accountRequired'),
   password: z.string().min(1, 'auth.passwordRequired'),
 });
 
@@ -91,147 +92,101 @@ export function LoginPage() {
     }
   };
 
+  // design-system-aligned CSS classes are applied via className
+  // No need for style constants anymore
+
   return (
-  <div
-    style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '24px 16px',
-    }}
-  >
-    <div style={{ width: '100%', maxWidth: 420 }}>
-      <Title
-        level={2}
-        style={{
-          textAlign: 'center',
-          marginBottom: 8,
-          fontWeight: 700,
-          color: '#1a1a1a',
-        }}
-      >
-        {t('auth.loginTitle')}
-      </Title>
+    <Layout className="login-page">
+      <Content className="login-content">
+        <Card className="login-card" classNames={{ body: 'login-card-body' }}>
+          <Title level={2} className="login-title">
+            {t('auth.loginTitle')}
+          </Title>
+          <Paragraph className="login-subtitle">
+            {t('auth.loginSubtitle') || 'Sign in to your luxury auction account'}
+          </Paragraph>
+          <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+            <Form.Item
+              label="Email"
+              validateStatus={errors.account ? 'error' : ''}
+              help={errors.account?.message ? t(errors.account.message) : undefined}
+            >
+              <Controller
+                name="account"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    prefix={<MailOutlined style={{ color: '#888' }} />}
+                    placeholder="you@example.com"
+                    size="large"
+                    className="login-input"
+                  />
+                )}
+              />
+            </Form.Item>
+            <Form.Item
+              label="Password"
+              validateStatus={errors.password ? 'error' : ''}
+              help={errors.password?.message ? t(errors.password.message) : undefined}
+              style={{ marginBottom: 24 }}
+            >
+              <Controller
+                name="password"
+                control={control}
+                render={({ field }) => (
+                  <Input.Password
+                    {...field}
+                    prefix={<LockOutlined style={{ color: '#888' }} />}
+                    iconRender={(visible) => (visible ? <EyeOutlined /> : <EyeInvisibleOutlined />)}
+                    placeholder={t('auth.password')}
+                    size="large"
+                    className="login-input"
+                  />
+                )}
+              />
+            </Form.Item>
+            <div className="login-forgot-password">
+              <Link to="/forgot-password" style={{ color: '#000', fontWeight: 500 }}>
+                {t('auth.forgotPassword') || 'Forgot password?'}
+              </Link>
+            </div>
 
-      <Text
-        type="secondary"
-        style={{
-          display: 'block',
-          textAlign: 'center',
-          fontSize: 16,
-          marginBottom: 32,
-        }}
-      >
-        Sign in to your luxury auction account
-      </Text>
+            <Form.Item>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={isSubmitting}
+                block
+                size="large"
+                className="login-button"
+              >
+                {t('auth.loginButton')}
+              </Button>
+            </Form.Item>
+          </Form>
 
-      <div
-        style={{
-          background: '#fff',
-          borderRadius: 12,
-          padding: '40px 32px',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
-          border: '1px solid #eee',
-        }}
-      >
-        <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-          <Form.Item
-            label="Email"
-            validateStatus={errors.account ? 'error' : ''}
-            help={errors.account?.message ? t(errors.account.message) : undefined}
-          >
-            <Controller
-              name="account"
-              control={control}
-              render={({ field }) => (
-                <Input
-                  {...field}
-                  prefix={<MailOutlined style={{ color: '#888' }} />}
-                  placeholder="you@example.com"
-                  size="large"
-                  style={{ borderRadius: 8 }}
-                />
-              )}
-            />
-          </Form.Item>
+          <Divider className="login-divider" />
 
-          <Form.Item
-            label="Password"
-            validateStatus={errors.password ? 'error' : ''}
-            help={errors.password?.message ? t(errors.password.message) : undefined}
-            style={{ marginBottom: 12 }}
-          >
-            <Controller
-              name="password"
-              control={control}
-              render={({ field }) => (
-                <Input.Password
-                  {...field}
-                  prefix={<LockOutlined style={{ color: '#888' }} />}
-                  iconRender={(visible) => (visible ? <EyeOutlined /> : <EyeInvisibleOutlined />)}
-                  placeholder={t('auth.password')}
-                  size="large"
-                  style={{ borderRadius: 8 }}
-                />
-              )}
-            />
-          </Form.Item>
-
-          <div style={{ textAlign: 'right', marginBottom: 24 }}>
-            <Link to="/forgot-password" style={{ color: '#000', fontWeight: 500 }}>
-              Forgot password?
+          <div className="login-signup-section">
+            <Text className="login-signup-text">
+              {t('auth.noAccount') || "DON'T HAVE AN ACCOUNT?"}
+            </Text>
+            <Link to="/register">
+              <Button type="default" size="large" className="login-signup-button">
+                {t('auth.registerButton')}
+              </Button>
             </Link>
           </div>
 
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={isSubmitting}
-              block
-              size="large"
-              style={{
-                height: 48,
-                borderRadius: 8,
-                background: '#000',
-                border: 'none',
-                fontSize: 16,
-                fontWeight: 600,
-              }}
-            >
-              {t('auth.loginButton')}
-            </Button>
-          </Form.Item>
-        </Form>
-
-        <Divider style={{ margin: '32px 0 24px' }} />
-
-        <div style={{ textAlign: 'center' }}>
-          <Text type="secondary" style={{ fontSize: 14, display: 'block', marginBottom: 8 }}>
-            DON'T HAVE AN ACCOUNT?
+          <Text className="login-agreement-text">
+            {t('auth.agreement') || 'By continuing, you agree to our'}{' '}
+            <Link to="/terms">{t('auth.terms') || 'Terms of Service'}</Link>{' '}
+            {t('auth.and') || 'and'}{' '}
+            <Link to="/privacy">{t('auth.privacy') || 'Privacy Policy'}</Link>
           </Text>
-          <Link to="/register">
-            <Button type="default" size="large" style={{ borderRadius: 8, minWidth: 180 }}>
-              {t('auth.registerButton')}
-            </Button>
-          </Link>
-        </div>
-      </div>
-
-      <Text
-        type="secondary"
-        style={{
-          display: 'block',
-          textAlign: 'center',
-          marginTop: 24,
-          fontSize: 13,
-        }}
-      >
-        By continuing, you agree to our{' '}
-        <Link to="/terms">Terms of Service</Link> and{' '}
-        <Link to="/privacy">Privacy Policy</Link>
-      </Text>
-    </div>
-  </div>
-);
+        </Card>
+      </Content>
+    </Layout>
+  );
 }

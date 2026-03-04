@@ -29,14 +29,17 @@ import {
   Flex,
   Button,
 } from 'antd';
+import { PageContainer } from '@/design-system/components/PageContainer';
+import { PageTitle } from '@/design-system/typography';
 import { MenuOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import type { AuctionFilters, AuctionStatus } from '@/types';
+import type { AuctionFilters } from '@/types';
 import { useAuctions, useCategories } from '@/hooks/useAuctions';
 import { AuctionCard } from '@/components/auction/AuctionCard';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 
-const { Title, Text } = Typography;
+
+const { Text } = Typography;
 
 
 /** Sort options for the sort dropdown */
@@ -59,7 +62,6 @@ export function BrowsePage() {
   // ─── Filter state ────────────────────────────────────────────
   const [searchText, setSearchText] = useState('');
   const [categoryId, setCategoryId] = useState<string | undefined>();
-  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortValue, setSortValue] = useState('endingSoon');
   const [page, setPage] = useState(1);
 
@@ -80,18 +82,9 @@ export function BrowsePage() {
     if (debouncedSearch) f.search = debouncedSearch;
     if (categoryId) f.categoryId = categoryId;
 
-    // Map status filter to AuctionStatus values
-    if (statusFilter === 'active') {
-      f.status = ['active'] as AuctionStatus[];
-    } else if (statusFilter === 'qualifying') {
-      f.status = ['qualifying'] as AuctionStatus[];
-    } else if (statusFilter === 'ended') {
-      f.status = ['ended', 'sold', 'cancelled', 'failed'] as AuctionStatus[];
-    }
-    // 'all' → no status filter
 
     return f;
-  }, [debouncedSearch, categoryId, statusFilter, selectedSort, page]);
+  }, [debouncedSearch, categoryId, selectedSort, page]);
 
   // ─── Data fetching ───────────────────────────────────────────
   const { data, isLoading } = useAuctions(filters);
@@ -106,140 +99,75 @@ export function BrowsePage() {
   };
 
 return (
+    <PageContainer>
+      <div className="container">
+        <div className="browse-filter-header">
+          {/* Left: big editorial title */}
+          <div className="browse-title-section">
+            <PageTitle>
+              {t('browse.title') || 'Live\nAuctions'}
+            </PageTitle>
+            <Text type="secondary" className="browse-subtitle">
+              {t('browse.subtitle') || 'Curated high-end designer toys and collectible figurines from global independent artists.'}
+            </Text>
+          </div>
 
-    <div style={{ maxWidth: 1440  , margin: '0 auto' }}>
-      <div style={{ textAlign: 'center', marginBottom: 40 }}>
-        <Title
-          level={1}
-          style={{
-            fontSize: 36,
-            fontWeight: 700,
-            marginBottom: 8,
-            color: '#000',
-          }}
-        >
-          Browse Auctions
-        </Title>
-        <Text
-          style={{
-            fontSize: 16,
-            color: '#666',
-            display: 'block',
-          }}
-        >
-          Discover authenticated luxury items from verified sellers
-        </Text>
-      </div>
-
-      {/* Search + Sort + Filters bar */}
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 16,
-          marginBottom: 32,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Input
-          placeholder="Search by brand, model, or keyword..."
-          value={searchText}
-          onChange={(e) => {
-            setSearchText(e.target.value);
-            setPage(1);
-          }}
-          allowClear
-          size="large"
-          style={{
-            flex: 1,
-            maxWidth: 600,
-            height: 48,
-            borderRadius: 8,
-            fontSize: 16,
-            background: '#fff',
-            border: '1px solid #d9d9d9',
-          }}
-        />
-
-        <Select
-          value={sortValue}
-          onChange={handleFilterChange(setSortValue)}
-          options={SORT_OPTIONS.map((o) => ({
-            label: t(o.labelKey),
-            value: o.value,
-          }))}
-          size="large"
-          style={{
-            width: 180,
-            height: 48,
-            borderRadius: 8,
-          }}
-          placeholder="ending-soon"
-        />
-
-        <Button
-          icon={<MenuOutlined />}
-          size="large"
-          style={{
-            height: 48,
-            borderRadius: 8,
-            padding: '0 16px',
-          }}
-        >
-          Filters
-        </Button>
-      </div>
-
-      <div style={{ marginBottom: 40, textAlign: 'center' }}>
-        <Space wrap size={[8, 12]}>
-          <Button
-            type={categoryId === undefined ? 'primary' : 'default'}
-            onClick={() => {
-              setCategoryId(undefined);
-              setPage(1);
-            }}
-            style={{
-              borderRadius: 9999,
-              padding: '0 24px',
-              height: 40,
-              fontSize: 15,
-              fontWeight: 600,
-              background: categoryId === undefined ? '#000' : '#fff',
-              color: categoryId === undefined ? '#fff' : '#000',
-              border: categoryId === undefined ? 'none' : '1px solid #d9d9d9',
-              boxShadow: categoryId === undefined ? 'none' : '0 1px 2px rgba(0,0,0,0.05)',
-            }}
-          >
-            All Categories
-          </Button>
-
-          {categories?.map((cat) => (
-            <Button
-              key={cat.id}
-              type={categoryId === cat.id ? 'primary' : 'default'}
-              onClick={() => {
-                setCategoryId(cat.id);
+          {/* Right: compact inline filter controls */}
+          <div className="browse-filter-controls">
+            {/* Category pill select */}
+            <Select
+              value={categoryId ?? '__all__'}
+              onChange={(val) => {
+                setCategoryId(val === '__all__' ? undefined : val);
                 setPage(1);
               }}
-              style={{
-                borderRadius: 9999,
-                padding: '0 20px',
-                height: 40,
-                fontSize: 15,
-                fontWeight: 500,
-                background: categoryId === cat.id ? '#000' : '#fff',
-                color: categoryId === cat.id ? '#fff' : '#000',
-                border: categoryId === cat.id ? 'none' : '1px solid #d9d9d9',
-                boxShadow: categoryId === cat.id ? 'none' : '0 1px 2px rgba(0,0,0,0.05)',
-              }}
-            >
-              {cat.name}
-            </Button>
-          ))}
-        </Space>
-      </div>
+              size="small"
+              className="browse-category-select"
+              options={[
+                { label: t('browse.allCategories') || 'CATEGORY: ALL', value: '__all__' },
+                ...(categories ?? []).map((cat) => ({
+                  label: cat.name,
+                  value: cat.id,
+                })),
+              ]}
+            />
 
+            {/* Sort select */}
+            <Select
+              value={sortValue}
+              onChange={handleFilterChange(setSortValue)}
+              options={SORT_OPTIONS.map((o) => ({
+                label: t(o.labelKey),
+                value: o.value,
+              }))}
+              size="small"
+              className="browse-sort-select"
+              placeholder={t('browse.sortPlaceholder') || `SORT: ENDING SOON`}
+            />
+
+            {/* Price / extra filter button */}
+            <Button
+              icon={<MenuOutlined />}
+              size="small"
+              className="browse-filter-button"
+            >
+              {t('browse.priceFilter') || 'PRICE: ANY'}
+            </Button>
+
+            {/* Search input — compact */}
+            <Input
+              placeholder={t('browse.searchPlaceholder') || 'Search…'}
+              value={searchText}
+              onChange={(e) => {
+                setSearchText(e.target.value);
+                setPage(1);
+              }}
+              allowClear
+              size="small"
+              className="browse-search-input"
+            />
+          </div>
+        </div>
 
       {isLoading ? (
         <Flex justify="center" align="center" style={{ minHeight: 400 }}>
@@ -249,11 +177,13 @@ return (
         <Empty
           description={
             <Space direction="vertical" size={8}>
-              <Text>No auctions found</Text>
-              <Text type="secondary">Try adjusting filters or search term</Text>
+              <Text>{t('browse.noResults') || 'No auctions found'}</Text>
+              <Text type="secondary">
+                {t('browse.tryAdjustFilters') || 'Try adjusting filters or search term'}
+              </Text>
             </Space>
           }
-          style={{ margin: '120px 0' }}
+          className="browse-empty-state"
         />
       ) : (
         <>
@@ -266,7 +196,7 @@ return (
           </Row>
 
           {data.totalPages > 1 && (
-            <Flex justify="center" style={{ marginTop: 48 }}>
+            <Flex justify="center" className="browse-pagination-container">
               <Pagination
                 current={data.page}
                 total={data.totalItems}
@@ -278,7 +208,7 @@ return (
           )}
         </>
       )}
-    </div>
-
+      </div>
+    </PageContainer>
 );
 }

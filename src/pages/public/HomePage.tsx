@@ -14,7 +14,6 @@ import {
   Flex,
 } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import type { AuctionFilters, AuctionStatus } from '@/types';
 import { useAuctions } from '@/hooks/useAuctions';
 import { AuctionCard } from '@/components/auction/AuctionCard';
@@ -22,7 +21,6 @@ import { AuctionCard } from '@/components/auction/AuctionCard';
 const { Title, Paragraph, Text } = Typography;
 
 export function HomePage() {
-  const { t } = useTranslation();
   const navigate = useNavigate();
 
   // ================= Fetch featured auctions (same pattern as Browse) =================

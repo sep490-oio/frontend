@@ -19,7 +19,7 @@ export type VerificationStatus = 'pending' | 'verified' | 'rejected';
 
 export type Gender = 'male' | 'female' | 'other';
 
-export type AddressType = 'shipping' | 'billing' | 'other';
+export type AddressType = 'home' | 'work' | 'other';
 
 // ─── Items & Catalog ────────────────────────────────────────────────
 

@@ -35,14 +35,14 @@ import { z } from 'zod';
 import axios from 'axios';
 import { register } from '@/services/authService';
 
-const { Header, Content, Footer } = Layout;
+const { Content, Footer } = Layout;
 const { Title, Text, Paragraph } = Typography;
 
 const registerSchema = z
   .object({
     userName: z.string().min(1, 'auth.userNameRequired'),
-    firstName: z.string().min(1, 'auth.firstNameRequired'),
-    lastName: z.string().min(1, 'auth.lastNameRequired'),
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
     email: z.string().min(1, 'auth.emailRequired').email('auth.emailInvalid'),
     password: z.string().min(8, 'auth.passwordMinLength'),
     confirmPassword: z.string().min(1, 'auth.passwordRequired'),
@@ -108,129 +108,19 @@ export function RegisterPage() {
     }
   };
 
-  const pageStyle: React.CSSProperties = {
-    minHeight: '100vh',
-    background: '#F5F5F5',
-  };
-
-  const headerStyle: React.CSSProperties = {
-    background: 'transparent',
-    padding: '0 40px',
-    height: 72,
-    lineHeight: '72px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  };
-
-  const logoStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    fontFamily: "'Space Grotesk', sans-serif",
-    fontWeight: 700,
-    fontSize: 20,
-    letterSpacing: '-0.5px',
-    color: '#000',
-  };
-
-  const navStyle: React.CSSProperties = {
-    display: 'flex',
-    gap: 32,
-    listStyle: 'none',
-    margin: 0,
-    padding: 0,
-  };
-
-  const navLinkStyle: React.CSSProperties = {
-    fontSize: 11,
-    textTransform: 'uppercase',
-    letterSpacing: '0.15em',
-    fontWeight: 500,
-    color: '#8c8c8c',
-    textDecoration: 'none',
-  };
-
-  const contentStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '48px 24px',
-    flex: 1,
-  };
-
-  const cardStyle: React.CSSProperties = {
-    width: '100%',
-    maxWidth: 520,
-    borderRadius: 0,
-    boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
-    border: '1px solid #e8e8e8',
-  };
-
-  const cardBodyStyle: React.CSSProperties = {
-    padding: '48px 56px',
-  };
-
-  const titleStyle: React.CSSProperties = {
-    fontFamily: "'Space Grotesk', sans-serif",
-    fontWeight: 700,
-    fontSize: 32,
-    letterSpacing: '-1px',
-    textTransform: 'uppercase',
-    color: '#000',
-    marginBottom: 4,
-  };
-
-  const submitButtonStyle: React.CSSProperties = {
-    height: 52,
-    fontSize: 13,
-    fontWeight: 700,
-    letterSpacing: '0.15em',
-    textTransform: 'uppercase',
-    background: '#000',
-    border: 'none',
-    borderRadius: 0,
-  };
-
-  const footerStyle: React.CSSProperties = {
-    background: 'transparent',
-    padding: '24px 40px',
-    borderTop: '1px solid #e8e8e8',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 16,
-  };
-
-  const footerTextStyle: React.CSSProperties = {
-    fontSize: 10,
-    textTransform: 'uppercase',
-    letterSpacing: '0.2em',
-    color: '#bfbfbf',
-  };
-
-  const inputStyle: React.CSSProperties = {
-    borderRadius: 0,
-    borderTop: 'none',
-    borderLeft: 'none',
-    borderRight: 'none',
-    borderBottom: '1px solid #d9d9d9',
-    boxShadow: 'none',
-    paddingLeft: 0,
-    background: 'transparent',
-  };
+  // design-system-aligned CSS classes are applied via className
+  // No need for style constants anymore
 
   if (registered) {
     return (
-      <Layout style={pageStyle}>
-        <Content style={contentStyle}>
-          <Card style={{ ...cardStyle, maxWidth: 460 }} styles={{ body: cardBodyStyle }}>
+      <Layout className="register-page">
+        <Content className="register-content">
+          <Card className="register-card register-success-card" classNames={{ body: 'register-card-body' }}>
             <Alert
               type="success"
               message={t('auth.registerSuccess')}
               showIcon
-              style={{ marginBottom: 24 }}
+              style={{ marginBottom: 16 }}
             />
             <Text strong style={{ display: 'block', textAlign: 'center' }}>
               <Link to="/login">{t('auth.loginButton')}</Link>
@@ -242,18 +132,18 @@ export function RegisterPage() {
   }
 
   return (
-    <Layout style={pageStyle}>
+    <Layout className="register-page">
 
 
 
       {/* Main content */}
-      <Content style={contentStyle}>
-        <Card style={cardStyle} styles={{ body: cardBodyStyle }}>
+      <Content className="register-content">
+        <Card className="register-card" classNames={{ body: 'register-card-body' }}>
           {/* Page heading */}
-          <Title level={2} style={titleStyle}>
+          <Title level={2} className="register-title">
             {t('auth.registerTitle') || 'Create Account'}
           </Title>
-          <Paragraph type="secondary" style={{ marginBottom: 40, fontSize: 13 }}>
+          <Paragraph className="register-subtitle">
             Join the premier destination for designer art toys.
           </Paragraph>
 
@@ -263,7 +153,7 @@ export function RegisterPage() {
               type="error"
               message={t(errors.root.message ?? 'common.error')}
               showIcon
-              style={{ marginBottom: 24 }}
+              style={{ marginBottom: 16 }}
             />
           )}
 
@@ -272,7 +162,7 @@ export function RegisterPage() {
             <Form.Item
               validateStatus={errors.userName ? 'error' : undefined}
               help={errors.userName?.message ? t(errors.userName.message) : undefined}
-              style={{ marginBottom: 24 }}
+              className="register-form-item"
             >
               <Controller
                 name="userName"
@@ -284,27 +174,17 @@ export function RegisterPage() {
                     placeholder={t('auth.userName')}
                     size="large"
                     variant="borderless"
-                    style={inputStyle}
+                    className="register-input"
                   />
                 )}
               />
             </Form.Item>
 
             {/* Full Name – side-by-side */}
-            <Text
-              style={{
-                display: 'block',
-                fontSize: 10,
-                textTransform: 'uppercase',
-                letterSpacing: '0.15em',
-                fontWeight: 700,
-                color: '#8c8c8c',
-                marginBottom: 8,
-              }}
-            >
+            <Text className="register-field-label">
               Full Name
             </Text>
-            <Row gutter={16} style={{ marginBottom: 24 }}>
+            <Row gutter={16} className="register-full-name-row">
               <Col span={12}>
                 <Form.Item
                   validateStatus={errors.firstName ? 'error' : undefined}
@@ -321,7 +201,7 @@ export function RegisterPage() {
                         placeholder={t('auth.firstName')}
                         size="large"
                         variant="borderless"
-                        style={inputStyle}
+                        className="register-input"
                       />
                     )}
                   />
@@ -342,7 +222,7 @@ export function RegisterPage() {
                         placeholder={t('auth.lastName')}
                         size="large"
                         variant="borderless"
-                        style={inputStyle}
+                        className="register-input"
                       />
                     )}
                   />
@@ -354,7 +234,7 @@ export function RegisterPage() {
             <Form.Item
               validateStatus={errors.email ? 'error' : undefined}
               help={errors.email?.message ? t(errors.email.message) : undefined}
-              style={{ marginBottom: 24 }}
+              className="register-form-item"
             >
               <Controller
                 name="email"
@@ -366,7 +246,7 @@ export function RegisterPage() {
                     placeholder={t('auth.email')}
                     size="large"
                     variant="borderless"
-                    style={inputStyle}
+                    className="register-input"
                   />
                 )}
               />
@@ -382,7 +262,7 @@ export function RegisterPage() {
                       ? t(errors.password.message, { min: 8 })
                       : undefined
                   }
-                  style={{ marginBottom: 24 }}
+                  className="register-form-item"
                 >
                   <Controller
                     name="password"
@@ -394,7 +274,7 @@ export function RegisterPage() {
                         placeholder={t('auth.password')}
                         size="large"
                         variant="borderless"
-                        style={inputStyle}
+                        className="register-input"
                       />
                     )}
                   />
@@ -408,7 +288,7 @@ export function RegisterPage() {
                       ? t(errors.confirmPassword.message)
                       : undefined
                   }
-                  style={{ marginBottom: 24 }}
+                  className="register-form-item"
                 >
                   <Controller
                     name="confirmPassword"
@@ -420,7 +300,7 @@ export function RegisterPage() {
                         placeholder={t('auth.confirmPassword')}
                         size="large"
                         variant="borderless"
-                        style={inputStyle}
+                        className="register-input"
                       />
                     )}
                   />
@@ -436,7 +316,7 @@ export function RegisterPage() {
                 loading={isSubmitting}
                 block
                 size="large"
-                style={submitButtonStyle}
+                className="register-button"
               >
                 {t('auth.registerButton') || 'Register'}
               </Button>
@@ -444,19 +324,16 @@ export function RegisterPage() {
           </form>
 
           {/* Terms notice */}
-          <Paragraph
-            type="secondary"
-            style={{ textAlign: 'center', marginTop: 20, fontSize: 11 }}
-          >
+          <Paragraph className="register-terms">
             By registering, you agree to our{' '}
             <Link to="/terms">Terms</Link> and{' '}
             <Link to="/privacy">Privacy Policy</Link>.
           </Paragraph>
 
-          <Divider style={{ margin: '24px 0' }} />
+          <Divider className="register-divider" />
 
           {/* Login link */}
-          <Text style={{ display: 'block', textAlign: 'center', fontSize: 13, color: '#8c8c8c' }}>
+          <Text className="register-login-link">
             Already have an account?{' '}
             <Link to="/login" style={{ color: '#000', fontWeight: 700 }}>
               {t('auth.loginButton') || 'Log in instead'}
@@ -466,11 +343,11 @@ export function RegisterPage() {
       </Content>
 
       {/* Footer */}
-      <Footer style={footerStyle}>
-        <Text style={footerTextStyle}>© 2024 Nest &amp; Field Art Toys</Text>
-        <div style={{ display: 'flex', gap: 24 }}>
+      <Footer className="register-footer">
+        <Text className="register-footer-text">© 2024 Nest &amp; Field Art Toys</Text>
+        <div className="register-footer-links">
           {['Twitter', 'Instagram', 'Discord'].map((platform) => (
-            <a key={platform} href="#" style={navLinkStyle}>
+            <a key={platform} href="#" className="register-nav-link">
               {platform}
             </a>
           ))}
