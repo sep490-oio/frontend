@@ -7,8 +7,8 @@
  *   2. GET /api/users/me    → receive user data
  *   3. Store credentials in Redux → redirect to intended page
  */
-import { Card, Button, Form, Input, Typography, message, Divider } from 'antd';
-import { MailOutlined, LockOutlined } from '@ant-design/icons';
+import { Button, Form, Input, Typography, message, Divider, Layout, Card } from 'antd';
+import { MailOutlined, LockOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useForm, Controller } from 'react-hook-form';
@@ -19,11 +19,12 @@ import { useAppDispatch } from '@/app/hooks';
 import { setCredentials } from '@/features/auth/authSlice';
 import { login, getMe, mapApiUserToUser, getOrCreateDeviceId } from '@/services/authService';
 
-const { Title, Text } = Typography;
+const { Text, Title, Paragraph } = Typography;
+const { Content } = Layout;
 
-/** Zod schema — validates the email + password fields */
+/** Zod schema — validates the account (username or email) + password fields */
 const loginSchema = z.object({
-  account: z.string().min(1, 'auth.emailRequired').email('auth.emailInvalid'),
+  account: z.string().min(1, 'auth.accountRequired'),
   password: z.string().min(1, 'auth.passwordRequired'),
 });
 
@@ -91,64 +92,101 @@ export function LoginPage() {
     }
   };
 
+  // design-system-aligned CSS classes are applied via className
+  // No need for style constants anymore
+
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 24 }}>
-      <Card style={{ width: '100%', maxWidth: 420, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-        <Title level={3} style={{ textAlign: 'center', marginBottom: 32 }}>
-          {t('auth.loginTitle')}
-        </Title>
+    <Layout className="login-page">
+      <Content className="login-content">
+        <Card className="login-card" classNames={{ body: 'login-card-body' }}>
+          <Title level={2} className="login-title">
+            {t('auth.loginTitle')}
+          </Title>
+          <Paragraph className="login-subtitle">
+            {t('auth.loginSubtitle') || 'Sign in to your luxury auction account'}
+          </Paragraph>
+          <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+            <Form.Item
+              label="Email"
+              validateStatus={errors.account ? 'error' : ''}
+              help={errors.account?.message ? t(errors.account.message) : undefined}
+            >
+              <Controller
+                name="account"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    prefix={<MailOutlined style={{ color: '#888' }} />}
+                    placeholder="you@example.com"
+                    size="large"
+                    className="login-input"
+                  />
+                )}
+              />
+            </Form.Item>
+            <Form.Item
+              label="Password"
+              validateStatus={errors.password ? 'error' : ''}
+              help={errors.password?.message ? t(errors.password.message) : undefined}
+              style={{ marginBottom: 24 }}
+            >
+              <Controller
+                name="password"
+                control={control}
+                render={({ field }) => (
+                  <Input.Password
+                    {...field}
+                    prefix={<LockOutlined style={{ color: '#888' }} />}
+                    iconRender={(visible) => (visible ? <EyeOutlined /> : <EyeInvisibleOutlined />)}
+                    placeholder={t('auth.password')}
+                    size="large"
+                    className="login-input"
+                  />
+                )}
+              />
+            </Form.Item>
+            <div className="login-forgot-password">
+              <Link to="/forgot-password" style={{ color: '#000', fontWeight: 500 }}>
+                {t('auth.forgotPassword') || 'Forgot password?'}
+              </Link>
+            </div>
 
-        <form onSubmit={handleSubmit(onSubmit)}>
-          {/* Email field — the backend accepts this as the 'account' field */}
-          <Form.Item
-            validateStatus={errors.account ? 'error' : ''}
-            help={errors.account?.message ? t(errors.account.message) : undefined}
-          >
-            <Controller
-              name="account"
-              control={control}
-              render={({ field }) => (
-                <Input
-                  {...field}
-                  prefix={<MailOutlined />}
-                  placeholder={t('auth.email')}
-                  size="large"
-                />
-              )}
-            />
-          </Form.Item>
+            <Form.Item>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={isSubmitting}
+                block
+                size="large"
+                className="login-button"
+              >
+                {t('auth.loginButton')}
+              </Button>
+            </Form.Item>
+          </Form>
 
-          <Form.Item
-            validateStatus={errors.password ? 'error' : ''}
-            help={errors.password?.message ? t(errors.password.message) : undefined}
-          >
-            <Controller
-              name="password"
-              control={control}
-              render={({ field }) => (
-                <Input.Password
-                  {...field}
-                  prefix={<LockOutlined />}
-                  placeholder={t('auth.password')}
-                  size="large"
-                />
-              )}
-            />
-          </Form.Item>
+          <Divider className="login-divider" />
 
-          <Form.Item>
-            <Button type="primary" htmlType="submit" loading={isSubmitting} block size="large">
-              {t('auth.loginButton')}
-            </Button>
-          </Form.Item>
-        </form>
+          <div className="login-signup-section">
+            <Text className="login-signup-text">
+              {t('auth.noAccount') || "DON'T HAVE AN ACCOUNT?"}
+            </Text>
+            <Link to="/register">
+              <Button type="default" size="large" className="login-signup-button">
+                {t('auth.registerButton')}
+              </Button>
+            </Link>
+          </div>
 
-        <Divider />
-
-        <Text style={{ display: 'block', textAlign: 'center' }}>
-          {t('auth.noAccount')} <Link to="/register">{t('auth.registerButton')}</Link>
-        </Text>
-      </Card>
-    </div>
+          <Text className="login-agreement-text">
+            {t('auth.agreement') || 'By continuing, you agree to our'}{' '}
+            <Link to="/terms">{t('auth.terms') || 'Terms of Service'}</Link>{' '}
+            {t('auth.and') || 'and'}{' '}
+            <Link to="/privacy">{t('auth.privacy') || 'Privacy Policy'}</Link>
+          </Text>
+        </Card>
+      </Content>
+    </Layout>
   );
 }

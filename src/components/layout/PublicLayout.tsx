@@ -111,7 +111,7 @@ export function PublicLayout() {
       <Content
         style={{
           padding: isMobile ? '16px' : '24px',
-          maxWidth: 1280,
+          maxWidth: 1600,
           margin: '0 auto',
           width: '100%',
         }}

@@ -1,63 +1,157 @@
 /**
- * HomePage — the landing page for guests and returning users.
- *
- * This is a placeholder that will later include:
- * - Featured auctions carousel
- * - Category browsing
- * - Search functionality
- * - Promotion banners (Marketing staff manages these)
- *
- * Responsive: Reduces padding and font sizes on mobile.
- * Buttons stack vertically on small screens for better touch targets.
+ * HomePage — Landing page with Hero + Featured Auctions
+ * Reuses useAuctions hook and Ant Design grid like BrowsePage
  */
-import { Button, Space, Typography } from 'antd';
-import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { useAppSelector } from '@/app/hooks';
-import { useBreakpoint } from '@/hooks/useBreakpoint';
 
-const { Title, Paragraph } = Typography;
+import { useMemo } from 'react';
+import {
+  Row,
+  Col,
+  Typography,
+  Button,
+  Spin,
+  Empty,
+  Flex,
+} from 'antd';
+import { useNavigate } from 'react-router-dom';
+import type { AuctionFilters, AuctionStatus } from '@/types';
+import { useAuctions } from '@/hooks/useAuctions';
+import { AuctionCard } from '@/components/auction/AuctionCard';
+
+const { Title, Paragraph, Text } = Typography;
 
 export function HomePage() {
-  const { t } = useTranslation();
   const navigate = useNavigate();
-  const user = useAppSelector((state) => state.auth.user);
-  const { isMobile } = useBreakpoint();
+
+  // ================= Fetch featured auctions (same pattern as Browse) =================
+  const filters: AuctionFilters = useMemo(() => ({
+    page: 1,
+    sortBy: 'endTime',
+    sortOrder: 'asc',
+    status: ['active', 'qualifying'] as AuctionStatus[],
+  }), []);
+
+  const { data, isLoading } = useAuctions(filters);
+
+  const featuredAuctions = data?.items ?? [];
 
   return (
-    <div style={{ textAlign: 'center', padding: isMobile ? '40px 16px' : '80px 24px' }}>
-      <Title level={isMobile ? 2 : 1}>{t('home.hero')}</Title>
-      <Paragraph
+    <div>
+
+      {/* ================= HERO SECTION ================= */}
+      <div
         style={{
-          fontSize: isMobile ? 15 : 18,
-          color: '#666',
-          maxWidth: 600,
-          margin: '0 auto 32px',
+          textAlign: 'center',
+          padding: '100px 24px 80px',
         }}
       >
-        {t('home.heroSub')}
-      </Paragraph>
-
-      {/* Stack buttons vertically on mobile for full-width touch targets */}
-      <Space direction={isMobile ? 'vertical' : 'horizontal'} size="large" style={{ width: isMobile ? '100%' : 'auto' }}>
-        <Button
-          type="primary"
-          size="large"
-          block={isMobile}
-          onClick={() => navigate('/browse')}
+        <Title
+          level={1}
+          style={{
+            fontSize: 42,
+            fontWeight: 700,
+            marginBottom: 16,
+          }}
         >
-          {t('home.browseButton')}
-        </Button>
-        {!user && (
+          The Premier Marketplace for
+          <br />
+          Authenticated Luxury
+        </Title>
+
+        <Paragraph
+          style={{
+            fontSize: 18,
+            color: '#666',
+            maxWidth: 700,
+            margin: '0 auto 40px',
+          }}
+        >
+          Buy and sell verified luxury goods with confidence.
+          Every item is authenticated, every transaction is protected.
+        </Paragraph>
+
+        <Flex justify="center" gap={16} wrap="wrap">
+          <Button
+            type="primary"
+            size="large"
+            onClick={() => navigate('/browse')}
+          >
+            Browse Auctions
+          </Button>
+
           <Button
             size="large"
-            block={isMobile}
             onClick={() => navigate('/register')}
           >
-            {t('home.registerButton')}
+            Start Selling
           </Button>
-        )}
-      </Space>
+        </Flex>
+
+        {/* Stats */}
+        <Row justify="center" gutter={80} style={{ marginTop: 60 }}>
+          <Col>
+            <Title level={3} style={{ marginBottom: 4 }}>$24M+</Title>
+            <Text type="secondary">Total Value Traded</Text>
+          </Col>
+          <Col>
+            <Title level={3} style={{ marginBottom: 4 }}>8,400+</Title>
+            <Text type="secondary">Successful Auctions</Text>
+          </Col>
+          <Col>
+            <Title level={3} style={{ marginBottom: 4 }}>99.8%</Title>
+            <Text type="secondary">Satisfaction Rate</Text>
+          </Col>
+        </Row>
+      </div>
+
+      {/* Divider */}
+      <div style={{ borderTop: '1px solid #eee' }} />
+
+      {/* ================= FEATURED AUCTIONS ================= */}
+      <div style={{ padding: '60px 0' }}>
+
+        <div
+          style={{
+            maxWidth: 1440,
+            margin: '0 auto',
+            padding: '0 24px',
+          }}
+        >
+          <Flex justify="space-between" align="center" style={{ marginBottom: 32 }}>
+            <div>
+              <Title level={3} style={{ marginBottom: 0 }}>
+                Featured Auctions
+              </Title>
+              <Text type="secondary">
+                Ending soon – place your bids now
+              </Text>
+            </div>
+
+            <Button type="link" onClick={() => navigate('/browse')}>
+              View All
+            </Button>
+          </Flex>
+
+          {isLoading ? (
+            <Flex justify="center" align="center" style={{ minHeight: 300 }}>
+              <Spin size="large" />
+            </Flex>
+          ) : featuredAuctions.length === 0 ? (
+            <Empty
+              description="No live auctions at the moment"
+              style={{ margin: '80px 0' }}
+            />
+          ) : (
+            <Row gutter={[24, 32]}>
+              {featuredAuctions.slice(0, 4).map((auction) => (
+                <Col key={auction.id} xs={24} sm={12} md={8} lg={6}>
+                  <AuctionCard auction={auction} />
+                </Col>
+              ))}
+            </Row>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

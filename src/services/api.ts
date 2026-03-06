@@ -25,7 +25,7 @@ const api = axios.create({
   // Base URL — no /api suffix. All endpoint paths begin with /api/...
   // Real backend:  VITE_API_BASE_URL=https://api.newlsun.com  (set in .env)
   // Local backend: VITE_API_BASE_URL=http://localhost:5000     (set in .env.local)
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
   headers: {
     'Content-Type': 'application/json',
   },

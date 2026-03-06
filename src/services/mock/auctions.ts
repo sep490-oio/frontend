@@ -341,7 +341,7 @@ export const MOCK_AUCTION_LIST: AuctionListItem[] = [
     auctionType: 'open',
     status: 'active',
     itemTitle: 'Guitar Acoustic Yamaha F310',
-    primaryImageUrl: 'https://picsum.photos/seed/yamahaguitar/400/400',
+    primaryImageUrl: 'https://framerusercontent.com/images/YmMrVPv41HRWFAGPViXrEI4Y2c0.png?scale-down-to=1024',
     itemCondition: 'very_good',
     verificationStatus: 'unverified',
     categoryName: 'Nhạc cụ',

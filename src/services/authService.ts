@@ -52,7 +52,7 @@ export function getOrCreateDeviceId(): string {
  *
  * Falls back to ['bidder'] if:
  *  - Token is malformed
- *  - No roles claim found (backend may not include roles yet — Q1 pending)
+ *  - No roles claim found
  */
 export function parseRolesFromToken(token: string): UserRole[] {
   try {
@@ -77,7 +77,7 @@ export function parseRolesFromToken(token: string): UserRole[] {
 
     // Validate against our known UserRole values before trusting the backend data
     const validRoles: UserRole[] = [
-      'guest', 'bidder', 'seller', 'moderator',
+      'user', 'guest', 'bidder', 'seller', 'moderator',
       'risk_manager', 'support', 'marketing', 'admin', 'super_admin',
     ];
     const filtered = rolesArray.filter((r): r is UserRole =>
@@ -88,6 +88,32 @@ export function parseRolesFromToken(token: string): UserRole[] {
   } catch {
     // If anything goes wrong, assume basic bidder access
     return ['bidder'];
+  }
+}
+
+// ─── JWT permission parser ───────────────────────────────────────────
+/**
+ * Decodes the JWT payload and extracts the user's permissions.
+ *
+ * The backend uses a custom claim "permission" (singular) to store
+ * fine-grained permissions like "Permissions.Auctions.Create".
+ * Returns an empty array if the token is malformed or has no permissions.
+ */
+export function parsePermissionsFromToken(token: string): string[] {
+  try {
+    const payloadBase64 = token.split('.')[1];
+    if (!payloadBase64) return [];
+
+    const padded = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
+    const decoded = atob(padded);
+    const payload = JSON.parse(decoded) as Record<string, unknown>;
+
+    const rawPerms = payload['permission'] as string[] | string | undefined;
+    if (!rawPerms) return [];
+
+    return Array.isArray(rawPerms) ? rawPerms : [rawPerms];
+  } catch {
+    return [];
   }
 }
 
@@ -106,7 +132,7 @@ export function mapApiUserToUser(dto: ApiUserDto, accessToken: string): User {
     avatarUrl: dto.profile?.avatarUrl ?? null,
     roles: parseRolesFromToken(accessToken),
     isEmailVerified: dto.emailConfirmed,
-    hasSellerPermission: false, // Will be derived from roles once Q1 is answered
+    hasSellerPermission: parseRolesFromToken(accessToken).includes('seller'),
     createdAt: dto.createdAt,
   };
 }
@@ -115,7 +141,7 @@ export function mapApiUserToUser(dto: ApiUserDto, accessToken: string): User {
 // Using a separate instance (not the main `api`) prevents the refresh
 // call itself from triggering another 401 intercept → infinite loop.
 const authAxios = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
   headers: { 'Content-Type': 'application/json' },
   timeout: 15000,
 });

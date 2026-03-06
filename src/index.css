@@ -1,47 +1,72 @@
-/**
- * Global styles and responsive design foundation.
- * Breakpoints follow mobile-first approach:
- * - Base: mobile (default)
- * - sm: 640px (large phones, small tablets)
- * - md: 768px (tablets)
- * - lg: 1024px (laptops)
- * - xl: 1280px (desktops)
- */
+/* ════════════════════════════════════════════════════════════════
+   GLOBAL FOUNDATION — Minimal Editorial Theme
+   Mobile-first responsive system
+   ════════════════════════════════════════════════════════════════ */
 
-/* CSS custom properties for consistent theming and responsive values */
+/* ────────────────────────────────────────────────────────────────
+   CSS VARIABLES
+   Only layout + spacing + typography scale
+   Brand colors are controlled by Ant Design theme
+   ──────────────────────────────────────────────────────────────── */
+
+
+   /* Input underline style */
+.ant-input,
+.ant-input-password input {
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding-left: 0 !important;
+}
+
+/* Primary button style */
+.ant-btn-primary {
+  background: #000 !important;
+  border: none !important;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-weight: 700;
+}
+
 :root {
-  /* Spacing */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-  --spacing-2xl: 3rem;
+  /* Spacing scale */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  --spacing-3xl: 64px;
 
   /* Typography */
-  --font-sans: system-ui, -apple-system, sans-serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-heading: 'Space Grotesk', sans-serif;
+
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
   --font-size-lg: 1.125rem;
   --font-size-xl: 1.25rem;
-  --font-size-2xl: 1.5rem;
-  --font-size-3xl: 2rem;
+  --font-size-2xl: 1.75rem;
+  --font-size-3xl: 2.25rem;
+  --font-size-2xl-heading: 2rem;
 
   /* Layout */
-  --max-width-content: 1200px;
-  --max-width-narrow: 640px;
-
-  /* Breakpoints (for reference; use in media queries) */
-  /* sm: 640px, md: 768px, lg: 1024px, xl: 1280px */
+  --max-width-content: 1800px;
+  --max-width-narrow: 520px;
 }
 
-/* Reset and base styles */
+/* ────────────────────────────────────────────────────────────────
+   RESET
+   Clean neutral base
+   ──────────────────────────────────────────────────────────────── */
+
 *,
 *::before,
 *::after {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
 html {
@@ -50,11 +75,12 @@ html {
 }
 
 body {
+  margin: 0;
   font-family: var(--font-sans);
   font-size: var(--font-size-base);
-  line-height: 1.5;
-  color: #1a1a1a;
+  line-height: 1.6;
   background-color: #f5f5f5;
+  color: #000;
   min-height: 100vh;
 }
 
@@ -62,89 +88,31 @@ body {
   min-height: 100vh;
 }
 
-/* App layout - responsive by default */
-.app {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
+/* ────────────────────────────────────────────────────────────────
+   LAYOUT UTILITIES
+   ──────────────────────────────────────────────────────────────── */
 
-.app-header {
-  background-color: #2563eb;
-  color: white;
-  padding: var(--spacing-lg) var(--spacing-md);
-  text-align: center;
-}
-
-.app-header h1 {
-  font-size: var(--font-size-2xl);
-  font-weight: 700;
-  margin-bottom: var(--spacing-xs);
-}
-
-.app-subtitle {
-  font-size: var(--font-size-sm);
-  opacity: 0.9;
-}
-
-.app-main {
-  flex: 1;
-  padding: var(--spacing-xl) var(--spacing-md);
+.container {
   max-width: var(--max-width-content);
+  margin: 0 auto;
+  width: 100%;
+  padding: var(--spacing-xl) var(--spacing-md);
+}
+
+.container-narrow {
+  max-width: var(--max-width-narrow);
   margin: 0 auto;
   width: 100%;
 }
 
-.welcome-message {
-  text-align: center;
-  color: #4b5563;
-  font-size: var(--font-size-lg);
+.section-spacing {
+  margin-bottom: var(--spacing-2xl);
 }
 
-/* Responsive: larger screens */
-@media (min-width: 640px) {
-  .app-header h1 {
-    font-size: var(--font-size-3xl);
-  }
+/* ────────────────────────────────────────────────────────────────
+   RESPONSIVE HELPERS
+   ──────────────────────────────────────────────────────────────── */
 
-  .app-subtitle {
-    font-size: var(--font-size-base);
-  }
-}
-
-@media (min-width: 768px) {
-  .app-header {
-    padding: var(--spacing-xl) var(--spacing-lg);
-  }
-
-  .app-main {
-    padding: var(--spacing-2xl) var(--spacing-lg);
-  }
-}
-
-/* ════════════════════════════════════════════════════════════════
-   RESPONSIVE UTILITY CLASSES
-
-   A small set of helpers for common responsive patterns.
-   Uses mobile-first approach: base = mobile, then enhance.
-
-   Breakpoints match our project standard (src/styles/breakpoints.ts):
-   - sm: 640px  (large phones)
-   - md: 768px  (tablets)
-   - lg: 1024px (laptops)
-   - xl: 1280px (desktops)
-   ════════════════════════════════════════════════════════════════ */
-
-/* ─── Visibility ───────────────────────────────────────────────
-   For show/hide based on screen size, use the useBreakpoint() hook
-   with conditional rendering in React — no CSS classes needed.
-   Example: {isMobile && <MobileMenu />}
-   ────────────────────────────────────────────────────────────── */
-
-/* ─── Responsive text alignment ────────────────────────────────
-   Center text on mobile, left-align on desktop.
-   Useful for page headers that look better centered on phones.
-   ────────────────────────────────────────────────────────────── */
 .text-center-mobile {
   text-align: center;
 }
@@ -154,31 +122,10 @@ body {
   }
 }
 
-/* ─── Responsive padding ───────────────────────────────────────
-   Tighter padding on mobile, more breathing room on desktop.
-   ────────────────────────────────────────────────────────────── */
-.padding-responsive {
-  padding: var(--spacing-md);
-}
-@media (min-width: 768px) {
-  .padding-responsive {
-    padding: var(--spacing-lg);
-  }
-}
-@media (min-width: 1024px) {
-  .padding-responsive {
-    padding: var(--spacing-xl);
-  }
-}
-
-/* ─── Responsive stack ─────────────────────────────────────────
-   Flexbox row on desktop, column (stacked) on mobile.
-   Add gap with --stack-gap custom property (default 12px).
-   ────────────────────────────────────────────────────────────── */
 .stack-on-mobile {
   display: flex;
   flex-direction: column;
-  gap: var(--stack-gap, 12px);
+  gap: 16px;
 }
 @media (min-width: 768px) {
   .stack-on-mobile {
@@ -186,10 +133,6 @@ body {
   }
 }
 
-/* ─── Full-width on mobile ─────────────────────────────────────
-   Makes an element take full width on mobile but respect its
-   natural width on larger screens. Useful for buttons/cards.
-   ────────────────────────────────────────────────────────────── */
 .full-width-mobile {
   width: 100%;
 }
@@ -197,4 +140,674 @@ body {
   .full-width-mobile {
     width: auto;
   }
+}
+
+/* ────────────────────────────────────────────────────────────────
+   TYPOGRAPHY UTILITIES
+   ──────────────────────────────────────────────────────────────── */
+
+.heading-uppercase {
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+  font-weight: 700;
+}
+
+.small-uppercase {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-weight: 600;
+  color: #8c8c8c;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   ANT DESIGN GLOBAL OVERRIDES
+   Makes entire app follow RegisterPage style
+   ════════════════════════════════════════════════════════════════ */
+
+.ant-btn {
+  border-radius: 0 !important;
+}
+
+.ant-btn-primary {
+  background: #000 !important;
+  border: none !important;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-weight: 700;
+}
+
+.ant-card {
+  border-radius: 0 !important;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06) !important;
+}
+
+.ant-input,
+.ant-input-password input {
+  border-radius: 0 !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  box-shadow: none !important;
+  padding-left: 0 !important;
+  background: transparent !important;
+}
+
+.ant-layout {
+  background: #F8F8F8 !important;
+}
+
+.ant-layout-footer {
+  background: transparent !important;
+  border-top: 1px solid #e8e8e8;
+}
+
+/* Links */
+a {
+  color: #000;
+  text-decoration: none;
+}
+
+a:hover {
+  opacity: 0.7;
+}
+
+/* ───────────────── Auction card helpers ────────────────────── */
+.auction-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  overflow: hidden;
+}
+
+.auction-card-cover {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.auction-card-image {
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+  object-fit: cover;
+  display: block;
+}
+
+.auction-card-badges {
+  position: absolute;
+  top: var(--spacing-sm);
+  left: var(--spacing-sm);
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.auction-card-badge-tag {
+  border-radius: 0;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.auction-card-countdown-box {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  text-align: right;
+}
+
+.auction-card-countdown-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-weight: 600;
+  color: #8c8c8c;
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+
+.auction-card-countdown-value {
+  font-size: var(--font-size-lg);
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+
+.auction-card-info-bar {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--spacing-md);
+  border-top: 1px solid #f0f0f0;
+  flex-shrink: 0;
+}
+
+.auction-card-title-section {
+  flex: 1;
+  min-width: 0;
+}
+
+.auction-card-title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.3px;
+  line-height: 1.1;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.auction-card-seller-link {
+  margin-top: 4px;
+  cursor: pointer;
+}
+
+.auction-card-seller-name {
+  font-size: var(--font-size-sm);
+  color: #8c8c8c;
+}
+
+.auction-card-price-section {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.auction-card-price-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-weight: 600;
+  color: #8c8c8c;
+  margin-bottom: 2px;
+}
+
+.auction-card-price-value {
+  font-size: var(--font-size-xl);
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  display: block;
+  line-height: 1.1;
+}
+
+.auction-card-bid-count {
+  font-size: var(--font-size-sm);
+  display: block;
+  margin-top: 2px;
+}
+
+/* ───────────────── Browse page helpers ────────────────────── */
+.browse-filter-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-2xl);
+  flex-wrap: wrap;
+}
+
+.browse-title-section {
+  flex: 1 1 auto;
+}
+
+.browse-title-section > :first-child {
+  line-height: 1;
+  font-size: var(--font-size-2xl);
+  margin-bottom: var(--spacing-sm);
+}
+
+.browse-subtitle {
+  font-size: var(--font-size-sm);
+  display: block;
+  max-width: 260px;
+}
+
+.browse-filter-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.browse-category-select {
+  min-width: 140px;
+}
+
+.browse-sort-select {
+  min-width: 160px;
+}
+
+.browse-search-input {
+  width: 180px;
+}
+
+.browse-filter-button {
+  /* uses default size/height from antd small */
+}
+
+.browse-empty-state {
+  margin: calc(var(--spacing-3xl) + var(--spacing-lg)) 0;
+}
+
+.browse-pagination-container {
+  margin-top: var(--spacing-3xl);
+}
+
+.category-pill {
+  border-radius: 9999px;
+  padding: 0 var(--spacing-lg);
+  height: 40px;
+  font-size: var(--font-size-base);
+  font-weight: 500;
+}
+
+/* ───────────────── Login page helpers ────────────────────── */
+.login-page {
+  min-height: 60vh;
+  background: #F8F8F8;
+}
+
+.login-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-2xl) var(--spacing-lg);
+  flex: 1;
+}
+
+.login-card {
+  width: 100%;
+  max-width: var(--max-width-narrow);
+  border-radius: 0;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e8e8e8;
+}
+
+.login-card-body {
+  padding: var(--spacing-2xl) calc(var(--spacing-2xl) + var(--spacing-lg));
+}
+
+.login-title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: var(--font-size-2xl-heading);
+  letter-spacing: -1px;
+  text-transform: uppercase;
+  color: #000;
+  margin-bottom: var(--spacing-xs);
+}
+
+.login-subtitle {
+  margin-bottom: var(--spacing-lg);
+  font-size: var(--font-size-sm);
+}
+
+.login-input {
+  border-radius: 0 !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: 1px solid #d9d9d9 !important;
+  box-shadow: none !important;
+  padding-left: 0 !important;
+  background: transparent !important;
+}
+
+.login-forgot-password {
+  text-align: right;
+  margin-bottom: var(--spacing-lg);
+}
+
+.login-button {
+  height: 52px;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  background: #000 !important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+.login-divider {
+  margin: var(--spacing-xl) 0 var(--spacing-lg);
+}
+
+.login-signup-section {
+  text-align: center;
+}
+
+.login-signup-text {
+  font-size: var(--font-size-sm);
+  display: block;
+  margin-bottom: var(--spacing-xs);
+}
+
+.login-signup-button {
+  height: 52px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  border-radius: 0;
+}
+
+.login-agreement-text {
+  display: block;
+  text-align: center;
+  margin-top: var(--spacing-lg);
+  font-size: var(--font-size-sm);
+}
+
+/* ───────────────── Register page helpers ────────────────────── */
+.register-page {
+  min-height: 60vh;
+  background: #F8F8F8;
+}
+
+.register-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-2xl) var(--spacing-lg);
+  flex: 1;
+}
+
+.register-card {
+  width: 100%;
+  max-width: var(--max-width-narrow);
+  border-radius: 0;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e8e8e8;
+}
+
+.register-success-card {
+  max-width: 460px;
+}
+
+.register-card-body {
+  padding: var(--spacing-2xl) calc(var(--spacing-2xl) + var(--spacing-lg));
+}
+
+.register-title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: var(--font-size-2xl-heading);
+  letter-spacing: -1px;
+  text-transform: uppercase;
+  color: #000;
+  margin-bottom: var(--spacing-xs);
+}
+
+.register-subtitle {
+  margin-bottom: var(--spacing-lg);
+  font-size: var(--font-size-sm);
+}
+
+.register-form-item {
+  margin-bottom: var(--spacing-lg);
+}
+
+.register-field-label {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-weight: 700;
+  color: #8c8c8c;
+  margin-bottom: var(--spacing-xs);
+}
+
+.register-full-name-row {
+  margin-bottom: var(--spacing-lg);
+}
+
+.register-input {
+  border-radius: 0 !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: 1px solid #d9d9d9 !important;
+  box-shadow: none !important;
+  padding-left: 0 !important;
+  background: transparent !important;
+}
+
+.register-button {
+  height: 52px;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  background: #000 !important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+.register-divider {
+  margin: var(--spacing-lg) 0;
+}
+
+.register-terms {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 11px;
+}
+
+.register-login-link {
+  display: block;
+  text-align: center;
+  font-size: var(--font-size-sm);
+  color: #8c8c8c;
+}
+
+.register-footer {
+  background: transparent;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  border-top: 1px solid #e8e8e8;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.register-footer-text {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #bfbfbf;
+}
+
+.register-footer-links {
+  display: flex;
+  gap: var(--spacing-lg);
+}
+
+.register-nav-link {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-weight: 500;
+  color: #8c8c8c;
+  text-decoration: none;
+}
+
+/* ───────────────── Profile page helpers ────────────────────── */
+
+.profile-info-tab {
+  max-width: 720px;
+}
+
+.profile-avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: var(--spacing-xl);
+}
+
+.profile-avatar-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-readonly-section {
+  margin-bottom: var(--spacing-xl);
+  padding-bottom: var(--spacing-lg);
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.profile-readonly-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: var(--spacing-md);
+}
+
+.profile-field-label {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-weight: 700;
+  color: #8c8c8c;
+  margin-bottom: var(--spacing-sm);
+}
+
+.profile-form-item {
+  margin-bottom: var(--spacing-md);
+}
+
+.profile-input {
+  border-radius: 0 !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: 1px solid #d9d9d9 !important;
+  box-shadow: none !important;
+  padding-left: 0 !important;
+  background: transparent !important;
+}
+
+.profile-select .ant-select-selector {
+  border-radius: 0 !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: 1px solid #d9d9d9 !important;
+  box-shadow: none !important;
+  padding-left: 0 !important;
+  background: transparent !important;
+}
+
+.profile-save-button {
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  border-radius: 0 !important;
+}
+
+.profile-tag {
+  border-radius: 0;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.profile-tag-confirmed {
+  background: #f6ffed;
+  color: #52c41a;
+  border-color: #b7eb8f;
+}
+
+.profile-tag-unconfirmed {
+  background: #fff7e6;
+  color: #fa8c16;
+  border-color: #ffd591;
+}
+
+.profile-tag-warning {
+  background: #fff7e6;
+  color: #fa8c16;
+  border-color: #ffd591;
+}
+
+.profile-tag-failed {
+  background: #fff2f0;
+  color: #ff4d4f;
+  border-color: #ffccc7;
+}
+
+/* ───────────────── Address card helpers ────────────────────── */
+
+.address-card {
+  border-radius: 0;
+  border: 1px solid #e8e8e8;
+}
+
+.address-card-body {
+  padding: var(--spacing-md);
+}
+
+.address-card-tag {
+  border-radius: 0;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.address-card-tag-default {
+  background: #f6ffed;
+  color: #52c41a;
+  border-color: #b7eb8f;
+}
+
+.address-card-action {
+  border-radius: 0;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* ───────────────── Security section helpers ────────────────── */
+
+.security-section {
+  margin-bottom: var(--spacing-lg);
+}
+
+/* ───────────────── Sessions / History helpers ──────────────── */
+
+.sessions-table .ant-table {
+  border-radius: 0;
+}
+
+.sessions-table .ant-table-thead > tr > th {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: #8c8c8c;
+  background: #fafafa;
+}
+
+.sessions-card {
+  border-radius: 0;
+  border: 1px solid #e8e8e8;
+  margin-bottom: var(--spacing-sm);
+}
+
+.sessions-card-list {
+  margin-bottom: var(--spacing-md);
 }
