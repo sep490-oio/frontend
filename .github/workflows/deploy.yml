@@ -41,9 +41,9 @@ jobs:
 
       - name: Deploy to VPS
         run: |
-          # Write the SSH key to a temp file
+          # Decode the base64-encoded SSH key
           mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          echo "${{ secrets.VPS_SSH_KEY }}" | base64 -d > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
 
           # SSH into VPS and pull + restart the frontend container
