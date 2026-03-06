@@ -40,14 +40,18 @@ jobs:
             VITE_API_BASE_URL=${{ vars.VITE_API_BASE_URL }}
 
       - name: Deploy to VPS
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: root
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            cd /opt/myapp
-            # Pull the freshly built image
-            docker compose pull frontend
-            # Recreate only the frontend container (zero-downtime for other services)
-            docker compose up -d frontend
+        run: |
+          # Decode the base64-encoded SSH key
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" | base64 -d > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          # Log in to ghcr.io on VPS, then pull and restart
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key root@${{ secrets.VPS_HOST }} \
+            "echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin && \
+             cd /opt/myapp && \
+             docker compose pull frontend && \
+             docker compose up -d frontend"
+
+          # Clean up
+          rm -f ~/.ssh/deploy_key

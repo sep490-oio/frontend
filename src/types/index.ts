@@ -20,6 +20,7 @@ export * from './order';
 export * from './notification';
 export * from './admin';
 export * from './dashboard';
+export * from './signalr';
 
 // ─── Core types (defined below, not in separate files) ──────────────
 // These are foundational types used across the entire app (auth, API, UI).
