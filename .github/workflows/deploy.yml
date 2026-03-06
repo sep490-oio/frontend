@@ -46,12 +46,12 @@ jobs:
           echo "${{ secrets.VPS_SSH_KEY }}" | base64 -d > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
 
-          # SSH into VPS and pull + restart the frontend container
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key root@${{ secrets.VPS_HOST }} '
-            cd /opt/myapp &&
-            docker compose pull frontend &&
-            docker compose up -d frontend
-          '
+          # Log in to ghcr.io on VPS, then pull and restart
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key root@${{ secrets.VPS_HOST }} \
+            "echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin && \
+             cd /opt/myapp && \
+             docker compose pull frontend && \
+             docker compose up -d frontend"
 
           # Clean up
           rm -f ~/.ssh/deploy_key
