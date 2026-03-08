@@ -26,14 +26,29 @@ interface BuyNowConfirmModalProps {
   open: boolean;
   onClose: () => void;
   auction: Auction;
+  /** SignalR hub buyNow action — if provided, used as primary channel */
+  hubBuyNow?: () => Promise<void>;
 }
 
-export function BuyNowConfirmModal({ open, onClose, auction }: BuyNowConfirmModalProps) {
+export function BuyNowConfirmModal({ open, onClose, auction, hubBuyNow }: BuyNowConfirmModalProps) {
   const { t } = useTranslation();
   const { isMobile } = useBreakpoint();
   const buyNow = useBuyNow();
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    // SignalR primary path
+    if (hubBuyNow) {
+      try {
+        await hubBuyNow();
+        message.success(t('bidding.buyNowSuccess'));
+        onClose();
+      } catch {
+        message.error(t('common.error'));
+      }
+      return;
+    }
+
+    // REST fallback
     buyNow.mutate(auction.id, {
       onSuccess: () => {
         message.success(t('bidding.buyNowSuccess'));

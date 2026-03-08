@@ -21,25 +21,25 @@ import type { UserAddress, UserProfile } from '@/types/user';
 // ─── Profile ─────────────────────────────────────────────────────────
 
 /**
- * GET /api/users/me
+ * GET /api/me
  * Returns the full user object including the nested profile.
  */
 export async function getMe(): Promise<ApiUserDto> {
-  const response = await api.get<ApiUserDto>('/api/users/me');
+  const response = await api.get<ApiUserDto>('/api/me');
   return response.data;
 }
 
 /**
- * GET /api/users/me/profile
+ * GET /api/me/profile
  * Returns just the profile data (personal info, avatar, etc.).
  */
 export async function getProfile(): Promise<UserProfile> {
-  const response = await api.get<UserProfile>('/api/users/me/profile');
+  const response = await api.get<UserProfile>('/api/me/profile');
   return response.data;
 }
 
 /**
- * PUT /api/users/me/profile
+ * PUT /api/me/profile
  * Updates displayable profile fields (name, avatar, DOB, gender).
  */
 export async function updateProfile(data: {
@@ -50,7 +50,7 @@ export async function updateProfile(data: {
   dateOfBirth?: string;
   gender?: string;
 }): Promise<ApiUserProfileDto> {
-  const response = await api.put<ApiUserProfileDto>('/api/users/me/profile', data);
+  const response = await api.put<ApiUserProfileDto>('/api/me/profile', data);
   return response.data;
 }
 
@@ -70,12 +70,12 @@ export interface AddAddressRequest {
 }
 
 /**
- * GET /api/users/me/addresses
+ * GET /api/me/addresses
  * Returns a paginated list. We fetch page 1 with a large page size
  * since users rarely have more than 10 addresses.
  */
 export async function getAddresses(): Promise<UserAddress[]> {
-  const response = await api.get<{ items: UserAddress[] }>('/api/users/me/addresses', {
+  const response = await api.get<{ items: UserAddress[] }>('/api/me/addresses', {
     params: { PageNumber: 1, PageSize: 50 },
   });
   // Handle both paginated shape { items: [...] } and flat array
@@ -85,16 +85,16 @@ export async function getAddresses(): Promise<UserAddress[]> {
 }
 
 /**
- * POST /api/users/me/addresses
+ * POST /api/me/addresses
  * Adds a new address. Returns the created address with its server-assigned id.
  */
 export async function addAddress(data: AddAddressRequest): Promise<UserAddress> {
-  const response = await api.post<UserAddress>('/api/users/me/addresses', data);
+  const response = await api.post<UserAddress>('/api/me/addresses', data);
   return response.data;
 }
 
 /**
- * PUT /api/users/me/addresses/{addressId}
+ * PUT /api/me/addresses/{addressId}
  * Updates an existing address by ID.
  */
 export async function updateAddress(
@@ -102,75 +102,75 @@ export async function updateAddress(
   data: Partial<AddAddressRequest>
 ): Promise<UserAddress> {
   const response = await api.put<UserAddress>(
-    `/api/users/me/addresses/${addressId}`,
+    `/api/me/addresses/${addressId}`,
     data
   );
   return response.data;
 }
 
 /**
- * DELETE /api/users/me/addresses/{addressId}
+ * DELETE /api/me/addresses/{addressId}
  * Removes an address. Returns nothing (204).
  */
 export async function deleteAddress(addressId: string): Promise<void> {
-  await api.delete(`/api/users/me/addresses/${addressId}`);
+  await api.delete(`/api/me/addresses/${addressId}`);
 }
 
 /**
- * PATCH /api/users/me/addresses/{addressId}/default
+ * PATCH /api/me/addresses/{addressId}/default
  * Marks an address as the user's default. Returns nothing (204).
  * This is a dedicated action — not part of the regular update endpoint.
  */
 export async function setDefaultAddress(addressId: string): Promise<void> {
-  await api.patch(`/api/users/me/addresses/${addressId}/default`);
+  await api.patch(`/api/me/addresses/${addressId}/default`);
 }
 
 // ─── Account Security ───────────────────────────────────────────────
 
 /**
- * PUT /api/users/me/password
+ * PUT /api/me/password
  * Changes the user's password. Requires the current password for verification.
  */
 export async function changePassword(data: ChangePasswordRequest): Promise<void> {
-  await api.put('/api/users/me/password', data);
+  await api.put('/api/me/password', data);
 }
 
 /**
- * PUT /api/users/me/phone
+ * PUT /api/me/phone
  * Sets or updates the user's phone number. Triggers a verification SMS.
  */
 export async function setPhoneNumber(data: SetPhoneNumberRequest): Promise<void> {
-  await api.put('/api/users/me/phone', data);
+  await api.put('/api/me/phone', data);
 }
 
 /**
- * POST /api/users/me/phone/confirm
+ * POST /api/me/phone/confirm
  * Confirms the phone number using the verification code from SMS.
  */
 export async function confirmPhone(data: ConfirmPhoneRequest): Promise<void> {
-  await api.post('/api/users/me/phone/confirm', data);
+  await api.post('/api/me/phone/confirm', data);
 }
 
 /**
- * POST /api/users/me/two-factor/enable
+ * POST /api/me/two-factor/enable
  * Enables two-factor authentication for the user's account.
  */
 export async function enableTwoFactor(provider: string): Promise<void> {
-  await api.post('/api/users/me/two-factor/enable', { provider });
+  await api.post('/api/me/two-factor/enable', { provider });
 }
 
 /**
- * POST /api/users/me/two-factor/disable
+ * POST /api/me/two-factor/disable
  * Disables two-factor authentication.
  */
 export async function disableTwoFactor(): Promise<void> {
-  await api.post('/api/users/me/two-factor/disable');
+  await api.post('/api/me/two-factor/disable');
 }
 
 // ─── Sessions & Login History ───────────────────────────────────────
 
 /**
- * GET /api/users/me/sessions
+ * GET /api/me/sessions
  * Returns a paginated list of active sessions across devices.
  */
 export async function getSessions(
@@ -178,14 +178,14 @@ export async function getSessions(
   pageSize = 10
 ): Promise<ApiPaginatedResponse<UserSessionDto>> {
   const response = await api.get<ApiPaginatedResponse<UserSessionDto>>(
-    '/api/users/me/sessions',
+    '/api/me/sessions',
     { params: { PageNumber: page, PageSize: pageSize } }
   );
   return response.data;
 }
 
 /**
- * GET /api/users/me/login-history
+ * GET /api/me/login-history
  * Returns a paginated list of past login attempts (success + failure).
  */
 export async function getLoginHistory(
@@ -193,7 +193,7 @@ export async function getLoginHistory(
   pageSize = 10
 ): Promise<ApiPaginatedResponse<LoginHistoryDto>> {
   const response = await api.get<ApiPaginatedResponse<LoginHistoryDto>>(
-    '/api/users/me/login-history',
+    '/api/me/login-history',
     { params: { PageNumber: page, PageSize: pageSize } }
   );
   return response.data;

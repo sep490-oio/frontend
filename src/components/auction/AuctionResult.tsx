@@ -23,8 +23,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { Auction } from '@/types';
-import { CURRENT_USER_ID } from '@/services/mock/auctionDetails';
-import { AUCTION_TO_ORDER_MAP } from '@/services/mock/orders';
+import { useAppSelector } from '@/app/hooks';
 import { formatVND } from '@/utils/formatters';
 
 const { Text } = Typography;
@@ -36,9 +35,10 @@ interface AuctionResultProps {
 export function AuctionResult({ auction }: AuctionResultProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const userId = useAppSelector((state) => state.auth.user?.id);
 
   // Determine if the current user won this auction
-  const isWinner = auction.winnerId === CURRENT_USER_ID;
+  const isWinner = !!userId && auction.winnerId === userId;
   const userParticipated = auction.currentUserDeposit !== null;
   const depositStatus = auction.currentUserDeposit?.status;
 
@@ -59,16 +59,14 @@ export function AuctionResult({ auction }: AuctionResultProps) {
           {depositStatus === 'applied' && (
             <Tag color="green">{t('bidding.depositApplied')}</Tag>
           )}
-          {/* Link to order page if one exists for this auction */}
-          {AUCTION_TO_ORDER_MAP[auction.id] && (
-            <Button
-              type="primary"
-              icon={<ShoppingOutlined />}
-              onClick={() => navigate(`/orders/${AUCTION_TO_ORDER_MAP[auction.id]}`)}
-            >
-              {t('bidding.viewOrder')}
-            </Button>
-          )}
+          {/* Link to order page — order ID would come from the API */}
+          <Button
+            type="primary"
+            icon={<ShoppingOutlined />}
+            onClick={() => navigate('/orders')}
+          >
+            {t('bidding.viewOrder')}
+          </Button>
         </Flex>
       </Result>
     );

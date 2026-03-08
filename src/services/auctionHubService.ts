@@ -61,11 +61,15 @@ function getOrCreateConnection(): HubConnection {
     .withUrl(HUB_URL, {
       // accessTokenFactory is called each time the client connects/reconnects
       accessTokenFactory: () => getAccessToken(),
-      // Prefer WebSockets, fall back to Server-Sent Events, then Long Polling
-      transport:
-        HttpTransportType.WebSockets |
-        HttpTransportType.ServerSentEvents |
-        HttpTransportType.LongPolling,
+      // WebSockets only + skip negotiate — avoids connectionId mismatch
+      // caused by Cloudflare/Caddy proxies routing the negotiate POST and
+      // WebSocket upgrade to different backend instances.
+      transport: HttpTransportType.WebSockets,
+      skipNegotiation: true,
+      // Don't send browser credentials (cookies) — we use Authorization header
+      // instead. Without this, CORS fails because the BE doesn't send
+      // Access-Control-Allow-Credentials: true.
+      withCredentials: false,
     })
     .withAutomaticReconnect([0, 2000, 10000, 30000])
     .configureLogging(

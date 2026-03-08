@@ -138,7 +138,9 @@
     "noResults": "Không tìm thấy kết quả phù hợp",
     "noResultsHint": "Thử thay đổi bộ lọc hoặc tìm kiếm với từ khóa khác",
     "resultCount": "{{count}} kết quả",
-    "totalItems": "Tổng {{total}} phiên đấu giá"
+    "totalItems": "Tổng {{total}} phiên đấu giá",
+    "allCategories": "Tất cả danh mục",
+    "priceFilter": "Khoảng giá"
   },
   "auction": {
     "statusDraft": "Bản nháp",
@@ -273,7 +275,13 @@
 
     "goToWallet": "Đến ví tiền",
     "loginRequired": "Đăng nhập để tham gia",
-    "viewOrder": "Xem đơn hàng"
+    "viewOrder": "Xem đơn hàng",
+
+    "outbidNotification": "Bạn đã bị vượt giá! Giá mới: {{amount}}",
+    "auctionExtended": "Phiên đấu giá được gia hạn thêm {{minutes}} phút",
+    "auctionEnded": "Phiên đấu giá đã kết thúc",
+    "liveConnection": "Trực tiếp",
+    "noConnection": "Không có kết nối trực tiếp"
   },
   "myBids": {
     "title": "Đấu giá của tôi",

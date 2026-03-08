@@ -60,9 +60,15 @@ const { Title, Text } = Typography;
 interface BiddingPanelProps {
   auction: Auction;
   bids: Bid[];
+  /** SignalR hub placeBid action — undefined when not connected */
+  hubPlaceBid?: (amount: number, currency: string) => Promise<void>;
+  /** SignalR hub buyNow action — undefined when not connected */
+  hubBuyNow?: () => Promise<void>;
+  /** Whether SignalR is connected */
+  isConnected?: boolean;
 }
 
-export function BiddingPanel({ auction }: BiddingPanelProps) {
+export function BiddingPanel({ auction, hubPlaceBid, hubBuyNow, isConnected }: BiddingPanelProps) {
   const { t } = useTranslation();
   const { isMobile } = useBreakpoint();
   const [buyNowOpen, setBuyNowOpen] = useState(false);
@@ -250,7 +256,7 @@ export function BiddingPanel({ auction }: BiddingPanelProps) {
           {/* ACTIVE OPEN → bid form + optional buy-now */}
           {isActive && !isSealed && (
             <Flex vertical gap={12}>
-              <BidForm auction={auction} />
+              <BidForm auction={auction} hubPlaceBid={hubPlaceBid} />
               {auction.buyNowPrice && isQualified && (
                 <Button
                   size="large"
@@ -271,6 +277,25 @@ export function BiddingPanel({ auction }: BiddingPanelProps) {
           {/* ENDED → auction result */}
           {isEnded && <AuctionResult auction={auction} />}
         </div>
+
+        {/* ─── SignalR connection status ──────────────────────────── */}
+        {isConnected !== undefined && (
+          <Flex align="center" gap={6} style={{ marginBottom: 8 }}>
+            <div
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                backgroundColor: isConnected ? '#52c41a' : '#d9d9d9',
+              }}
+            />
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              {isConnected
+                ? t('bidding.liveConnection')
+                : t('bidding.noConnection')}
+            </Text>
+          </Flex>
+        )}
 
         {/* ─── Stats row ───────────────────────────────────────────── */}
         <Flex wrap="wrap" gap={16} style={{ marginBottom: 12 }}>
@@ -323,6 +348,7 @@ export function BiddingPanel({ auction }: BiddingPanelProps) {
           open={buyNowOpen}
           onClose={() => setBuyNowOpen(false)}
           auction={auction}
+          hubBuyNow={hubBuyNow}
         />
       )}
     </>

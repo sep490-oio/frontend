@@ -18,7 +18,7 @@ import { useState } from 'react';
 import { Button, InputNumber, Flex, Typography, Alert, message } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { Auction } from '@/types';
-import { CURRENT_USER_ID } from '@/services/mock/auctionDetails';
+import { useAppSelector } from '@/app/hooks';
 import { usePlaceBid } from '@/hooks/useBidding';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { formatVND } from '@/utils/formatters';
@@ -27,9 +27,11 @@ const { Text } = Typography;
 
 interface BidFormProps {
   auction: Auction;
+  /** SignalR hub placeBid action — if provided, used as primary channel */
+  hubPlaceBid?: (amount: number, currency: string) => Promise<void>;
 }
 
-export function BidForm({ auction }: BidFormProps) {
+export function BidForm({ auction, hubPlaceBid }: BidFormProps) {
   const { t } = useTranslation();
   const { isMobile } = useBreakpoint();
   const placeBid = usePlaceBid();
@@ -39,13 +41,14 @@ export function BidForm({ auction }: BidFormProps) {
   const minNextBid = currentPrice + auction.bidIncrement;
 
   const [amount, setAmount] = useState<number | null>(minNextBid);
+  const [hubLoading, setHubLoading] = useState(false);
+  const userId = useAppSelector((state) => state.auth.user?.id);
 
   const isQualified = auction.currentUserDeposit !== null;
 
   // Check if the current user is currently winning
-  // The latest bid with status 'winning' belongs to the current user
   const latestWinningBid = auction.recentBids.find((b) => b.status === 'winning');
-  const isWinning = latestWinningBid?.bidderId === CURRENT_USER_ID;
+  const isWinning = !!userId && latestWinningBid?.bidderId === userId;
 
   // ─── Not qualified: show warning ──────────────────────────────
   if (!isQualified) {
@@ -59,7 +62,7 @@ export function BidForm({ auction }: BidFormProps) {
   }
 
   // ─── Winning/outbid status banner ─────────────────────────────
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!amount || amount < minNextBid) {
       message.warning(
         t('bidding.bidAmountTooLow', { min: formatVND(minNextBid) })
@@ -67,6 +70,24 @@ export function BidForm({ auction }: BidFormProps) {
       return;
     }
 
+    // SignalR primary path — if hub is connected
+    if (hubPlaceBid) {
+      setHubLoading(true);
+      try {
+        await hubPlaceBid(amount, 'VND');
+        message.success(
+          t('bidding.bidSuccess', { amount: formatVND(amount) })
+        );
+        setAmount(amount + auction.bidIncrement);
+      } catch {
+        message.error(t('common.error'));
+      } finally {
+        setHubLoading(false);
+      }
+      return;
+    }
+
+    // REST fallback path
     placeBid.mutate(
       { auctionId: auction.id, amount },
       {
@@ -74,7 +95,6 @@ export function BidForm({ auction }: BidFormProps) {
           message.success(
             t('bidding.bidSuccess', { amount: formatVND(data.newCurrentPrice) })
           );
-          // Update the input to the next minimum after placing a bid
           setAmount(data.newCurrentPrice + auction.bidIncrement);
         },
         onError: () => {
@@ -155,7 +175,7 @@ export function BidForm({ auction }: BidFormProps) {
         size="large"
         block
         onClick={handleSubmit}
-        loading={placeBid.isPending}
+        loading={hubLoading || placeBid.isPending}
         disabled={!amount || amount < minNextBid}
       >
         {placeBid.isPending

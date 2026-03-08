@@ -138,7 +138,9 @@
     "noResults": "No results found",
     "noResultsHint": "Try adjusting your filters or search with different keywords",
     "resultCount": "{{count}} results",
-    "totalItems": "{{total}} auctions total"
+    "totalItems": "{{total}} auctions total",
+    "allCategories": "All Categories",
+    "priceFilter": "Price Range"
   },
   "auction": {
     "statusDraft": "Draft",
@@ -273,7 +275,13 @@
 
     "goToWallet": "Go to Wallet",
     "loginRequired": "Login to participate",
-    "viewOrder": "View Order"
+    "viewOrder": "View Order",
+
+    "outbidNotification": "You've been outbid! New price: {{amount}}",
+    "auctionExtended": "Auction extended by {{minutes}} minutes",
+    "auctionEnded": "Auction has ended",
+    "liveConnection": "Live",
+    "noConnection": "No live connection"
   },
   "myBids": {
     "title": "My Bids",

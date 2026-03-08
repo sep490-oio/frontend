@@ -204,13 +204,13 @@ export async function confirmEmail(userId: string, token: string): Promise<void>
 }
 
 /**
- * GET /api/users/me
+ * GET /api/me
  * Fetches the current authenticated user's data.
  * Called right after login to hydrate the Redux auth state.
  * Requires the access token to be passed explicitly (before it's in Redux).
  */
 export async function getMe(accessToken: string): Promise<ApiUserDto> {
-  const response = await authAxios.get<ApiUserDto>('/api/users/me', {
+  const response = await authAxios.get<ApiUserDto>('/api/me', {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   return response.data;
