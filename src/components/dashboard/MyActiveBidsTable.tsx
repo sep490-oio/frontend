@@ -124,8 +124,7 @@ export function MyActiveBidsTable({ bids, isLoading }: MyActiveBidsTableProps) {
       width: 150,
       render: (_: unknown, record: MyBidItem) => {
         const isLive =
-          record.auction.status === 'active' ||
-          record.auction.status === 'qualifying';
+          record.auction.status === 'active';
         return (
           <Space size={4}>
             <ClockCircleOutlined
@@ -150,8 +149,7 @@ export function MyActiveBidsTable({ bids, isLoading }: MyActiveBidsTableProps) {
       renderItem={(item) => {
         const tag = getBidStatusTag(item.myBidStatus, t);
         const isLive =
-          item.auction.status === 'active' ||
-          item.auction.status === 'qualifying';
+          item.auction.status === 'active';
         return (
           <List.Item
             style={{ cursor: 'pointer', padding: '12px 0' }}

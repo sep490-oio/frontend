@@ -4,7 +4,7 @@
  * TEMPORARY: Will be replaced by GET /auctions API endpoint.
  *
  * Covers:
- * - All auction statuses (qualifying, active, ended, sold, cancelled)
+ * - All auction statuses (pending, active, ended, sold, cancelled)
  * - Both auction types (open, sealed)
  * - Multiple categories (electronics, fashion, collectibles, home, sports)
  * - Different price ranges (2M - 35M VND)
@@ -23,7 +23,7 @@ const seller = (index: number) => MOCK_SELLERS[index];
 
 /**
  * 12 mock auctions covering the main UI scenarios.
- * Sorted by relevance: active first, then qualifying, then ended.
+ * Sorted by relevance: active first, then pending, then ended.
  */
 export const MOCK_AUCTION_LIST: AuctionListItem[] = [
   // ─── Active Open Auctions (bidding live) ──────────────────────
@@ -49,6 +49,8 @@ export const MOCK_AUCTION_LIST: AuctionListItem[] = [
     sellerName: seller(0).storeName,
     sellerRating: seller(0).ratingAverage,
     sellerTrustScore: seller(0).trustScore,
+    watchCount: 0,
+    isEndingSoon: false,
   },
   {
     id: mockId('auction', 2),
@@ -72,6 +74,8 @@ export const MOCK_AUCTION_LIST: AuctionListItem[] = [
     sellerName: seller(1).storeName,
     sellerRating: seller(1).ratingAverage,
     sellerTrustScore: seller(1).trustScore,
+    watchCount: 0,
+    isEndingSoon: false,
   },
   {
     id: mockId('auction', 3),
@@ -95,6 +99,8 @@ export const MOCK_AUCTION_LIST: AuctionListItem[] = [
     sellerName: seller(0).storeName,
     sellerRating: seller(0).ratingAverage,
     sellerTrustScore: seller(0).trustScore,
+    watchCount: 0,
+    isEndingSoon: false,
   },
   {
     id: mockId('auction', 4),
@@ -118,6 +124,8 @@ export const MOCK_AUCTION_LIST: AuctionListItem[] = [
     sellerName: seller(2).storeName,
     sellerRating: seller(2).ratingAverage,
     sellerTrustScore: seller(2).trustScore,
+    watchCount: 0,
+    isEndingSoon: false,
   },
 
   // ─── Active Sealed Auction ────────────────────────────────────
@@ -131,7 +139,7 @@ export const MOCK_AUCTION_LIST: AuctionListItem[] = [
     verificationStatus: 'verified',
     categoryName: 'Âm thanh',
     startingPrice: 5_500_000,
-    currentPrice: null, // Sealed — no visible current price
+    currentPrice: 0, // Sealed — no visible current price
     buyNowPrice: null,
     currency: 'VND',
     startTime: mockDate(-8),
@@ -143,20 +151,22 @@ export const MOCK_AUCTION_LIST: AuctionListItem[] = [
     sellerName: seller(4).storeName,
     sellerRating: seller(4).ratingAverage,
     sellerTrustScore: seller(4).trustScore,
+    watchCount: 0,
+    isEndingSoon: false,
   },
 
-  // ─── Qualifying (deposit phase, not yet bidding) ──────────────
+  // ─── Pending (deposit phase, not yet bidding) ─────────────────
   {
     id: mockId('auction', 6),
     auctionType: 'open',
-    status: 'qualifying',
+    status: 'pending',
     itemTitle: 'Canon EOS R6 Mark II - Body Only',
     primaryImageUrl: 'https://picsum.photos/seed/canonr6/400/400',
     itemCondition: 'like_new',
     verificationStatus: 'verified',
     categoryName: 'Máy ảnh',
     startingPrice: 35_000_000,
-    currentPrice: null,
+    currentPrice: 0,
     buyNowPrice: null,
     currency: 'VND',
     startTime: mockDate(24),
@@ -168,18 +178,20 @@ export const MOCK_AUCTION_LIST: AuctionListItem[] = [
     sellerName: seller(0).storeName,
     sellerRating: seller(0).ratingAverage,
     sellerTrustScore: seller(0).trustScore,
+    watchCount: 0,
+    isEndingSoon: false,
   },
   {
     id: mockId('auction', 7),
     auctionType: 'sealed',
-    status: 'qualifying',
+    status: 'pending',
     itemTitle: 'Đĩa Vinyl - Trịnh Công Sơn Collection (5 đĩa)',
     primaryImageUrl: 'https://picsum.photos/seed/vinyl/400/400',
     itemCondition: 'good',
     verificationStatus: 'unverified',
     categoryName: 'Đĩa nhạc Vinyl',
     startingPrice: 2_500_000,
-    currentPrice: null,
+    currentPrice: 0,
     buyNowPrice: null,
     currency: 'VND',
     startTime: mockDate(12),
@@ -191,6 +203,8 @@ export const MOCK_AUCTION_LIST: AuctionListItem[] = [
     sellerName: seller(2).storeName,
     sellerRating: seller(2).ratingAverage,
     sellerTrustScore: seller(2).trustScore,
+    watchCount: 0,
+    isEndingSoon: false,
   },
 
   // ─── Ended / Sold ─────────────────────────────────────────────
@@ -216,6 +230,8 @@ export const MOCK_AUCTION_LIST: AuctionListItem[] = [
     sellerName: seller(0).storeName,
     sellerRating: seller(0).ratingAverage,
     sellerTrustScore: seller(0).trustScore,
+    watchCount: 0,
+    isEndingSoon: false,
   },
   {
     id: mockId('auction', 9),
@@ -239,6 +255,8 @@ export const MOCK_AUCTION_LIST: AuctionListItem[] = [
     sellerName: seller(3).storeName,
     sellerRating: seller(3).ratingAverage,
     sellerTrustScore: seller(3).trustScore,
+    watchCount: 0,
+    isEndingSoon: false,
   },
 
   // ─── More Active (variety) ────────────────────────────────────
@@ -264,6 +282,8 @@ export const MOCK_AUCTION_LIST: AuctionListItem[] = [
     sellerName: seller(4).storeName,
     sellerRating: seller(4).ratingAverage,
     sellerTrustScore: seller(4).trustScore,
+    watchCount: 0,
+    isEndingSoon: false,
   },
   {
     id: mockId('auction', 11),
@@ -287,18 +307,20 @@ export const MOCK_AUCTION_LIST: AuctionListItem[] = [
     sellerName: seller(2).storeName,
     sellerRating: seller(2).ratingAverage,
     sellerTrustScore: seller(2).trustScore,
+    watchCount: 0,
+    isEndingSoon: false,
   },
   {
     id: mockId('auction', 12),
     auctionType: 'open',
-    status: 'qualifying',
+    status: 'pending',
     itemTitle: 'Casio G-Shock GA-2100-1A1 "CasiOak"',
     primaryImageUrl: 'https://picsum.photos/seed/gshock/400/400',
     itemCondition: 'new',
     verificationStatus: 'verified',
     categoryName: 'Đồng hồ',
     startingPrice: 2_800_000,
-    currentPrice: null,
+    currentPrice: 0,
     buyNowPrice: 3_500_000,
     currency: 'VND',
     startTime: mockDate(6),
@@ -310,6 +332,8 @@ export const MOCK_AUCTION_LIST: AuctionListItem[] = [
     sellerName: seller(1).storeName,
     sellerRating: seller(1).ratingAverage,
     sellerTrustScore: seller(1).trustScore,
+    watchCount: 0,
+    isEndingSoon: false,
   },
 
   // ─── Additional items for pagination testing ──────────────────
@@ -335,6 +359,8 @@ export const MOCK_AUCTION_LIST: AuctionListItem[] = [
     sellerName: seller(1).storeName,
     sellerRating: seller(1).ratingAverage,
     sellerTrustScore: seller(1).trustScore,
+    watchCount: 0,
+    isEndingSoon: false,
   },
   {
     id: mockId('auction', 14),
@@ -358,6 +384,8 @@ export const MOCK_AUCTION_LIST: AuctionListItem[] = [
     sellerName: seller(3).storeName,
     sellerRating: seller(3).ratingAverage,
     sellerTrustScore: seller(3).trustScore,
+    watchCount: 0,
+    isEndingSoon: false,
   },
   {
     id: mockId('auction', 15),
@@ -369,7 +397,7 @@ export const MOCK_AUCTION_LIST: AuctionListItem[] = [
     verificationStatus: 'verified',
     categoryName: 'Laptop & Máy tính',
     startingPrice: 10_000_000,
-    currentPrice: null,
+    currentPrice: 0,
     buyNowPrice: null,
     currency: 'VND',
     startTime: mockDate(-168),
@@ -381,6 +409,8 @@ export const MOCK_AUCTION_LIST: AuctionListItem[] = [
     sellerName: seller(0).storeName,
     sellerRating: seller(0).ratingAverage,
     sellerTrustScore: seller(0).trustScore,
+    watchCount: 0,
+    isEndingSoon: false,
   },
   {
     id: mockId('auction', 16),
@@ -392,7 +422,7 @@ export const MOCK_AUCTION_LIST: AuctionListItem[] = [
     verificationStatus: 'unverified',
     categoryName: 'Đồ gia dụng',
     startingPrice: 2_200_000,
-    currentPrice: null,
+    currentPrice: 0,
     buyNowPrice: null,
     currency: 'VND',
     startTime: mockDate(-240),
@@ -404,6 +434,8 @@ export const MOCK_AUCTION_LIST: AuctionListItem[] = [
     sellerName: seller(3).storeName,
     sellerRating: seller(3).ratingAverage,
     sellerTrustScore: seller(3).trustScore,
+    watchCount: 0,
+    isEndingSoon: false,
   },
 ];
 

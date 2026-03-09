@@ -1,12 +1,12 @@
 /**
  * Auction & Bidding domain types — the core of the platform.
  *
- * Auction lifecycle:
+ * Auction lifecycle (matches BE state machine):
  * 1. Seller creates auction for an approved item (draft)
- * 2. Auction goes to "pending" after configuration
- * 3. Qualification phase opens (qualifying) — bidders pay deposit to qualify
- * 4. Bidding phase starts (active) — qualified bidders place bids
- * 5. Auction ends (ended) → winner determined → order created (sold)
+ * 2. Auction goes to "pending" after configuration / publish
+ * 3. Scheduled job activates at startTime (active) — bidders deposit & bid
+ * 4. Auction ends (ended) → winner determined → order created (sold)
+ *    Or: failed (reserve not met), cancelled (seller/admin)
  *
  * Two auction types (seller chooses):
  * - Open (English): ascending bids, live feed, auto-bid available
@@ -147,8 +147,8 @@ export interface Auction {
   reservePrice: number | null;
   /** Allows immediate purchase without bidding (optional) */
   buyNowPrice: number | null;
-  /** The current highest bid amount (null if no bids yet) */
-  currentPrice: number | null;
+  /** The current highest bid amount (startingPrice if no bids yet) */
+  currentPrice: number;
   // ─── Deposit ──────────────────────────────────────────────────
   /** Percentage of starting price required as deposit (default 10%) */
   depositPercentage: number;
@@ -156,10 +156,6 @@ export interface Auction {
   depositAmount: number | null;
   currency: string;
   // ─── Timing ───────────────────────────────────────────────────
-  /** When bidders can start paying deposits to qualify */
-  qualificationStartTime: string | null;
-  /** When qualification closes (bidding starts) */
-  qualificationEndTime: string | null;
   /** When bidding starts */
   startTime: string;
   /** Scheduled end time */
@@ -174,6 +170,15 @@ export interface Auction {
   qualifiedCount: number;
   winnerId: string | null;
   winningBidId: string | null;
+  // ─── Computed fields from BE ──────────────────────────────────
+  /** Minimum amount for the next valid bid (from BE) */
+  minimumBidAmount: number;
+  /** Whether reserve price has been met */
+  isReserveMet: boolean;
+  /** Whether buy-now option is available */
+  hasBuyNow: boolean;
+  /** Whether auction is ending soon (within threshold) */
+  isEndingSoon: boolean;
   // ─── Anti-sniping ─────────────────────────────────────────────
   /** Whether anti-sniping timer extension is enabled */
   autoExtend: boolean;
@@ -184,9 +189,6 @@ export interface Auction {
   viewCount: number;
   bidCount: number;
   watchCount: number;
-  // ─── Emergency stop (Admin/Super Admin only) ──────────────────
-  emergencyStopped: boolean;
-  emergencyStopReason: string | null;
   // ─── Nested data (populated by API) ───────────────────────────
   item: ItemSummary | null;
   seller: SellerSummary | null;
@@ -211,29 +213,32 @@ export interface Auction {
  */
 export interface AuctionListItem {
   id: string;
-  auctionType: AuctionType;
   status: AuctionStatus;
   // ─── From the item ────────────────────────────────────────────
   itemTitle: string;
   primaryImageUrl: string | null;
-  itemCondition: ItemCondition;
-  verificationStatus: ListingVerificationStatus;
-  categoryName: string | null;
   // ─── From the auction ─────────────────────────────────────────
   startingPrice: number;
-  currentPrice: number | null;
+  currentPrice: number;
   buyNowPrice: number | null;
   currency: string;
   startTime: string;
   endTime: string;
   bidCount: number;
-  qualifiedCount: number;
+  watchCount: number;
   isFeatured: boolean;
+  isEndingSoon: boolean;
   // ─── From the seller ──────────────────────────────────────────
   sellerId: string;
-  sellerName: string | null;
-  sellerRating: number;
-  sellerTrustScore: number;
+  // ─── Optional fields (not returned by BE list endpoint) ───────
+  auctionType?: AuctionType;
+  itemCondition?: ItemCondition;
+  verificationStatus?: ListingVerificationStatus;
+  categoryName?: string | null;
+  qualifiedCount?: number;
+  sellerName?: string | null;
+  sellerRating?: number;
+  sellerTrustScore?: number;
 }
 
 // Need these imports for AuctionListItem
@@ -271,7 +276,7 @@ export interface AuctionFilters {
   categoryId?: string;
   /** Filter by auction type */
   auctionType?: AuctionType;
-  /** Filter by status (e.g., 'qualifying', 'active') */
+  /** Filter by status (e.g., 'active', 'ended') */
   status?: AuctionStatus | AuctionStatus[];
   /** Minimum current price */
   priceMin?: number;

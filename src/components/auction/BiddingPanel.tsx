@@ -74,17 +74,14 @@ export function BiddingPanel({ auction, hubPlaceBid, hubBuyNow, isConnected }: B
   const [buyNowOpen, setBuyNowOpen] = useState(false);
 
   // ─── Phase detection ──────────────────────────────────────────
-  const isQualifying = auction.status === 'qualifying';
   const isActive = auction.status === 'active';
-  const isEnded = ['ended', 'sold', 'cancelled', 'failed', 'emergency_stopped'].includes(
+  const isEnded = ['ended', 'sold', 'cancelled', 'failed'].includes(
     auction.status
   );
   const isSealed = auction.auctionType === 'sealed';
 
   // Determine countdown target
-  const countdownTarget = isQualifying
-    ? auction.qualificationEndTime ?? auction.startTime
-    : auction.actualEndTime ?? auction.endTime;
+  const countdownTarget = auction.actualEndTime ?? auction.endTime;
 
   // Reserve price status
   const hasReserve = auction.reservePrice !== null;
@@ -250,11 +247,11 @@ export function BiddingPanel({ auction, hubPlaceBid, hubBuyNow, isConnected }: B
 
         {/* ─── Interactive section (phase-dependent) ────────────────── */}
         <div style={{ marginBottom: 12 }}>
-          {/* QUALIFYING → deposit flow */}
-          {isQualifying && <QualificationSection auction={auction} />}
+          {/* NOT QUALIFIED → deposit flow */}
+          {isActive && !isQualified && <QualificationSection auction={auction} />}
 
-          {/* ACTIVE OPEN → bid form + optional buy-now */}
-          {isActive && !isSealed && (
+          {/* ACTIVE OPEN + QUALIFIED → bid form + optional buy-now */}
+          {isActive && !isSealed && isQualified && (
             <Flex vertical gap={12}>
               <BidForm auction={auction} hubPlaceBid={hubPlaceBid} />
               {auction.buyNowPrice && isQualified && (
@@ -331,15 +328,6 @@ export function BiddingPanel({ auction, hubPlaceBid, hubBuyNow, isConnected }: B
           </Flex>
         )}
 
-        {/* Minimum participants warning */}
-        {isQualifying &&
-          auction.qualifiedCount < auction.minimumParticipants && (
-            <Text type="warning" style={{ fontSize: 12, display: 'block', marginTop: 8 }}>
-              {t('auctionDetail.minimumParticipants', {
-                count: auction.minimumParticipants,
-              })}
-            </Text>
-          )}
       </Card>
 
       {/* ─── Buy-now modal ──────────────────────────────────────── */}

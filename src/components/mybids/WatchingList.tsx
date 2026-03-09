@@ -117,7 +117,6 @@ export function WatchingList({ auctions, isLoading, viewMode }: WatchingListProp
           options={[
             { value: 'all', label: t('myBids.filterAll') },
             { value: 'active', label: t('auction.statusActive') },
-            { value: 'qualifying', label: t('auction.statusQualifying') },
           ]}
         />
       </Flex>
@@ -222,7 +221,7 @@ export function WatchingList({ auctions, isLoading, viewMode }: WatchingListProp
       key: 'timeLeft',
       width: 150,
       render: (_: unknown, record: AuctionListItem) => {
-        const isLive = record.status === 'active' || record.status === 'qualifying';
+        const isLive = record.status === 'active';
         return (
           <Space size={4}>
             <ClockCircleOutlined
@@ -245,7 +244,7 @@ export function WatchingList({ auctions, isLoading, viewMode }: WatchingListProp
       dataSource={filteredAuctions}
       locale={{ emptyText: emptyContent }}
       renderItem={(auction) => {
-        const isLive = auction.status === 'active' || auction.status === 'qualifying';
+        const isLive = auction.status === 'active';
         return (
           <List.Item
             style={{ cursor: 'pointer', padding: '12px 0' }}

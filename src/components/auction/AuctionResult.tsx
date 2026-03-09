@@ -56,7 +56,7 @@ export function AuctionResult({ auction }: AuctionResultProps) {
           <Text style={{ fontSize: 24, fontWeight: 700, color: '#1677ff' }}>
             {formatVND(auction.currentPrice ?? auction.startingPrice)}
           </Text>
-          {depositStatus === 'applied' && (
+          {depositStatus === 'converted_to_payment' && (
             <Tag color="green">{t('bidding.depositApplied')}</Tag>
           )}
           {/* Link to order page — order ID would come from the API */}
@@ -81,10 +81,10 @@ export function AuctionResult({ auction }: AuctionResultProps) {
         style={{ padding: '16px 0' }}
       >
         <Flex vertical align="center" gap={8}>
-          {depositStatus === 'refunded' && (
+          {depositStatus === 'returned' && (
             <Text type="secondary">{t('bidding.depositRefundedNote')}</Text>
           )}
-          {depositStatus === 'refunded' && (
+          {depositStatus === 'returned' && (
             <Tag color="cyan">{t('bidding.depositRefunded')}</Tag>
           )}
         </Flex>
@@ -104,14 +104,14 @@ export function AuctionResult({ auction }: AuctionResultProps) {
   }
 
   // ─── Cancelled ───────────────────────────────────────────────
-  if (auction.status === 'cancelled' || auction.status === 'emergency_stopped') {
+  if (auction.status === 'cancelled') {
     return (
       <Result
         icon={<StopOutlined style={{ color: '#ff4d4f' }} />}
         title={t('bidding.resultCancelled')}
         style={{ padding: '16px 0' }}
       >
-        {userParticipated && depositStatus === 'refunded' && (
+        {userParticipated && depositStatus === 'returned' && (
           <Text type="secondary">{t('bidding.depositRefundedNote')}</Text>
         )}
       </Result>
@@ -127,7 +127,7 @@ export function AuctionResult({ auction }: AuctionResultProps) {
         subTitle={t('bidding.resultFailedReason')}
         style={{ padding: '16px 0' }}
       >
-        {userParticipated && depositStatus === 'refunded' && (
+        {userParticipated && depositStatus === 'returned' && (
           <Text type="secondary">{t('bidding.depositRefundedNote')}</Text>
         )}
       </Result>

@@ -10,6 +10,7 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { Auction } from '@/types';
 import {
   joinAuction,
   placeBid,
@@ -82,7 +83,9 @@ export function useBuyNow() {
 
 /**
  * Mutation: Toggle watch/unwatch for an auction.
- * Only invalidates auction detail (updates isWatching + watchCount).
+ * Uses optimistic update because BE doesn't return isWatching in
+ * GET /api/auctions/{id} yet — without this, refetch resets to false
+ * and the next click sends POST again (409 Conflict).
  */
 export function useToggleWatch() {
   const queryClient = useQueryClient();
@@ -94,8 +97,27 @@ export function useToggleWatch() {
       auctionId: string;
       currentlyWatching: boolean;
     }) => toggleWatch(auctionId, currentlyWatching),
-    onSuccess: (_data, { auctionId }) => {
-      queryClient.invalidateQueries({ queryKey: ['auction', auctionId] });
+    onMutate: async ({ auctionId, currentlyWatching }) => {
+      // Cancel in-flight refetches so they don't overwrite our optimistic update
+      await queryClient.cancelQueries({ queryKey: ['auction', auctionId] });
+      const previous = queryClient.getQueryData<Auction>(['auction', auctionId]);
+      if (previous) {
+        queryClient.setQueryData<Auction>(['auction', auctionId], {
+          ...previous,
+          isWatching: !currentlyWatching,
+          watchCount: previous.watchCount + (currentlyWatching ? -1 : 1),
+        });
+      }
+      return { previous };
     },
+    onError: (_err, { auctionId }, context) => {
+      // Rollback on failure
+      if (context?.previous) {
+        queryClient.setQueryData(['auction', auctionId], context.previous);
+      }
+    },
+    // No onSettled invalidation — BE doesn't return isWatching, so refetch
+    // would overwrite the optimistic state back to false. The optimistic
+    // update in onMutate is the source of truth until BE adds isWatching.
   });
 }
