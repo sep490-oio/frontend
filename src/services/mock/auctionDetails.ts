@@ -314,21 +314,21 @@ function buildDeposit(
     currency: 'VND',
     sourceType: 'wallet',
     status,
-    auctionResult: status === 'applied' ? 'winner' : status === 'refunded' ? 'outbid' : null,
+    auctionResult: status === 'converted_to_payment' ? 'winner' : status === 'returned' ? 'outbid' : null,
     depositedAt: mockDate(-72),
-    refundedAt: status === 'refunded' ? mockDate(-24) : null,
+    refundedAt: status === 'returned' ? mockDate(-24) : null,
     forfeitedAt: null,
   };
 }
 
 /** Maps auction index → user's simulated state for that auction */
 const MOCK_USER_STATE: Record<number, UserAuctionState> = {
-  1:  { deposit: buildDeposit(1, 2_000_000, 'holding'),   isWatching: false, winnerId: null, winningBidId: null },
-  3:  { deposit: buildDeposit(3, 1_800_000, 'holding'),   isWatching: false, winnerId: null, winningBidId: null },
-  4:  { deposit: buildDeposit(4, 300_000,   'holding'),   isWatching: false, winnerId: null, winningBidId: null },
-  5:  { deposit: buildDeposit(5, 550_000,   'holding'),   isWatching: false, winnerId: null, winningBidId: null },
-  8:  { deposit: buildDeposit(8, 1_000_000, 'applied'),   isWatching: false, winnerId: CURRENT_USER_ID, winningBidId: mockId('bid', 110) },
-  9:  { deposit: buildDeposit(9, 600_000,   'refunded'),  isWatching: false, winnerId: mockId('user', 11), winningBidId: mockId('bid', 901) },
+  1:  { deposit: buildDeposit(1, 2_000_000, 'held'),                  isWatching: false, winnerId: null, winningBidId: null },
+  3:  { deposit: buildDeposit(3, 1_800_000, 'held'),                  isWatching: false, winnerId: null, winningBidId: null },
+  4:  { deposit: buildDeposit(4, 300_000,   'held'),                  isWatching: false, winnerId: null, winningBidId: null },
+  5:  { deposit: buildDeposit(5, 550_000,   'held'),                  isWatching: false, winnerId: null, winningBidId: null },
+  8:  { deposit: buildDeposit(8, 1_000_000, 'converted_to_payment'),  isWatching: false, winnerId: CURRENT_USER_ID, winningBidId: mockId('bid', 110) },
+  9:  { deposit: buildDeposit(9, 600_000,   'returned'),              isWatching: false, winnerId: mockId('user', 11), winningBidId: mockId('bid', 901) },
   // Watching but not qualified
   2:  { deposit: null, isWatching: true,  winnerId: null, winningBidId: null },
   6:  { deposit: null, isWatching: true,  winnerId: null, winningBidId: null },
@@ -364,40 +364,43 @@ export function buildMockAuctionDetail(
   );
 
   // Build nested item summary with detail fields
+  // AuctionListItem has optional fields (not always returned by BE list endpoint),
+  // so we provide sensible defaults when building the full detail object.
   const item: ItemSummary = {
     id: itemId,
     title: listItem.itemTitle,
-    condition: listItem.itemCondition,
+    condition: listItem.itemCondition ?? 'good',
     primaryImageUrl: listItem.primaryImageUrl,
-    verificationStatus: listItem.verificationStatus,
+    verificationStatus: listItem.verificationStatus ?? 'unverified',
     estimatedValue: listItem.startingPrice,
     categoryId: mockId('cat', auctionIndex),
-    categoryName: listItem.categoryName,
+    categoryName: listItem.categoryName ?? null,
     description: MOCK_DESCRIPTIONS[auctionIndex] ?? null,
     images: buildMockImages(auctionIndex, itemId),
     attributes: buildMockAttributes(auctionIndex, itemId),
   };
 
-  const seller = findSellerByName(listItem.sellerName);
+  const seller = findSellerByName(listItem.sellerName ?? null);
   const bids = BIDS_MAP[listItem.id] ?? [];
 
-  // Qualification timing: starts 48h before startTime, ends at startTime
   const startDate = new Date(listItem.startTime);
-  const qualStartDate = new Date(startDate.getTime() - 48 * 60 * 60 * 1000);
   const createdDate = new Date(startDate.getTime() - 72 * 60 * 60 * 1000);
+
+  const auctionType = listItem.auctionType ?? 'open';
+  const currentPrice = listItem.currentPrice ?? listItem.startingPrice;
 
   return {
     id: listItem.id,
     itemId,
     sellerId: seller?.userId ?? mockId('user', 99),
-    auctionType: listItem.auctionType,
+    auctionType,
 
     // Pricing
     startingPrice: listItem.startingPrice,
     bidIncrement: pricing.bidIncrement,
     reservePrice: pricing.reservePrice,
     buyNowPrice: listItem.buyNowPrice,
-    currentPrice: listItem.currentPrice,
+    currentPrice,
 
     // Deposit
     depositPercentage: pricing.depositPercentage,
@@ -405,8 +408,6 @@ export function buildMockAuctionDetail(
     currency: listItem.currency,
 
     // Timing
-    qualificationStartTime: qualStartDate.toISOString(),
-    qualificationEndTime: listItem.startTime,
     startTime: listItem.startTime,
     endTime: listItem.endTime,
     actualEndTime: null,
@@ -414,12 +415,18 @@ export function buildMockAuctionDetail(
     // Status & participants
     status: listItem.status,
     minimumParticipants: 2,
-    qualifiedCount: listItem.qualifiedCount,
+    qualifiedCount: listItem.qualifiedCount ?? 0,
     winnerId: userState.winnerId,
     winningBidId: userState.winningBidId,
 
+    // Computed fields from BE
+    minimumBidAmount: currentPrice + pricing.bidIncrement,
+    isReserveMet: pricing.reservePrice != null ? currentPrice >= pricing.reservePrice : true,
+    hasBuyNow: listItem.buyNowPrice != null,
+    isEndingSoon: listItem.isEndingSoon,
+
     // Anti-sniping
-    autoExtend: listItem.auctionType === 'open',
+    autoExtend: auctionType === 'open',
     extensionMinutes: 5,
 
     // Engagement
@@ -427,10 +434,6 @@ export function buildMockAuctionDetail(
     viewCount: Math.floor(Math.random() * 500) + 50,
     bidCount: listItem.bidCount,
     watchCount: Math.floor(Math.random() * 30) + 5,
-
-    // Emergency
-    emergencyStopped: false,
-    emergencyStopReason: null,
 
     // Nested data
     item,

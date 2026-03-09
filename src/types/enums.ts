@@ -41,20 +41,18 @@ export type ListingVerificationStatus = 'unverified' | 'pending_verification' | 
 // ─── Auctions & Bidding ─────────────────────────────────────────────
 
 /**
- * Auction lifecycle status. Flows roughly:
- * draft → pending → qualifying → active → ended → sold
- * Can also go to: cancelled, failed, emergency_stopped
+ * Auction lifecycle status (matches BE domain enum).
+ * draft → pending → active → ended → sold/failed
+ * Can also go to: cancelled
  */
 export type AuctionStatus =
   | 'draft'
   | 'pending'
-  | 'qualifying'
   | 'active'
   | 'ended'
   | 'sold'
   | 'cancelled'
-  | 'failed'
-  | 'emergency_stopped';
+  | 'failed';
 
 /** Seller chooses: open (English ascending) or sealed (hidden single bid) */
 export type AuctionType = 'open' | 'sealed';
@@ -67,9 +65,10 @@ export type AutoBidStatus = 'active' | 'paused' | 'exhausted' | 'won' | 'outbid'
 
 /**
  * Deposit lifecycle — bidders pay a deposit to qualify for an auction.
- * holding → applied (winner) or refunded (loser) or forfeited (non-payment)
+ * held → converted_to_payment (winner) or returned (loser) or forfeited (non-payment)
+ * Values match BE domain enum exactly.
  */
-export type DepositStatus = 'pending' | 'holding' | 'applied' | 'refunded' | 'forfeited' | 'cancelled';
+export type DepositStatus = 'held' | 'returned' | 'forfeited' | 'converted_to_payment';
 
 /** How the deposit was funded */
 export type DepositSourceType = 'wallet' | 'payment_gateway' | 'bank_transfer';

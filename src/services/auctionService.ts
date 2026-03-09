@@ -27,14 +27,21 @@ import type { AuctionStatus } from '@/types/enums';
 
 // ─── BE Response Shapes (what the backend actually returns) ──────
 
+/** BE MoneyDto — wraps all monetary values with currency info */
+interface ApiMoneyDto {
+  amount: number;
+  currency: string;
+  symbol: string;
+}
+
 /** Shape of a single item in GET /api/auctions list response */
 interface ApiAuctionListItem {
   id: string;
   itemTitle: string;
   primaryImageUrl: string | null;
-  currentPrice: number;
-  startingPrice: number;
-  buyNowPrice?: number | null;
+  currentPrice: ApiMoneyDto;
+  startingPrice: ApiMoneyDto;
+  buyNowPrice?: ApiMoneyDto | null;
   currency: string;
   status: string;
   bidCount: number;
@@ -94,21 +101,24 @@ interface ApiAuctionDetail {
   id: string;
   itemId: string;
   sellerId: string;
-  startingPrice: number;
-  buyNowPrice?: number | null;
-  currentPrice: number | null;
-  bidIncrement: number;
+  startingPrice: ApiMoneyDto;
+  reservePrice?: ApiMoneyDto | null;
+  buyNowPrice?: ApiMoneyDto | null;
+  currentPrice: ApiMoneyDto;
+  bidIncrement: ApiMoneyDto;
   currency: string;
   startTime: string;
   endTime: string;
+  actualEndTime?: string | null;
   status: string;
+  currentWinnerId?: string | null;
   autoExtend: boolean;
   extensionMinutes: number;
   isFeatured: boolean;
   viewCount: number;
   bidCount: number;
   watchCount: number;
-  minimumBidAmount: number;
+  minimumBidAmount: ApiMoneyDto;
   isReserveMet: boolean;
   hasBuyNow: boolean;
   remainingTime: string;
@@ -123,7 +133,7 @@ interface ApiBid {
   bidderId: string;
   bidderDisplayName?: string | null;
   bidderName?: string | null;
-  amount: number;
+  amount: ApiMoneyDto;
   isAutoBid: boolean;
   autoBidId?: string | null;
   status: string;
@@ -135,7 +145,7 @@ interface ApiAuctionDetailResponse {
   auction: ApiAuctionDetail;
   item: ApiItemDetail;
   recentBids: ApiBid[];
-  priceHistory: Array<{ price: number; recordedAt: string }>;
+  priceHistory: Array<{ price: ApiMoneyDto; bidId?: string | null; recordedAt: string }>;
 }
 
 // ─── Adapters (BE shape → FE types) ─────────────────────────────
@@ -166,26 +176,20 @@ function mapPagination<TApi, TFe>(
 function mapListItem(api: ApiAuctionListItem): AuctionListItem {
   return {
     id: api.id,
-    auctionType: 'open', // BE doesn't return auctionType in list — default to open
     status: api.status as AuctionStatus,
     itemTitle: api.itemTitle,
     primaryImageUrl: api.primaryImageUrl,
-    itemCondition: 'new', // Not in list response — default
-    verificationStatus: 'unverified', // Not in list response — default
-    categoryName: null, // Not in list response
-    startingPrice: api.startingPrice,
-    currentPrice: api.currentPrice,
-    buyNowPrice: api.buyNowPrice ?? null,
+    startingPrice: api.startingPrice.amount,
+    currentPrice: api.currentPrice.amount,
+    buyNowPrice: api.buyNowPrice?.amount ?? null,
     currency: api.currency,
     startTime: api.startTime,
     endTime: api.endTime,
     bidCount: api.bidCount,
-    qualifiedCount: 0, // Not in list response — default
+    watchCount: api.watchCount,
     isFeatured: api.isFeatured,
+    isEndingSoon: api.isEndingSoon,
     sellerId: api.sellerId,
-    sellerName: null, // Not in list response
-    sellerRating: 0, // Not in list response
-    sellerTrustScore: 0, // Not in list response
   };
 }
 
@@ -230,37 +234,40 @@ function mapAuctionDetail(response: ApiAuctionDetailResponse): Auction {
   // Map bids
   const mappedBids: Bid[] = recentBids.map(mapBid);
 
+  const startingPrice = a.startingPrice.amount;
+
   return {
     id: a.id,
     itemId: a.itemId,
     sellerId: a.sellerId,
-    auctionType: 'open', // BE doesn't return this yet — default to open
-    startingPrice: a.startingPrice,
-    bidIncrement: a.bidIncrement,
-    reservePrice: null, // Not in BE response
-    buyNowPrice: a.buyNowPrice ?? null,
-    currentPrice: a.currentPrice,
+    auctionType: 'open' as const, // BE doesn't return this yet — default to open
+    startingPrice,
+    bidIncrement: a.bidIncrement.amount,
+    reservePrice: a.reservePrice?.amount ?? null,
+    buyNowPrice: a.buyNowPrice?.amount ?? null,
+    currentPrice: a.currentPrice.amount,
     depositPercentage: 10, // Default per business rules
-    depositAmount: a.startingPrice * 0.1, // Calculate from default percentage
+    depositAmount: startingPrice * 0.1, // Calculate from default percentage
     currency: a.currency,
-    qualificationStartTime: null, // Not in BE response
-    qualificationEndTime: null, // Not in BE response
     startTime: a.startTime,
     endTime: a.endTime,
-    actualEndTime: null, // Not in BE response
+    actualEndTime: a.actualEndTime ?? null,
     status: a.status as AuctionStatus,
     minimumParticipants: 2, // Default per business rules
     qualifiedCount: 0, // Not in BE response
-    winnerId: null, // Not in BE response for active auctions
+    winnerId: a.currentWinnerId ?? null,
     winningBidId: null,
+    // Computed fields from BE
+    minimumBidAmount: a.minimumBidAmount.amount,
+    isReserveMet: a.isReserveMet,
+    hasBuyNow: a.hasBuyNow,
+    isEndingSoon: a.isEndingSoon,
     autoExtend: a.autoExtend,
     extensionMinutes: a.extensionMinutes,
     isFeatured: a.isFeatured,
     viewCount: a.viewCount,
     bidCount: a.bidCount,
     watchCount: a.watchCount,
-    emergencyStopped: false, // Not in BE response
-    emergencyStopReason: null,
     item: itemSummary,
     seller: null, // Not in BE response — seller info not returned
     recentBids: mappedBids,
@@ -279,7 +286,7 @@ function mapBid(b: ApiBid): Bid {
     auctionId: b.auctionId,
     bidderId: b.bidderId,
     bidderName: b.bidderDisplayName ?? b.bidderName ?? null,
-    amount: b.amount,
+    amount: b.amount.amount,
     isAutoBid: b.isAutoBid,
     autoBidId: b.autoBidId ?? null,
     status: b.status as Bid['status'],
@@ -350,10 +357,12 @@ export async function getAuctionById(
  */
 export async function getAuctionBids(auctionId: string): Promise<Bid[]> {
   try {
-    const { data } = await api.get<ApiBid[]>(
+    // BE may return a plain array OR a paginated object { items: [...] }
+    const { data } = await api.get<ApiBid[] | ApiPaginatedResponse<ApiBid>>(
       `/api/auctions/${auctionId}/bids`,
     );
-    return data.map(mapBid);
+    const bids = Array.isArray(data) ? data : data?.items ?? [];
+    return bids.map(mapBid);
   } catch {
     return [];
   }
@@ -364,8 +373,14 @@ export async function getAuctionBids(auctionId: string): Promise<Bid[]> {
 /** Fetches the category tree (top-level with nested children) */
 export async function getCategories(): Promise<Category[]> {
   try {
-    const { data } = await api.get<Category[]>('/api/categories');
-    return data;
+    // BE may return a plain array OR a paginated object { items: [...] }
+    const { data } = await api.get<Category[] | ApiPaginatedResponse<Category>>(
+      '/api/categories',
+    );
+    if (Array.isArray(data)) return data;
+    // Paginated response — extract items array
+    if (data && typeof data === 'object' && 'items' in data) return data.items;
+    return [];
   } catch {
     // If endpoint doesn't exist yet, return empty array
     return [];

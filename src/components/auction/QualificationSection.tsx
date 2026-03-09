@@ -60,11 +60,11 @@ export function QualificationSection({ auction }: QualificationSectionProps) {
               <Text type="secondary">{formatVND(deposit.amount)}</Text>
               <Tag
                 color={
-                  deposit.status === 'holding'
+                  deposit.status === 'held'
                     ? 'orange'
-                    : deposit.status === 'applied'
+                    : deposit.status === 'converted_to_payment'
                       ? 'green'
-                      : deposit.status === 'refunded'
+                      : deposit.status === 'returned'
                         ? 'cyan'
                         : 'red'
                 }

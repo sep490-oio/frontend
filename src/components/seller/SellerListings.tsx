@@ -3,7 +3,7 @@
  *
  * Reuses the existing AuctionCard component to display the
  * seller's current listings. Shows non-ended auctions first
- * (qualifying + active), with ended ones below.
+ * (active), with ended ones below.
  *
  * Grid: 3 per row (xl) → 2 per row (md) → 1 per row (xs)
  */
@@ -19,18 +19,16 @@ interface SellerListingsProps {
   auctions: AuctionListItem[];
 }
 
-/** Sort: active/qualifying first, then ended/sold/cancelled */
+/** Sort: active first, then ended/sold/cancelled */
 function sortByRelevance(a: AuctionListItem, b: AuctionListItem): number {
   const priority: Record<string, number> = {
     active: 0,
-    qualifying: 1,
-    pending: 2,
-    ended: 3,
-    sold: 4,
-    cancelled: 5,
-    failed: 6,
-    draft: 7,
-    emergency_stopped: 8,
+    pending: 1,
+    ended: 2,
+    sold: 3,
+    cancelled: 4,
+    failed: 5,
+    draft: 6,
   };
   return (priority[a.status] ?? 9) - (priority[b.status] ?? 9);
 }
@@ -40,7 +38,7 @@ export function SellerListings({ auctions }: SellerListingsProps) {
 
   const sorted = [...auctions].sort(sortByRelevance);
   const activeCount = auctions.filter(
-    (a) => a.status === 'active' || a.status === 'qualifying',
+    (a) => a.status === 'active',
   ).length;
 
   return (
