@@ -18,8 +18,21 @@ import { BrowserRouter } from 'react-router-dom';
 import viVN from 'antd/locale/vi_VN';
 import { store } from './store';
 import { queryClient } from './queryClient';
-import { antdTheme } from '../design-system/theme';
 
+// ─── Ant Design Theme ────────────────────────────────────────────────
+// Custom theme tokens to give the platform a branded look.
+// These can be adjusted later to match the Figma design more closely.
+const antdTheme = {
+  token: {
+    // Primary brand color — used for buttons, links, active states
+    colorPrimary: '#1677ff',
+    // Border radius — slightly rounded for modern feel
+    borderRadius: 6,
+    // Font family — system fonts for performance
+    fontFamily:
+      "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+  },
+};
 
 interface ProvidersProps {
   children: React.ReactNode;
