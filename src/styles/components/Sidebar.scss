@@ -1,0 +1,113 @@
+@use "../../styles/tokens/colors" as *;
+@use "../../styles/tokens/radius" as *;
+@use "../../styles/tokens/typography" as *;
+
+// ═══════════════════════════════════════════════
+//  APP SIDEBAR — role-based nav
+// ═══════════════════════════════════════════════
+
+.app-sidebar {
+  &.ant-layout-sider {
+    background: $color-bg-page !important;
+    border-right: 1px solid $border-color !important;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    // Custom scrollbar
+    &::-webkit-scrollbar       { width: 4px; }
+    &::-webkit-scrollbar-track { background: transparent; }
+    &::-webkit-scrollbar-thumb {
+      background: $border-color;
+      border-radius: 4px;
+    }
+  }
+}
+
+.app-sidebar-menu {
+  &.ant-menu {
+    background: transparent !important;
+    border-inline-end: none !important;
+    padding: 8px 8px;
+
+    // ── Menu item ─────────────────────────────
+    .ant-menu-item {
+      border-radius: $radius-sm !important;
+      color: $text-secondary !important;
+      font-size: $text-sm;
+      font-family: $font-primary;
+      height: 40px;
+      line-height: 40px;
+      margin-inline: 0 !important;
+      width: 100% !important;
+
+      &:hover {
+        background: $color-bg-hover !important;
+        color: $text-primary !important;
+
+        .ant-menu-item-icon,
+        .anticon {
+          color: $text-primary !important;
+        }
+      }
+
+      .ant-menu-item-icon,
+      .anticon {
+        color: $text-secondary !important;
+        font-size: 15px;
+        transition: color 0.15s ease;
+      }
+    }
+
+    // ── Selected item ─────────────────────────
+    .ant-menu-item-selected {
+      background: $color-primary !important;
+      color: #fff !important;
+
+      .ant-menu-item-icon,
+      .anticon {
+        color: #fff !important;
+      }
+
+      &:hover {
+        background: $color-primary !important;
+        color: #fff !important;
+      }
+    }
+
+    // ── Group title ───────────────────────────
+    .ant-menu-item-group-title {
+      color: $text-secondary !important;
+      font-family: $font-heading !important;
+      font-size: $text-xs !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 12px 12px 4px !important;
+    }
+
+    // ── Sub-menu ──────────────────────────────
+    .ant-menu-submenu-title {
+      border-radius: $radius-sm !important;
+      color: $text-secondary !important;
+
+      &:hover {
+        background: $color-bg-hover !important;
+        color: $text-primary !important;
+      }
+
+      .ant-menu-submenu-arrow {
+        color: $text-secondary !important;
+      }
+    }
+
+    .ant-menu-sub {
+      background: transparent !important;
+    }
+
+    // ── Divider ───────────────────────────────
+    .ant-menu-item-divider {
+      border-color: $border-color !important;
+      margin: 6px 8px !important;
+    }
+  }
+}
