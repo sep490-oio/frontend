@@ -127,8 +127,8 @@ export function mapApiUserToUser(dto: ApiUserDto, accessToken: string): User {
     id: dto.id,
     email: dto.email,
     fullName: dto.profile?.fullName
-      ?? [dto.profile?.firstName, dto.profile?.lastName].filter(Boolean).join(' ')
-      ?? dto.userName,
+      || [dto.profile?.firstName, dto.profile?.lastName].filter(Boolean).join(' ')
+      || dto.userName,
     avatarUrl: dto.profile?.avatarUrl ?? null,
     roles: parseRolesFromToken(accessToken),
     isEmailVerified: dto.emailConfirmed,

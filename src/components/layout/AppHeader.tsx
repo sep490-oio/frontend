@@ -105,9 +105,29 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
 
         {/* Logo — always visible, links to home */}
         <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Text strong style={{ fontSize: isMobile ? 16 : 20, color: '#1677ff' }}>
-            {t('app.name')}
-          </Text>
+          {isMobile ? (
+            // Placeholder logo icon for mobile — replace with actual <img> when logo is ready
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 6,
+                background: 'linear-gradient(135deg, #1677ff, #4096ff)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#fff',
+                fontWeight: 700,
+                fontSize: 16,
+              }}
+            >
+              B
+            </div>
+          ) : (
+            <Text strong style={{ fontSize: 20, color: '#1677ff' }}>
+              {t('app.name')}
+            </Text>
+          )}
         </Link>
       </Space>
 
@@ -126,7 +146,14 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
           <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
             <Space style={{ cursor: 'pointer' }}>
               <Avatar icon={<UserOutlined />} src={user.avatarUrl} />
-              {!isMobile && <Text>{user.fullName}</Text>}
+              <Text
+                style={isMobile
+                  ? { maxWidth: 64, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 12 }
+                  : undefined
+                }
+              >
+                {user.fullName}
+              </Text>
             </Space>
           </Dropdown>
         ) : (

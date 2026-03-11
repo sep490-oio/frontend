@@ -54,20 +54,31 @@ export function AuctionDetailPage() {
   const { t } = useTranslation();
   const { isMobile } = useBreakpoint();
   const queryClient = useQueryClient();
-  const isLoggedIn = !!useAppSelector((state) => state.auth.accessToken);
+  const authState = useAppSelector((state) => state.auth);
+  const isLoggedIn = !!authState.accessToken;
+  const userId = authState.user?.id;
 
   const { data: auction, isLoading } = useAuction(id);
   const { data: bids } = useAuctionBids(id);
 
   // ─── SignalR real-time connection ──────────────────────────────
   // Only connect when logged in (hub requires [Authorize])
-  const { isConnected, placeBid: hubPlaceBid, buyNow: hubBuyNow } = useAuctionHub(
+  const { isConnected, placeBid: hubPlaceBid, buyNow: hubBuyNow, configureAutoBid: hubConfigureAutoBid } = useAuctionHub(
     isLoggedIn ? id : undefined,
     {
-      onBidPlaced: () => {
+      onBidPlaced: (data) => {
         // Refresh auction data + bid history when any bid is placed
         queryClient.invalidateQueries({ queryKey: ['auction', id] });
         queryClient.invalidateQueries({ queryKey: ['auctionBids', id] });
+        // Show success toast only for the current user's bid
+        // NOTE: BidPlaced event is currently not firing from BE (confirmed 2026-03-12).
+        // Success toast is handled optimistically in BidForm with keyed messages instead.
+        if (data.bidderId === userId) {
+          message.success({
+            content: t('bidding.bidSuccess', { amount: formatVND(data.amount) }),
+            key: 'bid-toast',
+          });
+        }
       },
       onOutbid: (data) => {
         message.warning(
@@ -96,7 +107,16 @@ export function AuctionDetailPage() {
         queryClient.invalidateQueries({ queryKey: ['auction', id] });
       },
       onError: (data) => {
-        message.error(data.message);
+        // Signal to BidForm that this bid was rejected — prevents success toast
+        window.__bidError = true;
+        // BE sends English error messages — show a generic localized error.
+        // Uses 'bid-toast' key to REPLACE the loading toast from BidForm.
+        console.warn('[AuctionHub] Server error:', data.message);
+        message.error({
+          content: t('bidding.bidFailed'),
+          key: 'bid-toast',
+          duration: 4,
+        });
       },
     },
   );
@@ -159,6 +179,7 @@ export function AuctionDetailPage() {
               bids={bids ?? []}
               hubPlaceBid={isConnected ? hubPlaceBid : undefined}
               hubBuyNow={isConnected ? hubBuyNow : undefined}
+              hubConfigureAutoBid={isConnected ? hubConfigureAutoBid : undefined}
               isConnected={isConnected}
             />
 

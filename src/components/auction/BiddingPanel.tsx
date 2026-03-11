@@ -54,6 +54,7 @@ import { QualificationSection } from './QualificationSection';
 import { BidForm } from './BidForm';
 import { SealedBidForm } from './SealedBidForm';
 import { BuyNowConfirmModal } from './BuyNowConfirmModal';
+import { AutoBidForm } from './AutoBidForm';
 
 const { Title, Text } = Typography;
 
@@ -64,11 +65,13 @@ interface BiddingPanelProps {
   hubPlaceBid?: (amount: number, currency: string) => Promise<void>;
   /** SignalR hub buyNow action — undefined when not connected */
   hubBuyNow?: () => Promise<void>;
+  /** SignalR hub configureAutoBid action — undefined when not connected */
+  hubConfigureAutoBid?: (maxAmount: number, currency: string, incrementAmount?: number) => Promise<void>;
   /** Whether SignalR is connected */
   isConnected?: boolean;
 }
 
-export function BiddingPanel({ auction, hubPlaceBid, hubBuyNow, isConnected }: BiddingPanelProps) {
+export function BiddingPanel({ auction, hubPlaceBid, hubBuyNow, hubConfigureAutoBid, isConnected }: BiddingPanelProps) {
   const { t } = useTranslation();
   const { isMobile } = useBreakpoint();
   const [buyNowOpen, setBuyNowOpen] = useState(false);
@@ -91,7 +94,10 @@ export function BiddingPanel({ auction, hubPlaceBid, hubBuyNow, isConnected }: B
       : false;
 
   // Whether the user is qualified for bidding
-  const isQualified = auction.currentUserDeposit !== null;
+  // Bypass deposit requirement until BE delivers /api/auctions/{id}/qualify
+  // When ready, set VITE_BYPASS_DEPOSIT=false in .env to re-enable
+  const BYPASS_DEPOSIT = import.meta.env.VITE_BYPASS_DEPOSIT !== 'false';
+  const isQualified = BYPASS_DEPOSIT || auction.currentUserDeposit !== null;
 
   return (
     <>
@@ -265,6 +271,11 @@ export function BiddingPanel({ auction, hubPlaceBid, hubBuyNow, isConnected }: B
                   {t('bidding.buyNowButton')} — {formatVND(auction.buyNowPrice)}
                 </Button>
               )}
+              <Divider style={{ margin: '8px 0' }} />
+              <AutoBidForm
+                auction={auction}
+                hubConfigureAutoBid={hubConfigureAutoBid}
+              />
             </Flex>
           )}
 
