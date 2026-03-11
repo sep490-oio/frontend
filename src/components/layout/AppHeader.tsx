@@ -1,27 +1,20 @@
 /**
  * AppHeader — shared top header used by both PublicLayout and AppLayout.
  *
- * Provides consistent brand identity across the entire app (Shopee/Tiki pattern):
- * - Logo (always visible, links to home)
- * - "Khám phá" link (desktop only)
- * - Language switcher (always visible)
- * - Auth section: Login/Register (guest) OR user avatar dropdown (logged in)
+ * Provides consistent brand identity across the entire app.
  *
  * Responsive behavior:
- * - Desktop (≥992px): Full nav links + auth section, no hamburger
- * - Tablet (768–991px): Nav links visible + hamburger for drawer navigation
- * - Mobile (<768px): Compact — hamburger + logo + language + avatar/login
- *
- * The optional `onMenuClick` prop shows a hamburger button (mobile + tablet).
- * Parent layouts decide when to pass it (typically when sidebar is hidden).
- * Each parent layout manages its own drawer (PublicLayout → right, AppLayout → left).
+ * - Desktop (≥1200px): full nav, search, language switcher, and auth actions
+ * - Mobile (<1200px): compact header with hamburger, logo, language, and user/auth controls
  */
-import { Button, Space, Dropdown, Typography, Avatar, Layout } from 'antd';
+import { useState } from 'react';
+import { Button, Dropdown, Avatar, Layout } from 'antd';
 import {
   DashboardOutlined,
   GlobalOutlined,
   MenuOutlined,
   LogoutOutlined,
+  SearchOutlined,
   UserOutlined,
 } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
@@ -31,8 +24,9 @@ import { clearCredentials } from '@/features/auth/authSlice';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import type { SupportedLanguage } from '@/types';
 
+import './AppHeader.scss';
+
 const { Header } = Layout;
-const { Text } = Typography;
 
 interface AppHeaderProps {
   /** If provided, shows a hamburger button (mobile + tablet) that opens the nav drawer */
@@ -45,6 +39,7 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
   const { isMobile } = useBreakpoint();
+  const [searchValue, setSearchValue] = useState('');
 
   const changeLanguage = (lang: SupportedLanguage) => {
     i18n.changeLanguage(lang);
@@ -78,68 +73,81 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
   ];
 
   return (
-    <Header
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        background: '#fff',
-        borderBottom: '1px solid #f0f0f0',
-        padding: isMobile ? '0 16px' : '0 24px',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-      }}
-    >
-      {/* ─── Left side: hamburger (mobile) + logo ─────────────────── */}
-      <Space size="middle">
-        {/* Hamburger button — shows when parent provides onMenuClick (mobile + tablet) */}
-        {onMenuClick && (
-          <Button
-            type="text"
-            icon={<MenuOutlined />}
-            onClick={onMenuClick}
-            aria-label={t('common.menu')}
-          />
-        )}
+    <Header className="app-header">
+      <div className="app-header__inner">
+        <div className="app-header__brand">
+          {onMenuClick && (
+            <Button
+              className="app-header__menuButton"
+              type="text"
+              icon={<MenuOutlined />}
+              onClick={onMenuClick}
+              aria-label={t('common.menu')}
+            />
+          )}
 
-        {/* Logo — always visible, links to home */}
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Text strong style={{ fontSize: isMobile ? 16 : 20, color: '#1677ff' }}>
-            {t('app.name')}
-          </Text>
-        </Link>
-      </Space>
+          <Link to="/" className="app-header__logo">
+            <span className="app-header__logoImage" />
+            <span className="app-header__title">{t('app.name')}</span>
+          </Link>
+        </div>
 
-      {/* ─── Right side: nav links + language + auth/user ─────────── */}
-      <Space size="middle">
-        {/* Desktop nav links */}
-        {!isMobile && <Link to="/browse">{t('nav.browse')}</Link>}
+        <div className="app-header__search">
+          <div className="app-header__searchInput">
+            <SearchOutlined className="app-header__searchIcon" />
+            <input
+              className="app-header__searchField"
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              placeholder={t('browse.searchPlaceholder')}
+              aria-label={t('common.search')}
+            />
+          </div>
+        </div>
 
-        {/* Language Switcher — always visible */}
-        <Dropdown menu={{ items: languageItems }} placement="bottomRight">
-          <Button type="text" icon={<GlobalOutlined />} />
-        </Dropdown>
+        <div className="app-header__actions">
+          <nav className="app-header__nav">
+            <Link to="/browse" className="app-header__navLink">
+              {t('nav.browse')}
+            </Link>
+            <Link to="/about" className="app-header__navLink">
+              {t('nav.about')}
+            </Link>
+          </nav>
 
-        {/* Auth buttons (guest) OR user dropdown (logged in) */}
-        {user ? (
-          <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-            <Space style={{ cursor: 'pointer' }}>
-              <Avatar icon={<UserOutlined />} src={user.avatarUrl} />
-              {!isMobile && <Text>{user.fullName}</Text>}
-            </Space>
-          </Dropdown>
-        ) : (
-          !isMobile && (
-            <Space>
-              <Button onClick={() => navigate('/login')}>{t('nav.login')}</Button>
-              <Button type="primary" onClick={() => navigate('/register')}>
-                {t('nav.register')}
-              </Button>
-            </Space>
-          )
-        )}
-      </Space>
+          <div className="app-header__controls">
+            <Dropdown menu={{ items: languageItems }} placement="bottomRight">
+              <Button className="app-header__langButton" type="text" icon={<GlobalOutlined />} />
+            </Dropdown>
+
+            {user ? (
+              <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+                <button className="app-header__user" type="button">
+                  <Avatar icon={<UserOutlined />} src={user.avatarUrl} />
+                  <span className="app-header__userName">{user.fullName}</span>
+                </button>
+              </Dropdown>
+            ) : (
+              !isMobile && (
+                <div className="app-header__authButtons">
+                  <Button
+                    className="app-header__authButtonSecondary"
+                    onClick={() => navigate('/login')}
+                  >
+                    {t('nav.login')}
+                  </Button>
+                  <Button
+                    className="app-header__authButtonPrimary"
+                    onClick={() => navigate('/register')}
+                  >
+                    {t('nav.register')}
+                  </Button>
+                </div>
+              )
+            )}
+          </div>
+        </div>
+      </div>
     </Header>
   );
 }

@@ -1,0 +1,233 @@
+@use "../../styles/tokens/colors" as *;
+@use "../../styles/tokens/typography" as *;
+
+.app-header {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  width: 100%;
+  background: rgba(5, 7, 10, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  margin-bottom: 16px;
+
+  &__inner {
+    margin: 0 auto;
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__menuButton {
+    display: none;
+    padding: 0;
+    margin: 0;
+    color: $text-primary;
+    font-size: 18px;
+
+    &:hover {
+      color: $color-primary;
+    }
+  }
+
+  &__logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: $text-primary;
+  }
+
+  &__logoImage {
+    flex-shrink: 0;
+    width: 26px;
+    height: 24px;
+    background: url("https://codia-f2c.s3.us-west-1.amazonaws.com/image/2026-03-11/1d1KueTSt8.png") no-repeat center;
+    background-size: cover;
+    border-radius: 4px;
+  }
+
+  &__title {
+    font-family: $font-heading;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: $text-primary;
+    white-space: nowrap;
+  }
+
+  &__search {
+    flex: 1;
+    max-width: 512px;
+    min-width: 220px;
+  }
+
+  &__searchInput {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 9999px;
+    padding: 10px 12px 10px 40px;
+  }
+
+  &__searchIcon {
+    position: absolute;
+    left: 14px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 16px;
+  }
+
+  &__searchField {
+    width: 100%;
+    border: none;
+    background: transparent;
+    padding: 0;
+    color: $text-primary;
+    font-family: $font-primary;
+    font-size: 14px;
+    outline: none;
+
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  &__nav {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  &__navLink {
+    color: rgba(255, 255, 255, 0.8);
+    font-family: $font-primary;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+
+    &:hover {
+      color: #ffffff;
+    }
+  }
+
+  &__controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__langButton {
+    color: $text-primary;
+    padding: 0;
+
+    &:hover {
+      color: $color-primary;
+    }
+  }
+
+  &__user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: $text-primary;
+
+    &:hover {
+      color: $color-primary;
+    }
+  }
+
+  &__userName {
+    font-family: $font-primary;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  &__authButtons {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__authButtonPrimary {
+    background: $color-primary;
+    border: none;
+    color: #ffffff;
+    border-radius: 9999px;
+    padding: 8px 18px;
+    font-weight: 600;
+
+    &:hover {
+      background: lighten($color-primary, 5%);
+    }
+  }
+
+  &__authButtonSecondary {
+    color: $text-primary;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 9999px;
+    padding: 8px 18px;
+    font-weight: 500;
+
+    &:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+  }
+
+  @media (max-width: 1199px) {
+    &__inner {
+      padding: 0 16px;
+    }
+
+    &__search {
+      display: none;
+    }
+
+    &__nav {
+      display: none;
+    }
+
+    &__menuButton {
+      display: inline-flex;
+    }
+
+    &__userName {
+      display: none;
+    }
+  }
+
+  @media (max-width: 767px) {
+    &__inner {
+      height: 64px;
+    }
+
+    &__title {
+      font-size: 18px;
+    }
+  }
+}
