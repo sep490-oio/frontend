@@ -17,6 +17,9 @@ import {
   submitSealedBid,
   buyNow,
   toggleWatch,
+  configureAutoBid,
+  pauseAutoBid,
+  resumeAutoBid,
 } from '@/services/auctionService';
 
 /**
@@ -119,5 +122,41 @@ export function useToggleWatch() {
     // No onSettled invalidation — BE doesn't return isWatching, so refetch
     // would overwrite the optimistic state back to false. The optimistic
     // update in onMutate is the source of truth until BE adds isWatching.
+  });
+}
+
+// ─── Auto-Bid Mutations ──────────────────────────────────────────
+
+/** Mutation: Configure auto-bid */
+export function useConfigureAutoBid() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ auctionId, maxAmount, incrementAmount }: { auctionId: string; maxAmount: number; incrementAmount?: number }) =>
+      configureAutoBid(auctionId, maxAmount, incrementAmount),
+    onSuccess: (_data, { auctionId }) => {
+      queryClient.invalidateQueries({ queryKey: ['auction', auctionId] });
+    },
+  });
+}
+
+/** Mutation: Pause auto-bid */
+export function usePauseAutoBid() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (auctionId: string) => pauseAutoBid(auctionId),
+    onSuccess: (_data, auctionId) => {
+      queryClient.invalidateQueries({ queryKey: ['auction', auctionId] });
+    },
+  });
+}
+
+/** Mutation: Resume auto-bid */
+export function useResumeAutoBid() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (auctionId: string) => resumeAutoBid(auctionId),
+    onSuccess: (_data, auctionId) => {
+      queryClient.invalidateQueries({ queryKey: ['auction', auctionId] });
+    },
   });
 }

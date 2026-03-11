@@ -97,7 +97,8 @@ async function getUploadSignature(
     '/api/media/upload-signature',
     { context, fileName } satisfies UploadSignatureRequest
   );
-  return data.data;
+  // BE may return wrapped { data, message, success } or unwrapped directly
+  return data.data ?? (data as unknown as UploadSignatureResponse);
 }
 
 // ─── Step 2: Upload to Cloudinary ───────────────────────────────────
@@ -118,7 +119,14 @@ async function uploadToCloudinary(
   formData.append('signature', signature.signature);
   formData.append('public_id', signature.publicId);
   formData.append('folder', signature.folder);
-  formData.append('eager', signature.eager);
+  // All signed parameters must be sent to Cloudinary — BE signs
+  // eager and allowed_formats, so both must appear in the upload request
+  if (signature.eager) {
+    formData.append('eager', signature.eager);
+  }
+  if (signature.allowedFormats?.length > 0) {
+    formData.append('allowed_formats', signature.allowedFormats.join(','));
+  }
 
   // Upload directly to Cloudinary (NOT through our backend API)
   // Using fetch here instead of our `api` axios instance because this
@@ -155,11 +163,14 @@ async function uploadToCloudinary(
 
 async function confirmUpload(
   mediaUploadId: string,
-  cloudinaryResult: CloudinaryUploadResult
+  cloudinaryResult: CloudinaryUploadResult,
+  /** Use the original publicId from the signature — Cloudinary may prepend
+   *  the folder prefix, causing a mismatch with what the BE stored. */
+  originalPublicId?: string
 ): Promise<ConfirmUploadResponse> {
   const body: ConfirmUploadRequest = {
     mediaUploadId,
-    publicId: cloudinaryResult.public_id,
+    publicId: originalPublicId ?? cloudinaryResult.public_id,
     secureUrl: cloudinaryResult.secure_url,
     bytes: cloudinaryResult.bytes,
     format: cloudinaryResult.format,
@@ -172,7 +183,8 @@ async function confirmUpload(
     '/api/media/confirm',
     body
   );
-  return data.data;
+  // BE may return wrapped { data, message, success } or unwrapped directly
+  return data.data ?? (data as unknown as ConfirmUploadResponse);
 }
 
 // ─── High-Level Orchestrator ────────────────────────────────────────
@@ -195,8 +207,12 @@ async function uploadMedia(
   // Step 1: Get signed params from our backend
   const signature = await getUploadSignature(context, file.name);
 
-  // Validate file before uploading
-  if (file.size > signature.maxFileSize) {
+  if (!signature?.uploadUrl) {
+    throw new Error('Upload signature endpoint returned invalid data — check if BE has built /api/media/upload-signature');
+  }
+
+  // Validate file before uploading (skip if BE didn't return limits)
+  if (signature.maxFileSize && file.size > signature.maxFileSize) {
     throw new Error(
       `File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB exceeds max ${(signature.maxFileSize / 1024 / 1024).toFixed(0)}MB`
     );
@@ -204,7 +220,7 @@ async function uploadMedia(
 
   const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
   if (
-    signature.allowedFormats.length > 0 &&
+    signature.allowedFormats?.length > 0 &&
     !signature.allowedFormats.includes(extension)
   ) {
     throw new Error(
@@ -215,8 +231,13 @@ async function uploadMedia(
   // Step 2: Upload directly to Cloudinary
   const cloudinaryResult = await uploadToCloudinary(file, signature, onProgress);
 
-  // Step 3: Confirm with our backend
-  const confirmed = await confirmUpload(signature.mediaUploadId, cloudinaryResult);
+  // Step 3: Confirm with our backend — use signature.publicId (not Cloudinary's
+  // public_id) because Cloudinary may prepend the folder, doubling the path
+  const confirmed = await confirmUpload(
+    signature.mediaUploadId,
+    cloudinaryResult,
+    signature.publicId,
+  );
 
   return {
     mediaUploadId: confirmed.mediaUploadId,

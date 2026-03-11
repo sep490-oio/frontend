@@ -14,6 +14,7 @@ import type {
   Auction,
   AuctionListItem,
   AuctionFilters,
+  AutoBid,
   Bid,
   BuyNowResponse,
   Category,
@@ -21,6 +22,7 @@ import type {
   PaginatedResponse,
   PlaceBidResponse,
   ToggleWatchResponse,
+  ApiResponse,
 } from '@/types';
 import type { ItemSummary, ItemImage } from '@/types/item';
 import type { AuctionStatus } from '@/types/enums';
@@ -476,4 +478,94 @@ export async function toggleWatch(
     `/api/auctions/${auctionId}/watch`,
   );
   return data;
+}
+
+// ─── Auto-Bid ────────────────────────────────────────────────────
+
+/** Configure or update auto-bid for an auction */
+export async function configureAutoBid(
+  auctionId: string,
+  maxAmount: number,
+  incrementAmount?: number
+): Promise<AutoBid> {
+  const { data } = await api.put<AutoBid>(
+    `/api/auctions/${auctionId}/auto-bid`,
+    { maxAmount, currency: 'VND', incrementAmount },
+  );
+  return data;
+}
+
+/** Pause auto-bid */
+export async function pauseAutoBid(auctionId: string): Promise<AutoBid> {
+  const { data } = await api.post<AutoBid>(
+    `/api/auctions/${auctionId}/auto-bid/pause`,
+  );
+  return data;
+}
+
+/** Resume auto-bid */
+export async function resumeAutoBid(auctionId: string): Promise<AutoBid> {
+  const { data } = await api.post<AutoBid>(
+    `/api/auctions/${auctionId}/auto-bid/resume`,
+  );
+  return data;
+}
+
+/** Get current user's auto-bid for an auction */
+export async function getMyAutoBid(auctionId: string): Promise<AutoBid | null> {
+  try {
+    const { data } = await api.get<AutoBid>(
+      `/api/auctions/${auctionId}/auto-bid/my`,
+    );
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+// ─── Item Management (Seller Flow) ──────────────────────────────
+
+/** Shape of BE create item request */
+interface CreateItemRequest {
+  title: string;
+  condition: string;
+  categoryId?: string;
+  description?: string;
+  quantity?: number;
+  images?: Array<{
+    mediaUploadId: string;
+    publicId: string;
+    isPrimary: boolean;
+    sortOrder: number;
+  }>;
+}
+
+/** Create a new item (draft status) */
+export async function createItem(data: CreateItemRequest): Promise<{ id: string }> {
+  const { data: response } = await api.post<ApiResponse<{ id: string }>>('/api/items', data);
+  // BE may return wrapped { data, message, success } or unwrapped
+  return response.data ?? (response as unknown as { id: string });
+}
+
+/** Add a media file to an existing item — POST /api/items/{id}/media */
+export async function addItemMedia(
+  itemId: string,
+  media: { mediaUploadId: string; isPrimary: boolean; sortOrder: number }
+): Promise<void> {
+  await api.post(`/api/items/${itemId}/media`, media);
+}
+
+/** Activate an item (draft → active, requires ≥1 media) */
+export async function activateItem(itemId: string): Promise<void> {
+  await api.post(`/api/items/${itemId}/activate`);
+}
+
+/** Get seller's items */
+export async function getMyItems(): Promise<unknown[]> {
+  try {
+    const { data } = await api.get<unknown[]>('/api/items/my');
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
 }
