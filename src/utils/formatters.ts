@@ -93,13 +93,11 @@ export const CONDITION_KEYS: Record<ItemCondition, string> = {
 export const STATUS_KEYS: Record<AuctionStatus, string> = {
   draft: 'auction.statusDraft',
   pending: 'auction.statusPending',
-  qualifying: 'auction.statusQualifying',
   active: 'auction.statusActive',
   ended: 'auction.statusEnded',
   sold: 'auction.statusSold',
   cancelled: 'auction.statusCancelled',
   failed: 'auction.statusFailed',
-  emergency_stopped: 'auction.statusEmergencyStopped',
 };
 
 /**
@@ -108,13 +106,11 @@ export const STATUS_KEYS: Record<AuctionStatus, string> = {
 export const STATUS_COLORS: Record<AuctionStatus, string> = {
   draft: 'default',
   pending: 'processing',
-  qualifying: 'orange',
   active: 'green',
   ended: 'default',
   sold: 'blue',
   cancelled: 'default',
   failed: 'red',
-  emergency_stopped: 'red',
 };
 
 // ─── Order Status Labels ────────────────────────────────────────────

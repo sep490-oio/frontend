@@ -48,6 +48,9 @@ export function useAuction(id: string | undefined) {
     queryKey: ['auction', id],
     queryFn: () => getAuctionById(id!),
     enabled: !!id,
+    // Poll every 10s as fallback — SignalR should push updates faster,
+    // but polling catches cases where the hub connection drops or misses events
+    refetchInterval: 10_000,
   });
 }
 

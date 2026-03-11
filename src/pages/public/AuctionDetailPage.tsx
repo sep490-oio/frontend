@@ -29,14 +29,19 @@ import {
   Descriptions,
   Avatar,
   Rate,
+  message,
 } from 'antd';
 import {
   SafetyCertificateOutlined,
   ShopOutlined,
   ArrowLeftOutlined,
 } from '@ant-design/icons';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuction, useAuctionBids } from '@/hooks/useAuctions';
+import { useAuctionHub } from '@/hooks/useAuctionHub';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
+import { useAppSelector } from '@/app/hooks';
+import { formatVND } from '@/utils/formatters';
 import { ImageGallery } from '@/components/auction/ImageGallery';
 import { BidHistoryList } from '@/components/auction/BidHistoryList';
 import { BiddingPanel } from '@/components/auction/BiddingPanel';
@@ -48,9 +53,73 @@ export function AuctionDetailPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { isMobile } = useBreakpoint();
+  const queryClient = useQueryClient();
+  const authState = useAppSelector((state) => state.auth);
+  const isLoggedIn = !!authState.accessToken;
+  const userId = authState.user?.id;
 
   const { data: auction, isLoading } = useAuction(id);
   const { data: bids } = useAuctionBids(id);
+
+  // ─── SignalR real-time connection ──────────────────────────────
+  // Only connect when logged in (hub requires [Authorize])
+  const { isConnected, placeBid: hubPlaceBid, buyNow: hubBuyNow, configureAutoBid: hubConfigureAutoBid } = useAuctionHub(
+    isLoggedIn ? id : undefined,
+    {
+      onBidPlaced: (data) => {
+        // Refresh auction data + bid history when any bid is placed
+        queryClient.invalidateQueries({ queryKey: ['auction', id] });
+        queryClient.invalidateQueries({ queryKey: ['auctionBids', id] });
+        // Show success toast only for the current user's bid
+        // NOTE: BidPlaced event is currently not firing from BE (confirmed 2026-03-12).
+        // Success toast is handled optimistically in BidForm with keyed messages instead.
+        if (data.bidderId === userId) {
+          message.success({
+            content: t('bidding.bidSuccess', { amount: formatVND(data.amount) }),
+            key: 'bid-toast',
+          });
+        }
+      },
+      onOutbid: (data) => {
+        message.warning(
+          t('bidding.outbidNotification', {
+            amount: formatVND(data.newHighAmount),
+          }),
+        );
+      },
+      onPriceUpdated: () => {
+        queryClient.invalidateQueries({ queryKey: ['auction', id] });
+      },
+      onAuctionExtended: (data) => {
+        message.info(
+          t('bidding.auctionExtended', { minutes: data.extensionMinutes }),
+        );
+        queryClient.invalidateQueries({ queryKey: ['auction', id] });
+      },
+      onAuctionEnded: () => {
+        message.info(t('bidding.auctionEnded'));
+        queryClient.invalidateQueries({ queryKey: ['auction', id] });
+      },
+      onBuyNowExecuted: () => {
+        queryClient.invalidateQueries({ queryKey: ['auction', id] });
+      },
+      onAuctionCancelled: () => {
+        queryClient.invalidateQueries({ queryKey: ['auction', id] });
+      },
+      onError: (data) => {
+        // Signal to BidForm that this bid was rejected — prevents success toast
+        window.__bidError = true;
+        // BE sends English error messages — show a generic localized error.
+        // Uses 'bid-toast' key to REPLACE the loading toast from BidForm.
+        console.warn('[AuctionHub] Server error:', data.message);
+        message.error({
+          content: t('bidding.bidFailed'),
+          key: 'bid-toast',
+          duration: 4,
+        });
+      },
+    },
+  );
 
   // Loading state
   if (isLoading) {
@@ -104,8 +173,15 @@ export function AuctionDetailPage() {
         {/* Right column: BiddingPanel + seller info */}
         <Col xs={24} md={10}>
           <div style={isMobile ? undefined : { position: 'sticky', top: 24 }}>
-            {/* Interactive bidding panel (replaces the old static pricing Card) */}
-            <BiddingPanel auction={auction} bids={bids ?? []} />
+            {/* Interactive bidding panel with SignalR actions */}
+            <BiddingPanel
+              auction={auction}
+              bids={bids ?? []}
+              hubPlaceBid={isConnected ? hubPlaceBid : undefined}
+              hubBuyNow={isConnected ? hubBuyNow : undefined}
+              hubConfigureAutoBid={isConnected ? hubConfigureAutoBid : undefined}
+              isConnected={isConnected}
+            />
 
             {/* Seller info card (clickable → seller profile) */}
             {auction.seller && (

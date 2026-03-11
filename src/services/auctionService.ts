@@ -1,21 +1,20 @@
 /**
  * Auction service — data fetching functions for auctions & bidding.
  *
- * Currently returns MOCK DATA. When the backend API is ready,
- * replace the function bodies with real Axios calls.
- * The function signatures and return types stay the same,
- * so NO changes are needed in the UI components.
+ * Calls real backend API at VITE_API_BASE_URL (https://api.newlsun.com).
+ * Includes adapter functions to map BE response shapes to FE types.
  *
- * Example swap:
- *   BEFORE: const data = filterAndPaginate(MOCK_AUCTION_LIST, filters);
- *   AFTER:  const { data } = await api.get('/auctions', { params: filters });
+ * The function signatures and return types stay the same as the mock
+ * version, so NO changes are needed in hooks or UI components.
  */
 
+import { api } from './api';
+import axios from 'axios';
 import type {
   Auction,
-  AuctionDeposit,
   AuctionListItem,
   AuctionFilters,
+  AutoBid,
   Bid,
   BuyNowResponse,
   Category,
@@ -23,15 +22,279 @@ import type {
   PaginatedResponse,
   PlaceBidResponse,
   ToggleWatchResponse,
+  ApiResponse,
 } from '@/types';
-import { MOCK_AUCTION_LIST } from './mock/auctions';
-import {
-  CURRENT_USER_ID,
-  getMockAuctionDetail,
-  getMockAuctionBids,
-} from './mock/auctionDetails';
-import { MOCK_CATEGORIES, MOCK_CATEGORIES_FLAT } from './mock/categories';
-import { mockDelay, mockId } from './mock/helpers';
+import type { ItemSummary, ItemImage } from '@/types/item';
+import type { AuctionStatus } from '@/types/enums';
+
+// ─── BE Response Shapes (what the backend actually returns) ──────
+
+/** BE MoneyDto — wraps all monetary values with currency info */
+interface ApiMoneyDto {
+  amount: number;
+  currency: string;
+  symbol: string;
+}
+
+/** Shape of a single item in GET /api/auctions list response */
+interface ApiAuctionListItem {
+  id: string;
+  itemTitle: string;
+  primaryImageUrl: string | null;
+  currentPrice: ApiMoneyDto;
+  startingPrice: ApiMoneyDto;
+  buyNowPrice?: ApiMoneyDto | null;
+  currency: string;
+  status: string;
+  bidCount: number;
+  watchCount: number;
+  startTime: string;
+  endTime: string;
+  remainingTime: string;
+  isEndingSoon: boolean;
+  isFeatured: boolean;
+  sellerId: string;
+}
+
+/** Shape of GET /api/auctions paginated response */
+interface ApiPaginatedResponse<T> {
+  items: T[];
+  metadata: {
+    currentPage: number;
+    totalPages: number;
+    pageSize: number;
+    totalCount: number;
+    hasPrevious: boolean;
+    hasNext: boolean;
+  };
+}
+
+/** Shape of an image in the BE item response */
+interface ApiItemImage {
+  id: string;
+  url: string;
+  publicId: string;
+  resourceType: string;
+  isPrimary: boolean;
+  sortOrder: number;
+  fileName: string;
+  bytes: number;
+  format: string;
+  width: number;
+  height: number;
+}
+
+/** Shape of the item nested in GET /api/auctions/{id} */
+interface ApiItemDetail {
+  id: string;
+  sellerId: string;
+  categoryId: string;
+  title: string;
+  description: string | null;
+  condition: string;
+  status: string;
+  quantity: number;
+  images: ApiItemImage[];
+  createdAt: string;
+}
+
+/** Shape of auction object nested in GET /api/auctions/{id} */
+interface ApiAuctionDetail {
+  id: string;
+  itemId: string;
+  sellerId: string;
+  startingPrice: ApiMoneyDto;
+  reservePrice?: ApiMoneyDto | null;
+  buyNowPrice?: ApiMoneyDto | null;
+  currentPrice: ApiMoneyDto;
+  bidIncrement: ApiMoneyDto;
+  currency: string;
+  startTime: string;
+  endTime: string;
+  actualEndTime?: string | null;
+  status: string;
+  currentWinnerId?: string | null;
+  autoExtend: boolean;
+  extensionMinutes: number;
+  isFeatured: boolean;
+  viewCount: number;
+  bidCount: number;
+  watchCount: number;
+  minimumBidAmount: ApiMoneyDto;
+  isReserveMet: boolean;
+  hasBuyNow: boolean;
+  remainingTime: string;
+  isEndingSoon: boolean;
+  createdAt: string;
+}
+
+/** Shape of a bid in the BE response */
+interface ApiBid {
+  id: string;
+  auctionId: string;
+  bidderId: string;
+  bidderDisplayName?: string | null;
+  bidderName?: string | null;
+  amount: ApiMoneyDto;
+  isAutoBid: boolean;
+  autoBidId?: string | null;
+  status: string;
+  createdAt: string;
+}
+
+/** Full shape of GET /api/auctions/{id} response */
+interface ApiAuctionDetailResponse {
+  auction: ApiAuctionDetail;
+  item: ApiItemDetail;
+  recentBids: ApiBid[];
+  priceHistory: Array<{ price: ApiMoneyDto; bidId?: string | null; recordedAt: string }>;
+}
+
+// ─── Adapters (BE shape → FE types) ─────────────────────────────
+
+/**
+ * Maps BE paginated response to FE PaginatedResponse format.
+ * BE uses `metadata.currentPage`, FE uses `page`, etc.
+ */
+function mapPagination<TApi, TFe>(
+  response: ApiPaginatedResponse<TApi>,
+  mapItem: (item: TApi) => TFe,
+): PaginatedResponse<TFe> {
+  return {
+    items: response.items.map(mapItem),
+    page: response.metadata.currentPage,
+    pageSize: response.metadata.pageSize,
+    totalItems: response.metadata.totalCount,
+    totalPages: response.metadata.totalPages,
+    hasNextPage: response.metadata.hasNext,
+    hasPreviousPage: response.metadata.hasPrevious,
+  };
+}
+
+/**
+ * Maps BE auction list item to FE AuctionListItem.
+ * Fields missing from BE are defaulted to safe values.
+ */
+function mapListItem(api: ApiAuctionListItem): AuctionListItem {
+  return {
+    id: api.id,
+    status: api.status as AuctionStatus,
+    itemTitle: api.itemTitle,
+    primaryImageUrl: api.primaryImageUrl,
+    startingPrice: api.startingPrice.amount,
+    currentPrice: api.currentPrice.amount,
+    buyNowPrice: api.buyNowPrice?.amount ?? null,
+    currency: api.currency,
+    startTime: api.startTime,
+    endTime: api.endTime,
+    bidCount: api.bidCount,
+    watchCount: api.watchCount,
+    isFeatured: api.isFeatured,
+    isEndingSoon: api.isEndingSoon,
+    sellerId: api.sellerId,
+  };
+}
+
+/**
+ * Maps BE item images to FE ItemImage format.
+ * BE uses `url`, FE uses `imageUrl`.
+ */
+function mapItemImage(img: ApiItemImage, itemId: string): ItemImage {
+  return {
+    id: img.id,
+    itemId,
+    imageUrl: img.url,
+    isPrimary: img.isPrimary,
+    sortOrder: img.sortOrder,
+  };
+}
+
+/**
+ * Maps the full BE auction detail response to the FE Auction type.
+ * Merges auction + item data into a single flat Auction object.
+ */
+function mapAuctionDetail(response: ApiAuctionDetailResponse): Auction {
+  const { auction: a, item, recentBids } = response;
+
+  // Map item to FE ItemSummary
+  const itemSummary: ItemSummary = {
+    id: item.id,
+    title: item.title,
+    condition: item.condition as ItemSummary['condition'],
+    primaryImageUrl: item.images.find((img) => img.isPrimary)?.url
+      ?? item.images[0]?.url
+      ?? null,
+    verificationStatus: 'unverified', // Not in BE response
+    estimatedValue: null,
+    categoryId: item.categoryId,
+    categoryName: null, // Not in BE response
+    description: item.description,
+    images: item.images.map((img) => mapItemImage(img, item.id)),
+    attributes: [], // Not in BE response — could be added later
+  };
+
+  // Map bids
+  const mappedBids: Bid[] = recentBids.map(mapBid);
+
+  const startingPrice = a.startingPrice.amount;
+
+  return {
+    id: a.id,
+    itemId: a.itemId,
+    sellerId: a.sellerId,
+    auctionType: 'open' as const, // BE doesn't return this yet — default to open
+    startingPrice,
+    bidIncrement: a.bidIncrement.amount,
+    reservePrice: a.reservePrice?.amount ?? null,
+    buyNowPrice: a.buyNowPrice?.amount ?? null,
+    currentPrice: a.currentPrice.amount,
+    depositPercentage: 10, // Default per business rules
+    depositAmount: startingPrice * 0.1, // Calculate from default percentage
+    currency: a.currency,
+    startTime: a.startTime,
+    endTime: a.endTime,
+    actualEndTime: a.actualEndTime ?? null,
+    status: a.status as AuctionStatus,
+    minimumParticipants: 2, // Default per business rules
+    qualifiedCount: 0, // Not in BE response
+    winnerId: a.currentWinnerId ?? null,
+    winningBidId: null,
+    // Computed fields from BE
+    minimumBidAmount: a.minimumBidAmount.amount,
+    isReserveMet: a.isReserveMet,
+    hasBuyNow: a.hasBuyNow,
+    isEndingSoon: a.isEndingSoon,
+    autoExtend: a.autoExtend,
+    extensionMinutes: a.extensionMinutes,
+    isFeatured: a.isFeatured,
+    viewCount: a.viewCount,
+    bidCount: a.bidCount,
+    watchCount: a.watchCount,
+    item: itemSummary,
+    seller: null, // Not in BE response — seller info not returned
+    recentBids: mappedBids,
+    currentUserDeposit: null, // Not in BE response (requires auth)
+    currentUserAutoBid: null, // Not in BE response
+    isWatching: false, // Not in BE response
+    createdAt: a.createdAt,
+    modifiedAt: a.createdAt, // BE doesn't return modifiedAt — use createdAt
+  };
+}
+
+/** Maps a single BE bid to FE Bid type */
+function mapBid(b: ApiBid): Bid {
+  return {
+    id: b.id,
+    auctionId: b.auctionId,
+    bidderId: b.bidderId,
+    bidderName: b.bidderDisplayName ?? b.bidderName ?? null,
+    amount: b.amount.amount,
+    isAutoBid: b.isAutoBid,
+    autoBidId: b.autoBidId ?? null,
+    status: b.status as Bid['status'],
+    createdAt: b.createdAt,
+  };
+}
 
 // ─── Auction List (Browse page) ─────────────────────────────────
 
@@ -42,130 +305,30 @@ import { mockDelay, mockId } from './mock/helpers';
 export async function getAuctions(
   filters: AuctionFilters = {}
 ): Promise<PaginatedResponse<AuctionListItem>> {
-  await mockDelay();
-
-  let result = [...MOCK_AUCTION_LIST];
-
-  // ─── Apply filters ────────────────────────────────────────────
-  if (filters.search) {
-    const q = filters.search.toLowerCase();
-    result = result.filter(
-      (a) =>
-        a.itemTitle.toLowerCase().includes(q) ||
-        (a.sellerName?.toLowerCase().includes(q) ?? false)
-    );
-  }
-
-  if (filters.categoryId) {
-    // Build a set of matching category names.
-    // If the selected category is a parent, include all its children.
-    const parentCat = MOCK_CATEGORIES.find(
-      (c) => c.id === filters.categoryId
-    );
-
-    const matchNames = new Set<string>();
-    if (parentCat) {
-      // Parent selected — match parent name + all child names
-      matchNames.add(parentCat.name);
-      parentCat.children?.forEach((child) => matchNames.add(child.name));
-    } else {
-      // Child selected — match only that child's name
-      const childCat = MOCK_CATEGORIES_FLAT.find(
-        (c) => c.id === filters.categoryId
-      );
-      if (childCat) matchNames.add(childCat.name);
-    }
-
-    if (matchNames.size > 0) {
-      result = result.filter((a) => a.categoryName !== null && matchNames.has(a.categoryName));
-    }
-  }
-
-  if (filters.auctionType) {
-    result = result.filter((a) => a.auctionType === filters.auctionType);
-  }
-
+  // Map FE filter names to BE query parameter names
+  const params: Record<string, unknown> = {};
+  if (filters.page) params.PageNumber = filters.page;
+  if (filters.pageSize) params.PageSize = filters.pageSize;
+  if (filters.search) params.Search = filters.search;
+  if (filters.categoryId) params.CategoryId = filters.categoryId;
+  if (filters.auctionType) params.AuctionType = filters.auctionType;
   if (filters.status) {
-    const statuses = Array.isArray(filters.status)
-      ? filters.status
-      : [filters.status];
-    result = result.filter((a) => statuses.includes(a.status));
+    params.Status = Array.isArray(filters.status)
+      ? filters.status.join(',')
+      : filters.status;
   }
+  if (filters.sortBy) params.SortBy = filters.sortBy;
+  if (filters.sortOrder) params.SortOrder = filters.sortOrder;
+  if (filters.priceMin !== undefined) params.PriceMin = filters.priceMin;
+  if (filters.priceMax !== undefined) params.PriceMax = filters.priceMax;
+  if (filters.buyNowOnly) params.HasBuyNow = true;
 
-  if (filters.verifiedOnly) {
-    result = result.filter((a) => a.verificationStatus === 'verified');
-  }
+  const { data } = await api.get<ApiPaginatedResponse<ApiAuctionListItem>>(
+    '/api/auctions',
+    { params },
+  );
 
-  if (filters.buyNowOnly) {
-    result = result.filter((a) => a.buyNowPrice !== null);
-  }
-
-  if (filters.condition) {
-    const conditions = Array.isArray(filters.condition)
-      ? filters.condition
-      : [filters.condition];
-    result = result.filter((a) => conditions.includes(a.itemCondition));
-  }
-
-  if (filters.priceMin !== undefined) {
-    result = result.filter(
-      (a) => (a.currentPrice ?? a.startingPrice) >= filters.priceMin!
-    );
-  }
-
-  if (filters.priceMax !== undefined) {
-    result = result.filter(
-      (a) => (a.currentPrice ?? a.startingPrice) <= filters.priceMax!
-    );
-  }
-
-  // ─── Sort ─────────────────────────────────────────────────────
-  const sortBy = filters.sortBy ?? 'endTime';
-  const sortOrder = filters.sortOrder ?? 'asc';
-  const direction = sortOrder === 'asc' ? 1 : -1;
-
-  result.sort((a, b) => {
-    switch (sortBy) {
-      case 'currentPrice':
-        return (
-          ((a.currentPrice ?? a.startingPrice) -
-            (b.currentPrice ?? b.startingPrice)) *
-          direction
-        );
-      case 'bidCount':
-        return (a.bidCount - b.bidCount) * direction;
-      case 'createdAt':
-      case 'startTime':
-        return (
-          (new Date(a.startTime).getTime() - new Date(b.startTime).getTime()) *
-          direction
-        );
-      case 'endTime':
-      default:
-        return (
-          (new Date(a.endTime).getTime() - new Date(b.endTime).getTime()) *
-          direction
-        );
-    }
-  });
-
-  // ─── Paginate ─────────────────────────────────────────────────
-  const page = filters.page ?? 1;
-  const pageSize = filters.pageSize ?? 8;
-  const totalItems = result.length;
-  const totalPages = Math.ceil(totalItems / pageSize);
-  const start = (page - 1) * pageSize;
-  const items = result.slice(start, start + pageSize);
-
-  return {
-    items,
-    page,
-    pageSize,
-    totalItems,
-    totalPages,
-    hasNextPage: page < totalPages,
-    hasPreviousPage: page > 1,
-  };
+  return mapPagination(data, mapListItem);
 }
 
 // ─── Single Auction Detail ──────────────────────────────────────
@@ -177,152 +340,232 @@ export async function getAuctions(
 export async function getAuctionById(
   id: string
 ): Promise<Auction | null> {
-  await mockDelay();
-  return getMockAuctionDetail(id);
+  try {
+    const { data } = await api.get<ApiAuctionDetailResponse>(
+      `/api/auctions/${id}`,
+    );
+    return mapAuctionDetail(data);
+  } catch (err) {
+    if (axios.isAxiosError(err) && err.response?.status === 404) return null;
+    throw err;
+  }
 }
 
 // ─── Bid History ────────────────────────────────────────────────
 
 /**
  * Fetches bid history for an auction.
- * For sealed auctions, this returns empty until the auction ends.
+ * Uses the dedicated GET /api/auctions/{id}/bids endpoint.
  */
 export async function getAuctionBids(auctionId: string): Promise<Bid[]> {
-  await mockDelay();
-  return getMockAuctionBids(auctionId);
+  try {
+    // BE may return a plain array OR a paginated object { items: [...] }
+    const { data } = await api.get<ApiBid[] | ApiPaginatedResponse<ApiBid>>(
+      `/api/auctions/${auctionId}/bids`,
+    );
+    const bids = Array.isArray(data) ? data : data?.items ?? [];
+    return bids.map(mapBid);
+  } catch {
+    return [];
+  }
 }
 
 // ─── Categories ─────────────────────────────────────────────────
 
 /** Fetches the category tree (top-level with nested children) */
 export async function getCategories(): Promise<Category[]> {
-  await mockDelay(100, 300);
-  return MOCK_CATEGORIES;
+  try {
+    // BE may return a plain array OR a paginated object { items: [...] }
+    const { data } = await api.get<Category[] | ApiPaginatedResponse<Category>>(
+      '/api/categories',
+    );
+    if (Array.isArray(data)) return data;
+    // Paginated response — extract items array
+    if (data && typeof data === 'object' && 'items' in data) return data.items;
+    return [];
+  } catch {
+    // If endpoint doesn't exist yet, return empty array
+    return [];
+  }
 }
 
 /** Fetches a flat list of all categories */
 export async function getCategoriesFlat(): Promise<Category[]> {
-  await mockDelay(100, 300);
-  return MOCK_CATEGORIES_FLAT;
+  const tree = await getCategories();
+  // Flatten the tree — extract all children into a single array
+  const flat: Category[] = [];
+  for (const cat of tree) {
+    flat.push(cat);
+    if (cat.children) {
+      flat.push(...cat.children);
+    }
+  }
+  return flat;
 }
 
 // ─── Mutations (Layer 2: Interactive Bidding) ────────────────────
 
 /**
  * Join auction qualification by paying the deposit.
- * Mock: simulates deposit creation (Available → Locked).
- * In production: POST /auctions/:id/qualify
+ * POST /api/auctions/:id/qualify (or /deposit)
  */
 export async function joinAuction(
   auctionId: string
 ): Promise<JoinAuctionResponse> {
-  await mockDelay();
-  const auction = getMockAuctionDetail(auctionId);
-  if (!auction) throw new Error('Auction not found');
-
-  const deposit: AuctionDeposit = {
-    id: mockId('deposit', Date.now()),
-    auctionId,
-    userId: CURRENT_USER_ID,
-    amount: auction.depositAmount ?? 0,
-    currency: 'VND',
-    sourceType: 'wallet',
-    status: 'holding',
-    auctionResult: null,
-    depositedAt: new Date().toISOString(),
-    refundedAt: null,
-    forfeitedAt: null,
-  };
-
-  return {
-    deposit,
-    newQualifiedCount: auction.qualifiedCount + 1,
-  };
+  const { data } = await api.post<JoinAuctionResponse>(
+    `/api/auctions/${auctionId}/qualify`,
+  );
+  return data;
 }
 
 /**
  * Place a bid on an open auction.
- * Mock: validates nothing — just returns success.
- * In production: POST /auctions/:id/bids
+ * POST /api/auctions/:id/bids (REST fallback — primary is SignalR)
  */
 export async function placeBid(
   auctionId: string,
   amount: number
 ): Promise<PlaceBidResponse> {
-  await mockDelay();
-
-  const bid: Bid = {
-    id: mockId('bid', Date.now()),
-    auctionId,
-    bidderId: CURRENT_USER_ID,
-    bidderName: 'Bạn',
-    amount,
-    isAutoBid: false,
-    autoBidId: null,
-    status: 'winning',
-    createdAt: new Date().toISOString(),
-  };
-
-  return { bid, newCurrentPrice: amount };
+  const { data } = await api.post<PlaceBidResponse>(
+    `/api/auctions/${auctionId}/bids`,
+    { amount, currency: 'VND' },
+  );
+  return data;
 }
 
 /**
  * Submit a sealed bid (one-time, hidden).
- * Mock: records the bid but doesn't reveal it.
- * In production: POST /auctions/:id/sealed-bid
+ * Uses the same endpoint as open bids — BE handles the distinction.
  */
 export async function submitSealedBid(
   auctionId: string,
   amount: number
 ): Promise<PlaceBidResponse> {
-  await mockDelay();
-
-  const bid: Bid = {
-    id: mockId('bid', Date.now()),
-    auctionId,
-    bidderId: CURRENT_USER_ID,
-    bidderName: null,
-    amount,
-    isAutoBid: false,
-    autoBidId: null,
-    status: 'active',
-    createdAt: new Date().toISOString(),
-  };
-
-  return { bid, newCurrentPrice: amount };
+  const { data } = await api.post<PlaceBidResponse>(
+    `/api/auctions/${auctionId}/bids`,
+    { amount, currency: 'VND' },
+  );
+  return data;
 }
 
 /**
  * Buy-now — instant purchase at the buyNowPrice.
- * Mock: returns a fake order ID.
- * In production: POST /auctions/:id/buy-now
+ * POST /api/auctions/:id/buy-now
  */
 export async function buyNow(
   auctionId: string
 ): Promise<BuyNowResponse> {
-  await mockDelay(500, 1200);
-  const auction = getMockAuctionDetail(auctionId);
-  return {
-    orderId: mockId('order', Date.now()),
-    finalPrice: auction?.buyNowPrice ?? 0,
-  };
+  const { data } = await api.post<BuyNowResponse>(
+    `/api/auctions/${auctionId}/buy-now`,
+  );
+  return data;
 }
 
 /**
- * Toggle watch/unwatch for an auction.
- * Mock: flips the boolean.
- * In production: POST /auctions/:id/watch
+ * Watch or unwatch an auction.
+ * Watch:   POST   /api/auctions/:id/watch
+ * Unwatch: DELETE /api/auctions/:id/watch
  */
 export async function toggleWatch(
   auctionId: string,
-  currentlyWatching: boolean
+  currentlyWatching: boolean,
 ): Promise<ToggleWatchResponse> {
-  await mockDelay(100, 300);
-  // In a real API, the server would return the updated watch count
-  const auction = getMockAuctionDetail(auctionId);
-  const currentCount = auction?.watchCount ?? 0;
-  return {
-    isWatching: !currentlyWatching,
-    newWatchCount: currentlyWatching ? currentCount - 1 : currentCount + 1,
-  };
+  if (currentlyWatching) {
+    await api.delete(`/api/auctions/${auctionId}/watch`);
+    return { isWatching: false, newWatchCount: -1 };
+  }
+  const { data } = await api.post<ToggleWatchResponse>(
+    `/api/auctions/${auctionId}/watch`,
+  );
+  return data;
+}
+
+// ─── Auto-Bid ────────────────────────────────────────────────────
+
+/** Configure or update auto-bid for an auction */
+export async function configureAutoBid(
+  auctionId: string,
+  maxAmount: number,
+  incrementAmount?: number
+): Promise<AutoBid> {
+  const { data } = await api.put<AutoBid>(
+    `/api/auctions/${auctionId}/auto-bid`,
+    { maxAmount, currency: 'VND', incrementAmount },
+  );
+  return data;
+}
+
+/** Pause auto-bid */
+export async function pauseAutoBid(auctionId: string): Promise<AutoBid> {
+  const { data } = await api.post<AutoBid>(
+    `/api/auctions/${auctionId}/auto-bid/pause`,
+  );
+  return data;
+}
+
+/** Resume auto-bid */
+export async function resumeAutoBid(auctionId: string): Promise<AutoBid> {
+  const { data } = await api.post<AutoBid>(
+    `/api/auctions/${auctionId}/auto-bid/resume`,
+  );
+  return data;
+}
+
+/** Get current user's auto-bid for an auction */
+export async function getMyAutoBid(auctionId: string): Promise<AutoBid | null> {
+  try {
+    const { data } = await api.get<AutoBid>(
+      `/api/auctions/${auctionId}/auto-bid/my`,
+    );
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+// ─── Item Management (Seller Flow) ──────────────────────────────
+
+/** Shape of BE create item request */
+interface CreateItemRequest {
+  title: string;
+  condition: string;
+  categoryId?: string;
+  description?: string;
+  quantity?: number;
+  images?: Array<{
+    mediaUploadId: string;
+    publicId: string;
+    isPrimary: boolean;
+    sortOrder: number;
+  }>;
+}
+
+/** Create a new item (draft status) */
+export async function createItem(data: CreateItemRequest): Promise<{ id: string }> {
+  const { data: response } = await api.post<ApiResponse<{ id: string }>>('/api/items', data);
+  // BE may return wrapped { data, message, success } or unwrapped
+  return response.data ?? (response as unknown as { id: string });
+}
+
+/** Add a media file to an existing item — POST /api/items/{id}/media */
+export async function addItemMedia(
+  itemId: string,
+  media: { mediaUploadId: string; isPrimary: boolean; sortOrder: number }
+): Promise<void> {
+  await api.post(`/api/items/${itemId}/media`, media);
+}
+
+/** Activate an item (draft → active, requires ≥1 media) */
+export async function activateItem(itemId: string): Promise<void> {
+  await api.post(`/api/items/${itemId}/activate`);
+}
+
+/** Get seller's items */
+export async function getMyItems(): Promise<unknown[]> {
+  try {
+    const { data } = await api.get<unknown[]>('/api/items/my');
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
 }

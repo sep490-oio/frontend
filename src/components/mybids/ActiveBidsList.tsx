@@ -231,8 +231,7 @@ export function ActiveBidsList({ bids, isLoading, viewMode }: ActiveBidsListProp
       width: 150,
       render: (_: unknown, record: MyBidItem) => {
         const isLive =
-          record.auction.status === 'active' ||
-          record.auction.status === 'qualifying';
+          record.auction.status === 'active';
         return (
           <Space size={4}>
             <ClockCircleOutlined
@@ -257,8 +256,7 @@ export function ActiveBidsList({ bids, isLoading, viewMode }: ActiveBidsListProp
       renderItem={(item) => {
         const tag = getBidStatusTag(item.myBidStatus, t);
         const isLive =
-          item.auction.status === 'active' ||
-          item.auction.status === 'qualifying';
+          item.auction.status === 'active';
         return (
           <List.Item
             style={{ cursor: 'pointer', padding: '12px 0' }}
@@ -308,8 +306,7 @@ export function ActiveBidsList({ bids, isLoading, viewMode }: ActiveBidsListProp
       {filteredBids.map((item) => {
         const tag = getBidStatusTag(item.myBidStatus, t);
         const isLive =
-          item.auction.status === 'active' ||
-          item.auction.status === 'qualifying';
+          item.auction.status === 'active';
         return (
           <Col key={item.auction.id} xs={24} sm={12} lg={8}>
             <Card

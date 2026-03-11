@@ -39,6 +39,13 @@ const HUB_URL = `${BASE_URL}${HUB_PATH}`;
 
 let connection: HubConnection | null = null;
 
+/**
+ * Tracks the in-flight start() promise so multiple callers
+ * (e.g. startConnection + joinAuction racing) await the SAME attempt
+ * instead of one returning early while the other tries to invoke.
+ */
+let startPromise: Promise<void> | null = null;
+
 /** Returns the current access token from Redux for hub authentication */
 function getAccessToken(): string {
   return store.getState().auth.accessToken ?? '';
@@ -61,11 +68,15 @@ function getOrCreateConnection(): HubConnection {
     .withUrl(HUB_URL, {
       // accessTokenFactory is called each time the client connects/reconnects
       accessTokenFactory: () => getAccessToken(),
-      // Prefer WebSockets, fall back to Server-Sent Events, then Long Polling
-      transport:
-        HttpTransportType.WebSockets |
-        HttpTransportType.ServerSentEvents |
-        HttpTransportType.LongPolling,
+      // WebSockets only + skip negotiate — avoids connectionId mismatch
+      // caused by Cloudflare/Caddy proxies routing the negotiate POST and
+      // WebSocket upgrade to different backend instances.
+      transport: HttpTransportType.WebSockets,
+      skipNegotiation: true,
+      // Don't send browser credentials (cookies) — we use Authorization header
+      // instead. Without this, CORS fails because the BE doesn't send
+      // Access-Control-Allow-Credentials: true.
+      withCredentials: false,
     })
     .withAutomaticReconnect([0, 2000, 10000, 30000])
     .configureLogging(
@@ -78,12 +89,21 @@ function getOrCreateConnection(): HubConnection {
 
 // ─── Connection Lifecycle ───────────────────────────────────────────
 
-/** Starts the connection if not already connected */
+/**
+ * Starts the connection if not already connected.
+ *
+ * If a start() is already in flight (Connecting state), all callers
+ * await the same promise instead of returning early — this prevents
+ * the race condition where joinAuction fires before the WS handshake
+ * completes.
+ */
 async function startConnection(): Promise<void> {
   const conn = getOrCreateConnection();
 
   if (conn.state === HubConnectionState.Connected) return;
-  if (conn.state === HubConnectionState.Connecting) return;
+
+  // Another caller already started connecting — wait for it
+  if (startPromise) return startPromise;
 
   // Don't attempt to connect without a token — hub requires [Authorize]
   if (!getAccessToken()) {
@@ -91,13 +111,20 @@ async function startConnection(): Promise<void> {
     return;
   }
 
-  try {
-    await conn.start();
-    console.log('[AuctionHub] Connected');
-  } catch (err) {
-    console.error('[AuctionHub] Connection failed:', err);
-    throw err;
-  }
+  startPromise = conn
+    .start()
+    .then(() => {
+      console.log('[AuctionHub] Connected');
+    })
+    .catch((err) => {
+      console.error('[AuctionHub] Connection failed:', err);
+      throw err;
+    })
+    .finally(() => {
+      startPromise = null;
+    });
+
+  return startPromise;
 }
 
 /** Stops the connection and clears the singleton */
@@ -111,6 +138,7 @@ async function stopConnection(): Promise<void> {
     console.error('[AuctionHub] Disconnect error:', err);
   } finally {
     connection = null;
+    startPromise = null;
   }
 }
 

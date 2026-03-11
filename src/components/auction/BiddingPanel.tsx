@@ -54,31 +54,37 @@ import { QualificationSection } from './QualificationSection';
 import { BidForm } from './BidForm';
 import { SealedBidForm } from './SealedBidForm';
 import { BuyNowConfirmModal } from './BuyNowConfirmModal';
+import { AutoBidForm } from './AutoBidForm';
 
 const { Title, Text } = Typography;
 
 interface BiddingPanelProps {
   auction: Auction;
   bids: Bid[];
+  /** SignalR hub placeBid action — undefined when not connected */
+  hubPlaceBid?: (amount: number, currency: string) => Promise<void>;
+  /** SignalR hub buyNow action — undefined when not connected */
+  hubBuyNow?: () => Promise<void>;
+  /** SignalR hub configureAutoBid action — undefined when not connected */
+  hubConfigureAutoBid?: (maxAmount: number, currency: string, incrementAmount?: number) => Promise<void>;
+  /** Whether SignalR is connected */
+  isConnected?: boolean;
 }
 
-export function BiddingPanel({ auction }: BiddingPanelProps) {
+export function BiddingPanel({ auction, hubPlaceBid, hubBuyNow, hubConfigureAutoBid, isConnected }: BiddingPanelProps) {
   const { t } = useTranslation();
   const { isMobile } = useBreakpoint();
   const [buyNowOpen, setBuyNowOpen] = useState(false);
 
   // ─── Phase detection ──────────────────────────────────────────
-  const isQualifying = auction.status === 'qualifying';
   const isActive = auction.status === 'active';
-  const isEnded = ['ended', 'sold', 'cancelled', 'failed', 'emergency_stopped'].includes(
+  const isEnded = ['ended', 'sold', 'cancelled', 'failed'].includes(
     auction.status
   );
   const isSealed = auction.auctionType === 'sealed';
 
   // Determine countdown target
-  const countdownTarget = isQualifying
-    ? auction.qualificationEndTime ?? auction.startTime
-    : auction.actualEndTime ?? auction.endTime;
+  const countdownTarget = auction.actualEndTime ?? auction.endTime;
 
   // Reserve price status
   const hasReserve = auction.reservePrice !== null;
@@ -88,7 +94,10 @@ export function BiddingPanel({ auction }: BiddingPanelProps) {
       : false;
 
   // Whether the user is qualified for bidding
-  const isQualified = auction.currentUserDeposit !== null;
+  // Bypass deposit requirement until BE delivers /api/auctions/{id}/qualify
+  // When ready, set VITE_BYPASS_DEPOSIT=false in .env to re-enable
+  const BYPASS_DEPOSIT = import.meta.env.VITE_BYPASS_DEPOSIT !== 'false';
+  const isQualified = BYPASS_DEPOSIT || auction.currentUserDeposit !== null;
 
   return (
     <>
@@ -244,13 +253,13 @@ export function BiddingPanel({ auction }: BiddingPanelProps) {
 
         {/* ─── Interactive section (phase-dependent) ────────────────── */}
         <div style={{ marginBottom: 12 }}>
-          {/* QUALIFYING → deposit flow */}
-          {isQualifying && <QualificationSection auction={auction} />}
+          {/* NOT QUALIFIED → deposit flow */}
+          {isActive && !isQualified && <QualificationSection auction={auction} />}
 
-          {/* ACTIVE OPEN → bid form + optional buy-now */}
-          {isActive && !isSealed && (
+          {/* ACTIVE OPEN + QUALIFIED → bid form + optional buy-now */}
+          {isActive && !isSealed && isQualified && (
             <Flex vertical gap={12}>
-              <BidForm auction={auction} />
+              <BidForm auction={auction} hubPlaceBid={hubPlaceBid} />
               {auction.buyNowPrice && isQualified && (
                 <Button
                   size="large"
@@ -262,6 +271,11 @@ export function BiddingPanel({ auction }: BiddingPanelProps) {
                   {t('bidding.buyNowButton')} — {formatVND(auction.buyNowPrice)}
                 </Button>
               )}
+              <Divider style={{ margin: '8px 0' }} />
+              <AutoBidForm
+                auction={auction}
+                hubConfigureAutoBid={hubConfigureAutoBid}
+              />
             </Flex>
           )}
 
@@ -271,6 +285,25 @@ export function BiddingPanel({ auction }: BiddingPanelProps) {
           {/* ENDED → auction result */}
           {isEnded && <AuctionResult auction={auction} />}
         </div>
+
+        {/* ─── SignalR connection status ──────────────────────────── */}
+        {isConnected !== undefined && (
+          <Flex align="center" gap={6} style={{ marginBottom: 8 }}>
+            <div
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                backgroundColor: isConnected ? '#52c41a' : '#d9d9d9',
+              }}
+            />
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              {isConnected
+                ? t('bidding.liveConnection')
+                : t('bidding.noConnection')}
+            </Text>
+          </Flex>
+        )}
 
         {/* ─── Stats row ───────────────────────────────────────────── */}
         <Flex wrap="wrap" gap={16} style={{ marginBottom: 12 }}>
@@ -306,15 +339,6 @@ export function BiddingPanel({ auction }: BiddingPanelProps) {
           </Flex>
         )}
 
-        {/* Minimum participants warning */}
-        {isQualifying &&
-          auction.qualifiedCount < auction.minimumParticipants && (
-            <Text type="warning" style={{ fontSize: 12, display: 'block', marginTop: 8 }}>
-              {t('auctionDetail.minimumParticipants', {
-                count: auction.minimumParticipants,
-              })}
-            </Text>
-          )}
       </Card>
 
       {/* ─── Buy-now modal ──────────────────────────────────────── */}
@@ -323,6 +347,7 @@ export function BiddingPanel({ auction }: BiddingPanelProps) {
           open={buyNowOpen}
           onClose={() => setBuyNowOpen(false)}
           auction={auction}
+          hubBuyNow={hubBuyNow}
         />
       )}
     </>

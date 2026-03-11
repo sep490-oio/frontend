@@ -34,10 +34,10 @@ function getStatusBadge(
   auction: AuctionListItem,
   msLeft: number,
 ): StatusBadge {
-  // emergency_stopped / failed → red
-  if (auction.status === 'emergency_stopped' || auction.status === 'failed') {
+  // failed → red
+  if (auction.status === 'failed') {
     return {
-      label: auction.status === 'emergency_stopped' ? 'STOPPED' : 'FAILED',
+      label: 'FAILED',
       color: '#ff4d4f',
       textColor: '#fff',
       icon: <StopOutlined />,
@@ -64,8 +64,8 @@ function getStatusBadge(
     };
   }
 
-  // active / qualifying — dùng msLeft đã tính sẵn từ state
-  if (auction.status === 'active' || auction.status === 'qualifying') {
+  // active — dùng msLeft đã tính sẵn từ state
+  if (auction.status === 'active') {
     const ONE_HOUR = 60 * 60 * 1000;
 
     // Dưới 1 tiếng → ENDING SOON (cam)
@@ -113,8 +113,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const isLive =
-    auction.status === 'active' || auction.status === 'qualifying';
+  const isLive = auction.status === 'active';
   const isSealed = auction.auctionType === 'sealed';
 
   // Live countdown state — ticks every second
@@ -222,9 +221,9 @@ export function AuctionCard({ auction }: AuctionCardProps) {
           >
             <Space size={4} align="center">
               <Text className="auction-card-seller-name">
-                {auction.sellerName}
+                {auction.sellerName ?? ''}
               </Text>
-              {auction.sellerTrustScore >= 80 && (
+              {(auction.sellerTrustScore ?? 0) >= 80 && (
                 <SafetyCertificateOutlined style={{ fontSize: 12, color: '#8c8c8c' }} />
               )}
             </Space>

@@ -28,7 +28,7 @@ export function HomePage() {
     page: 1,
     sortBy: 'endTime',
     sortOrder: 'asc',
-    status: ['active', 'qualifying'] as AuctionStatus[],
+    status: ['active'] as AuctionStatus[],
   }), []);
 
   const { data, isLoading } = useAuctions(filters);

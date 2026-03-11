@@ -125,5 +125,5 @@ export const MOCK_DASHBOARD_STATS: BidderDashboardStats = {
 export const MOCK_FEATURED_FOR_DASHBOARD: AuctionListItem[] =
   MOCK_AUCTION_LIST.filter(
     (a) =>
-      (a.status === 'active' || a.status === 'qualifying') && a.isFeatured,
+      a.status === 'active' && a.isFeatured,
   ).slice(0, 4);

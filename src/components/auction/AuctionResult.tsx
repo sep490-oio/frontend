@@ -23,8 +23,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { Auction } from '@/types';
-import { CURRENT_USER_ID } from '@/services/mock/auctionDetails';
-import { AUCTION_TO_ORDER_MAP } from '@/services/mock/orders';
+import { useAppSelector } from '@/app/hooks';
 import { formatVND } from '@/utils/formatters';
 
 const { Text } = Typography;
@@ -36,9 +35,10 @@ interface AuctionResultProps {
 export function AuctionResult({ auction }: AuctionResultProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const userId = useAppSelector((state) => state.auth.user?.id);
 
   // Determine if the current user won this auction
-  const isWinner = auction.winnerId === CURRENT_USER_ID;
+  const isWinner = !!userId && auction.winnerId === userId;
   const userParticipated = auction.currentUserDeposit !== null;
   const depositStatus = auction.currentUserDeposit?.status;
 
@@ -56,19 +56,17 @@ export function AuctionResult({ auction }: AuctionResultProps) {
           <Text style={{ fontSize: 24, fontWeight: 700, color: '#1677ff' }}>
             {formatVND(auction.currentPrice ?? auction.startingPrice)}
           </Text>
-          {depositStatus === 'applied' && (
+          {depositStatus === 'converted_to_payment' && (
             <Tag color="green">{t('bidding.depositApplied')}</Tag>
           )}
-          {/* Link to order page if one exists for this auction */}
-          {AUCTION_TO_ORDER_MAP[auction.id] && (
-            <Button
-              type="primary"
-              icon={<ShoppingOutlined />}
-              onClick={() => navigate(`/orders/${AUCTION_TO_ORDER_MAP[auction.id]}`)}
-            >
-              {t('bidding.viewOrder')}
-            </Button>
-          )}
+          {/* Link to order page — order ID would come from the API */}
+          <Button
+            type="primary"
+            icon={<ShoppingOutlined />}
+            onClick={() => navigate('/orders')}
+          >
+            {t('bidding.viewOrder')}
+          </Button>
         </Flex>
       </Result>
     );
@@ -83,10 +81,10 @@ export function AuctionResult({ auction }: AuctionResultProps) {
         style={{ padding: '16px 0' }}
       >
         <Flex vertical align="center" gap={8}>
-          {depositStatus === 'refunded' && (
+          {depositStatus === 'returned' && (
             <Text type="secondary">{t('bidding.depositRefundedNote')}</Text>
           )}
-          {depositStatus === 'refunded' && (
+          {depositStatus === 'returned' && (
             <Tag color="cyan">{t('bidding.depositRefunded')}</Tag>
           )}
         </Flex>
@@ -106,14 +104,14 @@ export function AuctionResult({ auction }: AuctionResultProps) {
   }
 
   // ─── Cancelled ───────────────────────────────────────────────
-  if (auction.status === 'cancelled' || auction.status === 'emergency_stopped') {
+  if (auction.status === 'cancelled') {
     return (
       <Result
         icon={<StopOutlined style={{ color: '#ff4d4f' }} />}
         title={t('bidding.resultCancelled')}
         style={{ padding: '16px 0' }}
       >
-        {userParticipated && depositStatus === 'refunded' && (
+        {userParticipated && depositStatus === 'returned' && (
           <Text type="secondary">{t('bidding.depositRefundedNote')}</Text>
         )}
       </Result>
@@ -129,7 +127,7 @@ export function AuctionResult({ auction }: AuctionResultProps) {
         subTitle={t('bidding.resultFailedReason')}
         style={{ padding: '16px 0' }}
       >
-        {userParticipated && depositStatus === 'refunded' && (
+        {userParticipated && depositStatus === 'returned' && (
           <Text type="secondary">{t('bidding.depositRefundedNote')}</Text>
         )}
       </Result>
