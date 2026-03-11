@@ -38,9 +38,7 @@ export function HomePage() {
   const featuredAuctions = data?.items ?? [];
 
   return (
-    <PageContainer>
-      <div className="home-page">
-
+    <>
       <section className="home-hero">
         <div className="home-hero__inner">
           <div className="home-hero__content">
@@ -94,46 +92,49 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="home-featured">
-        <div className="home-featured__header">
-          <div>
-            <Title className="home-featured__title" level={2}>
-              Featured Auctions
-            </Title>
-            <Text type="secondary">Ending soon – place your bids now</Text>
-          </div>
+      <PageContainer>
+        <div className="home-page">
+          <section className="home-featured">
+            <div className="home-featured__header">
+              <div>
+                <Title className="home-featured__title" level={2}>
+                  Featured Auctions
+                </Title>
+                <Text type="secondary">Ending soon – place your bids now</Text>
+              </div>
 
-          <div className="home-featured__cta">
-            <Button type="link" onClick={() => navigate('/browse')}>
-              View All
-            </Button>
-          </div>
-        </div>
-
-        <div className="home-featured__grid">
-          {isLoading ? (
-            <div className="home-featured__empty">
-              <Space direction="vertical" style={{ width: '100%' }}>
-                <Spin size="large" />
-              </Space>
+              <div className="home-featured__cta">
+                <Button type="link" onClick={() => navigate('/browse')}>
+                  View All
+                </Button>
+              </div>
             </div>
-          ) : featuredAuctions.length === 0 ? (
-            <Empty
-              description="No live auctions at the moment"
-              className="home-featured__empty"
-            />
-          ) : (
-            <Row gutter={[24, 32]}>
-              {featuredAuctions.slice(0, 4).map((auction) => (
-                <Col key={auction.id} xs={24} sm={12} md={8} lg={6}>
-                  <AuctionCard auction={auction} />
-                </Col>
-              ))}
-            </Row>
-          )}
+
+            <div className="home-featured__grid">
+              {isLoading ? (
+                <div className="home-featured__empty">
+                  <Space direction="vertical" style={{ width: '100%' }}>
+                    <Spin size="large" />
+                  </Space>
+                </div>
+              ) : featuredAuctions.length === 0 ? (
+                <Empty
+                  description="No live auctions at the moment"
+                  className="home-featured__empty"
+                />
+              ) : (
+                <Row gutter={[24, 32]}>
+                  {featuredAuctions.slice(0, 4).map((auction) => (
+                    <Col key={auction.id} xs={24} sm={12} md={8} lg={8}>
+                      <AuctionCard auction={auction} />
+                    </Col>
+                  ))}
+                </Row>
+              )}
+            </div>
+          </section>
         </div>
-      </section>
-    </div>
-    </PageContainer>
+      </PageContainer>
+    </>
   );
 }

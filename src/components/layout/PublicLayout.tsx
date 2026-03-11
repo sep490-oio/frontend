@@ -110,7 +110,7 @@ export function PublicLayout() {
       {/* Page content renders here via React Router's <Outlet /> */}
       <Content
         style={{
-          padding: isMobile ? '16px' : '24px',
+          padding: isMobile ? '16px' : '0px',
           maxWidth: 1600,
           margin: '0 auto',
           width: '100%',
