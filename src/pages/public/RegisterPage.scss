@@ -1,0 +1,364 @@
+@use "../../styles/tokens/colors" as *;
+@use "../../styles/tokens/spacing" as *;
+@use "../../styles/tokens/typography" as *;
+@use "../../styles/tokens/radius" as *;
+
+.register-page {
+  min-height: 100vh;
+  padding: 48px 32px;
+  position: relative;
+  overflow: hidden;
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(80px);
+    z-index: 1;
+  }
+
+  &::before {
+    width: 500px;
+    height: 500px;
+    top: 8%;
+    left: 8%;
+    background: rgba(13, 127, 242, 0.2);
+  }
+
+  &::after {
+    width: 500px;
+    height: 500px;
+    bottom: 8%;
+    right: 8%;
+    background: rgba(147, 51, 234, 0.12);
+  }
+}
+
+.register-card {
+  position: relative;
+  z-index: 2;
+  max-width: 1152px;
+  margin: 0 auto;
+  border-radius: $radius-xl;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.035);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  display: flex;
+  flex-wrap: wrap;
+
+  @media (max-width: 1024px) {
+    flex-direction: column;
+  }
+}
+
+.register-hero {
+  position: relative;
+  width: 560px;
+  background: $color-bg-page;
+  padding: 48px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 24px;
+
+  @media (max-width: 1024px) {
+    width: 100%;
+    padding: 40px 32px;
+  }
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2026-03-10/dT7G1qtAT4.png)
+      no-repeat center;
+    background-size: cover;
+    opacity: 0.18;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.48));
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 460px;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px;
+    background: rgba(13, 127, 242, 0.1);
+    border: 1px solid rgba(13, 127, 242, 0.2);
+    border-radius: 9999px;
+    color: $color-primary;
+    font-family: $font-heading;
+    font-size: $text-xs;
+    font-weight: $font-weight-bold;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+
+  .hero-title {
+    font-family: $font-heading;
+    font-size: 48px;
+    font-weight: $font-weight-bold;
+    line-height: 1.1;
+    margin: 0;
+    color: $text-primary;
+    letter-spacing: -1.2px;
+  }
+
+  .hero-subtitle {
+    margin: 16px 0 0;
+    font-size: $text-md;
+    line-height: 1.6;
+    color: $text-secondary;
+    max-width: 480px;
+  }
+}
+
+.register-panel {
+  flex: 1;
+  padding: 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 32px;
+  position: relative;
+
+  @media (max-width: 1024px) {
+    padding: 48px 32px;
+    width: 100%;
+  }
+
+  @media (max-width: 640px) {
+    padding: 32px 24px;
+  }
+
+  .register-header {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .register-title {
+    font-family: $font-heading;
+    font-size: 30px;
+    font-weight: $font-weight-bold;
+    margin: 0;
+    color: $text-primary;
+  }
+
+  .register-subtitle {
+    font-size: $text-sm;
+    color: $text-secondary;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .register-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+
+    .ant-form-item-label > label {
+      color: $text-secondary;
+      font-weight: $font-weight-medium;
+    }
+
+    // Standalone input (no affix wrapper)
+    .ant-input:not(.ant-input-affix-wrapper .ant-input) {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid $border-color;
+      border-radius: $radius-xl;
+      color: $text-primary;
+      height: 52px;
+
+      &:-webkit-autofill,
+      &:-webkit-autofill:hover,
+      &:-webkit-autofill:focus {
+        transition: background-color 99999s ease-in-out 0s !important;
+        -webkit-text-fill-color: $text-primary !important;
+        caret-color: $text-primary;
+      }
+
+      &:hover,
+      &:focus {
+        border-color: rgba($color-primary, 0.5);
+        box-shadow: 0 0 0 2px rgba($color-primary, 0.1);
+      }
+
+      &::placeholder {
+        color: $text-secondary;
+      }
+    }
+
+    // Affix wrapper (inputs with prefix/suffix icons)
+    .ant-input-affix-wrapper {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid $border-color;
+      border-radius: $radius-xl;
+      height: 52px;
+      padding-inline: 12px;
+
+      // Inner input — transparent, no border/radius of its own
+      .ant-input {
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        color: $text-primary;
+        height: 100%;
+
+        &:-webkit-autofill,
+        &:-webkit-autofill:hover,
+        &:-webkit-autofill:focus {
+          transition: background-color 99999s ease-in-out 0s !important;
+          -webkit-text-fill-color: $text-primary !important;
+          caret-color: $text-primary;
+        }
+
+        &::placeholder {
+          color: $text-secondary;
+        }
+      }
+
+      .ant-input-prefix {
+        color: $text-secondary;
+        margin-inline-end: 8px;
+      }
+
+      .ant-input-suffix {
+        color: $text-secondary;
+      }
+
+      &:hover,
+      &:focus-within {
+        border-color: rgba($color-primary, 0.5);
+        box-shadow: 0 0 0 2px rgba($color-primary, 0.1);
+      }
+    }
+
+    .section {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+
+      .section-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        .section-icon {
+          width: 20px;
+          height: 20px;
+          border-radius: 8px;
+          background: rgba(13, 127, 242, 0.2);
+          display: grid;
+          place-items: center;
+        }
+
+        .section-title {
+          font-size: $text-lg;
+          font-weight: $font-weight-bold;
+          color: $text-primary;
+          margin: 0;
+        }
+      }
+
+      .section-row {
+        display: flex;
+        gap: 16px;
+
+        @media (max-width: 720px) {
+          flex-direction: column;
+        }
+      }
+    }
+
+    .register-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+
+      .terms {
+        font-size: $text-sm;
+        color: $text-secondary;
+        line-height: 1.5;
+
+        a {
+          color: $color-primary;
+          text-decoration: none;
+
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+      }
+
+      .submit {
+        width: 100%;
+        height: 52px;
+        border-radius: $radius-xl;
+        background: $color-primary;
+        border: none;
+        font-size: $text-md;
+        font-weight: $font-weight-bold;
+        color: #fff;
+
+        &:hover {
+          background: lighten($color-primary, 5%);
+        }
+      }
+    }
+  }
+
+  .register-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+
+    .login-redirect {
+      font-size: $text-sm;
+      color: $text-secondary;
+
+      a {
+        color: $color-primary;
+        font-weight: $font-weight-bold;
+      }
+    }
+
+    .feature-badges {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+
+      .badge {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 110px;
+        height: 36px;
+        background: rgba(51, 65, 85, 0.5);
+        border: 1px solid #475569;
+        border-radius: 8px;
+        color: $text-secondary;
+        font-size: $text-xs;
+        font-weight: $font-weight-bold;
+      }
+    }
+  }
+}
+
+

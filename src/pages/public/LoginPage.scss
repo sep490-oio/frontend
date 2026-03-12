@@ -1,0 +1,443 @@
+@use "../../styles/tokens/colors" as *;
+@use "../../styles/tokens/spacing" as *;
+@use "../../styles/tokens/typography" as *;
+@use "../../styles/tokens/radius" as *;
+
+// Login page layout
+.login-page {
+  min-height: 100vh;
+  padding: 48px 32px;
+  position: relative;
+  overflow: hidden;
+
+  // Background glow blobs
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(80px);
+    z-index: 1;
+  }
+
+  &::before {
+    width: 500px;
+    height: 500px;
+    top: 8%;
+    left: 8%;
+    background: rgba(13, 127, 242, 0.2);
+  }
+
+  &::after {
+    width: 500px;
+    height: 500px;
+    bottom: 8%;
+    right: 8%;
+    background: rgba(147, 51, 234, 0.12);
+  }
+}
+
+.login-card {
+  position: relative;
+  z-index: 2;
+  max-width: 1152px;
+  margin: 0 auto;
+  border-radius: $radius-xl;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.035);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  display: flex;
+  flex-wrap: wrap;
+
+  @media (max-width: 1024px) {
+    flex-direction: column;
+  }
+}
+
+.login-hero {
+  position: relative;
+  width: 560px;
+  background: $color-bg-page;
+  padding: 48px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 24px;
+
+  @media (max-width: 1024px) {
+    width: 100%;
+    padding: 40px 32px;
+  }
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2026-03-10/dT7G1qtAT4.png)
+      no-repeat center;
+    background-size: cover;
+    opacity: 0.18;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.48));
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 460px;
+  }
+
+  .hero-title {
+    font-family: $font-heading;
+    font-size: 48px;
+    font-weight: $font-weight-bold;
+    line-height: 1.25;
+    margin: 0;
+    color: $text-primary;
+
+    span {
+      display: block;
+    }
+
+    .accent {
+      color: $color-primary;
+    }
+  }
+
+  .hero-subtitle {
+    margin: 16px 0 0;
+    font-size: $text-md;
+    line-height: 1.6;
+    color: $text-secondary;
+    max-width: 448px;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 32px;
+    margin-top: 24px;
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      .stat-value {
+        font-family: $font-heading;
+        font-size: 30px;
+        font-weight: $font-weight-bold;
+        color: $text-primary;
+      }
+
+      .stat-label {
+        font-size: $text-sm;
+        color: $text-secondary;
+      }
+    }
+  }
+}
+
+.login-panel {
+  flex: 1;
+  padding: 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 32px;
+  position: relative;
+
+  @media (max-width: 1024px) {
+    padding: 48px 32px;
+    width: 100%;
+  }
+
+  @media (max-width: 640px) {
+    padding: 32px 24px;
+  }
+
+  .login-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .brand-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 16px;
+        background: $color-primary;
+        display: grid;
+        place-items: center;
+      }
+
+      .brand-name {
+        font-family: $font-heading;
+        font-size: 24px;
+        font-weight: $font-weight-bold;
+        color: $text-primary;
+      }
+    }
+
+    .top-action {
+      width: 40px;
+      height: 40px;
+      border-radius: 24px;
+      background: $color-bg-card;
+      display: grid;
+      place-items: center;
+      border: 1px solid $border-color;
+
+      svg {
+        width: 20px;
+        height: 20px;
+        color: $text-primary;
+      }
+    }
+  }
+
+  .login-title {
+    font-family: $font-heading;
+    font-size: 30px;
+    font-weight: $font-weight-bold;
+    margin: 0;
+    color: $text-primary;
+  }
+
+  .login-subtitle {
+    font-size: $text-sm;
+    color: $text-secondary;
+    margin: 4px 0 0;
+    line-height: 1.5;
+  }
+
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+
+    .ant-form-item-label > label {
+      color: $text-secondary;
+      font-weight: $font-weight-medium;
+    }
+
+    // Standalone input (email field — not wrapped in affix-wrapper)
+    .ant-input:not(.ant-input-affix-wrapper .ant-input) {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid $border-color;
+      border-radius: $radius-xl;
+      color: $text-primary;
+      height: 52px;
+
+      // Hide autofill highlight entirely via infinite transition delay
+      &:-webkit-autofill,
+      &:-webkit-autofill:hover,
+      &:-webkit-autofill:focus {
+        transition: background-color 99999s ease-in-out 0s !important;
+        -webkit-text-fill-color: $text-primary !important;
+        caret-color: $text-primary;
+      }
+
+      &:hover,
+      &:focus {
+        border-color: rgba($color-primary, 0.5);
+        box-shadow: 0 0 0 2px rgba($color-primary, 0.1);
+      }
+
+      &::placeholder {
+        color: $text-secondary;
+      }
+    }
+
+    // Affix wrapper (wraps both email & password inputs with prefix/suffix icons)
+    .ant-input-affix-wrapper {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid $border-color;
+      border-radius: $radius-xl;
+      height: 52px;
+      padding-inline: 12px;
+
+      // Inner input must be transparent — no border/radius of its own
+      .ant-input {
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        color: $text-primary;
+        height: 100%;
+
+        // Hide autofill highlight entirely via infinite transition delay
+        &:-webkit-autofill,
+        &:-webkit-autofill:hover,
+        &:-webkit-autofill:focus {
+          transition: background-color 99999s ease-in-out 0s !important;
+          -webkit-text-fill-color: $text-primary !important;
+          caret-color: $text-primary;
+        }
+
+        &::placeholder {
+          color: $text-secondary;
+        }
+      }
+
+      .ant-input-prefix {
+        color: $text-secondary;
+        margin-inline-end: 8px;
+      }
+
+      .ant-input-suffix {
+        color: $text-secondary;
+      }
+
+      &:hover,
+      &:focus-within {
+        border-color: rgba($color-primary, 0.5);
+        box-shadow: 0 0 0 2px rgba($color-primary, 0.1);
+      }
+    }
+
+    .login-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+
+      .ant-checkbox-wrapper {
+        color: $text-secondary;
+
+        .ant-checkbox-inner {
+          border-color: $border-color;
+          background: $color-bg-card;
+        }
+
+        &.ant-checkbox-wrapper-checked {
+          .ant-checkbox-inner {
+            background: $color-primary;
+            border-color: $color-primary;
+          }
+
+          .ant-checkbox-inner::after {
+            border-color: $color-bg-page;
+          }
+        }
+      }
+
+      .forgot-link {
+        color: $color-primary;
+        font-weight: $font-weight-bold;
+      }
+    }
+
+    .login-submit {
+      width: 100%;
+      height: 52px;
+      border-radius: $radius-xl;
+      background: $color-primary;
+      border: none;
+      font-size: $text-md;
+      font-weight: $font-weight-bold;
+      color: #fff;
+
+      &:hover {
+        background: lighten($color-primary, 5%);
+      }
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: $text-xs;
+      color: $text-secondary;
+      text-transform: uppercase;
+
+      &::before,
+      &::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: $border-color;
+      }
+    }
+
+    .social-buttons {
+      display: flex;
+      gap: 16px;
+
+      .social-btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 12px 16px;
+        background: rgba(30, 41, 59, 0.5);
+        border: 1px solid $border-color;
+        border-radius: $radius-xl;
+        cursor: pointer;
+
+        &:hover {
+          border-color: rgba($color-primary, 0.5);
+        }
+
+        .label {
+          color: $text-primary;
+          font-weight: $font-weight-bold;
+        }
+      }
+    }
+
+    .register-row {
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+      font-size: $text-sm;
+      color: $text-secondary;
+
+      .register-link {
+        color: $color-primary;
+        font-weight: $font-weight-bold;
+      }
+    }
+  }
+
+  .login-footer {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .links {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+
+      a {
+        color: $text-secondary;
+        font-size: $text-sm;
+        text-decoration: none;
+
+        &:hover {
+          color: $text-primary;
+        }
+      }
+    }
+
+    .copyright {
+      font-size: $text-xs;
+      color: $text-secondary;
+    }
+  }
+}

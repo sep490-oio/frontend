@@ -19,6 +19,7 @@ import type { SellerSummary } from './user';
  * Example: Electronics → Phones → Smartphones
  */
 export interface Category {
+  count: ReactI18NextChildren | Iterable<ReactI18NextChildren>;
   id: string;
   parentId: string | null;
   name: string;

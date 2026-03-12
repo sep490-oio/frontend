@@ -1,27 +1,20 @@
 /**
  * AppHeader — shared top header used by both PublicLayout and AppLayout.
  *
- * Provides consistent brand identity across the entire app (Shopee/Tiki pattern):
- * - Logo (always visible, links to home)
- * - "Khám phá" link (desktop only)
- * - Language switcher (always visible)
- * - Auth section: Login/Register (guest) OR user avatar dropdown (logged in)
+ * Provides consistent brand identity across the entire app.
  *
  * Responsive behavior:
- * - Desktop (≥992px): Full nav links + auth section, no hamburger
- * - Tablet (768–991px): Nav links visible + hamburger for drawer navigation
- * - Mobile (<768px): Compact — hamburger + logo + language + avatar/login
- *
- * The optional `onMenuClick` prop shows a hamburger button (mobile + tablet).
- * Parent layouts decide when to pass it (typically when sidebar is hidden).
- * Each parent layout manages its own drawer (PublicLayout → right, AppLayout → left).
+ * - Desktop (≥1200px): full nav, search, language switcher, and auth actions
+ * - Mobile (<1200px): compact header with hamburger, logo, language, and user/auth controls
  */
-import { Button, Space, Dropdown, Typography, Avatar, Layout } from 'antd';
+import { useState } from 'react';
+import { Button, Dropdown, Avatar, Layout } from 'antd';
 import {
   DashboardOutlined,
   GlobalOutlined,
   MenuOutlined,
   LogoutOutlined,
+  SearchOutlined,
   UserOutlined,
 } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
@@ -31,8 +24,9 @@ import { clearCredentials } from '@/features/auth/authSlice';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import type { SupportedLanguage } from '@/types';
 
+import './AppHeader.scss';
+
 const { Header } = Layout;
-const { Text } = Typography;
 
 interface AppHeaderProps {
   /** If provided, shows a hamburger button (mobile + tablet) that opens the nav drawer */
@@ -45,6 +39,7 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
   const { isMobile } = useBreakpoint();
+  const [searchValue, setSearchValue] = useState('');
 
   const changeLanguage = (lang: SupportedLanguage) => {
     i18n.changeLanguage(lang);
@@ -78,30 +73,18 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
   ];
 
   return (
-    <Header
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        background: '#fff',
-        borderBottom: '1px solid #f0f0f0',
-        padding: isMobile ? '0 16px' : '0 24px',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-      }}
-    >
-      {/* ─── Left side: hamburger (mobile) + logo ─────────────────── */}
-      <Space size="middle">
-        {/* Hamburger button — shows when parent provides onMenuClick (mobile + tablet) */}
-        {onMenuClick && (
-          <Button
-            type="text"
-            icon={<MenuOutlined />}
-            onClick={onMenuClick}
-            aria-label={t('common.menu')}
-          />
-        )}
+    <Header className="app-header">
+      <div className="app-header__inner">
+        <div className="app-header__brand">
+          {onMenuClick && (
+            <Button
+              className="app-header__menuButton"
+              type="text"
+              icon={<MenuOutlined />}
+              onClick={onMenuClick}
+              aria-label={t('common.menu')}
+            />
+          )}
 
         {/* Logo — always visible, links to home */}
         <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

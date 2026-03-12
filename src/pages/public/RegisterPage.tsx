@@ -10,23 +10,8 @@
  *   userName, firstName, lastName, email, password
  */
 import { useState } from 'react';
-import {
-  Alert,
-  Button,
-  Card,
-  Col,
-  Divider,
-  Form,
-  Input,
-  Layout,
-  Row,
-  Typography,
-} from 'antd';
-import {
-  LockOutlined,
-  MailOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
+import { Alert, Button, Form, Input, Row, Col } from 'antd';
+import { LockOutlined, MailOutlined, UserOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Controller, useForm } from 'react-hook-form';
@@ -35,8 +20,7 @@ import { z } from 'zod';
 import axios from 'axios';
 import { register } from '@/services/authService';
 
-const { Content, Footer } = Layout;
-const { Title, Text, Paragraph } = Typography;
+import './RegisterPage.scss';
 
 const registerSchema = z
   .object({
@@ -108,46 +92,65 @@ export function RegisterPage() {
     }
   };
 
-  // design-system-aligned CSS classes are applied via className
-  // No need for style constants anymore
-
   if (registered) {
     return (
-      <Layout className="register-page">
-        <Content className="register-content">
-          <Card className="register-card register-success-card" classNames={{ body: 'register-card-body' }}>
+      <div className="register-page">
+        <div className="register-card">
+          <div className="register-hero">
+            <div className="hero-content">
+              <div className="hero-tag">{t('auth.registerBadge') ?? 'Đăng ký tài khoản mới'}</div>
+              <h1 className="hero-title">{t('auth.registerSuccessTitle') ?? 'Check your inbox'}</h1>
+              <p className="hero-subtitle">
+                {t('auth.registerSuccessSubtitle') ?? 'We’ve just emailed you a confirmation link.'}
+              </p>
+            </div>
+          </div>
+          <div className="register-panel">
             <Alert
               type="success"
               message={t('auth.registerSuccess')}
               showIcon
-              style={{ marginBottom: 16 }}
+              style={{ marginBottom: 24 }}
             />
-            <Text strong style={{ display: 'block', textAlign: 'center' }}>
-              <Link to="/login">{t('auth.loginButton')}</Link>
-            </Text>
-          </Card>
-        </Content>
-      </Layout>
+            <div className="register-footer">
+              <div className="login-redirect">
+                {t('auth.alreadyHaveAccount') ?? 'Already have an account?'}{' '}
+                <Link to="/login">{t('auth.loginButton') ?? 'Log in'}</Link>
+              </div>
+              <div className="feature-badges">
+                <div className="badge">SECURE PAY</div>
+                <div className="badge">NFT VERIFIED</div>
+                <div className="badge">24/7 SUPPORT</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Layout className="register-page">
+    <div className="register-page">
+      <div className="register-card">
+        <div className="register-hero">
+          <div className="hero-content">
+            <div className="hero-tag">{t('auth.registerBadge') ?? 'Đăng ký tài khoản mới'}</div>
+            <h1 className="hero-title">{t('auth.registerHeroTitle') ?? 'Tham gia Metaz'}</h1>
+            <p className="hero-subtitle">
+              {t('auth.registerHeroSubtitle') ??
+                'Bắt đầu hành trình đấu giá tài sản số và vật phẩm xa xỉ của bạn với nền tảng bảo mật hàng đầu.'}
+            </p>
+          </div>
+        </div>
 
+        <div className="register-panel">
+          <div className="register-header">
+            <h2 className="register-title">{t('auth.registerTitle') || 'Create Account'}</h2>
+            <p className="register-subtitle">
+              {t('auth.registerSubtitle') || 'Create a free account to start bidding.'}
+            </p>
+          </div>
 
-
-      {/* Main content */}
-      <Content className="register-content">
-        <Card className="register-card" classNames={{ body: 'register-card-body' }}>
-          {/* Page heading */}
-          <Title level={2} className="register-title">
-            {t('auth.registerTitle') || 'Create Account'}
-          </Title>
-          <Paragraph className="register-subtitle">
-            Join the premier destination for designer art toys.
-          </Paragraph>
-
-          {/* Root error */}
           {errors.root && (
             <Alert
               type="error"
@@ -157,112 +160,107 @@ export function RegisterPage() {
             />
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)}>
-            {/* Username */}
-            <Form.Item
-              validateStatus={errors.userName ? 'error' : undefined}
-              help={errors.userName?.message ? t(errors.userName.message) : undefined}
-              className="register-form-item"
-            >
-              <Controller
-                name="userName"
-                control={control}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    prefix={<UserOutlined style={{ color: '#bfbfbf' }} />}
-                    placeholder={t('auth.userName')}
-                    size="large"
-                    variant="borderless"
-                    className="register-input"
-                  />
-                )}
-              />
-            </Form.Item>
+          <Form className="register-form" layout="vertical" onFinish={handleSubmit(onSubmit)}>
+            <div className="section">
+              <div className="section-header">
+                <div className="section-icon">
+                  <UserOutlined />
+                </div>
+                <h3 className="section-title">{t('auth.personalInfo') ?? 'Thông tin cá nhân'}</h3>
+              </div>
 
-            {/* Full Name – side-by-side */}
-            <Text className="register-field-label">
-              Full Name
-            </Text>
-            <Row gutter={16} className="register-full-name-row">
-              <Col span={12}>
+              <div className="section-row">
                 <Form.Item
+                  label={t('auth.userName')}
+                  validateStatus={errors.userName ? 'error' : undefined}
+                  help={errors.userName?.message ? t(errors.userName.message) : undefined}
+                  style={{ flex: 1, minWidth: 0 }}
+                >
+                  <Controller
+                    name="userName"
+                    control={control}
+                    render={({ field }) => (
+                      <Input
+                        {...field}
+                        prefix={<UserOutlined />}
+                        placeholder={t('auth.userName')}
+                        size="large"
+                      />
+                    )}
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  label={t('auth.firstName')}
                   validateStatus={errors.firstName ? 'error' : undefined}
                   help={errors.firstName?.message ? t(errors.firstName.message) : undefined}
-                  style={{ marginBottom: 0 }}
+                  style={{ flex: 1, minWidth: 0 }}
                 >
                   <Controller
                     name="firstName"
                     control={control}
                     render={({ field }) => (
-                      <Input
-                        {...field}
-                        prefix={<UserOutlined style={{ color: '#bfbfbf' }} />}
-                        placeholder={t('auth.firstName')}
-                        size="large"
-                        variant="borderless"
-                        className="register-input"
-                      />
+                      <Input {...field} placeholder={t('auth.firstName')} size="large" />
                     )}
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
+              </div>
+
+              <div className="section-row">
                 <Form.Item
+                  label={t('auth.lastName')}
                   validateStatus={errors.lastName ? 'error' : undefined}
                   help={errors.lastName?.message ? t(errors.lastName.message) : undefined}
-                  style={{ marginBottom: 0 }}
+                  style={{ flex: 1, minWidth: 0 }}
                 >
                   <Controller
                     name="lastName"
                     control={control}
                     render={({ field }) => (
-                      <Input
-                        {...field}
-                        placeholder={t('auth.lastName')}
-                        size="large"
-                        variant="borderless"
-                        className="register-input"
-                      />
+                      <Input {...field} placeholder={t('auth.lastName')} size="large" />
                     )}
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
 
-            {/* Email */}
-            <Form.Item
-              validateStatus={errors.email ? 'error' : undefined}
-              help={errors.email?.message ? t(errors.email.message) : undefined}
-              className="register-form-item"
-            >
-              <Controller
-                name="email"
-                control={control}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    prefix={<MailOutlined style={{ color: '#bfbfbf' }} />}
-                    placeholder={t('auth.email')}
-                    size="large"
-                    variant="borderless"
-                    className="register-input"
-                  />
-                )}
-              />
-            </Form.Item>
+            <div className="section">
+              <div className="section-header">
+                <div className="section-icon">
+                  <MailOutlined />
+                </div>
+                <h3 className="section-title">{t('auth.accountInfo') ?? 'Thông tin tài khoản'}</h3>
+              </div>
 
-            {/* Password + Confirm Password — side by side */}
-            <Row gutter={16}>
-              <Col span={12}>
+              <Form.Item
+                label={t('auth.email')}
+                validateStatus={errors.email ? 'error' : undefined}
+                help={errors.email?.message ? t(errors.email.message) : undefined}
+              >
+                <Controller
+                  name="email"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      {...field}
+                      prefix={<MailOutlined />}
+                      placeholder={t('auth.email')}
+                      size="large"
+                    />
+                  )}
+                />
+              </Form.Item>
+
+              <div className="section-row">
                 <Form.Item
+                  label={t('auth.password')}
                   validateStatus={errors.password ? 'error' : undefined}
                   help={
                     errors.password?.message
                       ? t(errors.password.message, { min: 8 })
                       : undefined
                   }
-                  className="register-form-item"
+                  style={{ flex: 1, minWidth: 0 }}
                 >
                   <Controller
                     name="password"
@@ -270,25 +268,23 @@ export function RegisterPage() {
                     render={({ field }) => (
                       <Input.Password
                         {...field}
-                        prefix={<LockOutlined style={{ color: '#bfbfbf' }} />}
+                        prefix={<LockOutlined />}
                         placeholder={t('auth.password')}
                         size="large"
-                        variant="borderless"
-                        className="register-input"
                       />
                     )}
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
+
                 <Form.Item
+                  label={t('auth.confirmPassword')}
                   validateStatus={errors.confirmPassword ? 'error' : undefined}
                   help={
                     errors.confirmPassword?.message
                       ? t(errors.confirmPassword.message)
                       : undefined
                   }
-                  className="register-form-item"
+                  style={{ flex: 1, minWidth: 0 }}
                 >
                   <Controller
                     name="confirmPassword"
@@ -296,63 +292,51 @@ export function RegisterPage() {
                     render={({ field }) => (
                       <Input.Password
                         {...field}
-                        prefix={<LockOutlined style={{ color: '#bfbfbf' }} />}
+                        prefix={<LockOutlined />}
                         placeholder={t('auth.confirmPassword')}
                         size="large"
-                        variant="borderless"
-                        className="register-input"
                       />
                     )}
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
 
-            {/* Submit */}
-            <Form.Item style={{ marginBottom: 0, marginTop: 8 }}>
+            <div className="register-actions">
+              <p className="terms">
+                {t('auth.registerTerms') ??
+                  'By registering, you agree to our '}
+                <Link to="/terms">{t('auth.terms') ?? 'Terms'}</Link> {t('auth.and') ?? 'and'}{' '}
+                <Link to="/privacy">{t('auth.privacy') ?? 'Privacy Policy'}</Link>.
+              </p>
+
               <Button
                 type="primary"
                 htmlType="submit"
                 loading={isSubmitting}
-                block
                 size="large"
-                className="register-button"
+                className="submit"
+                block
               >
                 {t('auth.registerButton') || 'Register'}
               </Button>
-            </Form.Item>
-          </form>
+            </div>
+          </Form>
 
-          {/* Terms notice */}
-          <Paragraph className="register-terms">
-            By registering, you agree to our{' '}
-            <Link to="/terms">Terms</Link> and{' '}
-            <Link to="/privacy">Privacy Policy</Link>.
-          </Paragraph>
+          <div className="register-footer">
+            <div className="login-redirect">
+              {t('auth.alreadyHaveAccount') ?? 'Already have an account?'}{' '}
+              <Link to="/login">{t('auth.loginButton') || 'Log in'}</Link>
+            </div>
 
-          <Divider className="register-divider" />
-
-          {/* Login link */}
-          <Text className="register-login-link">
-            Already have an account?{' '}
-            <Link to="/login" style={{ color: '#000', fontWeight: 700 }}>
-              {t('auth.loginButton') || 'Log in instead'}
-            </Link>
-          </Text>
-        </Card>
-      </Content>
-
-      {/* Footer */}
-      <Footer className="register-footer">
-        <Text className="register-footer-text">© 2024 Nest &amp; Field Art Toys</Text>
-        <div className="register-footer-links">
-          {['Twitter', 'Instagram', 'Discord'].map((platform) => (
-            <a key={platform} href="#" className="register-nav-link">
-              {platform}
-            </a>
-          ))}
+            <div className="feature-badges">
+              <div className="badge">SECURE PAY</div>
+              <div className="badge">NFT VERIFIED</div>
+              <div className="badge">24/7 SUPPORT</div>
+            </div>
+          </div>
         </div>
-      </Footer>
-    </Layout>
+      </div>
+    </div>
   );
 }
