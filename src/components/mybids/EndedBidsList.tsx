@@ -22,7 +22,6 @@ import {
   Typography,
   List,
   Avatar,
-  Button,
   Empty,
   Skeleton,
   Select,
@@ -31,12 +30,10 @@ import {
   Row,
   Col,
 } from 'antd';
-import { ShoppingOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { MyBidItem } from '@/types';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
-import { AUCTION_TO_ORDER_MAP } from '@/services/mock/orders';
 import { formatVND } from '@/utils/formatters';
 
 const { Text, Paragraph } = Typography;
@@ -165,7 +162,7 @@ export function EndedBidsList({ bids, isLoading, viewMode }: EndedBidsListProps)
       render: (_: unknown, record: MyBidItem) => (
         <Space>
           <img
-            src={record.auction.primaryImageUrl ?? ''}
+            src={record.auction.primaryImageUrl || '/placeholder-item.svg'}
             alt={record.auction.itemTitle}
             style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }}
           />
@@ -215,28 +212,6 @@ export function EndedBidsList({ bids, isLoading, viewMode }: EndedBidsListProps)
         return <Tag color={dep.color}>{dep.label}</Tag>;
       },
     },
-    {
-      title: '',
-      key: 'action',
-      width: 120,
-      render: (_: unknown, record: MyBidItem) => {
-        const orderId = isWon(record) ? AUCTION_TO_ORDER_MAP[record.auction.id] : undefined;
-        if (!orderId) return null;
-        return (
-          <Button
-            type="link"
-            size="small"
-            icon={<ShoppingOutlined />}
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/orders/${orderId}`);
-            }}
-          >
-            {t('myBids.viewOrder')}
-          </Button>
-        );
-      },
-    },
   ];
 
   // ─── Mobile: List view (used when viewMode=table on small screens) ──
@@ -257,7 +232,7 @@ export function EndedBidsList({ bids, isLoading, viewMode }: EndedBidsListProps)
                 <Avatar
                   shape="square"
                   size={48}
-                  src={item.auction.primaryImageUrl}
+                  src={item.auction.primaryImageUrl || '/placeholder-item.svg'}
                 />
               }
               title={
@@ -279,20 +254,6 @@ export function EndedBidsList({ bids, isLoading, viewMode }: EndedBidsListProps)
                   <Tag color={dep.color} style={{ margin: 0 }}>
                     {dep.label}
                   </Tag>
-                  {isWon(item) && AUCTION_TO_ORDER_MAP[item.auction.id] && (
-                    <Button
-                      type="link"
-                      size="small"
-                      icon={<ShoppingOutlined />}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/orders/${AUCTION_TO_ORDER_MAP[item.auction.id]}`);
-                      }}
-                      style={{ padding: 0, height: 'auto' }}
-                    >
-                      {t('myBids.viewOrder')}
-                    </Button>
-                  )}
                 </Flex>
               }
             />
@@ -318,7 +279,7 @@ export function EndedBidsList({ bids, isLoading, viewMode }: EndedBidsListProps)
                 <div style={{ position: 'relative' }}>
                   <img
                     alt={item.auction.itemTitle}
-                    src={item.auction.primaryImageUrl ?? ''}
+                    src={item.auction.primaryImageUrl || '/placeholder-item.svg'}
                     style={{ width: '100%', height: 180, objectFit: 'cover', display: 'block' }}
                   />
                   {/* Result badge — top-right */}
@@ -367,20 +328,6 @@ export function EndedBidsList({ bids, isLoading, viewMode }: EndedBidsListProps)
                 <Tag color={dep.color} style={{ margin: 0 }}>
                   {dep.label}
                 </Tag>
-                {isWon(item) && AUCTION_TO_ORDER_MAP[item.auction.id] && (
-                  <Button
-                    type="link"
-                    size="small"
-                    icon={<ShoppingOutlined />}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/orders/${AUCTION_TO_ORDER_MAP[item.auction.id]}`);
-                    }}
-                    style={{ padding: 0 }}
-                  >
-                    {t('myBids.viewOrder')}
-                  </Button>
-                )}
               </Flex>
             </Card>
           </Col>

@@ -48,6 +48,7 @@ import {
   STATUS_KEYS,
   STATUS_COLORS,
 } from '@/utils/formatters';
+import { useIsWatching } from '@/hooks/useMyBids';
 import { WatchButton } from './WatchButton';
 import { AuctionResult } from './AuctionResult';
 import { QualificationSection } from './QualificationSection';
@@ -75,6 +76,10 @@ export function BiddingPanel({ auction, hubPlaceBid, hubBuyNow, hubConfigureAuto
   const { t } = useTranslation();
   const { isMobile } = useBreakpoint();
   const [buyNowOpen, setBuyNowOpen] = useState(false);
+
+  // Cross-reference watchlist to get real isWatching status
+  // (BE doesn't return isWatching in GET /api/auctions/{id})
+  const isWatchingFromList = useIsWatching(auction.id);
 
   // ─── Phase detection ──────────────────────────────────────────
   const isActive = auction.status === 'active';
@@ -121,7 +126,7 @@ export function BiddingPanel({ auction, hubPlaceBid, hubBuyNow, hubConfigureAuto
           {/* Watch button — always visible */}
           <WatchButton
             auctionId={auction.id}
-            isWatching={auction.isWatching}
+            isWatching={isWatchingFromList || auction.isWatching}
             watchCount={auction.watchCount}
           />
         </Flex>

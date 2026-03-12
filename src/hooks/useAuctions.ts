@@ -66,6 +66,10 @@ export function useAuctionBids(auctionId: string | undefined) {
     queryKey: ['auctionBids', auctionId],
     queryFn: () => getAuctionBids(auctionId!),
     enabled: !!auctionId,
+    // Poll every 10s as fallback — matches useAuction polling cadence.
+    // SignalR BidPlaced event should push updates faster, but it's
+    // currently not arriving (BE bug). Polling catches the gap.
+    refetchInterval: 10_000,
   });
 }
 

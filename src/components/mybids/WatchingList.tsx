@@ -171,7 +171,7 @@ export function WatchingList({ auctions, isLoading, viewMode }: WatchingListProp
       render: (_: unknown, record: AuctionListItem) => (
         <Space>
           <img
-            src={record.primaryImageUrl ?? ''}
+            src={record.primaryImageUrl || '/placeholder-item.svg'}
             alt={record.itemTitle}
             style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }}
           />
@@ -255,7 +255,7 @@ export function WatchingList({ auctions, isLoading, viewMode }: WatchingListProp
                 <Avatar
                   shape="square"
                   size={48}
-                  src={auction.primaryImageUrl}
+                  src={auction.primaryImageUrl || '/placeholder-item.svg'}
                 />
               }
               title={

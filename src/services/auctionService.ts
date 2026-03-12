@@ -359,12 +359,47 @@ export async function getAuctionById(
  */
 export async function getAuctionBids(auctionId: string): Promise<Bid[]> {
   try {
-    // BE may return a plain array OR a paginated object { items: [...] }
-    const { data } = await api.get<ApiBid[] | ApiPaginatedResponse<ApiBid>>(
-      `/api/auctions/${auctionId}/bids`,
+    // BE caps PageSize at 50. Fetch all pages to get complete bid history.
+    // Request newest first so page 1 always has the most recent bids.
+    const allBids: ApiBid[] = [];
+    let page = 1;
+    let hasNext = true;
+
+    while (hasNext) {
+      const { data } = await api.get(
+        `/api/auctions/${auctionId}/bids`,
+        { params: { PageNumber: page, PageSize: 50, SortBy: 'createdAt', IsDescending: true } },
+      );
+
+      // Handle 3 possible shapes: plain array, { items }, or { data: { items } }
+      const obj = data as Record<string, unknown>;
+      const unwrapped = obj?.data;
+      const inner = (unwrapped && typeof unwrapped === 'object' && 'items' in (unwrapped as Record<string, unknown>))
+        ? unwrapped as { items: ApiBid[]; metadata?: { hasNext?: boolean } }
+        : null;
+
+      const paginated = inner
+        ?? (obj?.items ? obj as unknown as { items: ApiBid[]; metadata?: { hasNext?: boolean } } : null);
+
+      if (Array.isArray(data)) {
+        // Plain array — no pagination, we have everything
+        allBids.push(...data);
+        hasNext = false;
+      } else if (paginated) {
+        allBids.push(...(paginated.items ?? []));
+        hasNext = paginated.metadata?.hasNext ?? false;
+        page++;
+        // Safety: cap at 10 pages (500 bids) to prevent infinite loops
+        if (page > 10) hasNext = false;
+      } else {
+        hasNext = false;
+      }
+    }
+
+    // Sort newest first
+    return allBids.map(mapBid).sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
-    const bids = Array.isArray(data) ? data : data?.items ?? [];
-    return bids.map(mapBid);
   } catch {
     return [];
   }
