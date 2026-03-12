@@ -1,3 +1,4 @@
+@use "sass:color";
 @use "../../styles/tokens/colors" as *;
 @use "../../styles/tokens/spacing" as *;
 @use "../../styles/tokens/typography" as *;
@@ -10,7 +11,6 @@
   position: relative;
   overflow: hidden;
 
-  // Background glow blobs
   &::before,
   &::after {
     content: "";
@@ -190,37 +190,6 @@
         color: $text-primary;
       }
     }
-
-    .top-action {
-      width: 40px;
-      height: 40px;
-      border-radius: 24px;
-      background: $color-bg-card;
-      display: grid;
-      place-items: center;
-      border: 1px solid $border-color;
-
-      svg {
-        width: 20px;
-        height: 20px;
-        color: $text-primary;
-      }
-    }
-  }
-
-  .login-title {
-    font-family: $font-heading;
-    font-size: 30px;
-    font-weight: $font-weight-bold;
-    margin: 0;
-    color: $text-primary;
-  }
-
-  .login-subtitle {
-    font-size: $text-sm;
-    color: $text-secondary;
-    margin: 4px 0 0;
-    line-height: 1.5;
   }
 
   .login-form {
@@ -228,27 +197,12 @@
     flex-direction: column;
     gap: 24px;
 
-    .ant-form-item-label > label {
-      color: $text-secondary;
-      font-weight: $font-weight-medium;
-    }
-
-    // Standalone input (email field — not wrapped in affix-wrapper)
     .ant-input:not(.ant-input-affix-wrapper .ant-input) {
       background: rgba(30, 41, 59, 0.5);
       border: 1px solid $border-color;
       border-radius: $radius-xl;
       color: $text-primary;
       height: 52px;
-
-      // Hide autofill highlight entirely via infinite transition delay
-      &:-webkit-autofill,
-      &:-webkit-autofill:hover,
-      &:-webkit-autofill:focus {
-        transition: background-color 99999s ease-in-out 0s !important;
-        -webkit-text-fill-color: $text-primary !important;
-        caret-color: $text-primary;
-      }
 
       &:hover,
       &:focus {
@@ -258,85 +212,6 @@
 
       &::placeholder {
         color: $text-secondary;
-      }
-    }
-
-    // Affix wrapper (wraps both email & password inputs with prefix/suffix icons)
-    .ant-input-affix-wrapper {
-      background: rgba(30, 41, 59, 0.5);
-      border: 1px solid $border-color;
-      border-radius: $radius-xl;
-      height: 52px;
-      padding-inline: 12px;
-
-      // Inner input must be transparent — no border/radius of its own
-      .ant-input {
-        background: transparent !important;
-        border: none !important;
-        border-radius: 0 !important;
-        box-shadow: none !important;
-        color: $text-primary;
-        height: 100%;
-
-        // Hide autofill highlight entirely via infinite transition delay
-        &:-webkit-autofill,
-        &:-webkit-autofill:hover,
-        &:-webkit-autofill:focus {
-          transition: background-color 99999s ease-in-out 0s !important;
-          -webkit-text-fill-color: $text-primary !important;
-          caret-color: $text-primary;
-        }
-
-        &::placeholder {
-          color: $text-secondary;
-        }
-      }
-
-      .ant-input-prefix {
-        color: $text-secondary;
-        margin-inline-end: 8px;
-      }
-
-      .ant-input-suffix {
-        color: $text-secondary;
-      }
-
-      &:hover,
-      &:focus-within {
-        border-color: rgba($color-primary, 0.5);
-        box-shadow: 0 0 0 2px rgba($color-primary, 0.1);
-      }
-    }
-
-    .login-actions {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-
-      .ant-checkbox-wrapper {
-        color: $text-secondary;
-
-        .ant-checkbox-inner {
-          border-color: $border-color;
-          background: $color-bg-card;
-        }
-
-        &.ant-checkbox-wrapper-checked {
-          .ant-checkbox-inner {
-            background: $color-primary;
-            border-color: $color-primary;
-          }
-
-          .ant-checkbox-inner::after {
-            border-color: $color-bg-page;
-          }
-        }
-      }
-
-      .forgot-link {
-        color: $color-primary;
-        font-weight: $font-weight-bold;
       }
     }
 
@@ -351,93 +226,8 @@
       color: #fff;
 
       &:hover {
-        background: lighten($color-primary, 5%);
+        background: color.adjust($color-primary, $lightness: 5%);
       }
-    }
-
-    .divider {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      font-size: $text-xs;
-      color: $text-secondary;
-      text-transform: uppercase;
-
-      &::before,
-      &::after {
-        content: "";
-        flex: 1;
-        height: 1px;
-        background: $border-color;
-      }
-    }
-
-    .social-buttons {
-      display: flex;
-      gap: 16px;
-
-      .social-btn {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        padding: 12px 16px;
-        background: rgba(30, 41, 59, 0.5);
-        border: 1px solid $border-color;
-        border-radius: $radius-xl;
-        cursor: pointer;
-
-        &:hover {
-          border-color: rgba($color-primary, 0.5);
-        }
-
-        .label {
-          color: $text-primary;
-          font-weight: $font-weight-bold;
-        }
-      }
-    }
-
-    .register-row {
-      display: flex;
-      justify-content: center;
-      gap: 4px;
-      font-size: $text-sm;
-      color: $text-secondary;
-
-      .register-link {
-        color: $color-primary;
-        font-weight: $font-weight-bold;
-      }
-    }
-  }
-
-  .login-footer {
-    margin-top: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-
-    .links {
-      display: flex;
-      gap: 24px;
-      flex-wrap: wrap;
-
-      a {
-        color: $text-secondary;
-        font-size: $text-sm;
-        text-decoration: none;
-
-        &:hover {
-          color: $text-primary;
-        }
-      }
-    }
-
-    .copyright {
-      font-size: $text-xs;
-      color: $text-secondary;
     }
   }
 }

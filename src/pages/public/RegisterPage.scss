@@ -1,3 +1,4 @@
+@use "sass:color";
 @use "../../styles/tokens/colors" as *;
 @use "../../styles/tokens/spacing" as *;
 @use "../../styles/tokens/typography" as *;
@@ -177,21 +178,12 @@
       font-weight: $font-weight-medium;
     }
 
-    // Standalone input (no affix wrapper)
     .ant-input:not(.ant-input-affix-wrapper .ant-input) {
       background: rgba(30, 41, 59, 0.5);
       border: 1px solid $border-color;
       border-radius: $radius-xl;
       color: $text-primary;
       height: 52px;
-
-      &:-webkit-autofill,
-      &:-webkit-autofill:hover,
-      &:-webkit-autofill:focus {
-        transition: background-color 99999s ease-in-out 0s !important;
-        -webkit-text-fill-color: $text-primary !important;
-        caret-color: $text-primary;
-      }
 
       &:hover,
       &:focus {
@@ -204,7 +196,6 @@
       }
     }
 
-    // Affix wrapper (inputs with prefix/suffix icons)
     .ant-input-affix-wrapper {
       background: rgba(30, 41, 59, 0.5);
       border: 1px solid $border-color;
@@ -212,7 +203,6 @@
       height: 52px;
       padding-inline: 12px;
 
-      // Inner input — transparent, no border/radius of its own
       .ant-input {
         background: transparent !important;
         border: none !important;
@@ -220,14 +210,6 @@
         box-shadow: none !important;
         color: $text-primary;
         height: 100%;
-
-        &:-webkit-autofill,
-        &:-webkit-autofill:hover,
-        &:-webkit-autofill:focus {
-          transition: background-color 99999s ease-in-out 0s !important;
-          -webkit-text-fill-color: $text-primary !important;
-          caret-color: $text-primary;
-        }
 
         &::placeholder {
           color: $text-secondary;
@@ -250,62 +232,10 @@
       }
     }
 
-    .section {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-
-      .section-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-
-        .section-icon {
-          width: 20px;
-          height: 20px;
-          border-radius: 8px;
-          background: rgba(13, 127, 242, 0.2);
-          display: grid;
-          place-items: center;
-        }
-
-        .section-title {
-          font-size: $text-lg;
-          font-weight: $font-weight-bold;
-          color: $text-primary;
-          margin: 0;
-        }
-      }
-
-      .section-row {
-        display: flex;
-        gap: 16px;
-
-        @media (max-width: 720px) {
-          flex-direction: column;
-        }
-      }
-    }
-
     .register-actions {
       display: flex;
       flex-direction: column;
       gap: 16px;
-
-      .terms {
-        font-size: $text-sm;
-        color: $text-secondary;
-        line-height: 1.5;
-
-        a {
-          color: $color-primary;
-          text-decoration: none;
-
-          &:hover {
-            text-decoration: underline;
-          }
-        }
-      }
 
       .submit {
         width: 100%;
@@ -318,47 +248,9 @@
         color: #fff;
 
         &:hover {
-          background: lighten($color-primary, 5%);
+          background: color.adjust($color-primary, $lightness: 5%);
         }
       }
     }
   }
-
-  .register-footer {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-
-    .login-redirect {
-      font-size: $text-sm;
-      color: $text-secondary;
-
-      a {
-        color: $color-primary;
-        font-weight: $font-weight-bold;
-      }
-    }
-
-    .feature-badges {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-
-      .badge {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 110px;
-        height: 36px;
-        background: rgba(51, 65, 85, 0.5);
-        border: 1px solid #475569;
-        border-radius: 8px;
-        color: $text-secondary;
-        font-size: $text-xs;
-        font-weight: $font-weight-bold;
-      }
-    }
-  }
 }
-
-
