@@ -177,7 +177,7 @@ export function ActiveBidsList({ bids, isLoading, viewMode }: ActiveBidsListProp
       render: (_: unknown, record: MyBidItem) => (
         <Space>
           <img
-            src={record.auction.primaryImageUrl ?? ''}
+            src={record.auction.primaryImageUrl || '/placeholder-item.svg'}
             alt={record.auction.itemTitle}
             style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }}
           />
@@ -267,7 +267,7 @@ export function ActiveBidsList({ bids, isLoading, viewMode }: ActiveBidsListProp
                 <Avatar
                   shape="square"
                   size={48}
-                  src={item.auction.primaryImageUrl}
+                  src={item.auction.primaryImageUrl || '/placeholder-item.svg'}
                 />
               }
               title={
@@ -317,7 +317,7 @@ export function ActiveBidsList({ bids, isLoading, viewMode }: ActiveBidsListProp
                 <div style={{ position: 'relative' }}>
                   <img
                     alt={item.auction.itemTitle}
-                    src={item.auction.primaryImageUrl ?? ''}
+                    src={item.auction.primaryImageUrl || '/placeholder-item.svg'}
                     style={{ width: '100%', height: 180, objectFit: 'cover', display: 'block' }}
                   />
                   {/* Status badge — top-right */}

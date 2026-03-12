@@ -50,6 +50,7 @@ export function usePlaceBid() {
     onSuccess: (_data, { auctionId }) => {
       queryClient.invalidateQueries({ queryKey: ['auction', auctionId] });
       queryClient.invalidateQueries({ queryKey: ['auctionBids', auctionId] });
+      queryClient.invalidateQueries({ queryKey: ['myBids'] });
     },
   });
 }
@@ -65,6 +66,7 @@ export function useSubmitSealedBid() {
       submitSealedBid(auctionId, amount),
     onSuccess: (_data, { auctionId }) => {
       queryClient.invalidateQueries({ queryKey: ['auction', auctionId] });
+      queryClient.invalidateQueries({ queryKey: ['myBids'] });
     },
   });
 }
@@ -80,6 +82,7 @@ export function useBuyNow() {
     onSuccess: (_data, auctionId) => {
       queryClient.invalidateQueries({ queryKey: ['auction', auctionId] });
       queryClient.invalidateQueries({ queryKey: ['wallet', 'me'] });
+      queryClient.invalidateQueries({ queryKey: ['myBids'] });
     },
   });
 }
@@ -119,9 +122,13 @@ export function useToggleWatch() {
         queryClient.setQueryData(['auction', auctionId], context.previous);
       }
     },
-    // No onSettled invalidation — BE doesn't return isWatching, so refetch
-    // would overwrite the optimistic state back to false. The optimistic
-    // update in onMutate is the source of truth until BE adds isWatching.
+    // No onSettled invalidation for ['auction'] — BE doesn't return isWatching,
+    // so refetch would overwrite the optimistic state back to false.
+    // Invalidate watchlist on success so My Bids → Watching tab stays fresh.
+    // Also invalidate all myBids queries so tab counts update.
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['myBids'] });
+    },
   });
 }
 
