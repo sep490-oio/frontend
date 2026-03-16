@@ -1,0 +1,373 @@
+@use "../../styles/tokens/colors" as *;
+@use "../../styles/tokens/radius" as *;
+@use "../../styles/tokens/spacing" as *;
+@use "../../styles/tokens/typography" as *;
+// ═══════════════════════════════════════════════
+//  BROWSE PAGE
+//  Layout primitives (.page-container, .page-title,
+//  .page-subtitle) are defined in _global.scss.
+//  This file contains only BrowsePage-specific styles.
+// ═══════════════════════════════════════════════
+
+// ── Sidebar container ───────────────────────────
+.browse-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-top: 4px;
+}
+
+// ── Sidebar search ──────────────────────────────
+.browse-sidebar-search {
+  &.ant-input-affix-wrapper {
+    background: $color-bg-card !important;
+    border: 1px solid $border-color !important;
+    border-radius: $radius-md !important;
+    padding: 8px 12px;
+    color: $text-primary !important;
+    font-size: $text-sm;
+    margin-bottom: 24px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover,
+    &:focus-within {
+      border-color: rgba($color-primary, 0.5) !important;
+      box-shadow: 0 0 0 2px rgba($color-primary, 0.1) !important;
+    }
+
+    input {
+      background: transparent !important;
+      color: $text-primary !important;
+      font-size: $text-sm;
+
+      &::placeholder {
+        color: $text-secondary !important;
+      }
+    }
+  }
+}
+
+// ── Sidebar section wrapper ─────────────────────
+.browse-sidebar-section {
+  padding: 18px 0;
+  border-top: 1px solid $border-color;
+
+  &:last-child {
+    border-bottom: 1px solid $border-color;
+  }
+}
+
+// ── Section label ───────────────────────────────
+.browse-sidebar-section-label {
+  display: block;
+  font-family: $font-heading !important;
+  font-size: $text-xs !important;
+  font-weight: $font-weight-bold !important;
+  color: $text-secondary !important;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+// ── Category list ───────────────────────────────
+.browse-category-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.browse-category-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: $color-bg-hover;
+
+    .browse-category-name {
+      color: $text-primary;
+    }
+  }
+
+  &--active {
+    background: $color-primary;
+
+    .browse-category-name {
+      color: #fff;
+      font-weight: $font-weight-bold;
+    }
+
+    .browse-category-count {
+      color: rgba(255, 255, 255, 0.75);
+    }
+  }
+}
+
+.browse-category-name {
+  font-size: $text-sm;
+  color: $text-secondary;
+  transition: color 0.15s ease;
+  line-height: 1.4;
+}
+
+.browse-category-count {
+  font-size: $text-xs;
+  color: $text-secondary;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  padding: 1px 8px;
+  line-height: 1.6;
+}
+
+// ── Verified toggle row ─────────────────────────
+.browse-sidebar-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  // Ant Switch override
+  .ant-switch {
+    background: $border-color;
+
+    &.ant-switch-checked {
+      background: $color-primary !important;
+    }
+  }
+}
+
+// ── Price inputs ────────────────────────────────
+.browse-price-inputs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.browse-price-input {
+  &.ant-input-sm {
+    background: $color-bg-card !important;
+    border: 1px solid $border-color !important;
+    border-radius: $radius-sm !important;
+    color: $text-primary !important;
+    font-size: $text-xs;
+    text-align: center;
+
+    &::placeholder {
+      color: $text-secondary !important;
+    }
+
+    &:hover,
+    &:focus {
+      border-color: rgba($color-primary, 0.5) !important;
+      box-shadow: none !important;
+    }
+  }
+}
+
+// Ant Slider override
+.browse-price-slider {
+  .ant-slider-rail {
+    background: $border-color !important;
+  }
+
+  .ant-slider-track {
+    background: $color-primary !important;
+  }
+
+  .ant-slider-handle {
+    &::after {
+      background: $color-primary !important;
+      box-shadow: 0 0 0 2px $color-primary !important;
+    }
+  }
+}
+
+// ── Ending soon radio group ─────────────────────
+.browse-ending-soon-group {
+  width: 100%;
+
+  .ant-radio-wrapper {
+    color: $text-secondary !important;
+    font-size: $text-sm;
+    align-items: center;
+
+    &:hover {
+      color: $text-primary !important;
+    }
+
+    &.ant-radio-wrapper-checked {
+      color: $text-primary !important;
+    }
+  }
+
+  .ant-radio-inner {
+    background: transparent !important;
+    border-color: $border-color !important;
+  }
+
+  .ant-radio-checked .ant-radio-inner {
+    background: $color-primary !important;
+    border-color: $color-primary !important;
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  BROWSE HEADER ROW (title + sort bar)
+// ═══════════════════════════════════════════════
+
+.browse-header-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.browse-title-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.browse-subtitle {
+  font-size: $text-sm !important;
+  color: $text-secondary !important;
+  margin: 0;
+}
+
+// ── Sort bar ────────────────────────────────────
+.browse-sort-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.browse-sort-select {
+  min-width: 170px;
+
+  .ant-select-selector {
+    background: $color-bg-card !important;
+    border: 1px solid $border-color !important;
+    border-radius: $radius-sm !important;
+    color: $text-primary !important;
+    font-size: $text-sm;
+
+    &:hover {
+      border-color: rgba($color-primary, 0.5) !important;
+    }
+  }
+
+  .ant-select-arrow {
+    color: $text-secondary !important;
+  }
+
+  &.ant-select-open .ant-select-selector {
+    border-color: $color-primary !important;
+    box-shadow: 0 0 0 2px rgba($color-primary, 0.15) !important;
+  }
+}
+
+// ── Ant Select dropdown ─────────────────────────
+.ant-select-dropdown {
+  background: $color-bg-card !important;
+  border: 1px solid $border-color !important;
+  border-radius: $radius-md !important;
+
+  .ant-select-item {
+    color: $text-secondary !important;
+    font-size: $text-sm;
+
+    &:hover,
+    &.ant-select-item-option-active {
+      background: $color-bg-hover !important;
+      color: $text-primary !important;
+    }
+
+    &.ant-select-item-option-selected {
+      background: rgba($color-primary, 0.15) !important;
+      color: $color-primary !important;
+      font-weight: $font-weight-bold;
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  EMPTY STATE
+// ═══════════════════════════════════════════════
+
+.browse-empty-state {
+  padding: 80px 0;
+
+  .ant-empty-image {
+    opacity: 0.35;
+    filter: grayscale(1);
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  PAGINATION
+// ═══════════════════════════════════════════════
+
+.browse-pagination-container {
+  padding: 40px 0 16px;
+}
+
+// Ant Pagination override — dark theme
+.ant-pagination {
+  .ant-pagination-item {
+    background: $color-bg-card !important;
+    border: 1px solid $border-color !important;
+    border-radius: $radius-sm !important;
+    transition: border-color 0.15s, background 0.15s;
+
+    a {
+      color: $text-secondary !important;
+      font-size: $text-sm;
+    }
+
+    &:hover {
+      border-color: $color-primary !important;
+
+      a {
+        color: $color-primary !important;
+      }
+    }
+  }
+
+  .ant-pagination-item-active {
+    background: $color-primary !important;
+    border-color: $color-primary !important;
+
+    a {
+      color: #fff !important;
+    }
+  }
+
+  .ant-pagination-prev,
+  .ant-pagination-next {
+    button {
+      background: $color-bg-card !important;
+      border: 1px solid $border-color !important;
+      border-radius: $radius-sm !important;
+      color: $text-secondary !important;
+      transition: border-color 0.15s, color 0.15s;
+
+      &:hover {
+        border-color: $color-primary !important;
+        color: $color-primary !important;
+      }
+    }
+  }
+
+  .ant-pagination-disabled button {
+    opacity: 0.3;
+  }
+}

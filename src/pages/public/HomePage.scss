@@ -1,0 +1,149 @@
+@use "../../styles/tokens/colors" as *;
+@use "../../styles/tokens/radius" as *;
+@use "../../styles/tokens/spacing" as *;
+@use "../../styles/tokens/typography" as *;
+
+// Home page layout 
+.home-hero {
+  position: relative;
+  /* break out of Content/page-container padding */
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  width: 100vw;
+  padding: 80px 0 64px;
+  background: linear-gradient(135deg, rgba($color-primary, 0.06), rgba($color-primary-light, 0.04));
+  overflow: hidden;
+
+  &__inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    gap: 48px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  &__content {
+    flex: 1;
+    min-width: 280px;
+    max-width: 620px;
+  }
+
+  &__title {
+    @extend .page-title !optional;
+    margin-bottom: 18px;
+    max-width: 560px;
+    line-height: 1.1;
+  }
+
+  &__subtitle {
+    @extend .page-subtitle !optional;
+    margin-bottom: 32px;
+    max-width: 560px;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 44px;
+  }
+
+  &__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+  }
+
+  &__stat {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 120px;
+
+    &-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: $text-primary;
+    }
+
+    &-label {
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: $text-secondary;
+    }
+  }
+
+  &__visual {
+    width: 420px;
+    min-width: 280px;
+    max-width: 45%;
+    position: relative;
+
+    &-card {
+      border-radius: $radius-xl;
+      overflow: hidden;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: $color-bg-card;
+    }
+  }
+}
+
+.home-page {
+  .home-featured {
+    padding: 64px 0;
+
+    &__header {
+      max-width: 1200px;
+      margin: 0 auto 32px;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    &__title {
+      @extend .section-title !optional;
+      margin: 0;
+    }
+
+    &__cta {
+      a,
+      button {
+        font-weight: 600;
+      }
+    }
+
+    &__grid {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    &__empty {
+      padding: 80px 0;
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .home-hero {
+    &__inner {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    &__visual {
+      width: 100%;
+      max-width: 100%;
+    }
+  }
+}
