@@ -35,6 +35,8 @@ import { OrderDetailPage } from '@/pages/orders/OrderDetailPage';
 import { ConfirmEmailPage } from '@/pages/public/ConfirmEmailPage';
 import { ProfilePage } from '@/pages/profile/ProfilePage';
 import { CreateItemPage } from '@/pages/seller/CreateItemPage';
+import { CreateAuctionPage } from '@/pages/seller/CreateAuctionPage';
+import { MyListingsPage } from '@/pages/seller/MyListingsPage';
 
 /** Temporary placeholder for pages not yet built */
 function ComingSoon({ title }: { title: string }) {
@@ -74,8 +76,10 @@ export function AppRoutes() {
         <Route path="/settings" element={<ComingSoon title="Settings" />} />
 
         {/* Seller pages (require seller permission — enforced at component level) */}
-        <Route path="/my-listings" element={<ComingSoon title="My Listings" />} />
+        <Route path="/my-listings" element={<MyListingsPage />} />
         <Route path="/create-item" element={<CreateItemPage />} />
+        <Route path="/create-auction" element={<CreateAuctionPage />} />
+        <Route path="/create-auction/:itemId" element={<CreateAuctionPage />} />
       </Route>
 
       {/* ─── Staff Routes (require specific roles) ──────────────── */}

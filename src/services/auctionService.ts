@@ -24,8 +24,9 @@ import type {
   ToggleWatchResponse,
   ApiResponse,
 } from '@/types';
-import type { ItemSummary, ItemImage } from '@/types/item';
+import type { ItemSummary, ItemImage, SellerItem } from '@/types/item';
 import type { AuctionStatus } from '@/types/enums';
+import type { CreateAuctionRequest, CreateAuctionResponse } from '@/types';
 
 // ─── BE Response Shapes (what the backend actually returns) ──────
 
@@ -595,12 +596,87 @@ export async function activateItem(itemId: string): Promise<void> {
   await api.post(`/api/items/${itemId}/activate`);
 }
 
-/** Get seller's items */
-export async function getMyItems(): Promise<unknown[]> {
+/** Get seller's items — used in My Listings and Create Auction item selector */
+export async function getMyItems(): Promise<SellerItem[]> {
   try {
-    const { data } = await api.get<unknown[]>('/api/items/my');
-    return Array.isArray(data) ? data : [];
+    const { data } = await api.get('/api/items/my');
+    // BE may return plain array or paginated { items: [...] }
+    const items = Array.isArray(data)
+      ? data
+      : (data as Record<string, unknown>)?.items ?? [];
+    return (items as Record<string, unknown>[]).map(mapSellerItem);
   } catch {
     return [];
   }
+}
+
+/** Maps BE item response to FE SellerItem type */
+function mapSellerItem(raw: Record<string, unknown>): SellerItem {
+  return {
+    id: raw.id as string,
+    title: raw.title as string,
+    condition: raw.condition as string,
+    status: raw.status as string,
+    primaryImageUrl: (raw.primaryImageUrl as string | null)
+      ?? ((raw.images as Array<Record<string, unknown>> | undefined)
+          ?.find((img) => img.isPrimary)?.url as string | null)
+      ?? null,
+    categoryId: (raw.categoryId as string | null) ?? null,
+    quantity: (raw.quantity as number) ?? 1,
+    createdAt: raw.createdAt as string,
+  };
+}
+
+// ─── Auction Management (Seller Flow) ────────────────────────────────
+
+/**
+ * Create a new auction for an active item.
+ * POST /api/auctions — returns 201 Created with AuctionDto.
+ */
+export async function createAuction(
+  request: CreateAuctionRequest
+): Promise<CreateAuctionResponse> {
+  const { data } = await api.post('/api/auctions', request);
+  // BE may return wrapped { data, message } or unwrapped
+  const result = (data as Record<string, unknown>)?.data ?? data;
+  return result as CreateAuctionResponse;
+}
+
+/**
+ * Publish a draft auction (Draft → Pending).
+ * Quartz scheduler will auto-activate at startTime.
+ * POST /api/auctions/{id}/publish — returns 204 No Content.
+ */
+export async function publishAuction(auctionId: string): Promise<void> {
+  await api.post(`/api/auctions/${auctionId}/publish`);
+}
+
+/**
+ * Get the current seller's auctions.
+ * GET /api/me/auctions — paginated list.
+ */
+export async function getMyAuctions(
+  filters: { status?: AuctionStatus; page?: number; pageSize?: number } = {}
+): Promise<PaginatedResponse<AuctionListItem>> {
+  const params: Record<string, unknown> = {};
+  if (filters.status) params.Status = filters.status;
+  if (filters.page) params.PageNumber = filters.page;
+  if (filters.pageSize) params.PageSize = filters.pageSize;
+
+  const { data } = await api.get('/api/me/auctions', { params });
+
+  // Handle both paginated and plain array responses
+  if (Array.isArray(data)) {
+    return {
+      items: data.map(mapListItem),
+      page: 1,
+      pageSize: data.length,
+      totalItems: data.length,
+      totalPages: 1,
+      hasNextPage: false,
+      hasPreviousPage: false,
+    };
+  }
+
+  return mapPagination(data as ApiPaginatedResponse<ApiAuctionListItem>, mapListItem);
 }

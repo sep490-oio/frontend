@@ -12,13 +12,15 @@
  * but for mock data we compare IDs directly.
  */
 
-import { Result, Typography, Flex, Tag, Button } from 'antd';
+import { Result, Typography, Flex, Tag, Button, Alert, Steps } from 'antd';
 import {
   TrophyOutlined,
   CloseCircleOutlined,
   StopOutlined,
   WarningOutlined,
   ShoppingOutlined,
+  WalletOutlined,
+  CheckCircleOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -51,7 +53,7 @@ export function AuctionResult({ auction }: AuctionResultProps) {
         subTitle={t('bidding.paymentDeadline')}
         style={{ padding: '16px 0' }}
       >
-        <Flex vertical align="center" gap={8}>
+        <Flex vertical align="center" gap={12} style={{ maxWidth: 400, margin: '0 auto' }}>
           <Text type="secondary">{t('bidding.finalPrice')}</Text>
           <Text style={{ fontSize: 24, fontWeight: 700, color: '#1677ff' }}>
             {formatVND(auction.currentPrice ?? auction.startingPrice)}
@@ -59,14 +61,53 @@ export function AuctionResult({ auction }: AuctionResultProps) {
           {depositStatus === 'converted_to_payment' && (
             <Tag color="green">{t('bidding.depositApplied')}</Tag>
           )}
-          {/* Link to order page — order ID would come from the API */}
-          <Button
-            type="primary"
-            icon={<ShoppingOutlined />}
-            onClick={() => navigate('/orders')}
-          >
-            {t('bidding.viewOrder')}
-          </Button>
+
+          {/* Payment urgency warning */}
+          <Alert
+            type="warning"
+            showIcon
+            message={t('bidding.paymentDeadline')}
+            description={t('bidding.paymentDeadlineDetail')}
+            style={{ width: '100%' }}
+          />
+
+          {/* Next steps guide */}
+          <Steps
+            direction="vertical"
+            size="small"
+            current={0}
+            style={{ width: '100%' }}
+            items={[
+              {
+                title: t('bidding.nextStepPay'),
+                icon: <WalletOutlined />,
+              },
+              {
+                title: t('bidding.nextStepShip'),
+                icon: <ShoppingOutlined />,
+              },
+              {
+                title: t('bidding.nextStepComplete'),
+                icon: <CheckCircleOutlined />,
+              },
+            ]}
+          />
+
+          <Flex gap={8} wrap="wrap" justify="center">
+            <Button
+              type="primary"
+              icon={<ShoppingOutlined />}
+              onClick={() => navigate('/orders')}
+            >
+              {t('bidding.viewOrder')}
+            </Button>
+            <Button
+              icon={<WalletOutlined />}
+              onClick={() => navigate('/wallet')}
+            >
+              {t('bidding.goToWallet')}
+            </Button>
+          </Flex>
         </Flex>
       </Result>
     );
