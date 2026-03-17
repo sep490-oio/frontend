@@ -1,11 +1,10 @@
 /**
  * Route Configuration — all application routes defined in one place.
  *
- * Routes are organized by access level:
- * 1. Public routes — accessible without login (PublicLayout)
- * 2. Authenticated routes — require login (AppLayout + ProtectedRoute)
- * 3. Staff routes — require specific roles (AppLayout + ProtectedRoute with roles)
- * 4. Admin routes — require admin or super_admin role
+ * Routes are organized by layout:
+ * 1. Public routes — PublicLayout
+ * 2. Dashboard routes — DashboardLayout
+ * 3. Other routes — AppLayout
  *
  * Each route group uses a layout route (element with <Outlet />) to share
  * the same header/sidebar/footer across all pages in that group.
@@ -17,7 +16,7 @@ import { Routes, Route } from 'react-router-dom';
 import { Result } from 'antd';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { ProtectedRoute } from '@/components/common/ProtectedRoute';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 
 // ─── Page Components ─────────────────────────────────────────────────
 import { HomePage } from '@/pages/public/HomePage';
@@ -32,6 +31,9 @@ import { MyBidsPage } from '@/pages/mybids/MyBidsPage';
 import { SellerProfilePage } from '@/pages/seller/SellerProfilePage';
 import { OrdersPage } from '@/pages/orders/OrdersPage';
 import { OrderDetailPage } from '@/pages/orders/OrderDetailPage';
+import { ShippingPage } from '@/pages/orders/ShippingPage';
+import { DisputesPage } from '@/pages/disputes/DisputesPage';
+import { DisputeDetailPage } from '@/pages/disputes/DisputeDetailPage';
 import { ConfirmEmailPage } from '@/pages/public/ConfirmEmailPage';
 import { ProfilePage } from '@/pages/profile/ProfilePage';
 import { CreateItemPage } from '@/pages/seller/CreateItemPage';
@@ -55,78 +57,29 @@ export function AppRoutes() {
         <Route path="/confirm-email" element={<ConfirmEmailPage />} />
       </Route>
 
-      {/* ─── Authenticated Routes (login required) ──────────────── */}
-      <Route
-        element={
-          <ProtectedRoute>
-            <AppLayout />
-          </ProtectedRoute>
-        }
-      >
-        {/* Bidder pages (default for all logged-in users) */}
+      {/* ─── Dashboard Routes (with custom layout) ──────────────── */}
+      <Route element={<DashboardLayout />}>
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/wallet" element={<WalletPage />} />
         <Route path="/my-bids" element={<MyBidsPage />} />
         <Route path="/orders" element={<OrdersPage />} />
         <Route path="/orders/:id" element={<OrderDetailPage />} />
-        <Route path="/notifications" element={<ComingSoon title="Notifications" />} />
+        <Route path="/shipping" element={<ShippingPage />} />
+        <Route path="/disputes" element={<DisputesPage />} />
+        <Route path="/disputes/:id" element={<DisputeDetailPage />} />
         <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/settings" element={<ComingSoon title="Settings" />} />
+      </Route>
 
-        {/* Seller pages (require seller permission — enforced at component level) */}
+      {/* ─── Other Routes (standard layout) ──────────────── */}
+      <Route element={<AppLayout />}>
+        <Route path="/notifications" element={<ComingSoon title="Notifications" />} />
+        <Route path="/settings" element={<ComingSoon title="Settings" />} />
         <Route path="/my-listings" element={<ComingSoon title="My Listings" />} />
         <Route path="/create-item" element={<CreateItemPage />} />
-      </Route>
-
-      {/* ─── Staff Routes (require specific roles) ──────────────── */}
-      <Route
-        element={
-          <ProtectedRoute requiredRoles={['moderator']}>
-            <AppLayout />
-          </ProtectedRoute>
-        }
-      >
         <Route path="/moderator" element={<ComingSoon title="Moderator Portal" />} />
-      </Route>
-
-      <Route
-        element={
-          <ProtectedRoute requiredRoles={['risk_manager']}>
-            <AppLayout />
-          </ProtectedRoute>
-        }
-      >
         <Route path="/risk" element={<ComingSoon title="Risk Manager Portal" />} />
-      </Route>
-
-      <Route
-        element={
-          <ProtectedRoute requiredRoles={['support']}>
-            <AppLayout />
-          </ProtectedRoute>
-        }
-      >
         <Route path="/support" element={<ComingSoon title="Support Portal" />} />
-      </Route>
-
-      <Route
-        element={
-          <ProtectedRoute requiredRoles={['marketing']}>
-            <AppLayout />
-          </ProtectedRoute>
-        }
-      >
         <Route path="/marketing" element={<ComingSoon title="Marketing Portal" />} />
-      </Route>
-
-      {/* ─── Admin Routes ───────────────────────────────────────── */}
-      <Route
-        element={
-          <ProtectedRoute requiredRoles={['admin', 'super_admin']}>
-            <AppLayout />
-          </ProtectedRoute>
-        }
-      >
         <Route path="/admin" element={<ComingSoon title="Admin Dashboard" />} />
         <Route path="/admin/users" element={<ComingSoon title="User Management" />} />
         <Route path="/admin/config" element={<ComingSoon title="Platform Configuration" />} />

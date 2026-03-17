@@ -19,7 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { useAppSelector, useAppDispatch } from '@/app/hooks';
 import { clearCredentials } from '@/features/auth/authSlice';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
-import { AppHeader } from './AppHeader';
+import { MainHeader } from './MainHeader';
 import { Sidebar } from './Sidebar';
 import { buildMenuItems } from './buildMenuItems';
 
@@ -63,11 +63,9 @@ export function AppLayout() {
   };
 
   return (
-    <Layout style={{ height: '100dvh' }}>
-      {/* ─── Shared header — full width, above sidebar + content ── */}
-      <AppHeader onMenuClick={!isDesktop ? () => setDrawerOpen(true) : undefined} />
+    <Layout style={{ height: '100dvh', background: '#101922' }}>
+      <MainHeader />
 
-      {/* ─── Mobile/Tablet navigation drawer (left side) ─────────── */}
       <Drawer
         title={t('app.name')}
         placement="left"
@@ -83,7 +81,6 @@ export function AppLayout() {
           style={{ borderInlineEnd: 'none' }}
         />
 
-        {/* Logout button at the bottom of the drawer */}
         <div style={{ padding: '16px 24px' }}>
           <Button danger block onClick={handleLogout}>
             <LogoutOutlined /> {t('nav.logout')}
@@ -91,15 +88,9 @@ export function AppLayout() {
         </div>
       </Drawer>
 
-      {/* ─── Sidebar + Content area ────────────────────────────── */}
-      {/* flex: 1 fills remaining height after header; overflow: hidden
-          prevents page-level scrolling — each child scrolls independently */}
-      <Layout style={{ flex: 1, overflow: 'hidden' }}>
-        {/* Sidebar renders itself only on desktop ≥992px (see Sidebar.tsx) */}
+      <Layout style={{ flex: 1, overflow: 'hidden', background: '#101922' }}>
         <Sidebar />
 
-        {/* Scrollable content area — plain div instead of Layout to avoid
-            Ant Design's built-in flex/min-height CSS that prevents proper scrolling */}
         <div
           style={{
             flex: 1,
@@ -113,7 +104,7 @@ export function AppLayout() {
             style={{
               margin: isMobile ? 12 : 24,
               padding: isMobile ? 16 : 24,
-              background: '#fff',
+              background: '#1a2332',
               borderRadius: 8,
               flex: '1 0 auto',
             }}
@@ -121,8 +112,7 @@ export function AppLayout() {
             <Outlet />
           </Content>
 
-          {/* Footer scrolls with content — visible at bottom after all content */}
-          <Footer style={{ textAlign: 'center', color: '#999', padding: isMobile ? '16px' : '24px 50px' }}>
+          <Footer style={{ textAlign: 'center', color: '#999', padding: isMobile ? '16px' : '24px 50px', background: '#060B15' }}>
             {t('app.name')} ©{new Date().getFullYear()}
           </Footer>
         </div>

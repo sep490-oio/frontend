@@ -19,7 +19,7 @@ import {
   getAuctionById,
   getAuctionBids,
   getCategories,
-} from '@/services/auctionService';
+} from '@/services/auctionService.mock'; // Using mock data for development
 
 // ─── Auction List (Browse page) ─────────────────────────────────
 

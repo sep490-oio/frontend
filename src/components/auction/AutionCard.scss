@@ -1,291 +1,418 @@
-@use "../../styles/tokens/colors" as *;
-@use "../../styles/tokens/radius" as *;
-@use "../../styles/tokens/spacing" as *;
-@use "../../styles/tokens/typography" as *;
+// AuctionCard - Exact Figma specs
+// Card: 280px × 578.5px
 
-// ═══════════════════════════════════════════════
-//  AUCTION CARD
-//  Matches reference: dark card, full-bleed image,
-//  badge row top, blur stats bar bottom, info below.
-// ═══════════════════════════════════════════════
-
-.auction-card {
-  position: relative;
-  background: $color-bg-card;
-  border: 1px solid $border-color;
-  border-radius: $radius-md;
-  overflow: hidden;
-  cursor: pointer;
+.auction-card-figma {
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  transition: transform 0.22s ease,
-              border-color 0.22s ease,
-              box-shadow 0.22s ease;
+  align-items: flex-start;
+  padding: 0;
+  isolation: isolate;
+  width: 280px;
+  height: 578.5px;
+  background: rgba(14, 18, 26, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(4px);
+  border-radius: 24px;
+  flex: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
 
   &:hover {
     transform: translateY(-4px);
-    border-color: rgba($color-primary, 0.4);
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.65),
-                0 0 0 1px rgba($color-primary, 0.12);
+    border-color: rgba(59, 130, 246, 0.3);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 
-    .auction-card-image {
-      transform: scale(1.04);
+    .auction-card-product-image img {
+      transform: scale(1.05);
     }
   }
 }
 
-// ══ Cover / image area ══════════════════════════
-.auction-card-cover {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 3 /4;
-  overflow: hidden;
-  background: #08101e;            // dark fallback behind image
-}
-
-.auction-card-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  display: block;
-  transition: transform 0.35s ease;
-}
-
-// ── Top row: badges left + verified right ────────
-.auction-card-top-row {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  right: 10px;
+// ═══ Image Wrapper ═══
+.auction-card-image-wrapper {
   display: flex;
+  flex-direction: column;
+  justify-content: center;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 6px;
-  z-index: 2;
+  padding: 0;
+  isolation: isolate;
+  width: 278px;
+  height: 347.5px;
+  flex: none;
+  order: 0;
+  align-self: stretch;
+  flex-grow: 0;
+  z-index: 1;
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px 24px 0 0;
 }
 
-.auction-card-badges-left {
+.auction-card-product-image {
+  width: 278px;
+  height: 347.5px;
+  flex: none;
+  order: 0;
+  align-self: stretch;
+  flex-grow: 0;
+  z-index: 0;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+  }
+}
+
+// ═══ Labels (Top Left) ═══
+.auction-card-labels {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0;
+  gap: 8px;
+  position: absolute;
+  width: 110.69px;
+  height: auto;
+  left: 16px;
+  top: 16px;
+  flex: none;
+  order: 1;
+  flex-grow: 0;
+  z-index: 1;
+}
+
+// Live Badge with green dot
+.auction-card-badge-live {
   display: flex;
   flex-direction: row;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-
-// ── Shared badge tag ─────────────────────────────
-.auction-card-badge-tag {
-  display: inline-flex !important;
   align-items: center;
-  gap: 4px;
-  padding: 4px 10px !important;
-  border-radius: 20px !important;       // pill
-  border: none !important;
-  font-family: $font-primary !important;
-  font-size: 11px !important;
-  font-weight: $font-weight-bold !important;
-  letter-spacing: 0.05em;
-  line-height: 1.4 !important;
-  text-transform: uppercase;
-  white-space: nowrap;
-  margin: 0 !important;
-  cursor: pointer;
+  padding: 4px 12px;
+  width: 110.69px;
+  height: 23px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+  border-radius: 9999px;
+  flex: none;
+  order: 0;
+  align-self: stretch;
+  flex-grow: 0;
 
-  .anticon {
+  .badge-dot {
+    width: 6px;
+    height: 6px;
+    background: #22C55E;
+    border-radius: 9999px;
+    flex: none;
+    order: 0;
+    flex-grow: 0;
+    margin-right: 8px;
+  }
+
+  span {
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-weight: 700;
     font-size: 10px;
-  }
-
-  // Verified badge — teal/green outlined style
-  &.auction-card-badge-verified {
-    background: rgba(16, 185, 129, 0.18) !important;
-    color: #34d399 !important;
-    border: 1px solid rgba(52, 211, 153, 0.35) !important;
-  }
-
-  // Sealed badge
-  &.auction-card-badge-sealed {
-    background: rgba(99, 102, 241, 0.2) !important;
-    color: #a5b4fc !important;
-    border: 1px solid rgba(165, 180, 252, 0.3) !important;
+    line-height: 15px;
+    color: #FFFFFF;
+    flex: none;
+    order: 1;
+    flex-grow: 0;
   }
 }
 
-// ── Stats bar (bottom of image) ──────────────────
-// Two-column layout with a vertical divider — blur overlay
-.auction-card-stats-bar {
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
-  right: 10px;
+// Verified Badge
+.auction-card-badge-verified {
   display: flex;
-  align-items: stretch;
-  gap: 6px;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 4px 12px;
+  width: 110.69px;
+  height: 23px;
+  background: #2563EB;
+  border-radius: 9999px;
+  flex: none;
+  order: 1;
+  align-self: stretch;
+  flex-grow: 0;
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 10px;
+  line-height: 15px;
+  color: #FFFFFF;
+}
+
+// ═══ Countdown (Bottom Center) ═══
+.auction-card-countdown {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 8px 16px;
+  position: absolute;
+  height: 57px;
+  left: 12.5%;
+  right: 12.5%;
+  bottom: 16px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  border-radius: 12px;
+  flex: none;
+  order: 2;
+  flex-grow: 0;
   z-index: 2;
 }
 
-.auction-card-stat {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 10px;
-  gap: 2px;
-  background: rgba(8, 12, 24, 0.72);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: $radius-md;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-// divider no longer needed — kept to avoid TSX changes
-.auction-card-stat-divider {
-  display: none;
-}
-
-.auction-card-stat-label {
-  font-family: $font-primary;
+.countdown-label {
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 400;
   font-size: 10px;
-  font-weight: $font-weight-medium;
-  color: $text-secondary;
-  letter-spacing: 0.09em;
+  line-height: 15px;
+  text-align: center;
+  letter-spacing: 1px;
   text-transform: uppercase;
-  line-height: 1;
+  color: #D1D5DB;
+  flex: none;
+  order: 0;
+  align-self: stretch;
+  flex-grow: 0;
 }
 
-.auction-card-stat-value {
-  font-family: $font-heading;
-  font-size: $text-md;
-  font-weight: $font-weight-bold;
-  color: $text-primary;
-  letter-spacing: 0.01em;
-  line-height: 1.2;
-  display: flex;
-  align-items: center;
+.countdown-time {
+  width: 100%;
+  font-family: 'Liberation Mono', 'Courier New', monospace;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 24px;
+  text-align: center;
+  color: #3B82F6;
+  flex: none;
+  order: 1;
+  align-self: stretch;
+  flex-grow: 0;
 }
 
-// ══ Info bar ═════════════════════════════════════
-.auction-card-info-bar {
+// ═══ Info Container ═══
+.auction-card-info-container {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  padding: 24px;
   gap: 4px;
-  padding: 14px 14px 16px;
-  flex: 1;
+  width: 278px;
+  height: 229px;
+  flex: none;
+  order: 1;
+  align-self: stretch;
+  flex-grow: 0;
+  z-index: 0;
 }
 
-// ── Category label ───────────────────────────────
-.auction-card-category {
-  font-family: $font-primary;
-  font-size: $text-xs;
-  font-weight: $font-weight-medium;
-  color: $text-secondary;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  line-height: 1;
-  margin-bottom: 2px;
+// Title
+.auction-card-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0;
+  width: 230px;
+  height: 28px;
+  flex: none;
+  order: 0;
+  align-self: stretch;
+  flex-grow: 0;
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 28px;
+  color: #FFFFFF;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.auction-card-category-dot {
-  color: $text-secondary;
-  margin: 0 2px;
+// Item Code
+.auction-card-item-code {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0;
+  width: 230px;
+  height: 20px;
+  flex: none;
+  order: 1;
+  align-self: stretch;
+  flex-grow: 0;
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 20px;
+  color: #6B7280;
 }
 
-// ── Title ────────────────────────────────────────
-.auction-card-title {
-  font-family: $font-heading !important;
-  font-size: $text-lg !important;
-  font-weight: $font-weight-bold !important;
-  color: $text-primary !important;
-  margin: 0 0 2px !important;
-  line-height: 1.3 !important;
-}
-
-// ── Seller link ──────────────────────────────────
-.auction-card-seller-link {
-  display: inline-flex;
+// ═══ Price and Bids Row ═══
+.auction-card-price-bids-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
   align-items: center;
-  cursor: pointer;
-  margin-bottom: 10px;
+  padding: 12px 0 20px;
+  gap: 39.59px;
+  width: 230px;
+  height: 75px;
+  flex: none;
+  order: 2;
+  align-self: stretch;
+  flex-grow: 0;
+}
 
-  &:hover .auction-card-seller-name {
-    color: $color-primary;
+// Price Section
+.price-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0;
+  width: 143.41px;
+  height: 43px;
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+}
+
+.price-label {
+  width: 143.41px;
+  height: 15px;
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 10px;
+  line-height: 15px;
+  text-transform: uppercase;
+  color: #9CA3AF;
+  flex: none;
+  order: 0;
+  align-self: stretch;
+  flex-grow: 0;
+}
+
+.price-amount {
+  width: 143.41px;
+  height: 28px;
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 28px;
+  color: #FFFFFF;
+  flex: none;
+  order: 1;
+  align-self: stretch;
+  flex-grow: 0;
+}
+
+// Bids Section
+.bids-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 0;
+  width: 47px;
+  height: 39px;
+  flex: none;
+  order: 1;
+  flex-grow: 0;
+}
+
+.bids-label {
+  width: 47px;
+  height: 15px;
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 10px;
+  line-height: 15px;
+  text-align: right;
+  text-transform: uppercase;
+  color: #9CA3AF;
+  flex: none;
+  order: 0;
+  align-self: stretch;
+  flex-grow: 0;
+}
+
+.bids-count {
+  height: 24px;
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 24px;
+  text-align: right;
+  color: #E5E7EB;
+  flex: none;
+  order: 1;
+  align-self: stretch;
+  flex-grow: 0;
+}
+
+// ═══ CTA Button ═══
+.auction-card-cta {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 0;
+  width: 230px;
+  height: 46px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  flex: none;
+  order: 3;
+  align-self: stretch;
+  flex-grow: 0;
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 20px;
+  text-align: center;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
   }
 }
 
-.auction-card-seller-name {
-  font-size: $text-xs;
-  color: $text-secondary;
-  transition: color 0.15s ease;
-}
+// ═══ Responsive ═══
+@media (max-width: 768px) {
+  .auction-card-figma {
+    width: 100%;
+    height: auto;
+  }
 
-// ── Price + CTA row ──────────────────────────────
-.auction-card-price-row {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: auto;
-}
+  .auction-card-image-wrapper,
+  .auction-card-product-image {
+    width: 100%;
+  }
 
-.auction-card-price-block {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.auction-card-price-label {
-  font-family: $font-primary;
-  font-size: $text-xs;
-  font-weight: $font-weight-medium;
-  color: $text-secondary;
-  letter-spacing: 0.04em;
-  line-height: 1;
-}
-
-.auction-card-price-value {
-  font-family: $font-heading;
-  font-size: $text-lg;
-  font-weight: $font-weight-bold;
-  color: $color-primary;
-  line-height: 1.2;
-  display: flex;
-  align-items: baseline;
-  gap: 2px;
-}
-
-.auction-card-price-currency {
-  font-family: $font-primary;
-  font-size: $text-xs;
-  font-weight: $font-weight-medium;
-  color: $text-secondary;
-  letter-spacing: 0.05em;
-}
-
-// ── CTA Button ───────────────────────────────────
-.auction-card-cta-btn {
-  &.ant-btn {
-    height: 38px !important;
-    padding: 0 18px !important;
-    border-radius: $radius-md !important;
-    background: $color-primary !important;
-    border-color: $color-primary !important;
-    color: #fff !important;
-    font-family: $font-heading !important;
-    font-size: $text-xs !important;
-    font-weight: $font-weight-bold !important;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    white-space: nowrap;
-    flex-shrink: 0;
-    transition: background 0.18s ease, transform 0.15s ease !important;
-
-    &:hover {
-      background: darken(#3b82f6, 8%) !important;
-      border-color: darken(#3b82f6, 8%) !important;
-      transform: translateY(-1px);
-    }
-
-    &:active {
-      transform: translateY(0);
-    }
+  .auction-card-info-container {
+    width: 100%;
+    height: auto;
   }
 }

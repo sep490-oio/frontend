@@ -1,0 +1,412 @@
+.shipping-page {
+    width: 100%;
+    min-height: 100vh;
+    background: #14181D;
+    padding: 40px;
+}
+
+.shipping-container {
+    max-width: 1024px;
+    width: 100%;
+}
+
+// Header
+.shipping-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+.header-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.page-title {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 900;
+    font-size: 30px;
+    line-height: 36px;
+    letter-spacing: -0.75px;
+    color: #F1F5F9;
+    margin: 0;
+}
+
+.page-subtitle {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 24px;
+    color: #94A3B8;
+    margin: 0;
+}
+
+.refresh-button {
+    padding: 8px 16px;
+    background: #1E293B;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    font-family: 'Actor', sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    color: #F1F5F9;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+        background: #334155;
+    }
+}
+
+// Filter Tabs
+.filter-tabs {
+    display: flex;
+    border-bottom: 1px solid #1E293B;
+    margin-bottom: 32px;
+}
+
+.tab-button {
+    padding: 16px 24px;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 20px;
+    color: #94A3B8;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+        color: #F1F5F9;
+    }
+
+    &.active {
+        color: #0F66BD;
+        border-bottom-color: #0F66BD;
+    }
+}
+
+// Shipping List
+.shipping-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.shipping-item {
+    background: rgba(25, 38, 51, 0.4);
+    border: 1px solid transparent;
+    border-radius: 12px;
+    backdrop-filter: blur(6px);
+    transition: all 0.3s;
+
+    &.expanded {
+        border-color: rgba(15, 102, 189, 0.3);
+        box-shadow: 0px 10px 15px -3px rgba(15, 102, 189, 0.1), 0px 4px 6px -4px rgba(15, 102, 189, 0.1);
+    }
+
+    &:not(.expanded) {
+        opacity: 0.7;
+    }
+}
+
+.item-container {
+    display: flex;
+    flex-direction: column;
+}
+
+// Summary Row
+.item-summary {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    gap: 24px;
+    border-right: 1px solid #1E293B;
+}
+
+.item-image {
+    width: 64px;
+    height: 64px;
+    background: #1E293B;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+.item-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+}
+
+.item-title {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 28px;
+    color: #F1F5F9;
+    margin: 0;
+}
+
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 900;
+    font-size: 10px;
+    line-height: 15px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+
+    &.status-shipping {
+        background: rgba(15, 102, 189, 0.2);
+        border: 1px solid rgba(15, 102, 189, 0.3);
+        color: #0F66BD;
+    }
+
+    &.status-pending {
+        background: rgba(234, 179, 8, 0.1);
+        border: 1px solid rgba(234, 179, 8, 0.2);
+        color: #EAB308;
+    }
+
+    &.status-waiting {
+        background: rgba(100, 116, 139, 0.1);
+        border: 1px solid rgba(100, 116, 139, 0.2);
+        color: #94A3B8;
+    }
+}
+
+.item-meta {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    line-height: 16px;
+    color: #94A3B8;
+
+    svg {
+        color: #64748B;
+    }
+
+    &.highlight {
+        font-weight: 700;
+        color: #0F66BD;
+
+        svg {
+            color: #0F66BD;
+        }
+    }
+}
+
+.expand-button {
+    background: transparent;
+    border: none;
+    color: #64748B;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+
+    &:hover {
+        color: #94A3B8;
+    }
+}
+
+// Detailed View
+.item-details {
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    background: rgba(255, 255, 255, 0.05);
+    border-top: 1px solid #1E293B;
+}
+
+.timeline-container {
+    position: relative;
+    padding-bottom: 32px;
+}
+
+.timeline-divider {
+    position: absolute;
+    width: 2px;
+    left: 16px;
+    top: 0;
+    bottom: 0;
+    background: #1E293B;
+}
+
+.timeline-divider-active {
+    position: absolute;
+    width: 2px;
+    left: 16px;
+    top: 13.56%;
+    bottom: 36.44%;
+    background: #0F66BD;
+}
+
+.timeline-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding-left: 4px;
+}
+
+.timeline-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.step-icon {
+    position: relative;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    &.completed {
+        background: #0F66BD;
+
+        svg {
+            color: #FFFFFF;
+        }
+    }
+
+    &.pending {
+        background: #334155;
+
+        svg {
+            color: #CBD5E1;
+        }
+    }
+}
+
+.icon-shadow {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.002);
+    box-shadow: 0px 0px 0px 4px #101922;
+    border-radius: 50%;
+}
+
+.step-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.step-label {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 16px;
+    color: #F1F5F9;
+}
+
+.step-icon.completed+.step-content .step-label {
+    color: #0F66BD;
+}
+
+.step-time {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 400;
+    font-size: 10px;
+    line-height: 15px;
+    color: #64748B;
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.btn-primary,
+.btn-secondary {
+    padding: 8px 0;
+    border-radius: 8px;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: #94A3B8;
+    border: none;
+    color: #FFFFFF;
+
+    &:hover {
+        background: #64748B;
+    }
+}
+
+.btn-secondary {
+    background: transparent;
+    border: 1px solid #334155;
+    color: #F1F5F9;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+}
+
+// Responsive
+@media (max-width: 768px) {
+    .shipping-page {
+        padding: 20px;
+    }
+
+    .shipping-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .page-title {
+        font-size: 24px;
+        line-height: 32px;
+    }
+
+    .item-summary {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .item-meta {
+        flex-wrap: wrap;
+    }
+}

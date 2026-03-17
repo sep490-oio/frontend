@@ -1,0 +1,176 @@
+.shipping-tracking {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.shipping-title {
+    font-family: 'Public Sans', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 28px;
+    color: #F1F5F9;
+    margin: 0;
+}
+
+.tracking-card {
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    gap: 24px;
+    background: rgba(34, 22, 16, 0.6);
+    border: 1px solid rgba(236, 91, 19, 0.1);
+    backdrop-filter: blur(6px);
+    border-radius: 16px;
+}
+
+.tracking-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+
+    @media (max-width: 768px) {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+.tracking-product {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.product-image {
+    width: 48px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    overflow: hidden;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+.product-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.product-name {
+    font-family: 'Public Sans', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 24px;
+    color: #F1F5F9;
+    margin: 0;
+}
+
+.product-code {
+    font-family: 'Public Sans', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+    color: #64748B;
+    margin: 0;
+}
+
+.tracking-estimate {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+
+    @media (max-width: 768px) {
+        align-items: flex-start;
+    }
+}
+
+.estimate-label {
+    font-family: 'Public Sans', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 16px;
+    text-transform: uppercase;
+    color: #94A3B8;
+}
+
+.estimate-date {
+    font-family: 'Public Sans', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 20px;
+    color: #F1F5F9;
+}
+
+.tracking-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 4px;
+}
+
+.progress-labels {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 8px;
+}
+
+.progress-label {
+    font-family: 'Public Sans', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 16px;
+    color: #475569;
+
+    &.active {
+        color: #2563EB;
+    }
+}
+
+.progress-bar-container {
+    position: relative;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(236, 91, 19, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #2563EB;
+    transition: width 0.3s ease;
+}
+
+.progress-dots {
+    position: absolute;
+    top: -4px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 8px;
+}
+
+.progress-dot {
+    width: 16px;
+    height: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 4px solid #221610;
+    border-radius: 50%;
+    box-sizing: border-box;
+
+    &.completed {
+        background: #2563EB;
+    }
+}

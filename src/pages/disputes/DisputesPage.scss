@@ -1,0 +1,357 @@
+.disputes-page {
+    width: 100%;
+    min-height: 100vh;
+    background: #101922;
+    padding: 32px;
+}
+
+.disputes-container {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+// Stats Section
+.stats-section {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.stat-card {
+    position: relative;
+    padding: 24px;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(5px);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.stat-label {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 24px;
+    color: #94A3B8;
+    margin-bottom: 8px;
+}
+
+.stat-value-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+.stat-value {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    font-size: 36px;
+    line-height: 40px;
+    letter-spacing: -0.9px;
+    color: #F1F5F9;
+
+    &.pending {
+        color: #EAB308;
+    }
+
+    &.resolved {
+        color: #22C55E;
+    }
+}
+
+.stat-change {
+    padding-bottom: 4px;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 20px;
+
+    &.positive {
+        color: #22C55E;
+    }
+}
+
+.stat-icon {
+    position: absolute;
+    right: -15px;
+    bottom: -15px;
+    font-size: 80px;
+    color: #F1F5F9;
+    opacity: 0.05;
+}
+
+// Filter Section
+.filter-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.filter-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid #334155;
+    border-radius: 12px;
+}
+
+.filter-tab {
+    padding: 8px 24px;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+    color: #94A3B8;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+        color: #F1F5F9;
+    }
+
+    &.active {
+        background: #0F66BD;
+        color: #FFFFFF;
+        font-weight: 700;
+        box-shadow: 0px 10px 15px -3px rgba(15, 102, 189, 0.2), 0px 4px 6px -4px rgba(15, 102, 189, 0.2);
+    }
+}
+
+// Disputes Table
+.disputes-table {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid #1E293B;
+    backdrop-filter: blur(5px);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.table-header {
+    display: grid;
+    grid-template-columns: 110px 1fr 130px 200px 150px 110px;
+    background: rgba(30, 41, 59, 0.3);
+}
+
+.th {
+    padding: 16px;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #94A3B8;
+}
+
+.table-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.table-row-wrapper {
+    border-top: 1px solid #1E293B;
+
+    &:first-child {
+        border-top: none;
+    }
+}
+
+.table-row {
+    display: grid;
+    grid-template-columns: 110px 1fr 130px 200px 150px 110px;
+    align-items: center;
+    padding: 20px 0;
+}
+
+.td {
+    padding: 0 16px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 15px;
+    color: #F1F5F9;
+}
+
+.td-id {
+    font-family: 'Liberation Mono', monospace;
+    font-weight: 700;
+    font-size: 14px;
+    color: #0F66BD;
+}
+
+.td-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.item-image {
+    width: 48px;
+    height: 48px;
+    background: #334155;
+    border-radius: 6px;
+    overflow: hidden;
+    flex-shrink: 0;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+.item-name {
+    font-weight: 600;
+    font-size: 15px;
+    line-height: 20px;
+    color: #F1F5F9;
+}
+
+.td-date {
+    font-weight: 400;
+    font-size: 14px;
+    color: #94A3B8;
+}
+
+.td-reason {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    color: #CBD5E1;
+}
+
+.td-status {}
+
+.status-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    line-height: 14px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+
+    &.status-pending {
+        background: rgba(234, 179, 8, 0.15);
+        color: #EAB308;
+    }
+
+    &.status-resolved {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22C55E;
+    }
+
+    &.status-rejected {
+        background: rgba(239, 68, 68, 0.15);
+        color: #EF4444;
+    }
+}
+
+.td-action {}
+
+.btn-detail {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 20px;
+    color: #0F66BD;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+        color: #3B82F6;
+        text-decoration: underline;
+    }
+}
+
+// Table Footer
+.table-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    background: rgba(30, 41, 59, 0.1);
+}
+
+.pagination-info {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    color: #94A3B8;
+}
+
+.pagination {
+    display: flex;
+    gap: 8px;
+}
+
+.page-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1E293B;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    color: #94A3B8;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+        background: #334155;
+        color: #F1F5F9;
+    }
+
+    &.active {
+        background: #0F66BD;
+        border-color: #0F66BD;
+        color: #FFFFFF;
+        font-weight: 700;
+    }
+}
+
+// Responsive
+@media (max-width: 1024px) {
+    .disputes-page {
+        padding: 20px;
+    }
+
+    .stats-section {
+        grid-template-columns: 1fr;
+    }
+
+    .table-header,
+    .table-row {
+        grid-template-columns: 90px 1fr 100px 180px 140px 90px;
+    }
+}
+
+@media (max-width: 768px) {
+    .filter-tabs {
+        flex-wrap: wrap;
+    }
+
+    .table-header {
+        display: none;
+    }
+
+    .table-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 16px;
+    }
+}

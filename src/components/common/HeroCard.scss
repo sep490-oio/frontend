@@ -1,0 +1,168 @@
+.hero-card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 680px;
+  border-radius: 16px;
+  overflow: visible;
+  background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%);
+
+  .hero-card-image {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    opacity: 0.5;
+    border-radius: 16px;
+  }
+
+  // Top Badge - Verified
+  .hero-card-badge {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(6px);
+    border-radius: 9999px;
+    z-index: 10;
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      background: #22C55E;
+      border-radius: 50%;
+    }
+
+    .badge-text {
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.5px;
+    }
+  }
+
+  // Footer Section - Countdown & Bidders
+  .hero-card-stats {
+    position: absolute;
+    bottom: 180px;
+    left: 16px;
+    right: 16px;
+    display: flex;
+    gap: 12px;
+    z-index: 5;
+
+    .stat-box {
+      flex: 1;
+      padding: 12px;
+      background: rgba(14, 18, 26, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+
+      .stat-label {
+        font-family: 'Inter', sans-serif;
+        font-size: 10px;
+        font-weight: 400;
+        color: #9CA3AF;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+
+      .stat-value {
+        font-family: 'Inter', sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+        color: #fff;
+      }
+    }
+  }
+
+  // Bottom Info Panel
+  .hero-card-info {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    padding: 16px;
+    background: rgba(14, 18, 38, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    z-index: 10;
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .price-section {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      .price-label {
+        font-family: 'Inter', sans-serif;
+        font-size: 12px;
+        font-weight: 400;
+        color: #9CA3AF;
+      }
+
+      .price-value {
+        font-family: 'Inter', sans-serif;
+        font-size: 20px;
+        font-weight: 700;
+        color: #fff;
+      }
+    }
+
+    .bid-section {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+
+      .bid-label {
+        font-family: 'Inter', sans-serif;
+        font-size: 12px;
+        font-weight: 400;
+        color: #9CA3AF;
+      }
+
+      .bid-count {
+        font-family: 'Inter', sans-serif;
+        font-size: 20px;
+        font-weight: 700;
+        color: #3B82F6;
+      }
+    }
+
+    .hero-card-btn {
+      width: 100%;
+      padding: 14px;
+      background: #3B82F6;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.2s ease;
+
+      &:hover {
+        background: #2563eb;
+      }
+    }
+  }
+}
