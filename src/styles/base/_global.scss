@@ -1,0 +1,166 @@
+@use "../tokens/colors" as *;
+@use "../tokens/typography" as *;
+@use "../tokens/radius" as *;
+
+// ═══════════════════════════════════════════════
+//  GLOBAL RESET & BASE
+// ═══════════════════════════════════════════════
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  background: $color-bg-page;
+  color: $text-primary;
+  font-family: $font-primary;
+  font-size: $text-sm;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// ── Ant Design CSS variable override ───────────
+// Ant injects --ant-layout-body-bg through a :where() rule
+// (specificity = 0), then reads it back in .ant-layout { background }.
+//
+// Strategy:
+//  1. Redeclare the variables at :root so they win over
+//     any :where(...) selector Ant generates (hash changes per build).
+//  2. Set background directly on .ant-layout* as a hard fallback —
+//     plain class selectors beat :where() without needing !important.
+
+:root {
+  --ant-layout-body-bg:     #{$color-bg-page};
+  --ant-layout-header-bg:   #{$color-bg-card};
+  --ant-layout-sider-bg:    #{$color-bg-card};
+  --ant-layout-trigger-bg:  #{$color-bg-hover};
+  --ant-color-bg-layout:    #{$color-bg-page};
+  --ant-color-bg-container: #{$color-bg-card};
+  --ant-color-bg-elevated:  #{$color-bg-card};
+}
+
+// Direct selectors — higher specificity than :where()
+.ant-layout {
+  background: $color-bg-page;
+}
+
+.ant-layout-content {
+  background: $color-bg-page;
+}
+
+.ant-layout-header {
+  background: $color-bg-card;
+}
+
+.ant-layout-sider {
+  background: $color-bg-card;
+}
+
+// ═══════════════════════════════════════════════
+//  LAYOUT PRIMITIVES
+// ═══════════════════════════════════════════════
+
+.page-container {
+  padding: 96px 32px;
+
+  @media (max-width: 768px) {
+    padding: 32px 16px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 24px 12px;
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  TYPOGRAPHY
+// ═══════════════════════════════════════════════
+
+.page-title {
+  font-family: $font-heading;
+  font-size: $text-2xl;
+  font-weight: $font-weight-bold;
+  color: $text-primary;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  margin: 0 0 8px;
+  line-height: 1.1;
+
+  @media (max-width: 768px) {
+    font-size: $text-xl;
+  }
+}
+
+.section-title {
+  font-family: $font-heading;
+  font-size: $text-xl;
+  font-weight: $font-weight-bold;
+  color: $text-primary;
+  letter-spacing: -0.02em;
+  margin: 0 0 6px;
+  line-height: 1.2;
+}
+
+.page-subtitle {
+  font-family: $font-primary;
+  font-size: $text-sm;
+  color: $text-secondary;
+  margin: 0;
+  line-height: 1.5;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: $text-primary;
+  font-family: $font-heading;
+  margin: 0;
+}
+
+.ant-typography {
+  color: $text-primary;
+
+  &.ant-typography-secondary {
+    color: $text-secondary;
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  SCROLLBAR (Webkit)
+// ═══════════════════════════════════════════════
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: $color-bg-page;
+}
+
+::-webkit-scrollbar-thumb {
+  background: $border-color;
+  border-radius: $radius-sm;
+
+  &:hover {
+    background: $text-secondary;
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  UTILITY CLASSES
+// ═══════════════════════════════════════════════
+
+.text-primary   { color: $text-primary   !important; }
+.text-secondary { color: $text-secondary !important; }
+.text-accent    { color: $color-primary  !important; }
+.text-success   { color: $success        !important; }
+.text-warning   { color: $warning        !important; }
+.text-error     { color: $error          !important; }
+
+.bg-page   { background: $color-bg-page  !important; }
+.bg-card   { background: $color-bg-card  !important; }
+.bg-hover  { background: $color-bg-hover !important; }
+
+.border-base { border: 1px solid $border-color; }

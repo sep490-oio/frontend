@@ -8,12 +8,11 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
+import "./styles/index.scss";
 
 // Initialize i18n — must be imported before any component that uses useTranslation()
 import './services/i18n';
 
-// Global styles (CSS reset, CSS variables, base typography)
-import './index.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

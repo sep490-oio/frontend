@@ -7,8 +7,16 @@
  *   2. GET /api/users/me    → receive user data
  *   3. Store credentials in Redux → redirect to intended page
  */
-import { Button, Form, Input, Typography, message, Divider, Layout, Card } from 'antd';
-import { MailOutlined, LockOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
+import './LoginPage.scss';
+
+import { Button, Form, Input, Checkbox, message } from 'antd';
+import {
+  MailOutlined,
+  LockOutlined,
+  EyeOutlined,
+  EyeInvisibleOutlined,
+  MenuOutlined,
+} from '@ant-design/icons';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useForm, Controller } from 'react-hook-form';
@@ -18,9 +26,6 @@ import axios from 'axios';
 import { useAppDispatch } from '@/app/hooks';
 import { setCredentials } from '@/features/auth/authSlice';
 import { login, getMe, mapApiUserToUser, getOrCreateDeviceId } from '@/services/authService';
-
-const { Text, Title, Paragraph } = Typography;
-const { Content } = Layout;
 
 /** Zod schema — validates the account (username or email) + password fields */
 const loginSchema = z.object({
@@ -92,23 +97,64 @@ export function LoginPage() {
     }
   };
 
-  // design-system-aligned CSS classes are applied via className
-  // No need for style constants anymore
-
   return (
-    <Layout className="login-page">
-      <Content className="login-content">
-        <Card className="login-card" classNames={{ body: 'login-card-body' }}>
-          <Title level={2} className="login-title">
-            {t('auth.loginTitle')}
-          </Title>
-          <Paragraph className="login-subtitle">
-            {t('auth.loginSubtitle') || 'Sign in to your luxury auction account'}
-          </Paragraph>
-          <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+    <div className="login-page">
+      <div className="login-card">
+        <div className="login-hero">
+          <div className="hero-content">
+            <h1 className="hero-title">
+              <span className="hero-title-line">
+                {t('auth.heroTitleLine1', { defaultValue: 'Trải nghiệm' })}
+              </span>
+              <span className="hero-title-line accent">
+                {t('auth.heroTitleLine2', { defaultValue: 'Đấu giá Thế hệ mới' })}
+              </span>
+            </h1>
+            <p className="hero-subtitle">
+              {t('auth.heroSubtitle', {
+                defaultValue:
+                  'Khám phá các bộ sưu tập kỹ thuật số độc bản và vật phẩm hiếm có thông qua nền tảng bảo mật hàng đầu.',
+              })}
+            </p>
+            <div className="hero-stats">
+              <div className="stat">
+                <div className="stat-value">50k+</div>
+                <div className="stat-label">{t('auth.statItems', { defaultValue: 'Vật phẩm' })}</div>
+              </div>
+              <div className="stat">
+                <div className="stat-value">120+</div>
+                <div className="stat-label">{t('auth.statCountries', { defaultValue: 'Quốc gia' })}</div>
+              </div>
+              <div className="stat">
+                <div className="stat-value">$2.4B</div>
+                <div className="stat-label">{t('auth.statVolume', { defaultValue: 'Giao dịch' })}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="login-panel">
+          <div className="login-header">
+            <div className="brand">
+              <div className="brand-icon" />
+              <div className="brand-name">oio.vn</div>
+            </div>
+            <button type="button" className="top-action" aria-label={t('common.menu') ?? 'Menu'}>
+              <MenuOutlined />
+            </button>
+          </div>
+
+          <div className="login-intro">
+            <h2 className="login-title">{t('auth.loginTitle')}</h2>
+            <p className="login-subtitle">
+              {t('auth.loginSubtitle') || 'Sign in to your luxury auction account'}
+            </p>
+          </div>
+
+          <Form layout="vertical" className="login-form" onFinish={handleSubmit(onSubmit)}>
             <Form.Item
-              label="Email"
-              validateStatus={errors.account ? 'error' : ''}
+              label={t('auth.email')}
+              validateStatus={errors.account ? 'error' : undefined}
               help={errors.account?.message ? t(errors.account.message) : undefined}
             >
               <Controller
@@ -117,19 +163,18 @@ export function LoginPage() {
                 render={({ field }) => (
                   <Input
                     {...field}
-                    prefix={<MailOutlined style={{ color: '#888' }} />}
+                    prefix={<MailOutlined />}
                     placeholder="you@example.com"
                     size="large"
-                    className="login-input"
                   />
                 )}
               />
             </Form.Item>
+
             <Form.Item
-              label="Password"
-              validateStatus={errors.password ? 'error' : ''}
+              label={t('auth.password')}
+              validateStatus={errors.password ? 'error' : undefined}
               help={errors.password?.message ? t(errors.password.message) : undefined}
-              style={{ marginBottom: 24 }}
             >
               <Controller
                 name="password"
@@ -137,18 +182,22 @@ export function LoginPage() {
                 render={({ field }) => (
                   <Input.Password
                     {...field}
-                    prefix={<LockOutlined style={{ color: '#888' }} />}
+                    prefix={<LockOutlined />}
                     iconRender={(visible) => (visible ? <EyeOutlined /> : <EyeInvisibleOutlined />)}
                     placeholder={t('auth.password')}
                     size="large"
-                    className="login-input"
                   />
                 )}
               />
             </Form.Item>
-            <div className="login-forgot-password">
-              <Link to="/forgot-password" style={{ color: '#000', fontWeight: 500 }}>
-                {t('auth.forgotPassword') || 'Forgot password?'}
+
+            <div className="login-actions">
+              <Form.Item name="remember" valuePropName="checked" noStyle>
+                <Checkbox>{t('auth.rememberMe', { defaultValue: 'Remember me' })}</Checkbox>
+              </Form.Item>
+
+              <Link className="forgot-link" to="/forgot-password">
+                {t('auth.forgotPassword')}
               </Link>
             </div>
 
@@ -157,36 +206,45 @@ export function LoginPage() {
                 type="primary"
                 htmlType="submit"
                 loading={isSubmitting}
-                block
                 size="large"
-                className="login-button"
+                className="login-submit"
+                block
               >
                 {t('auth.loginButton')}
               </Button>
             </Form.Item>
-          </Form>
 
-          <Divider className="login-divider" />
+            <div className="divider">{t('auth.orLoginWith', { defaultValue: 'Or log in with' })}</div>
 
-          <div className="login-signup-section">
-            <Text className="login-signup-text">
-              {t('auth.noAccount') || "DON'T HAVE AN ACCOUNT?"}
-            </Text>
-            <Link to="/register">
-              <Button type="default" size="large" className="login-signup-button">
+            <div className="social-buttons">
+              <button type="button" className="social-btn" onClick={() => {}}>
+                <span className="label">Google</span>
+              </button>
+              <button type="button" className="social-btn" onClick={() => {}}>
+                <span className="label">GitHub</span>
+              </button>
+            </div>
+
+            <div className="register-row">
+              <span>{t('auth.noAccount') || "Don't have an account?"}</span>
+              <Link className="register-link" to="/register">
                 {t('auth.registerButton')}
-              </Button>
-            </Link>
-          </div>
+              </Link>
+            </div>
 
-          <Text className="login-agreement-text">
-            {t('auth.agreement') || 'By continuing, you agree to our'}{' '}
-            <Link to="/terms">{t('auth.terms') || 'Terms of Service'}</Link>{' '}
-            {t('auth.and') || 'and'}{' '}
-            <Link to="/privacy">{t('auth.privacy') || 'Privacy Policy'}</Link>
-          </Text>
-        </Card>
-      </Content>
-    </Layout>
+            <div className="login-footer">
+              <div className="links">
+                <Link to="/terms">{t('auth.terms') || 'Terms'}</Link>
+                <Link to="/privacy">{t('auth.privacy') || 'Privacy'}</Link>
+                <Link to="/support">{t('common.support') ?? 'Support'}</Link>
+              </div>
+              <div className="copyright">
+                © {new Date().getFullYear()} oio.vn All rights reserved.
+              </div>
+            </div>
+          </Form>
+        </div>
+      </div>
+    </div>
   );
 }
