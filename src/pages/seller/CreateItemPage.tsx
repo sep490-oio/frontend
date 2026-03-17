@@ -22,8 +22,9 @@ import {
   Image,
   Space,
   Alert,
+  Result,
 } from 'antd';
-import { PlusOutlined, DeleteOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined, CheckCircleOutlined, ShopOutlined } from '@ant-design/icons';
 import type { UploadFile } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -33,6 +34,7 @@ import { addItemMedia } from '@/services/auctionService';
 import { useCreateItem, useActivateItem } from '@/hooks/useItems';
 import { useCategories } from '@/hooks/useAuctions';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
+import { useAppSelector } from '@/app/hooks';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -57,6 +59,7 @@ export function CreateItemPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { isMobile } = useBreakpoint();
+  const user = useAppSelector((state) => state.auth.user);
   const [form] = Form.useForm();
 
   const createItem = useCreateItem();
@@ -68,6 +71,24 @@ export function CreateItemPage() {
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [uploading, setUploading] = useState(false);
   const [activated, setActivated] = useState(false);
+
+  // ─── Seller role check ──────────────────────────────────────────
+  if (!user?.hasSellerPermission) {
+    return (
+      <div style={{ maxWidth: 600, margin: '0 auto', padding: isMobile ? 16 : 24 }}>
+        <Result
+          icon={<ShopOutlined />}
+          title={t('createItem.sellerRequired')}
+          subTitle={t('createItem.sellerRequiredHint')}
+          extra={
+            <Button type="primary" onClick={() => navigate('/profile')}>
+              {t('createAuction.goToProfile')}
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
 
   // ─── Image Upload ──────────────────────────────────────────────
   const handleUpload = async (file: File) => {

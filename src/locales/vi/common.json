@@ -370,6 +370,8 @@
     "activateSuccess": "Sản phẩm đã được kích hoạt!",
     "doneTitle": "Đã tạo sản phẩm thành công!",
     "activatedMessage": "Sản phẩm đã sẵn sàng để tạo phiên đấu giá",
+    "sellerRequired": "Cần quyền người bán",
+    "sellerRequiredHint": "Bạn cần đăng ký làm người bán để đăng sản phẩm",
     "doneHint": "Bạn có thể tạo thêm sản phẩm hoặc xem danh sách sản phẩm đã đăng",
     "createAnother": "Tạo sản phẩm khác",
     "viewListings": "Xem sản phẩm đã đăng"

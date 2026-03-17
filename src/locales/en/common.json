@@ -370,6 +370,8 @@
     "activateSuccess": "Item has been activated!",
     "doneTitle": "Item Created Successfully!",
     "activatedMessage": "Item is ready for auction creation",
+    "sellerRequired": "Seller Permission Required",
+    "sellerRequiredHint": "You need to register as a seller to list items",
     "doneHint": "You can create another item or view your listings",
     "createAnother": "Create Another",
     "viewListings": "View My Listings"
