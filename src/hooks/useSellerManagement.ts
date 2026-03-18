@@ -15,6 +15,7 @@ import {
   getMyItems,
   getMyAuctions,
   createAuction,
+  submitAuction,
   publishAuction,
 } from '@/services/auctionService';
 import type { CreateAuctionRequest } from '@/types';
@@ -58,7 +59,18 @@ export function useCreateAuction() {
   });
 }
 
-/** Publish a draft auction (Draft → Pending) */
+/** Submit a draft auction for admin review (Draft → PendingReview) */
+export function useSubmitAuction() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (auctionId: string) => submitAuction(auctionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['myAuctions'] });
+    },
+  });
+}
+
+/** Publish an approved auction — admin action, not for sellers */
 export function usePublishAuction() {
   const queryClient = useQueryClient();
   return useMutation({

@@ -31,6 +31,8 @@ import {
   MOCK_CATEGORIES,
   MOCK_USER_PROFILE,
   MOCK_USER_ADDRESSES,
+  MOCK_USER_SESSIONS,
+  MOCK_LOGIN_HISTORY,
 } from './fixtures/mock-data';
 
 const API_BASE = 'https://api.newlsun.com';
@@ -515,6 +517,23 @@ authenticatedTest.describe('Profile', () => {
   });
 
   authenticatedTest('switching to sessions tab does not crash', async ({ authenticatedPage: page }) => {
+    // Mock both endpoints BEFORE clicking — prevents the 401→refresh-fail→redirect chain
+    // that the Axios interceptor triggers when a fake token hits the real backend.
+    await page.route(`${API_BASE}/api/me/sessions**`, (route) => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(paginated(MOCK_USER_SESSIONS)),
+      });
+    });
+    await page.route(`${API_BASE}/api/me/login-history**`, (route) => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(paginated(MOCK_LOGIN_HISTORY)),
+      });
+    });
+
     // Try segmented (desktop) or select (mobile) for tab switching
     const segmentedItems = page.locator('.ant-segmented-item');
     const tabCount = await segmentedItems.count();
@@ -530,8 +549,6 @@ authenticatedTest.describe('Profile', () => {
 
     // Verify no crash — the error boundary shows "Something Went Wrong"
     const crashed = await page.getByText('Something Went Wrong').isVisible().catch(() => false);
-    // If crashed, this is a KNOWN BUG — sessions tab fails when session API returns mock data
-    // We still want to detect it, so fail the test
     expect(crashed).toBeFalsy();
   });
 });

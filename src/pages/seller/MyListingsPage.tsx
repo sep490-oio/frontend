@@ -10,6 +10,7 @@
  */
 
 import { useState } from 'react';
+import axios from 'axios';
 import {
   Card,
   Typography,
@@ -34,7 +35,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { useAppSelector } from '@/app/hooks';
-import { useMyItems, useMyAuctions, usePublishAuction } from '@/hooks/useSellerManagement';
+import { useMyItems, useMyAuctions, useSubmitAuction } from '@/hooks/useSellerManagement';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { formatVND, STATUS_KEYS, STATUS_COLORS } from '@/utils/formatters';
 import type { SellerItem } from '@/types/item';
@@ -48,6 +49,9 @@ const { Title, Text } = Typography;
 
 const ITEM_STATUS_COLORS: Record<string, string> = {
   draft: 'default',
+  pending_review: 'processing',
+  pending_verify: 'gold',
+  approved: 'cyan',
   active: 'green',
   in_auction: 'blue',
   sold: 'purple',
@@ -56,6 +60,9 @@ const ITEM_STATUS_COLORS: Record<string, string> = {
 
 const ITEM_STATUS_KEYS: Record<string, string> = {
   draft: 'myListings.itemStatusDraft',
+  pending_review: 'myListings.itemStatusPendingReview',
+  pending_verify: 'myListings.itemStatusPendingVerify',
+  approved: 'myListings.itemStatusApproved',
   active: 'myListings.itemStatusActive',
   in_auction: 'myListings.itemStatusInAuction',
   sold: 'myListings.itemStatusSold',
@@ -79,7 +86,7 @@ export function MyListingsPage() {
     page: auctionPage,
     pageSize: 10,
   });
-  const publishAuction = usePublishAuction();
+  const submitAuction = useSubmitAuction();
 
   // ─── Seller role check ──────────────────────────────────────────
   if (!user?.hasSellerPermission) {
@@ -102,10 +109,24 @@ export function MyListingsPage() {
   // ─── Publish handler ────────────────────────────────────────────
   const handlePublish = async (auctionId: string) => {
     try {
-      await publishAuction.mutateAsync(auctionId);
+      await submitAuction.mutateAsync(auctionId);
       message.success(t('createAuction.publishSuccess'));
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : t('common.error');
+      // Map known BE rejection reasons to friendly i18n messages
+      const beDetail: string = axios.isAxiosError(err)
+        ? (err.response?.data?.detail ?? err.response?.data?.title ?? '')
+        : err instanceof Error ? err.message : '';
+
+      let errorMsg: string;
+      if (beDetail.includes('pending_verify')) {
+        errorMsg = t('myListings.submitErrorItemPendingVerify');
+      } else if (beDetail.includes('pending_review')) {
+        errorMsg = t('myListings.submitErrorItemPendingReview');
+      } else if (beDetail.includes("Cannot perform") || beDetail.includes("cannot perform")) {
+        errorMsg = t('myListings.submitErrorInvalidStatus');
+      } else {
+        errorMsg = beDetail || t('common.error');
+      }
       message.error(errorMsg);
     }
   };
@@ -141,7 +162,7 @@ export function MyListingsPage() {
       width: 130,
       render: (status: string) => (
         <Tag color={ITEM_STATUS_COLORS[status] ?? 'default'}>
-          {t(ITEM_STATUS_KEYS[status] ?? status)}
+          {ITEM_STATUS_KEYS[status] ? t(ITEM_STATUS_KEYS[status]) : t('common.unknownStatus')}
         </Tag>
       ),
     },
@@ -212,7 +233,7 @@ export function MyListingsPage() {
       width: 110,
       render: (status: AuctionStatus) => (
         <Tag color={STATUS_COLORS[status] ?? 'default'}>
-          {t(STATUS_KEYS[status] ?? status)}
+          {STATUS_KEYS[status] ? t(STATUS_KEYS[status]) : t('common.unknownStatus')}
         </Tag>
       ),
     },
@@ -242,7 +263,7 @@ export function MyListingsPage() {
               type="primary"
               size="small"
               icon={<RocketOutlined />}
-              loading={publishAuction.isPending}
+              loading={submitAuction.isPending}
               onClick={() => handlePublish(record.id)}
             >
               {t('myListings.publish')}

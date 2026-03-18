@@ -95,7 +95,10 @@ async function getUploadSignature(
 ): Promise<UploadSignatureResponse> {
   const { data } = await api.post<ApiResponse<UploadSignatureResponse>>(
     '/api/media/upload-signature',
-    { context, fileName } satisfies UploadSignatureRequest
+    { context, fileName } satisfies UploadSignatureRequest,
+    // Idempotency-Key prevents a duplicate signature being issued if the
+    // request is retried after a network timeout.
+    { headers: { 'Idempotency-Key': crypto.randomUUID() } },
   );
   // BE may return wrapped { data, message, success } or unwrapped directly
   return data.data ?? (data as unknown as UploadSignatureResponse);
@@ -181,7 +184,8 @@ async function confirmUpload(
 
   const { data } = await api.post<ApiResponse<ConfirmUploadResponse>>(
     '/api/media/confirm',
-    body
+    body,
+    { headers: { 'Idempotency-Key': crypto.randomUUID() } },
   );
   // BE may return wrapped { data, message, success } or unwrapped directly
   return data.data ?? (data as unknown as ConfirmUploadResponse);

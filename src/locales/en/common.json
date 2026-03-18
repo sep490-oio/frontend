@@ -93,7 +93,8 @@
     "yes": "Yes",
     "no": "No",
     "menu": "Menu",
-    "backToHome": "Back to Home"
+    "backToHome": "Back to Home",
+    "unknownStatus": "Unknown"
   },
   "errors": {
     "notFoundTitle": "Page Not Found",
@@ -157,7 +158,13 @@
   },
   "auction": {
     "statusDraft": "Draft",
+    "statusSubmitted": "Submitted",
+    "statusResubmitted": "Resubmitted",
     "statusPending": "Pending Review",
+    "statusPendingReview": "Pending Review",
+    "statusScheduled": "Scheduled",
+    "statusPublished": "Published",
+    "statusApproved": "Approved",
     "statusQualifying": "Qualifying",
     "statusActive": "Live",
     "statusEnded": "Ended",
@@ -428,7 +435,9 @@
     "publishNow": "Publish Now",
     "viewAuction": "View Auction",
     "goToListings": "View Listings",
-    "createAnother": "Create Another"
+    "createAnother": "Create Another",
+    "submitErrorInvalidStatus": "Cannot submit the auction in its current state.",
+    "submitErrorItemNotReady": "The item is not ready to be auctioned."
   },
   "myListings": {
     "title": "My Listings",
@@ -452,10 +461,16 @@
     "newAuction": "New Auction",
     "filterByStatus": "Filter by status",
     "itemStatusDraft": "Draft",
+    "itemStatusPendingReview": "Pending Review",
+    "itemStatusPendingVerify": "Pending Verification",
+    "itemStatusApproved": "Approved",
     "itemStatusActive": "Active",
     "itemStatusInAuction": "In Auction",
     "itemStatusSold": "Sold",
-    "itemStatusRemoved": "Removed"
+    "itemStatusRemoved": "Removed",
+    "submitErrorItemPendingVerify": "Item is pending verification. Please wait for admin approval before publishing the auction.",
+    "submitErrorItemPendingReview": "Item is pending review. Please wait for admin approval before publishing the auction.",
+    "submitErrorInvalidStatus": "Cannot publish the auction in its current state."
   },
   "myBids": {
     "title": "My Bids",
@@ -784,7 +799,10 @@
     "expiringSoon": "Expiring Soon",
     "date": "Date",
     "success": "Success",
-    "failed": "Failed"
+    "failed": "Failed",
+    "twoFactorProviderTotp": "Authenticator App",
+    "twoFactorProviderSms": "SMS",
+    "twoFactorProviderEmail": "Email"
   },
   "language": {
     "vi": "Tiếng Việt",

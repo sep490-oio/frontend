@@ -40,10 +40,11 @@ import {
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
+import axios from 'axios';
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
 import { useAppSelector } from '@/app/hooks';
-import { useMyItems, useCreateAuction, usePublishAuction } from '@/hooks/useSellerManagement';
+import { useMyItems, useCreateAuction, useSubmitAuction } from '@/hooks/useSellerManagement';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { formatVND } from '@/utils/formatters';
 import type { SellerItem } from '@/types/item';
@@ -72,13 +73,16 @@ export function CreateAuctionPage() {
 
   const { data: items = [], isLoading: itemsLoading } = useMyItems();
   const createAuction = useCreateAuction();
-  const publishAuction = usePublishAuction();
+  const submitAuction = useSubmitAuction();
 
   // ─── State ──────────────────────────────────────────────────────
   const [currentStep, setCurrentStep] = useState(routeItemId ? 1 : 0);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(routeItemId ?? null);
   const [createdAuctionId, setCreatedAuctionId] = useState<string | null>(null);
   const [published, setPublished] = useState(false);
+  // Snapshot of validated form values — saved when moving step 1 → 2 so
+  // handleCreate can read them even after the Form component unmounts.
+  const [confirmedValues, setConfirmedValues] = useState<AuctionFormValues | null>(null);
 
   // Filter items: only active items that are not already in an auction
   const availableItems = useMemo(
@@ -111,12 +115,14 @@ export function CreateAuctionPage() {
 
   // ─── Submit: Create Auction ─────────────────────────────────────
   const handleCreate = async () => {
-    if (!selectedItemId) return;
+    if (!selectedItemId || !confirmedValues || !selectedItem) return;
 
     try {
-      const values = await form.validateFields();
+      const values = confirmedValues;
       const result = await createAuction.mutateAsync({
         itemId: selectedItemId,
+        title: selectedItem.title,
+        condition: selectedItem.condition,
         startingPrice: values.startingPrice,
         bidIncrement: values.bidIncrement,
         startTime: values.startTime.toISOString(),
@@ -132,7 +138,9 @@ export function CreateAuctionPage() {
       setCurrentStep(3);
       message.success(t('createAuction.createSuccess'));
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : t('common.error');
+      const errorMsg = axios.isAxiosError(err)
+        ? (err.response?.data?.detail ?? err.response?.data?.title ?? t('common.error'))
+        : t('common.error');
       message.error(errorMsg);
     }
   };
@@ -141,11 +149,21 @@ export function CreateAuctionPage() {
   const handlePublish = async () => {
     if (!createdAuctionId) return;
     try {
-      await publishAuction.mutateAsync(createdAuctionId);
+      await submitAuction.mutateAsync(createdAuctionId);
       setPublished(true);
       message.success(t('createAuction.publishSuccess'));
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : t('common.error');
+      const beDetail = axios.isAxiosError(err)
+        ? (err.response?.data?.detail ?? err.response?.data?.title ?? '')
+        : '';
+      let errorMsg: string;
+      if (beDetail.includes('pending_verify') || beDetail.includes('pending_review')) {
+        errorMsg = t('myListings.submitErrorItemPendingVerify');
+      } else if (beDetail.includes('Cannot perform') || beDetail.includes('cannot perform')) {
+        errorMsg = t('createAuction.submitErrorInvalidStatus');
+      } else {
+        errorMsg = beDetail || t('common.error');
+      }
       message.error(errorMsg);
     }
   };
@@ -435,7 +453,8 @@ export function CreateAuctionPage() {
               type="primary"
               onClick={async () => {
                 try {
-                  await form.validateFields();
+                  const values = await form.validateFields();
+                  setConfirmedValues(values);
                   setCurrentStep(2);
                 } catch {
                   // Validation errors shown by form
@@ -538,7 +557,7 @@ export function CreateAuctionPage() {
                   type="primary"
                   icon={<RocketOutlined />}
                   onClick={handlePublish}
-                  loading={publishAuction.isPending}
+                  loading={submitAuction.isPending}
                 >
                   {t('createAuction.publishNow')}
                 </Button>

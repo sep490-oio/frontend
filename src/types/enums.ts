@@ -47,7 +47,13 @@ export type ListingVerificationStatus = 'unverified' | 'pending_verification' | 
  */
 export type AuctionStatus =
   | 'draft'
+  | 'submitted'
+  | 'resubmitted'
   | 'pending'
+  | 'pending_review'
+  | 'scheduled'
+  | 'published'
+  | 'approved'
   | 'active'
   | 'ended'
   | 'sold'

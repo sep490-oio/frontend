@@ -26,6 +26,21 @@ import { formatVND } from '@/utils/formatters';
 
 const { Text } = Typography;
 
+/**
+ * Maps backend deposit status values to their i18n keys.
+ * Using a static map instead of dynamic key construction prevents
+ * silent failures when new statuses are added without locale entries.
+ */
+const DEPOSIT_STATUS_KEY: Record<string, string> = {
+  held: 'bidding.depositHeld',
+  holding: 'bidding.depositHolding',
+  converted_to_payment: 'bidding.depositConverted_to_payment',
+  applied: 'bidding.depositApplied',
+  returned: 'bidding.depositReturned',
+  refunded: 'bidding.depositRefunded',
+  forfeited: 'bidding.depositForfeited',
+};
+
 interface QualificationSectionProps {
   auction: Auction;
 }
@@ -69,7 +84,7 @@ export function QualificationSection({ auction }: QualificationSectionProps) {
                         : 'red'
                 }
               >
-                {t(`bidding.deposit${deposit.status.charAt(0).toUpperCase() + deposit.status.slice(1)}`)}
+                {t(DEPOSIT_STATUS_KEY[deposit.status] ?? 'bidding.depositHeld')}
               </Tag>
             </Flex>
           </Flex>

@@ -343,6 +343,8 @@ export interface ToggleWatchResponse {
  */
 export interface CreateAuctionRequest {
   itemId: string;
+  title: string;       // BE requires item title alongside itemId
+  condition: string;   // BE requires item condition alongside itemId
   startingPrice: number;
   bidIncrement: number;
   startTime: string;   // ISO 8601 datetime

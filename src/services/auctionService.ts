@@ -457,6 +457,9 @@ export async function joinAuction(
 /**
  * Place a bid on an open auction.
  * POST /api/auctions/:id/bids (REST fallback — primary is SignalR)
+ *
+ * Idempotency-Key: a fresh UUID per call so the BE can deduplicate
+ * retries — prevents double-bids if the network drops mid-request.
  */
 export async function placeBid(
   auctionId: string,
@@ -465,6 +468,7 @@ export async function placeBid(
   const { data } = await api.post<PlaceBidResponse>(
     `/api/auctions/${auctionId}/bids`,
     { amount, currency: 'VND' },
+    { headers: { 'Idempotency-Key': crypto.randomUUID() } },
   );
   return data;
 }
@@ -472,6 +476,8 @@ export async function placeBid(
 /**
  * Submit a sealed bid (one-time, hidden).
  * Uses the same endpoint as open bids — BE handles the distinction.
+ *
+ * Idempotency-Key: same deduplication guard as placeBid.
  */
 export async function submitSealedBid(
   auctionId: string,
@@ -480,6 +486,7 @@ export async function submitSealedBid(
   const { data } = await api.post<PlaceBidResponse>(
     `/api/auctions/${auctionId}/bids`,
     { amount, currency: 'VND' },
+    { headers: { 'Idempotency-Key': crypto.randomUUID() } },
   );
   return data;
 }
@@ -643,8 +650,16 @@ export async function createAuction(
 }
 
 /**
- * Publish a draft auction (Draft → Pending).
- * Quartz scheduler will auto-activate at startTime.
+ * Submit a draft auction for admin review (Draft → PendingReview).
+ * POST /api/auctions/{id}/submit — returns 204 No Content.
+ */
+export async function submitAuction(auctionId: string): Promise<void> {
+  await api.post(`/api/auctions/${auctionId}/submit`);
+}
+
+/**
+ * Publish an approved auction (PendingReview → Published).
+ * This is an admin action — sellers do NOT call this directly.
  * POST /api/auctions/{id}/publish — returns 204 No Content.
  */
 export async function publishAuction(auctionId: string): Promise<void> {

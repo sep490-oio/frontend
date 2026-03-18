@@ -802,6 +802,65 @@ export const MOCK_USER_ADDRESSES = [
   },
 ];
 
+// ─── Sessions & Login History ─────────────────────────────────────────
+
+/** Matches UserSessionDto shape from GET /api/me/sessions */
+export const MOCK_USER_SESSIONS = [
+  {
+    sessionId: 'session-001',
+    deviceId: 'device-001',
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/122',
+    ipAddress: '192.168.x.x',
+    isActive: true,
+    isCurrentDevice: true,
+    createdAt: '2026-03-10T08:00:00Z',
+    lastRotatedAt: '2026-03-18T09:00:00Z',
+    slidingExpiresAt: '2026-03-19T09:00:00Z',
+    absoluteExpiresAt: '2026-03-25T08:00:00Z',
+    isNearingAbsoluteExpiration: false,
+    remainingAbsoluteTime: '7d',
+  },
+  {
+    sessionId: 'session-002',
+    deviceId: 'device-002',
+    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17) Safari/604',
+    ipAddress: '10.0.x.x',
+    isActive: false,
+    isCurrentDevice: false,
+    createdAt: '2026-03-05T14:00:00Z',
+    lastRotatedAt: '2026-03-15T10:00:00Z',
+    slidingExpiresAt: '2026-03-16T10:00:00Z',
+    absoluteExpiresAt: '2026-03-20T14:00:00Z',
+    isNearingAbsoluteExpiration: true,
+    remainingAbsoluteTime: '2d',
+  },
+];
+
+/** Matches LoginHistoryDto shape from GET /api/me/login-history */
+export const MOCK_LOGIN_HISTORY = [
+  {
+    id: 'lh-001',
+    ipAddress: '192.168.x.x',
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/122',
+    loginAt: '2026-03-18T09:00:00Z',
+    status: 'success',
+  },
+  {
+    id: 'lh-002',
+    ipAddress: '10.0.x.x',
+    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17) Safari/604',
+    loginAt: '2026-03-17T22:00:00Z',
+    status: 'failed',
+  },
+  {
+    id: 'lh-003',
+    ipAddress: '192.168.x.x',
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/122',
+    loginAt: '2026-03-16T08:30:00Z',
+    status: 'success',
+  },
+];
+
 // ─── Auction list for My Auctions (seller) ────────────────────────────
 
 export const MOCK_MY_AUCTIONS_LIST = [

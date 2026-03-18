@@ -111,10 +111,8 @@ export function CreateItemPage() {
       };
       setUploadedImages((prev) => [...prev, newImage]);
       message.success(t('createItem.uploadSuccess'));
-    } catch (err) {
-      message.error(
-        err instanceof Error ? err.message : t('createItem.uploadFailed')
-      );
+    } catch {
+      message.error(t('createItem.uploadFailed'));
     } finally {
       setUploading(false);
     }
