@@ -75,7 +75,9 @@
   },
   "common": {
     "loading": "Loading...",
-    "error": "An error occurred",
+    "error": {
+      "generic": "An error occurred. Please try again."
+    },
     "retry": "Retry",
     "save": "Save",
     "cancel": "Cancel",
@@ -93,7 +95,22 @@
     "yes": "Yes",
     "no": "No",
     "menu": "Menu",
-    "backToHome": "Back to Home"
+    "backToHome": "Back to Home",
+    "noResults": "No results found",
+    "refresh": "Refresh",
+    "viewDetail": "View detail",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "confirmed": "Confirmed",
+    "unconfirmed": "Unconfirmed",
+    "email": "Email",
+    "phone": "Phone",
+    "dateOfBirth": "Date of Birth",
+    "gender": "Gender",
+    "createdAt": "Created At",
+    "pagination": {
+      "total": "{{total}} records"
+    }
   },
   "errors": {
     "notFoundTitle": "Page Not Found",
@@ -246,7 +263,6 @@
     "depositHeld": "Holding",
     "depositReturned": "Refunded",
     "depositConverted_to_payment": "Applied to Payment",
-
     "placeBid": "Place Bid",
     "placing": "Placing bid...",
     "minNextBid": "Minimum next bid",
@@ -256,11 +272,9 @@
     "bidSuccess": "Successfully bid {{amount}}!",
     "bidFailed": "Bid failed. Please try again.",
     "quickBid": "Quick Bid",
-
     "notQualified": "You must pay deposit before bidding",
     "youAreWinning": "You are winning!",
     "youAreOutbid": "You have been outbid",
-
     "sealedBidTitle": "Submit Sealed Bid",
     "sealedBidWarning": "You can only submit one bid. It cannot be changed after submission.",
     "sealedBidConfirm": "Are you sure you want to submit {{amount}}?",
@@ -268,7 +282,6 @@
     "submitting": "Submitting...",
     "sealedBidSubmitted": "Sealed Bid Submitted",
     "sealedBidWaiting": "Results will be announced when the auction ends",
-
     "buyNowTitle": "Confirm Buy Now",
     "buyNowConfirm": "You will pay {{amount}}",
     "buyNowWarning": "The auction will end immediately",
@@ -276,7 +289,6 @@
     "buyNowConfirmButton": "Confirm Purchase",
     "buyNowSuccess": "Purchase successful! Order has been created.",
     "buyNowNote": "This is a simulated feature.",
-
     "resultWon": "Congratulations! You won the auction",
     "resultLost": "The auction has ended",
     "resultCancelled": "The auction was cancelled",
@@ -289,21 +301,17 @@
     "nextStepComplete": "Receive and confirm delivery",
     "finalPrice": "Final Price",
     "depositRefundedNote": "Your deposit has been refunded to your wallet",
-
     "watch": "Watch",
     "watching": "Watching",
     "unwatch": "Unwatch",
-
     "goToWallet": "Go to Wallet",
     "loginRequired": "Login to participate",
     "viewOrder": "View Order",
-
     "outbidNotification": "You've been outbid! New price: {{amount}}",
     "auctionExtended": "Auction extended by {{minutes}} minutes",
     "auctionEnded": "Auction has ended",
     "liveConnection": "Live",
     "noConnection": "No live connection",
-
     "autoBidTitle": "Auto-Bid",
     "autoBidDescription": "System will automatically bid on your behalf up to your max",
     "autoBidMaxAmount": "Maximum Amount",
@@ -577,7 +585,6 @@
     "columnDate": "Date",
     "columnAction": "Action",
     "viewDetail": "View",
-
     "statusPendingPayment": "Pending Payment",
     "statusPaid": "Paid",
     "statusProcessing": "Processing",
@@ -587,28 +594,24 @@
     "statusCancelled": "Cancelled",
     "statusRefunded": "Refunded",
     "statusDisputed": "Disputed",
-
     "orderNumber": "Order Number",
     "createdAt": "Created",
     "paidAt": "Paid",
     "shippedAt": "Shipped",
     "deliveredAt": "Delivered",
     "completedAt": "Completed",
-
     "itemPrice": "Item Price",
     "shippingFee": "Shipping Fee",
     "platformFee": "Platform Fee (5%)",
     "taxAmount": "Tax",
     "totalAmount": "Total",
     "priceBreakdown": "Price Breakdown",
-
     "escrowHolding": "Held in Escrow",
     "escrowReleased": "Released to Seller",
     "escrowRefunded": "Refunded to Buyer",
     "escrowDisputed": "Under Dispute",
     "paymentInfo": "Payment Information",
     "escrowStatus": "Escrow Status",
-
     "tracking": "Delivery Tracking",
     "carrier": "Carrier",
     "trackingNumber": "Tracking Number",
@@ -617,17 +620,14 @@
     "copyTracking": "Copy",
     "copied": "Copied!",
     "shippingAddress": "Shipping Address",
-
     "payNow": "Pay Now",
     "paymentDeadline": "Payment deadline: {{deadline}}",
     "payConfirm": "Pay {{amount}} from your wallet?",
     "paySuccess": "Payment successful!",
     "payNote": "This is a simulated feature.",
-
     "confirmReceipt": "Confirm Receipt",
     "confirmReceiptWarning": "After confirming, payment will be released to the seller. You will not be able to request a return.",
     "confirmReceiptSuccess": "Receipt confirmed!",
-
     "requestReturn": "Request Return",
     "returnReason": "Reason for Return",
     "returnReasonNotAsDescribed": "Item not as described",
@@ -637,11 +637,9 @@
     "returnReasonRequired": "Please select a reason for return",
     "returnNotes": "Additional notes",
     "returnSuccess": "Return request submitted!",
-
     "fileDispute": "File Dispute",
     "viewAuction": "View Auction",
     "viewOrder": "View Order",
-
     "browseNow": "Browse Auctions",
     "emptyActive": "No active orders",
     "emptyActiveHint": "Win an auction to create an order",
@@ -650,7 +648,6 @@
     "notFound": "Order not found",
     "notFoundDescription": "This order does not exist or has been removed",
     "backToOrders": "Back to orders",
-
     "timelineCreated": "Order Created",
     "timelinePaid": "Payment Received",
     "timelineProcessing": "Seller Preparing",
@@ -659,10 +656,8 @@
     "timelineCompleted": "Completed",
     "timelineCancelled": "Cancelled",
     "timelineDisputed": "Under Dispute",
-
     "timelineShowAll": "Show all steps",
     "timelineHide": "Hide details",
-
     "returnWindow": "Return window: {{days}} days remaining",
     "sellerInfo": "Seller"
   },
@@ -789,5 +784,386 @@
   "language": {
     "vi": "Tiếng Việt",
     "en": "English"
+  },
+  "admin": {
+    "dashboard": {
+      "title": "Dashboard",
+      "userStatus": {
+        "title": "User Status",
+        "usersLabel": "users"
+      },
+      "roleDistribution": {
+        "title": "Role Distribution"
+      },
+      "auctionStatus": {
+        "title": "Auctions",
+        "active": "Live",
+        "pending": "Upcoming",
+        "ended": "Ended",
+        "cancelled": "Cancelled"
+      },
+      "endingSoon": {
+        "title": "Ending Soon",
+        "noAuctions": "No auctions ending soon",
+        "updated": "Updated {{time}}"
+      },
+      "permissionHeatmap": {
+        "title": "Role Permissions",
+        "permissionCol": "Permission",
+        "toggleEnable": "Enable {{perm}} for {{role}}",
+        "toggleDisable": "Disable {{perm}} for {{role}}"
+      },
+      "recentUsers": {
+        "title": "New Users",
+        "updated": "Updated {{time}}"
+      },
+      "countdown": {
+        "ended": "Ended",
+        "hours": "{{h}}h {{mm}}m",
+        "minutes": "{{mm}}:{{ss}}"
+      }
+    },
+    "users": {
+      "title": "User Management",
+      "subtitle": "{{total}} total users",
+      "searchPlaceholder": "Search by name, email...",
+      "filterStatus": "Filter by status",
+      "filterRole": "Filter by role",
+      "sortBy": {
+        "createdAt": "Sort by created date",
+        "email": "Sort by email",
+        "status": "Sort by status"
+      },
+      "columns": {
+        "user": "User",
+        "roles": "Roles",
+        "status": "Status",
+        "emailConfirmed": "Email Confirmed",
+        "createdAt": "Created At"
+      },
+      "status": {
+        "active": "Active",
+        "banned": "Banned",
+        "suspended": "Suspended",
+        "inactive": "Inactive"
+      },
+      "actions": {
+        "activate": "Activate",
+        "ban": "Ban",
+        "suspend": "Suspend",
+        "unlock": "Unlock"
+      },
+      "statusChanged": "User status updated.",
+      "unlocked": "User unlocked.",
+      "deleted": "User deleted.",
+      "deleteConfirm": {
+        "title": "Delete this user?",
+        "content": "This will permanently delete {{email}}. This action cannot be undone."
+      }
+    },
+    "userDetail": {
+      "title": "User Detail",
+      "notFound": "User not found",
+      "bannedAlert": "This user is banned.",
+      "suspendedAlert": "This user is suspended.",
+      "banConfirm": "Are you sure you want to ban this user?",
+      "roles": "Roles",
+      "noRoles": "No roles assigned",
+      "selectRole": "Select a role",
+      "assignRole": "Assign",
+      "roleAssigned": "Role assigned.",
+      "roleRevoked": "Role revoked.",
+      "permissions": "Permissions",
+      "grant": "Grant",
+      "deny": "Deny",
+      "revoke": "Revoke",
+      "permGranted": "Permission granted.",
+      "permDenied": "Permission denied.",
+      "permRevoked": "Permission revoked."
+    },
+    "roles": {
+      "title": "Roles & Permissions",
+      "subtitle": "{{count}} roles · {{permCount}} permissions",
+      "searchRole": "Search roles...",
+      "searchPerm": "Search permissions...",
+      "legend": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "enable": "Enable",
+      "disable": "Disable",
+      "permEnabled": "Permission {{perm}} enabled.",
+      "permDisabled": "Permission {{perm}} disabled."
+    },
+    "settings": {
+      "title": "System Settings",
+      "subtitle": "{{count}} configuration keys",
+      "searchPlaceholder": "Search settings...",
+      "empty": "No settings found.",
+      "emptyValue": "(empty)",
+      "updated": "Setting {{key}} updated."
+    },
+    "items": {
+      "title": "Item Review Queue",
+      "subtitle": "{{count}} items pending review",
+      "filterStatus": "Filter by status",
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "columns": {
+        "item": "Item",
+        "status": "Status",
+        "reviewer": "Reviewer",
+        "createdAt": "Created At",
+        "actions": "Actions"
+      },
+      "noReviewer": "Not assigned",
+      "approve": "Approve",
+      "reject": "Reject",
+      "approveConfirm": "Approve this item?",
+      "approved": "Item approved.",
+      "rejected": "Item rejected.",
+      "rejectModal": {
+        "title": "Reject Item",
+        "reasonLabel": "Rejection Reason",
+        "reasonPlaceholder": "Enter reason for rejecting this item...",
+        "confirm": "Confirm Rejection",
+        "reasonRequired": "Please enter a reason."
+      }
+    },
+    "monitoring": {
+      "title": "Monitoring Alerts",
+      "subtitle": "{{count}} unresolved alerts · Auto-refresh every 30s",
+      "filterStatus": "Status",
+      "filterEntityType": "Entity Type",
+      "entityTypes": {
+        "auction": "Auction",
+        "user": "User",
+        "payment": "Payment"
+      },
+      "status": {
+        "open": "Open",
+        "acknowledged": "Acknowledged",
+        "resolved": "Resolved"
+      },
+      "columns": {
+        "entity": "Entity",
+        "severity": "Severity",
+        "status": "Status",
+        "notes": "Notes",
+        "createdAt": "Created At",
+        "actions": "Actions"
+      },
+      "acknowledge": "Acknowledge",
+      "resolve": "Resolve",
+      "acknowledgeModal": {
+        "title": "Acknowledge Alert",
+        "notesPlaceholder": "Acknowledgement notes..."
+      },
+      "resolveModal": {
+        "title": "Resolve Alert",
+        "actionLabel": "Action",
+        "actionResolve": "Resolve (fixed)",
+        "actionIgnore": "Ignore",
+        "notesPlaceholder": "Resolution notes...",
+        "confirm": "Confirm"
+      },
+      "acknowledged": "Alert acknowledged.",
+      "resolved": "Alert resolved."
+    },
+    "payments": {
+      "title": "Payment Management",
+      "subtitle": "Transactions, escrows, and withdrawal requests",
+      "tabs": {
+        "summary": "Summary",
+        "transactions": "Transactions",
+        "escrows": "Escrows",
+        "withdrawals": "Withdrawals"
+      },
+      "summary": {
+        "completed": "Completed Payments",
+        "failed": "Failed Payments",
+        "topUps": "Wallet Top-ups",
+        "withdrawalPending": "Pending Withdrawals",
+        "escrowHolding": "Holding Escrows",
+        "escrowReleased": "Released Escrow Total",
+        "escrowRefunded": "Refunded Escrow Total"
+      },
+      "transactions": {
+        "filterType": "Type",
+        "filterStatus": "Status",
+        "types": {
+          "payment": "Payment",
+          "refund": "Refund",
+          "deposit": "Deposit",
+          "withdrawal": "Withdrawal"
+        },
+        "status": {
+          "completed": "Completed",
+          "pending": "Pending",
+          "failed": "Failed"
+        },
+        "columns": {
+          "txNumber": "Transaction No.",
+          "type": "Type",
+          "amount": "Amount",
+          "status": "Status",
+          "gateway": "Gateway",
+          "createdAt": "Created At"
+        },
+        "fee": "Fee: {{amount}}"
+      },
+      "escrows": {
+        "filterStatus": "Status",
+        "status": {
+          "holding": "Holding",
+          "released": "Released",
+          "refunded": "Refunded"
+        },
+        "columns": {
+          "orderId": "Order ID",
+          "amount": "Amount",
+          "status": "Status",
+          "createdAt": "Created At",
+          "releasedAt": "Released At"
+        }
+      },
+      "withdrawals": {
+        "filterStatus": "Status",
+        "status": {
+          "pending": "Pending",
+          "approved": "Approved",
+          "rejected": "Rejected"
+        },
+        "columns": {
+          "bank": "Bank",
+          "account": "Account No.",
+          "amount": "Amount",
+          "status": "Status",
+          "createdAt": "Created At",
+          "actions": "Actions"
+        },
+        "net": "Net: {{amount}}",
+        "approve": "Approve",
+        "reject": "Reject",
+        "approveConfirm": "Approve this withdrawal request?",
+        "approved": "Withdrawal approved.",
+        "rejected": "Withdrawal rejected.",
+        "rejectModal": {
+          "title": "Reject Withdrawal",
+          "reasonPlaceholder": "Rejection reason...",
+          "confirm": "Reject",
+          "reasonRequired": "Please enter a reason."
+        }
+      }
+    },
+    "reports": {
+      "title": "Violation Reports",
+      "subtitle": "{{count}} reports",
+      "filterStatus": "Status",
+      "filterEntityType": "Entity Type",
+      "status": {
+        "pending": "Pending",
+        "under_review": "Under Review",
+        "resolved": "Resolved",
+        "escalated": "Escalated"
+      },
+      "entityTypes": {
+        "auction": "Auction",
+        "user": "User",
+        "item": "Item"
+      },
+      "columns": {
+        "entity": "Type / Entity",
+        "reason": "Reason",
+        "status": "Status",
+        "assignedTo": "Assigned To",
+        "createdAt": "Created At",
+        "actions": "Actions"
+      },
+      "notAssigned": "Not assigned",
+      "resolve": "Resolve",
+      "escalate": "Escalate to emergency",
+      "escalateConfirm": "Escalate to emergency?",
+      "escalateContent": "This action will create an emergency case.",
+      "escalated": "Escalated to emergency.",
+      "resolved": "Report resolved.",
+      "resolveModal": {
+        "title": "Resolve Report",
+        "actionLabel": "Action",
+        "actionResolve": "Resolve (fixed)",
+        "actionDismiss": "Dismiss",
+        "notesLabel": "Resolution Notes",
+        "notesPlaceholder": "Describe the resolution...",
+        "confirm": "Confirm"
+      }
+    },
+    "sellerProfiles": {
+      "title": "Seller Profiles",
+      "subtitle": "{{count}} pending verification",
+      "status": {
+        "pending": "Pending",
+        "verified": "Verified",
+        "rejected": "Rejected"
+      },
+      "columns": {
+        "seller": "Seller",
+        "status": "Status",
+        "sales": "Sales",
+        "verifiedAt": "Verified At",
+        "createdAt": "Created At",
+        "actions": "Actions"
+      },
+      "orders": "{{count}} orders",
+      "verify": "Verify",
+      "reject": "Reject",
+      "verifyConfirm": "Verify seller \"{{name}}\"?",
+      "rejectConfirm": "Reject seller \"{{name}}\"?",
+      "verified": "Seller verified.",
+      "rejected": "Seller rejected."
+    },
+    "verifications": {
+      "title": "KYC Verifications",
+      "subtitle": "{{count}} requests to process",
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "columns": {
+        "user": "User",
+        "type": "Verification Type",
+        "status": "Status",
+        "submittedAt": "Submitted At",
+        "actions": "Actions"
+      },
+      "viewDetail": "View Detail",
+      "approve": "Approve",
+      "reject": "Reject",
+      "approveConfirm": "Approve this verification?",
+      "approved": "Verification approved.",
+      "rejected": "Verification rejected.",
+      "detailDrawer": {
+        "title": "Verification Detail"
+      },
+      "rejectModal": {
+        "title": "Reject Verification",
+        "codeLabel": "Rejection Code",
+        "codePlaceholder": "Select rejection code",
+        "codes": {
+          "INVALID_ID": "Invalid ID document",
+          "BLURRY_IMAGE": "Image not clear",
+          "EXPIRED_ID": "Expired ID",
+          "MISMATCH": "Information mismatch",
+          "OTHER": "Other"
+        },
+        "reasonLabel": "Detailed Reason",
+        "reasonPlaceholder": "Describe the reason for rejection...",
+        "confirm": "Reject",
+        "reasonRequired": "Please enter a reason."
+      }
+    }
   }
 }
