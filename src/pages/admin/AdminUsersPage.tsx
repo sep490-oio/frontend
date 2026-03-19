@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -12,7 +12,6 @@ import {
   App,
   Typography,
   Flex,
-  Tooltip,
   Badge,
 } from 'antd';
 import type { TableProps, MenuProps } from 'antd';
@@ -24,7 +23,6 @@ import {
   UnlockOutlined,
   DeleteOutlined,
   EyeOutlined,
-  ReloadOutlined,
   FilterOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
@@ -37,16 +35,43 @@ import {
 import type { UserListItemDto, GetUsersParams } from '@/services/adminService';
 
 const { Text } = Typography;
-const { Option } = Select;
 
-const USER_STATUS_CONFIG: Record<
-  string,
-  { label: string; badgeStatus: 'success' | 'error' | 'warning' | 'default' }
-> = {
-  Active: { label: 'Hoạt động', badgeStatus: 'success' },
-  Banned: { label: 'Bị cấm', badgeStatus: 'error' },
-  Suspended: { label: 'Tạm khóa', badgeStatus: 'warning' },
-  Inactive: { label: 'Không hoạt động', badgeStatus: 'default' },
+
+const USER_STATUS_MAP = {
+  active: {
+    apiValue: 'active',
+    label: 'Hoạt động',
+    badge: 'success' as const,
+  },
+  inactive: {
+    apiValue: 'inactive',
+    label: 'Không hoạt động',
+    badge: 'default' as const,
+  },
+  locked: {
+    apiValue: 'locked',
+    label: 'Bị khóa',
+    badge: 'warning' as const,
+  },
+  banned: {
+    apiValue: 'banned',
+    label: 'Bị cấm',
+    badge: 'error' as const,
+  },
+  suspended: {
+    apiValue: 'suspended',
+    label: 'Tạm khóa',
+    badge: 'warning' as const,
+  },
+} as const;
+
+type StatusKey = keyof typeof USER_STATUS_MAP;
+
+// Helper function an toàn
+const getStatusConfig = (status?: string) => {
+  if (!status) return null;
+  const lower = status.toLowerCase() as StatusKey;
+  return USER_STATUS_MAP[lower] || null;
 };
 
 const PAGE_SIZE = 15;
@@ -64,21 +89,17 @@ export default function AdminUsersPage() {
   const [searchInput, setSearchInput] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
   const [roleFilter, setRoleFilter] = useState<string | undefined>();
-
-  // ✅ DATA LOCAL
   const [filteredData, setFilteredData] = useState<UserListItemDto[]>([]);
 
-  // ─── API (GIỮ NGUYÊN) ──────────────────────────────
-  const { data, isFetching, refetch } = useAdminUsers(params);
+  const { data, isFetching } = useAdminUsers(params);
   const changeStatus = useChangeUserStatus();
   const unlock = useUnlockUser();
   const remove = useRemoveUser();
 
-  // ✅ FILTER FRONTEND
+  // Frontend filtering
   useEffect(() => {
     let result = data?.items ?? [];
 
-    // search
     if (searchInput) {
       const keyword = searchInput.toLowerCase();
       result = result.filter((user) =>
@@ -90,28 +111,19 @@ export default function AdminUsersPage() {
       );
     }
 
-    // status
     if (statusFilter) {
-      result = result.filter((user) => user.status === statusFilter);
+      result = result.filter((user) => user.status?.toLowerCase() === statusFilter);
     }
 
-    // role
     if (roleFilter) {
-      result = result.filter((user) =>
-        user.roles?.includes(roleFilter)
-      );
+      result = result.filter((user) => user.roles?.includes(roleFilter));
     }
 
     setFilteredData(result);
   }, [data, searchInput, statusFilter, roleFilter]);
-
-  // ❌ KHÔNG gọi API nữa
-  const handleSearch = useCallback(() => {}, []);
-
-  // ─── ACTIONS (GIỮ NGUYÊN) ──────────────────────────
-  const handleStatusChange = (userId: string, status: string) => {
+const handleStatusChange = (userId: string, apiStatus: string) => {
     changeStatus.mutate(
-      { userId, data: { status } },
+      { userId, data: { status: apiStatus } },
       {
         onSuccess: () => message.success(t('admin.users.statusChanged')),
         onError: () => message.error(t('common.error.generic')),
@@ -134,59 +146,62 @@ export default function AdminUsersPage() {
     });
   };
 
-  const getRowActions = (record: UserListItemDto): MenuProps['items'] => [
-    {
-      key: 'view',
-      icon: <EyeOutlined />,
-      label: t('common.viewDetail'),
-      onClick: () => navigate(`/admin/users/${record.id}`),
-    },
-    { type: 'divider' },
-    ...(record.status !== 'Active'
-      ? [{
-          key: 'activate',
-          icon: <UnlockOutlined />,
-          label: t('admin.users.actions.activate'),
-          onClick: () => handleStatusChange(record.id, 'Active'),
-        }]
-      : []),
-    ...(record.status !== 'Banned'
-      ? [{
-          key: 'ban',
-          icon: <LockOutlined />,
-          label: t('admin.users.actions.ban'),
-          onClick: () => handleStatusChange(record.id, 'Banned'),
-        }]
-      : []),
-    ...(record.status !== 'Suspended'
-      ? [{
-          key: 'suspend',
-          icon: <LockOutlined />,
-          label: t('admin.users.actions.suspend'),
-          onClick: () => handleStatusChange(record.id, 'Suspended'),
-        }]
-      : []),
-    {
-      key: 'unlock',
-      icon: <UnlockOutlined />,
-      label: t('admin.users.actions.unlock'),
-      onClick: () =>
-        unlock.mutate(record.id, {
-          onSuccess: () => message.success(t('admin.users.unlocked')),
-          onError: () => message.error(t('common.error.generic')),
-        }),
-    },
-    { type: 'divider' },
-    {
-      key: 'delete',
-      icon: <DeleteOutlined />,
-      label: t('common.delete'),
-      danger: true,
-      onClick: () => handleDeleteConfirm(record),
-    },
-  ];
+  const getRowActions = (record: UserListItemDto): MenuProps['items'] => {
+    const currentStatus = record.status?.toLowerCase() as StatusKey | undefined;
 
-  // ─── COLUMNS (GIỮ NGUYÊN, KHÔNG MẤT emailConfirmed) ──────────────
+    return [
+      {
+        key: 'view',
+        icon: <EyeOutlined />,
+        label: t('common.viewDetail'),
+        onClick: () => navigate(`/admin/users/${record.id}`),
+      },
+      { type: 'divider' },
+
+      currentStatus !== 'active' && {
+        key: 'activate',
+        icon: <UnlockOutlined />,
+        label: USER_STATUS_MAP.active.label,
+        onClick: () => handleStatusChange(record.id, USER_STATUS_MAP.active.apiValue),
+      },
+
+      currentStatus !== 'banned' && {
+        key: 'ban',
+        icon: <LockOutlined />,
+        label: USER_STATUS_MAP.banned.label,
+        onClick: () => handleStatusChange(record.id, USER_STATUS_MAP.banned.apiValue),
+      },
+
+      currentStatus !== 'suspended' && {
+        key: 'suspend',
+        icon: <LockOutlined />,
+        label: USER_STATUS_MAP.suspended.label,
+        onClick: () => handleStatusChange(record.id, USER_STATUS_MAP.suspended.apiValue),
+      },
+
+      currentStatus === 'locked' && {
+        key: 'unlock',
+        icon: <UnlockOutlined />,
+        label: t('admin.users.actions.unlock'),
+        onClick: () =>
+          unlock.mutate(record.id, {
+            onSuccess: () => message.success(t('admin.users.unlocked')),
+            onError: () => message.error(t('common.error.generic')),
+          }),
+      },
+
+      { type: 'divider' },
+
+      {
+        key: 'delete',
+        icon: <DeleteOutlined />,
+        label: t('common.delete'),
+        danger: true,
+        onClick: () => handleDeleteConfirm(record),
+      },
+    ].filter(Boolean) as MenuProps['items'];
+  };
+
   const columns: TableProps<UserListItemDto>['columns'] = [
     {
       title: t('admin.users.columns.user'),
@@ -198,7 +213,7 @@ export default function AdminUsersPage() {
             <Text strong>
               {[record.firstName, record.lastName].filter(Boolean).join(' ') ||
                 record.userName ||
-                '—'}
+'—'}
             </Text>
             <br />
             <Text type="secondary">{record.email}</Text>
@@ -209,15 +224,18 @@ export default function AdminUsersPage() {
     {
       title: t('admin.users.columns.roles'),
       dataIndex: 'roles',
-      render: (roles: string[]) =>
-        roles?.map((r) => <Tag key={r}>{r}</Tag>),
+      render: (roles: string[]) => roles?.map((r) => <Tag key={r}>{r}</Tag>),
     },
     {
       title: t('admin.users.columns.status'),
       dataIndex: 'status',
       render: (status: string) => {
-        const cfg = USER_STATUS_CONFIG[status];
-        return <Badge status={cfg?.badgeStatus} text={cfg?.label} />;
+        const config = getStatusConfig(status);
+        return config ? (
+          <Badge status={config.badge} text={config.label} />
+        ) : (
+          <Badge status="default" text={status || 'Không xác định'} />
+        );
       },
     },
     {
@@ -248,64 +266,58 @@ export default function AdminUsersPage() {
   return (
     <div style={{ padding: 24 }}>
       <Flex gap={8} style={{ marginBottom: 16 }} wrap>
-        {/* ✅ SEARCH FRONTEND */}
         <Input.Search
           placeholder={t('admin.users.searchPlaceholder')}
           prefix={<SearchOutlined />}
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          onSearch={handleSearch}
           allowClear
           style={{ width: 280 }}
         />
 
-        {/* ✅ STATUS FRONTEND */}
         <Select
           placeholder={t('admin.users.filterStatus')}
           allowClear
           style={{ width: 160 }}
           suffixIcon={<FilterOutlined />}
-          onChange={(val) => setStatusFilter(val)}
+          onChange={(val) => setStatusFilter(val as string | undefined)}
         >
-          {Object.entries(USER_STATUS_CONFIG).map(([val, cfg]) => (
-            <Option key={val} value={val}>
-              <Badge status={cfg.badgeStatus} text={cfg.label} />
-            </Option>
+          {Object.entries(USER_STATUS_MAP).map(([key, config]) => (
+            <Select.Option key={key} value={key}>
+              <Badge status={config.badge} text={config.label} />
+            </Select.Option>
           ))}
         </Select>
 
-        {/* ✅ ROLE FRONTEND */}
         <Select
           placeholder={t('admin.users.filterRole')}
           allowClear
           style={{ width: 160 }}
-          onChange={(val) => setRoleFilter(val)}
+          onChange={(val) => setRoleFilter(val as string | undefined)}
         >
-          <Option value="Admin">Admin</Option>
-          <Option value="Moderator">Moderator</Option>
-          <Option value="User">User</Option>
+          <Select.Option value="Admin">Admin</Select.Option>
+          <Select.Option value="Moderator">Moderator</Select.Option>
+          <Select.Option value="User">User</Select.Option>
         </Select>
 
-        {/* giữ sort */}
         <Select
           style={{ width: 180 }}
           defaultValue="createdAt"
-          onChange={(val) => setParams((p) => ({ ...p, sortBy: val }))}
+          onChange={(val) => setParams((p) => ({ ...p, sortBy: val as string }))}
         >
-          <Option value="createdAt">{t('admin.users.sortBy.createdAt')}</Option>
-          <Option value="email">{t('admin.users.sortBy.email')}</Option>
-          <Option value="status">{t('admin.users.sortBy.status')}</Option>
+          <Select.Option value="createdAt">{t('admin.users.sortBy.createdAt')}</Select.Option>
+          <Select.Option value="email">{t('admin.users.sortBy.email')}</Select.Option>
+<Select.Option value="status">{t('admin.users.sortBy.status')}</Select.Option>
         </Select>
       </Flex>
 
       <Table<UserListItemDto>
         rowKey="id"
         columns={columns}
-        // ✅ DÙNG DATA FILTER
         dataSource={filteredData}
         loading={isFetching}
         scroll={{ x: 900 }}
-        pagination={false} // giữ UI nhưng không dùng server paging
+        pagination={false}
       />
     </div>
   );
