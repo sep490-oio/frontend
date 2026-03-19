@@ -323,3 +323,41 @@ export interface ToggleWatchResponse {
   isWatching: boolean;
   newWatchCount: number;
 }
+
+// ─── Create Auction (Seller Flow) ────────────────────────────────────
+
+/**
+ * Request payload for POST /api/auctions.
+ * Seller creates an auction for an active item.
+ *
+ * BE validation rules (from CreateAuctionCommand):
+ * - ItemId: not empty, item must be active & not already in auction
+ * - StartingPrice: non-negative
+ * - BidIncrement: non-negative
+ * - StartTime: must be in the future
+ * - EndTime: must be after StartTime
+ * - ReservePrice: if set, must be >= StartingPrice
+ * - BuyNowPrice: if set, must be >= StartingPrice
+ * - ExtensionMinutes: 1–30
+ * - Currency: exactly 3 characters
+ */
+export interface CreateAuctionRequest {
+  itemId: string;
+  startingPrice: number;
+  bidIncrement: number;
+  startTime: string;   // ISO 8601 datetime
+  endTime: string;     // ISO 8601 datetime
+  reservePrice?: number;
+  buyNowPrice?: number;
+  autoExtend?: boolean;       // default: true
+  extensionMinutes?: number;  // default: 5, range: 1-30
+  currency?: string;          // default: "VND"
+}
+
+/** Response from POST /api/auctions — returns the created auction */
+export interface CreateAuctionResponse {
+  id: string;
+  status: AuctionStatus;
+  startTime: string;
+  endTime: string;
+}

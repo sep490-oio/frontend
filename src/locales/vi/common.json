@@ -75,7 +75,9 @@
   },
   "common": {
     "loading": "Đang tải...",
-    "error": "Đã xảy ra lỗi",
+    "error": {
+      "generic": "Đã xảy ra lỗi. Vui lòng thử lại."
+    },
     "retry": "Thử lại",
     "save": "Lưu",
     "cancel": "Hủy",
@@ -93,7 +95,22 @@
     "yes": "Có",
     "no": "Không",
     "menu": "Menu",
-    "backToHome": "Về trang chủ"
+    "backToHome": "Về trang chủ",
+    "noResults": "Không có kết quả phù hợp",
+    "refresh": "Làm mới",
+    "viewDetail": "Xem chi tiết",
+    "enabled": "Đã bật",
+    "disabled": "Đã tắt",
+    "confirmed": "Đã xác nhận",
+    "unconfirmed": "Chưa xác nhận",
+    "email": "Email",
+    "phone": "Số điện thoại",
+    "dateOfBirth": "Ngày sinh",
+    "gender": "Giới tính",
+    "createdAt": "Ngày tạo",
+    "pagination": {
+      "total": "Tổng {{total}} bản ghi"
+    }
   },
   "errors": {
     "notFoundTitle": "Không tìm thấy trang",
@@ -246,7 +263,6 @@
     "depositHeld": "Đang giữ",
     "depositReturned": "Đã hoàn",
     "depositConverted_to_payment": "Đã áp dụng",
-
     "placeBid": "Đặt giá",
     "placing": "Đang đặt giá...",
     "minNextBid": "Giá tối thiểu tiếp theo",
@@ -256,11 +272,9 @@
     "bidSuccess": "Đã đặt giá {{amount}} thành công!",
     "bidFailed": "Đặt giá không thành công. Vui lòng thử lại.",
     "quickBid": "Đặt nhanh",
-
     "notQualified": "Bạn cần đặt cọc để đặt giá",
     "youAreWinning": "Bạn đang thắng!",
     "youAreOutbid": "Bạn đã bị vượt giá",
-
     "sealedBidTitle": "Đặt giá kín",
     "sealedBidWarning": "Bạn chỉ được đặt 1 giá duy nhất. Không thể thay đổi sau khi gửi.",
     "sealedBidConfirm": "Bạn chắc chắn muốn gửi giá {{amount}}?",
@@ -268,7 +282,6 @@
     "submitting": "Đang gửi...",
     "sealedBidSubmitted": "Đã gửi giá đấu thành công",
     "sealedBidWaiting": "Kết quả sẽ được công bố khi kết thúc phiên đấu giá",
-
     "buyNowTitle": "Xác nhận mua ngay",
     "buyNowConfirm": "Bạn sẽ thanh toán {{amount}}",
     "buyNowWarning": "Phiên đấu giá sẽ kết thúc ngay lập tức",
@@ -276,30 +289,29 @@
     "buyNowConfirmButton": "Xác nhận mua",
     "buyNowSuccess": "Mua thành công! Đơn hàng đã được tạo.",
     "buyNowNote": "Đây là tính năng mô phỏng.",
-
     "resultWon": "Chúc mừng! Bạn đã thắng phiên đấu giá",
     "resultLost": "Phiên đấu giá đã kết thúc",
     "resultCancelled": "Phiên đấu giá đã bị hủy",
     "resultFailed": "Phiên đấu giá không thành công",
     "resultFailedReason": "Không đủ người tham gia",
     "paymentDeadline": "Vui lòng thanh toán trong 48 giờ",
+    "paymentDeadlineDetail": "Nếu không thanh toán đúng hạn, tiền cọc sẽ bị mất (70% cho người bán, 30% cho nền tảng).",
+    "nextStepPay": "Thanh toán đơn hàng từ ví",
+    "nextStepShip": "Người bán giao hàng",
+    "nextStepComplete": "Nhận hàng và xác nhận",
     "finalPrice": "Giá cuối cùng",
     "depositRefundedNote": "Cọc của bạn đã được hoàn trả về ví",
-
     "watch": "Theo dõi",
     "watching": "Đang theo dõi",
     "unwatch": "Bỏ theo dõi",
-
     "goToWallet": "Đến ví tiền",
     "loginRequired": "Đăng nhập để tham gia",
     "viewOrder": "Xem đơn hàng",
-
     "outbidNotification": "Bạn đã bị vượt giá! Giá mới: {{amount}}",
     "auctionExtended": "Phiên đấu giá được gia hạn thêm {{minutes}} phút",
     "auctionEnded": "Phiên đấu giá đã kết thúc",
     "liveConnection": "Trực tiếp",
     "noConnection": "Không có kết nối trực tiếp",
-
     "autoBidTitle": "Đặt giá tự động",
     "autoBidDescription": "Hệ thống sẽ tự động đặt giá thay bạn đến mức tối đa",
     "autoBidMaxAmount": "Giá tối đa",
@@ -321,6 +333,16 @@
     "autoBidCurrentMax": "Giá tối đa hiện tại",
     "autoBidTotalBids": "Số lần đặt tự động",
     "autoBidDisabled": "Không khả dụng cho đấu giá kín"
+  },
+  "bidConfirm": {
+    "title": "Xác nhận đặt giá",
+    "item": "Sản phẩm",
+    "currentPrice": "Giá hiện tại",
+    "yourBid": "Giá bạn đặt",
+    "increase": "Tăng thêm",
+    "confirmButton": "Xác nhận đặt giá",
+    "highValueWarning": "Bạn đang đặt giá {{amount}} — đây là một khoản lớn. Vui lòng kiểm tra kỹ.",
+    "irreversibleNote": "Sau khi xác nhận, giá đặt không thể rút lại."
   },
   "createItem": {
     "title": "Đăng sản phẩm",
@@ -356,9 +378,92 @@
     "activateSuccess": "Sản phẩm đã được kích hoạt!",
     "doneTitle": "Đã tạo sản phẩm thành công!",
     "activatedMessage": "Sản phẩm đã sẵn sàng để tạo phiên đấu giá",
+    "sellerRequired": "Cần quyền người bán",
+    "sellerRequiredHint": "Bạn cần đăng ký làm người bán để đăng sản phẩm",
     "doneHint": "Bạn có thể tạo thêm sản phẩm hoặc xem danh sách sản phẩm đã đăng",
     "createAnother": "Tạo sản phẩm khác",
     "viewListings": "Xem sản phẩm đã đăng"
+  },
+  "createAuction": {
+    "title": "Tạo phiên đấu giá",
+    "subtitle": "Chọn sản phẩm và cấu hình phiên đấu giá mới",
+    "stepSelectItem": "Chọn sản phẩm",
+    "stepSettings": "Cài đặt",
+    "stepReview": "Xác nhận",
+    "stepDone": "Hoàn tất",
+    "sellerRequired": "Cần quyền người bán",
+    "sellerRequiredHint": "Bạn cần đăng ký làm người bán để tạo phiên đấu giá",
+    "goToProfile": "Đi tới hồ sơ",
+    "selectItemTitle": "Chọn sản phẩm để đấu giá",
+    "selectItemHint": "Chỉ hiển thị sản phẩm đã được duyệt và chưa có phiên đấu giá",
+    "noAvailableItems": "Không có sản phẩm nào khả dụng. Vui lòng tạo sản phẩm trước.",
+    "createItemFirst": "Tạo sản phẩm",
+    "selectedItem": "Sản phẩm đã chọn",
+    "settingsTitle": "Cài đặt phiên đấu giá",
+    "startingPrice": "Giá khởi điểm",
+    "startingPriceRequired": "Vui lòng nhập giá khởi điểm",
+    "priceMinimum": "Giá phải từ 1.000 VND trở lên",
+    "bidIncrement": "Bước giá",
+    "bidIncrementRequired": "Vui lòng nhập bước giá",
+    "reservePrice": "Giá sàn",
+    "reservePriceHint": "Giá tối thiểu để phiên đấu giá thành công. Nếu không đạt, không có người thắng.",
+    "reservePriceTooLow": "Giá sàn phải lớn hơn hoặc bằng giá khởi điểm",
+    "buyNowPrice": "Giá mua ngay",
+    "buyNowPriceHint": "Cho phép người mua mua ngay mà không cần đấu giá",
+    "buyNowPriceTooLow": "Giá mua ngay phải lớn hơn hoặc bằng giá khởi điểm",
+    "optional": "Tùy chọn",
+    "startTime": "Thời gian bắt đầu",
+    "startTimeRequired": "Vui lòng chọn thời gian bắt đầu",
+    "endTime": "Thời gian kết thúc",
+    "endTimeRequired": "Vui lòng chọn thời gian kết thúc",
+    "endTimeBeforeStart": "Thời gian kết thúc phải sau thời gian bắt đầu",
+    "selectDateTime": "Chọn ngày giờ",
+    "autoExtend": "Chống snipe",
+    "autoExtendHint": "Tự động gia hạn khi có người đấu giá vào phút cuối",
+    "extensionMinutes": "Số phút gia hạn",
+    "extensionMinutesRequired": "Vui lòng nhập số phút gia hạn",
+    "extensionMinutesRange": "Từ 1 đến 30 phút",
+    "minutes": "phút",
+    "reviewTitle": "Xác nhận thông tin",
+    "reviewHint": "Kiểm tra lại tất cả thông tin trước khi tạo phiên đấu giá",
+    "createButton": "Tạo phiên đấu giá",
+    "createSuccess": "Đã tạo phiên đấu giá thành công!",
+    "publishSuccess": "Đã xuất bản phiên đấu giá!",
+    "doneTitle": "Tạo phiên đấu giá thành công!",
+    "publishedMessage": "Phiên đấu giá đã được xuất bản và sẽ bắt đầu theo lịch",
+    "draftMessage": "Phiên đấu giá đang ở trạng thái nháp",
+    "draftMessageHint": "Bạn cần xuất bản để phiên đấu giá bắt đầu theo lịch",
+    "publishNow": "Xuất bản ngay",
+    "viewAuction": "Xem phiên đấu giá",
+    "goToListings": "Xem danh sách",
+    "createAnother": "Tạo phiên khác"
+  },
+  "myListings": {
+    "title": "Quản lý đấu giá",
+    "subtitle": "Quản lý sản phẩm và phiên đấu giá của bạn",
+    "sellerRequired": "Cần quyền người bán",
+    "sellerRequiredHint": "Bạn cần đăng ký làm người bán để truy cập trang này",
+    "tabItems": "Sản phẩm",
+    "tabAuctions": "Phiên đấu giá",
+    "itemTitle": "Tên sản phẩm",
+    "auctionTitle": "Tên phiên đấu giá",
+    "status": "Trạng thái",
+    "currentPrice": "Giá hiện tại",
+    "bids": "Lượt đấu",
+    "endTime": "Kết thúc",
+    "createdAt": "Ngày tạo",
+    "actions": "Thao tác",
+    "createAuction": "Tạo đấu giá",
+    "publish": "Xuất bản",
+    "view": "Xem",
+    "newItem": "Sản phẩm mới",
+    "newAuction": "Tạo đấu giá",
+    "filterByStatus": "Lọc theo trạng thái",
+    "itemStatusDraft": "Nháp",
+    "itemStatusActive": "Đang hoạt động",
+    "itemStatusInAuction": "Đang đấu giá",
+    "itemStatusSold": "Đã bán",
+    "itemStatusRemoved": "Đã xóa"
   },
   "myBids": {
     "title": "Đấu giá của tôi",
@@ -480,7 +585,6 @@
     "columnDate": "Ngày",
     "columnAction": "Thao tác",
     "viewDetail": "Xem",
-
     "statusPendingPayment": "Chờ thanh toán",
     "statusPaid": "Đã thanh toán",
     "statusProcessing": "Đang xử lý",
@@ -490,28 +594,24 @@
     "statusCancelled": "Đã hủy",
     "statusRefunded": "Đã hoàn tiền",
     "statusDisputed": "Đang khiếu nại",
-
     "orderNumber": "Mã đơn hàng",
     "createdAt": "Ngày tạo",
     "paidAt": "Ngày thanh toán",
     "shippedAt": "Ngày gửi hàng",
     "deliveredAt": "Ngày giao hàng",
     "completedAt": "Ngày hoàn thành",
-
     "itemPrice": "Giá sản phẩm",
     "shippingFee": "Phí vận chuyển",
     "platformFee": "Phí nền tảng (5%)",
     "taxAmount": "Thuế",
     "totalAmount": "Tổng cộng",
     "priceBreakdown": "Chi tiết thanh toán",
-
     "escrowHolding": "Đang giữ ký quỹ",
     "escrowReleased": "Đã chuyển cho người bán",
     "escrowRefunded": "Đã hoàn cho người mua",
     "escrowDisputed": "Đang tranh chấp",
     "paymentInfo": "Thông tin thanh toán",
     "escrowStatus": "Trạng thái ký quỹ",
-
     "tracking": "Theo dõi vận đơn",
     "carrier": "Đơn vị vận chuyển",
     "trackingNumber": "Mã vận đơn",
@@ -520,17 +620,14 @@
     "copyTracking": "Sao chép",
     "copied": "Đã sao chép!",
     "shippingAddress": "Địa chỉ giao hàng",
-
     "payNow": "Thanh toán ngay",
     "paymentDeadline": "Hạn thanh toán: {{deadline}}",
     "payConfirm": "Thanh toán {{amount}} từ ví?",
     "paySuccess": "Thanh toán thành công!",
     "payNote": "Đây là tính năng mô phỏng.",
-
     "confirmReceipt": "Xác nhận đã nhận hàng",
     "confirmReceiptWarning": "Sau khi xác nhận, số tiền sẽ được chuyển cho người bán. Bạn sẽ không thể yêu cầu trả hàng.",
     "confirmReceiptSuccess": "Đã xác nhận nhận hàng!",
-
     "requestReturn": "Yêu cầu trả hàng",
     "returnReason": "Lý do trả hàng",
     "returnReasonNotAsDescribed": "Sản phẩm không đúng mô tả",
@@ -540,11 +637,9 @@
     "returnReasonRequired": "Vui lòng chọn lý do trả hàng",
     "returnNotes": "Ghi chú thêm",
     "returnSuccess": "Đã gửi yêu cầu trả hàng!",
-
     "fileDispute": "Khiếu nại",
     "viewAuction": "Xem phiên đấu giá",
     "viewOrder": "Xem đơn hàng",
-
     "browseNow": "Khám phá đấu giá",
     "emptyActive": "Bạn chưa có đơn hàng nào đang xử lý",
     "emptyActiveHint": "Thắng đấu giá để tạo đơn hàng",
@@ -553,7 +648,6 @@
     "notFound": "Không tìm thấy đơn hàng",
     "notFoundDescription": "Đơn hàng này không tồn tại hoặc đã bị xóa",
     "backToOrders": "Quay lại danh sách đơn hàng",
-
     "timelineCreated": "Đã tạo đơn hàng",
     "timelinePaid": "Đã thanh toán",
     "timelineProcessing": "Người bán đang chuẩn bị",
@@ -562,10 +656,8 @@
     "timelineCompleted": "Hoàn thành",
     "timelineCancelled": "Đã hủy",
     "timelineDisputed": "Đang khiếu nại",
-
     "timelineShowAll": "Xem tất cả các bước",
     "timelineHide": "Ẩn chi tiết",
-
     "returnWindow": "Thời hạn trả hàng: {{days}} ngày còn lại",
     "sellerInfo": "Người bán"
   },
@@ -692,5 +784,386 @@
   "language": {
     "vi": "Tiếng Việt",
     "en": "English"
+  },
+  "admin": {
+    "dashboard": {
+      "title": "Tổng quan",
+      "userStatus": {
+        "title": "Trạng thái người dùng",
+        "usersLabel": "người dùng"
+      },
+      "roleDistribution": {
+        "title": "Phân bổ theo vai trò"
+      },
+      "auctionStatus": {
+        "title": "Phiên đấu giá",
+        "active": "Đang diễn ra",
+        "pending": "Sắp mở",
+        "ended": "Đã kết thúc",
+        "cancelled": "Đã hủy"
+      },
+      "endingSoon": {
+        "title": "Sắp kết thúc",
+        "noAuctions": "Không có phiên nào sắp kết thúc",
+        "updated": "Cập nhật {{time}}"
+      },
+      "permissionHeatmap": {
+        "title": "Phân quyền theo vai trò",
+        "permissionCol": "Quyền",
+        "toggleEnable": "Bật {{perm}} cho {{role}}",
+        "toggleDisable": "Tắt {{perm}} cho {{role}}"
+      },
+      "recentUsers": {
+        "title": "Người dùng mới",
+        "updated": "Cập nhật {{time}}"
+      },
+      "countdown": {
+        "ended": "Đã kết thúc",
+        "hours": "{{h}}g {{mm}}p",
+        "minutes": "{{mm}}:{{ss}}"
+      }
+    },
+    "users": {
+      "title": "Quản lý người dùng",
+      "subtitle": "Tổng {{total}} người dùng",
+      "searchPlaceholder": "Tìm theo tên, email...",
+      "filterStatus": "Lọc theo trạng thái",
+      "filterRole": "Lọc theo vai trò",
+      "sortBy": {
+        "createdAt": "Ngày tạo",
+        "email": "Email",
+        "status": "Trạng thái"
+      },
+      "columns": {
+        "user": "Người dùng",
+        "roles": "Vai trò",
+        "status": "Trạng thái",
+        "emailConfirmed": "Xác nhận email",
+        "createdAt": "Ngày tạo"
+      },
+      "status": {
+        "active": "Hoạt động",
+        "banned": "Bị cấm",
+        "suspended": "Tạm khóa",
+        "inactive": "Không hoạt động"
+      },
+      "actions": {
+        "activate": "Kích hoạt",
+        "ban": "Cấm",
+        "suspend": "Tạm khóa",
+        "unlock": "Mở khóa"
+      },
+      "statusChanged": "Đã cập nhật trạng thái người dùng.",
+      "unlocked": "Đã mở khóa người dùng.",
+      "deleted": "Đã xóa người dùng.",
+      "deleteConfirm": {
+        "title": "Xóa người dùng này?",
+        "content": "Thao tác này sẽ xóa vĩnh viễn tài khoản {{email}} và không thể hoàn tác."
+      }
+    },
+    "userDetail": {
+      "title": "Chi tiết người dùng",
+      "notFound": "Không tìm thấy người dùng",
+      "bannedAlert": "Người dùng này đang bị cấm.",
+      "suspendedAlert": "Người dùng này đang bị tạm khóa.",
+      "banConfirm": "Bạn có chắc muốn cấm người dùng này?",
+      "roles": "Vai trò",
+      "noRoles": "Chưa có vai trò nào",
+      "selectRole": "Chọn vai trò",
+      "assignRole": "Gán",
+      "roleAssigned": "Đã gán vai trò.",
+      "roleRevoked": "Đã thu hồi vai trò.",
+      "permissions": "Quyền hạn",
+      "grant": "Cấp quyền",
+      "deny": "Từ chối quyền",
+      "revoke": "Thu hồi quyền",
+      "permGranted": "Đã cấp quyền.",
+      "permDenied": "Đã từ chối quyền.",
+      "permRevoked": "Đã thu hồi quyền."
+    },
+    "roles": {
+      "title": "Vai trò & Quyền hạn",
+      "subtitle": "{{count}} vai trò · {{permCount}} quyền",
+      "searchRole": "Tìm vai trò...",
+      "searchPerm": "Tìm quyền...",
+      "legend": {
+        "active": "Đang bật",
+        "inactive": "Đang tắt"
+      },
+      "enable": "Bật",
+      "disable": "Tắt",
+      "permEnabled": "Đã bật quyền {{perm}}.",
+      "permDisabled": "Đã tắt quyền {{perm}}."
+    },
+    "settings": {
+      "title": "Cài đặt hệ thống",
+      "subtitle": "{{count}} khóa cấu hình",
+      "searchPlaceholder": "Tìm cài đặt...",
+      "empty": "Không tìm thấy cài đặt nào.",
+      "emptyValue": "(trống)",
+      "updated": "Đã cập nhật cài đặt {{key}}."
+    },
+    "items": {
+      "title": "Hàng đợi duyệt sản phẩm",
+      "subtitle": "{{count}} sản phẩm chờ duyệt",
+      "filterStatus": "Lọc theo trạng thái",
+      "status": {
+        "pending": "Chờ duyệt",
+        "approved": "Đã duyệt",
+        "rejected": "Đã từ chối"
+      },
+      "columns": {
+        "item": "Sản phẩm",
+        "status": "Trạng thái",
+        "reviewer": "Người duyệt",
+        "createdAt": "Ngày tạo",
+        "actions": "Thao tác"
+      },
+      "noReviewer": "Chưa gán",
+      "approve": "Duyệt",
+      "reject": "Từ chối",
+      "approveConfirm": "Duyệt sản phẩm này?",
+      "approved": "Sản phẩm đã được duyệt.",
+      "rejected": "Sản phẩm đã bị từ chối.",
+      "rejectModal": {
+        "title": "Từ chối sản phẩm",
+        "reasonLabel": "Lý do từ chối",
+        "reasonPlaceholder": "Nhập lý do từ chối sản phẩm này...",
+        "confirm": "Xác nhận từ chối",
+        "reasonRequired": "Vui lòng nhập lý do từ chối."
+      }
+    },
+    "monitoring": {
+      "title": "Cảnh báo hệ thống",
+      "subtitle": "{{count}} cảnh báo chưa xử lý · Tự làm mới mỗi 30 giây",
+      "filterStatus": "Trạng thái",
+      "filterEntityType": "Loại đối tượng",
+      "entityTypes": {
+        "auction": "Đấu giá",
+        "user": "Người dùng",
+        "payment": "Thanh toán"
+      },
+      "status": {
+        "open": "Chưa xử lý",
+        "acknowledged": "Đã xác nhận",
+        "resolved": "Đã xử lý"
+      },
+      "columns": {
+        "entity": "Đối tượng",
+        "severity": "Mức độ",
+        "status": "Trạng thái",
+        "notes": "Ghi chú",
+        "createdAt": "Ngày tạo",
+        "actions": "Thao tác"
+      },
+      "acknowledge": "Xác nhận",
+      "resolve": "Xử lý",
+      "acknowledgeModal": {
+        "title": "Xác nhận cảnh báo",
+        "notesPlaceholder": "Ghi chú xác nhận..."
+      },
+      "resolveModal": {
+        "title": "Xử lý cảnh báo",
+        "actionLabel": "Hành động",
+        "actionResolve": "Xử lý (đã giải quyết)",
+        "actionIgnore": "Bỏ qua (ignore)",
+        "notesPlaceholder": "Ghi chú xử lý...",
+        "confirm": "Xác nhận"
+      },
+      "acknowledged": "Đã xác nhận cảnh báo.",
+      "resolved": "Cảnh báo đã được xử lý."
+    },
+    "payments": {
+      "title": "Quản lý thanh toán",
+      "subtitle": "Tổng quan giao dịch, ký quỹ và yêu cầu rút tiền",
+      "tabs": {
+        "summary": "Tổng quan",
+        "transactions": "Giao dịch",
+        "escrows": "Ký quỹ",
+        "withdrawals": "Rút tiền"
+      },
+      "summary": {
+        "completed": "Thanh toán thành công",
+        "failed": "Thanh toán thất bại",
+        "topUps": "Nạp ví",
+        "withdrawalPending": "Rút tiền đang chờ",
+        "escrowHolding": "Ký quỹ đang giữ",
+        "escrowReleased": "Tổng ký quỹ đã giải phóng",
+        "escrowRefunded": "Tổng ký quỹ đã hoàn"
+      },
+      "transactions": {
+        "filterType": "Loại",
+        "filterStatus": "Trạng thái",
+        "types": {
+          "payment": "Thanh toán",
+          "refund": "Hoàn tiền",
+          "deposit": "Đặt cọc",
+          "withdrawal": "Rút tiền"
+        },
+        "status": {
+          "completed": "Thành công",
+          "pending": "Đang chờ",
+          "failed": "Thất bại"
+        },
+        "columns": {
+          "txNumber": "Mã giao dịch",
+          "type": "Loại",
+          "amount": "Số tiền",
+          "status": "Trạng thái",
+          "gateway": "Cổng thanh toán",
+          "createdAt": "Ngày tạo"
+        },
+        "fee": "Phí: {{amount}}"
+      },
+      "escrows": {
+        "filterStatus": "Trạng thái",
+        "status": {
+          "holding": "Đang giữ",
+          "released": "Đã giải phóng",
+          "refunded": "Đã hoàn"
+        },
+        "columns": {
+          "orderId": "Mã đơn hàng",
+          "amount": "Số tiền",
+          "status": "Trạng thái",
+          "createdAt": "Ngày tạo",
+          "releasedAt": "Ngày giải phóng"
+        }
+      },
+      "withdrawals": {
+        "filterStatus": "Trạng thái",
+        "status": {
+          "pending": "Chờ duyệt",
+          "approved": "Đã duyệt",
+          "rejected": "Đã từ chối"
+        },
+        "columns": {
+          "bank": "Ngân hàng",
+          "account": "Số tài khoản",
+          "amount": "Số tiền",
+          "status": "Trạng thái",
+          "createdAt": "Ngày tạo",
+          "actions": "Thao tác"
+        },
+        "net": "Thực nhận: {{amount}}",
+        "approve": "Duyệt",
+        "reject": "Từ chối",
+        "approveConfirm": "Duyệt yêu cầu rút tiền này?",
+        "approved": "Đã duyệt yêu cầu rút tiền.",
+        "rejected": "Đã từ chối yêu cầu rút tiền.",
+        "rejectModal": {
+          "title": "Từ chối rút tiền",
+          "reasonPlaceholder": "Lý do từ chối...",
+          "confirm": "Từ chối",
+          "reasonRequired": "Vui lòng nhập lý do từ chối."
+        }
+      }
+    },
+    "reports": {
+      "title": "Báo cáo vi phạm",
+      "subtitle": "{{count}} báo cáo",
+      "filterStatus": "Trạng thái",
+      "filterEntityType": "Loại đối tượng",
+      "status": {
+        "pending": "Chờ xử lý",
+        "under_review": "Đang xem xét",
+        "resolved": "Đã xử lý",
+        "escalated": "Đã leo thang"
+      },
+      "entityTypes": {
+        "auction": "Đấu giá",
+        "user": "Người dùng",
+        "item": "Sản phẩm"
+      },
+      "columns": {
+        "entity": "Loại / Đối tượng",
+        "reason": "Lý do",
+        "status": "Trạng thái",
+        "assignedTo": "Phụ trách",
+        "createdAt": "Ngày tạo",
+        "actions": "Thao tác"
+      },
+      "notAssigned": "Chưa gán",
+      "resolve": "Xử lý",
+      "escalate": "Leo thang khẩn cấp",
+      "escalateConfirm": "Leo thang thành khẩn cấp?",
+      "escalateContent": "Hành động này sẽ tạo một trường hợp khẩn cấp.",
+      "escalated": "Đã leo thang thành khẩn cấp.",
+      "resolved": "Báo cáo đã được xử lý.",
+      "resolveModal": {
+        "title": "Xử lý báo cáo",
+        "actionLabel": "Hành động",
+        "actionResolve": "Xử lý (giải quyết)",
+        "actionDismiss": "Bác bỏ (dismiss)",
+        "notesLabel": "Ghi chú xử lý",
+        "notesPlaceholder": "Mô tả cách xử lý...",
+        "confirm": "Xác nhận"
+      }
+    },
+    "sellerProfiles": {
+      "title": "Hồ sơ người bán",
+      "subtitle": "{{count}} đang chờ xác minh",
+      "status": {
+        "pending": "Chờ xác minh",
+        "verified": "Đã xác minh",
+        "rejected": "Đã từ chối"
+      },
+      "columns": {
+        "seller": "Người bán",
+        "status": "Trạng thái",
+        "sales": "Doanh số",
+        "verifiedAt": "Ngày xác minh",
+        "createdAt": "Ngày tạo",
+        "actions": "Thao tác"
+      },
+      "orders": "{{count}} đơn",
+      "verify": "Xác minh",
+      "reject": "Từ chối",
+      "verifyConfirm": "Xác minh người bán \"{{name}}\"?",
+      "rejectConfirm": "Từ chối người bán \"{{name}}\"?",
+      "verified": "Đã xác minh người bán.",
+      "rejected": "Đã từ chối người bán."
+    },
+    "verifications": {
+      "title": "Xác minh KYC",
+      "subtitle": "{{count}} yêu cầu cần xử lý",
+      "status": {
+        "pending": "Chờ xử lý",
+        "approved": "Đã duyệt",
+        "rejected": "Đã từ chối"
+      },
+      "columns": {
+        "user": "Người dùng",
+        "type": "Loại xác minh",
+        "status": "Trạng thái",
+        "submittedAt": "Ngày nộp",
+        "actions": "Thao tác"
+      },
+      "viewDetail": "Xem chi tiết",
+      "approve": "Duyệt",
+      "reject": "Từ chối",
+      "approveConfirm": "Duyệt xác minh này?",
+      "approved": "Đã duyệt xác minh.",
+      "rejected": "Đã từ chối xác minh.",
+      "detailDrawer": {
+        "title": "Chi tiết xác minh"
+      },
+      "rejectModal": {
+        "title": "Từ chối xác minh",
+        "codeLabel": "Mã từ chối",
+        "codePlaceholder": "Chọn mã từ chối",
+        "codes": {
+          "INVALID_ID": "Giấy tờ không hợp lệ",
+          "BLURRY_IMAGE": "Ảnh không rõ nét",
+          "EXPIRED_ID": "Giấy tờ đã hết hạn",
+          "MISMATCH": "Thông tin không khớp",
+          "OTHER": "Lý do khác"
+        },
+        "reasonLabel": "Lý do chi tiết",
+        "reasonPlaceholder": "Mô tả lý do từ chối...",
+        "confirm": "Từ chối",
+        "reasonRequired": "Vui lòng nhập lý do từ chối."
+      }
+    }
   }
 }
