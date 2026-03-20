@@ -10,6 +10,7 @@
  */
 
 import { useState } from 'react';
+import axios from 'axios';
 import {
   Card,
   Typography,
@@ -34,7 +35,8 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { useAppSelector } from '@/app/hooks';
-import { useMyItems, useMyAuctions, usePublishAuction } from '@/hooks/useSellerManagement';
+import { useMyItems, useMyAuctions, useSubmitAuction, usePublishAuction } from '@/hooks/useSellerManagement';
+import { useSubmitItem } from '@/hooks/useItems';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { formatVND, STATUS_KEYS, STATUS_COLORS } from '@/utils/formatters';
 import type { SellerItem } from '@/types/item';
@@ -48,6 +50,9 @@ const { Title, Text } = Typography;
 
 const ITEM_STATUS_COLORS: Record<string, string> = {
   draft: 'default',
+  pending_review: 'processing',
+  pending_verify: 'gold',
+  approved: 'cyan',
   active: 'green',
   in_auction: 'blue',
   sold: 'purple',
@@ -56,6 +61,9 @@ const ITEM_STATUS_COLORS: Record<string, string> = {
 
 const ITEM_STATUS_KEYS: Record<string, string> = {
   draft: 'myListings.itemStatusDraft',
+  pending_review: 'myListings.itemStatusPendingReview',
+  pending_verify: 'myListings.itemStatusPendingVerify',
+  approved: 'myListings.itemStatusApproved',
   active: 'myListings.itemStatusActive',
   in_auction: 'myListings.itemStatusInAuction',
   sold: 'myListings.itemStatusSold',
@@ -79,7 +87,9 @@ export function MyListingsPage() {
     page: auctionPage,
     pageSize: 10,
   });
+  const submitAuction = useSubmitAuction();
   const publishAuction = usePublishAuction();
+  const submitItem = useSubmitItem();
 
   // ─── Seller role check ──────────────────────────────────────────
   if (!user?.hasSellerPermission) {
@@ -99,13 +109,53 @@ export function MyListingsPage() {
     );
   }
 
-  // ─── Publish handler ────────────────────────────────────────────
-  const handlePublish = async (auctionId: string) => {
+  // ─── Submit item for review handler ─────────────────────────────
+  const handleSubmitItem = async (itemId: string) => {
+    try {
+      await submitItem.mutateAsync(itemId);
+      message.success(t('createItem.submitSuccess'));
+    } catch (err) {
+      const errorMsg = axios.isAxiosError(err)
+        ? (err.response?.data?.detail ?? err.response?.data?.title ?? t('common.error'))
+        : t('common.error');
+      message.error(errorMsg);
+    }
+  };
+
+  // ─── Publish auction handler (Scheduled → Active) ─────────────
+  const handlePublishAuction = async (auctionId: string) => {
     try {
       await publishAuction.mutateAsync(auctionId);
       message.success(t('createAuction.publishSuccess'));
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : t('common.error');
+      const errorMsg = axios.isAxiosError(err)
+        ? (err.response?.data?.detail ?? err.response?.data?.title ?? t('common.error'))
+        : t('common.error');
+      message.error(errorMsg);
+    }
+  };
+
+  // ─── Submit auction handler (Draft → Scheduled) ───────────────
+  const handlePublish = async (auctionId: string) => {
+    try {
+      await submitAuction.mutateAsync(auctionId);
+      message.success(t('createAuction.publishSuccess'));
+    } catch (err) {
+      // Map known BE rejection reasons to friendly i18n messages
+      const beDetail: string = axios.isAxiosError(err)
+        ? (err.response?.data?.detail ?? err.response?.data?.title ?? '')
+        : err instanceof Error ? err.message : '';
+
+      let errorMsg: string;
+      if (beDetail.includes('pending_verify')) {
+        errorMsg = t('myListings.submitErrorItemPendingVerify');
+      } else if (beDetail.includes('pending_review')) {
+        errorMsg = t('myListings.submitErrorItemPendingReview');
+      } else if (beDetail.includes("Cannot perform") || beDetail.includes("cannot perform")) {
+        errorMsg = t('myListings.submitErrorInvalidStatus');
+      } else {
+        errorMsg = beDetail || t('common.error');
+      }
       message.error(errorMsg);
     }
   };
@@ -141,7 +191,7 @@ export function MyListingsPage() {
       width: 130,
       render: (status: string) => (
         <Tag color={ITEM_STATUS_COLORS[status] ?? 'default'}>
-          {t(ITEM_STATUS_KEYS[status] ?? status)}
+          {ITEM_STATUS_KEYS[status] ? t(ITEM_STATUS_KEYS[status]) : t('common.unknownStatus')}
         </Tag>
       ),
     },
@@ -159,7 +209,16 @@ export function MyListingsPage() {
       width: 150,
       render: (_: unknown, record: SellerItem) => (
         <Space size="small">
-          {record.status === 'active' && (
+          {record.status === 'draft' && (
+            <Button
+              size="small"
+              loading={submitItem.isPending}
+              onClick={() => handleSubmitItem(record.id)}
+            >
+              {t('myListings.submitForReview')}
+            </Button>
+          )}
+          {(record.status === 'active' || record.status === 'approved') && (
             <Button
               type="primary"
               size="small"
@@ -212,7 +271,7 @@ export function MyListingsPage() {
       width: 110,
       render: (status: AuctionStatus) => (
         <Tag color={STATUS_COLORS[status] ?? 'default'}>
-          {t(STATUS_KEYS[status] ?? status)}
+          {STATUS_KEYS[status] ? t(STATUS_KEYS[status]) : t('common.unknownStatus')}
         </Tag>
       ),
     },
@@ -239,11 +298,21 @@ export function MyListingsPage() {
         <Space size="small">
           {record.status === 'draft' && (
             <Button
+              size="small"
+              icon={<RocketOutlined />}
+              loading={submitAuction.isPending}
+              onClick={() => handlePublish(record.id)}
+            >
+              {t('myListings.submit')}
+            </Button>
+          )}
+          {record.status === 'scheduled' && (
+            <Button
               type="primary"
               size="small"
               icon={<RocketOutlined />}
               loading={publishAuction.isPending}
-              onClick={() => handlePublish(record.id)}
+              onClick={() => handlePublishAuction(record.id)}
             >
               {t('myListings.publish')}
             </Button>
@@ -313,6 +382,7 @@ export function MyListingsPage() {
                       style={{ width: 180 }}
                       options={[
                         { value: 'draft', label: t('auction.statusDraft') },
+                        { value: 'scheduled', label: t('auction.statusScheduled') },
                         { value: 'pending', label: t('auction.statusPending') },
                         { value: 'active', label: t('auction.statusActive') },
                         { value: 'ended', label: t('auction.statusEnded') },

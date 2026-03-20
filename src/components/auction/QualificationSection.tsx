@@ -1,10 +1,10 @@
 /**
- * QualificationSection — handles the deposit/qualification flow.
+ * QualificationSection — handles the deposit/qualification flow via VNPay.
  *
  * Two states:
- * 1. NOT qualified: Shows deposit amount, wallet balance check,
- *    and "Đặt cọc tham gia" button. If wallet has insufficient funds,
- *    shows a warning with a link to the Wallet page.
+ * 1. NOT qualified: Shows deposit amount and "Đặt cọc tham gia" button.
+ *    Clicking redirects to VNPay payment page. After payment, user is
+ *    redirected back and BE has created the deposit via IPN callback.
  * 2. QUALIFIED: Shows a success banner with deposit details and
  *    a "waiting for auction to start" or "ready to bid" message.
  *
@@ -25,6 +25,21 @@ import { useWalletData } from '@/hooks/useWallet';
 import { formatVND } from '@/utils/formatters';
 
 const { Text } = Typography;
+
+/**
+ * Maps backend deposit status values to their i18n keys.
+ * Using a static map instead of dynamic key construction prevents
+ * silent failures when new statuses are added without locale entries.
+ */
+const DEPOSIT_STATUS_KEY: Record<string, string> = {
+  held: 'bidding.depositHeld',
+  holding: 'bidding.depositHolding',
+  converted_to_payment: 'bidding.depositConverted_to_payment',
+  applied: 'bidding.depositApplied',
+  returned: 'bidding.depositReturned',
+  refunded: 'bidding.depositRefunded',
+  forfeited: 'bidding.depositForfeited',
+};
 
 interface QualificationSectionProps {
   auction: Auction;
@@ -69,7 +84,7 @@ export function QualificationSection({ auction }: QualificationSectionProps) {
                         : 'red'
                 }
               >
-                {t(`bidding.deposit${deposit.status.charAt(0).toUpperCase() + deposit.status.slice(1)}`)}
+                {t(DEPOSIT_STATUS_KEY[deposit.status] ?? 'bidding.depositHeld')}
               </Tag>
             </Flex>
           </Flex>
@@ -84,9 +99,11 @@ export function QualificationSection({ auction }: QualificationSectionProps) {
   const shortfall = depositAmount - availableBalance;
 
   const handleJoin = () => {
-    joinAuction.mutate(auction.id, {
-      onSuccess: () => {
-        message.success(t('bidding.joinSuccess'));
+    const returnUrl = window.location.href;
+    joinAuction.mutate({ auctionId: auction.id, returnUrl }, {
+      onSuccess: (paymentUrl) => {
+        // Redirect user to VNPay payment page
+        window.location.href = paymentUrl;
       },
       onError: () => {
         message.error(t('common.error'));
