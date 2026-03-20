@@ -79,10 +79,8 @@ export function WalletSummaryCard({
           type="link"
           size="small"
           onClick={() => navigate('/wallet')}
-          icon={<ArrowRightOutlined />}
-          iconPosition="end"
         >
-          {t('dashboard.goToWallet')}
+          {t('dashboard.goToWallet')} <ArrowRightOutlined />
         </Button>
       }
       style={{ height: '100%' }}

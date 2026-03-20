@@ -76,15 +76,19 @@ export default function AdminItemsPage() {
       title: t('admin.items.columns.status'),
       dataIndex: 'status', key: 'status', width: 140,
       render: (status: string) => {
-        const color = status === 'pending' ? 'orange' : status === 'approved' ? 'green' : 'red';
-        return <Tag color={color}>{t(`admin.items.status.${status}`, { defaultValue: status })}</Tag>;
+        const colorMap: Record<string, string> = {
+          draft: 'default', pending_review: 'processing', pending_verify: 'gold',
+          pending_condition_confirmation: 'gold', approved: 'cyan', rejected: 'red',
+          active: 'green', in_auction: 'blue', sold: 'purple', removed: 'red',
+        };
+        return <Tag color={colorMap[status] ?? 'default'}>{t(`admin.items.status.${status}`, { defaultValue: status })}</Tag>;
       },
     },
     {
       title: t('admin.items.columns.reviewer'),
       dataIndex: 'assignedAdminId', key: 'assignedAdminId', width: 160,
       render: (id: string | null) =>
-        id ? <Text code style={{ fontSize: 11 }}>{id}</Text> : <Text type="secondary">{t('admin.items.noReviewer')}</Text>,
+        id ? <Tag color="blue">{t('admin.items.assigned')}</Tag> : <Text type="secondary">{t('admin.items.noReviewer')}</Text>,
     },
     {
       title: t('admin.items.columns.createdAt'),
@@ -107,13 +111,13 @@ export default function AdminItemsPage() {
                 title: t('admin.items.approveConfirm'),
                 okText: t('admin.items.approve'),
                 cancelText: t('common.cancel'),
-                onOk: () => approveMutation.mutateAsync(record.id as string),
+                onOk: () => approveMutation.mutateAsync(record.itemId as string),
               })}
             />
           </Tooltip>
           <Tooltip title={t('admin.items.reject')}>
             <Button size="small" danger icon={<CloseOutlined />}
-              onClick={() => setRejectModal({ open: true, itemId: record.id as string })}
+              onClick={() => setRejectModal({ open: true, itemId: record.itemId as string })}
             />
           </Tooltip>
         </Space>
@@ -146,7 +150,7 @@ export default function AdminItemsPage() {
       </Flex>
 
       <Table
-        rowKey="id" columns={columns} dataSource={items}
+        rowKey="itemId" columns={columns} dataSource={items}
         loading={isFetching} scroll={{ x: 800 }}
         pagination={{
           current: metadata?.currentPage ?? 1, pageSize: PAGE_SIZE,

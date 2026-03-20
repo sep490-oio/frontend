@@ -2,13 +2,18 @@
  * CreateAuctionPage — Seller flow: select item → configure auction → publish.
  *
  * 4-step wizard:
- * 0. Select an active item (not already in auction)
+ * 0. Select an approved/active item
  * 1. Configure auction settings (prices, timing, anti-sniping)
  * 2. Review all settings before submission
- * 3. Done — option to publish immediately
+ * 3. Done — auction is Scheduled, publish when bidders have deposited
  *
  * Requires seller role — shows "Become a Seller" prompt for non-sellers.
- * BE contract: POST /api/auctions (creates Draft), POST /api/auctions/{id}/publish (Draft → Pending).
+ *
+ * 3-step BE flow:
+ * 1. POST /api/items/{itemId}/auctions (pricing → Draft)
+ * 2. POST /api/auctions/{id}/submit (Draft → Approved)
+ * 3. PUT /api/auctions/{id}/timing (Approved + timing → Scheduled)
+ * Then: POST /api/auctions/{id}/publish (Scheduled → Active)
  */
 
 import { useState, useMemo } from 'react';
@@ -44,7 +49,7 @@ import axios from 'axios';
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
 import { useAppSelector } from '@/app/hooks';
-import { useMyItems, useCreateAuction, useSubmitAuction } from '@/hooks/useSellerManagement';
+import { useMyItems, useCreateAuction, useSetAuctionTiming, useSubmitAuction, usePublishAuction } from '@/hooks/useSellerManagement';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { formatVND } from '@/utils/formatters';
 import type { SellerItem } from '@/types/item';
@@ -73,7 +78,9 @@ export function CreateAuctionPage() {
 
   const { data: items = [], isLoading: itemsLoading } = useMyItems();
   const createAuction = useCreateAuction();
+  const setTiming = useSetAuctionTiming();
   const submitAuction = useSubmitAuction();
+  const publishAuction = usePublishAuction();
 
   // ─── State ──────────────────────────────────────────────────────
   const [currentStep, setCurrentStep] = useState(routeItemId ? 1 : 0);
@@ -84,9 +91,9 @@ export function CreateAuctionPage() {
   // handleCreate can read them even after the Form component unmounts.
   const [confirmedValues, setConfirmedValues] = useState<AuctionFormValues | null>(null);
 
-  // Filter items: only active items that are not already in an auction
+  // Filter items: approved or active items that can have auctions created
   const availableItems = useMemo(
-    () => items.filter((item) => item.status === 'active'),
+    () => items.filter((item) => item.status === 'active' || item.status === 'approved'),
     [items],
   );
 
@@ -113,28 +120,48 @@ export function CreateAuctionPage() {
     );
   }
 
-  // ─── Submit: Create Auction ─────────────────────────────────────
+  // ─── Submit: 3-step auction creation flow ───────────────────────
   const handleCreate = async () => {
-    if (!selectedItemId || !confirmedValues || !selectedItem) return;
+    if (!selectedItemId || !confirmedValues) return;
 
     try {
       const values = confirmedValues;
-      const result = await createAuction.mutateAsync({
+
+      // Step 1: Create auction from item (pricing only)
+      const { id: auctionId } = await createAuction.mutateAsync({
         itemId: selectedItemId,
-        title: selectedItem.title,
-        condition: selectedItem.condition,
-        startingPrice: values.startingPrice,
-        bidIncrement: values.bidIncrement,
-        startTime: values.startTime.toISOString(),
-        endTime: values.endTime.toISOString(),
-        reservePrice: values.reservePrice || undefined,
-        buyNowPrice: values.buyNowPrice || undefined,
-        autoExtend: values.autoExtend,
-        extensionMinutes: values.extensionMinutes,
-        currency: 'VND',
+        request: {
+          startingPrice: values.startingPrice,
+          bidIncrement: values.bidIncrement,
+          reservePrice: values.reservePrice || undefined,
+          buyNowPrice: values.buyNowPrice || undefined,
+          extensionMinutes: values.extensionMinutes,
+          currency: 'VND',
+          auctionType: 'regular',
+        },
       });
 
-      setCreatedAuctionId(result.id);
+      // Step 2: Submit auction (Draft → Approved, requires item to be approved)
+      await submitAuction.mutateAsync(auctionId);
+
+      // Step 3: Set timing on Approved auction — qualification window is 30 min before start
+      // BE requires: qualificationStartAt not in past, qualificationEndAt strictly before startTime.
+      // Setting timing on Approved auction transitions it to Scheduled.
+      const qualStart = values.startTime.subtract(30, 'minute');
+      const qualEnd = values.startTime.subtract(1, 'minute');
+      await setTiming.mutateAsync({
+        auctionId,
+        timing: {
+          startTime: values.startTime.toISOString(),
+          endTime: values.endTime.toISOString(),
+          qualificationStartAt: qualStart.toISOString(),
+          qualificationEndAt: qualEnd.toISOString(),
+          autoExtend: values.autoExtend,
+          extensionMinutes: values.extensionMinutes,
+        },
+      });
+
+      setCreatedAuctionId(auctionId);
       setCurrentStep(3);
       message.success(t('createAuction.createSuccess'));
     } catch (err) {
@@ -145,11 +172,11 @@ export function CreateAuctionPage() {
     }
   };
 
-  // ─── Publish after creation ─────────────────────────────────────
+  // ─── Publish: Scheduled → Active (only after bidders deposited) ──
   const handlePublish = async () => {
     if (!createdAuctionId) return;
     try {
-      await submitAuction.mutateAsync(createdAuctionId);
+      await publishAuction.mutateAsync(createdAuctionId);
       setPublished(true);
       message.success(t('createAuction.publishSuccess'));
     } catch (err) {
@@ -519,7 +546,7 @@ export function CreateAuctionPage() {
             <Button
               type="primary"
               onClick={handleCreate}
-              loading={createAuction.isPending}
+              loading={createAuction.isPending || setTiming.isPending || submitAuction.isPending}
             >
               {t('createAuction.createButton')}
             </Button>
@@ -546,8 +573,8 @@ export function CreateAuctionPage() {
               <Alert
                 type="info"
                 showIcon
-                message={t('createAuction.draftMessage')}
-                description={t('createAuction.draftMessageHint')}
+                message={t('createAuction.scheduledMessage')}
+                description={t('createAuction.scheduledMessageHint')}
               />
             )}
 
@@ -557,7 +584,7 @@ export function CreateAuctionPage() {
                   type="primary"
                   icon={<RocketOutlined />}
                   onClick={handlePublish}
-                  loading={submitAuction.isPending}
+                  loading={publishAuction.isPending}
                 >
                   {t('createAuction.publishNow')}
                 </Button>

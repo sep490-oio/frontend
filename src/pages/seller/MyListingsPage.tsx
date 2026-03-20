@@ -35,7 +35,8 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { useAppSelector } from '@/app/hooks';
-import { useMyItems, useMyAuctions, useSubmitAuction } from '@/hooks/useSellerManagement';
+import { useMyItems, useMyAuctions, useSubmitAuction, usePublishAuction } from '@/hooks/useSellerManagement';
+import { useSubmitItem } from '@/hooks/useItems';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { formatVND, STATUS_KEYS, STATUS_COLORS } from '@/utils/formatters';
 import type { SellerItem } from '@/types/item';
@@ -87,6 +88,8 @@ export function MyListingsPage() {
     pageSize: 10,
   });
   const submitAuction = useSubmitAuction();
+  const publishAuction = usePublishAuction();
+  const submitItem = useSubmitItem();
 
   // ─── Seller role check ──────────────────────────────────────────
   if (!user?.hasSellerPermission) {
@@ -106,7 +109,33 @@ export function MyListingsPage() {
     );
   }
 
-  // ─── Publish handler ────────────────────────────────────────────
+  // ─── Submit item for review handler ─────────────────────────────
+  const handleSubmitItem = async (itemId: string) => {
+    try {
+      await submitItem.mutateAsync(itemId);
+      message.success(t('createItem.submitSuccess'));
+    } catch (err) {
+      const errorMsg = axios.isAxiosError(err)
+        ? (err.response?.data?.detail ?? err.response?.data?.title ?? t('common.error'))
+        : t('common.error');
+      message.error(errorMsg);
+    }
+  };
+
+  // ─── Publish auction handler (Scheduled → Active) ─────────────
+  const handlePublishAuction = async (auctionId: string) => {
+    try {
+      await publishAuction.mutateAsync(auctionId);
+      message.success(t('createAuction.publishSuccess'));
+    } catch (err) {
+      const errorMsg = axios.isAxiosError(err)
+        ? (err.response?.data?.detail ?? err.response?.data?.title ?? t('common.error'))
+        : t('common.error');
+      message.error(errorMsg);
+    }
+  };
+
+  // ─── Submit auction handler (Draft → Scheduled) ───────────────
   const handlePublish = async (auctionId: string) => {
     try {
       await submitAuction.mutateAsync(auctionId);
@@ -180,7 +209,16 @@ export function MyListingsPage() {
       width: 150,
       render: (_: unknown, record: SellerItem) => (
         <Space size="small">
-          {record.status === 'active' && (
+          {record.status === 'draft' && (
+            <Button
+              size="small"
+              loading={submitItem.isPending}
+              onClick={() => handleSubmitItem(record.id)}
+            >
+              {t('myListings.submitForReview')}
+            </Button>
+          )}
+          {(record.status === 'active' || record.status === 'approved') && (
             <Button
               type="primary"
               size="small"
@@ -260,11 +298,21 @@ export function MyListingsPage() {
         <Space size="small">
           {record.status === 'draft' && (
             <Button
-              type="primary"
               size="small"
               icon={<RocketOutlined />}
               loading={submitAuction.isPending}
               onClick={() => handlePublish(record.id)}
+            >
+              {t('myListings.submit')}
+            </Button>
+          )}
+          {record.status === 'scheduled' && (
+            <Button
+              type="primary"
+              size="small"
+              icon={<RocketOutlined />}
+              loading={publishAuction.isPending}
+              onClick={() => handlePublishAuction(record.id)}
             >
               {t('myListings.publish')}
             </Button>
@@ -334,6 +382,7 @@ export function MyListingsPage() {
                       style={{ width: 180 }}
                       options={[
                         { value: 'draft', label: t('auction.statusDraft') },
+                        { value: 'scheduled', label: t('auction.statusScheduled') },
                         { value: 'pending', label: t('auction.statusPending') },
                         { value: 'active', label: t('auction.statusActive') },
                         { value: 'ended', label: t('auction.statusEnded') },

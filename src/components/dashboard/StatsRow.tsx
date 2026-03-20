@@ -72,9 +72,9 @@ export function StatsRow({ stats, walletBalance, isLoading }: StatsRowProps) {
                 }
                 value={card.formatted ? formatVND(card.value) : card.value}
                 prefix={isMobile ? undefined : card.icon}
-                valueStyle={
+                styles={
                   isMobile
-                    ? { fontSize: 20, overflowWrap: 'break-word' }
+                    ? { content: { fontSize: 20, overflowWrap: 'break-word' } }
                     : undefined
                 }
               />

@@ -1,10 +1,10 @@
 /**
- * QualificationSection — handles the deposit/qualification flow.
+ * QualificationSection — handles the deposit/qualification flow via VNPay.
  *
  * Two states:
- * 1. NOT qualified: Shows deposit amount, wallet balance check,
- *    and "Đặt cọc tham gia" button. If wallet has insufficient funds,
- *    shows a warning with a link to the Wallet page.
+ * 1. NOT qualified: Shows deposit amount and "Đặt cọc tham gia" button.
+ *    Clicking redirects to VNPay payment page. After payment, user is
+ *    redirected back and BE has created the deposit via IPN callback.
  * 2. QUALIFIED: Shows a success banner with deposit details and
  *    a "waiting for auction to start" or "ready to bid" message.
  *
@@ -99,9 +99,11 @@ export function QualificationSection({ auction }: QualificationSectionProps) {
   const shortfall = depositAmount - availableBalance;
 
   const handleJoin = () => {
-    joinAuction.mutate(auction.id, {
-      onSuccess: () => {
-        message.success(t('bidding.joinSuccess'));
+    const returnUrl = window.location.href;
+    joinAuction.mutate({ auctionId: auction.id, returnUrl }, {
+      onSuccess: (paymentUrl) => {
+        // Redirect user to VNPay payment page
+        window.location.href = paymentUrl;
       },
       onError: () => {
         message.error(t('common.error'));

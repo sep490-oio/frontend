@@ -26,7 +26,7 @@ import type {
 } from '@/types';
 import type { ItemSummary, ItemImage, SellerItem } from '@/types/item';
 import type { AuctionStatus } from '@/types/enums';
-import type { CreateAuctionRequest, CreateAuctionResponse } from '@/types';
+import type { CreateAuctionFromItemRequest, SetAuctionTimingRequest } from '@/types/auction';
 
 // ─── BE Response Shapes (what the backend actually returns) ──────
 
@@ -445,13 +445,43 @@ export async function getCategoriesFlat(): Promise<Category[]> {
  * Join auction qualification by paying the deposit.
  * POST /api/auctions/:id/qualify (or /deposit)
  */
+/**
+ * Create VNPay payment URL for auction deposit/qualification.
+ * POST /api/payments/vnpay/create-url
+ *
+ * The real deposit flow:
+ * 1. FE calls this → gets paymentUrl
+ * 2. FE redirects user to VNPay
+ * 3. User pays on VNPay
+ * 4. VNPay IPN callback → BE creates deposit → user is qualified
+ * 5. User redirected back to returnUrl
+ */
+export async function createDepositUrl(
+  auctionId: string,
+  returnUrl: string
+): Promise<string> {
+  const { data } = await api.post('/api/payments/vnpay/create-url', {
+    purpose: 'AuctionDeposit',
+    auctionId,
+    returnUrl,
+  });
+  // BE returns { paymentUrl: string } or may wrap in data
+  const raw = (data as Record<string, unknown>)?.data ?? data;
+  return (raw as Record<string, unknown>).paymentUrl as string;
+}
+
+/**
+ * @deprecated Use createDepositUrl instead — /api/auctions/{id}/qualify does not exist on BE.
+ * Kept temporarily for backward compatibility during migration.
+ */
 export async function joinAuction(
   auctionId: string
 ): Promise<JoinAuctionResponse> {
-  const { data } = await api.post<JoinAuctionResponse>(
-    `/api/auctions/${auctionId}/qualify`,
-  );
-  return data;
+  // Redirect to VNPay deposit flow instead of the non-existent qualify endpoint
+  const paymentUrl = await createDepositUrl(auctionId, window.location.href);
+  window.location.href = paymentUrl;
+  // This line won't execute due to redirect, but satisfies the type
+  return {} as JoinAuctionResponse;
 }
 
 /**
@@ -603,6 +633,18 @@ export async function activateItem(itemId: string): Promise<void> {
   await api.post(`/api/items/${itemId}/activate`);
 }
 
+/**
+ * Submit item for online moderation review (draft → pending_review).
+ * verifyByPlatform=false means admin reviews online (no warehouse shipping).
+ * POST /api/items/{id}/submit
+ */
+export async function submitItemForReview(
+  itemId: string,
+  verifyByPlatform: boolean = false
+): Promise<void> {
+  await api.post(`/api/items/${itemId}/submit`, { verifyByPlatform });
+}
+
 /** Get seller's items — used in My Listings and Create Auction item selector */
 export async function getMyItems(): Promise<SellerItem[]> {
   try {
@@ -637,16 +679,36 @@ function mapSellerItem(raw: Record<string, unknown>): SellerItem {
 // ─── Auction Management (Seller Flow) ────────────────────────────────
 
 /**
- * Create a new auction for an active item.
- * POST /api/auctions — returns 201 Created with AuctionDto.
+ * Create auction from an EXISTING item (correct endpoint for our flow).
+ * POST /api/items/{itemId}/auctions — returns 201 Created with AuctionDto.
+ *
+ * This is step 1 of the 3-step auction creation flow:
+ * 1. createAuctionFromItem → creates draft auction with pricing
+ * 2. setAuctionTiming → sets qualification + start/end times
+ * 3. submitAuction → transitions Draft → Scheduled
  */
-export async function createAuction(
-  request: CreateAuctionRequest
-): Promise<CreateAuctionResponse> {
-  const { data } = await api.post('/api/auctions', request);
-  // BE may return wrapped { data, message } or unwrapped
+export async function createAuctionFromItem(
+  itemId: string,
+  request: CreateAuctionFromItemRequest
+): Promise<{ id: string }> {
+  const { data } = await api.post(`/api/items/${itemId}/auctions`, request);
+  // BE returns AuctionDto — extract id. May be wrapped or unwrapped.
   const result = (data as Record<string, unknown>)?.data ?? data;
-  return result as CreateAuctionResponse;
+  return { id: (result as Record<string, unknown>).id as string };
+}
+
+/**
+ * Set auction timing — qualification window + start/end times.
+ * PUT /api/auctions/{id}/timing — all fields required.
+ * Qualification window must be BEFORE auction startTime.
+ *
+ * Step 2 of the 3-step auction creation flow.
+ */
+export async function setAuctionTiming(
+  auctionId: string,
+  timing: SetAuctionTimingRequest
+): Promise<void> {
+  await api.put(`/api/auctions/${auctionId}/timing`, timing);
 }
 
 /**
