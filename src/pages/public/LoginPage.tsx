@@ -41,8 +41,20 @@ export function LoginPage() {
   const location = useLocation();
   const dispatch = useAppDispatch();
 
-  // Where to redirect after login (default: dashboard)
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/dashboard';
+  // Where to redirect after login.
+  // Priority: (1) the page the user was trying to reach before being sent to /login,
+  //           (2) role-based default home,
+  //           (3) /dashboard as final fallback.
+  const intendedPath = (location.state as { from?: { pathname: string } })?.from?.pathname;
+
+  const getRoleDefaultRoute = (roles: string[]): string => {
+    if (roles.includes('admin') || roles.includes('super_admin')) return '/admin';
+    if (roles.includes('moderator'))    return '/moderator';
+    if (roles.includes('risk_manager')) return '/risk';
+    if (roles.includes('support'))      return '/support';
+    if (roles.includes('marketing'))    return '/marketing';
+    return '/dashboard';
+  };
 
   const {
     control,
@@ -78,7 +90,8 @@ export function LoginPage() {
       );
 
       message.success(t('dashboard.welcome', { name: user.fullName }));
-      navigate(from, { replace: true });
+      const destination = intendedPath ?? getRoleDefaultRoute(user.roles ?? []);
+      navigate(destination, { replace: true });
     } catch (err) {
       // Show specific messages for known HTTP status codes
       if (axios.isAxiosError(err)) {

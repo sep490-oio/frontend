@@ -62,13 +62,13 @@ export function RegisterPage() {
   const onSubmit = async (data: RegisterFormData) => {
     try {
       await register({
-        userName: data.userName,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
-        password: data.password,
-      });
-
+  userName: data.userName,
+  email: data.email,
+  password: data.password,
+  currency: 'VND',
+  firstName: data.firstName,
+  lastName: data.lastName,
+});
       setRegistered(true);
     } catch (err) {
       if (axios.isAxiosError(err)) {
