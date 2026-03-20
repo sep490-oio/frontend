@@ -78,12 +78,11 @@ export interface LoginRequest {
 
 export interface RegisterRequest {
   userName: string;
-  /** Optional — BE confirmed firstName is not required */
-  firstName?: string;
-  /** Optional — BE confirmed lastName is not required */
-  lastName?: string;
   email: string;
   password: string;
+  currency: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 export interface AuthResponse {
