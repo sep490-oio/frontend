@@ -855,6 +855,16 @@
         "ended": "Đã kết thúc",
         "hours": "{{h}}g {{mm}}p",
         "minutes": "{{mm}}:{{ss}}"
+      },
+      "actionCenter": {
+        "title": "Trung tâm hành động",
+        "urgentTag": "Khẩn cấp",
+        "criticalAlerts": "Cảnh báo nghiêm trọng",
+        "totalOpen": "Tổng chưa xử lý",
+        "itemsPending": "Sản phẩm chờ duyệt",
+        "withdrawalsPending": "Rút tiền chờ duyệt",
+        "verificationsPending": "KYC chờ xử lý",
+        "clickToManage": "Nhấn để xử lý"
       }
     },
     "users": {
@@ -893,6 +903,27 @@
       "deleteConfirm": {
         "title": "Xóa người dùng này?",
         "content": "Thao tác này sẽ xóa vĩnh viễn tài khoản {{email}} và không thể hoàn tác."
+      },
+      "flagged": "Đã gắn cờ người dùng.",
+      "investigation": {
+        "investigate": "Điều tra",
+        "riskScore": "Điểm rủi ro",
+        "risk": {
+          "safe": "An toàn",
+          "low": "Thấp",
+          "medium": "Trung bình",
+          "high": "Cao"
+        },
+        "openReports": "Báo cáo chưa xử lý",
+        "openAlerts": "Cảnh báo đang mở",
+        "quickActions": "Thao tác nhanh",
+        "flagSuspicious": "Gắn cờ đáng ngờ",
+        "flagFraud": "Gắn cờ gian lận",
+        "reportsAbout": "Báo cáo liên quan",
+        "noReports": "Không có báo cáo nào.",
+        "monitoringAlerts": "Cảnh báo hệ thống",
+        "noAlerts": "Không có cảnh báo nào.",
+        "viewAllReports": "Xem tất cả {{count}} báo cáo"
       }
     },
     "userDetail": {
@@ -913,7 +944,18 @@
       "revoke": "Thu hồi quyền",
       "permGranted": "Đã cấp quyền.",
       "permDenied": "Đã từ chối quyền.",
-      "permRevoked": "Đã thu hồi quyền."
+      "permRevoked": "Đã thu hồi quyền.",
+      "tabs": {
+        "roles": "Vai trò & Quyền",
+        "reports": "Báo cáo",
+        "alerts": "Cảnh báo"
+      },
+      "reports": {
+        "none": "Không có báo cáo nào liên quan đến người dùng này."
+      },
+      "alerts": {
+        "none": "Không có cảnh báo nào về người dùng này."
+      }
     },
     "roles": {
       "title": "Vai trò & Quyền hạn",
@@ -927,7 +969,17 @@
       "enable": "Bật",
       "disable": "Tắt",
       "permEnabled": "Đã bật quyền {{perm}}.",
-      "permDisabled": "Đã tắt quyền {{perm}}."
+      "permDisabled": "Đã tắt quyền {{perm}}.",
+      "allGroups": "Tất cả nhóm",
+      "selectRoleHint": "Chọn một vai trò để xem và chỉnh sửa quyền hạn.",
+      "columns": {
+        "domain": "Nhóm quyền",
+        "permission": "Tên quyền",
+        "action": "Hành động",
+        "status": "Trạng thái",
+        "toggle": "Bật/Tắt"
+      },
+      "activeCount": "{{active}} / {{total}} quyền đang bật"
     },
     "settings": {
       "title": "Cài đặt hệ thống",
@@ -1023,7 +1075,8 @@
         "summary": "Tổng quan",
         "transactions": "Giao dịch",
         "escrows": "Ký quỹ",
-        "withdrawals": "Rút tiền"
+        "withdrawals": "Rút tiền",
+        "disputes": "Tranh chấp"
       },
       "summary": {
         "completed": "Thanh toán thành công",
@@ -1141,6 +1194,15 @@
         "notesLabel": "Ghi chú xử lý",
         "notesPlaceholder": "Mô tả cách xử lý...",
         "confirm": "Xác nhận"
+      },
+      "viewDispute": "Xem tranh chấp liên quan",
+      "dispute": "Tranh chấp",
+      "entity": {
+        "notFound": "Không thể tải thông tin đối tượng.",
+        "viewFull": "Xem đầy đủ",
+        "title": "Tên",
+        "price": "Giá",
+        "condition": "Tình trạng"
       }
     },
     "sellerProfiles": {
@@ -1157,7 +1219,8 @@
         "sales": "Doanh số",
         "verifiedAt": "Ngày xác minh",
         "createdAt": "Ngày tạo",
-        "actions": "Thao tác"
+        "actions": "Thao tác",
+        "kyc": "KYC"
       },
       "orders": "{{count}} đơn",
       "verify": "Xác minh",
@@ -1165,7 +1228,18 @@
       "verifyConfirm": "Xác minh người bán \"{{name}}\"?",
       "rejectConfirm": "Từ chối người bán \"{{name}}\"?",
       "verified": "Đã xác minh người bán.",
-      "rejected": "Đã từ chối người bán."
+      "rejected": "Đã từ chối người bán.",
+      "alreadyVerified": "Người bán đã được xác minh.",
+      "kycBlockedWarning": "{{count}} hồ sơ bị chặn do KYC chưa hoàn tất",
+      "kyc": {
+        "approved": "KYC đã duyệt",
+        "pending": "KYC chờ duyệt",
+        "rejected": "KYC bị từ chối",
+        "noData": "Chưa có KYC",
+        "notFound": "Không tìm thấy thông tin KYC",
+        "blocksVerify": "Người bán cần hoàn tất KYC trước khi được xác minh",
+        "mustApproveFirst": "KYC đang ở trạng thái \"{{status}}\" — cần duyệt KYC trước"
+      }
     },
     "verifications": {
       "title": "Xác minh KYC",
@@ -1206,6 +1280,196 @@
         "reasonPlaceholder": "Mô tả lý do từ chối...",
         "confirm": "Từ chối",
         "reasonRequired": "Vui lòng nhập lý do từ chối."
+      }
+    },
+    "disputes": {
+      "title": "Tranh chấp đơn hàng",
+      "subtitle": "{{total}} tranh chấp",
+      "filterStatus": "Lọc theo trạng thái",
+      "statsOpen": "{{count}} đang mở",
+      "statsReview": "{{count}} đang xem xét",
+      "statsEscalated": "{{count}} leo thang",
+      "status": {
+        "open": "Đang mở",
+        "under_review": "Đang xem xét",
+        "resolved": "Đã xử lý",
+        "escalated": "Leo thang",
+        "closed": "Đã đóng"
+      },
+      "resolution": {
+        "refund_buyer": "Hoàn tiền người mua",
+        "release_to_seller": "Giải phóng cho người bán",
+        "partial_refund": "Hoàn tiền một phần",
+        "dismissed": "Bác bỏ"
+      },
+      "columns": {
+        "order": "Đơn hàng",
+        "parties": "Các bên",
+        "initiator": "Người khởi kiện",
+        "respondent": "Bị đơn",
+        "reason": "Lý do",
+        "status": "Trạng thái",
+        "resolution": "Phán quyết",
+        "createdAt": "Ngày tạo",
+        "actions": "Thao tác"
+      },
+      "viewDetail": "Xem chi tiết",
+      "resolve": "Xử lý",
+      "resolved": "Đã xử lý tranh chấp.",
+      "resolveModal": {
+        "title": "Xử lý tranh chấp",
+        "escrowContext": "Thông tin ký quỹ liên quan",
+        "escrowAmount": "Số tiền đang giữ",
+        "escrowStatus": "Trạng thái ký quỹ",
+        "noEscrow": "Không tìm thấy ký quỹ liên quan.",
+        "resolutionType": "Phán quyết",
+        "resolutionRequired": "Vui lòng chọn phán quyết.",
+        "resolutionPlaceholder": "Chọn phán quyết...",
+        "refundAmount": "Số tiền hoàn",
+        "amountRequired": "Vui lòng nhập số tiền hoàn.",
+        "escrowMax": "Tối đa: {{max}} ₫",
+        "notes": "Ghi chú xử lý",
+        "notesPlaceholder": "Mô tả chi tiết quyết định...",
+        "confirm": "Xác nhận xử lý",
+        "hint": {
+          "refund_buyer": "Toàn bộ ký quỹ sẽ được hoàn trả về ví người mua.",
+          "release_to_seller": "Toàn bộ ký quỹ sẽ được giải phóng cho người bán.",
+          "partial_refund": "Số tiền đã nhập sẽ được hoàn cho người mua, phần còn lại cho người bán.",
+          "dismissed": "Tranh chấp bị bác bỏ. Ký quỹ sẽ được xử lý theo quy trình thông thường.",
+          "default": "Hành động này không thể hoàn tác sau khi xác nhận."
+        }
+      },
+      "detailDrawer": {
+        "title": "Chi tiết tranh chấp",
+        "messages": "Tin nhắn ({{count}})",
+        "noMessages": "Chưa có tin nhắn nào."
+      }
+    },
+    "auctions": {
+      "title": "Quản lý phiên đấu giá",
+      "subtitle": "Curation, xử lý khẩn cấp và kiểm soát đấu giá",
+      "tabs": {
+        "curation": "Curation",
+        "emergencies": "Khẩn cấp",
+        "bids": "Giá đặt",
+        "sealedBids": "Giá kín"
+      },
+      "filterStatus": "Lọc theo trạng thái",
+      "columns": {
+        "auction": "Phiên đấu giá",
+        "status": "Trạng thái",
+        "featured": "Nổi bật",
+        "priority": "Ưu tiên",
+        "reviewer": "Người duyệt",
+        "endsAt": "Kết thúc",
+        "actions": "Thao tác"
+      },
+      "curation": {
+        "featured": "Nổi bật",
+        "unassigned": "Chưa gán",
+        "edit": "Sửa",
+        "editTooltip": "Chỉnh sửa curation",
+        "modalTitle": "Curation: {{title}}",
+        "saved": "Đã lưu cài đặt curation.",
+        "priority": "Mức ưu tiên",
+        "priorityPlaceholder": "Chọn mức ưu tiên",
+        "priorityHigh": "Cao",
+        "priorityMedium": "Trung bình",
+        "priorityLow": "Thấp",
+        "priorityReason": "Lý do ưu tiên",
+        "priorityReasonPlaceholder": "Giải thích lý do...",
+        "assignAdmin": "Gán admin duyệt",
+        "assignAdminPlaceholder": "UUID của admin...",
+        "clearAdmin": "Xóa admin được gán"
+      },
+      "emergencies": {
+        "subtitle": "{{count}} cảnh báo đang mở",
+        "trigger": "Kích hoạt khẩn cấp",
+        "triggered": "Đã kích hoạt tình trạng khẩn cấp.",
+        "resolved": "Đã xử lý tình trạng khẩn cấp.",
+        "criticalBanner": "{{count}} cảnh báo nghiêm trọng / cao đang mở",
+        "criticalHint": "— nhấn nút Command để xử lý ngay",
+        "columns": {
+          "auction": "Đối tượng / Loại",
+          "actions": "Thao tác"
+        },
+        "acknowledge": "Xác nhận",
+        "resolve": "Xử lý",
+        "triggerModal": {
+          "title": "Kích hoạt khẩn cấp",
+          "auctionId": "ID phiên đấu giá",
+          "auctionIdPlaceholder": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+          "auctionRequired": "Vui lòng nhập ID phiên đấu giá.",
+          "source": "Nguồn kích hoạt",
+          "sourcePlaceholder": "Chọn nguồn...",
+          "sourceManual": "Admin thủ công",
+          "sourceFraud": "Phát hiện gian lận",
+          "sourceSystem": "Cảnh báo hệ thống",
+          "reason": "Lý do",
+          "reasonPlaceholder": "Mô tả tình huống khẩn cấp...",
+          "reasonRequired": "Vui lòng nhập lý do."
+        },
+        "resolveModal": {
+          "title": "Xử lý tình trạng khẩn cấp",
+          "resolutionType": "Kết quả xử lý",
+          "resolutionPlaceholder": "Chọn kết quả...",
+          "typeResolved": "Đã giải quyết",
+          "typeCancelled": "Hủy phiên đấu giá",
+          "typeExtended": "Gia hạn thêm"
+        },
+        "cascade": {
+          "command": "Command",
+          "openCommand": "Mở trung tâm xử lý cascade",
+          "title": "Trung tâm xử lý khẩn cấp",
+          "execute": "Thực thi cascade",
+          "step1": "Bước 1 — Tùy chọn",
+          "step2": "Bước 2 — Bắt buộc",
+          "cancelBidTitle": "Hủy giá đặt gian lận (tùy chọn)",
+          "cancelBidHint": "Nếu có bid cụ thể cần hủy, nhập ID vào đây.",
+          "bidIdPlaceholder": "ID của bid cần hủy...",
+          "cancelReasonPlaceholder": "Lý do hủy bid...",
+          "resolveTitle": "Xử lý tình trạng khẩn cấp",
+          "result": "Kết quả thực thi",
+          "pleaseWait": "Đang thực thi, vui lòng chờ...",
+          "cancelling": "Đang hủy bid...",
+          "resolving": "Đang xử lý khẩn cấp...",
+          "stepCancelBid": "Hủy bid gian lận",
+          "stepResolveEmergency": "Xử lý khẩn cấp",
+          "bidCancelled": "Bid đã được hủy thành công.",
+          "bidFailed": "Không thể hủy bid — tiếp tục xử lý khẩn cấp.",
+          "emergencyResolved": "Tình trạng khẩn cấp đã được xử lý.",
+          "resolveFailed": "Không thể xử lý khẩn cấp.",
+          "auctionId": "Phiên đấu giá",
+          "alertType": "Loại cảnh báo"
+        }
+      },
+      "bids": {
+        "searchPlaceholder": "Nhập ID phiên đấu giá để tìm bid...",
+        "search": "Tìm",
+        "enterAuctionId": "Nhập ID phiên đấu giá để xem danh sách bid.",
+        "cancel": "Hủy bid",
+        "cancelTooltip": "Hủy bid không hợp lệ",
+        "cancelled": "Đã hủy bid.",
+        "columns": {
+          "bidder": "Người đặt",
+          "amount": "Số tiền",
+          "status": "Trạng thái",
+          "createdAt": "Thời gian",
+          "actions": "Thao tác"
+        },
+        "cancelModal": {
+          "title": "Hủy bid không hợp lệ",
+          "reasonLabel": "Lý do hủy",
+          "reasonPlaceholder": "Mô tả lý do hủy bid này...",
+          "reasonRequired": "Vui lòng nhập lý do hủy."
+        }
+      },
+      "sealedBids": {
+        "title": "Tiết lộ giá kín",
+        "description": "Dùng để tiết lộ một giá đặt kín cụ thể trong phiên đấu giá kín.",
+        "sealedBidId": "ID của giá kín",
+        "reveal": "Tiết lộ",
+        "revealed": "Đã tiết lộ giá kín."
       }
     }
   }

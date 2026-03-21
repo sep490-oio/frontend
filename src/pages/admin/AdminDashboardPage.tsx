@@ -18,9 +18,12 @@ import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
-import { getUsers, getRoles, getPermissions, togglePermissionOnRole } from '@/services/adminService';
+import {
+  getUsers, getRoles, getPermissions, togglePermissionOnRole,
+  getMonitoringAlerts, getItemReviewQueue, getWithdrawals, getPendingVerifications,
+} from '@/services/adminService';
 import { getAuctions } from '@/services/auctionService';
-import type { UserListItemDto } from '@/services/adminService';
+import type { UserListItemDto, MonitoringAlertDto } from '@/services/adminService';
 import type { AuctionListItem, AuctionFilters } from '@/types';
 
 dayjs.extend(duration);
@@ -41,7 +44,151 @@ const AUCTION_STATUS_COLOR: Record<string, string> = {
   active: '#1D9E75', pending: '#378ADD', ended: '#888780', cancelled: '#E24B4A',
 };
 
+// ─── Widget 0 — Action Center (KPI cards actionable) ─────────────────────────
+
+function ActionCenterWidget() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+
+  const { data: alerts = [], isLoading: alertsLoading } = useQuery<MonitoringAlertDto[]>({
+    queryKey: ['admin', 'monitoring-alerts', { status: 'open' }],
+    queryFn: async () => {
+      const res = await getMonitoringAlerts({ status: 'open' });
+      return res;
+    },
+    staleTime: 30 * 1000,
+    refetchInterval: 30 * 1000,
+  });
+
+  const { data: itemsQueue, isLoading: itemsLoading } = useQuery({
+    queryKey: ['admin', 'items', 'review-queue', { Status: 'pending', PageSize: 1 }],
+    queryFn: () => getItemReviewQueue({ Status: 'pending', PageSize: 1 }),
+    staleTime: 60 * 1000,
+  });
+
+  const { data: withdrawals, isLoading: wdLoading } = useQuery({
+    queryKey: ['admin', 'payments', 'withdrawals', { Status: 'pending', PageSize: 1 }],
+    queryFn: () => getWithdrawals({ Status: 'pending', PageSize: 1 }),
+    staleTime: 60 * 1000,
+  });
+
+  const { data: verifications = [], isLoading: verLoading } = useQuery({
+    queryKey: ['admin', 'verifications'],
+    queryFn: getPendingVerifications,
+    staleTime: 60 * 1000,
+  });
+
+  const criticalAlerts = (alerts as MonitoringAlertDto[]).filter((a) => a.severity === 'critical' || a.severity === 'high');
+  const itemsPending   = itemsQueue?.metadata?.totalCount ?? (Array.isArray(itemsQueue?.items) ? itemsQueue.items.length : 0);
+  const wdPending      = withdrawals?.metadata?.totalCount ?? (Array.isArray(withdrawals?.items) ? (withdrawals as any).items.length : 0);
+  const verPending     = Array.isArray(verifications) ? verifications.length : 0;
+
+  const isLoading = alertsLoading || itemsLoading || wdLoading || verLoading;
+  const hasUrgent = criticalAlerts.length > 0;
+
+  const cards = [
+    {
+      key: 'alerts',
+      title: t('admin.dashboard.actionCenter.criticalAlerts'),
+      value: criticalAlerts.length,
+      total: (alerts as MonitoringAlertDto[]).length,
+      totalLabel: t('admin.dashboard.actionCenter.totalOpen'),
+      color: criticalAlerts.length > 0 ? '#E24B4A' : '#888780',
+      urgent: criticalAlerts.length > 0,
+      route: '/admin/monitoring',
+    },
+    {
+      key: 'items',
+      title: t('admin.dashboard.actionCenter.itemsPending'),
+      value: itemsPending,
+      total: null,
+      totalLabel: null,
+      color: itemsPending > 0 ? '#BA7517' : '#888780',
+      urgent: false,
+      route: '/admin/items',
+    },
+    {
+      key: 'withdrawals',
+      title: t('admin.dashboard.actionCenter.withdrawalsPending'),
+      value: wdPending,
+      total: null,
+      totalLabel: null,
+      color: wdPending > 0 ? '#378ADD' : '#888780',
+      urgent: false,
+      route: '/admin/payments',
+    },
+    {
+      key: 'verifications',
+      title: t('admin.dashboard.actionCenter.verificationsPending'),
+      value: verPending,
+      total: null,
+      totalLabel: null,
+      color: verPending > 0 ? '#7F77DD' : '#888780',
+      urgent: false,
+      route: '/admin/verifications',
+    },
+  ];
+
+  return (
+    <Card
+      title={
+        <Flex align="center" gap={8}>
+          <FireOutlined style={{ color: hasUrgent ? '#E24B4A' : 'inherit' }} />
+          <span>{t('admin.dashboard.actionCenter.title')}</span>
+          {hasUrgent && (
+            <Tag color="error" style={{ marginLeft: 4 }}>
+              {t('admin.dashboard.actionCenter.urgentTag')}
+            </Tag>
+          )}
+        </Flex>
+      }
+    >
+      {isLoading ? (
+        <Row gutter={[12, 12]}>
+          {[0, 1, 2, 3].map((i) => (
+            <Col xs={24} sm={12} lg={6} key={i}>
+              <Skeleton.Input active style={{ width: '100%', height: 80 }} />
+            </Col>
+          ))}
+        </Row>
+      ) : (
+        <Row gutter={[12, 12]}>
+          {cards.map(({ key, title, value, total, totalLabel, color, urgent, route }) => (
+            <Col xs={24} sm={12} lg={6} key={key}>
+              <div
+                onClick={() => navigate(route)}
+                style={{
+                  padding: '14px 16px',
+                  borderRadius: 8,
+                  border: `1px solid ${urgent ? 'var(--ant-color-error-border)' : 'var(--ant-color-border-secondary)'}`,
+                  background: urgent ? 'var(--ant-color-error-bg)' : 'var(--ant-color-bg-container)',
+                  cursor: 'pointer',
+                  transition: 'border-color 0.2s, box-shadow 0.2s',
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = 'none'; }}
+              >
+                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 6 }}>{title}</Text>
+                <Text strong style={{ fontSize: 26, color, lineHeight: 1 }}>{value.toLocaleString()}</Text>
+                {total !== null && (
+                  <Text type="secondary" style={{ fontSize: 11, display: 'block', marginTop: 4 }}>
+                    {totalLabel}: {total}
+                  </Text>
+                )}
+                <Text type="secondary" style={{ fontSize: 11, marginTop: 4, display: 'block' }}>
+                  {t('admin.dashboard.actionCenter.clickToManage')} →
+                </Text>
+              </div>
+            </Col>
+          ))}
+        </Row>
+      )}
+    </Card>
+  );
+}
+
 // ─── Widget 1 — User Status Donut ────────────────────────────────────────────
+
 
 function UserStatusWidget() {
   const { t } = useTranslation();
@@ -425,6 +572,7 @@ export default function AdminDashboardPage() {
         </div>
       </Flex>
       <Flex vertical gap={16}>
+        <ActionCenterWidget />
         <AuctionStatusWidget />
         <Row gutter={[16, 16]}>
           <Col xs={24} lg={12}><UserStatusWidget /></Col>

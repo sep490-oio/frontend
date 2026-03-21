@@ -48,7 +48,9 @@ import AdminVerificationsPage  from '@/pages/admin/AdminVerificationsPage';
 import AdminReportsPage        from '@/pages/admin/AdminReportsPage';
 import AdminMonitoringPage     from '@/pages/admin/AdminMonitoringPage';
 import AdminSellerProfilesPage from '@/pages/admin/AdminSellerProfilesPage';
-
+import AdminAuctionsPage from '@/pages/admin/AdminAuctionsPage';
+import AdminDisputesPage from '@/pages/admin/AdminDisputesPage';
+import AdminTermsPage from '@/pages/admin/AdminTermsPage';
 function ComingSoon({ title }: { title: string }) {
   return <Result title={title} subTitle="This page is under construction." />;
 }
@@ -105,7 +107,7 @@ export function AppRoutes() {
       <Route
         element={
           <ProtectedRoute requiredRoles={['admin', 'super_admin']}>
-            <AdminLayout />          {/* ← thay AppLayout bằng AdminLayout */}
+            <AdminLayout />          
           </ProtectedRoute>
         }
       >
@@ -119,7 +121,10 @@ export function AppRoutes() {
         <Route path="/admin/verifications"    element={<AdminVerificationsPage />} />
         <Route path="/admin/reports"          element={<AdminReportsPage />} />
         <Route path="/admin/monitoring"       element={<AdminMonitoringPage />} />
-        <Route path="/admin/seller-profiles"  element={<AdminSellerProfilesPage />} />
+        <Route path="/admin/seller-profiles"  element={<AdminSellerProfilesPage />} />\
+        <Route path="/admin/auctions"         element={<AdminAuctionsPage />} />
+        <Route path="/admin/disputes"         element={<AdminDisputesPage />} />
+        <Route path="/admin/terms"           element={<AdminTermsPage />} />
         <Route path="/admin/config"           element={<ComingSoon title="Platform Configuration" />} />
         <Route path="/admin/logs"             element={<ComingSoon title="Audit Logs" />} />
         <Route path="/admin/staff"            element={<ComingSoon title="Staff Management" />} />
