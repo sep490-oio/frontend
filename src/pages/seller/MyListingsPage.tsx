@@ -76,12 +76,13 @@ export function MyListingsPage() {
   const { isMobile } = useBreakpoint();
   const user = useAppSelector((state) => state.auth.user);
 
-  // ─── Auction filters ────────────────────────────────────────────
+  // ─── Filters & pagination ──────────────────────────────────────
+  const [itemsPage, setItemsPage] = useState(1);
   const [auctionStatus, setAuctionStatus] = useState<AuctionStatus | undefined>(undefined);
   const [auctionPage, setAuctionPage] = useState(1);
 
   // ─── Data ───────────────────────────────────────────────────────
-  const { data: items = [], isLoading: itemsLoading } = useMyItems();
+  const { data: itemsData, isLoading: itemsLoading } = useMyItems({ page: itemsPage, pageSize: 10 });
   const { data: auctionsData, isLoading: auctionsLoading } = useMyAuctions({
     status: auctionStatus,
     page: auctionPage,
@@ -352,15 +353,20 @@ export function MyListingsPage() {
           items={[
             {
               key: 'items',
-              label: `${t('myListings.tabItems')} (${items.length})`,
+              label: `${t('myListings.tabItems')} (${itemsData?.totalItems ?? 0})`,
               children: (
                 <Table<SellerItem>
                   columns={itemColumns}
-                  dataSource={items}
+                  dataSource={itemsData?.items ?? []}
                   loading={itemsLoading}
                   rowKey="id"
                   size={isMobile ? 'small' : 'middle'}
-                  pagination={{ pageSize: 10 }}
+                  pagination={{
+                    current: itemsPage,
+                    pageSize: 10,
+                    total: itemsData?.totalItems ?? 0,
+                    onChange: setItemsPage,
+                  }}
                   scroll={{ x: 500 }}
                 />
               ),

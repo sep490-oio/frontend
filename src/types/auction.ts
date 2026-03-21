@@ -162,6 +162,10 @@ export interface Auction {
   endTime: string;
   /** Actual end time (may differ from endTime due to anti-sniping extensions) */
   actualEndTime: string | null;
+  /** When the qualification/deposit window opens */
+  qualificationStartAt: string | null;
+  /** When the qualification/deposit window closes (must be before startTime) */
+  qualificationEndAt: string | null;
   // ─── Status & Participants ────────────────────────────────────
   status: AuctionStatus;
   /** Minimum qualified bidders required for auction to proceed (default 2) */

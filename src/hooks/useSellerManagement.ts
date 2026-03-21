@@ -24,13 +24,11 @@ import type { AuctionStatus } from '@/types/enums';
 
 // ─── Queries ──────────────────────────────────────────────────────────
 
-/** Fetch the current seller's items (for item selector in Create Auction) */
-export function useMyItems() {
+/** Fetch the current seller's items with pagination */
+export function useMyItems(filters: { page?: number; pageSize?: number } = {}) {
   return useQuery({
-    queryKey: ['myItems'],
-    queryFn: getMyItems,
-    // No staleTime — items change status frequently (submit, approve, auction).
-    // Default staleTime=0 ensures fresh data on every component mount.
+    queryKey: ['myItems', filters],
+    queryFn: () => getMyItems(filters),
   });
 }
 

@@ -79,9 +79,7 @@
   "common": {
     "loading": "Đang tải...",
     "support": "Hỗ trợ",
-    "error": {
-      "generic": "Đã xảy ra lỗi. Vui lòng thử lại."
-    },
+    "error": "Đã xảy ra lỗi. Vui lòng thử lại.",
     "retry": "Thử lại",
     "save": "Lưu",
     "cancel": "Hủy",
@@ -436,6 +434,7 @@
     "optional": "Tùy chọn",
     "startTime": "Thời gian bắt đầu",
     "startTimeRequired": "Vui lòng chọn thời gian bắt đầu",
+    "startTimeTooSoon": "Thời gian bắt đầu phải ít nhất 30 phút kể từ bây giờ",
     "endTime": "Thời gian kết thúc",
     "endTimeRequired": "Vui lòng chọn thời gian kết thúc",
     "endTimeBeforeStart": "Thời gian kết thúc phải sau thời gian bắt đầu",

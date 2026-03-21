@@ -32,8 +32,8 @@ import {
  */
 export function useJoinAuction() {
   return useMutation({
-    mutationFn: ({ auctionId, returnUrl }: { auctionId: string; returnUrl: string }) =>
-      createDepositUrl(auctionId, returnUrl),
+    mutationFn: ({ auctionId, depositAmount }: { auctionId: string; depositAmount: number }) =>
+      createDepositUrl(auctionId, depositAmount),
     // No cache invalidation — user gets redirected to VNPay.
     // On return, the auction detail page refetches automatically.
   });

@@ -76,7 +76,8 @@ export function CreateAuctionPage() {
   const user = useAppSelector((state) => state.auth.user);
   const [form] = Form.useForm<AuctionFormValues>();
 
-  const { data: items = [], isLoading: itemsLoading } = useMyItems();
+  const { data: itemsData, isLoading: itemsLoading } = useMyItems({ pageSize: 100 });
+  const items = useMemo(() => itemsData?.items ?? [], [itemsData]);
   const createAuction = useCreateAuction();
   const setTiming = useSetAuctionTiming();
   const submitAuction = useSubmitAuction();
@@ -144,10 +145,10 @@ export function CreateAuctionPage() {
       // Step 2: Submit auction (Draft → Approved, requires item to be approved)
       await submitAuction.mutateAsync(auctionId);
 
-      // Step 3: Set timing on Approved auction — qualification window is 30 min before start
-      // BE requires: qualificationStartAt not in past, qualificationEndAt strictly before startTime.
-      // Setting timing on Approved auction transitions it to Scheduled.
-      const qualStart = values.startTime.subtract(30, 'minute');
+      // Step 3: Set timing on Approved auction — qualification window is 29 min before start.
+      // UI tells user "30 min" but we use 29 to give a 1-minute buffer against the BE
+      // validation that rejects qualificationStartAt in the past.
+      const qualStart = values.startTime.subtract(29, 'minute');
       const qualEnd = values.startTime.subtract(1, 'minute');
       await setTiming.mutateAsync({
         auctionId,
@@ -196,7 +197,9 @@ export function CreateAuctionPage() {
   };
 
   // ─── Validation helpers ─────────────────────────────────────────
-  const disablePassedDates = (current: Dayjs) => current && current.isBefore(dayjs(), 'minute');
+  // Only disable past DAYS (not today) — Ant Design disabledDate works at day granularity.
+  // Using 'day' ensures today remains selectable; the time picker handles hour/minute filtering.
+  const disablePassedDates = (current: Dayjs) => current && current.isBefore(dayjs(), 'day');
 
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: isMobile ? 16 : 24 }}>
@@ -391,7 +394,21 @@ export function CreateAuctionPage() {
             <Form.Item
               name="startTime"
               label={t('createAuction.startTime')}
-              rules={[{ required: true, message: t('createAuction.startTimeRequired') }]}
+              rules={[
+                { required: true, message: t('createAuction.startTimeRequired') },
+                () => ({
+                  validator(_, value) {
+                    if (!value) return Promise.resolve();
+                    // Qualification window starts 30min before startTime.
+                    // BE rejects if qualificationStartAt is in the past.
+                    const minTime = dayjs().add(30, 'minute');
+                    if (value.isBefore(minTime)) {
+                      return Promise.reject(t('createAuction.startTimeTooSoon'));
+                    }
+                    return Promise.resolve();
+                  },
+                }),
+              ]}
             >
               <DatePicker
                 showTime={{ format: 'HH:mm' }}
