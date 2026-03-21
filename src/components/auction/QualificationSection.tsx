@@ -99,8 +99,7 @@ export function QualificationSection({ auction }: QualificationSectionProps) {
   const shortfall = depositAmount - availableBalance;
 
   const handleJoin = () => {
-    const returnUrl = window.location.href;
-    joinAuction.mutate({ auctionId: auction.id, returnUrl }, {
+    joinAuction.mutate({ auctionId: auction.id, depositAmount }, {
       onSuccess: (paymentUrl) => {
         // Redirect user to VNPay payment page
         window.location.href = paymentUrl;

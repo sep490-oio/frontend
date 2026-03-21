@@ -79,9 +79,7 @@
   "common": {
     "loading": "Loading...",
     "support": "Support",
-    "error": {
-      "generic": "An error occurred. Please try again."
-    },
+    "error": "An error occurred. Please try again.",
     "retry": "Retry",
     "save": "Save",
     "cancel": "Cancel",
@@ -436,6 +434,7 @@
     "optional": "Optional",
     "startTime": "Start Time",
     "startTimeRequired": "Please select start time",
+    "startTimeTooSoon": "Start time must be at least 30 minutes from now",
     "endTime": "End Time",
     "endTimeRequired": "Please select end time",
     "endTimeBeforeStart": "End time must be after start time",

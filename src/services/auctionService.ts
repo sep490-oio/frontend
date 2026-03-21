@@ -113,6 +113,8 @@ interface ApiAuctionDetail {
   startTime: string;
   endTime: string;
   actualEndTime?: string | null;
+  qualificationStartAt?: string | null;
+  qualificationEndAt?: string | null;
   status: string;
   currentWinnerId?: string | null;
   autoExtend: boolean;
@@ -255,6 +257,8 @@ function mapAuctionDetail(response: ApiAuctionDetailResponse): Auction {
     startTime: a.startTime,
     endTime: a.endTime,
     actualEndTime: a.actualEndTime ?? null,
+    qualificationStartAt: a.qualificationStartAt ?? null,
+    qualificationEndAt: a.qualificationEndAt ?? null,
     status: a.status as AuctionStatus,
     minimumParticipants: 2, // Default per business rules
     qualifiedCount: 0, // Not in BE response
@@ -401,8 +405,10 @@ export async function getAuctionBids(auctionId: string): Promise<Bid[]> {
     return allBids.map(mapBid).sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
-  } catch {
-    return [];
+  } catch (err) {
+    // 404 = no bids yet (valid state for new auctions)
+    if (axios.isAxiosError(err) && err.response?.status === 404) return [];
+    throw err;
   }
 }
 
@@ -410,19 +416,14 @@ export async function getAuctionBids(auctionId: string): Promise<Bid[]> {
 
 /** Fetches the category tree (top-level with nested children) */
 export async function getCategories(): Promise<Category[]> {
-  try {
-    // BE may return a plain array OR a paginated object { items: [...] }
-    const { data } = await api.get<Category[] | ApiPaginatedResponse<Category>>(
-      '/api/categories',
-    );
-    if (Array.isArray(data)) return data;
-    // Paginated response — extract items array
-    if (data && typeof data === 'object' && 'items' in data) return data.items;
-    return [];
-  } catch {
-    // If endpoint doesn't exist yet, return empty array
-    return [];
-  }
+  // BE may return a plain array OR a paginated object { items: [...] }
+  const { data } = await api.get<Category[] | ApiPaginatedResponse<Category>>(
+    '/api/categories',
+  );
+  if (Array.isArray(data)) return data;
+  // Paginated response — extract items array
+  if (data && typeof data === 'object' && 'items' in data) return data.items;
+  return [];
 }
 
 /** Fetches a flat list of all categories */
@@ -458,12 +459,14 @@ export async function getCategoriesFlat(): Promise<Category[]> {
  */
 export async function createDepositUrl(
   auctionId: string,
-  returnUrl: string
+  depositAmount: number
 ): Promise<string> {
   const { data } = await api.post('/api/payments/vnpay/create-url', {
-    purpose: 'AuctionDeposit',
+    purpose: 'auction_deposit',
     auctionId,
-    returnUrl,
+    amount: depositAmount,
+    currency: 'VND',
+    description: `Auction deposit for ${auctionId}`,
   });
   // BE returns { paymentUrl: string } or may wrap in data
   const raw = (data as Record<string, unknown>)?.data ?? data;
@@ -478,7 +481,7 @@ export async function joinAuction(
   auctionId: string
 ): Promise<JoinAuctionResponse> {
   // Redirect to VNPay deposit flow instead of the non-existent qualify endpoint
-  const paymentUrl = await createDepositUrl(auctionId, window.location.href);
+  const paymentUrl = await createDepositUrl(auctionId, 0);
   window.location.href = paymentUrl;
   // This line won't execute due to redirect, but satisfies the type
   return {} as JoinAuctionResponse;
@@ -591,8 +594,10 @@ export async function getMyAutoBid(auctionId: string): Promise<AutoBid | null> {
       `/api/auctions/${auctionId}/auto-bid/my`,
     );
     return data;
-  } catch {
-    return null;
+  } catch (err) {
+    // 404 = no auto-bid configured (valid state)
+    if (axios.isAxiosError(err) && err.response?.status === 404) return null;
+    throw err;
   }
 }
 
@@ -645,18 +650,30 @@ export async function submitItemForReview(
   await api.post(`/api/items/${itemId}/submit`, { verifyByPlatform });
 }
 
-/** Get seller's items — used in My Listings and Create Auction item selector */
-export async function getMyItems(): Promise<SellerItem[]> {
-  try {
-    const { data } = await api.get('/api/items/my');
-    // BE may return plain array or paginated { items: [...] }
-    const items = Array.isArray(data)
-      ? data
-      : (data as Record<string, unknown>)?.items ?? [];
-    return (items as Record<string, unknown>[]).map(mapSellerItem);
-  } catch {
-    return [];
-  }
+/** Get seller's items — supports pagination for My Listings */
+export async function getMyItems(
+  filters: { page?: number; pageSize?: number } = {}
+): Promise<PaginatedResponse<SellerItem>> {
+  const params: Record<string, unknown> = {};
+  if (filters.page) params.PageNumber = filters.page;
+  if (filters.pageSize) params.PageSize = filters.pageSize;
+
+  const { data } = await api.get('/api/items/my', { params });
+  const raw = data as Record<string, unknown>;
+  const items = Array.isArray(data)
+    ? (data as Record<string, unknown>[]).map(mapSellerItem)
+    : ((raw?.items ?? []) as Record<string, unknown>[]).map(mapSellerItem);
+  const metadata = raw?.metadata as Record<string, unknown> | undefined;
+
+  return {
+    items,
+    page: (metadata?.currentPage as number) ?? 1,
+    pageSize: (metadata?.pageSize as number) ?? items.length,
+    totalItems: (metadata?.totalCount as number) ?? items.length,
+    totalPages: (metadata?.totalPages as number) ?? 1,
+    hasNextPage: (metadata?.hasNext as boolean) ?? false,
+    hasPreviousPage: (metadata?.hasPrevious as boolean) ?? false,
+  };
 }
 
 /** Maps BE item response to FE SellerItem type */
