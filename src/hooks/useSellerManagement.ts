@@ -15,11 +15,16 @@ import {
   getMyItems,
   getMyAuctions,
   createAuctionFromItem,
+  createAuctionAllInOne,
   setAuctionTiming,
   submitAuction,
   publishAuction,
 } from '@/services/auctionService';
-import type { CreateAuctionFromItemRequest, SetAuctionTimingRequest } from '@/types/auction';
+import type {
+  CreateAuctionFromItemRequest,
+  CreateAuctionAllInOneRequest,
+  SetAuctionTimingRequest,
+} from '@/types/auction';
 import type { AuctionStatus } from '@/types/enums';
 
 // ─── Queries ──────────────────────────────────────────────────────────
@@ -45,6 +50,19 @@ export function useMyAuctions(filters: {
 }
 
 // ─── Mutations ────────────────────────────────────────────────────────
+
+/** All-in-one auction creation — creates item + auction in one call (POST /api/auctions) */
+export function useCreateAuctionAllInOne() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (request: CreateAuctionAllInOneRequest) =>
+      createAuctionAllInOne(request),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['myItems'] });
+      queryClient.invalidateQueries({ queryKey: ['myAuctions'] });
+    },
+  });
+}
 
 /** Create auction from an existing item — step 1 of 3-step flow */
 export function useCreateAuction() {

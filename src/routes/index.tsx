@@ -35,7 +35,9 @@ import { ConfirmEmailPage }  from '@/pages/public/ConfirmEmailPage';
 import { ProfilePage }       from '@/pages/profile/ProfilePage';
 import { CreateItemPage }    from '@/pages/seller/CreateItemPage';
 import { CreateAuctionPage } from '@/pages/seller/CreateAuctionPage';
+import { CreateAuctionWizardPage } from '@/pages/seller/CreateAuctionWizardPage';
 import { MyListingsPage }    from '@/pages/seller/MyListingsPage';
+import { ItemDetailPage }   from '@/pages/seller/ItemDetailPage';
 
 import AdminDashboardPage      from '@/pages/admin/AdminDashboardPage';
 import AdminUsersPage          from '@/pages/admin/AdminUsersPage';
@@ -79,6 +81,8 @@ export function AppRoutes() {
         <Route path="/profile"                   element={<ProfilePage />} />
         <Route path="/settings"                  element={<ComingSoon title="Settings" />} />
         <Route path="/my-listings"               element={<MyListingsPage />} />
+        <Route path="/item/:id"                  element={<ItemDetailPage />} />
+        <Route path="/sell"                      element={<CreateAuctionWizardPage />} />
         <Route path="/create-item"               element={<CreateItemPage />} />
         <Route path="/create-auction"            element={<CreateAuctionPage />} />
         <Route path="/create-auction/:itemId"    element={<CreateAuctionPage />} />

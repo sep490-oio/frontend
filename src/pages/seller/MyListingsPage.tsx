@@ -28,16 +28,17 @@ import {
 import {
   ShopOutlined,
   PlusOutlined,
-  RocketOutlined,
   EyeOutlined,
+  CalendarOutlined,
+  SendOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { useAppSelector } from '@/app/hooks';
-import { useMyItems, useMyAuctions, useSubmitAuction, usePublishAuction } from '@/hooks/useSellerManagement';
-import { useSubmitItem } from '@/hooks/useItems';
+import { useMyItems, useMyAuctions, useSubmitAuction } from '@/hooks/useSellerManagement';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
+import { AuctionTimingModal } from '@/components/seller/AuctionTimingModal';
 import { formatVND, STATUS_KEYS, STATUS_COLORS } from '@/utils/formatters';
 import type { SellerItem } from '@/types/item';
 import type { AuctionListItem } from '@/types/auction';
@@ -89,8 +90,9 @@ export function MyListingsPage() {
     pageSize: 10,
   });
   const submitAuction = useSubmitAuction();
-  const publishAuction = usePublishAuction();
-  const submitItem = useSubmitItem();
+
+  // Timing modal state
+  const [timingAuctionId, setTimingAuctionId] = useState<string | null>(null);
 
   // ─── Seller role check ──────────────────────────────────────────
   if (!user?.hasSellerPermission) {
@@ -110,49 +112,20 @@ export function MyListingsPage() {
     );
   }
 
-  // ─── Submit item for review handler ─────────────────────────────
-  const handleSubmitItem = async (itemId: string) => {
-    try {
-      await submitItem.mutateAsync(itemId);
-      message.success(t('createItem.submitSuccess'));
-    } catch (err) {
-      const errorMsg = axios.isAxiosError(err)
-        ? (err.response?.data?.detail ?? err.response?.data?.title ?? t('common.error'))
-        : t('common.error');
-      message.error(errorMsg);
-    }
-  };
-
-  // ─── Publish auction handler (Scheduled → Active) ─────────────
-  const handlePublishAuction = async (auctionId: string) => {
-    try {
-      await publishAuction.mutateAsync(auctionId);
-      message.success(t('createAuction.publishSuccess'));
-    } catch (err) {
-      const errorMsg = axios.isAxiosError(err)
-        ? (err.response?.data?.detail ?? err.response?.data?.title ?? t('common.error'))
-        : t('common.error');
-      message.error(errorMsg);
-    }
-  };
-
-  // ─── Submit auction handler (Draft → Scheduled) ───────────────
-  const handlePublish = async (auctionId: string) => {
+  // ─── Submit auction handler (Draft → Approved) ───────────────
+  const handleSubmitAuction = async (auctionId: string) => {
     try {
       await submitAuction.mutateAsync(auctionId);
-      message.success(t('createAuction.publishSuccess'));
+      message.success(t('myListings.submitAuctionSuccess'));
     } catch (err) {
-      // Map known BE rejection reasons to friendly i18n messages
       const beDetail: string = axios.isAxiosError(err)
         ? (err.response?.data?.detail ?? err.response?.data?.title ?? '')
         : err instanceof Error ? err.message : '';
 
       let errorMsg: string;
-      if (beDetail.includes('pending_verify')) {
-        errorMsg = t('myListings.submitErrorItemPendingVerify');
-      } else if (beDetail.includes('pending_review')) {
-        errorMsg = t('myListings.submitErrorItemPendingReview');
-      } else if (beDetail.includes("Cannot perform") || beDetail.includes("cannot perform")) {
+      if (beDetail.includes('Item.InvalidState') || (beDetail.includes('item') && beDetail.includes('Approved'))) {
+        errorMsg = t('myListings.submitErrorItemNotApproved');
+      } else if (beDetail.includes('Cannot perform') || beDetail.includes('cannot perform')) {
         errorMsg = t('myListings.submitErrorInvalidStatus');
       } else {
         errorMsg = beDetail || t('common.error');
@@ -209,27 +182,13 @@ export function MyListingsPage() {
       key: 'actions',
       width: 150,
       render: (_: unknown, record: SellerItem) => (
-        <Space size="small">
-          {record.status === 'draft' && (
-            <Button
-              size="small"
-              loading={submitItem.isPending}
-              onClick={() => handleSubmitItem(record.id)}
-            >
-              {t('myListings.submitForReview')}
-            </Button>
-          )}
-          {(record.status === 'active' || record.status === 'approved') && (
-            <Button
-              type="primary"
-              size="small"
-              icon={<PlusOutlined />}
-              onClick={() => navigate(`/create-auction/${record.id}`)}
-            >
-              {t('myListings.createAuction')}
-            </Button>
-          )}
-        </Space>
+        <Button
+          size="small"
+          icon={<EyeOutlined />}
+          onClick={() => navigate(`/item/${record.id}`)}
+        >
+          {t('myListings.view')}
+        </Button>
       ),
     },
   ];
@@ -300,22 +259,21 @@ export function MyListingsPage() {
           {record.status === 'draft' && (
             <Button
               size="small"
-              icon={<RocketOutlined />}
+              icon={<SendOutlined />}
               loading={submitAuction.isPending}
-              onClick={() => handlePublish(record.id)}
+              onClick={() => handleSubmitAuction(record.id)}
             >
               {t('myListings.submit')}
             </Button>
           )}
-          {record.status === 'scheduled' && (
+          {record.status === 'approved' && (
             <Button
               type="primary"
               size="small"
-              icon={<RocketOutlined />}
-              loading={publishAuction.isPending}
-              onClick={() => handlePublishAuction(record.id)}
+              icon={<CalendarOutlined />}
+              onClick={() => setTimingAuctionId(record.id)}
             >
-              {t('myListings.publish')}
+              {t('myListings.setTiming')}
             </Button>
           )}
           <Button
@@ -337,14 +295,9 @@ export function MyListingsPage() {
           <Title level={3} style={{ margin: 0 }}>{t('myListings.title')}</Title>
           <Text type="secondary">{t('myListings.subtitle')}</Text>
         </div>
-        <Space>
-          <Button icon={<PlusOutlined />} onClick={() => navigate('/create-item')}>
-            {t('myListings.newItem')}
-          </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/create-auction')}>
-            {t('myListings.newAuction')}
-          </Button>
-        </Space>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/sell')}>
+          {t('nav.sell')}
+        </Button>
       </Flex>
 
       <Card>
@@ -388,8 +341,8 @@ export function MyListingsPage() {
                       style={{ width: 180 }}
                       options={[
                         { value: 'draft', label: t('auction.statusDraft') },
+                        { value: 'approved', label: t('auction.statusApproved') },
                         { value: 'scheduled', label: t('auction.statusScheduled') },
-                        { value: 'pending', label: t('auction.statusPending') },
                         { value: 'active', label: t('auction.statusActive') },
                         { value: 'ended', label: t('auction.statusEnded') },
                         { value: 'sold', label: t('auction.statusSold') },
@@ -418,6 +371,16 @@ export function MyListingsPage() {
           ]}
         />
       </Card>
+
+      {/* Timing modal for approved auctions */}
+      {timingAuctionId && (
+        <AuctionTimingModal
+          open={!!timingAuctionId}
+          auctionId={timingAuctionId}
+          onClose={() => setTimingAuctionId(null)}
+          onSuccess={() => setTimingAuctionId(null)}
+        />
+      )}
     </div>
   );
 }

@@ -23,6 +23,9 @@ yarn-error.log*
 # TypeScript
 *.tsbuildinfo
 
+# Figma reference images (local only)
+figma-reference/
+
 # Playwright
 /test-results/
 /playwright-report/

@@ -3,8 +3,17 @@
  * Used by the Create Item page (seller flow).
  */
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createItem, activateItem, submitItemForReview } from '@/services/auctionService';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getItemById, createItem, activateItem, submitItemForReview } from '@/services/auctionService';
+
+/** Query: Fetch a single item by ID */
+export function useItem(itemId: string | undefined) {
+  return useQuery({
+    queryKey: ['item', itemId],
+    queryFn: () => getItemById(itemId!),
+    enabled: !!itemId,
+  });
+}
 
 /** Mutation: Create a new item (draft) */
 export function useCreateItem() {

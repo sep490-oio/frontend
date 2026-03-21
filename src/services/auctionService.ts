@@ -26,7 +26,12 @@ import type {
 } from '@/types';
 import type { ItemSummary, ItemImage, SellerItem } from '@/types/item';
 import type { AuctionStatus } from '@/types/enums';
-import type { CreateAuctionFromItemRequest, SetAuctionTimingRequest } from '@/types/auction';
+import type {
+  CreateAuctionFromItemRequest,
+  CreateAuctionAllInOneRequest,
+  CreateAuctionAllInOneResponse,
+  SetAuctionTimingRequest,
+} from '@/types/auction';
 
 // ─── BE Response Shapes (what the backend actually returns) ──────
 
@@ -349,7 +354,29 @@ export async function getAuctionById(
     const { data } = await api.get<ApiAuctionDetailResponse>(
       `/api/auctions/${id}`,
     );
-    return mapAuctionDetail(data);
+    const auction = mapAuctionDetail(data);
+
+    // Workaround for BE bug: GET /api/auctions/{id} returns item.images: []
+    // because GetAuctionByIdQueryHandler doesn't .ThenInclude(x => x.Media).
+    // If images are empty, fetch the item separately to get its images.
+    if (auction.item && (!auction.item.images || auction.item.images.length === 0)) {
+      try {
+        const { data: itemData } = await api.get(`/api/items/${auction.itemId}`);
+        const raw = (itemData as Record<string, unknown>)?.data ?? itemData;
+        const itemRaw = raw as Record<string, unknown>;
+        const rawImages = (itemRaw.images as ApiItemImage[] | undefined) ?? [];
+        if (rawImages.length > 0) {
+          auction.item.images = rawImages.map((img) => mapItemImage(img, auction.itemId));
+          auction.item.primaryImageUrl = rawImages.find((img) => img.isPrimary)?.url
+            ?? rawImages[0]?.url
+            ?? null;
+        }
+      } catch {
+        // Item fetch failed — continue with empty images
+      }
+    }
+
+    return auction;
   } catch (err) {
     if (axios.isAxiosError(err) && err.response?.status === 404) return null;
     throw err;
@@ -618,6 +645,18 @@ interface CreateItemRequest {
   }>;
 }
 
+/** Fetch a single item by ID — GET /api/items/{id} (public) */
+export async function getItemById(itemId: string): Promise<SellerItem | null> {
+  try {
+    const { data } = await api.get(`/api/items/${itemId}`);
+    const raw = (data as Record<string, unknown>)?.data ?? data;
+    return mapSellerItem(raw as Record<string, unknown>);
+  } catch (err) {
+    if (axios.isAxiosError(err) && err.response?.status === 404) return null;
+    throw err;
+  }
+}
+
 /** Create a new item (draft status) */
 export async function createItem(data: CreateItemRequest): Promise<{ id: string }> {
   const { data: response } = await api.post<ApiResponse<{ id: string }>>('/api/items', data);
@@ -694,6 +733,28 @@ function mapSellerItem(raw: Record<string, unknown>): SellerItem {
 }
 
 // ─── Auction Management (Seller Flow) ────────────────────────────────
+
+/**
+ * All-in-one auction creation — creates BOTH item AND auction in one call.
+ * POST /api/auctions — returns 201 Created with AuctionDto + nested ItemDto.
+ *
+ * Used by the unified /sell wizard (CreateAuctionWizardPage).
+ * After this call, the item is in 'draft' and auction is in 'draft'.
+ * Seller must then submit the item for review separately.
+ */
+export async function createAuctionAllInOne(
+  request: CreateAuctionAllInOneRequest
+): Promise<CreateAuctionAllInOneResponse> {
+  const { data } = await api.post('/api/auctions', request);
+  // BE may wrap in { data: ... } or return directly
+  const result = (data as Record<string, unknown>)?.data ?? data;
+  const r = result as Record<string, unknown>;
+  return {
+    id: r.id as string,
+    itemId: r.itemId as string,
+    status: r.status as string,
+  } as CreateAuctionAllInOneResponse;
+}
 
 /**
  * Create auction from an EXISTING item (correct endpoint for our flow).

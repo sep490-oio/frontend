@@ -328,7 +328,49 @@ export interface ToggleWatchResponse {
   newWatchCount: number;
 }
 
-// ─── Create Auction (Seller Flow) ────────────────────────────────────
+// ─── Create Auction — All-in-One (Seller Flow) ──────────────────────
+
+/**
+ * Request payload for POST /api/auctions (all-in-one).
+ * Creates BOTH item AND auction in a single call.
+ * Used by the unified CreateAuctionWizardPage (/sell).
+ *
+ * The BE handler:
+ * 1. Creates Item via Item.Create() (draft)
+ * 2. Attaches media
+ * 3. Creates Auction via AuctionDraftCreationService (draft)
+ * 4. Raises AuctionCreatedEvent
+ */
+export interface CreateAuctionAllInOneRequest {
+  // Item fields
+  title: string;
+  condition: string;
+  categoryId?: string;
+  description?: string;
+  quantity: number;
+  media: Array<{
+    mediaUploadId: string;
+    isPrimary: boolean;
+    sortOrder: number;
+  }>;
+  // Auction fields
+  startingPrice: number;
+  bidIncrement: number;
+  reservePrice?: number;
+  buyNowPrice?: number;
+  extensionMinutes: number;
+  currency: string;          // "VND"
+  auctionType: string;       // "regular" | "sealed"
+}
+
+/** Response from POST /api/auctions — returns AuctionDto with nested item */
+export interface CreateAuctionAllInOneResponse {
+  id: string;
+  itemId: string;
+  status: AuctionStatus;
+}
+
+// ─── Create Auction — From Existing Item (Seller Flow) ──────────────
 
 /**
  * Request payload for POST /api/items/{itemId}/auctions.

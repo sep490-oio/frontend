@@ -175,8 +175,8 @@ export function buildMenuItems(
   // Seller
   if (roles.includes('seller')) {
     items.push({ type: 'divider' });
-    items.push({ key: '/my-listings', icon: <AppstoreAddOutlined />, label: t('nav.myListings') });
-    items.push({ key: '/create-item', icon: <AppstoreAddOutlined />, label: t('nav.createItem') });
+    items.push({ key: '/my-listings', icon: <AppstoreOutlined />, label: t('nav.myListings') });
+    items.push({ key: '/sell', icon: <AppstoreAddOutlined />, label: t('nav.sell') });
   }
 
   // Staff
