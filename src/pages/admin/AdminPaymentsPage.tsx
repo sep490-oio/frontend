@@ -56,7 +56,7 @@ function SummaryTab() {
         <Col xs={24} sm={12} lg={6} key={key}>
           <Card>
             {isLoading ? <Skeleton.Input active style={{ width: '100%' }} /> : (
-              <Statistic title={t(`admin.payments.summary.${key}`)} value={value ?? 0} prefix={prefix} valueStyle={{ color }} />
+              <Statistic title={t(`admin.payments.summary.${key}`)} value={value ?? 0} prefix={prefix} styles={{ content: { color } }} />
             )}
           </Card>
         </Col>

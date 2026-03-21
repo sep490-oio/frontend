@@ -56,7 +56,7 @@ function getBidStatusTag(
     active: { color: 'blue', label: t('myBids.statusWaiting') },
     outbid: { color: 'orange', label: t('myBids.statusOutbid') },
   };
-  return map[status] ?? { color: 'default', label: status };
+  return map[status] ?? { color: 'default', label: t('common.unknownStatus') };
 }
 
 export function ActiveBidsList({ bids, isLoading, viewMode }: ActiveBidsListProps) {

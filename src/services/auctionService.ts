@@ -26,7 +26,7 @@ import type {
 } from '@/types';
 import type { ItemSummary, ItemImage, SellerItem } from '@/types/item';
 import type { AuctionStatus } from '@/types/enums';
-import type { CreateAuctionRequest, CreateAuctionResponse } from '@/types';
+import type { CreateAuctionFromItemRequest, SetAuctionTimingRequest } from '@/types/auction';
 
 // ─── BE Response Shapes (what the backend actually returns) ──────
 
@@ -113,6 +113,8 @@ interface ApiAuctionDetail {
   startTime: string;
   endTime: string;
   actualEndTime?: string | null;
+  qualificationStartAt?: string | null;
+  qualificationEndAt?: string | null;
   status: string;
   currentWinnerId?: string | null;
   autoExtend: boolean;
@@ -255,6 +257,8 @@ function mapAuctionDetail(response: ApiAuctionDetailResponse): Auction {
     startTime: a.startTime,
     endTime: a.endTime,
     actualEndTime: a.actualEndTime ?? null,
+    qualificationStartAt: a.qualificationStartAt ?? null,
+    qualificationEndAt: a.qualificationEndAt ?? null,
     status: a.status as AuctionStatus,
     minimumParticipants: 2, // Default per business rules
     qualifiedCount: 0, // Not in BE response
@@ -401,8 +405,10 @@ export async function getAuctionBids(auctionId: string): Promise<Bid[]> {
     return allBids.map(mapBid).sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
-  } catch {
-    return [];
+  } catch (err) {
+    // 404 = no bids yet (valid state for new auctions)
+    if (axios.isAxiosError(err) && err.response?.status === 404) return [];
+    throw err;
   }
 }
 
@@ -410,19 +416,14 @@ export async function getAuctionBids(auctionId: string): Promise<Bid[]> {
 
 /** Fetches the category tree (top-level with nested children) */
 export async function getCategories(): Promise<Category[]> {
-  try {
-    // BE may return a plain array OR a paginated object { items: [...] }
-    const { data } = await api.get<Category[] | ApiPaginatedResponse<Category>>(
-      '/api/categories',
-    );
-    if (Array.isArray(data)) return data;
-    // Paginated response — extract items array
-    if (data && typeof data === 'object' && 'items' in data) return data.items;
-    return [];
-  } catch {
-    // If endpoint doesn't exist yet, return empty array
-    return [];
-  }
+  // BE may return a plain array OR a paginated object { items: [...] }
+  const { data } = await api.get<Category[] | ApiPaginatedResponse<Category>>(
+    '/api/categories',
+  );
+  if (Array.isArray(data)) return data;
+  // Paginated response — extract items array
+  if (data && typeof data === 'object' && 'items' in data) return data.items;
+  return [];
 }
 
 /** Fetches a flat list of all categories */
@@ -445,18 +446,53 @@ export async function getCategoriesFlat(): Promise<Category[]> {
  * Join auction qualification by paying the deposit.
  * POST /api/auctions/:id/qualify (or /deposit)
  */
+/**
+ * Create VNPay payment URL for auction deposit/qualification.
+ * POST /api/payments/vnpay/create-url
+ *
+ * The real deposit flow:
+ * 1. FE calls this → gets paymentUrl
+ * 2. FE redirects user to VNPay
+ * 3. User pays on VNPay
+ * 4. VNPay IPN callback → BE creates deposit → user is qualified
+ * 5. User redirected back to returnUrl
+ */
+export async function createDepositUrl(
+  auctionId: string,
+  depositAmount: number
+): Promise<string> {
+  const { data } = await api.post('/api/payments/vnpay/create-url', {
+    purpose: 'auction_deposit',
+    auctionId,
+    amount: depositAmount,
+    currency: 'VND',
+    description: `Auction deposit for ${auctionId}`,
+  });
+  // BE returns { paymentUrl: string } or may wrap in data
+  const raw = (data as Record<string, unknown>)?.data ?? data;
+  return (raw as Record<string, unknown>).paymentUrl as string;
+}
+
+/**
+ * @deprecated Use createDepositUrl instead — /api/auctions/{id}/qualify does not exist on BE.
+ * Kept temporarily for backward compatibility during migration.
+ */
 export async function joinAuction(
   auctionId: string
 ): Promise<JoinAuctionResponse> {
-  const { data } = await api.post<JoinAuctionResponse>(
-    `/api/auctions/${auctionId}/qualify`,
-  );
-  return data;
+  // Redirect to VNPay deposit flow instead of the non-existent qualify endpoint
+  const paymentUrl = await createDepositUrl(auctionId, 0);
+  window.location.href = paymentUrl;
+  // This line won't execute due to redirect, but satisfies the type
+  return {} as JoinAuctionResponse;
 }
 
 /**
  * Place a bid on an open auction.
  * POST /api/auctions/:id/bids (REST fallback — primary is SignalR)
+ *
+ * Idempotency-Key: a fresh UUID per call so the BE can deduplicate
+ * retries — prevents double-bids if the network drops mid-request.
  */
 export async function placeBid(
   auctionId: string,
@@ -465,6 +501,7 @@ export async function placeBid(
   const { data } = await api.post<PlaceBidResponse>(
     `/api/auctions/${auctionId}/bids`,
     { amount, currency: 'VND' },
+    { headers: { 'Idempotency-Key': crypto.randomUUID() } },
   );
   return data;
 }
@@ -472,6 +509,8 @@ export async function placeBid(
 /**
  * Submit a sealed bid (one-time, hidden).
  * Uses the same endpoint as open bids — BE handles the distinction.
+ *
+ * Idempotency-Key: same deduplication guard as placeBid.
  */
 export async function submitSealedBid(
   auctionId: string,
@@ -480,6 +519,7 @@ export async function submitSealedBid(
   const { data } = await api.post<PlaceBidResponse>(
     `/api/auctions/${auctionId}/bids`,
     { amount, currency: 'VND' },
+    { headers: { 'Idempotency-Key': crypto.randomUUID() } },
   );
   return data;
 }
@@ -554,8 +594,10 @@ export async function getMyAutoBid(auctionId: string): Promise<AutoBid | null> {
       `/api/auctions/${auctionId}/auto-bid/my`,
     );
     return data;
-  } catch {
-    return null;
+  } catch (err) {
+    // 404 = no auto-bid configured (valid state)
+    if (axios.isAxiosError(err) && err.response?.status === 404) return null;
+    throw err;
   }
 }
 
@@ -596,18 +638,42 @@ export async function activateItem(itemId: string): Promise<void> {
   await api.post(`/api/items/${itemId}/activate`);
 }
 
-/** Get seller's items — used in My Listings and Create Auction item selector */
-export async function getMyItems(): Promise<SellerItem[]> {
-  try {
-    const { data } = await api.get('/api/items/my');
-    // BE may return plain array or paginated { items: [...] }
-    const items = Array.isArray(data)
-      ? data
-      : (data as Record<string, unknown>)?.items ?? [];
-    return (items as Record<string, unknown>[]).map(mapSellerItem);
-  } catch {
-    return [];
-  }
+/**
+ * Submit item for online moderation review (draft → pending_review).
+ * verifyByPlatform=false means admin reviews online (no warehouse shipping).
+ * POST /api/items/{id}/submit
+ */
+export async function submitItemForReview(
+  itemId: string,
+  verifyByPlatform: boolean = false
+): Promise<void> {
+  await api.post(`/api/items/${itemId}/submit`, { verifyByPlatform });
+}
+
+/** Get seller's items — supports pagination for My Listings */
+export async function getMyItems(
+  filters: { page?: number; pageSize?: number } = {}
+): Promise<PaginatedResponse<SellerItem>> {
+  const params: Record<string, unknown> = {};
+  if (filters.page) params.PageNumber = filters.page;
+  if (filters.pageSize) params.PageSize = filters.pageSize;
+
+  const { data } = await api.get('/api/items/my', { params });
+  const raw = data as Record<string, unknown>;
+  const items = Array.isArray(data)
+    ? (data as Record<string, unknown>[]).map(mapSellerItem)
+    : ((raw?.items ?? []) as Record<string, unknown>[]).map(mapSellerItem);
+  const metadata = raw?.metadata as Record<string, unknown> | undefined;
+
+  return {
+    items,
+    page: (metadata?.currentPage as number) ?? 1,
+    pageSize: (metadata?.pageSize as number) ?? items.length,
+    totalItems: (metadata?.totalCount as number) ?? items.length,
+    totalPages: (metadata?.totalPages as number) ?? 1,
+    hasNextPage: (metadata?.hasNext as boolean) ?? false,
+    hasPreviousPage: (metadata?.hasPrevious as boolean) ?? false,
+  };
 }
 
 /** Maps BE item response to FE SellerItem type */
@@ -630,21 +696,49 @@ function mapSellerItem(raw: Record<string, unknown>): SellerItem {
 // ─── Auction Management (Seller Flow) ────────────────────────────────
 
 /**
- * Create a new auction for an active item.
- * POST /api/auctions — returns 201 Created with AuctionDto.
+ * Create auction from an EXISTING item (correct endpoint for our flow).
+ * POST /api/items/{itemId}/auctions — returns 201 Created with AuctionDto.
+ *
+ * This is step 1 of the 3-step auction creation flow:
+ * 1. createAuctionFromItem → creates draft auction with pricing
+ * 2. setAuctionTiming → sets qualification + start/end times
+ * 3. submitAuction → transitions Draft → Scheduled
  */
-export async function createAuction(
-  request: CreateAuctionRequest
-): Promise<CreateAuctionResponse> {
-  const { data } = await api.post('/api/auctions', request);
-  // BE may return wrapped { data, message } or unwrapped
+export async function createAuctionFromItem(
+  itemId: string,
+  request: CreateAuctionFromItemRequest
+): Promise<{ id: string }> {
+  const { data } = await api.post(`/api/items/${itemId}/auctions`, request);
+  // BE returns AuctionDto — extract id. May be wrapped or unwrapped.
   const result = (data as Record<string, unknown>)?.data ?? data;
-  return result as CreateAuctionResponse;
+  return { id: (result as Record<string, unknown>).id as string };
 }
 
 /**
- * Publish a draft auction (Draft → Pending).
- * Quartz scheduler will auto-activate at startTime.
+ * Set auction timing — qualification window + start/end times.
+ * PUT /api/auctions/{id}/timing — all fields required.
+ * Qualification window must be BEFORE auction startTime.
+ *
+ * Step 2 of the 3-step auction creation flow.
+ */
+export async function setAuctionTiming(
+  auctionId: string,
+  timing: SetAuctionTimingRequest
+): Promise<void> {
+  await api.put(`/api/auctions/${auctionId}/timing`, timing);
+}
+
+/**
+ * Submit a draft auction for admin review (Draft → PendingReview).
+ * POST /api/auctions/{id}/submit — returns 204 No Content.
+ */
+export async function submitAuction(auctionId: string): Promise<void> {
+  await api.post(`/api/auctions/${auctionId}/submit`);
+}
+
+/**
+ * Publish an approved auction (PendingReview → Published).
+ * This is an admin action — sellers do NOT call this directly.
  * POST /api/auctions/{id}/publish — returns 204 No Content.
  */
 export async function publishAuction(auctionId: string): Promise<void> {

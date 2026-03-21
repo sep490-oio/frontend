@@ -115,7 +115,7 @@ export function SellerStats({ seller }: SellerStatsProps) {
                   value={metric.value}
                   suffix={metric.suffix}
                   precision={metric.precision}
-                  valueStyle={{ color: metric.color, fontSize: 20 }}
+                  styles={{ content: { color: metric.color, fontSize: 20 } }}
                 />
               </Flex>
             )}

@@ -66,8 +66,8 @@ const STATUS_OPTIONS = [
 ];
 
 const ENDING_SOON_OPTIONS = [
-  { label: 'Dưới 1 giờ', value: '1h' },
-  { label: 'Hôm nay', value: 'today' },
+  { labelKey: 'browse.endingSoon1h', label: 'Dưới 1 giờ', value: '1h' },
+  { labelKey: 'browse.endingSoonToday', label: 'Hôm nay', value: 'today' },
 ];
 
 // ─── Props ───────────────────────────────────────────────────────
@@ -249,7 +249,7 @@ export function BrowseSidebar({
           </div>
           <div className="browse-price-inputs">
             <Input
-              placeholder="Min"
+              placeholder={t('browse.priceMin', 'Min')}
               size="small"
               className="browse-price-input"
               value={priceRange[0] > 0 ? priceRange[0].toLocaleString() : ''}
@@ -259,7 +259,7 @@ export function BrowseSidebar({
               }}
             />
             <Input
-              placeholder="Max"
+              placeholder={t('browse.priceMax', 'Max')}
               size="small"
               className="browse-price-input"
               value={priceRange[1] < 100_000_000 ? priceRange[1].toLocaleString() : ''}
@@ -303,7 +303,7 @@ export function BrowseSidebar({
                   value={opt.value}
                   className="browse-ending-soon-radio"
                 >
-                  {opt.label}
+                  {t(opt.labelKey, opt.label)}
                 </Radio>
               ))}
             </Space>

@@ -60,7 +60,13 @@ export function TwoFactorSection({ twoFactorEnabled, twoFactorProvider }: TwoFac
         <Flex align="center" gap={8}>
           {twoFactorEnabled && twoFactorProvider && (
             <Tag className="profile-tag profile-tag-confirmed">
-              {twoFactorProvider.toUpperCase()}
+              {(
+                {
+                  totp: t('profile.twoFactorProviderTotp'),
+                  sms: t('profile.twoFactorProviderSms'),
+                  email: t('profile.twoFactorProviderEmail'),
+                } as Record<string, string>
+              )[twoFactorProvider] ?? twoFactorProvider.toUpperCase()}
             </Tag>
           )}
           {twoFactorEnabled ? (

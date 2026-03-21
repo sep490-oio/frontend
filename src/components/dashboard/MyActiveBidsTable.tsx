@@ -202,10 +202,8 @@ export function MyActiveBidsTable({ bids, isLoading }: MyActiveBidsTableProps) {
             type="link"
             size="small"
             onClick={() => navigate('/my-bids')}
-            icon={<ArrowRightOutlined />}
-            iconPosition="end"
           >
-            {t('dashboard.viewAllBids')}
+            {t('dashboard.viewAllBids')} <ArrowRightOutlined />
           </Button>
         )
       }

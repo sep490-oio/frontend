@@ -198,16 +198,12 @@ function deduplicateByAuction(bids: MyBidItem[]): MyBidItem[] {
  * client-side to show one row per auction with the latest bid.
  */
 export async function getMyBids(): Promise<MyBidItem[]> {
-  try {
-    const { data } = await api.get('/api/me/bids', {
-      params: { PageNumber: 1, PageSize: 200, SortBy: 'bidPlacedAt' },
-    });
-    const paginated = unwrapPaginated<ApiMyBidDto>(data);
-    const allBids = (paginated.items ?? []).map(mapMyBid);
-    return deduplicateByAuction(allBids);
-  } catch {
-    return [];
-  }
+  const { data } = await api.get('/api/me/bids', {
+    params: { PageNumber: 1, PageSize: 200, SortBy: 'bidPlacedAt' },
+  });
+  const paginated = unwrapPaginated<ApiMyBidDto>(data);
+  const allBids = (paginated.items ?? []).map(mapMyBid);
+  return deduplicateByAuction(allBids);
 }
 
 /**

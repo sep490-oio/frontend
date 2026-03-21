@@ -2,13 +2,18 @@
  * CreateAuctionPage — Seller flow: select item → configure auction → publish.
  *
  * 4-step wizard:
- * 0. Select an active item (not already in auction)
+ * 0. Select an approved/active item
  * 1. Configure auction settings (prices, timing, anti-sniping)
  * 2. Review all settings before submission
- * 3. Done — option to publish immediately
+ * 3. Done — auction is Scheduled, publish when bidders have deposited
  *
  * Requires seller role — shows "Become a Seller" prompt for non-sellers.
- * BE contract: POST /api/auctions (creates Draft), POST /api/auctions/{id}/publish (Draft → Pending).
+ *
+ * 3-step BE flow:
+ * 1. POST /api/items/{itemId}/auctions (pricing → Draft)
+ * 2. POST /api/auctions/{id}/submit (Draft → Approved)
+ * 3. PUT /api/auctions/{id}/timing (Approved + timing → Scheduled)
+ * Then: POST /api/auctions/{id}/publish (Scheduled → Active)
  */
 
 import { useState, useMemo } from 'react';
@@ -40,10 +45,11 @@ import {
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
+import axios from 'axios';
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
 import { useAppSelector } from '@/app/hooks';
-import { useMyItems, useCreateAuction, usePublishAuction } from '@/hooks/useSellerManagement';
+import { useMyItems, useCreateAuction, useSetAuctionTiming, useSubmitAuction, usePublishAuction } from '@/hooks/useSellerManagement';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { formatVND } from '@/utils/formatters';
 import type { SellerItem } from '@/types/item';
@@ -70,8 +76,11 @@ export function CreateAuctionPage() {
   const user = useAppSelector((state) => state.auth.user);
   const [form] = Form.useForm<AuctionFormValues>();
 
-  const { data: items = [], isLoading: itemsLoading } = useMyItems();
+  const { data: itemsData, isLoading: itemsLoading } = useMyItems({ pageSize: 100 });
+  const items = useMemo(() => itemsData?.items ?? [], [itemsData]);
   const createAuction = useCreateAuction();
+  const setTiming = useSetAuctionTiming();
+  const submitAuction = useSubmitAuction();
   const publishAuction = usePublishAuction();
 
   // ─── State ──────────────────────────────────────────────────────
@@ -79,10 +88,13 @@ export function CreateAuctionPage() {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(routeItemId ?? null);
   const [createdAuctionId, setCreatedAuctionId] = useState<string | null>(null);
   const [published, setPublished] = useState(false);
+  // Snapshot of validated form values — saved when moving step 1 → 2 so
+  // handleCreate can read them even after the Form component unmounts.
+  const [confirmedValues, setConfirmedValues] = useState<AuctionFormValues | null>(null);
 
-  // Filter items: only active items that are not already in an auction
+  // Filter items: approved or active items that can have auctions created
   const availableItems = useMemo(
-    () => items.filter((item) => item.status === 'active'),
+    () => items.filter((item) => item.status === 'active' || item.status === 'approved'),
     [items],
   );
 
@@ -109,35 +121,59 @@ export function CreateAuctionPage() {
     );
   }
 
-  // ─── Submit: Create Auction ─────────────────────────────────────
+  // ─── Submit: 3-step auction creation flow ───────────────────────
   const handleCreate = async () => {
-    if (!selectedItemId) return;
+    if (!selectedItemId || !confirmedValues) return;
 
     try {
-      const values = await form.validateFields();
-      const result = await createAuction.mutateAsync({
+      const values = confirmedValues;
+
+      // Step 1: Create auction from item (pricing only)
+      const { id: auctionId } = await createAuction.mutateAsync({
         itemId: selectedItemId,
-        startingPrice: values.startingPrice,
-        bidIncrement: values.bidIncrement,
-        startTime: values.startTime.toISOString(),
-        endTime: values.endTime.toISOString(),
-        reservePrice: values.reservePrice || undefined,
-        buyNowPrice: values.buyNowPrice || undefined,
-        autoExtend: values.autoExtend,
-        extensionMinutes: values.extensionMinutes,
-        currency: 'VND',
+        request: {
+          startingPrice: values.startingPrice,
+          bidIncrement: values.bidIncrement,
+          reservePrice: values.reservePrice || undefined,
+          buyNowPrice: values.buyNowPrice || undefined,
+          extensionMinutes: values.extensionMinutes,
+          currency: 'VND',
+          auctionType: 'regular',
+        },
       });
 
-      setCreatedAuctionId(result.id);
+      // Step 2: Submit auction (Draft → Approved, requires item to be approved)
+      await submitAuction.mutateAsync(auctionId);
+
+      // Step 3: Set timing on Approved auction — qualification window is 29 min before start.
+      // UI tells user "30 min" but we use 29 to give a 1-minute buffer against the BE
+      // validation that rejects qualificationStartAt in the past.
+      const qualStart = values.startTime.subtract(29, 'minute');
+      const qualEnd = values.startTime.subtract(1, 'minute');
+      await setTiming.mutateAsync({
+        auctionId,
+        timing: {
+          startTime: values.startTime.toISOString(),
+          endTime: values.endTime.toISOString(),
+          qualificationStartAt: qualStart.toISOString(),
+          qualificationEndAt: qualEnd.toISOString(),
+          autoExtend: values.autoExtend,
+          extensionMinutes: values.extensionMinutes,
+        },
+      });
+
+      setCreatedAuctionId(auctionId);
       setCurrentStep(3);
       message.success(t('createAuction.createSuccess'));
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : t('common.error');
+      const errorMsg = axios.isAxiosError(err)
+        ? (err.response?.data?.detail ?? err.response?.data?.title ?? t('common.error'))
+        : t('common.error');
       message.error(errorMsg);
     }
   };
 
-  // ─── Publish after creation ─────────────────────────────────────
+  // ─── Publish: Scheduled → Active (only after bidders deposited) ──
   const handlePublish = async () => {
     if (!createdAuctionId) return;
     try {
@@ -145,13 +181,25 @@ export function CreateAuctionPage() {
       setPublished(true);
       message.success(t('createAuction.publishSuccess'));
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : t('common.error');
+      const beDetail = axios.isAxiosError(err)
+        ? (err.response?.data?.detail ?? err.response?.data?.title ?? '')
+        : '';
+      let errorMsg: string;
+      if (beDetail.includes('pending_verify') || beDetail.includes('pending_review')) {
+        errorMsg = t('myListings.submitErrorItemPendingVerify');
+      } else if (beDetail.includes('Cannot perform') || beDetail.includes('cannot perform')) {
+        errorMsg = t('createAuction.submitErrorInvalidStatus');
+      } else {
+        errorMsg = beDetail || t('common.error');
+      }
       message.error(errorMsg);
     }
   };
 
   // ─── Validation helpers ─────────────────────────────────────────
-  const disablePassedDates = (current: Dayjs) => current && current.isBefore(dayjs(), 'minute');
+  // Only disable past DAYS (not today) — Ant Design disabledDate works at day granularity.
+  // Using 'day' ensures today remains selectable; the time picker handles hour/minute filtering.
+  const disablePassedDates = (current: Dayjs) => current && current.isBefore(dayjs(), 'day');
 
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: isMobile ? 16 : 24 }}>
@@ -346,7 +394,21 @@ export function CreateAuctionPage() {
             <Form.Item
               name="startTime"
               label={t('createAuction.startTime')}
-              rules={[{ required: true, message: t('createAuction.startTimeRequired') }]}
+              rules={[
+                { required: true, message: t('createAuction.startTimeRequired') },
+                () => ({
+                  validator(_, value) {
+                    if (!value) return Promise.resolve();
+                    // Qualification window starts 30min before startTime.
+                    // BE rejects if qualificationStartAt is in the past.
+                    const minTime = dayjs().add(30, 'minute');
+                    if (value.isBefore(minTime)) {
+                      return Promise.reject(t('createAuction.startTimeTooSoon'));
+                    }
+                    return Promise.resolve();
+                  },
+                }),
+              ]}
             >
               <DatePicker
                 showTime={{ format: 'HH:mm' }}
@@ -435,7 +497,8 @@ export function CreateAuctionPage() {
               type="primary"
               onClick={async () => {
                 try {
-                  await form.validateFields();
+                  const values = await form.validateFields();
+                  setConfirmedValues(values);
                   setCurrentStep(2);
                 } catch {
                   // Validation errors shown by form
@@ -500,7 +563,7 @@ export function CreateAuctionPage() {
             <Button
               type="primary"
               onClick={handleCreate}
-              loading={createAuction.isPending}
+              loading={createAuction.isPending || setTiming.isPending || submitAuction.isPending}
             >
               {t('createAuction.createButton')}
             </Button>
@@ -527,8 +590,8 @@ export function CreateAuctionPage() {
               <Alert
                 type="info"
                 showIcon
-                message={t('createAuction.draftMessage')}
-                description={t('createAuction.draftMessageHint')}
+                message={t('createAuction.scheduledMessage')}
+                description={t('createAuction.scheduledMessageHint')}
               />
             )}
 
