@@ -14,7 +14,7 @@
  * the TypeScript literal type inference issue with min={0}.
  */
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Button, InputNumber, Flex, Typography, Alert, message } from 'antd';
 
 // Global flag for cross-component communication between BidForm and onError handler.
@@ -31,6 +31,7 @@ import { useAppSelector } from '@/app/hooks';
 import { usePlaceBid } from '@/hooks/useBidding';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { formatVND } from '@/utils/formatters';
+import { BidConfirmModal } from './BidConfirmModal';
 
 const { Text } = Typography;
 
@@ -52,6 +53,7 @@ export function BidForm({ auction, hubPlaceBid }: BidFormProps) {
 
   const [amount, setAmount] = useState<number | null>(minNextBid);
   const [hubLoading, setHubLoading] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   // Ref guard prevents double-submission when user clicks rapidly before React state updates
   const submittingRef = useRef(false);
   const userId = useAppSelector((state) => state.auth.user?.id);
@@ -72,27 +74,23 @@ export function BidForm({ auction, hubPlaceBid }: BidFormProps) {
   const effectiveWinner = winningBid ?? highestBid;
   const isWinning = !!userId && effectiveWinner?.bidderId === userId;
 
-  // ─── Not qualified: show warning ──────────────────────────────
-  if (!isQualified) {
-    return (
-      <Alert
-        type="warning"
-        showIcon
-        message={t('bidding.notQualified')}
-      />
-    );
-  }
-
-  // ─── Winning/outbid status banner ─────────────────────────────
-  const handleSubmit = async () => {
-    // Prevent double-submission from rapid clicks
-    if (submittingRef.current) return;
+  // ─── Open confirmation modal before placing bid ──────────────
+  const handleSubmit = () => {
     if (!amount || amount < minNextBid) {
       message.warning(
         t('bidding.bidAmountTooLow', { min: formatVND(minNextBid) })
       );
       return;
     }
+    setShowConfirm(true);
+  };
+
+  // ─── Actual bid execution (called after confirmation) ────────
+  const executeBid = useCallback(async () => {
+    setShowConfirm(false);
+    // Prevent double-submission from rapid clicks
+    if (submittingRef.current) return;
+    if (!amount || amount < minNextBid) return;
 
     // SignalR primary path — if hub is connected
     // NOTE: invoke('PlaceBid') resolves even on business errors — BE sends
@@ -155,13 +153,25 @@ export function BidForm({ auction, hubPlaceBid }: BidFormProps) {
         },
       }
     );
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [amount, minNextBid, hubPlaceBid, auction.id, auction.bidIncrement, t]);
 
   // Quick bid amounts: +1x, +2x, +3x the bid increment
   const quickBids = [1, 2, 3].map((multiplier) => ({
     label: `+${multiplier}x`,
     amount: currentPrice + auction.bidIncrement * multiplier,
   }));
+
+  // ─── Not qualified: show warning ──────────────────────────────
+  if (!isQualified) {
+    return (
+      <Alert
+        type="warning"
+        showIcon
+        message={t('bidding.notQualified')}
+      />
+    );
+  }
 
   return (
     <Flex vertical gap={12}>
@@ -235,6 +245,16 @@ export function BidForm({ auction, hubPlaceBid }: BidFormProps) {
           ? t('bidding.placing')
           : `${t('bidding.placeBid')} ${amount ? formatVND(amount) : ''}`}
       </Button>
+
+      {/* Bid confirmation modal — supervisor requirement from 14/03 meeting */}
+      <BidConfirmModal
+        open={showConfirm}
+        onConfirm={executeBid}
+        onCancel={() => setShowConfirm(false)}
+        auction={auction}
+        bidAmount={amount ?? minNextBid}
+        loading={hubLoading || placeBid.isPending}
+      />
     </Flex>
   );
 }

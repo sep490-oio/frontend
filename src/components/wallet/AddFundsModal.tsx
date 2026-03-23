@@ -1,14 +1,15 @@
 /**
- * AddFundsModal — mock form for adding money to the wallet.
+ * AddFundsModal — add money to the wallet via VNPay payment redirect.
  *
- * In production, selecting a payment method would redirect the user
- * to VNPay/MoMo/bank transfer flow. For now, this is a simulated
- * form that shows a success message on submit.
+ * User selects an amount and payment method, then gets redirected to
+ * VNPay to complete payment. After payment, VNPay redirects back and
+ * the wallet balance updates via IPN callback.
  *
  * The modal is controlled by the parent (WalletPage) via open/onClose.
  * Responsive: full-width on mobile, 480px on desktop.
  */
 
+import { useState } from 'react';
 import { Modal, Form, InputNumber, Radio, Space, Alert, message } from 'antd';
 import {
   CreditCardOutlined,
@@ -18,6 +19,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { formatVND } from '@/utils/formatters';
+import { api } from '@/services/api';
 
 interface AddFundsModalProps {
   open: boolean;
@@ -32,14 +34,31 @@ export function AddFundsModal({ open, onClose }: AddFundsModalProps) {
   const { isMobile } = useBreakpoint();
   const [form] = Form.useForm();
 
+  const [submitting, setSubmitting] = useState(false);
+
   const handleSubmit = () => {
-    form.validateFields().then((values) => {
-      // Mock: just show success message
-      message.success(
-        t('wallet.successAddFunds', { amount: formatVND(values.amount) })
-      );
-      form.resetFields();
-      onClose();
+    form.validateFields().then(async (values) => {
+      setSubmitting(true);
+      try {
+        // Call VNPay to create a payment URL for wallet top-up
+        const { data } = await api.post('/api/payments/vnpay/create-url', {
+          purpose: 'wallet_top_up',
+          amount: values.amount,
+          currency: 'VND',
+          description: `Wallet top-up ${values.amount} VND`,
+        });
+        const paymentUrl = ((data as Record<string, unknown>)?.data ?? data) as Record<string, unknown>;
+        const url = paymentUrl?.paymentUrl as string;
+        if (url) {
+          window.location.href = url; // Redirect to VNPay
+        } else {
+          message.error(t('common.error'));
+          setSubmitting(false);
+        }
+      } catch {
+        message.error(t('common.error'));
+        setSubmitting(false);
+      }
     });
   };
 
@@ -54,6 +73,7 @@ export function AddFundsModal({ open, onClose }: AddFundsModalProps) {
       open={open}
       onOk={handleSubmit}
       onCancel={handleCancel}
+      confirmLoading={submitting}
       okText={t('wallet.addFunds')}
       cancelText={t('common.cancel')}
       width={isMobile ? '100%' : 480}

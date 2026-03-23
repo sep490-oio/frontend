@@ -12,7 +12,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Auction } from '@/types';
 import {
-  joinAuction,
+  createDepositUrl,
   placeBid,
   submitSealedBid,
   buyNow,
@@ -23,18 +23,19 @@ import {
 } from '@/services/auctionService';
 
 /**
- * Mutation: Join auction qualification by paying deposit.
- * On success, refreshes auction detail (shows new deposit status)
- * and wallet (shows reduced available balance).
+ * Mutation: Initiate VNPay deposit for auction qualification.
+ * On success, returns a VNPay payment URL — the caller should
+ * redirect the user to it (window.location.href = paymentUrl).
+ *
+ * After payment, VNPay redirects back to returnUrl. The auction
+ * detail page refetches to show the new deposit/qualification status.
  */
 export function useJoinAuction() {
-  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (auctionId: string) => joinAuction(auctionId),
-    onSuccess: (_data, auctionId) => {
-      queryClient.invalidateQueries({ queryKey: ['auction', auctionId] });
-      queryClient.invalidateQueries({ queryKey: ['wallet', 'me'] });
-    },
+    mutationFn: ({ auctionId, depositAmount }: { auctionId: string; depositAmount: number }) =>
+      createDepositUrl(auctionId, depositAmount),
+    // No cache invalidation — user gets redirected to VNPay.
+    // On return, the auction detail page refetches automatically.
   });
 }
 

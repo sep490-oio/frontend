@@ -92,7 +92,13 @@ export const CONDITION_KEYS: Record<ItemCondition, string> = {
  */
 export const STATUS_KEYS: Record<AuctionStatus, string> = {
   draft: 'auction.statusDraft',
+  submitted: 'auction.statusSubmitted',
+  resubmitted: 'auction.statusResubmitted',
   pending: 'auction.statusPending',
+  pending_review: 'auction.statusPendingReview',
+  scheduled: 'auction.statusScheduled',
+  published: 'auction.statusPublished',
+  approved: 'auction.statusApproved',
   active: 'auction.statusActive',
   ended: 'auction.statusEnded',
   sold: 'auction.statusSold',
@@ -105,7 +111,13 @@ export const STATUS_KEYS: Record<AuctionStatus, string> = {
  */
 export const STATUS_COLORS: Record<AuctionStatus, string> = {
   draft: 'default',
+  submitted: 'gold',
+  resubmitted: 'gold',
   pending: 'processing',
+  pending_review: 'processing',
+  scheduled: 'cyan',
+  published: 'cyan',
+  approved: 'cyan',
   active: 'green',
   ended: 'default',
   sold: 'blue',

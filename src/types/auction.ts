@@ -162,6 +162,10 @@ export interface Auction {
   endTime: string;
   /** Actual end time (may differ from endTime due to anti-sniping extensions) */
   actualEndTime: string | null;
+  /** When the qualification/deposit window opens */
+  qualificationStartAt: string | null;
+  /** When the qualification/deposit window closes (must be before startTime) */
+  qualificationEndAt: string | null;
   // ─── Status & Participants ────────────────────────────────────
   status: AuctionStatus;
   /** Minimum qualified bidders required for auction to proceed (default 2) */
@@ -322,4 +326,44 @@ export interface BuyNowResponse {
 export interface ToggleWatchResponse {
   isWatching: boolean;
   newWatchCount: number;
+}
+
+// ─── Create Auction (Seller Flow) ────────────────────────────────────
+
+/**
+ * Request payload for POST /api/items/{itemId}/auctions.
+ * Creates an auction from an EXISTING item (correct endpoint for our flow).
+ *
+ * BE validation: startingPrice ≥ 0, bidIncrement ≥ 0,
+ * reservePrice ≥ startingPrice, buyNowPrice ≥ startingPrice,
+ * extensionMinutes 1–30, currency 3 chars.
+ */
+export interface CreateAuctionFromItemRequest {
+  startingPrice: number;
+  bidIncrement: number;
+  reservePrice?: number;
+  buyNowPrice?: number;
+  extensionMinutes?: number;  // 1-30, default 5
+  currency?: string;          // 3 chars, default "VND"
+  auctionType?: string;       // "regular" | "sealed", default "regular"
+}
+
+/**
+ * Request payload for PUT /api/auctions/{id}/timing.
+ * Sets the auction schedule and qualification window.
+ * All fields required. Qualification must be BEFORE auction start.
+ */
+export interface SetAuctionTimingRequest {
+  startTime: string;              // ISO 8601
+  endTime: string;                // ISO 8601
+  qualificationStartAt: string;   // ISO 8601
+  qualificationEndAt: string;     // ISO 8601
+  autoExtend: boolean;
+  extensionMinutes: number;
+}
+
+/** Response from POST /api/items/{itemId}/auctions — returns AuctionDto */
+export interface CreateAuctionFromItemResponse {
+  id: string;
+  status: AuctionStatus;
 }

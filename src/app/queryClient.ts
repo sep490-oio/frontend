@@ -11,8 +11,11 @@ export const queryClient = new QueryClient({
     queries: {
       // Don't refetch when the browser tab regains focus (less aggressive)
       refetchOnWindowFocus: false,
-      // Retry failed requests once before showing error
-      retry: 1,
+      // Retry failed requests with exponential backoff (500ms, 1000ms).
+      // This gives the axios 401-refresh interceptor time to complete
+      // before the next retry fires — prevents "empty page on first load".
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(500 * 2 ** attemptIndex, 5000),
       // Cache data for 5 minutes before considering it stale
       staleTime: 5 * 60 * 1000,
     },

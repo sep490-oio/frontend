@@ -22,17 +22,19 @@ import {
   Image,
   Space,
   Alert,
+  Result,
 } from 'antd';
-import { PlusOutlined, DeleteOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined, CheckCircleOutlined, ShopOutlined } from '@ant-design/icons';
 import type { UploadFile } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { mediaService } from '@/services/mediaService';
 import type { MediaUploadResult } from '@/services/mediaService';
 import { addItemMedia } from '@/services/auctionService';
-import { useCreateItem, useActivateItem } from '@/hooks/useItems';
+import { useCreateItem, useSubmitItem } from '@/hooks/useItems';
 import { useCategories } from '@/hooks/useAuctions';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
+import { useAppSelector } from '@/app/hooks';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -57,17 +59,36 @@ export function CreateItemPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { isMobile } = useBreakpoint();
+  const user = useAppSelector((state) => state.auth.user);
   const [form] = Form.useForm();
 
   const createItem = useCreateItem();
-  const activateItem = useActivateItem();
+  const submitItem = useSubmitItem();
   const { data: categories = [] } = useCategories();
 
   // ─── State ──────────────────────────────────────────────────────
   const [currentStep, setCurrentStep] = useState(0);
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [activated, setActivated] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  // ─── Seller role check ──────────────────────────────────────────
+  if (!user?.hasSellerPermission) {
+    return (
+      <div style={{ maxWidth: 600, margin: '0 auto', padding: isMobile ? 16 : 24 }}>
+        <Result
+          icon={<ShopOutlined />}
+          title={t('createItem.sellerRequired')}
+          subTitle={t('createItem.sellerRequiredHint')}
+          extra={
+            <Button type="primary" onClick={() => navigate('/profile')}>
+              {t('createAuction.goToProfile')}
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
 
   // ─── Image Upload ──────────────────────────────────────────────
   const handleUpload = async (file: File) => {
@@ -90,10 +111,8 @@ export function CreateItemPage() {
       };
       setUploadedImages((prev) => [...prev, newImage]);
       message.success(t('createItem.uploadSuccess'));
-    } catch (err) {
-      message.error(
-        err instanceof Error ? err.message : t('createItem.uploadFailed')
-      );
+    } catch {
+      message.error(t('createItem.uploadFailed'));
     } finally {
       setUploading(false);
     }
@@ -131,17 +150,16 @@ export function CreateItemPage() {
         });
       }
 
-      // Step 3: Try to activate (draft → active). BE has a known issue where
-      // the activate handler doesn't Include() the media collection, causing
-      // "no images" even after addItemMedia succeeds. Skip gracefully if 409.
+      // Step 3: Submit item for online moderation review (draft → pending_review).
+      // Admin will review and approve before seller can create an auction.
       if (uploadedImages.length > 0) {
         try {
-          await activateItem.mutateAsync(itemId);
-          setActivated(true);
-          message.success(t('createItem.activateSuccess'));
+          await submitItem.mutateAsync(itemId);
+          setSubmitted(true);
+          message.success(t('createItem.submitSuccess'));
         } catch {
-          // Activation failed (likely BE Include bug) — item stays as draft
-          // with images attached. Seller can activate later.
+          // Submit failed — item stays as draft with images attached.
+          // Seller can submit for review later from My Listings.
         }
       }
 
@@ -341,7 +359,7 @@ export function CreateItemPage() {
             <Button
               type="primary"
               onClick={handleSubmit}
-              loading={createItem.isPending || activateItem.isPending}
+              loading={createItem.isPending || submitItem.isPending}
             >
               {t('createItem.submit')}
             </Button>
@@ -357,10 +375,16 @@ export function CreateItemPage() {
             <Title level={4} style={{ margin: 0 }}>
               {t('createItem.doneTitle')}
             </Title>
-            {activated && (
+            {submitted ? (
               <Alert
                 type="success"
-                message={t('createItem.activatedMessage')}
+                message={t('createItem.submittedMessage')}
+                showIcon
+              />
+            ) : (
+              <Alert
+                type="info"
+                message={t('createItem.draftSavedMessage')}
                 showIcon
               />
             )}
@@ -371,7 +395,7 @@ export function CreateItemPage() {
               <Button onClick={() => {
                 setCurrentStep(0);
                 setUploadedImages([]);
-                setActivated(false);
+                setSubmitted(false);
                 form.resetFields();
               }}>
                 {t('createItem.createAnother')}

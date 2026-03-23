@@ -19,6 +19,7 @@ import type { SellerSummary } from './user';
  * Example: Electronics → Phones → Smartphones
  */
 export interface Category {
+  count: ReactI18NextChildren | Iterable<ReactI18NextChildren>;
   id: string;
   parentId: string | null;
   name: string;
@@ -133,4 +134,21 @@ export interface ItemSummary {
   description?: string | null;
   images?: ItemImage[];
   attributes?: ItemAttribute[];
+}
+
+// ─── Seller's Item (My Items list) ───────────────────────────────────
+
+/**
+ * Lightweight item returned by GET /api/items/my.
+ * Used in the My Listings page and the Create Auction item selector.
+ */
+export interface SellerItem {
+  id: string;
+  title: string;
+  condition: string;
+  status: string;           // draft | active | in_auction | sold | removed
+  primaryImageUrl: string | null;
+  categoryId: string | null;
+  quantity: number;
+  createdAt: string;
 }

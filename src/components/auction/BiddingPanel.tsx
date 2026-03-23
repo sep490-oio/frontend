@@ -88,6 +88,14 @@ export function BiddingPanel({ auction, hubPlaceBid, hubBuyNow, hubConfigureAuto
   );
   const isSealed = auction.auctionType === 'sealed';
 
+  // Detect if we're currently in the qualification/deposit window.
+  // Bidders can deposit during this window (before auction starts).
+  const isInQualificationWindow = (() => {
+    if (!auction.qualificationStartAt || !auction.qualificationEndAt) return false;
+    const now = new Date();
+    return now >= new Date(auction.qualificationStartAt) && now <= new Date(auction.qualificationEndAt);
+  })();
+
   // Determine countdown target
   const countdownTarget = auction.actualEndTime ?? auction.endTime;
 
@@ -98,11 +106,8 @@ export function BiddingPanel({ auction, hubPlaceBid, hubBuyNow, hubConfigureAuto
       ? auction.currentPrice >= auction.reservePrice!
       : false;
 
-  // Whether the user is qualified for bidding
-  // Bypass deposit requirement until BE delivers /api/auctions/{id}/qualify
-  // When ready, set VITE_BYPASS_DEPOSIT=false in .env to re-enable
-  const BYPASS_DEPOSIT = import.meta.env.VITE_BYPASS_DEPOSIT !== 'false';
-  const isQualified = BYPASS_DEPOSIT || auction.currentUserDeposit !== null;
+  // Whether the user has paid the deposit and is qualified for bidding
+  const isQualified = auction.currentUserDeposit !== null;
 
   return (
     <>
@@ -258,8 +263,8 @@ export function BiddingPanel({ auction, hubPlaceBid, hubBuyNow, hubConfigureAuto
 
         {/* ─── Interactive section (phase-dependent) ────────────────── */}
         <div style={{ marginBottom: 12 }}>
-          {/* NOT QUALIFIED → deposit flow */}
-          {isActive && !isQualified && <QualificationSection auction={auction} />}
+          {/* NOT QUALIFIED → deposit flow (visible during qualification window OR active) */}
+          {(isActive || isInQualificationWindow) && !isQualified && <QualificationSection auction={auction} />}
 
           {/* ACTIVE OPEN + QUALIFIED → bid form + optional buy-now */}
           {isActive && !isSealed && isQualified && (
