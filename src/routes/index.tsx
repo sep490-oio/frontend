@@ -17,6 +17,7 @@ import { Result } from 'antd';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { WarehouseLayout } from '@/components/layout/WarehouseLayout';
 
 // ─── Page Components ─────────────────────────────────────────────────
 import { HomePage } from '@/pages/public/HomePage';
@@ -37,6 +38,21 @@ import { DisputeDetailPage } from '@/pages/disputes/DisputeDetailPage';
 import { ConfirmEmailPage } from '@/pages/public/ConfirmEmailPage';
 import { ProfilePage } from '@/pages/profile/ProfilePage';
 import { CreateItemPage } from '@/pages/seller/CreateItemPage';
+import { SellerDashboardPage } from '@/pages/seller/SellerDashboardPage';
+import { SellerActiveAuctionsPage } from '@/pages/seller/SellerActiveAuctionsPage';
+import { SellerItemsPage } from '@/pages/seller/SellerItemsPage';
+import { CreateAuctionPage } from '@/pages/seller/CreateAuctionPage';
+import { SellerShippingPage } from '@/pages/seller/SellerShippingPage';
+import SellerShippingInfoPage from '@/pages/seller/SellerShippingInfoPage';
+import OrderPackagingPage from '@/pages/seller/OrderPackagingPage';
+import InspectorOverviewPage from '@/pages/inspector/InspectorOverviewPage';
+import InspectorHistoryPage from '@/pages/inspector/InspectorHistoryPage';
+import InspectorItemDetailPage from '@/pages/inspector/InspectorItemDetailPage';
+import WarehouseLogisticsPage from '@/pages/warehouse/WarehouseLogisticsPage';
+import WarehouseScannerPage from '@/pages/warehouse/WarehouseScannerPage';
+import NewShipmentPage from '@/pages/warehouse/NewShipmentPage';
+import CreateShipmentPage from '@/pages/warehouse/CreateShipmentPage';
+import WarehouseInventoryPage from '@/pages/warehouse/WarehouseInventoryPage';
 
 /** Temporary placeholder for pages not yet built */
 function ComingSoon({ title }: { title: string }) {
@@ -60,6 +76,11 @@ export function AppRoutes() {
       {/* ─── Dashboard Routes (with custom layout) ──────────────── */}
       <Route element={<DashboardLayout />}>
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/seller-dashboard" element={<SellerDashboardPage />} />
+        <Route path="/seller-dashboard/active-auctions" element={<SellerActiveAuctionsPage />} />
+        <Route path="/seller-dashboard/items" element={<SellerItemsPage />} />
+        <Route path="/seller-dashboard/create-auction" element={<CreateAuctionPage />} />
+        <Route path="/seller-dashboard/shipping" element={<SellerShippingPage />} />
         <Route path="/wallet" element={<WalletPage />} />
         <Route path="/my-bids" element={<MyBidsPage />} />
         <Route path="/orders" element={<OrdersPage />} />
@@ -69,6 +90,26 @@ export function AppRoutes() {
         <Route path="/disputes/:id" element={<DisputeDetailPage />} />
         <Route path="/profile" element={<ProfilePage />} />
       </Route>
+
+      {/* ─── Warehouse Routes (separate layout) ──────────────── */}
+      <Route element={<WarehouseLayout />}>
+        <Route path="/warehouse-logistics" element={<WarehouseLogisticsPage />} />
+        <Route path="/warehouse-logistics/new-shipment" element={<NewShipmentPage />} />
+        <Route path="/warehouse-scanner" element={<WarehouseScannerPage />} />
+        <Route path="/warehouse-intake" element={<CreateShipmentPage />} />
+        <Route path="/warehouse-inventory" element={<WarehouseInventoryPage />} />
+      </Route>
+
+      {/* ─── Standalone Pages (no sidebar) ──────────────── */}
+      <Route element={<PublicLayout />}>
+        <Route path="/seller-dashboard/shipping/info/:orderId" element={<SellerShippingInfoPage />} />
+        <Route path="/seller-dashboard/order/packaging/:orderId" element={<OrderPackagingPage />} />
+      </Route>
+
+      {/* ─── Inspector Page (no layout wrapper) ──────────────── */}
+      <Route path="/inspector" element={<InspectorOverviewPage />} />
+      <Route path="/inspector/history" element={<InspectorHistoryPage />} />
+      <Route path="/inspector/item/:itemId" element={<InspectorItemDetailPage />} />
 
       {/* ─── Other Routes (standard layout) ──────────────── */}
       <Route element={<AppLayout />}>

@@ -11,6 +11,7 @@ import {
     UserOutlined,
     ShopOutlined,
     WarningOutlined,
+    AppstoreOutlined,
 } from '@ant-design/icons';
 import { MainHeader } from './MainHeader';
 import './DashboardLayout.scss';
@@ -24,6 +25,8 @@ export function DashboardLayout() {
         { key: '/shipping', icon: <ShoppingOutlined />, label: 'Giao hàng' },
         { key: '/my-bids', icon: <ShoppingOutlined />, label: 'Đấu giá của tôi' },
         { key: '/disputes', icon: <WarningOutlined />, label: 'Tranh chấp' },
+        { key: '/warehouse-logistics', icon: <AppstoreOutlined />, label: 'Kho Logistics' },
+        { key: '/warehouse-scanner', icon: <AppstoreOutlined />, label: 'Quét Nhập Kho' },
         { key: '/profile', icon: <UserOutlined />, label: 'Hồ sơ cá nhân' },
     ];
 

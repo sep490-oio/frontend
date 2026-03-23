@@ -39,3 +39,30 @@ export function useSellerReviews(userId: string | undefined) {
     enabled: !!userId,
   });
 }
+
+/**
+ * Fetch seller dashboard data (stats, wallet, active auctions)
+ * For the seller's own dashboard page
+ */
+export function useSellerDashboard() {
+  return useQuery({
+    queryKey: ['seller', 'dashboard'],
+    queryFn: async () => {
+      // Mock data for now - replace with actual API call
+      return {
+        stats: {
+          trustScore: 99.8,
+          rating: 4.9,
+          totalRevenue: 2400000000,
+          totalItems: 142,
+        },
+        wallet: {
+          balance: 45000000,
+          balanceUSD: 1850,
+        },
+        activeAuctions: [],
+      };
+    },
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+}

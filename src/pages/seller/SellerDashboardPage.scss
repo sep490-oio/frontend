@@ -1,0 +1,977 @@
+// SellerDashboardPage.scss - Theo thiết kế Figma
+
+.seller-dashboard-page {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 32px 16px 112px;
+    gap: 32px;
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+// ─── Hero Stats Section ─────────────────────────────────────────────
+
+.hero-stats-section {
+    display: flex;
+    flex-direction: row;
+    gap: 24px;
+    width: 100%;
+    height: 246px;
+}
+
+// Welcome & Trust Meter Card
+.welcome-card {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 32px;
+    isolation: isolate;
+    position: relative;
+    flex: 1;
+    height: 246px;
+    background: linear-gradient(112.64deg, rgba(31, 41, 55, 0.4) 0%, rgba(17, 24, 39, 0.8) 100%);
+    border: 1px solid rgba(75, 85, 99, 0.3);
+    border-radius: 24px;
+    overflow: hidden;
+
+    // Decorative background element
+    &::before {
+        content: '';
+        position: absolute;
+        width: 256px;
+        height: 256px;
+        right: -79px;
+        top: -79px;
+        background: rgba(37, 99, 235, 0.1);
+        filter: blur(32px);
+        border-radius: 9999px;
+        z-index: 0;
+    }
+}
+
+.welcome-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+    height: 180px;
+    z-index: 1;
+}
+
+.welcome-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    width: 100%;
+}
+
+.welcome-title {
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-weight: 700;
+    font-size: 36px;
+    line-height: 40px;
+    color: #FFFFFF;
+    margin: 0;
+}
+
+.welcome-subtitle {
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 24px;
+    color: #9CA3AF;
+    max-width: 448px;
+    margin: 0;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 177.5px);
+    gap: 16px;
+    width: 100%;
+    margin-top: 32px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+}
+
+.stat-label {
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #6B7280;
+}
+
+.stat-value {
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-weight: 700;
+    font-size: 24px;
+    line-height: 32px;
+    color: #FFFFFF;
+
+    &.trust-score {
+        color: #2563EB;
+    }
+}
+
+.stat-value-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+}
+
+// Wallet Balance Card
+.wallet-balance-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 32px;
+    gap: 16px;
+    isolation: isolate;
+    position: relative;
+    width: 400px;
+    height: 210px;
+    background: #1D4ED8;
+    border-radius: 24px;
+    box-shadow: 0px 20px 25px -5px rgba(30, 58, 138, 0.4), 0px 8px 10px -6px rgba(30, 58, 138, 0.4);
+}
+
+.wallet-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.wallet-label {
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 24px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.wallet-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+}
+
+.wallet-amount {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+}
+
+.wallet-balance {
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-weight: 700;
+    font-size: 30px;
+    line-height: 36px;
+    color: #FFFFFF;
+    margin: 0;
+}
+
+.wallet-usd {
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    color: #DBEAFE;
+    margin: 0;
+}
+
+.wallet-actions {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+}
+
+.btn-wallet-primary {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 12.5px 0px 13.5px;
+    flex: 1;
+    height: 46px;
+    background: #FFFFFF;
+    border-radius: 12px;
+    border: none;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 20px;
+    color: #2563EB;
+    cursor: pointer;
+
+    &:hover {
+        background: #F3F4F6;
+    }
+}
+
+.btn-wallet-secondary {
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 12px 0px;
+    flex: 1;
+    height: 46px;
+    background: rgba(29, 78, 216, 0.5);
+    border: 1px solid rgba(96, 165, 250, 0.3);
+    border-radius: 12px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 20px;
+    color: #FFFFFF;
+    cursor: pointer;
+
+    &:hover {
+        background: rgba(29, 78, 216, 0.7);
+    }
+}
+
+// ─── Tabs Navigation ────────────────────────────────────────────────
+
+.tabs-navigation {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 32px;
+    width: 100%;
+    height: 36px;
+    border-bottom: 1px solid #1F2937;
+}
+
+.tab-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0px 0px 16px;
+    position: relative;
+    background: none;
+    border: none;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+    color: #6B7280;
+    cursor: pointer;
+    transition: color 0.2s;
+
+    &:hover {
+        color: #9CA3AF;
+    }
+
+    &.active {
+        font-weight: 700;
+        color: #FFFFFF;
+
+        &::after {
+            content: '';
+            position: absolute;
+            height: 2px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #2563EB;
+            box-shadow: 0px 0px 10px rgba(37, 99, 235, 0.5);
+        }
+    }
+}
+
+// ─── Performance Chart Section ──────────────────────────────────────
+
+.performance-chart-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
+    width: 100%;
+}
+
+.section-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.section-title {
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 28px;
+    color: #FFFFFF;
+    margin: 0;
+}
+
+.chart-period-select {
+    box-sizing: border-box;
+    padding: 8.5px 9px 8.5px 17px;
+    width: 117px;
+    height: 38px;
+    background: #111827;
+    border: 1px solid #374151;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    color: #FFFFFF;
+    cursor: pointer;
+}
+
+.chart-container {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 24px;
+    gap: 8px;
+    width: 100%;
+    height: 320px;
+    background: linear-gradient(110.03deg, rgba(31, 41, 55, 0.4) 0%, rgba(17, 24, 39, 0.8) 100%);
+    border: 1px solid rgba(75, 85, 99, 0.3);
+    border-radius: 24px;
+}
+
+.chart-bar {
+    flex: 1;
+    background: #1F2937;
+    border-radius: 8px 8px 0px 0px;
+    position: relative;
+    transition: background 0.3s;
+
+    &.highlighted {
+        background: #2563EB;
+    }
+
+    &:hover {
+        background: #374151;
+    }
+}
+
+.chart-tooltip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 8px;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: -40px;
+    background: #FFFFFF;
+    border-radius: 4px;
+    box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1), 0px 4px 6px -4px rgba(0, 0, 0, 0.1);
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 10px;
+    line-height: 15px;
+    color: #000000;
+    white-space: nowrap;
+}
+
+// ─── Active Auctions Section ────────────────────────────────────────
+
+.active-auctions-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px 0px 0px;
+    gap: 24px;
+    width: 100%;
+}
+
+.section-title-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+}
+
+.section-badge {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    padding: 4px 12px;
+    background: rgba(37, 99, 235, 0.2);
+    border: 1px solid rgba(37, 99, 235, 0.3);
+    border-radius: 9999px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 16px;
+    color: #3B82F6;
+}
+
+.section-link {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 20px;
+    color: #2563EB;
+    text-decoration: none;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+.auctions-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    width: 100%;
+}
+
+// ─── Auction Card ───────────────────────────────────────────────────
+
+.auction-card {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0px;
+    isolation: isolate;
+    background: #111827;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    overflow: hidden;
+
+    &.waitlist {
+        opacity: 0.8;
+    }
+}
+
+.auction-image-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    position: relative;
+    width: 100%;
+    height: 224px;
+    isolation: isolate;
+}
+
+.auction-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+
+    &.grayscale {
+        filter: saturate(0);
+    }
+}
+
+.auction-badges {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    z-index: 1;
+}
+
+.badge {
+    display: flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 10px;
+    line-height: 15px;
+    text-transform: uppercase;
+
+    &.badge-active {
+        background: #22C55E;
+        color: #000000;
+    }
+
+    &.badge-reserve {
+        background: #2563EB;
+        color: #FFFFFF;
+    }
+
+    &.badge-waitlist {
+        background: #F97316;
+        color: #000000;
+    }
+}
+
+.auction-timer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px;
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(6px);
+    border-radius: 8px;
+    z-index: 2;
+
+    &.waitlist-timer {
+        background: rgba(249, 115, 22, 0.2);
+        border: 1px solid rgba(249, 115, 22, 0.3);
+    }
+}
+
+.timer-label {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 10px;
+    line-height: 15px;
+    letter-spacing: -0.5px;
+    text-transform: uppercase;
+    color: #9CA3AF;
+    text-align: center;
+
+    .waitlist-timer & {
+        color: #FED7AA;
+    }
+}
+
+.timer-value {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 24px;
+    color: #2563EB;
+    text-align: center;
+
+    .waitlist-timer & {
+        color: #F97316;
+    }
+}
+
+.auction-details {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 20px;
+    width: 100%;
+}
+
+.auction-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0px 0px 16px;
+    gap: 4px;
+    width: 100%;
+}
+
+.auction-title {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 20px;
+    color: #FFFFFF;
+    margin: 0;
+
+    &.muted {
+        color: #9CA3AF;
+    }
+}
+
+.auction-code {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+    color: #6B7280;
+    margin: 0;
+
+    &.muted {
+        color: #4B5563;
+    }
+}
+
+.auction-pricing {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 12px 0px 0px;
+    width: 100%;
+}
+
+.current-bid,
+.bid-count {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.bid-label,
+.count-label {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 10px;
+    line-height: 15px;
+    text-transform: uppercase;
+    color: #6B7280;
+
+    &.muted {
+        color: #4B5563;
+    }
+}
+
+.bid-value {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 28px;
+    color: #FFFFFF;
+
+    &.muted {
+        color: #9CA3AF;
+    }
+}
+
+.count-label {
+    text-align: right;
+}
+
+.count-value {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 24px;
+    color: #FFFFFF;
+    text-align: right;
+}
+
+.btn-view-auction {
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 0px;
+    width: 100%;
+    height: 42px;
+    background: transparent;
+    border: 1px solid #374151;
+    border-radius: 12px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 20px;
+    color: #FFFFFF;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+        background: #1F2937;
+        border-color: #4B5563;
+    }
+
+    &.disabled {
+        border-color: #1F2937;
+        color: #6B7280;
+        cursor: not-allowed;
+
+        &:hover {
+            background: transparent;
+            border-color: #1F2937;
+        }
+    }
+}
+
+// ─── Auction Card Placeholder ───────────────────────────────────────
+
+.auction-card-placeholder {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 167.5px 32px;
+    border: 2px dashed #1F2937;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+        border-color: #374151;
+        background: rgba(31, 41, 55, 0.2);
+    }
+}
+
+.placeholder-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 48px;
+    height: 48px;
+    background: #111827;
+    border-radius: 9999px;
+    margin-bottom: 16px;
+}
+
+.placeholder-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 20px;
+    color: #6B7280;
+}
+
+// ─── Marketplace Explorer Section ───────────────────────────────────
+
+.marketplace-explorer-section {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 55.25px 40px 40px;
+    isolation: isolate;
+    position: relative;
+    width: 100%;
+    background: linear-gradient(109.03deg, rgba(31, 41, 55, 0.4) 0%, rgba(17, 24, 39, 0.8) 100%);
+    border: 1px solid rgba(75, 85, 99, 0.3);
+    border-radius: 24px;
+    overflow: hidden;
+
+    // Abstract gradient blob
+    &::after {
+        content: '';
+        position: absolute;
+        width: 384px;
+        height: 384px;
+        right: -95px;
+        bottom: -95px;
+        background: rgba(147, 51, 234, 0.1);
+        filter: blur(50px);
+        border-radius: 9999px;
+        z-index: 0;
+    }
+}
+
+.explorer-content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 48px;
+    width: 100%;
+    z-index: 1;
+}
+
+.explorer-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    flex: 1;
+}
+
+.explorer-title {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 30px;
+    line-height: 38px;
+    color: #FFFFFF;
+    margin: 0;
+}
+
+.explorer-description {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 24px;
+    color: #9CA3AF;
+    margin: 0;
+}
+
+.explorer-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    padding: 16px 0px 0px;
+    gap: 16px;
+}
+
+.btn-explore-primary {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 14.5px 20px 15.5px;
+    height: 50px;
+    background: #2563EB;
+    border-radius: 9999px;
+    border: none;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 20px;
+    color: #FFFFFF;
+    cursor: pointer;
+    transition: background 0.2s;
+
+    &:hover {
+        background: #1D4ED8;
+    }
+}
+
+.btn-explore-secondary {
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 12px 32px;
+    height: 50px;
+    background: transparent;
+    border: 1px solid #374151;
+    border-radius: 9999px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 24px;
+    color: #FFFFFF;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+        background: rgba(55, 65, 81, 0.3);
+        border-color: #4B5563;
+    }
+}
+
+.explorer-categories {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: 1;
+}
+
+.category-grid-left,
+.category-grid-right {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+}
+
+.category-grid-right {
+    padding: 0px 0px 32px;
+}
+
+.category-card {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px;
+    flex: 1;
+    background: rgba(31, 41, 55, 0.5);
+    border: 1px solid #374151;
+    border-radius: 16px;
+    transition: all 0.2s;
+    cursor: pointer;
+
+    &:hover {
+        background: rgba(31, 41, 55, 0.7);
+        border-color: #4B5563;
+    }
+}
+
+.category-label {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+    text-transform: uppercase;
+    color: #6B7280;
+}
+
+.category-count {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 24px;
+    color: #FFFFFF;
+}
+
+// ─── Responsive ─────────────────────────────────────────────────────
+
+@media (max-width: 1280px) {
+    .auctions-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 1024px) {
+    .hero-stats-section {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .wallet-balance-card {
+        width: 100%;
+    }
+
+    .auctions-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .explorer-content {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .auctions-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .tabs-navigation {
+        overflow-x: auto;
+        gap: 16px;
+    }
+}
