@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Read(*)",
+      "Read(**)",
+      "Read(//d/HocTrenTruong/Ky9/Project/OIO/**)"
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "notifications": "Thông báo",
+  "markAllAsRead": "Đánh dấu tất cả đã đọc",
+  "noNotifications": "Không có thông báo",
+  "new": "Mới",
+  "viewAll": "Xem tất cả thông báo",
+  "readAt": "Đã đọc",
+  "filter": {
+    "all": "Tất cả",
+    "unread": "Chưa đọc",
+    "read": "Đã đọc"
+  },
+  "type": {
+    "auction": "Đấu giá",
+    "order": "Đơn hàng",
+    "payment": "Thanh toán",
+    "warning": "Cảnh báo",
+    "system": "Hệ thống",
+    "dispute": "Tranh chấp"
+  }
+}

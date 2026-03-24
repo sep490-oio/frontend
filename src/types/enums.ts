@@ -1,187 +1,251 @@
-/**
- * Shared enums (union types) mirroring PostgreSQL enum types.
- *
- * All enums from the DB schema are collected here so there's ONE place
- * to find every status/type value. They're exported as TypeScript union
- * types (not the `enum` keyword) because:
- *   - Union types work naturally with JSON API responses (no runtime object)
- *   - Better tree-shaking (unused types are stripped from the bundle)
- *   - Easier to compare: `status === 'active'` just works
- *
- * Organized by domain to match CORE_FLOW_SUMMARY.md sections.
- */
+// Auction
+export const AuctionStatus = {
+  Draft: 'draft',
+  Pending: 'pending',
+  Approved: 'approved',
+  Scheduled: 'scheduled',
+  Active: 'active',
+  Ended: 'ended',
+  Sold: 'sold',
+  PaymentDefaulted: 'payment_defaulted',
+  Cancelled: 'cancelled',
+  Failed: 'failed',
+  Terminated: 'terminated',
+} as const
+export type AuctionStatus = (typeof AuctionStatus)[keyof typeof AuctionStatus]
 
-// ─── User & Auth ────────────────────────────────────────────────────
+export const AuctionType = {
+  Regular: 'regular',
+  Sealed: 'sealed',
+} as const
+export type AuctionType = (typeof AuctionType)[keyof typeof AuctionType]
 
-export type UserStatus = 'active' | 'inactive' | 'suspended' | 'banned';
+export const BidStatus = {
+  Pending: 'pending',
+  Accepted: 'accepted',
+  Rejected: 'rejected',
+  Cancelled: 'cancelled',
+  Retracted: 'retracted',
+} as const
+export type BidStatus = (typeof BidStatus)[keyof typeof BidStatus]
 
-export type VerificationStatus = 'pending' | 'verified' | 'rejected';
+export const AutoBidStatus = {
+  Active: 'active',
+  Paused: 'paused',
+  Completed: 'completed',
+  Cancelled: 'cancelled',
+} as const
+export type AutoBidStatus = (typeof AutoBidStatus)[keyof typeof AutoBidStatus]
 
-export type Gender = 'male' | 'female' | 'other';
+export const SealedBidStatus = {
+  Submitted: 'submitted',
+  Revealed: 'revealed',
+  Invalid: 'invalid',
+  Expired: 'expired',
+} as const
+export type SealedBidStatus = (typeof SealedBidStatus)[keyof typeof SealedBidStatus]
 
-export type AddressType = 'home' | 'work' | 'other';
+// User
+export const UserStatus = {
+  Active: 'active',
+  Inactive: 'inactive',
+  Locked: 'locked',
+  Banned: 'banned',
+  Suspended: 'suspended',
+} as const
+export type UserStatus = (typeof UserStatus)[keyof typeof UserStatus]
 
-// ─── Items & Catalog ────────────────────────────────────────────────
+export const SellerProfileStatus = {
+  Pending: 'pending',
+  Approved: 'approved',
+  Rejected: 'rejected',
+  Suspended: 'suspended',
+} as const
+export type SellerProfileStatus = (typeof SellerProfileStatus)[keyof typeof SellerProfileStatus]
 
-/** Physical condition of the item being auctioned */
-export type ItemCondition = 'new' | 'like_new' | 'very_good' | 'good' | 'acceptable';
+export const VerificationType = {
+  Identity: 'identity',
+  Business: 'business',
+  BankAccount: 'bank_account',
+} as const
+export type VerificationType = (typeof VerificationType)[keyof typeof VerificationType]
 
-/**
- * Moderator review status — every item must be approved before it can
- * be auctioned. This is the Moderator's workflow (not Admin).
- */
-export type ModerationStatus = 'pending' | 'approved' | 'rejected';
+export const VerificationDocumentType = {
+  Passport: 'passport',
+  NationalId: 'national_id',
+  DriverLicense: 'driver_license',
+  BusinessRegistration: 'business_registration',
+} as const
+export type VerificationDocumentType = (typeof VerificationDocumentType)[keyof typeof VerificationDocumentType]
 
-/**
- * Verified vs Non-verified listing badge (professor requirement).
- * Separate from moderation — this is about product authenticity verification.
- */
-export type ListingVerificationStatus = 'unverified' | 'pending_verification' | 'verified';
+export const IdentityVerificationStatus = {
+  Unverified: 'unverified',
+  Pending: 'pending',
+  Approved: 'approved',
+  Rejected: 'rejected',
+} as const
+export type IdentityVerificationStatus = (typeof IdentityVerificationStatus)[keyof typeof IdentityVerificationStatus]
 
-// ─── Auctions & Bidding ─────────────────────────────────────────────
+export const Gender = {
+  Male: 'male',
+  Female: 'female',
+  Other: 'other',
+} as const
+export type Gender = (typeof Gender)[keyof typeof Gender]
 
-/**
- * Auction lifecycle status (matches BE domain enum).
- * draft → pending → active → ended → sold/failed
- * Can also go to: cancelled
- */
-export type AuctionStatus =
-  | 'draft'
-  | 'submitted'
-  | 'resubmitted'
-  | 'pending'
-  | 'pending_review'
-  | 'scheduled'
-  | 'published'
-  | 'approved'
-  | 'active'
-  | 'ended'
-  | 'sold'
-  | 'cancelled'
-  | 'failed';
+// Order
+export const OrderStatus = {
+  PendingPayment: 'pending_payment',
+  Paid: 'paid',
+  Processing: 'processing',
+  Shipped: 'shipped',
+  Delivered: 'delivered',
+  Completed: 'completed',
+  Cancelled: 'cancelled',
+  Refunded: 'refunded',
+  Disputed: 'disputed',
+} as const
+export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus]
 
-/** Seller chooses: open (English ascending) or sealed (hidden single bid) */
-export type AuctionType = 'open' | 'sealed';
+export const OrderReturnStatus = {
+  Requested: 'requested',
+  Approved: 'approved',
+  Rejected: 'rejected',
+  Shipped: 'shipped',
+  Received: 'received',
+  Completed: 'completed',
+  Cancelled: 'cancelled',
+} as const
+export type OrderReturnStatus = (typeof OrderReturnStatus)[keyof typeof OrderReturnStatus]
 
-/** Individual bid status within an auction */
-export type BidStatus = 'active' | 'outbid' | 'winning' | 'won' | 'cancelled';
+// Payment
+export const PaymentMethodType = {
+  Card: 'card',
+  Wallet: 'wallet',
+  BankTransfer: 'bank_transfer',
+  VnPay: 'vnpay',
+} as const
+export type PaymentMethodType = (typeof PaymentMethodType)[keyof typeof PaymentMethodType]
 
-/** Auto-bid (proxy bidding) status — bidder sets a max, system bids for them */
-export type AutoBidStatus = 'active' | 'paused' | 'exhausted' | 'won' | 'outbid';
+export const TransactionStatus = {
+  Pending: 'pending',
+  Completed: 'completed',
+  Failed: 'failed',
+  Cancelled: 'cancelled',
+  Processing: 'processing',
+} as const
+export type TransactionStatus = (typeof TransactionStatus)[keyof typeof TransactionStatus]
 
-/**
- * Deposit lifecycle — bidders pay a deposit to qualify for an auction.
- * held → converted_to_payment (winner) or returned (loser) or forfeited (non-payment)
- * Values match BE domain enum exactly.
- */
-export type DepositStatus = 'held' | 'returned' | 'forfeited' | 'converted_to_payment';
+export const WalletTransactionType = {
+  Credit: 'credit',
+  Debit: 'debit',
+  Refund: 'refund',
+  Fee: 'fee',
+} as const
+export type WalletTransactionType = (typeof WalletTransactionType)[keyof typeof WalletTransactionType]
 
-/** How the deposit was funded */
-export type DepositSourceType = 'wallet' | 'payment_gateway' | 'bank_transfer';
+export const WithdrawalStatus = {
+  Pending: 'pending',
+  Approved: 'approved',
+  Rejected: 'rejected',
+  Processing: 'processing',
+  Completed: 'completed',
+  Failed: 'failed',
+} as const
+export type WithdrawalStatus = (typeof WithdrawalStatus)[keyof typeof WithdrawalStatus]
 
-/** What happened to the bidder after the auction ended */
-export type AuctionResult = 'winner' | 'outbid' | 'auction_cancelled';
+export const EscrowStatus = {
+  Held: 'held',
+  Released: 'released',
+  Disputed: 'disputed',
+  Refunded: 'refunded',
+} as const
+export type EscrowStatus = (typeof EscrowStatus)[keyof typeof EscrowStatus]
 
-// ─── Orders & Payment ───────────────────────────────────────────────
+// Moderation
+export const ReportStatus = {
+  Open: 'open',
+  Assigned: 'assigned',
+  InProgress: 'in_progress',
+  Resolved: 'resolved',
+  Closed: 'closed',
+} as const
+export type ReportStatus = (typeof ReportStatus)[keyof typeof ReportStatus]
 
-/**
- * Order lifecycle. Created after auction ends with a winner.
- * pending_payment → paid → processing → shipped → delivered → completed
- */
-export type OrderStatus =
-  | 'pending_payment'
-  | 'paid'
-  | 'processing'
-  | 'shipped'
-  | 'delivered'
-  | 'completed'
-  | 'cancelled'
-  | 'refunded'
-  | 'disputed';
+export const DisputeStatus = {
+  Open: 'open',
+  Assigned: 'assigned',
+  InProgress: 'in_progress',
+  PendingResponse: 'pending_response',
+  Resolved: 'resolved',
+  Closed: 'closed',
+} as const
+export type DisputeStatus = (typeof DisputeStatus)[keyof typeof DisputeStatus]
 
-export type PaymentMethodType = 'credit_card' | 'debit_card' | 'bank_account' | 'e_wallet';
+export const AlertSeverity = {
+  Low: 'low',
+  Medium: 'medium',
+  High: 'high',
+  Critical: 'critical',
+} as const
+export type AlertSeverity = (typeof AlertSeverity)[keyof typeof AlertSeverity]
 
-export type TransactionType = 'payment' | 'refund' | 'deposit' | 'withdrawal' | 'fee' | 'payout';
+export const AlertStatus = {
+  Active: 'active',
+  Acknowledged: 'acknowledged',
+  Resolved: 'resolved',
+  Closed: 'closed',
+} as const
+export type AlertStatus = (typeof AlertStatus)[keyof typeof AlertStatus]
 
-export type TransactionStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled' | 'refunded';
+// Catalog
+export const ItemStatus = {
+  Draft: 'draft',
+  PendingReview: 'pending_review',
+  PendingVerify: 'pending_verify',
+  PendingConditionConfirmation: 'pending_condition_confirmation',
+  Approved: 'approved',
+  Active: 'active',
+  InAuction: 'in_auction',
+  Sold: 'sold',
+  Rejected: 'rejected',
+  Removed: 'removed',
+} as const
+export type ItemStatus = (typeof ItemStatus)[keyof typeof ItemStatus]
 
-/** Wallet-level transaction direction */
-export type WalletTransactionType = 'credit' | 'debit' | 'hold' | 'release';
+export const ItemCondition = {
+  New: 'new',
+  LikeNew: 'like_new',
+  VeryGood: 'very_good',
+  Good: 'good',
+  Acceptable: 'acceptable',
+} as const
+export type ItemCondition = (typeof ItemCondition)[keyof typeof ItemCondition]
 
-/** Escrow holds payment until delivery is confirmed */
-export type EscrowStatus = 'holding' | 'released_to_seller' | 'refunded_to_buyer' | 'disputed';
+// Notification
+export const NotificationStatus = {
+  Unread: 'unread',
+  Read: 'read',
+  Archived: 'archived',
+} as const
+export type NotificationStatus = (typeof NotificationStatus)[keyof typeof NotificationStatus]
 
-export type WithdrawalRequestStatus = 'pending' | 'approved' | 'processing' | 'completed' | 'rejected' | 'cancelled';
+// Warehouse
+export const ShipmentStatus = {
+  Pending: 'pending',
+  Confirmed: 'confirmed',
+  InTransit: 'in_transit',
+  Arrived: 'arrived',
+  Stored: 'stored',
+  Shipped: 'shipped',
+  Delivered: 'delivered',
+  Cancelled: 'cancelled',
+} as const
+export type ShipmentStatus = (typeof ShipmentStatus)[keyof typeof ShipmentStatus]
 
-export type InvoiceStatus = 'issued' | 'draft' | 'paid' | 'cancelled';
-
-// ─── Disputes ───────────────────────────────────────────────────────
-
-export type DisputeType =
-  | 'item_not_received'
-  | 'item_not_as_described'
-  | 'damaged_item'
-  | 'counterfeit'
-  | 'payment_issue'
-  | 'shipping_issue'
-  | 'seller_unresponsive'
-  | 'other';
-
-export type DesiredResolution = 'refund' | 'replacement' | 'partial_refund' | 'other';
-
-export type DisputeStatus =
-  | 'open'
-  | 'under_review'
-  | 'awaiting_response'
-  | 'escalated'
-  | 'resolved'
-  | 'closed'
-  | 'cancelled';
-
-export type Priority = 'low' | 'medium' | 'high' | 'urgent';
-
-export type ResolutionType =
-  | 'refund_full'
-  | 'refund_partial'
-  | 'replacement'
-  | 'favor_buyer'
-  | 'favor_seller'
-  | 'mutual_agreement'
-  | 'no_action'
-  | 'cancelled';
-
-export type EvidenceType = 'image' | 'video' | 'document' | 'screenshot' | 'receipt' | 'tracking' | 'other';
-
-export type RefundStatus = 'pending' | 'processing' | 'completed' | 'failed';
-
-// ─── Notifications ──────────────────────────────────────────────────
-
-export type NotificationChannel = 'in_app' | 'email' | 'sms' | 'push' | 'webhook' | 'signalR';
-
-export type NotificationDeliveryStatus = 'pending' | 'sent' | 'delivered' | 'failed' | 'bounced';
-
-// ─── Reviews ────────────────────────────────────────────────────────
-
-export type ReviewStatus = 'pending' | 'published' | 'hidden' | 'removed';
-
-export type ReportReason = 'spam' | 'inappropriate' | 'fake' | 'harassment' | 'irrelevant' | 'other';
-
-export type ReportStatus = 'pending' | 'reviewed' | 'action_taken' | 'dismissed';
-
-// ─── Promotions ─────────────────────────────────────────────────────
-
-export type PromotionType = 'featured_listing' | 'homepage_banner' | 'category_highlight';
-
-export type PromotionStatus = 'pending' | 'active' | 'expired' | 'cancelled';
-
-// ─── Admin ──────────────────────────────────────────────────────────
-
-export type AuditAction =
-  | 'create'
-  | 'update'
-  | 'delete'
-  | 'login'
-  | 'logout'
-  | 'status_change'
-  | 'permission_change'
-  | 'system';
+// Address
+export const AddressType = {
+  Home: 'home',
+  Work: 'work',
+} as const
+export type AddressType = (typeof AddressType)[keyof typeof AddressType]

@@ -1,0 +1,591 @@
+/* ─── OIO Design System: Warm Ivory ─── */
+
+:root {
+  /* Colors */
+  --color-bg-primary: #FAFAF7;
+  --color-bg-surface: #F5F4F0;
+  --color-bg-card: #FFFFFF;
+  --color-text-primary: #1A1A1A;
+  --color-text-secondary: #6B6560;
+  --color-accent: #8B7355;
+  --color-accent-hover: #7A6548;
+  --color-accent-light: rgba(139, 115, 85, 0.08);
+  --color-success: #4A7C59;
+  --color-danger: #C4513D;
+  --color-border: #E8E5DF;
+  --color-border-light: #F0EFEB;
+
+  /* Typography */
+  --font-serif: 'DM Serif Display', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'DM Mono', 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Shadows (warm-tinted) */
+  --shadow-sm: 0 1px 2px rgba(26, 26, 26, 0.04);
+  --shadow-md: 0 4px 12px rgba(26, 26, 26, 0.06);
+  --shadow-lg: 0 8px 30px rgba(26, 26, 26, 0.08);
+  --shadow-xl: 0 16px 48px rgba(26, 26, 26, 0.10);
+
+  /* Spacing */
+  --section-gap: 80px;
+  --component-gap: 32px;
+  --card-padding: 24px;
+}
+
+/* ─── Dark Mode ─── */
+
+[data-theme="dark"] {
+  --color-bg-primary: #0F0F0F;
+  --color-bg-surface: #1A1A1A;
+  --color-bg-card: #242424;
+  --color-text-primary: #F5F0EB;
+  --color-text-secondary: #9A9590;
+  --color-accent: #C5A572;
+  --color-accent-hover: #B89560;
+  --color-accent-light: rgba(197, 165, 114, 0.1);
+  --color-success: #5A9C6B;
+  --color-danger: #D4634E;
+  --color-border: #2E2E2E;
+  --color-border-light: #363636;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] body {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .oio-price {
+  color: var(--color-accent);
+}
+
+[data-theme="dark"] .oio-label {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .ant-card {
+  background: var(--color-bg-card) !important;
+  border-color: var(--color-border) !important;
+}
+
+[data-theme="dark"] .ant-modal-content,
+[data-theme="dark"] .ant-popover-inner {
+  background: var(--color-bg-card) !important;
+}
+
+[data-theme="dark"] .ant-table {
+  background: var(--color-bg-card) !important;
+}
+
+[data-theme="dark"] .ant-descriptions-view {
+  background: var(--color-bg-card) !important;
+}
+
+[data-theme="dark"] .ant-tabs-nav::before {
+  border-color: var(--color-border) !important;
+}
+
+[data-theme="dark"] .ant-tabs-tab {
+  color: var(--color-text-secondary) !important;
+}
+
+[data-theme="dark"] .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: var(--color-accent) !important;
+}
+
+[data-theme="dark"] .ant-tabs-tab:hover .ant-tabs-tab-btn {
+  color: var(--color-text-primary) !important;
+}
+
+[data-theme="dark"] .ant-tabs-ink-bar {
+  background: var(--color-accent) !important;
+}
+
+[data-theme="dark"] .ant-tabs-content {
+  color: var(--color-text-primary) !important;
+}
+
+[data-theme="dark"] .ant-input,
+[data-theme="dark"] .ant-input-number,
+[data-theme="dark"] .ant-select-selector {
+  background: var(--color-bg-surface) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text-primary) !important;
+}
+
+[data-theme="dark"] .ant-btn-default {
+  background: transparent !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text-primary) !important;
+}
+
+[data-theme="dark"] .ant-typography {
+  color: var(--color-text-primary) !important;
+}
+
+[data-theme="dark"] .ant-typography.ant-typography-secondary {
+  color: var(--color-text-secondary) !important;
+}
+
+[data-theme="dark"] .ant-empty-description {
+  color: var(--color-text-secondary) !important;
+}
+
+[data-theme="dark"] .ant-pagination-item a {
+  color: var(--color-text-primary) !important;
+}
+
+[data-theme="dark"] .ant-pagination-item-active a {
+  color: #fff !important;
+}
+
+[data-theme="dark"] .ant-list-item {
+  border-color: var(--color-border) !important;
+}
+
+[data-theme="dark"] .ant-divider {
+  border-color: var(--color-border) !important;
+}
+
+[data-theme="dark"] .ant-dropdown-menu {
+  background: var(--color-bg-card) !important;
+}
+
+[data-theme="dark"] .ant-dropdown-menu-item {
+  color: var(--color-text-primary) !important;
+}
+
+[data-theme="dark"] .ant-dropdown-menu-item:hover {
+  background: var(--color-bg-surface) !important;
+}
+
+/* ─── Base ─── */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ─── Serif Headlines ─── */
+
+.oio-serif {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+h1.oio-serif, .oio-display {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+/* ─── Monospace Prices ─── */
+
+.oio-price {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  color: var(--color-accent);
+}
+
+/* ─── Labels (Uppercase) ─── */
+
+.oio-label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+/* ─── Paper Grain Texture ─── */
+
+.oio-grain::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ─── Scrollbar ─── */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+/* ─── Selection ─── */
+
+::selection {
+  background: rgba(139, 115, 85, 0.15);
+  color: var(--color-text-primary);
+}
+
+/* ─── Ant Design Overrides ─── */
+
+/* Remove default antd blue focus ring, use bronze */
+.ant-input:focus,
+.ant-input-focused,
+.ant-input:hover,
+.ant-input-number:hover,
+.ant-select:not(.ant-select-disabled):hover .ant-select-selector {
+  border-color: var(--color-accent) !important;
+}
+
+.ant-input:focus,
+.ant-input-focused,
+.ant-input-number-focused {
+  box-shadow: 0 0 0 2px rgba(139, 115, 85, 0.1) !important;
+}
+
+/* Card hover lift */
+.oio-card-hover {
+  transition: transform 250ms ease, box-shadow 250ms ease;
+}
+
+.oio-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Image zoom on hover */
+.oio-image-zoom {
+  overflow: hidden;
+}
+
+.oio-image-zoom img {
+  transition: transform 400ms ease;
+}
+
+.oio-image-zoom:hover img {
+  transform: scale(1.02);
+}
+
+/* Link underline animation */
+.oio-link {
+  position: relative;
+  text-decoration: none;
+  color: var(--color-accent);
+}
+
+.oio-link::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--color-accent);
+  transition: width 200ms ease;
+}
+
+.oio-link:hover::after {
+  width: 100%;
+}
+
+/* Bid price pulse animation */
+@keyframes pricePulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.oio-price-pulse {
+  animation: pricePulse 400ms ease-out;
+}
+
+/* Subtle glow for ending soon */
+@keyframes urgentGlow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.oio-urgent-glow {
+  animation: urgentGlow 2s ease-in-out infinite;
+}
+
+/* Skeleton shimmer (warm) */
+@keyframes warmShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.oio-skeleton {
+  background: linear-gradient(90deg, #F0EFEB 25%, #FAFAF7 50%, #F0EFEB 75%);
+  background-size: 200% 100%;
+  animation: warmShimmer 1.5s ease-in-out infinite;
+  border-radius: 2px;
+}
+
+/* ─── Premium Button Styles ─── */
+
+.ant-btn-primary {
+  font-weight: 500 !important;
+  letter-spacing: 0.01em !important;
+  transition: all 200ms ease !important;
+}
+
+.ant-btn-primary:not(:disabled):hover {
+  filter: brightness(0.9) !important;
+  transform: translateY(-1px) !important;
+}
+
+.ant-btn-primary:not(:disabled):active {
+  transform: translateY(0) scale(0.98) !important;
+}
+
+.ant-btn-default:not(:disabled):hover {
+  border-color: var(--color-accent) !important;
+  color: var(--color-accent) !important;
+}
+
+/* Fix all button border-radius to 2px (design system rule) */
+.ant-btn {
+  border-radius: 2px !important;
+}
+
+.ant-btn-lg {
+  height: 48px !important;
+}
+
+/* ─── Card Refinements ─── */
+
+.ant-card {
+  border-radius: 4px !important;
+  border: 1px solid var(--color-border) !important;
+  transition: box-shadow 250ms ease, transform 250ms ease !important;
+}
+
+/* ─── Table Refinements ─── */
+
+.ant-table-thead > tr > th {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  color: var(--color-text-secondary) !important;
+  background: var(--color-bg-surface) !important;
+  border-bottom: 1px solid var(--color-border) !important;
+  padding: 12px 16px !important;
+}
+
+.ant-table-tbody > tr > td {
+  padding: 14px 16px !important;
+  border-bottom: 1px solid var(--color-border-light) !important;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background: var(--color-accent-light) !important;
+}
+
+/* ─── Input Refinements ─── */
+
+.ant-input, .ant-input-number, .ant-select-selector, .ant-picker {
+  border-radius: 2px !important;
+  border-color: var(--color-border) !important;
+  transition: border-color 200ms ease, box-shadow 200ms ease !important;
+}
+
+.ant-input:focus, .ant-input:hover,
+.ant-input-number:focus, .ant-input-number:hover,
+.ant-select:hover .ant-select-selector {
+  border-color: var(--color-accent) !important;
+}
+
+/* ─── Modal Refinements ─── */
+
+.ant-modal-content {
+  border-radius: 4px !important;
+  overflow: hidden;
+}
+
+.ant-modal-header {
+  border-bottom: 1px solid var(--color-border) !important;
+  padding: 20px 24px !important;
+}
+
+.ant-modal-title {
+  font-family: 'DM Serif Display', Georgia, serif !important;
+  font-size: 20px !important;
+  font-weight: 400 !important;
+}
+
+.ant-modal-body {
+  padding: 24px !important;
+}
+
+.ant-modal-footer {
+  border-top: 1px solid var(--color-border) !important;
+  padding: 16px 24px !important;
+}
+
+/* ─── Tabs Refinements ─── */
+
+.ant-tabs-tab {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  padding: 12px 0 !important;
+}
+
+/* ─── Tag/Badge Refinements ─── */
+
+.ant-tag {
+  border-radius: 100px !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  padding: 2px 10px !important;
+  line-height: 20px !important;
+}
+
+/* ─── Notification/Message Refinements ─── */
+
+.ant-message-notice-content,
+.ant-notification-notice {
+  border-radius: 4px !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+/* ─── Statistic Refinements ─── */
+
+.ant-statistic-title {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  color: var(--color-text-secondary) !important;
+}
+
+.ant-statistic-content-value {
+  font-family: 'DM Mono', monospace !important;
+  color: var(--color-text-primary) !important;
+}
+
+/* ─── Form Label Refinements ─── */
+
+.ant-form-item-label > label {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: var(--color-text-secondary) !important;
+}
+
+/* ─── Pagination Refinements ─── */
+
+.ant-pagination-item {
+  border-radius: 2px !important;
+  border-color: var(--color-border) !important;
+  background: var(--color-bg-card) !important;
+}
+
+.ant-pagination-item a {
+  color: var(--color-text-primary) !important;
+}
+
+.ant-pagination-item:hover {
+  border-color: var(--color-accent) !important;
+}
+
+.ant-pagination-item:hover a {
+  color: var(--color-accent) !important;
+}
+
+.ant-pagination-item-active {
+  border-color: var(--color-accent) !important;
+  background: var(--color-accent) !important;
+}
+
+.ant-pagination-item-active a {
+  color: #fff !important;
+}
+
+.ant-pagination-item-active:hover a {
+  color: #fff !important;
+}
+
+.ant-pagination-prev .ant-pagination-item-link,
+.ant-pagination-next .ant-pagination-item-link {
+  color: var(--color-text-primary) !important;
+  border-color: var(--color-border) !important;
+  background: var(--color-bg-card) !important;
+  border-radius: 2px !important;
+}
+
+.ant-pagination-prev:hover .ant-pagination-item-link,
+.ant-pagination-next:hover .ant-pagination-item-link {
+  color: var(--color-accent) !important;
+  border-color: var(--color-accent) !important;
+}
+
+.ant-pagination-disabled .ant-pagination-item-link {
+  color: var(--color-text-secondary) !important;
+  opacity: 0.4;
+}
+
+.ant-pagination-options .ant-select-selector {
+  border-radius: 2px !important;
+  background: var(--color-bg-card) !important;
+}
+
+/* Dark mode pagination overrides */
+[data-theme="dark"] .ant-pagination-item {
+  background: var(--color-bg-surface) !important;
+  border-color: var(--color-border) !important;
+}
+
+[data-theme="dark"] .ant-pagination-item a {
+  color: var(--color-text-primary) !important;
+}
+
+[data-theme="dark"] .ant-pagination-item-active {
+  background: var(--color-accent) !important;
+  border-color: var(--color-accent) !important;
+}
+
+[data-theme="dark"] .ant-pagination-item-active a {
+  color: #0F0F0F !important;
+}
+
+[data-theme="dark"] .ant-pagination-prev .ant-pagination-item-link,
+[data-theme="dark"] .ant-pagination-next .ant-pagination-item-link {
+  background: var(--color-bg-surface) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text-primary) !important;
+}
