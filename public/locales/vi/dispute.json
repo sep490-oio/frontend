@@ -1,0 +1,42 @@
+{
+  "disputes": "Tranh chấp",
+  "dispute": "Tranh chấp",
+  "id": "Mã",
+  "type": "Loại",
+  "status": "Trạng thái",
+  "priority": "Độ ưu tiên",
+  "createdAt": "Ngày tạo",
+  "updatedAt": "Cập nhật",
+  "lastUpdated": "Cập nhật",
+  "participants": "Thành viên",
+  "notFound": "Không tìm thấy tranh chấp",
+  "noMessages": "Chưa có tin nhắn",
+  "send": "Gửi",
+  "messagePlaceholder": "Nhập tin nhắn...",
+  "attachment": "Tệp đính kèm",
+  "attachFile": "Đính kèm tệp (sắp có)",
+  "filterByStatus": "Lọc theo trạng thái",
+  "filter": {
+    "all": "Tất cả"
+  },
+  "statusLabel": {
+    "open": "Mở",
+    "assigned": "Đã phân công",
+    "in_progress": "Đang xử lý",
+    "pending_response": "Chờ phản hồi",
+    "resolved": "Đã giải quyết",
+    "closed": "Đã đóng"
+  },
+  "priorityLabel": {
+    "low": "Thấp",
+    "medium": "Trung bình",
+    "high": "Cao",
+    "critical": "Nghiêm trọng"
+  },
+  "disputeType": {
+    "order": "Tranh chấp đơn hàng",
+    "payment": "Tranh chấp thanh toán",
+    "item": "Tranh chấp sản phẩm",
+    "delivery": "Tranh chấp giao hàng"
+  }
+}

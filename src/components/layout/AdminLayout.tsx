@@ -1,243 +1,478 @@
-/**
- * AdminLayout — layout riêng cho toàn bộ khu vực /admin/*
- *
- * Cấu trúc:
- * - Sidebar trái: logo + menu admin đầy đủ (buildAdminMenuItems)
- * - Header trên: tên trang + avatar + logout
- * - Content: <Outlet /> render page tương ứng
- *
- * Sidebar menu được build từ buildAdminMenuItems(roles, t),
- * tự động điều chỉnh theo super_admin vs admin thường.
- *
- * Responsive:
- * - Desktop (≥992px): sidebar cố định bên trái
- * - Mobile/tablet (<992px): sidebar ẩn, mở bằng hamburger → Drawer
- */
-import { useState } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { useState } from 'react'
+import { Outlet, useNavigate, useLocation, Link } from 'react-router'
+import { Layout, Avatar, Tooltip, Drawer } from 'antd'
 import {
-  Layout, Menu, Avatar, Dropdown, Button, Drawer,
-  Typography, Flex,
-} from 'antd';
-import type { MenuProps } from 'antd';
-import {
-  SettingOutlined,
-  UserOutlined,
-  MenuOutlined,
-  LogoutOutlined,
+  DashboardOutlined,
+  TeamOutlined,
+  SafetyCertificateOutlined,
+  ShopOutlined,
+  AuditOutlined,
+  AlertOutlined,
+  MonitorOutlined,
+  CommentOutlined,
+  DollarOutlined,
+  FileTextOutlined,
+  LockOutlined,
   ArrowLeftOutlined,
-} from '@ant-design/icons';
-import { useAppSelector, useAppDispatch } from '@/app/hooks';
-import { clearCredentials } from '@/features/auth/authSlice';
-import { useBreakpoint } from '@/hooks/useBreakpoint';
-import { buildAdminMenuItems } from './buildMenuItems';
+  SunOutlined,
+  MoonOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  MenuOutlined,
+  UserOutlined,
+  GlobalOutlined,
+} from '@ant-design/icons'
+import { useTranslation } from 'react-i18next'
+import { useAuth } from '@/hooks/useAuth'
+import { useTheme } from '@/hooks/useTheme'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 
-const { Sider, Header, Content } = Layout;
-const { Text } = Typography;
+const { Content } = Layout
 
+const SERIF_FONT = "'DM Serif Display', Georgia, serif"
+const SANS_FONT = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
 
-
-// ─── Sidebar menu ─────────────────────────────────────────────────────────────
-
-function AdminSidebarMenu({ onSelect }: { onSelect?: () => void }) {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const user = useAppSelector((state) => state.auth.user);
-
-
-  const roles = user?.roles ?? [];
-  const menuItems = buildAdminMenuItems(roles, t);
-
-  // Tự động mở sub-menu nếu pathname đang thuộc group
-  const userSubPaths = ['/admin/users', '/admin/verifications', '/admin/seller-profiles'];
-  const defaultOpenKeys = userSubPaths.includes(location.pathname) ? ['group-users'] : [];
-
-  return (
-    <Menu
-      mode="inline"
-      selectedKeys={[location.pathname]}
-      defaultOpenKeys={defaultOpenKeys}
-      items={menuItems}
-      onClick={({ key }) => {
-        navigate(key);
-        onSelect?.();
-      }}
-      style={{ border: 'none' }}
-    />
-  );
-}
-
-// ─── Header ───────────────────────────────────────────────────────────────────
-
-function AdminHeader({ onMobileMenu }: { onMobileMenu: () => void }) {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const dispatch = useAppDispatch();
-  const user = useAppSelector((state) => state.auth.user);
-  const { isDesktop } = useBreakpoint();
-  const handleLogout = () => {
-    dispatch(clearCredentials());
-    navigate('/login');
-  };
-
-  const dropdownItems: MenuProps['items'] = [
-    {
-      key: 'back',
-      icon: <ArrowLeftOutlined />,
-      label: t('nav.dashboard'),
-      onClick: () => navigate('/dashboard'),
-    },
-    { type: 'divider' },
-    {
-      key: 'logout',
-      icon: <LogoutOutlined />,
-      label: t('nav.logout'),
-      danger: true,
-      onClick: handleLogout,
-    },
-  ];
-
-  return (
-    <Header
-      style={{
-        padding: '0 20px',
-        background: 'var(--ant-color-bg-container)',
-        borderBottom: '1px solid var(--ant-color-border-secondary)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-        height: 56,
-        lineHeight: '56px',
-      }}
-    >
-      {/* Left: hamburger (mobile only) */}
-      <Flex align="center" gap={10}>
-        {!isDesktop && (
-          <Button
-            type="text"
-            icon={<MenuOutlined />}
-            onClick={onMobileMenu}
-            size="small"
-          />
-        )}
-      </Flex>
-
-      {/* Right: email + avatar dropdown */}
-      <Flex align="center" gap={10}>
-        {isDesktop && (
-          <Text type="secondary" style={{ fontSize: 12 }}>
-            {user?.email}
-          </Text>
-        )}
-        <Dropdown
-          menu={{ items: dropdownItems }}
-          placement="bottomRight"
-          trigger={['click']}
-        >
-          <Avatar
-            size={32}
-            icon={<UserOutlined />}
-            style={{ cursor: 'pointer', background: 'var(--ant-color-primary)' }}
-          />
-        </Dropdown>
-      </Flex>
-    </Header>
-  );
-}
-
-// ─── AdminLayout export ───────────────────────────────────────────────────────
+const SIDEBAR_WIDTH = 240
+const SIDEBAR_COLLAPSED = 72
+const HEADER_HEIGHT = 64
 
 export function AdminLayout() {
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const { isDesktop } = useBreakpoint();
+  const [collapsed, setCollapsed] = useState(false)
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
+  const { isMobile } = useBreakpoint()
+  const { t, i18n } = useTranslation('admin')
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { user } = useAuth()
+  const { isDark, toggle: toggleTheme } = useTheme()
+
+  const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED : SIDEBAR_WIDTH
+
+  const menuItems = [
+    { key: '/admin', icon: <DashboardOutlined />, label: t('menu.dashboard', 'Dashboard') },
+    { key: '/admin/users', icon: <TeamOutlined />, label: t('menu.users', 'Users') },
+    { key: '/admin/verifications', icon: <SafetyCertificateOutlined />, label: t('menu.verifications', 'Verifications') },
+    { key: '/admin/sellers', icon: <ShopOutlined />, label: t('menu.sellers', 'Sellers') },
+    { key: '/admin/items/review', icon: <AuditOutlined />, label: t('menu.itemReview', 'Item Review') },
+    { key: '/admin/reports', icon: <AlertOutlined />, label: t('menu.reports', 'Reports') },
+    { key: '/admin/monitoring', icon: <MonitorOutlined />, label: t('menu.monitoring', 'Monitoring') },
+    { key: '/admin/disputes', icon: <CommentOutlined />, label: t('menu.disputes', 'Disputes') },
+    { key: '/admin/payments', icon: <DollarOutlined />, label: t('menu.payments', 'Payments') },
+    { key: '/admin/terms', icon: <FileTextOutlined />, label: t('menu.terms', 'Terms') },
+    { key: '/admin/roles', icon: <LockOutlined />, label: t('menu.roles', 'Roles & Permissions') },
+  ]
+
+  const isActive = (key: string) => {
+    if (key === '/admin') return location.pathname === '/admin'
+    return location.pathname.startsWith(key)
+  }
+
+  const toggleLanguage = () => {
+    const next = i18n.language === 'en' ? 'uk' : 'en'
+    i18n.changeLanguage(next)
+  }
+
+  const displayName = user?.profile?.displayName || user?.profile?.firstName || user?.userName || 'Admin'
+  const avatarUrl = user?.profile?.avatarUrl
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-
-      {/* ── Desktop sidebar ─────────────────────────────────── */}
-      {isDesktop && (
-        <Sider
-          width={240}
+    <div style={{ minHeight: '100vh', background: 'var(--color-bg-primary)' }}>
+      {/* Sidebar (hidden on mobile) */}
+      <aside
+        style={{
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: sidebarWidth,
+          background: 'var(--color-bg-card)',
+          borderRight: '1px solid var(--color-border)',
+          transition: 'width 200ms ease',
+          display: isMobile ? 'none' : 'flex',
+          flexDirection: 'column',
+          zIndex: 100,
+          overflow: 'hidden',
+        }}
+      >
+        {/* Logo area */}
+        <div
           style={{
-            background: 'var(--ant-color-bg-container)',
-            borderRight: '1px solid var(--ant-color-border-secondary)',
-            position: 'sticky',
-            top: 0,
-            height: '100vh',
+            height: HEADER_HEIGHT,
             display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
+            alignItems: 'center',
+            justifyContent: collapsed ? 'center' : 'flex-start',
+            padding: collapsed ? '0' : '0 20px',
+            borderBottom: '1px solid var(--color-border)',
+            flexShrink: 0,
           }}
         >
-          {/* Brand */}
-          <Flex
-            align="center"
-            gap={8}
+          <Link
+            to="/admin"
             style={{
-              padding: '0 20px',
-              height: 56,
-              borderBottom: '1px solid var(--ant-color-border-secondary)',
-              flexShrink: 0,
+              fontFamily: SERIF_FONT,
+              fontSize: collapsed ? 18 : 22,
+              letterSpacing: '0.1em',
+              color: 'var(--color-text-primary)',
+              textDecoration: 'none',
+              fontWeight: 400,
+              display: 'flex',
+              alignItems: 'baseline',
+              whiteSpace: 'nowrap',
             }}
           >
-            <div style={{
-              width: 28, height: 28, borderRadius: 6,
-              background: 'var(--ant-color-primary)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <SettingOutlined style={{ color: '#fff', fontSize: 14 }} />
-            </div>
-            <Text strong style={{ fontSize: 15 }}>Admin Panel</Text>
-          </Flex>
+            OIO
+            {!collapsed && (
+              <span
+                style={{
+                  fontFamily: SANS_FONT,
+                  fontSize: 10,
+                  fontWeight: 600,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color: 'var(--color-accent)',
+                  marginLeft: 8,
+                }}
+              >
+                Admin
+              </span>
+            )}
+          </Link>
+        </div>
 
-          {/* Menu — scrollable */}
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: 8, paddingBottom: 16 }}>
-            <AdminSidebarMenu />
-          </div>
-        </Sider>
-      )}
+        {/* Menu */}
+        <nav style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '8px 0' }}>
+          {menuItems.map((item) => {
+            const active = isActive(item.key)
+            const menuItem = (
+              <div
+                key={item.key}
+                onClick={() => navigate(item.key)}
+                style={{
+                  height: 44,
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: collapsed ? '0 0 0 0' : '0 16px',
+                  justifyContent: collapsed ? 'center' : 'flex-start',
+                  margin: '2px 8px',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  fontFamily: SANS_FONT,
+                  fontSize: 13,
+                  fontWeight: active ? 500 : 400,
+                  color: active ? 'var(--color-accent)' : 'var(--color-text-secondary)',
+                  background: active ? 'var(--color-accent-light)' : 'transparent',
+                  borderLeft: active ? '3px solid var(--color-accent)' : '3px solid transparent',
+                  transition: 'all 150ms ease',
+                  whiteSpace: 'nowrap',
+                  gap: collapsed ? 0 : 12,
+                  position: 'relative',
+                }}
+                onMouseEnter={(e) => {
+                  if (!active) {
+                    e.currentTarget.style.background = 'var(--color-accent-light)'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!active) {
+                    e.currentTarget.style.background = 'transparent'
+                  }
+                }}
+              >
+                <span style={{ fontSize: 16, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                  {item.icon}
+                </span>
+                {!collapsed && <span>{item.label}</span>}
+              </div>
+            )
+            if (collapsed) {
+              return (
+                <Tooltip key={item.key} title={item.label} placement="right">
+                  {menuItem}
+                </Tooltip>
+              )
+            }
+            return menuItem
+          })}
+        </nav>
 
-      {/* ── Mobile drawer ───────────────────────────────────── */}
-      <Drawer
-        title={
-          <Flex align="center" gap={8}>
-            <div style={{
-              width: 24, height: 24, borderRadius: 5,
-              background: 'var(--ant-color-primary)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <SettingOutlined style={{ color: '#fff', fontSize: 12 }} />
-            </div>
-            <Text strong>Admin Panel</Text>
-          </Flex>
-        }
-        placement="left"
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        width={260}
-        styles={{ body: { padding: 0, paddingTop: 8 } }}
-      >
-        <AdminSidebarMenu onSelect={() => setDrawerOpen(false)} />
-      </Drawer>
-
-      {/* ── Main content area ───────────────────────────────── */}
-      <Layout>
-        <AdminHeader onMobileMenu={() => setDrawerOpen(true)} />
-        <Content
+        {/* Sidebar footer */}
+        <div
           style={{
-            background: 'var(--ant-color-bg-layout)',
-            minHeight: 'calc(100vh - 56px)',
+            padding: '12px 16px',
+            borderTop: '1px solid var(--color-border)',
+            flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: collapsed ? 'center' : 'flex-start',
           }}
         >
+          <span
+            style={{
+              fontFamily: SANS_FONT,
+              fontSize: 11,
+              color: 'var(--color-text-secondary)',
+              opacity: 0.6,
+            }}
+          >
+            {collapsed ? 'v1' : 'v1.0'}
+          </span>
+        </div>
+      </aside>
+
+      {/* Mobile Drawer */}
+      <Drawer
+        title={
+          <span style={{ fontFamily: SERIF_FONT, fontSize: 20, letterSpacing: '0.1em' }}>
+            OIO <span style={{ fontFamily: SANS_FONT, fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-accent)', marginLeft: 8 }}>Admin</span>
+          </span>
+        }
+        placement="left"
+        onClose={() => setMobileDrawerOpen(false)}
+        open={mobileDrawerOpen}
+        width={280}
+        styles={{ body: { padding: 0 } }}
+      >
+        <nav style={{ padding: '8px 0' }}>
+          {menuItems.map((item) => {
+            const active = isActive(item.key)
+            return (
+              <div
+                key={item.key}
+                onClick={() => { navigate(item.key); setMobileDrawerOpen(false) }}
+                style={{
+                  height: 44,
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '0 16px',
+                  margin: '2px 8px',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  fontFamily: SANS_FONT,
+                  fontSize: 13,
+                  fontWeight: active ? 500 : 400,
+                  color: active ? 'var(--color-accent)' : 'var(--color-text-secondary)',
+                  background: active ? 'var(--color-accent-light)' : 'transparent',
+                  borderLeft: active ? '3px solid var(--color-accent)' : '3px solid transparent',
+                  gap: 12,
+                }}
+              >
+                <span style={{ fontSize: 16, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                  {item.icon}
+                </span>
+                <span>{item.label}</span>
+              </div>
+            )
+          })}
+        </nav>
+      </Drawer>
+
+      {/* Header */}
+      <header
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: isMobile ? 0 : sidebarWidth,
+          right: 0,
+          height: HEADER_HEIGHT,
+          background: 'var(--color-bg-card)',
+          borderBottom: '1px solid var(--color-border)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 24px',
+          transition: 'left 200ms ease',
+          zIndex: 99,
+        }}
+      >
+        {/* Left side: collapse toggle (desktop) / hamburger (mobile) + breadcrumb */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          {isMobile ? (
+            <button
+              onClick={() => setMobileDrawerOpen(true)}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 4,
+                display: 'flex',
+                alignItems: 'center',
+                color: 'var(--color-text-secondary)',
+                fontSize: 18,
+              }}
+              aria-label="Open menu"
+            >
+              <MenuOutlined />
+            </button>
+          ) : (
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 4,
+                display: 'flex',
+                alignItems: 'center',
+                color: 'var(--color-text-secondary)',
+                fontSize: 18,
+              }}
+              aria-label="Toggle sidebar"
+            >
+              {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            </button>
+          )}
+          <span
+            style={{
+              fontFamily: SANS_FONT,
+              fontSize: 14,
+              fontWeight: 500,
+              color: 'var(--color-text-primary)',
+            }}
+          >
+            OIO Admin
+          </span>
+        </div>
+
+        {/* Right side: back link, theme, lang, user */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button
+            onClick={() => navigate('/')}
+            style={{
+              background: 'none',
+              border: '1px solid var(--color-border)',
+              borderRadius: 6,
+              cursor: 'pointer',
+              padding: '6px 12px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              fontFamily: SANS_FONT,
+              fontSize: 12,
+              color: 'var(--color-text-secondary)',
+              transition: 'all 150ms ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--color-accent)'
+              e.currentTarget.style.color = 'var(--color-accent)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'var(--color-border)'
+              e.currentTarget.style.color = 'var(--color-text-secondary)'
+            }}
+          >
+            <ArrowLeftOutlined style={{ fontSize: 11 }} />
+            Back to Platform
+          </button>
+
+          <Tooltip title={isDark ? 'Light mode' : 'Dark mode'}>
+            <button
+              onClick={toggleTheme}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 8,
+                display: 'flex',
+                alignItems: 'center',
+                color: 'var(--color-text-secondary)',
+                fontSize: 16,
+                borderRadius: 6,
+                transition: 'color 150ms ease',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-accent)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-secondary)' }}
+            >
+              {isDark ? <SunOutlined /> : <MoonOutlined />}
+            </button>
+          </Tooltip>
+
+          <Tooltip title="Switch language">
+            <button
+              onClick={toggleLanguage}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 8,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+                color: 'var(--color-text-secondary)',
+                fontSize: 12,
+                fontFamily: SANS_FONT,
+                fontWeight: 500,
+                borderRadius: 6,
+                transition: 'color 150ms ease',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-accent)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-secondary)' }}
+            >
+              <GlobalOutlined style={{ fontSize: 14 }} />
+              {i18n.language === 'en' ? 'EN' : 'UK'}
+            </button>
+          </Tooltip>
+
+          <div
+            style={{
+              width: 1,
+              height: 24,
+              background: 'var(--color-border)',
+              margin: '0 4px',
+            }}
+          />
+
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '4px 8px',
+              borderRadius: 8,
+            }}
+          >
+            <Avatar
+              size={32}
+              src={avatarUrl}
+              icon={!avatarUrl ? <UserOutlined /> : undefined}
+              style={{
+                backgroundColor: avatarUrl ? undefined : 'var(--color-accent-light)',
+                color: avatarUrl ? undefined : 'var(--color-accent)',
+              }}
+            />
+            {!collapsed && (
+              <span
+                style={{
+                  fontFamily: SANS_FONT,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: 'var(--color-text-primary)',
+                  maxWidth: 120,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {displayName}
+              </span>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Content area */}
+      <main
+        style={{
+          marginLeft: isMobile ? 0 : sidebarWidth,
+          marginTop: HEADER_HEIGHT,
+          transition: 'margin-left 200ms ease',
+          minHeight: `calc(100vh - ${HEADER_HEIGHT}px)`,
+          background: 'var(--color-bg-primary)',
+        }}
+      >
+        <Content style={{ padding: isMobile ? 16 : 32 }}>
           <Outlet />
         </Content>
-      </Layout>
-
-    </Layout>
-  );
+      </main>
+    </div>
+  )
 }

@@ -1,0 +1,82 @@
+/* ─── OIO Animations ─── */
+
+/* Page enter animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.oio-fade-in {
+  animation: fadeInUp 400ms ease-out both;
+}
+
+.oio-fade-in-delay-1 { animation-delay: 100ms; }
+.oio-fade-in-delay-2 { animation-delay: 200ms; }
+.oio-fade-in-delay-3 { animation-delay: 300ms; }
+
+/* Stagger children */
+.oio-stagger > * {
+  animation: fadeInUp 400ms ease-out both;
+}
+.oio-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.oio-stagger > *:nth-child(2) { animation-delay: 60ms; }
+.oio-stagger > *:nth-child(3) { animation-delay: 120ms; }
+.oio-stagger > *:nth-child(4) { animation-delay: 180ms; }
+.oio-stagger > *:nth-child(5) { animation-delay: 240ms; }
+.oio-stagger > *:nth-child(6) { animation-delay: 300ms; }
+.oio-stagger > *:nth-child(7) { animation-delay: 360ms; }
+.oio-stagger > *:nth-child(8) { animation-delay: 420ms; }
+.oio-stagger > *:nth-child(9) { animation-delay: 480ms; }
+
+/* Smooth number counter for prices */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.oio-count-up {
+  animation: countUp 300ms ease-out;
+}
+
+/* Gentle scale on click */
+.oio-press:active {
+  transform: scale(0.97);
+  transition: transform 100ms ease;
+}
+
+/* Toast slide in */
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.oio-slide-in-right {
+  animation: slideInRight 300ms ease-out;
+}
+
+/* Subtle hover glow for interactive elements */
+.oio-glow:hover {
+  box-shadow: 0 0 0 3px var(--color-accent-light);
+  transition: box-shadow 200ms ease;
+}
+
+/* Smooth page transitions */
+.oio-page-enter {
+  animation: fadeInUp 300ms ease-out;
+}
+
+/* Card appear on scroll */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.oio-appear {
+  animation: fadeIn 500ms ease-out both;
+}
