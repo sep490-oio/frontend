@@ -3,7 +3,7 @@ name: Deploy Frontend test
 # Auto-deploy when code is pushed to master
 on:
   push:
-    branches: [test]
+    branches: [test-refactor]
 
 env:
   IMAGE: ghcr.io/sep490-oio/frontend
