@@ -19,6 +19,7 @@ interface ShipmentActionPanelProps {
 export function ShipmentActionPanel({
   status,
   carrierTrackingNumber,
+  providerCode,
   qrData,
   onCancel,
   onSetTracking,

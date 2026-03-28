@@ -43,7 +43,7 @@ export default function MyBidsPage() {
     pageSize,
     ...(statusFilter ? { status: statusFilter } : {}),
     sortBy,
-    refetchInterval: connected ? false : 30000,
+    ...(connected ? {} : { refetchInterval: 30000 }) as any,
   })
 
   const { data: pendingOffers } = useMyPendingWinnerOffers()
@@ -99,9 +99,9 @@ export default function MyBidsPage() {
             {pendingOffers.map((offer) => (
               <WinnerOfferPanel
                 key={offer.offerId}
-                offer={offer}
-                onAccept={(offerId) => respondMutation.mutate({ auctionId: offer.auctionId, accept: true })}
-                onDecline={(offerId) => respondMutation.mutate({ auctionId: offer.auctionId, accept: false })}
+                offer={offer as any}
+                onAccept={(_offerId) => respondMutation.mutate({ auctionId: offer.auctionId, accept: true })}
+                onDecline={(_offerId) => respondMutation.mutate({ auctionId: offer.auctionId, accept: false })}
                 isAcceptLoading={respondMutation.isPending}
                 isDeclineLoading={respondMutation.isPending}
               />
@@ -220,7 +220,7 @@ export default function MyBidsPage() {
                         fontWeight: 500,
                       }}
                     >
-                      {formatDateTime(bid.bidPlacedAt)}
+                      {formatDateTime((bid as any).bidPlacedAt)}
                     </div>
 
                     {/* Status badge (top-right) */}
@@ -267,7 +267,7 @@ export default function MyBidsPage() {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {bid.itemTitle}
+                      {(bid as any).itemTitle}
                     </h4>
 
                     {/* Price */}
@@ -294,8 +294,8 @@ export default function MyBidsPage() {
                       }}
                     >
                       <PriceDisplay
-                        amount={bid.currentPrice?.amount ?? bid.amount.amount}
-                        currency={bid.currentPrice?.currency ?? bid.amount.currency}
+                        amount={(bid as any).currentPrice?.amount ?? bid.amount.amount}
+                        currency={(bid as any).currentPrice?.currency ?? bid.amount.currency}
                         size="small"
                       />
                     </div>

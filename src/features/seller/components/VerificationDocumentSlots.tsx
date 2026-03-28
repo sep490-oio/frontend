@@ -48,7 +48,7 @@ export function VerificationDocumentSlots({
   documents,
   onUpload,
   onDelete,
-  uploadLoading,
+  uploadLoading: _uploadLoading,
 }: VerificationDocumentSlotsProps) {
   const { t } = useTranslation('seller')
   const slots = SLOT_CONFIGS[verificationType] ?? SLOT_CONFIGS.manual

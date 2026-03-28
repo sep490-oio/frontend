@@ -11,7 +11,6 @@ import {
   App,
   Switch,
   Skeleton,
-  Spin,
   Alert,
   Image,
   Tag,
@@ -102,7 +101,7 @@ export default function CreateAuctionPage() {
   const { id: editId } = useParams<{ id?: string }>()
   const isEditMode = !!editId && !itemId
 
-  const { data: editAuction, isLoading: editLoading } = useAuctionDetail(editId ?? '', { enabled: isEditMode })
+  const { data: editAuction, isLoading: editLoading } = useAuctionDetail(editId ?? '')
 
   const { data: existingItem, isLoading: itemLoading, isError: itemError } = useItemById(itemId ?? '')
 
@@ -182,7 +181,7 @@ export default function CreateAuctionPage() {
       sortOrder: index,
     })),
     verifyByPlatform: requireVerification,
-  })
+  }) as any as CreateAuctionRequest
 
   // Save Draft: create auction as draft, optionally set timing
   const handleSaveDraft = async () => {
@@ -379,7 +378,7 @@ export default function CreateAuctionPage() {
             {existingItemForPreview.images && existingItemForPreview.images.length > 0 && (
               <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
                 <Image.PreviewGroup>
-                  {existingItemForPreview.images.slice(0, 4).map((img: { id: string; url: string; thumbnailUrl?: string }) => (
+                  {existingItemForPreview.images.slice(0, 4).map((img: any) => (
                     <Image
                       key={img.id}
                       src={img.thumbnailUrl ?? img.url}

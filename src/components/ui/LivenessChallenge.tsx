@@ -23,8 +23,8 @@ export function LivenessChallengeOverlay({ videoRef, onComplete, onFail, step }:
   const [countdown, setCountdown] = useState(10)
   const framesRef = useRef<{ blob: Blob; metadata: Partial<CaptureMetadata> }[]>([])
   const burstId = useRef(crypto.randomUUID())
-  const timerRef = useRef<ReturnType<typeof setInterval>>()
-  const captureRef = useRef<ReturnType<typeof setInterval>>()
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const captureRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const captureFrame = useCallback(() => {
     const video = videoRef.current
@@ -69,7 +69,7 @@ export function LivenessChallengeOverlay({ videoRef, onComplete, onFail, step }:
         frameCount++
       }
       if (frameCount >= 5) {
-        clearInterval(captureRef.current)
+        if (captureRef.current) clearInterval(captureRef.current)
         setStatus('done')
         onComplete(framesRef.current)
       }
@@ -81,7 +81,7 @@ export function LivenessChallengeOverlay({ videoRef, onComplete, onFail, step }:
     timerRef.current = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          clearInterval(timerRef.current)
+          if (timerRef.current) clearInterval(timerRef.current)
           if (status === 'waiting') {
             // Timeout — auto-capture what we have
             if (attempts < 2) {
@@ -98,8 +98,8 @@ export function LivenessChallengeOverlay({ videoRef, onComplete, onFail, step }:
     }, 1000)
 
     return () => {
-      clearInterval(timerRef.current)
-      clearInterval(captureRef.current)
+      if (timerRef.current) clearInterval(timerRef.current)
+      if (captureRef.current) clearInterval(captureRef.current)
     }
   }, [attempts]) // eslint-disable-line react-hooks/exhaustive-deps
 

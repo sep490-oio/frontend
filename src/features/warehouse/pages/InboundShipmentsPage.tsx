@@ -14,11 +14,11 @@ import type { ColumnsType } from 'antd/es/table'
 
 const STATUS_TABS = [
   { key: 'all', label: 'all' },
-  { key: ShipmentStatus.Pending, label: 'pending' },
-  { key: ShipmentStatus.Confirmed, label: 'confirmed' },
+  { key: ShipmentStatus.AwaitingPickup, label: 'pending' },
   { key: ShipmentStatus.InTransit, label: 'inTransit' },
   { key: ShipmentStatus.Arrived, label: 'arrived' },
-  { key: ShipmentStatus.Stored, label: 'stored' },
+  { key: ShipmentStatus.Inspected, label: 'inspected' },
+  { key: ShipmentStatus.Completed, label: 'stored' },
   { key: ShipmentStatus.Cancelled, label: 'cancelled' },
 ] as const
 
@@ -111,7 +111,7 @@ export default function InboundShipmentsPage() {
               onClick={() => navigate(`${prefix}/warehouse/inbound/${record.id}`)}
             />
           </Tooltip>
-          {(record.status === ShipmentStatus.Pending || record.status === ShipmentStatus.Confirmed) && (
+          {(record.status === ShipmentStatus.AwaitingPickup) && (
             <Tooltip title={tc('action.cancel', 'Cancel')}>
               <Button
                 type="text"

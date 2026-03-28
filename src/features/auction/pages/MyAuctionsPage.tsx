@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, Space, Modal, Flex, Tooltip, Input, message, DatePicker, Switch, Card, List, Tag } from 'antd'
+import { Button, Space, Modal, Flex, Tooltip, Input, message, DatePicker, Switch, Card, List } from 'antd'
 import {
   PlusOutlined,
   EditOutlined,
@@ -256,7 +256,7 @@ export default function MyAuctionsPage() {
               />
             </Tooltip>
             <Tooltip title={
-              (record as Record<string, unknown>).itemStatus && (record as Record<string, unknown>).itemStatus !== 'approved'
+              ((record as any)).itemStatus && ((record as any)).itemStatus !== 'approved'
                 ? t('itemMustBeApproved', 'Item must be approved before submitting auction')
                 : tc('action.submit', 'Submit')
             }>
@@ -265,7 +265,7 @@ export default function MyAuctionsPage() {
                 size="small"
                 icon={<SendOutlined />}
                 loading={submitAuction.isPending}
-                disabled={!!(record as Record<string, unknown>).itemStatus && (record as Record<string, unknown>).itemStatus !== 'approved'}
+                disabled={!!((record as any)).itemStatus && ((record as any)).itemStatus !== 'approved'}
                 onClick={() => handleSubmit(record.id)}
               />
             </Tooltip>

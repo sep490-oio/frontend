@@ -195,14 +195,14 @@ export default function OrderDetailPage() {
       <WarrantyNotice
         orderStatus={order.status}
         deliveredAt={order.deliveredAt}
-        confirmedAt={order.confirmedAt}
+        confirmedAt={(order as any).confirmedAt}
       />
 
       {/* Seller Rating */}
       {isBuyer &&
         order.status === OrderStatus.Completed &&
-        order.confirmedAt &&
-        !order.review &&
+        (order as any).confirmedAt &&
+        !(order as any).review &&
         !reviewSubmitted && (
           <Card
             title={t('rateThisSeller', 'Rate this Seller')}

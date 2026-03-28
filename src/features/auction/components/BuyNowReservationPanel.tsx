@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next'
 import { CountdownTimer } from '@/components/ui/CountdownTimer'
 import { PriceDisplay } from '@/components/ui/PriceDisplay'
 import { BuyNowReservationStatus } from '@/types/enums'
-import { formatCurrency } from '@/utils/format'
+import { formatCurrency as _formatCurrency } from '@/utils/format'
 
 const { Text, Title } = Typography
 

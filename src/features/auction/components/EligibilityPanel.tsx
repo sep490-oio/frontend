@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { CountdownTimer } from '@/components/ui/CountdownTimer'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatCurrency } from '@/utils/format'
-import { ParticipantQualificationStatus, DepositStatus } from '@/types/enums'
+import { ParticipantQualificationStatus, DepositStatus as _DepositStatus } from '@/types/enums'
 
 interface EligibilityPanelProps {
   qualificationStatus?: string

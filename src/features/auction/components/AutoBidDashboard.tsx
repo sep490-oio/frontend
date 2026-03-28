@@ -1,4 +1,4 @@
-import { Typography, Progress, Button, Space, Flex, Popconfirm, Alert } from 'antd'
+import { Typography, Progress, Button, Flex, Popconfirm, Alert } from 'antd'
 import {
   RobotOutlined,
   PauseCircleOutlined,

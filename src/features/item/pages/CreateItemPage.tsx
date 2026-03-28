@@ -50,7 +50,7 @@ export default function CreateItemPage() {
 
       await createItem.mutateAsync({
         ...values,
-        images,
+        images: images as any,
       })
       message.success(t('createSuccess', 'Item created successfully'))
       navigate(`${prefix}/items`)

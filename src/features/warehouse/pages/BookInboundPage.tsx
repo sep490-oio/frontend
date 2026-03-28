@@ -12,6 +12,11 @@ const SHIPMENT_MODE_OPTIONS = [
   { label: 'External Carrier', value: 'external_carrier' },
 ]
 
+const PROVIDER_OPTIONS = [
+  { label: 'GHN (Giao Hang Nhanh)', value: 'ghn' },
+  { label: 'External Carrier', value: 'external' },
+]
+
 export default function BookInboundPage() {
   const { t } = useTranslation('warehouse')
   const { t: tc } = useTranslation('common')
@@ -52,8 +57,8 @@ export default function BookInboundPage() {
       const result = await bookInbound.mutateAsync({
         itemId: values.itemId,
         itemName: selectedItem?.title ?? 'Item',
-        itemPrice: selectedItem?.price ?? 0,
-        insuranceValue: values.insuranceValue ?? selectedItem?.price ?? 0,
+        itemPrice: (selectedItem as any)?.price ?? 0,
+        insuranceValue: values.insuranceValue ?? (selectedItem as any)?.price ?? 0,
         providerCode: isExternal ? 'external' : 'ghn',
         shipmentMode: values.shipmentMode,
         externalCarrierName: isExternal ? values.externalCarrierName : undefined,

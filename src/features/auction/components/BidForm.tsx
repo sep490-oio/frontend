@@ -3,7 +3,7 @@ import { Typography, Button, InputNumber, Popconfirm } from 'antd'
 import { RobotOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
-import { PriceDisplay } from '@/components/ui/PriceDisplay'
+import { PriceDisplay as _PriceDisplay } from '@/components/ui/PriceDisplay'
 import { AutoBidDashboard } from '@/features/auction/components/AutoBidDashboard'
 import { PriceHistoryChart } from '@/features/auction/components/PriceHistoryChart'
 import { formatCurrency } from '@/utils/format'
@@ -167,7 +167,7 @@ export default function BidForm({
       </label>
       <InputNumber
         id="bid-amount-input"
-        ref={inputRef}
+        ref={inputRef as any}
         style={{
           width: '100%',
           height: 52,

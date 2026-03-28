@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { CountdownTimer } from '@/components/ui/CountdownTimer'
 import { formatCurrency, formatDateTime } from '@/utils/format'
-import { EscrowStatus, OrderStatus } from '@/types/enums'
+import { EscrowStatus, OrderStatus as _OrderStatus } from '@/types/enums'
 import dayjs from 'dayjs'
 
 export interface EscrowTimelineProps {

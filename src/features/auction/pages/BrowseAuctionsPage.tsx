@@ -148,7 +148,7 @@ export default function BrowseAuctionsPage() {
               showSizeChanger={!isMobile}
               showTotal={isMobile ? undefined : (total) => tc('pagination.total', { total })}
               onChange={(p, ps) => setFilters((prev) => ({ ...prev, pageNumber: p, pageSize: ps }))}
-              size={isMobile ? 'small' : 'default'}
+              size={isMobile ? 'small' : undefined}
             />
           </Flex>
         </>

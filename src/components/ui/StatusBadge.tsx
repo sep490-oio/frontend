@@ -94,9 +94,6 @@ const STATUS_STYLES: Record<string, StatusBadgeStyle> = {
   accepted: { bg: 'rgba(74,124,89,0.1)', color: 'var(--color-success)' },
   declined: { bg: 'rgba(196,81,61,0.08)', color: 'var(--color-danger)' },
 
-  // Verification states
-  under_review: { bg: 'rgba(139,115,85,0.1)', color: 'var(--color-accent)' },
-
   // Special
   auto: { bg: 'rgba(22,119,255,0.08)', color: '#1677ff' },
   regular: { bg: 'var(--color-bg-surface)', color: 'var(--color-text-secondary)' },

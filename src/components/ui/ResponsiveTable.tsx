@@ -4,7 +4,7 @@ import { DownOutlined, UpOutlined } from '@ant-design/icons'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import type { TableProps, ColumnType } from 'antd/es/table'
 
-interface ResponsiveTableProps<T extends Record<string, unknown>> extends TableProps<T> {
+interface ResponsiveTableProps<T extends Record<string, any>> extends TableProps<T> {
   /** Mobile display mode: "card" for complex data, "list" for simple data */
   mobileMode?: 'card' | 'list'
   /** Custom mobile row renderer — overrides auto-generated card/list layout */
@@ -13,7 +13,7 @@ interface ResponsiveTableProps<T extends Record<string, unknown>> extends TableP
   mobileColumns?: string[]
 }
 
-export function ResponsiveTable<T extends Record<string, unknown>>({
+export function ResponsiveTable<T extends Record<string, any>>({
   mobileMode = 'card',
   mobileRender,
   mobileColumns,
@@ -92,7 +92,7 @@ interface MobileCardViewProps<T> {
   rowKey: TableProps<T>['rowKey']
 }
 
-function MobileCardView<T extends Record<string, unknown>>({
+function MobileCardView<T extends Record<string, any>>({
   data,
   columns,
   mobileRender,
@@ -118,7 +118,7 @@ function MobileCardView<T extends Record<string, unknown>>({
             ) : (
               <Flex vertical gap={6}>
                 {columns.map((col) => {
-                  const value = col.dataIndex ? (record as Record<string, unknown>)[String(col.dataIndex)] : undefined
+                  const value = col.dataIndex ? (record as Record<string, any>)[String(col.dataIndex)] : undefined
                   const rendered = col.render
                     ? col.render(value, record as T, index)
                     : value
@@ -163,7 +163,7 @@ interface MobileListViewProps<T> {
   rowKey: TableProps<T>['rowKey']
 }
 
-function MobileListView<T extends Record<string, unknown>>({
+function MobileListView<T extends Record<string, any>>({
   data,
   columns,
   allColumns,
@@ -212,7 +212,7 @@ function MobileListView<T extends Record<string, unknown>>({
                 <Flex justify="space-between" align="center">
                   {primary.map((col) => {
                     const value = col.dataIndex
-                      ? (record as Record<string, unknown>)[String(col.dataIndex)]
+                      ? (record as Record<string, any>)[String(col.dataIndex)]
                       : undefined
                     const rendered = col.render
                       ? col.render(value, record, index)
@@ -231,7 +231,7 @@ function MobileListView<T extends Record<string, unknown>>({
                   <Flex vertical gap={4} style={{ paddingTop: 8, borderTop: '1px solid var(--color-border)' }}>
                     {detail.map((col) => {
                       const value = col.dataIndex
-                        ? (record as Record<string, unknown>)[String(col.dataIndex)]
+                        ? (record as Record<string, any>)[String(col.dataIndex)]
                         : undefined
                       const rendered = col.render
                         ? col.render(value, record, index)
@@ -270,12 +270,12 @@ function MobileListView<T extends Record<string, unknown>>({
 
 // --- Helpers ---
 
-function getRowKey<T extends Record<string, unknown>>(
+function getRowKey<T extends Record<string, any>>(
   record: T,
   index: number,
   rowKey: TableProps<T>['rowKey'],
 ): string {
   if (typeof rowKey === 'function') return String(rowKey(record))
   if (typeof rowKey === 'string') return String(record[rowKey] ?? index)
-  return String((record as Record<string, unknown>).id ?? (record as Record<string, unknown>).key ?? index)
+  return String((record as Record<string, any>).id ?? (record as Record<string, any>).key ?? index)
 }

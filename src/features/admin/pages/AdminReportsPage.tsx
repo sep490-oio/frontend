@@ -157,7 +157,7 @@ export default function AdminReportsPage() {
       <ResponsiveTable<ReportDto>
         rowKey="id"
         columns={columns}
-        dataSource={data ?? []}
+        dataSource={(data as any)?.items ?? data ?? []}
         loading={isLoading}
         mobileMode="list"
         pagination={{ pageSize: 20 }}

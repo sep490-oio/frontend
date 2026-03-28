@@ -123,7 +123,7 @@ export default function BrowseSellersPage() {
                 showSizeChanger={!isMobile}
                 showTotal={isMobile ? undefined : (total) => t('pagination.total', { total })}
                 onChange={(p, ps) => { setPage(p); setPageSize(ps) }}
-                size={isMobile ? 'small' : 'default'}
+                size={isMobile ? 'small' : undefined}
               />
             </Flex>
           )}

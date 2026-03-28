@@ -1,5 +1,5 @@
 import apiClient, { idempotentPost } from '@/lib/axios'
-import { queryKeys, queryClient } from '@/lib/queryClient'
+import { queryKeys, queryClient as _queryClient } from '@/lib/queryClient'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type {
   AuctionListItemDto,

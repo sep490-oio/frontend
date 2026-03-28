@@ -22,6 +22,7 @@ import { useMyItems } from '@/features/item/api'
 import { useWallet } from '@/features/payment/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatCurrency, formatDateTime } from '@/utils/format'
+import { SellerProfileStatus } from '@/types/enums'
 import type { AuctionListItemDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
 
@@ -441,7 +442,7 @@ export default function SellerDashboardPage() {
             >
               {profile.storeName}
             </h1>
-            {profile.status === 'approved' && (
+            {profile.status === SellerProfileStatus.Verified && (
               <span
                 style={{
                   display: 'inline-flex',
@@ -462,7 +463,7 @@ export default function SellerDashboardPage() {
                 {t('verified', 'Da xac minh')}
               </span>
             )}
-            {profile.status !== 'approved' && (
+            {profile.status !== SellerProfileStatus.Verified && (
               <StatusBadge status={profile.status} />
             )}
           </div>

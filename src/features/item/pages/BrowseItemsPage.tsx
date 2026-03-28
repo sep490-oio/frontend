@@ -128,7 +128,7 @@ export default function BrowseItemsPage() {
                 showSizeChanger={!isMobile}
                 showTotal={isMobile ? undefined : (total) => tc('pagination.total', { total })}
                 onChange={(p, ps) => { setPage(p); setPageSize(ps) }}
-                size={isMobile ? 'small' : 'default'}
+                size={isMobile ? 'small' : undefined}
               />
             </Flex>
           )}

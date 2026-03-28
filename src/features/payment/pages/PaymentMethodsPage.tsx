@@ -49,14 +49,6 @@ const TYPE_ICONS: Record<string, React.ReactNode> = {
   [PaymentMethodType.VnPay]: <CreditCardOutlined style={{ fontSize: 24 }} />,
 }
 
-const TYPE_LABELS: Record<string, string> = {
-  [PaymentMethodType.CreditCard]: 'Credit Card',
-  [PaymentMethodType.DebitCard]: 'Debit Card',
-  [PaymentMethodType.BankAccount]: 'Bank Account',
-  [PaymentMethodType.EWallet]: 'E-Wallet',
-  [PaymentMethodType.VnPay]: 'VNPay',
-}
-
 export default function PaymentMethodsPage() {
   const { t } = useTranslation('payment')
   const { isMobile } = useBreakpoint()

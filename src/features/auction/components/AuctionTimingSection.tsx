@@ -32,13 +32,6 @@ function disabledDate(current: Dayjs): boolean {
   return current && current.isBefore(dayjs().startOf('day'))
 }
 
-function makeAllOrNoneValidator(t: (key: string, fallback: string) => string) {
-  return (_: unknown, __: unknown, callback: (error?: string) => void) => {
-    // This is handled at form level; individual fields just pass through
-    callback()
-  }
-}
-
 export function AuctionTimingSection({ form }: AuctionTimingSectionProps) {
   const { t } = useTranslation('auction')
 

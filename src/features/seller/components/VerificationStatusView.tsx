@@ -1,11 +1,8 @@
-import { Button, Card, Result, Timeline, Typography, Descriptions, Divider, List, Flex, Space } from 'antd'
+import { Button, Card, Result, Timeline, Typography, Flex, Space } from 'antd'
 import {
   SafetyCertificateOutlined,
-  CheckCircleOutlined,
   ClockCircleOutlined,
   SearchOutlined,
-  CloseCircleOutlined,
-  FileOutlined,
   IdcardOutlined,
   CameraOutlined,
 } from '@ant-design/icons'

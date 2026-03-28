@@ -11,10 +11,10 @@ import type { ColumnsType } from 'antd/es/table'
 
 const STATUS_TABS = [
   { key: 'all', label: 'all' },
-  { key: ShipmentStatus.Pending, label: 'pending' },
-  { key: ShipmentStatus.Confirmed, label: 'confirmed' },
-  { key: ShipmentStatus.Shipped, label: 'shipped' },
-  { key: ShipmentStatus.Delivered, label: 'delivered' },
+  { key: ShipmentStatus.AwaitingPickup, label: 'pending' },
+  { key: ShipmentStatus.InTransit, label: 'inTransit' },
+  { key: ShipmentStatus.Arrived, label: 'arrived' },
+  { key: ShipmentStatus.Completed, label: 'completed' },
   { key: ShipmentStatus.Cancelled, label: 'cancelled' },
 ] as const
 
