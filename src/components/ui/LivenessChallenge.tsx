@@ -29,7 +29,7 @@ export function LivenessChallengeOverlay({ videoRef, onComplete, onFail, step }:
 
   const captureFrame = useCallback(() => {
     const video = videoRef.current
-    if (!video) return null
+    if (!video || !video.videoWidth || !video.videoHeight) return null // Guard: stream not ready
 
     const canvas = document.createElement('canvas')
     canvas.width = video.videoWidth
@@ -63,11 +63,20 @@ export function LivenessChallengeOverlay({ videoRef, onComplete, onFail, step }:
     framesRef.current = []
     let frameCount = 0
 
+    let retries = 0
     captureRef.current = setInterval(() => {
       const frame = captureFrame()
       if (frame) {
         framesRef.current.push(frame)
         frameCount++
+      } else {
+        retries++
+        if (retries > 20) {
+          // Video stream never became ready — abort gracefully
+          if (captureRef.current) clearInterval(captureRef.current)
+          onFail()
+          return
+        }
       }
       if (frameCount >= 5) {
         if (captureRef.current) clearInterval(captureRef.current)

@@ -52,7 +52,7 @@ export function SecureCaptureUploader({
   const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null)
   const [capturedMeta, setCapturedMeta] = useState<Partial<CaptureMetadata> | null>(null)
   const [qualityIssues, setQualityIssues] = useState<string[]>([])
-  const [showLiveness, setShowLiveness] = useState(step === 'selfie')
+  const [showLiveness, setShowLiveness] = useState(false) // Don't auto-show — wait until camera is active
   const [cameraStarted, setCameraStarted] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
@@ -61,6 +61,10 @@ export function SecureCaptureUploader({
   const handleStartCamera = () => {
     startCamera({ facingMode })
     setCameraStarted(true)
+    // Trigger liveness challenge for selfie after a short delay for camera to initialize
+    if (step === 'selfie') {
+      setTimeout(() => setShowLiveness(true), 1500)
+    }
   }
 
   const handleCapture = () => {
@@ -188,7 +192,13 @@ export function SecureCaptureUploader({
         autoPlay
         playsInline
         muted
-        style={{ width: '100%', maxHeight: 400, objectFit: 'cover', display: 'block' }}
+        style={{
+          width: '100%',
+          maxHeight: step === 'selfie' ? '70vh' : 400,
+          minHeight: step === 'selfie' ? 400 : undefined,
+          objectFit: 'cover',
+          display: 'block',
+        }}
       />
 
       {/* Overlay guide */}
