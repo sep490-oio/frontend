@@ -1,87 +1,103 @@
-/**
- * Admin & Staff domain types — for staff portals and admin dashboard.
- *
- * These types are minimal placeholders for now. They will be expanded
- * when we reach the staff portal implementation phase (weeks 4-5).
- *
- * Included early because some types (like PlatformSetting) are
- * referenced by other domains (e.g., auction deposit percentage
- * comes from platform settings).
- */
+import type { AlertSeverity, AlertStatus } from './enums'
 
-import type {
-  AuditAction,
-  PromotionType,
-  PromotionStatus,
-} from './enums';
-
-// ─── Platform Settings ──────────────────────────────────────────────
-
-/**
- * Admin-configurable system parameter.
- * All business rules (deposit %, commission %, return window, etc.)
- * are stored as platform settings so Admin can adjust them without
- * code changes.
- *
- * Categories: 'auction', 'payment', 'shipping', 'verification', 'promotion'
- */
-export interface PlatformSetting {
-  id: string;
-  key: string;
-  value: string;
-  /** How to interpret the value: 'string', 'integer', 'decimal', 'boolean', 'json' */
-  dataType: string;
-  category: string;
-  description: string | null;
-  isActive: boolean;
-  modifiedBy: string | null;
-  createdAt: string;
-  modifiedAt: string;
+export interface RoleDto {
+  name: string
+  permissions: string[]
 }
 
-// ─── Audit Log ──────────────────────────────────────────────────────
+// Permissions endpoint returns PagedList<string>, not objects
+export type PermissionName = string
 
-/**
- * Append-only audit trail. Every significant action in the system
- * is logged here for accountability and compliance.
- */
-export interface AuditLog {
-  id: string;
-  actorUserId: string | null;
-  actorDisplayName: string | null;
-  actorEmail: string | null;
-  targetUserId: string | null;
-  targetDisplayName: string | null;
-  targetEmail: string | null;
-  action: AuditAction;
-  entityType: string | null;
-  entityId: string | null;
-  ip: string | null;
-  metadata: Record<string, unknown> | null;
-  createdAt: string;
+export interface MonitoringAlertDto {
+  id: string
+  alertType: string
+  severity: AlertSeverity
+  status: AlertStatus
+  payload: string
+  entityType: string
+  entityId: string
+  notes?: string
+  acknowledgedBy?: string
+  acknowledgedAt?: string
+  resolvedBy?: string
+  resolvedAt?: string
+  createdAt: string
 }
 
-// ─── Promotion ──────────────────────────────────────────────────────
+export interface UserRiskFlagDto {
+  id: string
+  userId: string
+  severity: AlertSeverity
+  reason: string
+  createdAt: string
+}
 
-/**
- * Seller-purchased visibility promotion.
- * Sellers can buy featured placement for their auctions.
- * Marketing staff manages campaigns and reviews analytics.
- */
-export interface Promotion {
-  id: string;
-  auctionId: string;
-  sellerId: string;
-  type: PromotionType;
-  status: PromotionStatus;
-  amountPaid: number;
-  currency: string;
-  startDate: string;
-  endDate: string;
-  /** Number of times the promoted auction was shown */
-  impressions: number;
-  /** Number of times users clicked on the promotion */
-  clicks: number;
-  createdAt: string;
-  modifiedAt: string;
+export interface AuctionEmergencyDto {
+  id: string
+  auctionId: string
+  reason: string
+  triggeredAt: string
+  resolvedAt?: string
+  resolution?: string
+}
+
+export interface ReviewQueueItemDto {
+  id: string
+  itemId: string
+  title: string
+  sellerId: string
+  sellerName: string
+  submittedAt: string
+  assignedTo?: string
+  status: string
+}
+
+export interface ItemReviewDto {
+  id: string
+  reviewerId: string
+  action: string
+  reason?: string
+  createdAt: string
+}
+
+export interface UserListItemDto {
+  id: string
+  userName: string
+  email: string
+  status: string
+  roles: string[]
+  createdAt: string
+}
+
+export interface PaymentTransactionDto {
+  id: string
+  type: string
+  amount: number
+  currency: string
+  status: string
+  orderId?: string
+  userId?: string
+  createdAt: string
+}
+
+export interface TermsDocumentDto {
+  id: string
+  type: string
+  version: number
+  isActive: boolean
+  publishedAt?: string
+  createdAt: string
+  contentUrl?: string
+  fileName?: string
+  fileSize?: number
+  format?: string
+  storagePublicId?: string
+  storageFolder?: string
+}
+
+export interface TermsAcceptanceDto {
+  documentId: string
+  userId: string
+  acceptedAt: string
+  version: string
 }

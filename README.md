@@ -1,6 +1,6 @@
 # Bid System v1.0 — Frontend
 
-Responsive web frontend for the Competitive Bidding E-Commerce Platform. Built with **React 18**, **TypeScript**, **Vite**, and **Ant Design 6**.
+Responsive web frontend for the Competitive Bidding E-Commerce Platform. Built with **React 19**, **TypeScript**, **Vite 8**, and **Ant Design 6**.
 
 **Deployed:** `http://14.225.222.182` — CI/CD via Docker + ghcr.io (push to `master` triggers deploy).
 
@@ -8,110 +8,218 @@ Responsive web frontend for the Competitive Bidding E-Commerce Platform. Built w
 
 ```bash
 npm install
-npm run dev          # http://localhost:3000 with HMR
-npm run build        # TypeScript check + production build
-npm run lint         # ESLint
-npm run preview      # Preview production build
+npm run dev        # Dev server → http://localhost:5173
+npm run build      # TypeScript check + production build
+npm run lint       # Code quality check
+npm run preview    # Preview production build
 ```
-
-**Requires:** Node.js 18+
 
 ## Implemented Pages
 
-| Route | Page | Description |
-|-------|------|-------------|
-| `/` | Home | Landing page |
-| `/browse` | Browse | Auction catalog with filters, search, AuctionCard grid |
-| `/auction/:id` | Auction Detail | Image gallery, bid history, real-time bidding (SignalR) |
-| `/dashboard` | Dashboard | Stats, active bids, recent results, wallet summary |
-| `/wallet` | Wallet | Balance overview, transaction history, add/withdraw modals |
-| `/my-bids` | My Bids | 3 tabs (Active/Ended/Watching), table/card toggle, filters |
-| `/seller/:id` | Seller Profile | Seller info, stats, listings, reviews with ratings |
-| `/seller/create-item` | Create Item | 3-step wizard: upload images (Cloudinary) → fill details → submit |
-| `/orders` | Orders | 3 tabs (Active/Completed/Cancelled), table/card toggle |
-| `/orders/:id` | Order Detail | Timeline, item card, tracking, payment info, actions |
-| `/profile` | Profile | 4 tabs: info, addresses, security (password/2FA/phone), sessions |
-| `/login` | Login | JWT authentication |
-| `/register` | Register | User registration |
-| `/confirm-email` | Confirm Email | Email verification callback |
+### Public
+| Route | Description |
+|-------|-------------|
+| `/` | Auction list (home) |
+| `/auctions` | Browse all auctions |
+| `/auctions/:id` | Auction detail |
+| `/items` | Browse all items |
+| `/items/:id` | Item detail |
+| `/sellers` | Browse sellers |
+| `/sellers/:id` | Public seller profile |
+| `/about` | About page |
+| `/categories` | Categories |
+| `/help` | Help center |
+
+### Auth
+| Route | Description |
+|-------|-------------|
+| `/login` | Login |
+| `/register` | Registration |
+| `/2fa` | Two-factor authentication |
+| `/forgot-password` | Forgot password |
+| `/reset-password` | Reset password |
+| `/confirm-email` | Email confirmation |
+
+### User (`/me/*`)
+| Route | Description |
+|-------|-------------|
+| `/me/dashboard` | User dashboard |
+| `/me/profile` | Profile settings |
+| `/me/addresses` | Address book |
+| `/me/security` | Security settings |
+| `/me/notifications` | Notifications |
+| `/me/notifications/settings` | Notification preferences |
+| `/me/terms` | Terms acceptance |
+| `/me/verification` | Identity verification (CCCD) |
+| `/me/items` | My items |
+| `/me/items/create` | Create item |
+| `/me/items/:id/edit` | Edit item |
+| `/me/auctions` | My auctions |
+| `/me/auctions/create` | Create auction |
+| `/me/auctions/:id/edit` | Edit auction |
+| `/me/watchlist` | Watchlist |
+| `/me/bids` | My bids |
+| `/me/orders` | My orders |
+| `/me/orders/:id` | Order detail |
+| `/me/orders/:id/return` | Order return |
+| `/me/wallet` | Wallet |
+| `/me/wallet/withdraw` | Withdraw |
+| `/me/payment-methods` | Payment methods |
+| `/me/checkout/:orderId` | Checkout |
+| `/me/disputes` | Disputes |
+| `/me/disputes/:id` | Dispute detail |
+
+### Seller (`/seller/*`)
+| Route | Description |
+|-------|-------------|
+| `/seller/dashboard` | Seller dashboard |
+| `/seller/items` | Manage items |
+| `/seller/items/create` | Create item |
+| `/seller/items/:id/edit` | Edit item |
+| `/seller/auctions` | Manage auctions |
+| `/seller/auctions/create` | Create auction |
+| `/seller/auctions/:id/edit` | Edit auction |
+| `/seller/bids` | Bids received |
+| `/seller/orders` | Seller orders |
+| `/seller/orders/:id` | Order detail |
+| `/seller/orders/:id/return` | Order return |
+| `/seller/wallet` | Seller wallet |
+| `/seller/wallet/withdraw` | Withdraw |
+| `/seller/warehouse/inbound` | Inbound shipments |
+| `/seller/warehouse/inbound/book` | Book inbound |
+| `/seller/warehouse/inbound/:id` | Inbound detail |
+| `/seller/warehouse/outbound` | Outbound shipments |
+| `/seller/warehouse/items` | Warehouse inventory |
+| `/seller/profile` | Seller profile |
+| `/seller/verification` | Seller verification |
+| `/seller/register` | Seller registration |
+
+### Admin (`/admin/*`)
+| Route | Description |
+|-------|-------------|
+| `/admin/dashboard` | Admin dashboard |
+| `/admin/users` | User management |
+| `/admin/users/:id` | User detail |
+| `/admin/verifications` | Identity verifications |
+| `/admin/verifications/:id` | Verification detail |
+| `/admin/sellers` | Seller management |
+| `/admin/items/review` | Item review queue |
+| `/admin/items/:id` | Item detail |
+| `/admin/auctions/:id` | Auction detail |
+| `/admin/reports` | Reports |
+| `/admin/monitoring` | System monitoring |
+| `/admin/disputes` | Dispute management |
+| `/admin/payments` | Payment management |
+| `/admin/terms` | Terms management |
+| `/admin/roles` | Role management |
+
+### Inspector (`/inspector/*`)
+| Route | Description |
+|-------|-------------|
+| `/inspector/dashboard` | Inspector dashboard |
+| `/inspector/queue` | Inspection queue |
+| `/inspector/inspections/:shipmentId` | Inspection detail |
+| `/inspector/reviews` | Reviews |
+| `/inspector/storage` | Storage management |
 
 ## Tech Stack
 
-| Category | Technology |
-|----------|-----------|
-| UI | Ant Design 6.3 (Vietnamese locale), @ant-design/icons 6 |
-| State | Redux Toolkit 2 (auth) + TanStack Query 5 (server data) |
-| Real-time | @microsoft/signalr 10 (auction hub — 9 events, 6 actions) |
-| Routing | React Router v7 |
-| Forms | React Hook Form 7 + Zod 4 |
-| HTTP | Axios (with silent JWT refresh + queue pattern) |
-| i18n | react-i18next (Vietnamese primary, English secondary, ~660 keys) |
-| Dates | dayjs |
-| Media | Cloudinary signed upload (3-step: signature → upload → confirm) |
+| Technology | Version | Purpose |
+|-----------|---------|---------|
+| React | 19.2.4 | UI library — functional components, hooks |
+| TypeScript | ~5.9.3 | Type safety — all code in TS |
+| Vite | 8.0.1 | Build tool — fast dev server, optimized builds |
+| Ant Design | 6.3.3 | UI component library |
+| @ant-design/icons | 6.1.0 | Icon set |
+| Redux Toolkit | 2.11.2 | Global state management |
+| TanStack Query | 5.94.5 | Server state, caching, data fetching |
+| React Router | 7.13.1 | Client-side routing |
+| React Hook Form | 7.71.2 | Form state management |
+| Zod | 4.3.6 | Schema validation |
+| Axios | 1.13.6 | HTTP client |
+| @microsoft/signalr | 10.0.0 | Real-time WebSocket communication |
+| i18next | 25.10.2 | Internationalization framework |
+| react-i18next | 16.6.0 | React bindings for i18next |
+| dayjs | 1.11.20 | Date/time utilities |
 
 ## Project Structure
 
+Feature-based architecture — each domain module owns its API, pages, components, hooks, and utilities.
+
 ```
 src/
+├── app/               # App shell: App.tsx, router.tsx, providers.tsx, store.ts, i18n.ts
+├── assets/            # Static assets (images, fonts)
 ├── components/
-│   ├── auction/       # AuctionCard, BiddingPanel, BidForm, AutoBidForm, SealedBidForm,
-│   │                  # ImageGallery, BidHistoryList, QualificationSection, BuyNowConfirmModal,
-│   │                  # AuctionResult, WatchButton (11 components)
-│   ├── dashboard/     # StatsRow, WalletSummaryCard, MyActiveBidsTable, etc. (5)
-│   ├── wallet/        # BalanceOverview, TransactionHistory, AddFundsModal, etc. (4)
-│   ├── mybids/        # ActiveBidsList, EndedBidsList, WatchingList (3)
-│   ├── seller/        # SellerInfoCard, SellerStats, SellerListings, SellerReviewsList (4)
-│   ├── orders/        # OrderTimeline, OrderItemCard, OrderActions, OrdersList, etc. (8)
-│   ├── profile/       # ProfileInfoTab, AddressesTab, SecurityTab, SessionsTab, etc. (9)
-│   ├── layout/        # AppLayout, PublicLayout, AppHeader, Sidebar (5)
-│   └── common/        # ErrorBoundary (2)
-├── pages/
-│   ├── public/        # HomePage, BrowsePage, AuctionDetailPage, Login, Register, etc.
-│   ├── dashboard/     # DashboardPage
-│   ├── wallet/        # WalletPage
-│   ├── mybids/        # MyBidsPage
-│   ├── seller/        # SellerProfilePage, CreateItemPage
-│   ├── orders/        # OrdersPage, OrderDetailPage
-│   └── profile/       # ProfilePage
-├── hooks/             # useAuctions, useBidding, useAuctionHub, useItems, useWallet,
-│                      # useMyBids, useSeller, useOrders, useUser, useDashboard,
-│                      # useBreakpoint, useDebouncedValue (12 hooks)
-├── services/          # api.ts, authService, auctionService, auctionHubService,
-│                      # mediaService, walletService, userService, dashboardService,
-│                      # myBidsService, sellerService, orderService, i18n (12 services)
-├── types/             # enums, user, item, auction, wallet, dashboard, order,
-│                      # notification, admin, signalr + index barrel (11 files)
-├── locales/           # vi/common.json, en/common.json
-├── routes/            # React Router config
-├── store/             # Redux slices (auth)
-└── utils/             # formatVND, formatCountdown, STATUS_KEYS, etc.
+│   ├── common/        # Shared utility components
+│   ├── guards/        # AuthGuard, GuestGuard, SellerGuard, RoleGuard, InspectorGuard
+│   ├── layout/        # AppLayout, AuthLayout, AdminLayout, InspectorLayout, SellerLayout
+│   └── ui/            # 15 reusable UI components (AuctionCard, CountdownTimer,
+│                      # EmptyState, ImageGallery, MediaUploader, MultiCaptureUploader,
+│                      # SecureCaptureUploader, LiveCapturedBadge, LivenessChallenge,
+│                      # CaptureQualityValidator, OrderStatusStepper, PriceDisplay,
+│                      # ResponsiveTable, ShippingDetailsForm, StatusBadge)
+├── features/          # Domain modules — each has api.ts + pages/
+│   ├── admin/         # Dashboard, users, verifications, sellers, items, auctions,
+│   │                  # reports, monitoring, disputes, payments, terms, roles
+│   ├── auction/       # List, detail, create, my auctions, watchlist, my bids, browse
+│   ├── auth/          # Login, register, 2FA, forgot/reset password, confirm email
+│   ├── dispute/       # Dispute list, detail
+│   ├── inspector/     # Dashboard, queue, detail, review, storage
+│   ├── item/          # My items, create, edit, browse, detail
+│   ├── notification/  # Notifications page, preferences
+│   ├── order/         # My orders, order detail, order return
+│   ├── payment/       # Wallet, payment methods, checkout, VnPay return, withdraw
+│   ├── public/        # About, categories, help
+│   ├── seller/        # Dashboard, profile, registration, verification, browse, public profile
+│   ├── user/          # Dashboard, profile, addresses, security, notification prefs, terms
+│   └── warehouse/     # Inbound/outbound shipments, book inbound, warehouse items
+├── hooks/             # 8 global hooks: useAuth, useBreakpoint, useCamera, useDebounce,
+│                      # useMediaUpload, useRoutePrefix, useSignalR, useTheme
+├── lib/               # axios.ts, cloudinary.ts, queryClient.ts, signalr.ts
+├── locales/           # vi/ and en/ translation files
+├── styles/            # animations.css, global.css
+├── types/             # 15 type files + index barrel (admin, api, auction, auth, capture,
+│                      # dispute, enums, item, media, notification, order, payment,
+│                      # seller, user, warehouse)
+└── utils/             # constants.ts, format.ts, itemPhotoRules.ts, validation.ts
 ```
 
 ## Responsive Design
 
-Two-tier system using Ant Design's grid + custom `useBreakpoint()` hook:
-- **Mobile** (<1200px) — single column, compact lists, Select dropdowns, hamburger menu
-- **Desktop** (≥1200px) — full layout with 240px sidebar, tables, side-by-side layouts
+Mobile-first approach with CSS breakpoints defined in the design system:
 
-Tested across 17 Edge DevTools device dimensions (iPhone SE to Nest Hub Max).
+| Breakpoint | Width |
+|-----------|-------|
+| `sm` | 640px |
+| `md` | 768px |
+| `lg` | 1024px |
+| `xl` | 1280px |
+| `2xl` | 1536px |
+
+Use `useBreakpoint` hook to respond to breakpoint changes in components.
 
 ## API Integration
 
-- **Base URL:** `https://api.newlsun.com`
-- **Auth:** JWT with silent refresh (access=1hr, refresh=7d) via queue pattern in `api.ts`
-- **Real-time:** SignalR hub at `/hubs/auction` ([Authorize])
-- **Media:** Cloudinary signed upload — FE never holds API secret
+All API calls are co-located with their feature module in `features/*/api.ts`. The HTTP client is configured in `src/lib/axios.ts` with base URL from `VITE_API_URL`.
+
+Real-time features (bid updates, notifications) use SignalR via `src/lib/signalr.ts` and the `useSignalR` hook.
 
 ## Path Aliases
 
-`@/` maps to `src/`:
+`@/` maps to `src/` — use absolute imports throughout:
+
 ```ts
-import { AuctionCard } from '@/components/auction/AuctionCard';
+import { AuctionCard } from '@/components/ui/AuctionCard'
+import { useAuth } from '@/hooks/useAuth'
+import type { Auction } from '@/types'
 ```
 
 ## Environment Variables
 
 | Variable | Description |
-|----------|------------|
-| `VITE_API_BASE_URL` | Backend API base URL |
-| `VITE_BYPASS_DEPOSIT` | Skip qualification phase (dev only, until BE builds endpoint) |
+|----------|-------------|
+| `VITE_API_URL` | Backend API base URL (e.g. `https://api.newlsun.com`) |
+| `VITE_SIGNALR_URL` | SignalR hub URL for real-time features |
+
+Copy `.env.example` to `.env.local` for local development.

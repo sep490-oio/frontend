@@ -10,8 +10,10 @@ RUN npm ci
 
 # Copy source code and build
 COPY . .
-ARG VITE_API_BASE_URL=https://api.newlsun.com
-ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ARG VITE_API_URL=https://api.newlsun.com/api
+ARG VITE_SIGNALR_URL=https://api.newlsun.com/hubs
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_SIGNALR_URL=$VITE_SIGNALR_URL
 RUN npm run build
 
 # ── Stage 2: Serve ────────────────────────────────────────────────
