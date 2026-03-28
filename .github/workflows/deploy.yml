@@ -1,9 +1,9 @@
-name: Deploy Frontend test
+name: Deploy Frontend
 
 # Auto-deploy when code is pushed to master
 on:
   push:
-    branches: [test-refactor]
+    branches: [master]
 
 env:
   IMAGE: ghcr.io/sep490-oio/frontend
