@@ -7,6 +7,7 @@ import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useCreateReturn } from '@/features/order/api'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 
 const RETURN_REASONS = [
   'defective',
@@ -32,6 +33,7 @@ export default function OrderReturnPage() {
   const prefix = useRoutePrefix()
   const { message } = App.useApp()
 
+  const { isMobile } = useBreakpoint()
   const createReturn = useCreateReturn()
 
   const {
@@ -62,18 +64,18 @@ export default function OrderReturnPage() {
   }
 
   return (
-    <div>
+    <div style={{ padding: isMobile ? '0 12px' : undefined }}>
       <Space style={{ marginBottom: 16 }}>
         <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(`${prefix}/orders/${orderId}`)}>
           {tc('action.back', 'Back')}
         </Button>
       </Space>
 
-      <Typography.Title level={2} style={{ marginBottom: 24 }}>
+      <Typography.Title level={isMobile ? 3 : 2} style={{ marginBottom: isMobile ? 16 : 24 }}>
         {t('requestReturn', 'Request Return')}
       </Typography.Title>
 
-      <Card style={{ maxWidth: 600 }}>
+      <Card style={{ maxWidth: isMobile ? '100%' : 600 }}>
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
           <Form.Item
             label={t('returnReason', 'Reason')}

@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Typography, Table, Select, Space, Button, Tag, App } from 'antd'
+import { Typography, Select, Space, Button, Tag, App, Modal, Input, Switch } from 'antd'
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { AlertOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useMonitoringAlerts, useAcknowledgeAlert, useResolveAlert } from '@/features/admin/api'
@@ -19,10 +20,10 @@ const SEVERITY_OPTIONS = [
 
 const STATUS_OPTIONS = [
   { value: '', label: '' },
-  { value: AlertStatus.Active, label: 'Active' },
+  { value: AlertStatus.Open, label: 'Open' },
   { value: AlertStatus.Acknowledged, label: 'Acknowledged' },
   { value: AlertStatus.Resolved, label: 'Resolved' },
-  { value: AlertStatus.Closed, label: 'Closed' },
+  { value: AlertStatus.Ignored, label: 'Ignored' },
 ] as const
 
 const SEVERITY_COLORS: Record<string, string> = {
@@ -34,17 +35,23 @@ const SEVERITY_COLORS: Record<string, string> = {
 
 export default function AdminMonitoringPage() {
   const { t } = useTranslation('admin')
-  const { t: tc } = useTranslation('common')
   const { message } = App.useApp()
 
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
   const [severityFilter, setSeverityFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
 
+  // Acknowledge modal state
+  const [ackModalOpen, setAckModalOpen] = useState(false)
+  const [ackAlertId, setAckAlertId] = useState<string>('')
+  const [ackNotes, setAckNotes] = useState('')
+
+  // Resolve modal state
+  const [resolveModalOpen, setResolveModalOpen] = useState(false)
+  const [resolveAlertId, setResolveAlertId] = useState<string>('')
+  const [resolveIgnored, setResolveIgnored] = useState(false)
+  const [resolveNotes, setResolveNotes] = useState('')
+
   const { data, isLoading } = useMonitoringAlerts({
-    pageNumber: page,
-    pageSize,
     ...(severityFilter ? { severity: severityFilter } : {}),
     ...(statusFilter ? { status: statusFilter } : {}),
   })
@@ -52,19 +59,34 @@ export default function AdminMonitoringPage() {
   const acknowledgeAlert = useAcknowledgeAlert()
   const resolveAlert = useResolveAlert()
 
-  const handleAcknowledge = async (id: string) => {
+  const handleAcknowledge = (id: string) => {
+    setAckAlertId(id)
+    setAckNotes('')
+    setAckModalOpen(true)
+  }
+
+  const handleAcknowledgeConfirm = async () => {
     try {
-      await acknowledgeAlert.mutateAsync(id)
+      await acknowledgeAlert.mutateAsync({ id: ackAlertId, notes: ackNotes || undefined })
       message.success(t('monitoring.acknowledgeSuccess'))
+      setAckModalOpen(false)
     } catch {
       message.error(t('common.error'))
     }
   }
 
-  const handleResolve = async (id: string) => {
+  const handleResolve = (id: string) => {
+    setResolveAlertId(id)
+    setResolveIgnored(false)
+    setResolveNotes('')
+    setResolveModalOpen(true)
+  }
+
+  const handleResolveConfirm = async () => {
     try {
-      await resolveAlert.mutateAsync({ id })
+      await resolveAlert.mutateAsync({ id: resolveAlertId, ignored: resolveIgnored, notes: resolveNotes || undefined })
       message.success(t('monitoring.resolveSuccess'))
+      setResolveModalOpen(false)
     } catch {
       message.error(t('common.error'))
     }
@@ -73,9 +95,10 @@ export default function AdminMonitoringPage() {
   const columns: ColumnsType<MonitoringAlertDto> = [
     {
       title: t('monitoring.type'),
-      dataIndex: 'type',
-      key: 'type',
-      width: 120,
+      dataIndex: 'alertType',
+      key: 'alertType',
+      width: 140,
+      render: (type: string) => <StatusBadge status={type} size="small" />,
     },
     {
       title: t('monitoring.severity'),
@@ -96,10 +119,24 @@ export default function AdminMonitoringPage() {
       render: (status: string) => <StatusBadge status={status} />,
     },
     {
-      title: t('monitoring.message'),
-      dataIndex: 'message',
-      key: 'message',
+      title: t('monitoring.entity', 'Entity'),
+      dataIndex: 'entityType',
+      key: 'entityType',
+      width: 120,
+    },
+    {
+      title: t('monitoring.payload', 'Details'),
+      dataIndex: 'payload',
+      key: 'payload',
       ellipsis: true,
+      render: (payload: string) => {
+        try {
+          const parsed = JSON.parse(payload)
+          return parsed.message || parsed.reason || JSON.stringify(parsed).slice(0, 80)
+        } catch {
+          return payload?.slice(0, 80) || '-'
+        }
+      },
     },
     {
       title: t('monitoring.createdAt'),
@@ -114,12 +151,12 @@ export default function AdminMonitoringPage() {
       width: 200,
       render: (_, record) => (
         <Space size={4}>
-          {record.status === AlertStatus.Active && (
+          {record.status === AlertStatus.Open && (
             <Button type="link" size="small" onClick={() => handleAcknowledge(record.id)}>
               {t('monitoring.acknowledge')}
             </Button>
           )}
-          {(record.status === AlertStatus.Active || record.status === AlertStatus.Acknowledged) && (
+          {(record.status === AlertStatus.Open || record.status === AlertStatus.Acknowledged) && (
             <Button type="link" size="small" onClick={() => handleResolve(record.id)}>
               {t('monitoring.resolve')}
             </Button>
@@ -139,7 +176,7 @@ export default function AdminMonitoringPage() {
         <Select
           placeholder={t('monitoring.filterSeverity')}
           value={severityFilter}
-          onChange={(val) => { setSeverityFilter(val); setPage(1) }}
+          onChange={(val) => setSeverityFilter(val)}
           style={{ width: 200 }}
           allowClear
           onClear={() => setSeverityFilter('')}
@@ -151,7 +188,7 @@ export default function AdminMonitoringPage() {
         <Select
           placeholder={t('monitoring.filterStatus')}
           value={statusFilter}
-          onChange={(val) => { setStatusFilter(val); setPage(1) }}
+          onChange={(val) => setStatusFilter(val)}
           style={{ width: 200 }}
           allowClear
           onClear={() => setStatusFilter('')}
@@ -162,21 +199,52 @@ export default function AdminMonitoringPage() {
         />
       </Space>
 
-      <Table<MonitoringAlertDto>
+      <ResponsiveTable<MonitoringAlertDto>
         rowKey="id"
         columns={columns}
-        dataSource={data?.items ?? []}
+        dataSource={data ?? []}
         loading={isLoading}
-        scroll={{ x: 900 }}
-        pagination={{
-          current: data?.metadata?.currentPage ?? page,
-          pageSize: data?.metadata?.pageSize ?? pageSize,
-          total: data?.metadata?.totalCount ?? 0,
-          showSizeChanger: true,
-          showTotal: (total) => tc('pagination.total', { total }),
-          onChange: (p, ps) => { setPage(p); setPageSize(ps) },
-        }}
+        mobileMode="list"
+        pagination={{ pageSize: 20 }}
       />
+
+      {/* Acknowledge Modal */}
+      <Modal
+        title={t('monitoring.acknowledge')}
+        open={ackModalOpen}
+        onOk={handleAcknowledgeConfirm}
+        onCancel={() => setAckModalOpen(false)}
+        confirmLoading={acknowledgeAlert.isPending}
+      >
+        <div style={{ marginBottom: 8 }}>Ghi ch\u00fa</div>
+        <Input.TextArea
+          rows={3}
+          value={ackNotes}
+          onChange={(e) => setAckNotes(e.target.value)}
+          placeholder="Nh\u1eadp ghi ch\u00fa (kh\u00f4ng b\u1eaft bu\u1ed9c)"
+        />
+      </Modal>
+
+      {/* Resolve Modal */}
+      <Modal
+        title={t('monitoring.resolve')}
+        open={resolveModalOpen}
+        onOk={handleResolveConfirm}
+        onCancel={() => setResolveModalOpen(false)}
+        confirmLoading={resolveAlert.isPending}
+      >
+        <div style={{ marginBottom: 8 }}>
+          <span style={{ marginRight: 8 }}>B\u1ecf qua</span>
+          <Switch checked={resolveIgnored} onChange={setResolveIgnored} />
+        </div>
+        <div style={{ marginBottom: 8 }}>Ghi ch\u00fa</div>
+        <Input.TextArea
+          rows={3}
+          value={resolveNotes}
+          onChange={(e) => setResolveNotes(e.target.value)}
+          placeholder="Nh\u1eadp ghi ch\u00fa (kh\u00f4ng b\u1eaft bu\u1ed9c)"
+        />
+      </Modal>
     </div>
   )
 }

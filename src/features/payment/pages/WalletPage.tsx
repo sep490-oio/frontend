@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Typography, Card, Table, Statistic, Row, Col, Button, Space, Select, Modal, InputNumber, App } from 'antd'
+import { Typography, Card, Statistic, Row, Col, Button, Space, Select, Modal, InputNumber, App } from 'antd'
 import { WalletOutlined, ArrowDownOutlined, PlusOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
 import { useTranslation } from 'react-i18next'
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { useWallet, useWalletTransactions, useWalletTopup } from '@/features/payment/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { PriceDisplay } from '@/components/ui/PriceDisplay'
@@ -16,8 +17,8 @@ const TX_TYPE_OPTIONS = [
   { value: '', label: 'All' },
   { value: WalletTransactionType.Credit, label: 'Credit' },
   { value: WalletTransactionType.Debit, label: 'Debit' },
-  { value: WalletTransactionType.Refund, label: 'Refund' },
-  { value: WalletTransactionType.Fee, label: 'Fee' },
+  { value: WalletTransactionType.Hold, label: 'Hold' },
+  { value: WalletTransactionType.Release, label: 'Release' },
 ] as const
 
 const balanceCardStyle: React.CSSProperties = {
@@ -38,13 +39,13 @@ export default function WalletPage() {
   const [topupModalOpen, setTopupModalOpen] = useState(false)
   const [topupAmount, setTopupAmount] = useState<number | null>(null)
 
-  const { data: wallet, isLoading: walletLoading } = useWallet()
+  const { data: wallet, isLoading: walletLoading } = useWallet({ refetchInterval: 30000 })
   const topupMutation = useWalletTopup()
   const { data: transactions, isLoading: txLoading } = useWalletTransactions({
     pageNumber: page,
     pageSize,
     ...(typeFilter ? { type: typeFilter } : {}),
-  })
+  }, { refetchInterval: 30000 })
 
   const columns: ColumnsType<WalletTransactionDto> = [
     {
@@ -64,7 +65,7 @@ export default function WalletPage() {
           amount={amount}
           currency={record.currency}
           size="small"
-          type={record.type === WalletTransactionType.Debit || record.type === WalletTransactionType.Fee ? 'danger' : 'success'}
+          type={record.type === WalletTransactionType.Debit || record.type === WalletTransactionType.Hold ? 'danger' : 'success'}
         />
       ),
     },
@@ -144,16 +145,19 @@ export default function WalletPage() {
         <Col xs={24} sm={8}>
           <Card loading={walletLoading} style={balanceCardStyle}>
             <Statistic
-              title={t('pendingBalance', 'Pending Balance')}
+              title={t('reservedFunds', 'Reserved Funds')}
               value={wallet?.pendingBalance ?? 0}
               formatter={(val) => formatCurrency(val as number, wallet?.currency)}
               valueStyle={{
-                color: 'var(--color-danger)',
+                color: '#d48806',
                 fontFamily: "'DM Mono', monospace",
                 fontSize: 28,
                 fontWeight: 500,
               }}
             />
+            <Typography.Text type="secondary" style={{ fontSize: 12, marginTop: 8, display: 'block' }}>
+              {t('reservedFundsHelp', 'Funds held for active deposits, auto-bid reservations, and pending withdrawals.')}
+            </Typography.Text>
           </Card>
         </Col>
         <Col xs={24} sm={8}>
@@ -163,12 +167,15 @@ export default function WalletPage() {
               value={wallet?.totalBalance ?? 0}
               formatter={(val) => formatCurrency(val as number, wallet?.currency)}
               valueStyle={{
-                color: 'var(--color-text-primary)',
+                color: 'var(--color-text-secondary)',
                 fontFamily: "'DM Mono', monospace",
                 fontSize: 28,
                 fontWeight: 500,
               }}
             />
+            <Typography.Text type="secondary" style={{ fontSize: 12, marginTop: 8, display: 'block' }}>
+              {t('totalBalanceHelp', 'Available + reserved funds combined.')}
+            </Typography.Text>
           </Card>
         </Col>
       </Row>
@@ -219,12 +226,12 @@ export default function WalletPage() {
           />
         </Space>
 
-        <Table<WalletTransactionDto>
+        <ResponsiveTable<WalletTransactionDto>
+          mobileMode="list"
           rowKey="id"
           columns={columns}
           dataSource={transactions?.items ?? []}
           loading={txLoading}
-          scroll={{ x: 600 }}
           pagination={{
             current: transactions?.metadata?.currentPage ?? page,
             pageSize: transactions?.metadata?.pageSize ?? pageSize,

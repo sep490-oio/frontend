@@ -22,7 +22,7 @@ export function EmptyState({
       gap={16}
       style={{ padding: '80px 24px', textAlign: 'center' }}
     >
-      <div style={{ fontSize: 48, color: 'var(--color-border)', lineHeight: 1 }}>
+      <div style={{ fontSize: 48, color: 'var(--color-text-secondary)', lineHeight: 1, opacity: 0.5 }}>
         {icon ?? <InboxOutlined />}
       </div>
       <Typography.Text

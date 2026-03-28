@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -5,30 +6,31 @@ import { useTranslation } from 'react-i18next'
 import { App, Input, Button, Form } from 'antd'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { useResetPassword } from '@/features/auth/api'
-import { passwordSchema } from '@/utils/validation'
+import { createPasswordSchema } from '@/utils/validation'
 import type { AxiosError } from 'axios'
 import type { ApiError } from '@/types'
 
 const SERIF_FONT = "'DM Serif Display', Georgia, serif"
 
-const resetPasswordSchema = z
-  .object({
-    newPassword: passwordSchema,
-    confirmPassword: z.string().min(1, 'Vui lòng xác nhận mật khẩu'),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: 'Mật khẩu không khớp',
-    path: ['confirmPassword'],
-  })
-
-type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>
+type ResetPasswordFormValues = { newPassword: string; confirmPassword: string }
 
 export default function ResetPasswordPage() {
   const { t } = useTranslation('auth')
+  const { t: tv } = useTranslation('validation')
   const { message } = App.useApp()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const resetMutation = useResetPassword()
+
+  const resetPasswordSchema = useMemo(() => z
+    .object({
+      newPassword: createPasswordSchema(tv),
+      confirmPassword: z.string().min(1, tv('required', 'Trường này là bắt buộc')),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+      message: t('passwordMismatch', 'Mật khẩu không khớp'),
+      path: ['confirmPassword'],
+    }), [tv, t])
 
   const email = searchParams.get('email')
   const token = searchParams.get('token')

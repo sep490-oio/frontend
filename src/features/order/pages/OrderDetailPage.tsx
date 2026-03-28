@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
 import {
@@ -8,14 +9,35 @@ import {
   Space,
   Spin,
   Alert,
+  App,
+  Popconfirm,
+  Divider,
+  Modal,
+  Input,
+  Form,
 } from 'antd'
-import { ArrowLeftOutlined, RollbackOutlined } from '@ant-design/icons'
+import { ArrowLeftOutlined, RollbackOutlined, CheckOutlined, CloseOutlined, SendOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
-import { useOrderById } from '@/features/order/api'
+import {
+  useOrderById,
+  useApproveReturn,
+  useRejectReturn,
+  useShipReturn,
+  useConfirmReturnReceived,
+  useCreateSellerReview,
+} from '@/features/order/api'
+import { SellerRatingForm } from '@/features/order/components/SellerRatingForm'
+import { useAuth } from '@/hooks/useAuth'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/queryClient'
 import { OrderStatusStepper } from '@/components/ui/OrderStatusStepper'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { PriceDisplay } from '@/components/ui/PriceDisplay'
-import { OrderStatus } from '@/types/enums'
+import { CountdownTimer } from '@/components/ui/CountdownTimer'
+import { EscrowTimeline } from '@/features/order/components/EscrowTimeline'
+import { WarrantyNotice } from '@/features/order/components/WarrantyNotice'
+import { OrderStatus, OrderReturnStatus } from '@/types/enums'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { formatDateTime } from '@/utils/format'
 
 const RETURN_ELIGIBLE_STATUSES = new Set<string>([
@@ -30,11 +52,43 @@ export default function OrderDetailPage() {
   const navigate = useNavigate()
   const prefix = useRoutePrefix()
 
+  const { message } = App.useApp()
+  const { user } = useAuth()
+  const { isMobile } = useBreakpoint()
+  const qc = useQueryClient()
   const { data: order, isLoading, error } = useOrderById(id)
+
+  // Poll order detail when status is 'paid' — auto-ship runs async after payment
+  useEffect(() => {
+    if (order?.status !== 'paid') return
+    const interval = setInterval(() => {
+      qc.invalidateQueries({ queryKey: queryKeys.orders.detail(id) })
+    }, 8000) // poll every 8s
+    return () => clearInterval(interval)
+  }, [order?.status, id, qc])
+
+  const approveReturn = useApproveReturn()
+  const rejectReturn = useRejectReturn()
+  const shipReturn = useShipReturn()
+  const confirmReturnReceived = useConfirmReturnReceived()
+  const createReview = useCreateSellerReview()
+  const [reviewSubmitted, setReviewSubmitted] = useState(false)
+
+  // Reject return modal state
+  const [rejectModalOpen, setRejectModalOpen] = useState(false)
+  const [rejectReason, setRejectReason] = useState('')
+
+  // Ship return modal state
+  const [shipModalOpen, setShipModalOpen] = useState(false)
+  const [shipProviderCode, setShipProviderCode] = useState('')
+  const [shipTrackingNumber, setShipTrackingNumber] = useState('')
+
+  const isSeller = user?.id === order?.sellerId
+  const isBuyer = user?.id === order?.buyerId
 
   if (isLoading) {
     return (
-      <div style={{ textAlign: 'center', padding: 64 }}>
+      <div style={{ textAlign: 'center', padding: isMobile ? 32 : 64 }}>
         <Spin size="large" />
       </div>
     )
@@ -48,14 +102,14 @@ export default function OrderDetailPage() {
     RETURN_ELIGIBLE_STATUSES.has(order.status) && !order.return
 
   return (
-    <div>
+    <div style={{ padding: isMobile ? '0 12px' : undefined }}>
       <Space style={{ marginBottom: 16 }}>
         <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(`${prefix}/orders`)}>
           {tc('action.back', 'Back')}
         </Button>
       </Space>
 
-      <Typography.Title level={2} style={{ marginBottom: 24 }}>
+      <Typography.Title level={isMobile ? 3 : 2} style={{ marginBottom: isMobile ? 16 : 24 }}>
         {t('orderDetail', 'Order Detail')} #{order.orderNumber}
       </Typography.Title>
 
@@ -64,9 +118,30 @@ export default function OrderDetailPage() {
         <OrderStatusStepper status={order.status} />
       </Card>
 
+      {/* Payment deadline countdown */}
+      {order.status === OrderStatus.PendingPayment && order.paymentDueAt && (
+        <Alert
+          type="warning"
+          showIcon
+          style={{ marginBottom: 24 }}
+          message={
+            <span>
+              {t('payBy', 'Pay by')} {formatDateTime(order.paymentDueAt)} —{' '}
+              <CountdownTimer endTime={order.paymentDueAt} size="small" /> {t('remaining', 'remaining')}
+            </span>
+          }
+        />
+      )}
+
+      {/* Escrow timeline */}
+      <EscrowTimeline
+        order={order}
+        isSeller={isSeller}
+      />
+
       {/* Order info */}
-      <Card title={t('orderInfo', 'Order Information')} style={{ marginBottom: 24 }}>
-        <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
+      <Card title={t('orderInfo', 'Order Information')} style={{ marginBottom: isMobile ? 16 : 24 }}>
+        <Descriptions column={isMobile ? 1 : { xs: 1, sm: 2 }} bordered size="small">
           <Descriptions.Item label={t('orderNumber', 'Order Number')}>
             {order.orderNumber}
           </Descriptions.Item>
@@ -116,19 +191,52 @@ export default function OrderDetailPage() {
         </Descriptions>
       </Card>
 
+      {/* Warranty notice */}
+      <WarrantyNotice
+        orderStatus={order.status}
+        deliveredAt={order.deliveredAt}
+        confirmedAt={(order as any).confirmedAt}
+      />
+
+      {/* Seller Rating */}
+      {isBuyer &&
+        order.status === OrderStatus.Completed &&
+        (order as any).confirmedAt &&
+        !(order as any).review &&
+        !reviewSubmitted && (
+          <Card
+            title={t('rateThisSeller', 'Rate this Seller')}
+            style={{ marginBottom: isMobile ? 16 : 24 }}
+          >
+            <SellerRatingForm
+              orderId={order.id}
+              loading={createReview.isPending}
+              onSubmit={async (data) => {
+                try {
+                  await createReview.mutateAsync(data)
+                  message.success(t('reviewSubmitted', 'Review submitted successfully'))
+                  setReviewSubmitted(true)
+                } catch {
+                  message.error(t('reviewError', 'Failed to submit review'))
+                }
+              }}
+            />
+          </Card>
+        )}
+
       {/* Tracking */}
       {order.trackingNumber && (
-        <Card title={t('tracking', 'Tracking')} style={{ marginBottom: 24 }}>
+        <Card title={t('tracking', 'Tracking')} style={{ marginBottom: isMobile ? 16 : 24 }}>
           <Typography.Text strong>{t('trackingNumber', 'Tracking Number')}: </Typography.Text>
           <Typography.Text copyable>{order.trackingNumber}</Typography.Text>
         </Card>
       )}
 
       {/* Return section */}
-      <Card title={t('returnSection', 'Return')} style={{ marginBottom: 24 }}>
+      <Card title={t('returnSection', 'Return')} style={{ marginBottom: isMobile ? 16 : 24 }}>
         {order.return ? (
           <>
-            <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
+            <Descriptions column={isMobile ? 1 : { xs: 1, sm: 2 }} bordered size="small">
               <Descriptions.Item label={t('returnStatus', 'Return Status')}>
                 <StatusBadge status={order.return.status} />
               </Descriptions.Item>
@@ -149,6 +257,59 @@ export default function OrderDetailPage() {
                 </Descriptions.Item>
               )}
             </Descriptions>
+
+            {/* Return action buttons */}
+            <Divider style={{ margin: '16px 0' }} />
+            <Space wrap>
+              {/* Seller: Approve/Reject when requested */}
+              {isSeller && order.return.status === OrderReturnStatus.Requested && (
+                <>
+                  <Popconfirm
+                    title={t('approveReturnConfirm', 'Approve this return request?')}
+                    onConfirm={async () => {
+                      try {
+                        await approveReturn.mutateAsync({ orderId: order.id, returnId: order.return!.id })
+                        message.success(t('returnApproved', 'Return approved'))
+                      } catch { message.error(t('returnError', 'Action failed')) }
+                    }}
+                  >
+                    <Button type="primary" icon={<CheckOutlined />} loading={approveReturn.isPending}
+                      style={{ background: 'var(--color-success)', borderColor: 'var(--color-success)' }}>
+                      {t('approveReturn', 'Approve')}
+                    </Button>
+                  </Popconfirm>
+                  <Button danger icon={<CloseOutlined />} loading={rejectReturn.isPending}
+                    onClick={() => { setRejectReason(''); setRejectModalOpen(true) }}>
+                    {t('rejectReturn', 'Reject')}
+                  </Button>
+                </>
+              )}
+
+              {/* Buyer: Ship return after approval */}
+              {isBuyer && order.return.status === OrderReturnStatus.Approved && (
+                <Button type="primary" icon={<SendOutlined />} loading={shipReturn.isPending}
+                  onClick={() => { setShipProviderCode(''); setShipTrackingNumber(''); setShipModalOpen(true) }}>
+                  {t('shipReturn', 'Ship Return')}
+                </Button>
+              )}
+
+              {/* Seller: Confirm received after shipped */}
+              {isSeller && order.return.status === OrderReturnStatus.ReturnInTransit && (
+                <Popconfirm
+                  title={t('confirmReceivedConfirm', 'Confirm you received the returned item?')}
+                  onConfirm={async () => {
+                    try {
+                      await confirmReturnReceived.mutateAsync({ orderId: order.id, returnId: order.return!.id })
+                      message.success(t('returnReceived', 'Return received confirmed'))
+                    } catch { message.error(t('returnError', 'Action failed')) }
+                  }}
+                >
+                  <Button type="primary" icon={<CheckOutlined />} loading={confirmReturnReceived.isPending}>
+                    {t('confirmReceived', 'Confirm Received')}
+                  </Button>
+                </Popconfirm>
+              )}
+            </Space>
           </>
         ) : canRequestReturn ? (
           <Button
@@ -173,6 +334,75 @@ export default function OrderDetailPage() {
           </Button>
         )}
       </Space>
+
+      {/* Reject Return Modal */}
+      <Modal
+        title={t('rejectReturn', 'Reject Return')}
+        open={rejectModalOpen}
+        onCancel={() => setRejectModalOpen(false)}
+        onOk={async () => {
+          if (!rejectReason.trim()) return
+          try {
+            await rejectReturn.mutateAsync({ orderId: order.id, returnId: order.return!.id, reason: rejectReason.trim() })
+            message.success(t('returnRejected', 'Return rejected'))
+            setRejectModalOpen(false)
+          } catch { message.error(t('returnError', 'Action failed')) }
+        }}
+        okText={tc('action.confirm', 'Confirm')}
+        okButtonProps={{ danger: true, loading: rejectReturn.isPending, disabled: !rejectReason.trim() }}
+        centered
+      >
+        <Form layout="vertical">
+          <Form.Item label="Lý do từ chối" required>
+            <Input.TextArea
+              rows={3}
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder={t('rejectReasonPlaceholder', 'Nhập lý do từ chối...')}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Ship Return Modal */}
+      <Modal
+        title={t('shipReturn', 'Ship Return')}
+        open={shipModalOpen}
+        onCancel={() => setShipModalOpen(false)}
+        onOk={async () => {
+          if (!shipProviderCode.trim() || !shipTrackingNumber.trim()) return
+          try {
+            await shipReturn.mutateAsync({
+              orderId: order.id,
+              returnId: order.return!.id,
+              providerCode: shipProviderCode.trim(),
+              trackingNumber: shipTrackingNumber.trim(),
+            })
+            message.success(t('returnShipped', 'Return marked as shipped'))
+            setShipModalOpen(false)
+          } catch { message.error(t('returnError', 'Action failed')) }
+        }}
+        okText={tc('action.confirm', 'Confirm')}
+        okButtonProps={{ loading: shipReturn.isPending, disabled: !shipProviderCode.trim() || !shipTrackingNumber.trim() }}
+        centered
+      >
+        <Form layout="vertical">
+          <Form.Item label="Mã nhà vận chuyển" required>
+            <Input
+              value={shipProviderCode}
+              onChange={(e) => setShipProviderCode(e.target.value)}
+              placeholder={t('providerCodePlaceholder', 'vd: ghn, ghtk, viettelpost')}
+            />
+          </Form.Item>
+          <Form.Item label="Mã vận đơn" required>
+            <Input
+              value={shipTrackingNumber}
+              onChange={(e) => setShipTrackingNumber(e.target.value)}
+              placeholder={t('trackingNumberPlaceholder', 'Nhập mã vận đơn...')}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   )
 }

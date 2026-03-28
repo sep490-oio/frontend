@@ -1,4 +1,5 @@
 import { createBrowserRouter, useRouteError, Link } from 'react-router'
+import { useTranslation } from 'react-i18next'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { AuthLayout } from '@/components/layout/AuthLayout'
 import { AdminLayout } from '@/components/layout/AdminLayout'
@@ -23,7 +24,15 @@ const PageLoader = () => (
 // Global error boundary for route errors (dynamic import failures, etc.)
 function RouteErrorBoundary() {
   const error = useRouteError()
+  const { t } = useTranslation('common')
   const isDynamicImportError = error instanceof TypeError && String(error.message).includes('dynamically imported module')
+
+  const title = isDynamicImportError
+    ? t('pageUpdated', 'Page Updated')
+    : t('somethingWentWrong', 'Something went wrong')
+  const desc = isDynamicImportError
+    ? t('pageUpdatedDesc', 'A new version has been deployed. Please reload the page.')
+    : t('unexpectedErrorDesc', 'An unexpected error occurred. Please try again.')
 
   return (
     <Flex vertical align="center" justify="center" style={{ minHeight: '60vh', padding: 32, textAlign: 'center' }}>
@@ -36,12 +45,10 @@ function RouteErrorBoundary() {
           marginBottom: 8,
         }}
       >
-        {isDynamicImportError ? 'Trang đã được cập nhật' : 'Đã xảy ra lỗi'}
+        {title}
       </h2>
       <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, maxWidth: 400, marginBottom: 24 }}>
-        {isDynamicImportError
-          ? 'Phiên bản mới đã được triển khai. Vui lòng tải lại trang.'
-          : 'Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.'}
+        {desc}
       </p>
       <Flex gap={12}>
         <Button
@@ -49,10 +56,10 @@ function RouteErrorBoundary() {
           onClick={() => window.location.reload()}
           style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
         >
-          Tải lại trang
+          {t('reloadPage', 'Reload page')}
         </Button>
         <Link to="/">
-          <Button>Về trang chủ</Button>
+          <Button>{t('goToHome', 'Go to home')}</Button>
         </Link>
       </Flex>
     </Flex>
@@ -83,6 +90,10 @@ const ItemDetailPage = () => lazyPage(() => import('@/features/item/pages/ItemDe
 const PublicSellerPage = () => lazyPage(() => import('@/features/seller/pages/PublicSellerPage'))
 const AboutPage = () => lazyPage(() => import('@/features/public/pages/AboutPage'))
 const CategoriesPage = () => lazyPage(() => import('@/features/public/pages/CategoriesPage'))
+const HelpPage = () => lazyPage(() => import('@/features/public/pages/HelpPage'))
+const BrowseAuctionsPage = () => lazyPage(() => import('@/features/auction/pages/BrowseAuctionsPage'))
+const BrowseSellersPage = () => lazyPage(() => import('@/features/seller/pages/BrowseSellersPage'))
+const BrowseItemsPage = () => lazyPage(() => import('@/features/item/pages/BrowseItemsPage'))
 
 // User pages (auth required)
 const ProfilePage = () => lazyPage(() => import('@/features/user/pages/ProfilePage'))
@@ -122,6 +133,7 @@ const DisputeListPage = () => lazyPage(() => import('@/features/dispute/pages/Di
 const DisputeDetailPage = () => lazyPage(() => import('@/features/dispute/pages/DisputeDetailPage'))
 
 // Seller pages
+const UserDashboardPage = () => lazyPage(() => import('@/features/user/pages/DashboardPage'))
 const SellerDashboardPage = () => lazyPage(() => import('@/features/seller/pages/SellerDashboardPage'))
 const CreateSellerProfilePage = () => lazyPage(() => import('@/features/seller/pages/CreateSellerProfilePage'))
 const SellerProfilePage = () => lazyPage(() => import('@/features/seller/pages/SellerProfilePage'))
@@ -184,7 +196,7 @@ export const router = createBrowserRouter([
     ],
   },
   // VnPay return (no layout needed)
-  { path: '/payments/vnpay/return', element: <VnPayReturnPage /> },
+  { path: '/payments/vnpay/return', element: <VnPayReturnPage />, errorElement: <RouteErrorBoundary /> },
   // Main app routes
   {
     errorElement: <RouteErrorBoundary />,
@@ -192,23 +204,28 @@ export const router = createBrowserRouter([
     children: [
       // Public routes
       { index: true, element: <AuctionListPage /> },
-      { path: '/auctions', element: <AuctionListPage /> },
+      { path: '/auctions', element: <BrowseAuctionsPage /> },
       { path: '/auctions/:id', element: <AuctionDetailPage /> },
+      { path: '/items', element: <BrowseItemsPage /> },
       { path: '/items/:id', element: <ItemDetailPage /> },
+      { path: '/sellers', element: <BrowseSellersPage /> },
       { path: '/sellers/:id', element: <PublicSellerPage /> },
       { path: '/about', element: <AboutPage /> },
       { path: '/categories', element: <CategoriesPage /> },
+      { path: '/help', element: <HelpPage /> },
       // Auth-required routes
       {
         element: <AuthGuard />,
         children: [
           // User
+          { path: '/me/dashboard', element: <UserDashboardPage /> },
           { path: '/me/profile', element: <ProfilePage /> },
           { path: '/me/addresses', element: <AddressesPage /> },
           { path: '/me/security', element: <SecurityPage /> },
           { path: '/me/notifications', element: <NotificationsPage /> },
           { path: '/me/notifications/settings', element: <NotificationPrefsPage /> },
           { path: '/me/terms', element: <TermsPage /> },
+          { path: '/me/verification', element: <VerificationPage /> },
           // Items
           { path: '/me/items', element: <MyItemsPage /> },
           { path: '/me/items/create', element: <CreateItemPage /> },
@@ -216,6 +233,7 @@ export const router = createBrowserRouter([
           // Auctions
           { path: '/me/auctions', element: <MyAuctionsPage /> },
           { path: '/me/auctions/create', element: <CreateAuctionPage /> },
+          { path: '/me/auctions/:id/edit', element: <CreateAuctionPage /> },
           { path: '/me/watchlist', element: <WatchlistPage /> },
           { path: '/me/bids', element: <MyBidsPage /> },
           // Orders
@@ -252,6 +270,7 @@ export const router = createBrowserRouter([
           // Auctions
           { path: '/seller/auctions', element: <MyAuctionsPage /> },
           { path: '/seller/auctions/create', element: <CreateAuctionPage /> },
+          { path: '/seller/auctions/:id/edit', element: <CreateAuctionPage /> },
           { path: '/seller/bids', element: <MyBidsPage /> },
           // Business
           { path: '/seller/orders', element: <MyOrdersPage /> },

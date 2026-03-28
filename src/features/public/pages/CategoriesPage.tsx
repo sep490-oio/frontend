@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Spin, Empty } from 'antd'
 import { useCategories } from '@/features/item/api'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 
 const SANS_FONT = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
 const SERIF_FONT = "'DM Serif Display', Georgia, serif"
@@ -14,6 +15,7 @@ export default function CategoriesPage() {
   const headingFont = isVi ? SANS_FONT : SERIF_FONT
   const headingWeight = isVi ? 600 : 400
 
+  const { isMobile } = useBreakpoint()
   const { data: categories, isLoading } = useCategories()
 
   if (isLoading) {
@@ -27,9 +29,9 @@ export default function CategoriesPage() {
   const activeCategories = categories?.filter((c) => c.isActive) ?? []
 
   return (
-    <div className="oio-fade-in" style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
+    <div className="oio-fade-in" style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 16px' : '0 24px' }}>
       {/* Header */}
-      <section style={{ textAlign: 'center', padding: '80px 0 64px' }}>
+      <section style={{ textAlign: 'center', padding: isMobile ? '40px 0 32px' : '80px 0 64px' }}>
         <p
           style={{
             fontFamily: SANS_FONT,
@@ -46,7 +48,7 @@ export default function CategoriesPage() {
         <h1
           style={{
             fontFamily: headingFont,
-            fontSize: isVi ? 36 : 44,
+            fontSize: isMobile ? (isVi ? 24 : 28) : (isVi ? 36 : 44),
             fontWeight: headingWeight,
             lineHeight: 1.15,
             color: 'var(--color-text-primary)',
@@ -84,9 +86,9 @@ export default function CategoriesPage() {
           className="oio-stagger"
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 24,
-            paddingBottom: 80,
+            gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
+            gap: isMobile ? 12 : 24,
+            paddingBottom: isMobile ? 40 : 80,
           }}
         >
           {activeCategories.map((category) => (
@@ -99,7 +101,7 @@ export default function CategoriesPage() {
                 background: 'var(--color-bg-card)',
                 border: '1px solid var(--color-border-light)',
                 borderRadius: 2,
-                padding: '32px 28px',
+                padding: isMobile ? '16px 14px' : '32px 28px',
                 cursor: 'pointer',
                 textAlign: 'left',
                 transition: 'border-color 0.2s, box-shadow 0.2s',

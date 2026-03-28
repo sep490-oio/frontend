@@ -14,6 +14,10 @@ import {
   App,
   Empty,
   Spin,
+  Input,
+  InputNumber,
+  Checkbox,
+  Alert,
 } from 'antd'
 import {
   PlusOutlined,
@@ -26,6 +30,7 @@ import {
   LinkOutlined,
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import {
   usePaymentMethods,
   useAddPaymentMethod,
@@ -37,18 +42,27 @@ import { PaymentMethodType } from '@/types/enums'
 import type { PaymentMethodDto } from '@/types'
 
 const TYPE_ICONS: Record<string, React.ReactNode> = {
-  [PaymentMethodType.Card]: <CreditCardOutlined style={{ fontSize: 24 }} />,
-  [PaymentMethodType.BankTransfer]: <BankOutlined style={{ fontSize: 24 }} />,
-  [PaymentMethodType.Wallet]: <WalletOutlined style={{ fontSize: 24 }} />,
+  [PaymentMethodType.CreditCard]: <CreditCardOutlined style={{ fontSize: 24 }} />,
+  [PaymentMethodType.DebitCard]: <CreditCardOutlined style={{ fontSize: 24 }} />,
+  [PaymentMethodType.BankAccount]: <BankOutlined style={{ fontSize: 24 }} />,
+  [PaymentMethodType.EWallet]: <WalletOutlined style={{ fontSize: 24 }} />,
   [PaymentMethodType.VnPay]: <CreditCardOutlined style={{ fontSize: 24 }} />,
 }
 
 export default function PaymentMethodsPage() {
   const { t } = useTranslation('payment')
+  const { isMobile } = useBreakpoint()
   const { message } = App.useApp()
 
   const [addModalOpen, setAddModalOpen] = useState(false)
-  const [addType, setAddType] = useState<string>(PaymentMethodType.Card)
+  const [addType, setAddType] = useState<string>(PaymentMethodType.BankAccount)
+  const [addProvider, setAddProvider] = useState('')
+  const [addAccountNumber, setAddAccountNumber] = useState('')
+  const [addHolderName, setAddHolderName] = useState('')
+  const [addLastFour, setAddLastFour] = useState('')
+  const [addExpiryMonth, setAddExpiryMonth] = useState<number | undefined>()
+  const [addExpiryYear, setAddExpiryYear] = useState<number | undefined>()
+  const [addIsDefault, setAddIsDefault] = useState(false)
 
   const { data: methods, isLoading } = usePaymentMethods()
   const addMethod = useAddPaymentMethod()
@@ -56,13 +70,37 @@ export default function PaymentMethodsPage() {
   const setDefault = useSetDefaultPaymentMethod()
   const linkVnPay = useLinkCardVnPay()
 
+  const resetAddForm = () => {
+    setAddType(PaymentMethodType.BankAccount)
+    setAddProvider('')
+    setAddAccountNumber('')
+    setAddHolderName('')
+    setAddLastFour('')
+    setAddExpiryMonth(undefined)
+    setAddExpiryYear(undefined)
+    setAddIsDefault(false)
+  }
+
   const handleAdd = () => {
+    const lastFour = addType === PaymentMethodType.BankAccount && addAccountNumber
+      ? addAccountNumber.slice(-4)
+      : addLastFour || undefined
+
     addMethod.mutate(
-      { type: addType },
+      {
+        type: addType,
+        provider: addProvider || undefined,
+        lastFour,
+        holderName: addHolderName || undefined,
+        expiryMonth: addExpiryMonth,
+        expiryYear: addExpiryYear,
+        isDefault: addIsDefault,
+      },
       {
         onSuccess: () => {
           message.success(t('methodAdded', 'Payment method added'))
           setAddModalOpen(false)
+          resetAddForm()
         },
         onError: () => {
           message.error(t('methodAddError', 'Failed to add payment method'))
@@ -87,7 +125,7 @@ export default function PaymentMethodsPage() {
 
   const handleLinkVnPay = () => {
     linkVnPay.mutate(
-      { returnUrl: `${window.location.origin}/me/payment-methods` },
+      { cardType: 'vnpay' },
       {
         onSuccess: (data) => {
           window.location.href = data.redirectUrl
@@ -109,11 +147,11 @@ export default function PaymentMethodsPage() {
 
   return (
     <div>
-      <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', gap: isMobile ? 12 : 0, marginBottom: 24 }}>
         <Typography.Title level={2} style={{ margin: 0 }}>
           {t('paymentMethods', 'Payment Methods')}
         </Typography.Title>
-        <Space>
+        <Space style={{ flexWrap: 'wrap' }}>
           <Button icon={<LinkOutlined />} onClick={handleLinkVnPay} loading={linkVnPay.isPending}>
             {t('linkVnPay', 'Link Card via VnPay')}
           </Button>
@@ -121,7 +159,7 @@ export default function PaymentMethodsPage() {
             {t('addMethod', 'Add Method')}
           </Button>
         </Space>
-      </Space>
+      </div>
 
       {(!methods || methods.length === 0) ? (
         <Empty description={t('noMethods', 'No payment methods yet')} />
@@ -189,19 +227,78 @@ export default function PaymentMethodsPage() {
         title={t('addMethod', 'Add Payment Method')}
         open={addModalOpen}
         onOk={handleAdd}
-        onCancel={() => setAddModalOpen(false)}
+        onCancel={() => { setAddModalOpen(false); resetAddForm() }}
         confirmLoading={addMethod.isPending}
       >
         <Form layout="vertical">
           <Form.Item label={t('methodType', 'Type')}>
             <Select
               value={addType}
-              onChange={setAddType}
+              onChange={(v) => { setAddType(v); setAddProvider(''); setAddAccountNumber(''); setAddHolderName(''); setAddLastFour('') }}
               options={[
-                { value: PaymentMethodType.Card, label: t('typeCard', 'Card') },
-                { value: PaymentMethodType.BankTransfer, label: t('typeBankTransfer', 'Bank Transfer') },
+                { value: PaymentMethodType.BankAccount, label: t('typeBankAccount', 'Bank Account') },
+                { value: PaymentMethodType.CreditCard, label: t('typeCreditCard', 'Credit Card') },
+                { value: PaymentMethodType.DebitCard, label: t('typeDebitCard', 'Debit Card') },
+                { value: PaymentMethodType.EWallet, label: t('typeEWallet', 'E-Wallet') },
               ]}
             />
+          </Form.Item>
+
+          {/* Bank Account fields */}
+          {addType === PaymentMethodType.BankAccount && (
+            <>
+              <Form.Item label={t('bankName', 'Bank Name')}>
+                <Input value={addProvider} onChange={(e) => setAddProvider(e.target.value)} placeholder={t('bankNamePlaceholder', 'e.g. Vietcombank')} />
+              </Form.Item>
+              <Form.Item label={t('accountNumber', 'Account Number')}>
+                <Input value={addAccountNumber} onChange={(e) => setAddAccountNumber(e.target.value)} placeholder={t('accountNumberPlaceholder', 'e.g. 1234567890')} />
+              </Form.Item>
+              <Form.Item label={t('holderName', 'Account Holder Name')}>
+                <Input value={addHolderName} onChange={(e) => setAddHolderName(e.target.value)} placeholder={t('holderNamePlaceholder', 'Full name as on account')} />
+              </Form.Item>
+            </>
+          )}
+
+          {/* Card fields */}
+          {(addType === PaymentMethodType.CreditCard || addType === PaymentMethodType.DebitCard) && (
+            <>
+              <Alert type="info" showIcon message={t('cardVnPayHint', 'For cards, we recommend linking via VNPay for secure tokenization.')} style={{ marginBottom: 16 }} />
+              <Form.Item label={t('cardBrand', 'Card Brand')}>
+                <Input value={addProvider} onChange={(e) => setAddProvider(e.target.value)} placeholder={t('cardBrandPlaceholder', 'e.g. Visa, Mastercard')} />
+              </Form.Item>
+              <Form.Item label={t('lastFourDigits', 'Last 4 Digits')}>
+                <Input value={addLastFour} onChange={(e) => setAddLastFour(e.target.value)} maxLength={4} placeholder="1234" />
+              </Form.Item>
+              <Space>
+                <Form.Item label={t('expiryMonth', 'Expiry Month')}>
+                  <InputNumber min={1} max={12} value={addExpiryMonth} onChange={(v) => setAddExpiryMonth(v ?? undefined)} />
+                </Form.Item>
+                <Form.Item label={t('expiryYear', 'Expiry Year')}>
+                  <InputNumber min={2024} max={2040} value={addExpiryYear} onChange={(v) => setAddExpiryYear(v ?? undefined)} />
+                </Form.Item>
+              </Space>
+              <Form.Item label={t('holderName', 'Cardholder Name')}>
+                <Input value={addHolderName} onChange={(e) => setAddHolderName(e.target.value)} placeholder={t('holderNamePlaceholder', 'Full name as on card')} />
+              </Form.Item>
+            </>
+          )}
+
+          {/* E-Wallet fields */}
+          {addType === PaymentMethodType.EWallet && (
+            <>
+              <Form.Item label={t('walletProvider', 'Wallet Provider')}>
+                <Input value={addProvider} onChange={(e) => setAddProvider(e.target.value)} placeholder={t('walletProviderPlaceholder', 'e.g. MoMo, ZaloPay')} />
+              </Form.Item>
+              <Form.Item label={t('holderName', 'Account Name')}>
+                <Input value={addHolderName} onChange={(e) => setAddHolderName(e.target.value)} placeholder={t('holderNamePlaceholder', 'Full name')} />
+              </Form.Item>
+            </>
+          )}
+
+          <Form.Item>
+            <Checkbox checked={addIsDefault} onChange={(e) => setAddIsDefault(e.target.checked)}>
+              {t('setAsDefault', 'Set as default payment method')}
+            </Checkbox>
           </Form.Item>
         </Form>
       </Modal>

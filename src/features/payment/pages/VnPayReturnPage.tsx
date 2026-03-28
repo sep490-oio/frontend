@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router'
 import { Button, Spin, Descriptions } from 'antd'
+import { useTranslation } from 'react-i18next'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { formatCurrency, formatDateTime } from '@/utils/format'
 import apiClient from '@/lib/axios'
 
@@ -17,6 +19,8 @@ interface VnPayCallbackResponse {
 export default function VnPayReturnPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const { t } = useTranslation('payment')
+  const { isMobile } = useBreakpoint()
   const calledRef = useRef(false)
 
   const [loading, setLoading] = useState(true)
@@ -28,7 +32,7 @@ export default function VnPayReturnPage() {
 
   // Parse VnPay params for display
   const transactionNo = searchParams.get('vnp_TransactionNo') ?? ''
-  const amount = Number(searchParams.get('vnp_Amount') ?? 0) / 100
+  const amount = (Number(searchParams.get('vnp_Amount')) || 0) / 100
   const orderInfo = searchParams.get('vnp_OrderInfo') ?? ''
   const txnRef = searchParams.get('vnp_TxnRef') ?? ''
   const bankCode = searchParams.get('vnp_BankCode') ?? ''
@@ -40,6 +44,13 @@ export default function VnPayReturnPage() {
         `${payDate.slice(0, 4)}-${payDate.slice(4, 6)}-${payDate.slice(6, 8)}T${payDate.slice(8, 10)}:${payDate.slice(10, 12)}:${payDate.slice(12, 14)}`,
       )
     : ''
+
+  // Clean up localStorage on unmount
+  useEffect(() => {
+    return () => {
+      localStorage.removeItem('oio_deposit_auction_id')
+    }
+  }, [])
 
   // Call BE to confirm the payment
   useEffect(() => {
@@ -54,7 +65,7 @@ export default function VnPayReturnPage() {
       })
       .catch((err) => {
         // Try to extract error detail
-        const detail = err?.response?.data?.detail || err?.response?.data?.message || 'Payment verification failed'
+        const detail = err?.response?.data?.detail || err?.response?.data?.message || t('payment:vnpayReturn.verificationFailed', 'Payment verification failed')
         setError(detail)
       })
       .finally(() => {
@@ -78,7 +89,7 @@ export default function VnPayReturnPage() {
       >
         <Spin size="large" />
         <p style={{ color: 'var(--color-text-secondary)', fontSize: 14 }}>
-          Đang xác nhận thanh toán...
+          {t('payment:vnpayReturn.verifying', 'Verifying payment...')}
         </p>
       </div>
     )
@@ -106,7 +117,7 @@ export default function VnPayReturnPage() {
           background: 'var(--color-bg-card)',
           border: '1px solid var(--color-border)',
           borderRadius: 4,
-          padding: '48px 40px',
+          padding: isMobile ? '32px 16px' : '48px 40px',
           textAlign: 'center',
         }}
       >
@@ -139,18 +150,20 @@ export default function VnPayReturnPage() {
           style={{
             fontFamily: SERIF_FONT,
             fontWeight: 400,
-            fontSize: 28,
+            fontSize: isMobile ? 22 : 28,
             color: 'var(--color-text-primary)',
             margin: '0 0 8px',
           }}
         >
-          {isSuccess ? 'Thanh toán thành công!' : 'Thanh toán thất bại'}
+          {isSuccess
+            ? (txnRef.startsWith('LINK-') ? t('payment:vnpayReturn.cardLinkedSuccess', 'Card linked successfully!') : t('payment:vnpayReturn.paymentSuccess', 'Payment successful!'))
+            : (txnRef.startsWith('LINK-') ? t('payment:vnpayReturn.cardLinkedFailed', 'Card linking failed') : t('payment:vnpayReturn.paymentFailed', 'Payment failed'))}
         </h1>
 
         <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, margin: '0 0 32px' }}>
           {isSuccess
-            ? 'Giao dịch của bạn đã được xử lý thành công.'
-            : error || result?.message || 'Giao dịch không thể hoàn tất. Vui lòng thử lại.'}
+            ? (txnRef.startsWith('LINK-') ? t('payment:vnpayReturn.cardLinkedDesc', 'Your card has been linked successfully.') : t('payment:vnpayReturn.paymentSuccessDesc', 'Your transaction has been processed successfully.'))
+            : error || result?.message || t('payment:vnpayReturn.paymentFailedDesc', 'Transaction could not be completed. Please try again.')}
         </p>
 
         {/* Amount */}
@@ -159,7 +172,7 @@ export default function VnPayReturnPage() {
             <span
               style={{
                 fontFamily: MONO_FONT,
-                fontSize: 36,
+                fontSize: isMobile ? 28 : 36,
                 fontWeight: 500,
                 color: isSuccess ? 'var(--color-success)' : 'var(--color-danger)',
               }}
@@ -174,41 +187,41 @@ export default function VnPayReturnPage() {
           <Descriptions
             column={1}
             size="small"
-            labelStyle={{ color: 'var(--color-text-secondary)', fontSize: 13, width: 140 }}
+            labelStyle={{ color: 'var(--color-text-secondary)', fontSize: 13, width: isMobile ? 100 : 140 }}
             contentStyle={{ fontFamily: MONO_FONT, fontSize: 13 }}
           >
             {txnRef && (
-              <Descriptions.Item label="Mã giao dịch">
+              <Descriptions.Item label={t('payment:vnpayReturn.transactionRef', 'Transaction Ref')}>
                 {txnRef}
               </Descriptions.Item>
             )}
             {transactionNo && (
-              <Descriptions.Item label="Mã VnPay">
+              <Descriptions.Item label={t('payment:vnpayReturn.vnpayCode', 'VnPay Code')}>
                 {transactionNo}
               </Descriptions.Item>
             )}
             {result?.transactionRef && (
-              <Descriptions.Item label="Tham chiếu">
+              <Descriptions.Item label={t('payment:vnpayReturn.reference', 'Reference')}>
                 {result.transactionRef}
               </Descriptions.Item>
             )}
             {bankCode && (
-              <Descriptions.Item label="Ngân hàng">
+              <Descriptions.Item label={t('payment:vnpayReturn.bank', 'Bank')}>
                 {bankCode}
               </Descriptions.Item>
             )}
             {formattedPayDate && (
-              <Descriptions.Item label="Thời gian">
+              <Descriptions.Item label={t('payment:vnpayReturn.time', 'Time')}>
                 <span style={{ fontFamily: "'Inter', sans-serif" }}>{formattedPayDate}</span>
               </Descriptions.Item>
             )}
             {orderInfo && (
-              <Descriptions.Item label="Nội dung">
+              <Descriptions.Item label={t('payment:vnpayReturn.content', 'Content')}>
                 <span style={{ fontFamily: "'Inter', sans-serif" }}>{orderInfo}</span>
               </Descriptions.Item>
             )}
             {!isSuccess && result?.responseCode && (
-              <Descriptions.Item label="Mã lỗi">
+              <Descriptions.Item label={t('payment:vnpayReturn.errorCode', 'Error Code')}>
                 <span style={{ color: 'var(--color-danger)' }}>{result.responseCode}</span>
               </Descriptions.Item>
             )}
@@ -216,7 +229,7 @@ export default function VnPayReturnPage() {
         </div>
 
         {/* Actions */}
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', flexDirection: isMobile ? 'column' : 'row' }}>
           {isSuccess && depositAuctionId && (
             <Button
               type="primary"
@@ -233,10 +246,26 @@ export default function VnPayReturnPage() {
                 borderColor: 'var(--color-accent)',
               }}
             >
-              Quay lại phiên đấu giá
+              {t('payment:vnpayReturn.backToAuction', 'Back to Auction')}
             </Button>
           )}
-          {isSuccess && !depositAuctionId && (
+          {isSuccess && !depositAuctionId && txnRef.startsWith('LINK-') && (
+            <Button
+              type="primary"
+              size="large"
+              onClick={() => navigate('/me/payment-methods')}
+              style={{
+                height: 48,
+                padding: '0 32px',
+                fontWeight: 500,
+                background: 'var(--color-accent)',
+                borderColor: 'var(--color-accent)',
+              }}
+            >
+              {t('payment:vnpayReturn.viewPaymentMethods', 'View Payment Methods')}
+            </Button>
+          )}
+          {isSuccess && !depositAuctionId && !txnRef.startsWith('LINK-') && (
             <Button
               type="primary"
               size="large"
@@ -249,7 +278,7 @@ export default function VnPayReturnPage() {
                 borderColor: 'var(--color-accent)',
               }}
             >
-              Xem đơn hàng
+              {t('payment:vnpayReturn.viewOrders', 'View Orders')}
             </Button>
           )}
           {!isSuccess && (
@@ -265,7 +294,7 @@ export default function VnPayReturnPage() {
                 borderColor: 'var(--color-accent)',
               }}
             >
-              Thử lại
+              {t('payment:vnpayReturn.retry', 'Try Again')}
             </Button>
           )}
           <Button
@@ -276,7 +305,7 @@ export default function VnPayReturnPage() {
             }}
             style={{ height: 48, padding: '0 32px', borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
           >
-            Về trang chủ
+            {t('payment:vnpayReturn.backToHome', 'Back to Home')}
           </Button>
         </div>
       </div>

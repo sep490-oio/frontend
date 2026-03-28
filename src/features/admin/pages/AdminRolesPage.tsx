@@ -24,9 +24,9 @@ export default function AdminRolesPage() {
   const roleList = roles ?? []
   const permissionNames = permissionsData?.items ?? []
 
-  const handleToggle = async (roleName: string, permissionName: string) => {
+  const handleToggle = async (roleName: string, permissionName: string, currentlyActive: boolean) => {
     try {
-      await togglePermission.mutateAsync({ role: roleName, permission: permissionName })
+      await togglePermission.mutateAsync({ role: roleName, permission: permissionName, isActive: !currentlyActive })
       message.success('Permission updated')
     } catch {
       message.error('Failed to update permission')
@@ -75,7 +75,7 @@ export default function AdminRolesPage() {
                         <Checkbox
                           key={perm}
                           checked={hasPermission}
-                          onChange={() => handleToggle(role.name, perm)}
+                          onChange={() => handleToggle(role.name, perm, hasPermission)}
                           style={{ fontSize: 13 }}
                         >
                           <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 12 }}>

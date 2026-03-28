@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Typography, Table, Select, Space, Button, App } from 'antd'
+import { Typography, Select, Space, Button, App } from 'antd'
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { SafetyCertificateOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -11,26 +12,22 @@ import type { VerificationDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
 
 const STATUS_OPTIONS = [
-  { value: '', label: '' },
+  { value: '', label: 'All' },
   { value: IdentityVerificationStatus.Pending, label: 'Pending' },
+  { value: IdentityVerificationStatus.Submitted, label: 'Submitted' },
+  { value: IdentityVerificationStatus.UnderReview, label: 'Under Review' },
   { value: IdentityVerificationStatus.Approved, label: 'Approved' },
   { value: IdentityVerificationStatus.Rejected, label: 'Rejected' },
-  { value: IdentityVerificationStatus.Unverified, label: 'Unverified' },
 ] as const
 
 export default function AdminVerificationsPage() {
   const { t } = useTranslation('admin')
-  const { t: tc } = useTranslation('common')
   const { message } = App.useApp()
   const navigate = useNavigate()
 
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
   const [statusFilter, setStatusFilter] = useState('')
 
   const { data, isLoading } = usePendingVerifications({
-    pageNumber: page,
-    pageSize,
     ...(statusFilter ? { status: statusFilter } : {}),
   })
 
@@ -57,29 +54,24 @@ export default function AdminVerificationsPage() {
 
   const columns: ColumnsType<VerificationDto> = [
     {
-      title: t('verifications.user'),
-      dataIndex: 'userId',
-      key: 'userId',
+      title: t('verifications.fullName', 'Full Name'),
+      dataIndex: 'fullName',
+      key: 'fullName',
       ellipsis: true,
+      render: (name: string) => name || '-',
     },
     {
       title: t('verifications.type'),
-      dataIndex: 'type',
-      key: 'type',
-      width: 120,
-      render: (type: string) => <StatusBadge status={type} size="small" />,
-    },
-    {
-      title: t('verifications.idType'),
-      dataIndex: 'idType',
-      key: 'idType',
+      dataIndex: 'verificationType',
+      key: 'verificationType',
       width: 140,
+      render: (type: string) => <StatusBadge status={type} size="small" />,
     },
     {
       title: t('verifications.status'),
       dataIndex: 'status',
       key: 'status',
-      width: 120,
+      width: 130,
       render: (status: string) => <StatusBadge status={status} />,
     },
     {
@@ -90,6 +82,13 @@ export default function AdminVerificationsPage() {
       render: (date: string) => date ? formatDateTime(date) : '-',
     },
     {
+      title: t('verifications.attempts', 'Attempts'),
+      dataIndex: 'attemptCount',
+      key: 'attemptCount',
+      width: 90,
+      align: 'center' as const,
+    },
+    {
       title: t('verifications.actions'),
       key: 'actions',
       width: 220,
@@ -98,7 +97,9 @@ export default function AdminVerificationsPage() {
           <Button type="link" size="small" onClick={() => navigate(`/admin/verifications/${record.id}`)}>
             {t('verifications.view')}
           </Button>
-          {record.status === IdentityVerificationStatus.Pending && (
+          {(record.status === IdentityVerificationStatus.Pending ||
+            record.status === IdentityVerificationStatus.Submitted ||
+            record.status === IdentityVerificationStatus.UnderReview) && (
             <>
               <Button type="link" size="small" onClick={() => handleApprove(record.id)}>
                 {t('verifications.approve')}
@@ -123,7 +124,7 @@ export default function AdminVerificationsPage() {
         <Select
           placeholder={t('verifications.filterStatus')}
           value={statusFilter}
-          onChange={(val) => { setStatusFilter(val); setPage(1) }}
+          onChange={(val) => setStatusFilter(val)}
           style={{ width: 200 }}
           allowClear
           onClear={() => setStatusFilter('')}
@@ -134,20 +135,13 @@ export default function AdminVerificationsPage() {
         />
       </Space>
 
-      <Table<VerificationDto>
+      <ResponsiveTable<VerificationDto>
         rowKey="id"
         columns={columns}
-        dataSource={data?.items ?? []}
+        dataSource={(data as any)?.items ?? data ?? []}
         loading={isLoading}
-        scroll={{ x: 800 }}
-        pagination={{
-          current: data?.metadata?.currentPage ?? page,
-          pageSize: data?.metadata?.pageSize ?? pageSize,
-          total: data?.metadata?.totalCount ?? 0,
-          showSizeChanger: true,
-          showTotal: (total) => tc('pagination.total', { total }),
-          onChange: (p, ps) => { setPage(p); setPageSize(ps) },
-        }}
+        mobileMode="list"
+        pagination={{ pageSize: 20 }}
       />
     </div>
   )

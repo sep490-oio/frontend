@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Typography, Table, Card, Button, Modal, Input, Select, Space, message } from 'antd'
+import { Typography, Card, Button, Modal, Input, Select, Space, message } from 'antd'
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons'
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { useInspectionQueue, useReviewInspection } from '@/features/inspector/api'
 import type { InspectionQueueItem } from '@/features/inspector/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
@@ -109,13 +110,14 @@ export default function InspectionReviewPage() {
     <div>
       <Typography.Title
         level={2}
-        style={{ marginBottom: 24, fontFamily: SERIF_FONT, color: '#1A1A1A' }}
+        style={{ marginBottom: 24, fontFamily: SERIF_FONT, color: 'var(--color-text-primary)' }}
       >
         Inspection Reviews
       </Typography.Title>
 
       <Card>
-        <Table<InspectionQueueItem>
+        <ResponsiveTable<InspectionQueueItem>
+          mobileMode="card"
           columns={columns}
           dataSource={data?.items ?? []}
           rowKey="id"

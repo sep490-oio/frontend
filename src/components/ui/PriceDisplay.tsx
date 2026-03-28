@@ -36,7 +36,7 @@ export function PriceDisplay({
 
   if (price != null && typeof price === 'object') {
     // MoneyDto
-    displayText = `${price.symbol ?? ''}${formatCurrency(price.amount ?? 0, price.currency ?? currency)}`
+    displayText = formatCurrency(price.amount ?? 0, price.currency ?? currency)
   } else {
     // raw number (backwards compat)
     const numericAmount = (typeof price === 'number' ? price : amount) ?? 0

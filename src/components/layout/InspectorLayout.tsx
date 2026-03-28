@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Outlet, useNavigate, useLocation, Link } from 'react-router'
-import { Layout, Avatar, Tooltip } from 'antd'
+import { Layout, Avatar, Tooltip, Drawer } from 'antd'
 import {
   DashboardOutlined,
   SearchOutlined,
@@ -11,24 +11,28 @@ import {
   MoonOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  MenuOutlined,
   UserOutlined,
   GlobalOutlined,
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/hooks/useTheme'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 
 const { Content } = Layout
 
 const SERIF_FONT = "'DM Serif Display', Georgia, serif"
 const SANS_FONT = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
 
-const SIDEBAR_WIDTH = 260
+const SIDEBAR_WIDTH = 240
 const SIDEBAR_COLLAPSED = 72
 const HEADER_HEIGHT = 64
 
 export function InspectorLayout() {
   const [collapsed, setCollapsed] = useState(false)
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
+  const { isMobile } = useBreakpoint()
   const { t, i18n } = useTranslation('inspector')
   const navigate = useNavigate()
   const location = useLocation()
@@ -59,7 +63,7 @@ export function InspectorLayout() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-bg-primary)' }}>
-      {/* Sidebar */}
+      {/* Sidebar (hidden on mobile) */}
       <aside
         style={{
           position: 'fixed',
@@ -70,7 +74,7 @@ export function InspectorLayout() {
           background: 'var(--color-bg-card)',
           borderRight: '1px solid var(--color-border)',
           transition: 'width 200ms ease',
-          display: 'flex',
+          display: isMobile ? 'none' : 'flex',
           flexDirection: 'column',
           zIndex: 100,
           overflow: 'hidden',
@@ -201,12 +205,59 @@ export function InspectorLayout() {
         </div>
       </aside>
 
+      {/* Mobile Drawer */}
+      <Drawer
+        title={
+          <span style={{ fontFamily: SERIF_FONT, fontSize: 20, letterSpacing: '0.1em' }}>
+            OIO <span style={{ fontFamily: SANS_FONT, fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-accent)', marginLeft: 8 }}>Inspector</span>
+          </span>
+        }
+        placement="left"
+        onClose={() => setMobileDrawerOpen(false)}
+        open={mobileDrawerOpen}
+        width={280}
+        styles={{ body: { padding: 0 } }}
+      >
+        <nav style={{ padding: '8px 0' }}>
+          {menuItems.map((item) => {
+            const active = isActive(item.key)
+            return (
+              <div
+                key={item.key}
+                onClick={() => { navigate(item.key); setMobileDrawerOpen(false) }}
+                style={{
+                  height: 44,
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '0 16px',
+                  margin: '2px 8px',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  fontFamily: SANS_FONT,
+                  fontSize: 13,
+                  fontWeight: active ? 500 : 400,
+                  color: active ? 'var(--color-accent)' : 'var(--color-text-secondary)',
+                  background: active ? 'var(--color-accent-light)' : 'transparent',
+                  borderLeft: active ? '3px solid var(--color-accent)' : '3px solid transparent',
+                  gap: 12,
+                }}
+              >
+                <span style={{ fontSize: 16, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                  {item.icon}
+                </span>
+                <span>{item.label}</span>
+              </div>
+            )
+          })}
+        </nav>
+      </Drawer>
+
       {/* Header */}
       <header
         style={{
           position: 'fixed',
           top: 0,
-          left: sidebarWidth,
+          left: isMobile ? 0 : sidebarWidth,
           right: 0,
           height: HEADER_HEIGHT,
           background: 'var(--color-bg-card)',
@@ -219,24 +270,43 @@ export function InspectorLayout() {
           zIndex: 99,
         }}
       >
-        {/* Left side: collapse toggle + breadcrumb */}
+        {/* Left side: collapse toggle (desktop) / hamburger (mobile) + breadcrumb */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: 4,
-              display: 'flex',
-              alignItems: 'center',
-              color: 'var(--color-text-secondary)',
-              fontSize: 18,
-            }}
-            aria-label="Toggle sidebar"
-          >
-            {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-          </button>
+          {isMobile ? (
+            <button
+              onClick={() => setMobileDrawerOpen(true)}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 4,
+                display: 'flex',
+                alignItems: 'center',
+                color: 'var(--color-text-secondary)',
+                fontSize: 18,
+              }}
+              aria-label="Open menu"
+            >
+              <MenuOutlined />
+            </button>
+          ) : (
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 4,
+                display: 'flex',
+                alignItems: 'center',
+                color: 'var(--color-text-secondary)',
+                fontSize: 18,
+              }}
+              aria-label="Toggle sidebar"
+            >
+              {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            </button>
+          )}
           <span
             style={{
               fontFamily: SANS_FONT,
@@ -378,14 +448,14 @@ export function InspectorLayout() {
       {/* Content area */}
       <main
         style={{
-          marginLeft: sidebarWidth,
+          marginLeft: isMobile ? 0 : sidebarWidth,
           marginTop: HEADER_HEIGHT,
           transition: 'margin-left 200ms ease',
           minHeight: `calc(100vh - ${HEADER_HEIGHT}px)`,
           background: 'var(--color-bg-primary)',
         }}
       >
-        <Content style={{ padding: 32 }}>
+        <Content style={{ padding: isMobile ? 16 : 32 }}>
           <Outlet />
         </Content>
       </main>

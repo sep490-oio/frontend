@@ -1,0 +1,14 @@
+{
+  "emailInvalid": "Invalid email address",
+  "passwordMinLength": "Password must be at least 8 characters",
+  "passwordUppercase": "Password must contain at least 1 uppercase letter",
+  "passwordLowercase": "Password must contain at least 1 lowercase letter",
+  "passwordNumber": "Password must contain at least 1 number",
+  "passwordSpecialChar": "Password must contain at least 1 special character",
+  "usernameMinLength": "Username must be at least 3 characters",
+  "usernameMaxLength": "Username must be at most 30 characters",
+  "usernamePattern": "Username can only contain letters, numbers, and underscores",
+  "phoneInvalid": "Invalid phone number",
+  "required": "This field is required",
+  "positiveValue": "Value must be greater than 0"
+}

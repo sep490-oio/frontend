@@ -28,6 +28,7 @@ import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useTranslation } from 'react-i18next'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import {
   useAddresses,
   useAddAddress,
@@ -59,6 +60,7 @@ type AddressFormValues = z.infer<typeof addressSchema>
 
 export default function AddressesPage() {
   const { t: _t } = useTranslation('common')
+  const { isMobile } = useBreakpoint()
   const { message } = App.useApp()
 
   const [modalOpen, setModalOpen] = useState(false)
@@ -169,8 +171,8 @@ export default function AddressesPage() {
   }
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+    <div style={{ maxWidth: 900, margin: '0 auto', padding: isMobile ? '0 12px' : undefined }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', gap: isMobile ? 12 : 0, marginBottom: 24 }}>
         <Title level={2} style={{ margin: 0 }}>Dia chi</Title>
         <Button type="primary" icon={<PlusOutlined />} onClick={openAddModal}>
           Them dia chi
@@ -261,7 +263,7 @@ export default function AddressesPage() {
       >
         <form>
           <Row gutter={16}>
-            <Col span={12}>
+            <Col xs={24} sm={12}>
               <div style={{ marginBottom: 16 }}>
                 <label>Ten nguoi nhan *</label>
                 <Controller
@@ -280,7 +282,7 @@ export default function AddressesPage() {
                 )}
               </div>
             </Col>
-            <Col span={12}>
+            <Col xs={24} sm={12}>
               <div style={{ marginBottom: 16 }}>
                 <label>So dien thoai *</label>
                 <Controller
@@ -320,7 +322,7 @@ export default function AddressesPage() {
           </div>
 
           <Row gutter={16}>
-            <Col span={12}>
+            <Col xs={24} sm={12}>
               <div style={{ marginBottom: 16 }}>
                 <label>Phuong/Xa *</label>
                 <Controller
@@ -339,7 +341,7 @@ export default function AddressesPage() {
                 )}
               </div>
             </Col>
-            <Col span={12}>
+            <Col xs={24} sm={12}>
               <div style={{ marginBottom: 16 }}>
                 <label>Quan/Huyen *</label>
                 <Controller
@@ -361,7 +363,7 @@ export default function AddressesPage() {
           </Row>
 
           <Row gutter={16}>
-            <Col span={12}>
+            <Col xs={24} sm={12}>
               <div style={{ marginBottom: 16 }}>
                 <label>Tinh/Thanh pho *</label>
                 <Controller
@@ -380,7 +382,7 @@ export default function AddressesPage() {
                 )}
               </div>
             </Col>
-            <Col span={12}>
+            <Col xs={24} sm={12}>
               <div style={{ marginBottom: 16 }}>
                 <label>Ma buu chinh</label>
                 <Controller

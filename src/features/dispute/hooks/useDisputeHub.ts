@@ -1,11 +1,13 @@
 import { useEffect, useState, useRef } from 'react'
-import { getDisputeHub, startConnection, stopConnection } from '@/lib/signalr'
-import { queryKeys } from '@/lib/queryClient'
 import { useQueryClient } from '@tanstack/react-query'
+
+import { useAuth } from '@/hooks/useAuth'
+import { queryKeys } from '@/lib/queryClient'
+import { getDisputeHub, startConnection } from '@/lib/signalr'
 import type {
   DisputeMessageDto,
-  DisputeThreadMetaDto,
   DisputeParticipantReadStateDto,
+  DisputeThreadMetaDto,
   DisputeUnreadUpdateDto,
 } from '@/types'
 
@@ -27,56 +29,85 @@ const initialState: DisputeHubState = {
 
 export function useDisputeHub(disputeId: string) {
   const [state, setState] = useState<DisputeHubState>(initialState)
-  const connectionRef = useRef(getDisputeHub())
+  const connectionRef = useRef<ReturnType<typeof getDisputeHub> | null>(null)
   const qc = useQueryClient()
+  const { isAuthenticated } = useAuth()
 
   useEffect(() => {
-    if (!disputeId) return
-
-    const connection = connectionRef.current
-
-    const connect = async () => {
-      await startConnection(connection)
-      await connection.invoke('JoinDispute', disputeId)
-      setState((prev) => ({ ...prev, connected: true }))
+    if (!disputeId || !isAuthenticated) {
+      return
     }
 
-    connection.on('MessageReceived', (data: DisputeMessageDto) => {
+    const connection = getDisputeHub()
+    connectionRef.current = connection
+    let isActive = true
+
+    const joinDispute = async () => {
+      const started = await startConnection(connection)
+      if (!started || !isActive) {
+        return
+      }
+
+      await connection.invoke('JoinDispute', disputeId)
+      if (isActive) {
+        setState((prev) => ({ ...prev, connected: true }))
+      }
+    }
+
+    const messageReceivedHandler = (data: DisputeMessageDto) => {
       setState((prev) => ({
         ...prev,
+        connected: true,
         messages: [...prev.messages, data],
       }))
       qc.invalidateQueries({ queryKey: queryKeys.disputes.messages(disputeId) })
-    })
+    }
 
-    connection.on('ReadStateUpdated', (data: DisputeParticipantReadStateDto) => {
-      setState((prev) => ({ ...prev, readState: data }))
-    })
+    const readStateUpdatedHandler = (data: DisputeParticipantReadStateDto) => {
+      setState((prev) => ({ ...prev, connected: true, readState: data }))
+    }
 
-    connection.on('DisputeUpdated', (data: DisputeThreadMetaDto) => {
-      setState((prev) => ({ ...prev, disputeMeta: data }))
+    const disputeUpdatedHandler = (data: DisputeThreadMetaDto) => {
+      setState((prev) => ({ ...prev, connected: true, disputeMeta: data }))
       qc.invalidateQueries({ queryKey: queryKeys.disputes.detail(disputeId) })
-    })
+    }
 
-    connection.on('DisputeUnreadUpdated', (data: DisputeUnreadUpdateDto) => {
-      setState((prev) => ({ ...prev, unreadUpdate: data }))
+    const disputeUnreadUpdatedHandler = (data: DisputeUnreadUpdateDto) => {
+      setState((prev) => ({ ...prev, connected: true, unreadUpdate: data }))
       qc.invalidateQueries({ queryKey: queryKeys.disputes.list() })
+    }
+
+    connection.on('MessageReceived', messageReceivedHandler)
+    connection.on('ReadStateUpdated', readStateUpdatedHandler)
+    connection.on('DisputeUpdated', disputeUpdatedHandler)
+    connection.on('DisputeUnreadUpdated', disputeUnreadUpdatedHandler)
+
+    connection.onreconnecting(() => {
+      if (isActive) {
+        setState((prev) => ({ ...prev, connected: false }))
+      }
+    })
+    connection.onreconnected(() => {
+      void joinDispute()
+    })
+    connection.onclose(() => {
+      if (isActive) {
+        setState((prev) => ({ ...prev, connected: false }))
+      }
     })
 
-    connect()
+    void joinDispute()
 
     return () => {
-      connection.invoke('LeaveDispute', disputeId).catch(() => {
-        // ignore errors on leave
-      })
-      connection.off('MessageReceived')
-      connection.off('ReadStateUpdated')
-      connection.off('DisputeUpdated')
-      connection.off('DisputeUnreadUpdated')
-      stopConnection(connection)
+      isActive = false
+      void connection.invoke('LeaveDispute', disputeId).catch(() => undefined)
+      connection.off('MessageReceived', messageReceivedHandler)
+      connection.off('ReadStateUpdated', readStateUpdatedHandler)
+      connection.off('DisputeUpdated', disputeUpdatedHandler)
+      connection.off('DisputeUnreadUpdated', disputeUnreadUpdatedHandler)
       setState(initialState)
     }
-  }, [disputeId, qc])
+  }, [disputeId, isAuthenticated, qc])
 
   return state
 }

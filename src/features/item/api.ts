@@ -1,12 +1,13 @@
 import apiClient from '@/lib/axios'
 import { queryKeys } from '@/lib/queryClient'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import type {
   ItemDto,
   ItemMediaDto,
   CreateItemRequest,
   CategoryDto,
   ItemQuestionDto,
+  ItemQuestionNotification,
   PagedList,
   PaginationParams,
 } from '@/types'
@@ -47,6 +48,7 @@ export function useCreateItem() {
   })
 }
 
+// TODO: PUT /items/{id} endpoint does not exist on backend — this mutation will always 404
 export function useUpdateItem() {
   const qc = useQueryClient()
   return useMutation({
@@ -100,6 +102,49 @@ export function useConfirmInspectedCondition() {
   })
 }
 
+// ── Public Items ────────────────────────────────────────────────────
+
+export function usePublicItems(params?: PaginationParams & { categoryId?: string; search?: string }) {
+  return useQuery({
+    queryKey: [...queryKeys.items.list(params), 'public'],
+    queryFn: async () => {
+      const res = await apiClient.get<PagedList<ItemDto>>('/items/public', { params })
+      return res.data
+    },
+  })
+}
+
+// ── Batch Media ─────────────────────────────────────────────────────
+
+export function useBatchAddMedia() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ itemId, mediaUploadIds }: { itemId: string; mediaUploadIds: string[] }) => {
+      const res = await apiClient.post<ItemMediaDto[]>(`/items/${itemId}/media/batch`, { mediaUploadIds })
+      return res.data
+    },
+    onSuccess: (_, { itemId }) => {
+      qc.invalidateQueries({ queryKey: queryKeys.items.detail(itemId) })
+    },
+  })
+}
+
+// ── Create Auction from Item ────────────────────────────────────────
+
+export function useCreateAuctionFromItem() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ itemId, ...data }: { itemId: string; auctionType?: string }) => {
+      const res = await apiClient.post(`/items/${itemId}/auctions`, data)
+      return res.data
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.items.all })
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.all })
+    },
+  })
+}
+
 // ── Categories ───────────────────────────────────────────────────────
 
 export function useCategories() {
@@ -113,17 +158,155 @@ export function useCategories() {
   })
 }
 
+export function useCategoryById(id: string) {
+  return useQuery({
+    queryKey: queryKeys.categories.detail(id),
+    queryFn: async () => {
+      const res = await apiClient.get<CategoryDto>(`/categories/${id}`)
+      return res.data
+    },
+    enabled: !!id,
+    staleTime: 30 * 60 * 1000,
+  })
+}
+
+export function useCategoryBySlug(slug: string) {
+  return useQuery({
+    queryKey: [...queryKeys.categories.all, 'slug', slug],
+    queryFn: async () => {
+      const res = await apiClient.get<CategoryDto>(`/categories/by-slug/${slug}`)
+      return res.data
+    },
+    enabled: !!slug,
+    staleTime: 30 * 60 * 1000,
+  })
+}
+
+export function useCategoryChildren(id: string) {
+  return useQuery({
+    queryKey: queryKeys.categories.children(id),
+    queryFn: async () => {
+      const res = await apiClient.get<{ items: CategoryDto[] }>(`/categories/${id}/children`)
+      return res.data.items
+    },
+    enabled: !!id,
+    staleTime: 30 * 60 * 1000,
+  })
+}
+
 // ── Questions ────────────────────────────────────────────────────────
 
-export function useItemQuestions(itemId: string, params?: PaginationParams) {
+function toItemQuestionDto(
+  incoming: ItemQuestionDto | ItemQuestionNotification,
+  existing?: ItemQuestionDto,
+): ItemQuestionDto {
+  if ('questionerId' in incoming) {
+    return incoming
+  }
+
+  return {
+    id: incoming.questionId,
+    itemId: incoming.itemId,
+    questionerId: incoming.askerId,
+    question: incoming.question,
+    answer: incoming.answer ?? existing?.answer,
+    createdAt: incoming.createdAt,
+    answeredAt:
+      incoming.answer != null
+        ? existing?.answeredAt ?? new Date().toISOString()
+        : existing?.answeredAt,
+  }
+}
+
+function upsertQuestionPage(
+  current: PagedList<ItemQuestionDto> | undefined,
+  incoming: ItemQuestionDto | ItemQuestionNotification,
+): PagedList<ItemQuestionDto> | undefined {
+  if (!current) {
+    return current
+  }
+
+  const questionId = 'questionId' in incoming ? incoming.questionId : incoming.id
+  const existingIndex = current.items.findIndex((question) => question.id === questionId)
+  const existingQuestion = existingIndex >= 0 ? current.items[existingIndex] : undefined
+  const nextQuestion = toItemQuestionDto(incoming, existingQuestion)
+
+  if (existingIndex >= 0) {
+    return {
+      ...current,
+      items: current.items.map((question, index) =>
+        index === existingIndex ? { ...question, ...nextQuestion } : question,
+      ),
+    }
+  }
+
+  const pageSize = current.metadata.pageSize || current.items.length || 1
+
+  return {
+    items: [nextQuestion, ...current.items].slice(0, pageSize),
+    metadata: {
+      ...current.metadata,
+      totalCount: current.metadata.totalCount + 1,
+      hasNext:
+        current.metadata.totalCount + 1 >
+        current.metadata.currentPage * pageSize,
+    },
+  }
+}
+
+function patchQuestionPage(
+  current: PagedList<ItemQuestionDto> | undefined,
+  questionId: string,
+  updater: (question: ItemQuestionDto) => ItemQuestionDto,
+): PagedList<ItemQuestionDto> | undefined {
+  if (!current || !current.items.some((question) => question.id === questionId)) {
+    return current
+  }
+
+  return {
+    ...current,
+    items: current.items.map((question) =>
+      question.id === questionId ? updater(question) : question,
+    ),
+  }
+}
+
+export function upsertItemQuestionCaches(
+  queryClient: QueryClient,
+  itemId: string,
+  incoming: ItemQuestionDto | ItemQuestionNotification,
+): void {
+  queryClient.setQueriesData<PagedList<ItemQuestionDto>>(
+    { queryKey: queryKeys.items.questionsRoot(itemId) },
+    (current) => upsertQuestionPage(current, incoming),
+  )
+}
+
+export function patchItemQuestionCaches(
+  queryClient: QueryClient,
+  itemId: string,
+  questionId: string,
+  updater: (question: ItemQuestionDto) => ItemQuestionDto,
+): void {
+  queryClient.setQueriesData<PagedList<ItemQuestionDto>>(
+    { queryKey: queryKeys.items.questionsRoot(itemId) },
+    (current) => patchQuestionPage(current, questionId, updater),
+  )
+}
+
+export function useItemQuestions(
+  itemId: string,
+  params?: PaginationParams,
+  options?: { refetchInterval?: number | false; enabled?: boolean },
+) {
   return useQuery({
     queryKey: queryKeys.items.questions(itemId, params),
     queryFn: async () => {
       const res = await apiClient.get<PagedList<ItemQuestionDto>>(`/items/${itemId}/questions`, { params })
       return res.data
     },
-    enabled: !!itemId,
-    refetchInterval: 30000, // 30 seconds polling
+    enabled: options?.enabled ?? !!itemId,
+    refetchInterval: options?.refetchInterval ?? 60000,
   })
 }
 
@@ -134,8 +317,9 @@ export function useAskQuestion() {
       const res = await apiClient.post<ItemQuestionDto>(`/items/${itemId}/questions`, { question })
       return res.data
     },
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.items.questions(variables.itemId) })
+    onSuccess: (data, variables) => {
+      upsertItemQuestionCaches(qc, variables.itemId, data)
+      qc.invalidateQueries({ queryKey: queryKeys.items.questionsRoot(variables.itemId) })
     },
   })
 }
@@ -147,8 +331,17 @@ export function useAnswerQuestion() {
       const res = await apiClient.post<ItemQuestionDto>(`/items/${itemId}/questions/${questionId}/answer`, { answer })
       return res.data
     },
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.items.questions(variables.itemId) })
+    onSuccess: (data, variables) => {
+      if (data) {
+        upsertItemQuestionCaches(qc, variables.itemId, data)
+      } else {
+        patchItemQuestionCaches(qc, variables.itemId, variables.questionId, (question) => ({
+          ...question,
+          answer: variables.answer,
+          answeredAt: question.answeredAt ?? new Date().toISOString(),
+        }))
+      }
+      qc.invalidateQueries({ queryKey: queryKeys.items.questionsRoot(variables.itemId) })
     },
   })
 }
@@ -212,8 +405,8 @@ export function useReorderItemMedia() {
 export function useChooseItemShipping() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ itemId, shippingOptionId }: { itemId: string; shippingOptionId: string }) => {
-      await apiClient.post(`/items/${itemId}/shipping`, { shippingOptionId })
+    mutationFn: async ({ itemId, senderName, senderPhone, senderAddress, senderWard, senderDistrict, senderProvince, weightGrams, insuranceValue }: { itemId: string; senderName: string; senderPhone: string; senderAddress: string; senderWard: string; senderDistrict: string; senderProvince: string; weightGrams: number; insuranceValue: number }) => {
+      await apiClient.post(`/items/${itemId}/shipping`, { senderName, senderPhone, senderAddress, senderWard, senderDistrict, senderProvince, weightGrams, insuranceValue })
     },
     onSuccess: (_, { itemId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.items.detail(itemId) })
@@ -225,8 +418,8 @@ export function useChooseItemShipping() {
 export function useResubmitItem() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (itemId: string) => {
-      await apiClient.post(`/items/${itemId}/resubmit`)
+    mutationFn: async ({ itemId, verifyByPlatform = false }: { itemId: string; verifyByPlatform?: boolean }) => {
+      await apiClient.post(`/items/${itemId}/resubmit`, { verifyByPlatform })
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.items.all })

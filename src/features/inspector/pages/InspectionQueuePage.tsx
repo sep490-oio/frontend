@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Typography, Table, Select, Button, Space, Card } from 'antd'
+import { Typography, Select, Button, Space, Card } from 'antd'
 import { SearchOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { useInspectionQueue } from '@/features/inspector/api'
 import type { InspectionQueueItem } from '@/features/inspector/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
@@ -66,7 +67,7 @@ export default function InspectionQueuePage() {
           type="link"
           icon={<SearchOutlined />}
           onClick={() => navigate(`/inspector/inspections/${record.id}`)}
-          style={{ color: '#8B7355' }}
+          style={{ color: 'var(--color-accent)' }}
         >
           Inspect
         </Button>
@@ -83,7 +84,7 @@ export default function InspectionQueuePage() {
     <div>
       <Typography.Title
         level={2}
-        style={{ marginBottom: 24, fontFamily: SERIF_FONT, color: '#1A1A1A' }}
+        style={{ marginBottom: 24, fontFamily: SERIF_FONT, color: 'var(--color-text-primary)' }}
       >
         Inspection Queue
       </Typography.Title>
@@ -101,7 +102,8 @@ export default function InspectionQueuePage() {
       </Card>
 
       <Card>
-        <Table<InspectionQueueItem>
+        <ResponsiveTable<InspectionQueueItem>
+          mobileMode="card"
           columns={columns}
           dataSource={data?.items ?? []}
           rowKey="id"

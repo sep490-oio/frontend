@@ -78,5 +78,12 @@
   "withdrawalError": "Gửi yêu cầu rút tiền thất bại",
   "withdrawalCancelled": "Đã hủy yêu cầu rút tiền",
   "withdrawalCancelError": "Hủy yêu cầu rút tiền thất bại",
-  "confirmCancelWithdrawal": "Hủy yêu cầu rút tiền này?"
+  "confirmCancelWithdrawal": "Hủy yêu cầu rút tiền này?",
+  "walletPayment": "Ví trên sàn",
+  "payFromWallet": "Thanh toán bằng ví",
+  "payWalletPlusVnpay": "Thanh toán (Ví + VnPay)",
+  "hybridNote": "Ví thanh toán {{wallet}}, VnPay thanh toán {{vnpay}} còn lại",
+  "insufficientBalance": "Số dư không đủ — hãy nạp thêm vào ví",
+  "noSavedMethods": "Chưa có phương thức thanh toán nào",
+  "otherMethods": "Phương thức khác"
 }

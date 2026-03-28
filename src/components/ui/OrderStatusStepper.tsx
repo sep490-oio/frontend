@@ -59,10 +59,12 @@ export function OrderStatusStepper({ status }: OrderStatusStepperProps) {
   }
 
   const currentIndex = STEP_SEQUENCE.indexOf(status as (typeof STEP_SEQUENCE)[number])
+  // If status is unknown (not in sequence), don't highlight any step
+  const activeStep = currentIndex >= 0 ? currentIndex : -1
 
   return (
     <Steps
-      current={currentIndex >= 0 ? currentIndex : 0}
+      current={activeStep}
       items={STEP_SEQUENCE.map((step) => ({
         title: t(`status.${step}`, step),
         icon: STEP_ICONS[step],

@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Typography, Table, Select, Space, Button, Modal, Input, App, Rate } from 'antd'
+import { Typography, Select, Space, Button, Modal, Input, App } from 'antd'
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { ShopOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useAdminSellerProfiles, useVerifySellerProfile, useRejectSellerProfile } from '@/features/admin/api'
@@ -12,26 +13,21 @@ import type { ColumnsType } from 'antd/es/table'
 const STATUS_OPTIONS = [
   { value: '', label: '' },
   { value: SellerProfileStatus.Pending, label: 'Pending' },
-  { value: SellerProfileStatus.Approved, label: 'Approved' },
+  { value: SellerProfileStatus.Verified, label: 'Verified' },
   { value: SellerProfileStatus.Rejected, label: 'Rejected' },
   { value: SellerProfileStatus.Suspended, label: 'Suspended' },
 ] as const
 
 export default function AdminSellerProfilesPage() {
   const { t } = useTranslation('admin')
-  const { t: tc } = useTranslation('common')
   const { message } = App.useApp()
 
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
   const [statusFilter, setStatusFilter] = useState('')
   const [rejectModalOpen, setRejectModalOpen] = useState(false)
   const [rejectId, setRejectId] = useState('')
   const [rejectReason, setRejectReason] = useState('')
 
   const { data, isLoading } = useAdminSellerProfiles({
-    pageNumber: page,
-    pageSize,
     ...(statusFilter ? { status: statusFilter } : {}),
   })
 
@@ -67,10 +63,11 @@ export default function AdminSellerProfilesPage() {
       ellipsis: true,
     },
     {
-      title: t('sellers.user'),
-      dataIndex: 'userId',
-      key: 'userId',
+      title: t('sellers.description'),
+      dataIndex: 'storeDescription',
+      key: 'storeDescription',
       ellipsis: true,
+      render: (desc: string) => desc || '—',
     },
     {
       title: t('sellers.status'),
@@ -80,11 +77,15 @@ export default function AdminSellerProfilesPage() {
       render: (status: string) => <StatusBadge status={status} />,
     },
     {
-      title: t('sellers.rating'),
-      dataIndex: 'rating',
-      key: 'rating',
-      width: 160,
-      render: (rating: number) => <Rate disabled value={rating} allowHalf />,
+      title: t('sellers.trustScore'),
+      dataIndex: 'trustScore',
+      key: 'trustScore',
+      width: 120,
+      render: (score: number) => (
+        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 13 }}>
+          {score != null ? score.toFixed(1) : '—'}
+        </span>
+      ),
     },
     {
       title: t('sellers.createdAt'),
@@ -132,7 +133,7 @@ export default function AdminSellerProfilesPage() {
         <Select
           placeholder={t('sellers.filterStatus')}
           value={statusFilter}
-          onChange={(val) => { setStatusFilter(val); setPage(1) }}
+          onChange={(val) => setStatusFilter(val)}
           style={{ width: 200 }}
           allowClear
           onClear={() => setStatusFilter('')}
@@ -143,20 +144,13 @@ export default function AdminSellerProfilesPage() {
         />
       </Space>
 
-      <Table<SellerProfileDto>
+      <ResponsiveTable<SellerProfileDto>
         rowKey="id"
         columns={columns}
-        dataSource={data?.items ?? []}
+        dataSource={data ?? []}
         loading={isLoading}
-        scroll={{ x: 800 }}
-        pagination={{
-          current: data?.metadata?.currentPage ?? page,
-          pageSize: data?.metadata?.pageSize ?? pageSize,
-          total: data?.metadata?.totalCount ?? 0,
-          showSizeChanger: true,
-          showTotal: (total) => tc('pagination.total', { total }),
-          onChange: (p, ps) => { setPage(p); setPageSize(ps) },
-        }}
+        mobileMode="list"
+        pagination={{ pageSize: 20 }}
       />
 
       <Modal

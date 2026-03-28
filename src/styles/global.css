@@ -1,26 +1,26 @@
-/* ─── OIO Design System: Warm Ivory ─── */
+/* ─── OIO Design System: Blue ─── */
 
 :root {
   /* Colors */
-  --color-bg-primary: #FAFAF7;
-  --color-bg-surface: #F5F4F0;
+  --color-bg-primary: #F8FAFC;
+  --color-bg-surface: #F1F5F9;
   --color-bg-card: #FFFFFF;
-  --color-text-primary: #1A1A1A;
-  --color-text-secondary: #6B6560;
-  --color-accent: #8B7355;
-  --color-accent-hover: #7A6548;
-  --color-accent-light: rgba(139, 115, 85, 0.08);
+  --color-text-primary: #0F172A;
+  --color-text-secondary: #64748B;
+  --color-accent: #2563EB;
+  --color-accent-hover: #1D4ED8;
+  --color-accent-light: rgba(37, 99, 235, 0.08);
   --color-success: #4A7C59;
   --color-danger: #C4513D;
-  --color-border: #E8E5DF;
-  --color-border-light: #F0EFEB;
+  --color-border: #E2E8F0;
+  --color-border-light: #F1F5F9;
 
   /* Typography */
   --font-serif: 'DM Serif Display', Georgia, 'Times New Roman', serif;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'DM Mono', 'JetBrains Mono', 'Fira Code', monospace;
 
-  /* Shadows (warm-tinted) */
+  /* Shadows */
   --shadow-sm: 0 1px 2px rgba(26, 26, 26, 0.04);
   --shadow-md: 0 4px 12px rgba(26, 26, 26, 0.06);
   --shadow-lg: 0 8px 30px rgba(26, 26, 26, 0.08);
@@ -35,18 +35,18 @@
 /* ─── Dark Mode ─── */
 
 [data-theme="dark"] {
-  --color-bg-primary: #0F0F0F;
-  --color-bg-surface: #1A1A1A;
-  --color-bg-card: #242424;
-  --color-text-primary: #F5F0EB;
-  --color-text-secondary: #9A9590;
-  --color-accent: #C5A572;
-  --color-accent-hover: #B89560;
-  --color-accent-light: rgba(197, 165, 114, 0.1);
+  --color-bg-primary: #0F172A;
+  --color-bg-surface: #1E293B;
+  --color-bg-card: #1E293B;
+  --color-text-primary: #F1F5F9;
+  --color-text-secondary: #94A3B8;
+  --color-accent: #3B82F6;
+  --color-accent-hover: #2563EB;
+  --color-accent-light: rgba(59, 130, 246, 0.1);
   --color-success: #5A9C6B;
   --color-danger: #D4634E;
-  --color-border: #2E2E2E;
-  --color-border-light: #363636;
+  --color-border: #334155;
+  --color-border-light: #1E293B;
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -65,6 +65,19 @@
 
 [data-theme="dark"] .oio-label {
   color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .oio-skeleton {
+  background: linear-gradient(90deg, #1E293B 25%, #334155 50%, #1E293B 75%);
+  background-size: 200% 100%;
+}
+
+/* Dark mode tab contrast fix */
+[data-theme="dark"] .ant-tabs-tab {
+  color: var(--color-text-secondary) !important;
+}
+[data-theme="dark"] .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: var(--color-text-primary) !important;
 }
 
 [data-theme="dark"] .ant-card {
@@ -254,13 +267,13 @@ h1.oio-serif, .oio-display {
 /* ─── Selection ─── */
 
 ::selection {
-  background: rgba(139, 115, 85, 0.15);
+  background: rgba(37, 99, 235, 0.15);
   color: var(--color-text-primary);
 }
 
 /* ─── Ant Design Overrides ─── */
 
-/* Remove default antd blue focus ring, use bronze */
+/* Input focus ring using accent color */
 .ant-input:focus,
 .ant-input-focused,
 .ant-input:hover,
@@ -272,7 +285,7 @@ h1.oio-serif, .oio-display {
 .ant-input:focus,
 .ant-input-focused,
 .ant-input-number-focused {
-  box-shadow: 0 0 0 2px rgba(139, 115, 85, 0.1) !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1) !important;
 }
 
 /* Card hover lift */
@@ -341,14 +354,14 @@ h1.oio-serif, .oio-display {
   animation: urgentGlow 2s ease-in-out infinite;
 }
 
-/* Skeleton shimmer (warm) */
+/* Skeleton shimmer */
 @keyframes warmShimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
 
 .oio-skeleton {
-  background: linear-gradient(90deg, #F0EFEB 25%, #FAFAF7 50%, #F0EFEB 75%);
+  background: linear-gradient(90deg, #F1F5F9 25%, #F8FAFC 50%, #F1F5F9 75%);
   background-size: 200% 100%;
   animation: warmShimmer 1.5s ease-in-out infinite;
   border-radius: 2px;
@@ -360,10 +373,13 @@ h1.oio-serif, .oio-display {
   font-weight: 500 !important;
   letter-spacing: 0.01em !important;
   transition: all 200ms ease !important;
+  background: linear-gradient(to right, #2563EB, #1D4ED8) !important;
+  border: none !important;
 }
 
 .ant-btn-primary:not(:disabled):hover {
-  filter: brightness(0.9) !important;
+  background: linear-gradient(to right, #1D4ED8, #1E40AF) !important;
+  filter: none !important;
   transform: translateY(-1px) !important;
 }
 
@@ -580,7 +596,7 @@ h1.oio-serif, .oio-display {
 }
 
 [data-theme="dark"] .ant-pagination-item-active a {
-  color: #0F0F0F !important;
+  color: #0F172A !important;
 }
 
 [data-theme="dark"] .ant-pagination-prev .ant-pagination-item-link,

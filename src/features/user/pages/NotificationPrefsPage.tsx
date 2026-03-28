@@ -13,6 +13,7 @@ import {
   MessageOutlined,
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useNotificationPreferences, useUpdateNotificationPreferences } from '../api'
 import { useState, useEffect } from 'react'
 
@@ -31,6 +32,7 @@ const CHANNELS = [
 
 export default function NotificationPrefsPage() {
   const { t: _t } = useTranslation('common')
+  const { isMobile } = useBreakpoint()
   const { message } = App.useApp()
 
   const { data: prefs, isLoading } = useNotificationPreferences()
@@ -87,8 +89,8 @@ export default function NotificationPrefsPage() {
   }
 
   return (
-    <div style={{ maxWidth: 700, margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+    <div style={{ maxWidth: 700, margin: '0 auto', padding: isMobile ? '0 12px' : undefined }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', gap: isMobile ? 12 : 0, marginBottom: 24 }}>
         <Title level={2} style={{ margin: 0 }}>Cai dat thong bao</Title>
         <Button type="primary" onClick={onSave} loading={updatePrefs.isPending} disabled={!dirty}>
           Luu thay doi

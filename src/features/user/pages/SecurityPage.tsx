@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import {
   Typography,
   Card,
@@ -8,10 +8,10 @@ import {
   Spin,
   Alert,
   Tabs,
-  Table,
   Tag,
   App,
   QRCode,
+  Modal,
 } from 'antd'
 import {
   LockOutlined,
@@ -27,7 +27,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import dayjs from 'dayjs'
 import { useTranslation } from 'react-i18next'
-import { passwordSchema } from '@/utils/validation'
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
+import { createPasswordSchema } from '@/utils/validation'
 import {
   useCurrentUser,
   useChangePassword,
@@ -47,18 +48,22 @@ const { Title, Text, Paragraph } = Typography
 
 // -- Schemas -------------------------------------------------------------------
 
-const changePasswordSchema = z
-  .object({
-    currentPassword: z.string().min(1, 'Vui long nhap mat khau hien tai'),
-    newPassword: passwordSchema,
-    confirmPassword: z.string().min(1, 'Vui long nhap lai mat khau'),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: 'Mat khau nhap lai khong khop',
-    path: ['confirmPassword'],
-  })
+function useChangePasswordSchema() {
+  const { t: tv } = useTranslation('validation')
+  const { t } = useTranslation('auth')
+  return useMemo(() => z
+    .object({
+      currentPassword: z.string().min(1, tv('required', 'Trường này là bắt buộc')),
+      newPassword: createPasswordSchema(tv),
+      confirmPassword: z.string().min(1, tv('required', 'Trường này là bắt buộc')),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+      message: t('passwordMismatch', 'Mật khẩu không khớp'),
+      path: ['confirmPassword'],
+    }), [tv, t])
+}
 
-type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>
+type ChangePasswordFormValues = { currentPassword: string; newPassword: string; confirmPassword: string }
 
 const totpCodeSchema = z.object({
   code: z.string().length(6, 'Ma xac nhan phai gom 6 chu so'),
@@ -71,6 +76,7 @@ type TotpCodeFormValues = z.infer<typeof totpCodeSchema>
 function ChangePasswordSection() {
   const { message } = App.useApp()
   const changePassword = useChangePassword()
+  const changePasswordSchema = useChangePasswordSchema()
 
   const {
     control,
@@ -229,13 +235,19 @@ function TwoFactorSection() {
     }
   })
 
+  const [regenModalOpen, setRegenModalOpen] = useState(false)
+  const [regenTotpCode, setRegenTotpCode] = useState('')
+
   const onRegenerateCodes = async () => {
+    if (!regenTotpCode || regenTotpCode.length !== 6) return
     try {
-      const data = await regenCodes.mutateAsync()
+      const data = await regenCodes.mutateAsync(regenTotpCode)
       setRecoveryCodes(data.recoveryCodes)
       message.success('Da tao lai ma khoi phuc')
+      setRegenModalOpen(false)
+      setRegenTotpCode('')
     } catch {
-      message.error('Khong the tao ma khoi phuc')
+      message.error('Ma xac thuc khong chinh xac')
     }
   }
 
@@ -299,7 +311,7 @@ function TwoFactorSection() {
               <Paragraph type="secondary">
                 Ma khoi phuc giup ban truy cap tai khoan khi khong co ung dung xac thuc.
               </Paragraph>
-              <Button onClick={onRegenerateCodes} loading={regenCodes.isPending}>
+              <Button onClick={() => { setRegenTotpCode(''); setRegenModalOpen(true) }}>
                 Tao lai ma khoi phuc
               </Button>
               {recoveryCodes && (
@@ -323,6 +335,28 @@ function TwoFactorSection() {
                 </div>
               )}
             </Card>
+
+            {/* TOTP Verification Modal for Recovery Code Regeneration */}
+            <Modal
+              title="Xác thực để tạo lại mã khôi phục"
+              open={regenModalOpen}
+              onCancel={() => setRegenModalOpen(false)}
+              onOk={onRegenerateCodes}
+              okText="Xác nhận"
+              okButtonProps={{ loading: regenCodes.isPending, disabled: regenTotpCode.length !== 6 }}
+              centered
+            >
+              <div style={{ marginBottom: 8 }}>
+                <Text>Nhập mã xác thực 6 chữ số từ ứng dụng TOTP:</Text>
+              </div>
+              <Input
+                value={regenTotpCode}
+                onChange={(e) => setRegenTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="Mã xác thực"
+                maxLength={6}
+                style={{ fontSize: 18, letterSpacing: 4, textAlign: 'center' }}
+              />
+            </Modal>
           </>
         ) : (
           <>
@@ -438,7 +472,8 @@ function SessionsSection() {
 
   return (
     <Card>
-      <Table<UserSessionDto>
+      <ResponsiveTable<UserSessionDto>
+        mobileMode="list"
         columns={columns}
         dataSource={sessions?.items ?? []}
         rowKey="sessionId"
@@ -494,7 +529,8 @@ function LoginHistorySection() {
 
   return (
     <Card>
-      <Table<LoginHistoryDto>
+      <ResponsiveTable<LoginHistoryDto>
+        mobileMode="list"
         columns={columns}
         dataSource={data?.items ?? []}
         rowKey="id"

@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { getNotificationHub, startConnection, stopConnection } from '@/lib/signalr'
+import { getNotificationHub, startConnection } from '@/lib/signalr'
 import { queryKeys } from '@/lib/queryClient'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/useAuth'
@@ -40,8 +40,9 @@ export function useNotificationHub() {
       qc.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() })
     })
 
-    connection.on('UnreadCountUpdated', (data: { count: number }) => {
-      setState((prev) => ({ ...prev, unreadCount: data.count }))
+    connection.on('UnreadCountUpdated', (countOrObj: number | { count: number }) => {
+      const count = typeof countOrObj === 'number' ? countOrObj : countOrObj?.count ?? 0
+      setState((prev) => ({ ...prev, unreadCount: count }))
       qc.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() })
     })
 
@@ -50,7 +51,6 @@ export function useNotificationHub() {
     return () => {
       connection.off('ReceiveNotification')
       connection.off('UnreadCountUpdated')
-      stopConnection(connection)
       setState(initialState)
     }
   }, [isAuthenticated, qc])

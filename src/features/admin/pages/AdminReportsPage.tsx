@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Typography, Table, Select, Space, Button, Modal, Input, App } from 'antd'
+import { Typography, Select, Space, Button, Modal, Input, Switch, App } from 'antd'
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { FlagOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useAdminReports, useAssignReport, useResolveReport } from '@/features/admin/api'
@@ -12,19 +13,16 @@ import type { ColumnsType } from 'antd/es/table'
 const STATUS_OPTIONS = [
   { value: '', label: '' },
   { value: ReportStatus.Open, label: 'Open' },
-  { value: ReportStatus.Assigned, label: 'Assigned' },
-  { value: ReportStatus.InProgress, label: 'In Progress' },
-  { value: ReportStatus.Resolved, label: 'Resolved' },
+  { value: ReportStatus.UnderReview, label: 'Under Review' },
+  { value: ReportStatus.ActionTaken, label: 'Action Taken' },
+  { value: ReportStatus.Dismissed, label: 'Dismissed' },
   { value: ReportStatus.Closed, label: 'Closed' },
 ] as const
 
 export default function AdminReportsPage() {
   const { t } = useTranslation('admin')
-  const { t: tc } = useTranslation('common')
   const { message } = App.useApp()
 
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
   const [statusFilter, setStatusFilter] = useState('')
   const [assignModalOpen, setAssignModalOpen] = useState(false)
   const [assignReportId, setAssignReportId] = useState('')
@@ -32,10 +30,9 @@ export default function AdminReportsPage() {
   const [resolveModalOpen, setResolveModalOpen] = useState(false)
   const [resolveReportId, setResolveReportId] = useState('')
   const [resolutionNotes, setResolutionNotes] = useState('')
+  const [dismissedFlag, setDismissedFlag] = useState(false)
 
   const { data, isLoading } = useAdminReports({
-    pageNumber: page,
-    pageSize,
     ...(statusFilter ? { status: statusFilter } : {}),
   })
 
@@ -45,7 +42,7 @@ export default function AdminReportsPage() {
   const handleAssign = async () => {
     if (!assigneeId) return
     try {
-      await assignReport.mutateAsync({ id: assignReportId, assigneeId })
+      await assignReport.mutateAsync({ id: assignReportId, assignedToUserId: assigneeId })
       message.success(t('reports.assignSuccess'))
       setAssignModalOpen(false)
       setAssigneeId('')
@@ -57,10 +54,11 @@ export default function AdminReportsPage() {
   const handleResolve = async () => {
     if (!resolutionNotes) return
     try {
-      await resolveReport.mutateAsync({ id: resolveReportId, notes: resolutionNotes })
+      await resolveReport.mutateAsync({ id: resolveReportId, dismissed: dismissedFlag, resolutionNotes })
       message.success(t('reports.resolveSuccess'))
       setResolveModalOpen(false)
       setResolutionNotes('')
+      setDismissedFlag(false)
     } catch {
       message.error(t('common.error'))
     }
@@ -112,7 +110,7 @@ export default function AdminReportsPage() {
       width: 180,
       render: (_, record) => (
         <Space size={4}>
-          {(record.status === ReportStatus.Open || record.status === ReportStatus.Assigned) && (
+          {(record.status === ReportStatus.Open || record.status === ReportStatus.UnderReview) && (
             <Button
               type="link"
               size="small"
@@ -121,11 +119,11 @@ export default function AdminReportsPage() {
               {t('reports.assign')}
             </Button>
           )}
-          {record.status !== ReportStatus.Resolved && record.status !== ReportStatus.Closed && (
+          {record.status !== ReportStatus.Dismissed && record.status !== ReportStatus.Closed && (
             <Button
               type="link"
               size="small"
-              onClick={() => { setResolveReportId(record.id); setResolveModalOpen(true) }}
+              onClick={() => { setResolveReportId(record.id); setDismissedFlag(false); setResolveModalOpen(true) }}
             >
               {t('reports.resolve')}
             </Button>
@@ -145,7 +143,7 @@ export default function AdminReportsPage() {
         <Select
           placeholder={t('reports.filterStatus')}
           value={statusFilter}
-          onChange={(val) => { setStatusFilter(val); setPage(1) }}
+          onChange={(val) => setStatusFilter(val)}
           style={{ width: 200 }}
           allowClear
           onClear={() => setStatusFilter('')}
@@ -156,20 +154,13 @@ export default function AdminReportsPage() {
         />
       </Space>
 
-      <Table<ReportDto>
+      <ResponsiveTable<ReportDto>
         rowKey="id"
         columns={columns}
-        dataSource={data?.items ?? []}
+        dataSource={(data as any)?.items ?? data ?? []}
         loading={isLoading}
-        scroll={{ x: 900 }}
-        pagination={{
-          current: data?.metadata?.currentPage ?? page,
-          pageSize: data?.metadata?.pageSize ?? pageSize,
-          total: data?.metadata?.totalCount ?? 0,
-          showSizeChanger: true,
-          showTotal: (total) => tc('pagination.total', { total }),
-          onChange: (p, ps) => { setPage(p); setPageSize(ps) },
-        }}
+        mobileMode="list"
+        pagination={{ pageSize: 20 }}
       />
 
       {/* Assign modal */}
@@ -194,10 +185,19 @@ export default function AdminReportsPage() {
         title={t('reports.resolve')}
         open={resolveModalOpen}
         onOk={handleResolve}
-        onCancel={() => { setResolveModalOpen(false); setResolutionNotes('') }}
+        onCancel={() => { setResolveModalOpen(false); setResolutionNotes(''); setDismissedFlag(false) }}
         confirmLoading={resolveReport.isPending}
       >
-        <Typography.Text strong>{t('reports.resolutionNotes')}</Typography.Text>
+        <div style={{ marginBottom: 16 }}>
+          <Typography.Text strong>Bỏ qua</Typography.Text>
+          <br />
+          <Switch
+            checked={dismissedFlag}
+            onChange={(checked) => setDismissedFlag(checked)}
+            style={{ marginTop: 8 }}
+          />
+        </div>
+        <Typography.Text strong>Ghi chú giải quyết</Typography.Text>
         <Input.TextArea
           rows={3}
           value={resolutionNotes}

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
-import { Typography, Descriptions, Card, Button, Space, Spin, Alert, Modal, Input, App, Table, Image } from 'antd'
+import { Typography, Descriptions, Card, Button, Space, Spin, Alert, Modal, Input, App, Image } from 'antd'
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useAdminItemDetail, useApproveItem, useRejectItem } from '@/features/admin/api'
@@ -121,12 +122,12 @@ export default function AdminItemDetailPage() {
 
       {/* Review history */}
       <Card title={t('itemDetail.reviewHistory')} style={{ marginBottom: 24 }}>
-        <Table<ItemReviewDto>
+        <ResponsiveTable<ItemReviewDto>
           rowKey="id"
           columns={reviewColumns}
           dataSource={item.reviews ?? []}
           pagination={false}
-          scroll={{ x: 600 }}
+          mobileMode="list"
         />
       </Card>
 

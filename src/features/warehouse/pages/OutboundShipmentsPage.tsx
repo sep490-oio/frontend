@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Typography, Table, Space, Tabs } from 'antd'
+import { Typography, Space, Tabs } from 'antd'
 import { useTranslation } from 'react-i18next'
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { useOutboundShipments } from '@/features/warehouse/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { ShipmentStatus } from '@/types/enums'
@@ -10,10 +11,10 @@ import type { ColumnsType } from 'antd/es/table'
 
 const STATUS_TABS = [
   { key: 'all', label: 'all' },
-  { key: ShipmentStatus.Pending, label: 'pending' },
-  { key: ShipmentStatus.Confirmed, label: 'confirmed' },
-  { key: ShipmentStatus.Shipped, label: 'shipped' },
-  { key: ShipmentStatus.Delivered, label: 'delivered' },
+  { key: ShipmentStatus.AwaitingPickup, label: 'pending' },
+  { key: ShipmentStatus.InTransit, label: 'inTransit' },
+  { key: ShipmentStatus.Arrived, label: 'arrived' },
+  { key: ShipmentStatus.Completed, label: 'completed' },
   { key: ShipmentStatus.Cancelled, label: 'cancelled' },
 ] as const
 
@@ -103,7 +104,8 @@ export default function OutboundShipmentsPage() {
         }))}
       />
 
-      <Table<OutboundShipmentDto>
+      <ResponsiveTable<OutboundShipmentDto>
+        mobileMode="card"
         rowKey="id"
         columns={columns}
         dataSource={data?.items ?? []}

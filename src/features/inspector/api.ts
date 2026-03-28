@@ -75,9 +75,9 @@ export function useInspectItem() {
   return useMutation({
     mutationFn: async (data: {
       shipmentId: string
-      conditionOnArrival: string
+      condition: string
       inspectionNotes?: string
-      evidenceMediaIds?: string[]
+      inspectionMediaUploadIds?: string[]
     }) => {
       const { shipmentId, ...body } = data
       const res = await apiClient.post<WarehouseInspectionDto>(
@@ -137,6 +137,25 @@ export function useCreateStorageLocation() {
       bin: string
     }) => {
       const res = await apiClient.post<StorageLocationDto>('/warehouse/storage-locations', data)
+      return res.data
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.warehouse.locations() })
+    },
+  })
+}
+
+export function useUpdateStorageLocation() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, ...data }: {
+      id: string
+      zone: string
+      aisle: string
+      shelf: string
+      bin: string
+    }) => {
+      const res = await apiClient.put<StorageLocationDto>(`/warehouse/storage-locations/${id}`, data)
       return res.data
     },
     onSuccess: () => {

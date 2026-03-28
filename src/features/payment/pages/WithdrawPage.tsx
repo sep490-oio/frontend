@@ -7,7 +7,6 @@ import {
   Form,
   Input,
   InputNumber,
-  Table,
   Statistic,
   Popconfirm,
   App,
@@ -19,6 +18,7 @@ import { useTranslation } from 'react-i18next'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { useWallet, useMyWithdrawals, useCreateWithdrawal, useCancelWithdrawal } from '@/features/payment/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { WithdrawalStatus } from '@/types/enums'
@@ -69,6 +69,10 @@ export default function WithdrawPage() {
   })
 
   const onSubmit = (data: WithdrawFormData) => {
+    if (data.amount > (wallet?.availableBalance ?? 0)) {
+      message.error(t('insufficientBalance', 'Withdrawal amount exceeds available balance'))
+      return
+    }
     createWithdrawal.mutate(data, {
       onSuccess: () => {
         message.success(t('withdrawalCreated', 'Withdrawal request submitted'))
@@ -249,12 +253,12 @@ export default function WithdrawPage() {
 
       {/* Recent withdrawals */}
       <Card title={t('recentWithdrawals', 'Recent Withdrawals')}>
-        <Table<WithdrawalRequestDto>
+        <ResponsiveTable<WithdrawalRequestDto>
+          mobileMode="list"
           rowKey="id"
           columns={columns}
           dataSource={withdrawals?.items ?? []}
           loading={wdLoading}
-          scroll={{ x: 600 }}
           pagination={{
             current: withdrawals?.metadata?.currentPage ?? page,
             pageSize: withdrawals?.metadata?.pageSize ?? pageSize,

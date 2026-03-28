@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Typography, Table, Space, Button, Modal, Input, App } from 'antd'
+import { Typography, Space, Button, Modal, Input, App } from 'antd'
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { FileSearchOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -53,7 +54,7 @@ export default function AdminReviewQueuePage() {
   const handleAssign = async () => {
     if (!reviewerId) return
     try {
-      await assignReviewer.mutateAsync({ itemId: assignItemId, reviewerId })
+      await assignReviewer.mutateAsync({ itemId: assignItemId, adminId: reviewerId })
       message.success(t('reviewQueue.assignSuccess'))
       setAssignModalOpen(false)
       setReviewerId('')
@@ -105,24 +106,28 @@ export default function AdminReviewQueuePage() {
           <Button type="link" size="small" onClick={() => navigate(`/admin/items/${record.itemId}`)}>
             {t('reviewQueue.view')}
           </Button>
-          <Button type="link" size="small" onClick={() => handleApprove(record.itemId)}>
-            {t('reviewQueue.approve')}
-          </Button>
-          <Button
-            type="link"
-            size="small"
-            danger
-            onClick={() => { setRejectItemId(record.itemId); setRejectModalOpen(true) }}
-          >
-            {t('reviewQueue.reject')}
-          </Button>
-          <Button
-            type="link"
-            size="small"
-            onClick={() => { setAssignItemId(record.itemId); setAssignModalOpen(true) }}
-          >
-            {t('reviewQueue.assign')}
-          </Button>
+          {record.status === 'pending_review' && (
+            <>
+              <Button type="link" size="small" onClick={() => handleApprove(record.itemId)}>
+                {t('reviewQueue.approve')}
+              </Button>
+              <Button
+                type="link"
+                size="small"
+                danger
+                onClick={() => { setRejectItemId(record.itemId); setRejectModalOpen(true) }}
+              >
+                {t('reviewQueue.reject')}
+              </Button>
+              <Button
+                type="link"
+                size="small"
+                onClick={() => { setAssignItemId(record.itemId); setAssignModalOpen(true) }}
+              >
+                {t('reviewQueue.assign')}
+              </Button>
+            </>
+          )}
         </Space>
       ),
     },
@@ -134,12 +139,12 @@ export default function AdminReviewQueuePage() {
         <FileSearchOutlined /> {t('reviewQueue.title')}
       </Typography.Title>
 
-      <Table<ReviewQueueItemDto>
+      <ResponsiveTable<ReviewQueueItemDto>
         rowKey="id"
         columns={columns}
         dataSource={data?.items ?? []}
         loading={isLoading}
-        scroll={{ x: 900 }}
+        mobileMode="list"
         pagination={{
           current: data?.metadata?.currentPage ?? page,
           pageSize: data?.metadata?.pageSize ?? pageSize,

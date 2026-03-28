@@ -1,22 +1,26 @@
 import { useEffect, useRef, useState } from 'react'
-import { Typography, Card, Tag, Space, Spin, Empty, Button, Input, List, Divider, Avatar, Tooltip, Progress, Upload } from 'antd'
-import { SendOutlined, PaperClipOutlined, UserOutlined, CloseCircleOutlined } from '@ant-design/icons'
+import { Typography, Card, Tag, Space, Spin, Empty, Button, Input, List, Divider, Avatar, Tooltip, Progress, Upload, Popconfirm } from 'antd'
+import { SendOutlined, PaperClipOutlined, UserOutlined, CloseCircleOutlined, FlagOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router'
-import { useDisputeThread, useDisputeMessages, useSendDisputeMessage, useMarkDisputeRead } from '@/features/dispute/api'
+import { useDisputeThread, useDisputeMessages, useSendDisputeMessage, useMarkDisputeRead, useCreateReport } from '@/features/dispute/api'
 import { useDisputeHub } from '@/features/dispute/hooks/useDisputeHub'
 import { useMediaUpload } from '@/hooks/useMediaUpload'
+import { useAuth } from '@/hooks/useAuth'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { DisputeStatus } from '@/types/enums'
 import type { DisputeMessageDto } from '@/types'
 import dayjs from 'dayjs'
 
 const STATUS_COLOR_MAP: Record<string, string> = {
+  [DisputeStatus.Draft]: 'default',
   [DisputeStatus.Open]: 'blue',
-  [DisputeStatus.Assigned]: 'cyan',
-  [DisputeStatus.InProgress]: 'orange',
-  [DisputeStatus.PendingResponse]: 'gold',
+  [DisputeStatus.UnderReview]: 'orange',
+  [DisputeStatus.AwaitingResponse]: 'gold',
+  [DisputeStatus.Escalated]: 'red',
   [DisputeStatus.Resolved]: 'green',
   [DisputeStatus.Closed]: 'default',
+  [DisputeStatus.Cancelled]: 'default',
 }
 
 
@@ -24,28 +28,23 @@ const STATUS_COLOR_MAP: Record<string, string> = {
 export default function DisputeDetailPage() {
   const { t } = useTranslation('dispute')
   const { id } = useParams<{ id: string }>()
+  const { isMobile } = useBreakpoint()
   const disputeId = id ?? ''
 
   const { data: dispute, isLoading: isLoadingDispute } = useDisputeThread(disputeId)
   const { data: messagesData, isLoading: isLoadingMessages } = useDisputeMessages(disputeId, {
-    pageNumber: 1,
     pageSize: 100,
   })
   const sendMessage = useSendDisputeMessage()
   const markRead = useMarkDisputeRead()
+  const createReport = useCreateReport()
   const hub = useDisputeHub(disputeId)
+  const { user: currentUser } = useAuth()
 
   const [messageText, setMessageText] = useState('')
   const [uploadedFiles, setUploadedFiles] = useState<{ id: string; name: string }[]>([])
   const mediaUpload = useMediaUpload('dispute_attachment')
   const messagesEndRef = useRef<HTMLDivElement>(null)
-
-  // Mark as read on open
-  useEffect(() => {
-    if (disputeId) {
-      markRead.mutate(disputeId)
-    }
-  }, [disputeId])
 
   // Combine API messages with hub real-time messages
   const apiMessages = messagesData?.items ?? []
@@ -54,6 +53,20 @@ export default function DisputeDetailPage() {
     ...apiMessages.filter((m) => !hubMessageIds.has(m.id)),
     ...hub.messages,
   ].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+
+  // Mark as read when new messages arrive from others
+  const prevCountRef = useRef(0)
+  useEffect(() => {
+    if (!disputeId) return
+    if (allMessages.length > prevCountRef.current) {
+      const lastMsg = allMessages[allMessages.length - 1]
+      if (lastMsg && lastMsg.senderId !== currentUser?.id) {
+        markRead.mutate({ disputeId, lastReadMessageId: lastMsg.id })
+      }
+      prevCountRef.current = allMessages.length
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [disputeId, allMessages.length])
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -100,6 +113,7 @@ export default function DisputeDetailPage() {
   // Use hub meta if available, otherwise API data
   const currentStatus = hub.disputeMeta?.status ?? dispute?.meta?.status
   const currentUpdatedAt = hub.disputeMeta?.updatedAt ?? dispute?.meta?.updatedAt
+  const isTerminal = ['Resolved', 'Closed', 'Cancelled'].includes(currentStatus ?? '')
 
   if (isLoadingDispute) {
     return (
@@ -114,10 +128,10 @@ export default function DisputeDetailPage() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 200px)', minHeight: 500 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 200px)', minHeight: 500, padding: isMobile ? 16 : 0 }}>
       {/* Dispute info header */}
-      <Card size="small" style={{ marginBottom: 16 }}>
-        <Space wrap size="middle">
+      <Card size="small" style={{ marginBottom: isMobile ? 8 : 16 }}>
+        <Space wrap size={isMobile ? 'small' : 'middle'} direction={isMobile ? 'vertical' : 'horizontal'}>
           <Typography.Text strong>{t('dispute', 'Dispute')}: </Typography.Text>
           <Typography.Text copyable style={{ fontSize: 12 }}>
             {dispute.meta.disputeId}
@@ -148,6 +162,26 @@ export default function DisputeDetailPage() {
               </Typography.Text>
             </>
           )}
+          <Divider type="vertical" />
+          <Popconfirm
+            title={t('reportConfirm', 'Report this dispute for review?')}
+            onConfirm={async () => {
+              try {
+                await createReport.mutateAsync({
+                  entityType: 'dispute',
+                  entityId: disputeId,
+                  reasonCode: 'escalation',
+                  description: 'Reported from dispute detail',
+                })
+              } catch {
+                // error handled by mutation
+              }
+            }}
+          >
+            <Button size="small" icon={<FlagOutlined />} danger loading={createReport.isPending}>
+              {t('report', 'Report')}
+            </Button>
+          </Popconfirm>
         </Space>
       </Card>
 
@@ -163,7 +197,7 @@ export default function DisputeDetailPage() {
           body: {
             flex: 1,
             overflow: 'auto',
-            padding: '16px',
+            padding: isMobile ? '8px' : '16px',
           },
         }}
       >
@@ -258,16 +292,17 @@ export default function DisputeDetailPage() {
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={t('messagePlaceholder', 'Type a message...')}
+            placeholder={isTerminal ? t('disputeClosed', 'This dispute is closed') : t('messagePlaceholder', 'Type a message...')}
             autoSize={{ minRows: 1, maxRows: 4 }}
             style={{ flex: 1 }}
+            disabled={isTerminal}
           />
           <Button
             type="primary"
             icon={<SendOutlined />}
             onClick={handleSend}
             loading={sendMessage.isPending}
-            disabled={!messageText.trim()}
+            disabled={!messageText.trim() || isTerminal}
           >
             {t('send', 'Send')}
           </Button>

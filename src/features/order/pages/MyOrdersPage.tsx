@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
-import { Table, Button, Tabs, Tag, Tooltip } from 'antd'
+import { Button, Tabs, Tag, Tooltip, Card, List, Flex } from 'antd'
 import { EyeOutlined, ClockCircleOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useTranslation } from 'react-i18next'
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { useMyOrders } from '@/features/order/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { PriceDisplay } from '@/components/ui/PriceDisplay'
@@ -20,6 +22,8 @@ const STATUS_TABS = [
   { key: OrderStatus.Delivered, label: 'delivered' },
   { key: OrderStatus.Completed, label: 'completed' },
   { key: OrderStatus.Cancelled, label: 'cancelled' },
+  { key: OrderStatus.Refunded, label: 'Refunded' },
+  { key: OrderStatus.Disputed, label: 'Disputed' },
 ] as const
 
 function formatCountdown(targetDate: string): string {
@@ -74,6 +78,7 @@ export default function MyOrdersPage() {
   const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
   const prefix = useRoutePrefix()
+  const { isMobile } = useBreakpoint()
 
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [page, setPage] = useState(1)
@@ -85,7 +90,7 @@ export default function MyOrdersPage() {
     ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
   }
 
-  const { data, isLoading } = useMyOrders(params)
+  const { data, isLoading } = useMyOrders(params, { refetchInterval: 30000 })
 
   const columns: ColumnsType<OrderDto> = [
     {
@@ -228,24 +233,102 @@ export default function MyOrdersPage() {
         style={{ marginBottom: 16 }}
       />
 
-      <Table<OrderDto>
-        rowKey="id"
-        columns={columns}
-        dataSource={data?.items ?? []}
-        loading={isLoading}
-        scroll={{ x: 800 }}
-        pagination={{
-          current: data?.metadata?.currentPage ?? page,
-          pageSize: data?.metadata?.pageSize ?? pageSize,
-          total: data?.metadata?.totalCount ?? 0,
-          showSizeChanger: true,
-          showTotal: (total) => tc('pagination.total', { total }),
-          onChange: (p, ps) => {
-            setPage(p)
-            setPageSize(ps)
-          },
-        }}
-      />
+      {isMobile ? (
+        /* Mobile card view */
+        <List
+          dataSource={data?.items ?? []}
+          loading={isLoading}
+          pagination={{
+            current: data?.metadata?.currentPage ?? page,
+            pageSize: data?.metadata?.pageSize ?? pageSize,
+            total: data?.metadata?.totalCount ?? 0,
+            onChange: (p, ps) => {
+              setPage(p)
+              setPageSize(ps)
+            },
+          }}
+          renderItem={(record: OrderDto) => (
+            <List.Item style={{ padding: '8px 0', border: 'none' }}>
+              <Card
+                size="small"
+                style={{ width: '100%', borderRadius: 10 }}
+                styles={{ body: { padding: '12px 16px' } }}
+              >
+                <Flex vertical gap={8}>
+                  <Flex justify="space-between" align="center">
+                    <Button
+                      type="link"
+                      style={{
+                        padding: 0,
+                        fontFamily: 'var(--font-mono)',
+                        fontWeight: 500,
+                        fontSize: 13,
+                      }}
+                      onClick={() => navigate(`${prefix}/orders/${record.id}`)}
+                    >
+                      {record.orderNumber}
+                    </Button>
+                    <Flex gap={4} align="center">
+                      <StatusBadge status={record.status} />
+                      {record.decisionWindowEndsAt && record.status === OrderStatus.Delivered && (
+                        <DecisionCountdown endsAt={record.decisionWindowEndsAt} />
+                      )}
+                    </Flex>
+                  </Flex>
+                  <Flex justify="space-between" align="center">
+                    <span style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
+                      {t('totalAmount', 'Total Amount')}
+                    </span>
+                    <PriceDisplay amount={record.totalAmount} currency={record.currency} size="small" />
+                  </Flex>
+                  {record.return && (
+                    <Flex justify="space-between" align="center">
+                      <span style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
+                        {t('returnStatus', 'Return')}
+                      </span>
+                      <Tag color={RETURN_STATUS_COLORS[record.return.status] ?? 'default'} style={{ fontSize: 12 }}>
+                        {t(`returnStatus.${record.return.status}`, record.return.status)}
+                      </Tag>
+                    </Flex>
+                  )}
+                  <Flex justify="space-between" align="center">
+                    <span style={{ color: 'var(--color-text-secondary)', fontSize: 12 }}>
+                      {formatDateTime(record.createdAt)}
+                    </span>
+                    <Button
+                      type="default"
+                      size="small"
+                      icon={<EyeOutlined />}
+                      onClick={() => navigate(`${prefix}/orders/${record.id}`)}
+                    >
+                      {t('viewDetail', 'View Detail')}
+                    </Button>
+                  </Flex>
+                </Flex>
+              </Card>
+            </List.Item>
+          )}
+        />
+      ) : (
+        <ResponsiveTable<OrderDto>
+          mobileMode="card"
+          rowKey="id"
+          columns={columns}
+          dataSource={data?.items ?? []}
+          loading={isLoading}
+          pagination={{
+            current: data?.metadata?.currentPage ?? page,
+            pageSize: data?.metadata?.pageSize ?? pageSize,
+            total: data?.metadata?.totalCount ?? 0,
+            showSizeChanger: true,
+            showTotal: (total) => tc('pagination.total', { total }),
+            onChange: (p, ps) => {
+              setPage(p)
+              setPageSize(ps)
+            },
+          }}
+        />
+      )}
     </div>
   )
 }

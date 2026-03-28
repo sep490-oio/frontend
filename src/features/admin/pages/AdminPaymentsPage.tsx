@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Typography, Tabs, Card, Table, Statistic, Row, Col, Select, Space, Button, Modal, Input, App } from 'antd'
+import { Typography, Tabs, Card, Statistic, Row, Col, Select, Space, Button, Modal, Input, App, Popconfirm } from 'antd'
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { DollarOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import {
@@ -10,6 +11,7 @@ import {
   useAdminEscrows,
   useApproveWithdrawal,
   useRejectWithdrawal,
+  useCompleteWithdrawal,
 } from '@/features/admin/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime, formatCurrency } from '@/utils/format'
@@ -60,6 +62,7 @@ export default function AdminPaymentsPage() {
 
   const approveWithdrawal = useApproveWithdrawal()
   const rejectWithdrawal = useRejectWithdrawal()
+  const completeWithdrawal = useCompleteWithdrawal()
 
   const [rejectModalOpen, setRejectModalOpen] = useState(false)
   const [rejectId, setRejectId] = useState('')
@@ -69,6 +72,15 @@ export default function AdminPaymentsPage() {
     try {
       await approveWithdrawal.mutateAsync(id)
       message.success(t('payments.approveSuccess'))
+    } catch {
+      message.error(t('common.error'))
+    }
+  }
+
+  const handleComplete = async (id: string) => {
+    try {
+      await completeWithdrawal.mutateAsync(id)
+      message.success(t('payments.completeSuccess', 'Withdrawal completed'))
     } catch {
       message.error(t('common.error'))
     }
@@ -131,22 +143,31 @@ export default function AdminPaymentsPage() {
       key: 'actions',
       width: 180,
       render: (_, record) => {
-        if (record.status !== WithdrawalStatus.Pending) return null
-        return (
-          <Space size={4}>
-            <Button type="link" size="small" onClick={() => handleApprove(record.id)}>
-              {t('payments.approve')}
-            </Button>
-            <Button
-              type="link"
-              size="small"
-              danger
-              onClick={() => { setRejectId(record.id); setRejectModalOpen(true) }}
+        if (record.status === WithdrawalStatus.Pending) {
+          return (
+            <Space size={4}>
+              <Button type="link" size="small" onClick={() => handleApprove(record.id)}>
+                {t('payments.approve')}
+              </Button>
+              <Button type="link" size="small" danger onClick={() => { setRejectId(record.id); setRejectModalOpen(true) }}>
+                {t('payments.reject')}
+              </Button>
+            </Space>
+          )
+        }
+        if (record.status === 'approved') {
+          return (
+            <Popconfirm
+              title={t('payments.completeConfirm', 'Confirm bank transfer completed for this withdrawal?')}
+              onConfirm={() => handleComplete(record.id)}
             >
-              {t('payments.reject')}
-            </Button>
-          </Space>
-        )
+              <Button type="link" size="small" loading={completeWithdrawal.isPending} style={{ color: 'var(--color-success)' }}>
+                {t('payments.complete', 'Complete')}
+              </Button>
+            </Popconfirm>
+          )
+        }
+        return null
       },
     },
   ]
@@ -335,12 +356,12 @@ export default function AdminPaymentsPage() {
               ]}
             />
           </Space>
-          <Table<WithdrawalRequestDto>
+          <ResponsiveTable<WithdrawalRequestDto>
             rowKey="id"
             columns={withdrawalColumns}
             dataSource={withdrawals?.items ?? []}
             loading={wLoading}
-            scroll={{ x: 900 }}
+            mobileMode="list"
             pagination={{
               current: withdrawals?.metadata?.currentPage ?? wPage,
               pageSize: withdrawals?.metadata?.pageSize ?? wPageSize,
@@ -374,12 +395,12 @@ export default function AdminPaymentsPage() {
               ]}
             />
           </Space>
-          <Table<PaymentTransactionDto>
+          <ResponsiveTable<PaymentTransactionDto>
             rowKey="id"
             columns={transactionColumns}
             dataSource={transactions?.items ?? []}
             loading={tLoading}
-            scroll={{ x: 900 }}
+            mobileMode="list"
             pagination={{
               current: transactions?.metadata?.currentPage ?? tPage,
               pageSize: transactions?.metadata?.pageSize ?? tPageSize,
@@ -414,12 +435,12 @@ export default function AdminPaymentsPage() {
               ]}
             />
           </Space>
-          <Table<EscrowDto>
+          <ResponsiveTable<EscrowDto>
             rowKey="id"
             columns={escrowColumns}
             dataSource={escrows?.items ?? []}
             loading={eLoading}
-            scroll={{ x: 800 }}
+            mobileMode="list"
             pagination={{
               current: escrows?.metadata?.currentPage ?? ePage,
               pageSize: escrows?.metadata?.pageSize ?? ePageSize,

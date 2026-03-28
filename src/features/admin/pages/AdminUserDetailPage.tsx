@@ -82,7 +82,7 @@ export default function AdminUserDetailPage() {
   const handleAddFlag = async () => {
     if (!flagReason) return
     try {
-      await flagUser.mutateAsync({ userId: id!, severity: flagSeverity, reason: flagReason })
+      await flagUser.mutateAsync({ userId: id!, severity: flagSeverity, reason: flagReason, flagType: 'manual' })
       message.success(t('userDetail.flagSuccess'))
       setFlagModalOpen(false)
       setFlagReason('')

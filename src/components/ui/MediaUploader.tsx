@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Typography, Progress, Space, Button, Image } from 'antd'
 import {
   CloudUploadOutlined,
@@ -24,6 +25,7 @@ export function MediaUploader({
   onUploadComplete,
   initialFiles,
 }: MediaUploaderProps) {
+  const { t } = useTranslation('common')
   const { upload, uploading, progress, uploadedFiles, error, removeFile } =
     useMediaUpload(context)
 
@@ -136,7 +138,7 @@ export function MediaUploader({
             justifyContent: 'center',
             gap: 8,
             padding: '32px 24px',
-            border: `2px dashed ${dragOver ? '#8B7355' : '#d9d0c3'}`,
+            border: `2px dashed ${dragOver ? 'var(--color-accent)' : 'var(--color-border)'}`,
             borderRadius: 8,
             backgroundColor: dragOver ? 'rgba(139, 115, 85, 0.04)' : '#FDFBF7',
             cursor: uploading ? 'not-allowed' : 'pointer',
@@ -152,14 +154,14 @@ export function MediaUploader({
             disabled={uploading}
             style={{ display: 'none' }}
           />
-          <CloudUploadOutlined style={{ fontSize: 32, color: '#8B7355' }} />
+          <CloudUploadOutlined style={{ fontSize: 32, color: 'var(--color-accent)' }} />
           <Typography.Text style={{ color: '#6B5B4F' }}>
-            Drag & drop or click to upload
+            {t('dragDropUpload', 'Drag & drop or click to upload')}
           </Typography.Text>
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>
             {maxFiles > 1
-              ? `Up to ${maxFiles} files (${allFiles.length}/${maxFiles} uploaded)`
-              : 'Select a file'}
+              ? t('uploadLimit', 'Up to {{max}} files ({{count}}/{{max}} uploaded)', { max: maxFiles, count: allFiles.length })
+              : t('selectFile', 'Select a file')}
           </Typography.Text>
         </label>
       )}
@@ -169,7 +171,7 @@ export function MediaUploader({
         <Progress
           percent={Math.round(progress)}
           size="small"
-          strokeColor="#8B7355"
+          strokeColor="var(--color-accent)"
           style={{ marginTop: 12 }}
         />
       )}
@@ -192,7 +194,7 @@ export function MediaUploader({
               key={file.mediaUploadId}
               style={{
                 position: 'relative',
-                border: '1px solid #d9d0c3',
+                border: '1px solid var(--color-border)',
                 borderRadius: 6,
                 overflow: 'hidden',
                 width: 96,
@@ -215,9 +217,9 @@ export function MediaUploader({
               ) : (
                 <div style={{ textAlign: 'center', padding: 8 }}>
                   {file.resourceType === 'video' ? (
-                    <PaperClipOutlined style={{ fontSize: 24, color: '#8B7355' }} />
+                    <PaperClipOutlined style={{ fontSize: 24, color: 'var(--color-accent)' }} />
                   ) : (
-                    <FileOutlined style={{ fontSize: 24, color: '#8B7355' }} />
+                    <FileOutlined style={{ fontSize: 24, color: 'var(--color-accent)' }} />
                   )}
                   <Typography.Text
                     ellipsis

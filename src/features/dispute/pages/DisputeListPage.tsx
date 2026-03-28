@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Typography, Table, Tag, Select, Space, Button } from 'antd'
+import { Typography, Tag, Select, Space, Button } from 'antd'
 import { EyeOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { useDisputes } from '@/features/dispute/api'
 import type { DisputeFilterParams } from '@/features/dispute/api'
 import { DisputeStatus } from '@/types/enums'
@@ -11,12 +12,14 @@ import type { ColumnsType, TablePaginationConfig } from 'antd/es/table'
 import dayjs from 'dayjs'
 
 const STATUS_COLOR_MAP: Record<string, string> = {
+  [DisputeStatus.Draft]: 'default',
   [DisputeStatus.Open]: 'blue',
-  [DisputeStatus.Assigned]: 'cyan',
-  [DisputeStatus.InProgress]: 'orange',
-  [DisputeStatus.PendingResponse]: 'gold',
+  [DisputeStatus.UnderReview]: 'orange',
+  [DisputeStatus.AwaitingResponse]: 'gold',
+  [DisputeStatus.Escalated]: 'red',
   [DisputeStatus.Resolved]: 'green',
   [DisputeStatus.Closed]: 'default',
+  [DisputeStatus.Cancelled]: 'default',
 }
 
 const PRIORITY_COLOR_MAP: Record<string, string> = {
@@ -28,12 +31,14 @@ const PRIORITY_COLOR_MAP: Record<string, string> = {
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All' },
+  { value: DisputeStatus.Draft, label: 'Draft' },
   { value: DisputeStatus.Open, label: 'Open' },
-  { value: DisputeStatus.Assigned, label: 'Assigned' },
-  { value: DisputeStatus.InProgress, label: 'In Progress' },
-  { value: DisputeStatus.PendingResponse, label: 'Pending Response' },
+  { value: DisputeStatus.UnderReview, label: 'Under Review' },
+  { value: DisputeStatus.AwaitingResponse, label: 'Awaiting Response' },
+  { value: DisputeStatus.Escalated, label: 'Escalated' },
   { value: DisputeStatus.Resolved, label: 'Resolved' },
   { value: DisputeStatus.Closed, label: 'Closed' },
+  { value: DisputeStatus.Cancelled, label: 'Cancelled' },
 ]
 
 export default function DisputeListPage() {
@@ -46,7 +51,7 @@ export default function DisputeListPage() {
     pageSize: 10,
   })
 
-  const { data, isLoading } = useDisputes(filters)
+  const { data, isLoading } = useDisputes(filters, { refetchInterval: 30000 })
 
   const handleTableChange = (pagination: TablePaginationConfig) => {
     setFilters((prev) => ({
@@ -143,7 +148,8 @@ export default function DisputeListPage() {
         />
       </Space>
 
-      <Table<DisputeDto>
+      <ResponsiveTable<DisputeDto>
+        mobileMode="card"
         columns={columns}
         dataSource={data?.items ?? []}
         rowKey="id"
@@ -156,7 +162,6 @@ export default function DisputeListPage() {
           showTotal: (total) => tc('pagination.total', { total }),
         }}
         onChange={handleTableChange}
-        scroll={{ x: 900 }}
       />
     </div>
   )

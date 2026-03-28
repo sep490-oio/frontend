@@ -1,18 +1,33 @@
 import { useState } from 'react'
 import { App } from 'antd'
 import { useTranslation } from 'react-i18next'
-import { useItemQuestions, useAskQuestion, useAnswerQuestion } from '@/features/item/api'
+
+import { useAnswerQuestion, useAskQuestion, useItemQuestions } from '@/features/item/api'
 import { formatRelativeTime } from '@/utils/format'
 
 const SANS_FONT = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
 const SERIF_FONT = "'DM Serif Display', Georgia, serif"
+const PAGE_SIZE_STEP = 5
+
+interface PendingQuestion {
+  id: string
+  question: string
+  createdAt: string
+}
 
 interface ItemQAProps {
   itemId: string
   isSeller?: boolean
+  realtimeConnected?: boolean
+  lastSyncedAt?: number | null
 }
 
-export function ItemQA({ itemId, isSeller = false }: ItemQAProps) {
+export function ItemQA({
+  itemId,
+  isSeller = false,
+  realtimeConnected = false,
+  lastSyncedAt = null,
+}: ItemQAProps) {
   const { t, i18n } = useTranslation('item')
   const { message } = App.useApp()
   const isVi = i18n.language === 'vi'
@@ -20,97 +35,179 @@ export function ItemQA({ itemId, isSeller = false }: ItemQAProps) {
   const headingFont = isVi ? SANS_FONT : SERIF_FONT
   const headingWeight = isVi ? 600 : 400
 
-  const { data: questionsData, isLoading } = useItemQuestions(itemId)
+  const [pageSize, setPageSize] = useState(PAGE_SIZE_STEP)
+  const [newQuestion, setNewQuestion] = useState('')
+  const [answerText, setAnswerText] = useState<Record<string, string>>({})
+  const [pendingQuestions, setPendingQuestions] = useState<PendingQuestion[]>([])
+  const [answeringQuestionId, setAnsweringQuestionId] = useState<string | null>(null)
+
+  const {
+    data: questionsData,
+    isLoading,
+    isFetching,
+  } = useItemQuestions(
+    itemId,
+    { pageNumber: 1, pageSize },
+    { refetchInterval: realtimeConnected ? false : 60000 },
+  )
   const askQuestion = useAskQuestion()
   const answerQuestion = useAnswerQuestion()
 
-  const [newQuestion, setNewQuestion] = useState('')
-  const [answerText, setAnswerText] = useState<Record<string, string>>({})
-
   const questions = questionsData?.items ?? []
+  const canLoadMore = Boolean(questionsData?.metadata.hasNext)
+  const lastSyncedLabel = lastSyncedAt ? formatRelativeTime(new Date(lastSyncedAt).toISOString()) : null
 
   const handleAskQuestion = async () => {
-    if (!newQuestion.trim()) return
+    const question = newQuestion.trim()
+    if (!question) {
+      return
+    }
+
+    const optimisticQuestion: PendingQuestion = {
+      id: `pending-${Date.now()}`,
+      question,
+      createdAt: new Date().toISOString(),
+    }
+
+    setPendingQuestions((prev) => [optimisticQuestion, ...prev])
+    setNewQuestion('')
+
     try {
-      await askQuestion.mutateAsync({ itemId, question: newQuestion.trim() })
-      setNewQuestion('')
-      message.success(t('questionAsked', 'C\u00e2u h\u1ecfi \u0111\u00e3 \u0111\u01b0\u1ee3c g\u1eedi'))
+      await askQuestion.mutateAsync({ itemId, question })
+      setPendingQuestions((prev) => prev.filter((entry) => entry.id !== optimisticQuestion.id))
+      message.success(t('questionAsked', 'Câu hỏi đã được gửi'))
     } catch {
-      message.error(t('questionError', 'Kh\u00f4ng th\u1ec3 g\u1eedi c\u00e2u h\u1ecfi'))
+      setPendingQuestions((prev) => prev.filter((entry) => entry.id !== optimisticQuestion.id))
+      setNewQuestion(question)
+      message.error(t('questionError', 'Không thể gửi câu hỏi'))
     }
   }
 
   const handleAnswer = async (questionId: string) => {
-    const text = answerText[questionId]?.trim()
-    if (!text) return
+    const answer = answerText[questionId]?.trim()
+    if (!answer) {
+      return
+    }
+
+    setAnsweringQuestionId(questionId)
+
     try {
-      await answerQuestion.mutateAsync({ itemId, questionId, answer: text })
+      await answerQuestion.mutateAsync({ itemId, questionId, answer })
       setAnswerText((prev) => ({ ...prev, [questionId]: '' }))
-      message.success(t('answerPosted', 'C\u00e2u tr\u1ea3 l\u1eddi \u0111\u00e3 \u0111\u01b0\u1ee3c \u0111\u0103ng'))
+      message.success(t('answerPosted', 'Câu trả lời đã được đăng'))
     } catch {
-      message.error(t('answerError', 'Kh\u00f4ng th\u1ec3 \u0111\u0103ng c\u00e2u tr\u1ea3 l\u1eddi'))
+      message.error(t('answerError', 'Không thể đăng câu trả lời'))
+    } finally {
+      setAnsweringQuestionId(null)
     }
   }
 
   return (
     <div style={{ marginTop: 48 }}>
-      <h3
+      <div
         style={{
-          fontFamily: headingFont,
-          fontSize: 22,
-          fontWeight: headingWeight,
-          color: 'var(--color-text-primary)',
+          alignItems: 'center',
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 12,
+          justifyContent: 'space-between',
           marginBottom: 24,
         }}
       >
-        {t('qna', 'H\u1ecfi & \u0110\u00e1p')}
-      </h3>
-
-      {/* Questions list */}
-      {isLoading ? (
-        <div style={{ textAlign: 'center', padding: 40, color: 'var(--color-text-secondary)', fontFamily: SANS_FONT, fontSize: 14 }}>
-          {t('loading', '\u0110ang t\u1ea3i...')}
-        </div>
-      ) : questions.length === 0 ? (
+        <h3
+          style={{
+            color: 'var(--color-text-primary)',
+            fontFamily: headingFont,
+            fontSize: 22,
+            fontWeight: headingWeight,
+            margin: 0,
+          }}
+        >
+          {t('qna', 'Hỏi & Đáp')}
+        </h3>
         <div
           style={{
-            padding: '40px 24px',
-            textAlign: 'center',
+            alignItems: 'center',
+            color: 'var(--color-text-secondary)',
+            display: 'inline-flex',
+            fontFamily: SANS_FONT,
+            fontSize: 12,
+            gap: 8,
+          }}
+        >
+          <span
+            style={{
+              background: realtimeConnected ? 'var(--color-success)' : 'var(--color-text-tertiary)',
+              borderRadius: '50%',
+              display: 'inline-block',
+              height: 8,
+              width: 8,
+            }}
+          />
+          <span>
+            {realtimeConnected
+              ? t('realtimeLive', 'Realtime đang hoạt động')
+              : t('realtimeFallback', 'Đang dùng làm mới định kỳ')}
+          </span>
+          {lastSyncedLabel && (
+            <span>
+              {t('lastSynced', 'Cập nhật {{time}}', { time: lastSyncedLabel })}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div
+          style={{
             color: 'var(--color-text-secondary)',
             fontFamily: SANS_FONT,
             fontSize: 14,
-            background: 'var(--color-bg-surface)',
-            borderRadius: 2,
+            padding: 40,
+            textAlign: 'center',
           }}
         >
-          {t('noQuestions', 'Ch\u01b0a c\u00f3 c\u00e2u h\u1ecfi n\u00e0o')}
+          {t('loading', 'Đang tải...')}
+        </div>
+      ) : questions.length === 0 && pendingQuestions.length === 0 ? (
+        <div
+          style={{
+            background: 'var(--color-bg-surface)',
+            borderRadius: 2,
+            color: 'var(--color-text-secondary)',
+            fontFamily: SANS_FONT,
+            fontSize: 14,
+            padding: '40px 24px',
+            textAlign: 'center',
+          }}
+        >
+          {t('noQuestions', 'Chưa có câu hỏi nào')}
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {questions.map((q) => (
+          {pendingQuestions.map((question) => (
             <div
-              key={q.id}
+              key={question.id}
               style={{
-                background: 'var(--color-bg-card)',
-                border: '1px solid var(--color-border-light)',
+                background: 'rgba(196, 147, 61, 0.05)',
+                border: '1px dashed rgba(196, 147, 61, 0.45)',
                 borderRadius: 2,
                 padding: '20px 24px',
               }}
             >
-              {/* Question */}
-              <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+              <div style={{ display: 'flex', gap: 12 }}>
                 <div
                   style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    background: 'var(--color-accent-light)',
-                    display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
+                    background: 'var(--color-accent-light)',
+                    borderRadius: '50%',
+                    color: 'var(--color-accent)',
+                    display: 'flex',
                     flexShrink: 0,
                     fontSize: 14,
-                    color: 'var(--color-accent)',
+                    height: 32,
+                    justifyContent: 'center',
+                    width: 32,
                   }}
                 >
                   Q
@@ -118,53 +215,107 @@ export function ItemQA({ itemId, isSeller = false }: ItemQAProps) {
                 <div style={{ flex: 1 }}>
                   <p
                     style={{
+                      color: 'var(--color-text-primary)',
                       fontFamily: SANS_FONT,
                       fontSize: 14,
                       lineHeight: 1.6,
-                      color: 'var(--color-text-primary)',
                       margin: 0,
                     }}
                   >
-                    {q.question}
+                    {question.question}
                   </p>
                   <span
                     style={{
+                      color: 'var(--color-text-tertiary)',
+                      display: 'block',
                       fontFamily: SANS_FONT,
                       fontSize: 12,
-                      color: 'var(--color-text-tertiary)',
                       marginTop: 4,
-                      display: 'block',
                     }}
                   >
-                    {formatRelativeTime(q.createdAt)}
+                    {t('pendingQuestion', 'Đang gửi...')} • {formatRelativeTime(question.createdAt)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {questions.map((question) => (
+            <div
+              key={question.id}
+              style={{
+                background: 'var(--color-bg-card)',
+                border: '1px solid var(--color-border-light)',
+                borderRadius: 2,
+                padding: '20px 24px',
+              }}
+            >
+              <div style={{ alignItems: 'flex-start', display: 'flex', gap: 12 }}>
+                <div
+                  style={{
+                    alignItems: 'center',
+                    background: 'var(--color-accent-light)',
+                    borderRadius: '50%',
+                    color: 'var(--color-accent)',
+                    display: 'flex',
+                    flexShrink: 0,
+                    fontSize: 14,
+                    height: 32,
+                    justifyContent: 'center',
+                    width: 32,
+                  }}
+                >
+                  Q
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p
+                    style={{
+                      color: 'var(--color-text-primary)',
+                      fontFamily: SANS_FONT,
+                      fontSize: 14,
+                      lineHeight: 1.6,
+                      margin: 0,
+                    }}
+                  >
+                    {question.question}
+                  </p>
+                  <span
+                    style={{
+                      color: 'var(--color-text-tertiary)',
+                      display: 'block',
+                      fontFamily: SANS_FONT,
+                      fontSize: 12,
+                      marginTop: 4,
+                    }}
+                  >
+                    {formatRelativeTime(question.createdAt)}
                   </span>
                 </div>
               </div>
 
-              {/* Answer */}
-              {q.answer ? (
+              {question.answer ? (
                 <div
                   style={{
+                    alignItems: 'flex-start',
+                    borderTop: '1px solid var(--color-border-light)',
                     display: 'flex',
                     gap: 12,
-                    alignItems: 'flex-start',
                     marginTop: 16,
                     paddingTop: 16,
-                    borderTop: '1px solid var(--color-border-light)',
                   }}
                 >
                   <div
                     style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: '50%',
-                      background: 'rgba(74, 124, 89, 0.1)',
-                      display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
+                      background: 'rgba(74, 124, 89, 0.1)',
+                      borderRadius: '50%',
+                      color: 'var(--color-success)',
+                      display: 'flex',
                       flexShrink: 0,
                       fontSize: 14,
-                      color: 'var(--color-success)',
+                      height: 32,
+                      justifyContent: 'center',
+                      width: 32,
                     }}
                   >
                     A
@@ -172,26 +323,26 @@ export function ItemQA({ itemId, isSeller = false }: ItemQAProps) {
                   <div style={{ flex: 1 }}>
                     <p
                       style={{
+                        color: 'var(--color-text-primary)',
                         fontFamily: SANS_FONT,
                         fontSize: 14,
                         lineHeight: 1.6,
-                        color: 'var(--color-text-primary)',
                         margin: 0,
                       }}
                     >
-                      {q.answer}
+                      {question.answer}
                     </p>
-                    {q.answeredAt && (
+                    {question.answeredAt && (
                       <span
                         style={{
+                          color: 'var(--color-text-tertiary)',
+                          display: 'block',
                           fontFamily: SANS_FONT,
                           fontSize: 12,
-                          color: 'var(--color-text-tertiary)',
                           marginTop: 4,
-                          display: 'block',
                         }}
                       >
-                        {formatRelativeTime(q.answeredAt)}
+                        {formatRelativeTime(question.answeredAt)}
                       </span>
                     )}
                   </div>
@@ -199,63 +350,77 @@ export function ItemQA({ itemId, isSeller = false }: ItemQAProps) {
               ) : (
                 <div
                   style={{
+                    borderTop: '1px solid var(--color-border-light)',
                     marginTop: 16,
                     paddingTop: 16,
-                    borderTop: '1px solid var(--color-border-light)',
                   }}
                 >
                   {isSeller ? (
                     <div style={{ display: 'flex', gap: 8 }}>
                       <input
                         type="text"
-                        value={answerText[q.id] ?? ''}
-                        onChange={(e) => setAnswerText((prev) => ({ ...prev, [q.id]: e.target.value }))}
-                        placeholder={t('answerPlaceholder', 'Nh\u1eadp c\u00e2u tr\u1ea3 l\u1eddi...')}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleAnswer(q.id)
+                        value={answerText[question.id] ?? ''}
+                        onChange={(event) =>
+                          setAnswerText((prev) => ({
+                            ...prev,
+                            [question.id]: event.target.value,
+                          }))
+                        }
+                        placeholder={t('answerPlaceholder', 'Nhập câu trả lời...')}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') {
+                            void handleAnswer(question.id)
+                          }
                         }}
                         style={{
-                          flex: 1,
-                          padding: '8px 12px',
+                          background: 'var(--color-bg-surface)',
                           border: '1px solid var(--color-border)',
                           borderRadius: 2,
+                          color: 'var(--color-text-primary)',
+                          flex: 1,
                           fontFamily: SANS_FONT,
                           fontSize: 14,
-                          background: 'var(--color-bg-surface)',
-                          color: 'var(--color-text-primary)',
                           outline: 'none',
+                          padding: '8px 12px',
                         }}
                       />
                       <button
                         type="button"
-                        onClick={() => handleAnswer(q.id)}
-                        disabled={answerQuestion.isPending || !answerText[q.id]?.trim()}
+                        onClick={() => {
+                          void handleAnswer(question.id)
+                        }}
+                        disabled={answeringQuestionId === question.id || !answerText[question.id]?.trim()}
                         style={{
-                          padding: '8px 20px',
                           background: 'var(--color-accent)',
-                          color: '#fff',
                           border: 'none',
                           borderRadius: 2,
+                          color: '#fff',
+                          cursor: 'pointer',
                           fontFamily: SANS_FONT,
                           fontSize: 14,
                           fontWeight: 500,
-                          cursor: 'pointer',
-                          opacity: answerQuestion.isPending || !answerText[q.id]?.trim() ? 0.5 : 1,
+                          opacity:
+                            answeringQuestionId === question.id || !answerText[question.id]?.trim()
+                              ? 0.5
+                              : 1,
+                          padding: '8px 20px',
                         }}
                       >
-                        {t('answer', 'Tr\u1ea3 l\u1eddi')}
+                        {answeringQuestionId === question.id
+                          ? t('answering', 'Đang gửi...')
+                          : t('answer', 'Trả lời')}
                       </button>
                     </div>
                   ) : (
                     <span
                       style={{
+                        color: 'var(--color-text-tertiary)',
                         fontFamily: SANS_FONT,
                         fontSize: 13,
-                        color: 'var(--color-text-tertiary)',
                         fontStyle: 'italic',
                       }}
                     >
-                      {t('noAnswer', 'Ch\u01b0a tr\u1ea3 l\u1eddi')}
+                      {t('noAnswer', 'Chưa trả lời')}
                     </span>
                   )}
                 </div>
@@ -265,68 +430,95 @@ export function ItemQA({ itemId, isSeller = false }: ItemQAProps) {
         </div>
       )}
 
-      {/* Ask question form */}
+      {canLoadMore && (
+        <div style={{ marginTop: 16, textAlign: 'center' }}>
+          <button
+            type="button"
+            onClick={() => setPageSize((prev) => prev + PAGE_SIZE_STEP)}
+            disabled={isFetching}
+            style={{
+              background: 'transparent',
+              border: '1px solid var(--color-border)',
+              borderRadius: 2,
+              color: 'var(--color-text-primary)',
+              cursor: 'pointer',
+              fontFamily: SANS_FONT,
+              fontSize: 13,
+              fontWeight: 500,
+              opacity: isFetching ? 0.6 : 1,
+              padding: '10px 18px',
+            }}
+          >
+            {isFetching ? t('loadingMore', 'Đang tải thêm...') : t('loadMore', 'Xem thêm câu hỏi')}
+          </button>
+        </div>
+      )}
+
       {!isSeller && (
         <div
           style={{
-            marginTop: 24,
-            padding: '20px 24px',
             background: 'var(--color-bg-surface)',
             borderRadius: 2,
+            marginTop: 24,
+            padding: '20px 24px',
           }}
         >
           <label
             style={{
+              color: 'var(--color-text-secondary)',
+              display: 'block',
               fontFamily: SANS_FONT,
               fontSize: 13,
               fontWeight: 500,
-              color: 'var(--color-text-secondary)',
               marginBottom: 8,
-              display: 'block',
             }}
           >
-            {t('askLabel', '\u0110\u1eb7t c\u00e2u h\u1ecfi')}
+            {t('askLabel', 'Đặt câu hỏi')}
           </label>
           <div style={{ display: 'flex', gap: 8 }}>
             <input
               type="text"
               value={newQuestion}
-              onChange={(e) => setNewQuestion(e.target.value)}
-              placeholder={t('askPlaceholder', 'H\u1ecfi v\u1ec1 s\u1ea3n ph\u1ea9m n\u00e0y...')}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleAskQuestion()
+              onChange={(event) => setNewQuestion(event.target.value)}
+              placeholder={t('askPlaceholder', 'Hỏi về sản phẩm này...')}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  void handleAskQuestion()
+                }
               }}
               style={{
-                flex: 1,
-                padding: '10px 14px',
+                background: 'var(--color-bg-card)',
                 border: '1px solid var(--color-border)',
                 borderRadius: 2,
+                color: 'var(--color-text-primary)',
+                flex: 1,
                 fontFamily: SANS_FONT,
                 fontSize: 14,
-                background: 'var(--color-bg-card)',
-                color: 'var(--color-text-primary)',
                 outline: 'none',
+                padding: '10px 14px',
               }}
             />
             <button
               type="button"
-              onClick={handleAskQuestion}
+              onClick={() => {
+                void handleAskQuestion()
+              }}
               disabled={askQuestion.isPending || !newQuestion.trim()}
               className="oio-press"
               style={{
-                padding: '10px 24px',
                 background: 'var(--color-accent)',
-                color: '#fff',
                 border: 'none',
                 borderRadius: 2,
+                color: '#fff',
+                cursor: 'pointer',
                 fontFamily: SANS_FONT,
                 fontSize: 14,
                 fontWeight: 500,
-                cursor: 'pointer',
                 opacity: askQuestion.isPending || !newQuestion.trim() ? 0.5 : 1,
+                padding: '10px 24px',
               }}
             >
-              {t('ask', 'G\u1eedi')}
+              {askQuestion.isPending ? t('sending', 'Đang gửi...') : t('ask', 'Gửi')}
             </button>
           </div>
         </div>

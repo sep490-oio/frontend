@@ -14,8 +14,10 @@ interface TimeLeft {
   total: number
 }
 
-function calcTimeLeft(endTime: string): TimeLeft {
-  const total = Math.max(0, new Date(endTime).getTime() - Date.now())
+const ZERO: TimeLeft = { days: 0, hours: 0, minutes: 0, seconds: 0, total: 0 }
+
+function calcTimeLeft(endTimestamp: number, now: number): TimeLeft {
+  const total = Math.max(0, endTimestamp - now)
   return {
     days: Math.floor(total / (1000 * 60 * 60 * 24)),
     hours: Math.floor((total / (1000 * 60 * 60)) % 24),
@@ -25,8 +27,8 @@ function calcTimeLeft(endTime: string): TimeLeft {
   }
 }
 
-function pad(n: number): string {
-  return String(n).padStart(2, '0')
+function pad(value: number): string {
+  return String(value).padStart(2, '0')
 }
 
 const FONT_SIZES: Record<string, number> = {
@@ -39,36 +41,55 @@ const ONE_HOUR = 60 * 60 * 1000
 const FIVE_MIN = 5 * 60 * 1000
 
 export function CountdownTimer({ endTime, onEnd, size = 'default' }: CountdownTimerProps) {
-  const [timeLeft, setTimeLeft] = useState<TimeLeft>(() => calcTimeLeft(endTime))
-  const onEndCalledRef = useRef(false)
+  const endTimestamp = new Date(endTime).getTime()
+  const isValid = !!endTime && !Number.isNaN(endTimestamp)
 
-  // Reset the guard when endTime changes (new countdown)
+  const [now, setNow] = useState(() => Date.now())
+  const onEndCalledRef = useRef(false)
+  const onEndRef = useRef(onEnd)
+
+  useEffect(() => {
+    onEndRef.current = onEnd
+  }, [onEnd])
+
   useEffect(() => {
     onEndCalledRef.current = false
   }, [endTime])
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      const tl = calcTimeLeft(endTime)
-      setTimeLeft(tl)
-      if (tl.total <= 0) {
-        clearInterval(timer)
-        if (!onEndCalledRef.current) {
-          onEndCalledRef.current = true
-          onEnd?.()
-        }
-      }
+    if (!isValid) {
+      return
+    }
+
+    const timerId = setInterval(() => {
+      setNow(Date.now())
     }, 1000)
-    return () => clearInterval(timer)
-  }, [endTime, onEnd])
+
+    return () => clearInterval(timerId)
+  }, [isValid])
+
+  const timeLeft = isValid ? calcTimeLeft(endTimestamp, now) : ZERO
+
+  useEffect(() => {
+    if (!isValid || timeLeft.total > 0 || onEndCalledRef.current) {
+      return
+    }
+
+    onEndCalledRef.current = true
+    onEndRef.current?.()
+  }, [isValid, timeLeft.total])
+
+  if (!isValid) {
+    return null
+  }
 
   if (timeLeft.total <= 0) {
     return (
       <span
         style={{
+          color: 'var(--color-text-secondary)',
           fontFamily: "'DM Mono', monospace",
           fontSize: FONT_SIZES[size],
-          color: 'var(--color-text-secondary)',
         }}
       >
         --:--:--
@@ -78,23 +99,23 @@ export function CountdownTimer({ endTime, onEnd, size = 'default' }: CountdownTi
 
   const isUrgent = timeLeft.total < ONE_HOUR
   const isCritical = timeLeft.total < FIVE_MIN
-
-  // Format: "2d 14h 32m" when > 1 day, "14:32:07" when < 1 day
   const display =
     timeLeft.days > 0
       ? `${timeLeft.days}d ${pad(timeLeft.hours)}h ${pad(timeLeft.minutes)}m`
       : `${pad(timeLeft.hours)}:${pad(timeLeft.minutes)}:${pad(timeLeft.seconds)}`
-
   const color = isUrgent ? 'var(--color-danger)' : 'var(--color-text-secondary)'
 
   return (
     <span
       className={isCritical ? 'oio-urgent-glow' : undefined}
+      role="timer"
+      aria-live="polite"
+      aria-atomic="true"
       style={{
+        color,
         fontFamily: "'DM Mono', monospace",
         fontSize: FONT_SIZES[size],
         fontVariantNumeric: 'tabular-nums',
-        color,
       }}
     >
       {display}

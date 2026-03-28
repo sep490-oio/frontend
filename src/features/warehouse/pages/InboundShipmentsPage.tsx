@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Typography, Table, Button, Space, Tabs, App, Tooltip } from 'antd'
+import { Typography, Button, Space, Tabs, App, Tooltip } from 'antd'
 import { PlusOutlined, EyeOutlined, CloseCircleOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
 import { useTranslation } from 'react-i18next'
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { useInboundShipments, useCancelInbound } from '@/features/warehouse/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { ShipmentStatus } from '@/types/enums'
@@ -13,11 +14,11 @@ import type { ColumnsType } from 'antd/es/table'
 
 const STATUS_TABS = [
   { key: 'all', label: 'all' },
-  { key: ShipmentStatus.Pending, label: 'pending' },
-  { key: ShipmentStatus.Confirmed, label: 'confirmed' },
+  { key: ShipmentStatus.AwaitingPickup, label: 'pending' },
   { key: ShipmentStatus.InTransit, label: 'inTransit' },
   { key: ShipmentStatus.Arrived, label: 'arrived' },
-  { key: ShipmentStatus.Stored, label: 'stored' },
+  { key: ShipmentStatus.Inspected, label: 'inspected' },
+  { key: ShipmentStatus.Completed, label: 'stored' },
   { key: ShipmentStatus.Cancelled, label: 'cancelled' },
 ] as const
 
@@ -110,7 +111,7 @@ export default function InboundShipmentsPage() {
               onClick={() => navigate(`${prefix}/warehouse/inbound/${record.id}`)}
             />
           </Tooltip>
-          {(record.status === ShipmentStatus.Pending || record.status === ShipmentStatus.Confirmed) && (
+          {(record.status === ShipmentStatus.AwaitingPickup) && (
             <Tooltip title={tc('action.cancel', 'Cancel')}>
               <Button
                 type="text"
@@ -150,7 +151,8 @@ export default function InboundShipmentsPage() {
         }))}
       />
 
-      <Table<InboundShipmentDto>
+      <ResponsiveTable<InboundShipmentDto>
+        mobileMode="card"
         rowKey="id"
         columns={columns}
         dataSource={data?.items ?? []}

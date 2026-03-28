@@ -1,6 +1,8 @@
 import { useState } from 'react'
-import { Typography, Table, Space } from 'antd'
+import { Typography, Space, Button } from 'antd'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router'
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { useWarehouseItems } from '@/features/warehouse/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
@@ -19,6 +21,7 @@ export default function WarehouseItemsPage() {
     pageSize,
   }
 
+  const navigate = useNavigate()
   const { data, isLoading } = useWarehouseItems(params)
 
   const columns: ColumnsType<WarehouseItemDto> = [
@@ -27,6 +30,11 @@ export default function WarehouseItemsPage() {
       dataIndex: 'itemId',
       key: 'itemId',
       ellipsis: true,
+      render: (itemId: string) => (
+        <Button type="link" size="small" onClick={() => navigate(`/items/${itemId}`)} style={{ padding: 0, fontFamily: "'DM Mono', monospace", fontSize: 12 }}>
+          {itemId.slice(0, 12)}...
+        </Button>
+      ),
     },
     {
       title: t('quantity', 'Quantity'),
@@ -72,7 +80,8 @@ export default function WarehouseItemsPage() {
         </Typography.Title>
       </Space>
 
-      <Table<WarehouseItemDto>
+      <ResponsiveTable<WarehouseItemDto>
+        mobileMode="card"
         rowKey="id"
         columns={columns}
         dataSource={data?.items ?? []}

@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Table, Button, Modal, Space, Popconfirm, App, Select } from 'antd'
+import { Button, Modal, Space, Popconfirm, App, Select } from 'antd'
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { FileTextOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useAdminTerms, useCreateTerms, useActivateTerms } from '@/features/admin/api'
@@ -179,12 +180,12 @@ export default function AdminTermsPage() {
       </div>
 
       {/* Table */}
-      <Table<TermsDocumentDto>
+      <ResponsiveTable<TermsDocumentDto>
         rowKey="id"
         columns={columns}
         dataSource={data ?? []}
         loading={isLoading}
-        scroll={{ x: 800 }}
+        mobileMode="list"
         pagination={{ pageSize: 10, showTotal: (total) => tc('pagination.total', { total }) }}
       />
 

@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/queryClient'
 import {
   Typography,
   Card,
@@ -17,11 +19,13 @@ import {
   App,
 } from 'antd'
 import { UserOutlined, UploadOutlined, PhoneOutlined, CheckCircleOutlined, CameraOutlined } from '@ant-design/icons'
+import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import dayjs from 'dayjs'
 import { useTranslation } from 'react-i18next'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useCurrentUser, useCurrentUserProfile, useUpdateProfile, useSetPhoneNumber, useConfirmPhoneNumber } from '../api'
 import type { Gender } from '@/types/enums'
 
@@ -73,11 +77,15 @@ const labelStyle: React.CSSProperties = {
 // -- Component -----------------------------------------------------------------
 
 export default function ProfilePage() {
-  const { t: _t } = useTranslation('common')
+  const { t } = useTranslation('user')
+  const { isMobile } = useBreakpoint()
   const { message } = App.useApp()
   const [showPhoneVerify, setShowPhoneVerify] = useState(false)
+  const [avatarUploadId, setAvatarUploadId] = useState<string | null>(null)
+  const avatarUpload = useMediaUpload('user_avatar')
   const [avatarHover, setAvatarHover] = useState(false)
 
+  const queryClient = useQueryClient()
   const { data: user, isLoading: userLoading } = useCurrentUser()
   const { data: profile, isLoading: profileLoading } = useCurrentUserProfile()
   const updateProfile = useUpdateProfile()
@@ -128,10 +136,13 @@ export default function ProfilePage() {
         displayName: values.displayName || undefined,
         dateOfBirth: values.dateOfBirth || undefined,
         gender: (values.gender || undefined) as Gender | undefined,
+        avatarMediaUploadId: avatarUploadId || undefined,
       })
-      message.success('Cap nhat ho so thanh cong')
+      await queryClient.invalidateQueries({ queryKey: queryKeys.auth.currentUser() })
+      await queryClient.invalidateQueries({ queryKey: queryKeys.users.profile() })
+      message.success(t('user:profile.updateSuccess', 'Profile updated successfully'))
     } catch {
-      message.error('Khong the cap nhat ho so')
+      message.error(t('user:profile.updateError', 'Failed to update profile'))
     }
   })
 
@@ -139,19 +150,19 @@ export default function ProfilePage() {
     try {
       await setPhoneNumber.mutateAsync(values)
       setShowPhoneVerify(true)
-      message.success('Ma xac nhan da duoc gui den so dien thoai cua ban')
+      message.success(t('user:profile.otpSent', 'Verification code sent'))
     } catch {
-      message.error('Khong the gui ma xac nhan')
+      message.error(t('user:profile.otpSendError', 'Failed to send verification code'))
     }
   })
 
   const onConfirmPhone = handleConfirmSubmit(async (values) => {
     try {
-      await confirmPhone.mutateAsync(values)
+      await confirmPhone.mutateAsync({ verificationCode: values.code })
       setShowPhoneVerify(false)
-      message.success('Xac nhan so dien thoai thanh cong')
+      message.success(t('user:profile.phoneVerified', 'Phone verified successfully'))
     } catch {
-      message.error('Ma xac nhan khong chinh xac')
+      message.error(t('user:profile.otpInvalid', 'Invalid verification code'))
     }
   })
 
@@ -164,22 +175,22 @@ export default function ProfilePage() {
   }
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto' }}>
+    <div style={{ maxWidth: 800, margin: '0 auto', padding: isMobile ? '0 12px' : undefined }}>
       {/* Page Heading */}
       <h1
         style={{
           fontFamily: "'DM Serif Display', Georgia, serif",
           fontWeight: 400,
-          fontSize: 28,
+          fontSize: isMobile ? 22 : 28,
           color: 'var(--color-text-primary)',
           marginBottom: 8,
           letterSpacing: '-0.01em',
         }}
       >
-        Ho so ca nhan
+        {t('user:profile.title', 'My Profile')}
       </h1>
-      <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, marginBottom: 32 }}>
-        Quan ly thong tin tai khoan cua ban
+      <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, marginBottom: isMobile ? 20 : 32 }}>
+        {t('user:profile.subtitle', 'Manage your account information')}
       </p>
 
       {/* Avatar Section */}
@@ -218,11 +229,20 @@ export default function ProfilePage() {
           </div>
           <Upload
             showUploadList={false}
-            beforeUpload={() => false}
-            disabled
+            accept="image/*"
+            beforeUpload={async (file) => {
+              try {
+                const result = await avatarUpload.upload(file)
+                setAvatarUploadId(result.mediaUploadId)
+                message.success(t('user:profile.avatarUploaded', 'Avatar uploaded'))
+              } catch {
+                message.error(t('user:profile.avatarUploadError', 'Failed to upload avatar'))
+              }
+              return false
+            }}
           >
-            <Button icon={<UploadOutlined />} disabled size="small" style={{ marginTop: 8 }}>
-              Thay doi anh dai dien (sap ra mat)
+            <Button icon={<UploadOutlined />} size="small" style={{ marginTop: 8 }} loading={avatarUpload.uploading}>
+              {t('user:profile.changeAvatar', 'Change Avatar')}
             </Button>
           </Upload>
           <Text type="secondary" style={{ fontSize: 13 }}>{user?.email}</Text>
@@ -232,20 +252,20 @@ export default function ProfilePage() {
       {/* Profile Form */}
       <Card
         style={{ marginBottom: 32 }}
-        title={<span style={sectionHeadingStyle}>Thong tin ca nhan</span>}
+        title={<span style={sectionHeadingStyle}>{t('user:profile.personalInfo', 'Personal Information')}</span>}
       >
         <form onSubmit={onProfileSave}>
           <Row gutter={16}>
             <Col xs={24} sm={12}>
               <div style={{ marginBottom: 20 }}>
-                <label style={labelStyle}>Ho</label>
+                <label style={labelStyle}>{t('user:profile.firstName', 'First Name')}</label>
                 <Controller
                   name="firstName"
                   control={profileControl}
                   render={({ field }) => (
                     <Input
                       {...field}
-                      placeholder="Nhap ho"
+                      placeholder={t('user:profile.firstNamePlaceholder', 'Enter first name')}
                       status={profileErrors.firstName ? 'error' : undefined}
                       style={{ height: 42 }}
                     />
@@ -258,14 +278,14 @@ export default function ProfilePage() {
             </Col>
             <Col xs={24} sm={12}>
               <div style={{ marginBottom: 20 }}>
-                <label style={labelStyle}>Ten</label>
+                <label style={labelStyle}>{t('user:profile.lastName', 'Last Name')}</label>
                 <Controller
                   name="lastName"
                   control={profileControl}
                   render={({ field }) => (
                     <Input
                       {...field}
-                      placeholder="Nhap ten"
+                      placeholder={t('user:profile.lastNamePlaceholder', 'Enter last name')}
                       status={profileErrors.lastName ? 'error' : undefined}
                       style={{ height: 42 }}
                     />
@@ -279,14 +299,14 @@ export default function ProfilePage() {
           </Row>
 
           <div style={{ marginBottom: 20 }}>
-            <label style={labelStyle}>Ten hien thi</label>
+            <label style={labelStyle}>{t('user:profile.displayName', 'Display Name')}</label>
             <Controller
               name="displayName"
               control={profileControl}
               render={({ field }) => (
                 <Input
                   {...field}
-                  placeholder="Nhap ten hien thi..."
+                  placeholder={t('user:profile.displayNamePlaceholder', 'Enter display name')}
                   status={profileErrors.displayName ? 'error' : undefined}
                   style={{ height: 42 }}
                 />
@@ -300,7 +320,7 @@ export default function ProfilePage() {
           <Row gutter={16}>
             <Col xs={24} sm={12}>
               <div style={{ marginBottom: 20 }}>
-                <label style={labelStyle}>Ngay sinh</label>
+                <label style={labelStyle}>{t('user:profile.dateOfBirth', 'Date of Birth')}</label>
                 <Controller
                   name="dateOfBirth"
                   control={profileControl}
@@ -309,7 +329,7 @@ export default function ProfilePage() {
                       style={{ width: '100%', height: 42 }}
                       value={field.value ? dayjs(field.value) : null}
                       onChange={(date) => field.onChange(date ? date.format('YYYY-MM-DD') : '')}
-                      placeholder="Chon ngay sinh"
+                      placeholder={t('user:profile.dateOfBirthPlaceholder', 'Select date of birth')}
                       format="DD/MM/YYYY"
                     />
                   )}
@@ -318,7 +338,7 @@ export default function ProfilePage() {
             </Col>
             <Col xs={24} sm={12}>
               <div style={{ marginBottom: 20 }}>
-                <label style={labelStyle}>Gioi tinh</label>
+                <label style={labelStyle}>{t('user:profile.gender', 'Gender')}</label>
                 <Controller
                   name="gender"
                   control={profileControl}
@@ -326,12 +346,12 @@ export default function ProfilePage() {
                     <Select
                       {...field}
                       style={{ width: '100%' }}
-                      placeholder="Chon gioi tinh"
+                      placeholder={t('user:profile.genderPlaceholder', 'Select gender')}
                       allowClear
                       options={[
-                        { value: 'male', label: 'Nam' },
-                        { value: 'female', label: 'Nu' },
-                        { value: 'other', label: 'Khac' },
+                        { value: 'male', label: t('user:profile.genderMale', 'Male') },
+                        { value: 'female', label: t('user:profile.genderFemale', 'Female') },
+                        { value: 'other', label: t('user:profile.genderOther', 'Other') },
                       ]}
                     />
                   )}
@@ -346,7 +366,7 @@ export default function ProfilePage() {
             loading={updateProfile.isPending}
             style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
           >
-            Luu thay doi
+            {t('user:profile.saveChanges', 'Save Changes')}
           </Button>
         </form>
       </Card>
@@ -354,20 +374,20 @@ export default function ProfilePage() {
       {/* Phone Number Section */}
       <Card
         style={{ marginBottom: 32 }}
-        title={<span style={sectionHeadingStyle}>So dien thoai</span>}
+        title={<span style={sectionHeadingStyle}>{t('user:profile.phoneNumber', 'Phone Number')}</span>}
       >
         {user?.phoneNumberConfirmed ? (
           <Alert
             type="success"
             showIcon
             icon={<CheckCircleOutlined />}
-            message={`So dien thoai ${user.countryCode ?? ''} ${user.phoneNumber ?? ''} da duoc xac nhan`}
+            message={t('user:profile.phoneConfirmed', 'Phone number {{code}} {{number}} has been verified', { code: user.countryCode ?? '', number: user.phoneNumber ?? '' })}
             style={{ borderRadius: 2 }}
           />
         ) : (
           <>
             <Text type="secondary" style={{ display: 'block', marginBottom: 16, fontSize: 14 }}>
-              Them so dien thoai de bao mat tai khoan tot hon.
+              {t('user:profile.addPhoneHint', 'Add a phone number for better account security.')}
             </Text>
             <form onSubmit={onPhoneSave}>
               <Row gutter={8}>
@@ -396,7 +416,7 @@ export default function ProfilePage() {
                       <Input
                         {...field}
                         prefix={<PhoneOutlined />}
-                        placeholder="Nhap so dien thoai"
+                        placeholder={t('user:profile.phonePlaceholder', 'Enter phone number')}
                         status={phoneErrors.phoneNumber ? 'error' : undefined}
                         style={{ height: 42 }}
                       />
@@ -414,7 +434,7 @@ export default function ProfilePage() {
                     icon={<PhoneOutlined />}
                     style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
                   >
-                    Gui ma
+                    {t('user:profile.sendCode', 'Send Code')}
                   </Button>
                 </Col>
               </Row>
@@ -431,7 +451,7 @@ export default function ProfilePage() {
                       render={({ field }) => (
                         <Input
                           {...field}
-                          placeholder="Nhap ma 6 chu so"
+                          placeholder={t('user:profile.otpPlaceholder', 'Enter 6-digit code')}
                           maxLength={6}
                           status={confirmErrors.code ? 'error' : undefined}
                           style={{ height: 42, fontFamily: 'var(--font-mono)', letterSpacing: '0.15em' }}
@@ -444,7 +464,7 @@ export default function ProfilePage() {
                       loading={confirmPhone.isPending}
                       style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
                     >
-                      Xac nhan
+                      {t('user:profile.confirm', 'Confirm')}
                     </Button>
                   </Space>
                   {confirmErrors.code && (

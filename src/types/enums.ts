@@ -21,27 +21,28 @@ export const AuctionType = {
 export type AuctionType = (typeof AuctionType)[keyof typeof AuctionType]
 
 export const BidStatus = {
-  Pending: 'pending',
-  Accepted: 'accepted',
-  Rejected: 'rejected',
+  Active: 'active',
+  Outbid: 'outbid',
+  Winning: 'winning',
+  Won: 'won',
   Cancelled: 'cancelled',
-  Retracted: 'retracted',
 } as const
 export type BidStatus = (typeof BidStatus)[keyof typeof BidStatus]
 
 export const AutoBidStatus = {
   Active: 'active',
   Paused: 'paused',
-  Completed: 'completed',
-  Cancelled: 'cancelled',
+  Exhausted: 'exhausted',
+  Won: 'won',
+  Outbid: 'outbid',
 } as const
 export type AutoBidStatus = (typeof AutoBidStatus)[keyof typeof AutoBidStatus]
 
 export const SealedBidStatus = {
   Submitted: 'submitted',
   Revealed: 'revealed',
-  Invalid: 'invalid',
-  Expired: 'expired',
+  Invalidated: 'invalidated',
+  Withdrawn: 'withdrawn',
 } as const
 export type SealedBidStatus = (typeof SealedBidStatus)[keyof typeof SealedBidStatus]
 
@@ -57,32 +58,40 @@ export type UserStatus = (typeof UserStatus)[keyof typeof UserStatus]
 
 export const SellerProfileStatus = {
   Pending: 'pending',
-  Approved: 'approved',
+  Verified: 'verified',
   Rejected: 'rejected',
   Suspended: 'suspended',
 } as const
 export type SellerProfileStatus = (typeof SellerProfileStatus)[keyof typeof SellerProfileStatus]
 
 export const VerificationType = {
-  Identity: 'identity',
-  Business: 'business',
-  BankAccount: 'bank_account',
+  GovernmentId: 'government_id',
+  Passport: 'passport',
+  BusinessOwner: 'business_owner',
+  Manual: 'manual',
 } as const
 export type VerificationType = (typeof VerificationType)[keyof typeof VerificationType]
 
 export const VerificationDocumentType = {
-  Passport: 'passport',
-  NationalId: 'national_id',
-  DriverLicense: 'driver_license',
-  BusinessRegistration: 'business_registration',
+  IdFront: 'id_front',
+  IdBack: 'id_back',
+  Selfie: 'selfie',
+  SelfieWithId: 'selfie_with_id',
+  BusinessLicense: 'business_license',
+  BankStatement: 'bank_statement',
+  Other: 'other',
 } as const
 export type VerificationDocumentType = (typeof VerificationDocumentType)[keyof typeof VerificationDocumentType]
 
 export const IdentityVerificationStatus = {
-  Unverified: 'unverified',
   Pending: 'pending',
+  Submitted: 'submitted',
+  UnderReview: 'under_review',
   Approved: 'approved',
   Rejected: 'rejected',
+  Expired: 'expired',
+  Suspended: 'suspended',
+  Cancelled: 'cancelled',
 } as const
 export type IdentityVerificationStatus = (typeof IdentityVerificationStatus)[keyof typeof IdentityVerificationStatus]
 
@@ -111,74 +120,79 @@ export const OrderReturnStatus = {
   Requested: 'requested',
   Approved: 'approved',
   Rejected: 'rejected',
-  Shipped: 'shipped',
-  Received: 'received',
-  Completed: 'completed',
+  ReturnInTransit: 'return_in_transit',
+  SellerReceived: 'seller_received',
+  BuyerFollowup: 'buyer_followup',
+  Resolved: 'resolved',
   Cancelled: 'cancelled',
 } as const
 export type OrderReturnStatus = (typeof OrderReturnStatus)[keyof typeof OrderReturnStatus]
 
 // Payment
 export const PaymentMethodType = {
-  Card: 'card',
-  Wallet: 'wallet',
-  BankTransfer: 'bank_transfer',
+  CreditCard: 'credit_card',
+  DebitCard: 'debit_card',
+  BankAccount: 'bank_account',
+  EWallet: 'e_wallet',
   VnPay: 'vnpay',
 } as const
 export type PaymentMethodType = (typeof PaymentMethodType)[keyof typeof PaymentMethodType]
 
 export const TransactionStatus = {
   Pending: 'pending',
+  Processing: 'processing',
   Completed: 'completed',
   Failed: 'failed',
   Cancelled: 'cancelled',
-  Processing: 'processing',
+  Refunded: 'refunded',
 } as const
 export type TransactionStatus = (typeof TransactionStatus)[keyof typeof TransactionStatus]
 
 export const WalletTransactionType = {
   Credit: 'credit',
   Debit: 'debit',
-  Refund: 'refund',
-  Fee: 'fee',
+  Hold: 'hold',
+  Release: 'release',
 } as const
 export type WalletTransactionType = (typeof WalletTransactionType)[keyof typeof WalletTransactionType]
 
 export const WithdrawalStatus = {
   Pending: 'pending',
   Approved: 'approved',
-  Rejected: 'rejected',
   Processing: 'processing',
   Completed: 'completed',
-  Failed: 'failed',
+  Rejected: 'rejected',
+  Cancelled: 'cancelled',
 } as const
 export type WithdrawalStatus = (typeof WithdrawalStatus)[keyof typeof WithdrawalStatus]
 
 export const EscrowStatus = {
-  Held: 'held',
-  Released: 'released',
+  Holding: 'holding',
+  ReleasedToSeller: 'released_to_seller',
   Disputed: 'disputed',
-  Refunded: 'refunded',
+  RefundedToBuyer: 'refunded_to_buyer',
 } as const
 export type EscrowStatus = (typeof EscrowStatus)[keyof typeof EscrowStatus]
 
 // Moderation
 export const ReportStatus = {
   Open: 'open',
-  Assigned: 'assigned',
-  InProgress: 'in_progress',
-  Resolved: 'resolved',
+  UnderReview: 'under_review',
+  ActionTaken: 'action_taken',
+  Dismissed: 'dismissed',
   Closed: 'closed',
 } as const
 export type ReportStatus = (typeof ReportStatus)[keyof typeof ReportStatus]
 
 export const DisputeStatus = {
+  Draft: 'draft',
   Open: 'open',
-  Assigned: 'assigned',
-  InProgress: 'in_progress',
-  PendingResponse: 'pending_response',
+  UnderReview: 'under_review',
+  AwaitingResponse: 'awaiting_response',
+  Escalated: 'escalated',
   Resolved: 'resolved',
   Closed: 'closed',
+  Cancelled: 'cancelled',
 } as const
 export type DisputeStatus = (typeof DisputeStatus)[keyof typeof DisputeStatus]
 
@@ -191,10 +205,10 @@ export const AlertSeverity = {
 export type AlertSeverity = (typeof AlertSeverity)[keyof typeof AlertSeverity]
 
 export const AlertStatus = {
-  Active: 'active',
+  Open: 'open',
   Acknowledged: 'acknowledged',
   Resolved: 'resolved',
-  Closed: 'closed',
+  Ignored: 'ignored',
 } as const
 export type AlertStatus = (typeof AlertStatus)[keyof typeof AlertStatus]
 
@@ -227,19 +241,19 @@ export const NotificationStatus = {
   Unread: 'unread',
   Read: 'read',
   Archived: 'archived',
+  Deleted: 'deleted',
 } as const
 export type NotificationStatus = (typeof NotificationStatus)[keyof typeof NotificationStatus]
 
 // Warehouse
 export const ShipmentStatus = {
-  Pending: 'pending',
-  Confirmed: 'confirmed',
+  AwaitingPickup: 'awaiting_pickup',
   InTransit: 'in_transit',
   Arrived: 'arrived',
-  Stored: 'stored',
-  Shipped: 'shipped',
-  Delivered: 'delivered',
+  Inspected: 'inspected',
+  Completed: 'completed',
   Cancelled: 'cancelled',
+  Failed: 'failed',
 } as const
 export type ShipmentStatus = (typeof ShipmentStatus)[keyof typeof ShipmentStatus]
 
@@ -247,5 +261,55 @@ export type ShipmentStatus = (typeof ShipmentStatus)[keyof typeof ShipmentStatus
 export const AddressType = {
   Home: 'home',
   Work: 'work',
+  Other: 'other',
 } as const
 export type AddressType = (typeof AddressType)[keyof typeof AddressType]
+
+// Participant Qualification (server-sourced, replaces localStorage)
+export const ParticipantQualificationStatus = {
+  Pending: 'pending',
+  Qualified: 'qualified',
+  Rejected: 'rejected',
+  Expired: 'expired',
+  Waived: 'waived',
+} as const
+export type ParticipantQualificationStatus = (typeof ParticipantQualificationStatus)[keyof typeof ParticipantQualificationStatus]
+
+// Deposit Status
+export const DepositStatus = {
+  Held: 'held',
+  Returned: 'returned',
+  Forfeited: 'forfeited',
+  ConvertedToPayment: 'converted_to_payment',
+} as const
+export type DepositStatus = (typeof DepositStatus)[keyof typeof DepositStatus]
+
+// Buy Now Reservation
+export const BuyNowReservationStatus = {
+  PendingPayment: 'pending_payment',
+  Paid: 'paid',
+  Expired: 'expired',
+  Cancelled: 'cancelled',
+  Failed: 'failed',
+} as const
+export type BuyNowReservationStatus = (typeof BuyNowReservationStatus)[keyof typeof BuyNowReservationStatus]
+
+// Winner Offer (runner-up flow)
+export const WinnerOfferStatus = {
+  Pending: 'pending',
+  Accepted: 'accepted',
+  Declined: 'declined',
+  Expired: 'expired',
+  Cancelled: 'cancelled',
+} as const
+export type WinnerOfferStatus = (typeof WinnerOfferStatus)[keyof typeof WinnerOfferStatus]
+
+// Participant Join Status
+export const ParticipantJoinStatus = {
+  Invited: 'invited',
+  Requested: 'requested',
+  Joined: 'joined',
+  Withdrawn: 'withdrawn',
+  Rejected: 'rejected',
+} as const
+export type ParticipantJoinStatus = (typeof ParticipantJoinStatus)[keyof typeof ParticipantJoinStatus]

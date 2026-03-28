@@ -1,11 +1,15 @@
+import { useState, useEffect } from 'react'
 import { Outlet, useNavigate, useLocation, Link } from 'react-router'
-import { Layout, Avatar, Dropdown, Button, Space } from 'antd'
-import { UserOutlined, LogoutOutlined, SettingOutlined, HistoryOutlined, SunOutlined, MoonOutlined, HeartOutlined, WalletOutlined, ShoppingOutlined, CommentOutlined } from '@ant-design/icons'
+import { Layout, Avatar, Dropdown, Button, Space, Drawer } from 'antd'
+import { UserOutlined, LogoutOutlined, SettingOutlined, HistoryOutlined, SunOutlined, MoonOutlined, HeartOutlined, WalletOutlined, ShoppingOutlined, CommentOutlined, SafetyCertificateOutlined, MenuOutlined, CloseOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/hooks/useTheme'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useAppSelector } from '@/app/store'
 import { NotificationDropdown } from '@/features/notification/components/NotificationDropdown'
+import { TermsAcceptanceBanner } from '@/features/user/components/TermsAcceptanceBanner'
+import { usePendingTerms } from '@/features/user/api'
 
 function getRolesFromToken(token: string | null): string[] {
   if (!token) return []
@@ -31,8 +35,19 @@ export function AppLayout() {
   const { isDark, toggle: toggleTheme } = useTheme()
   const accessToken = useAppSelector((state) => state.auth.accessToken)
   const roles = getRolesFromToken(accessToken)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { isMobile } = useBreakpoint()
+
+  // Platform terms redirect — enforce before any app usage
+  const { data: platformTerms } = usePendingTerms('platform')
+  useEffect(() => {
+    if (isAuthenticated && platformTerms?.hasPending && !location.pathname.startsWith('/me/terms')) {
+      navigate(`/me/terms?type=platform&returnTo=${encodeURIComponent(location.pathname)}`)
+    }
+  }, [isAuthenticated, platformTerms?.hasPending, location.pathname, navigate])
 
   const userMenuItems = [
+    { key: 'dashboard', icon: <UserOutlined />, label: t('common:menu.home', 'Dashboard') },
     { key: 'profile', icon: <UserOutlined />, label: t('common:menu.profile', 'Profile') },
     { key: 'bids', icon: <HistoryOutlined />, label: t('common:menu.bids', 'My Bids') },
     { key: 'watchlist', icon: <HeartOutlined />, label: t('common:menu.watchlist', 'Watchlist') },
@@ -40,6 +55,7 @@ export function AppLayout() {
     { key: 'wallet', icon: <WalletOutlined />, label: t('common:menu.wallet', 'Wallet') },
     { key: 'disputes', icon: <CommentOutlined />, label: t('common:menu.disputes', 'Disputes') },
     { type: 'divider' as const },
+    { key: 'verification', icon: <SafetyCertificateOutlined />, label: t('common:menu.verification', 'Verification') },
     { key: 'security', icon: <SettingOutlined />, label: t('common:menu.security', 'Security') },
     { type: 'divider' as const },
     { key: 'logout', icon: <LogoutOutlined />, label: t('common:menu.logout', 'Sign Out'), danger: true },
@@ -47,6 +63,7 @@ export function AppLayout() {
 
   const handleUserMenuClick = ({ key }: { key: string }) => {
     switch (key) {
+      case 'dashboard': navigate('/me/dashboard'); break
       case 'profile': navigate('/me/profile'); break
       case 'bids': navigate('/me/bids'); break
       case 'watchlist': navigate('/me/watchlist'); break
@@ -54,12 +71,14 @@ export function AppLayout() {
       case 'wallet': navigate('/me/wallet'); break
       case 'disputes': navigate('/me/disputes'); break
       case 'security': navigate('/me/security'); break
-      case 'logout': handleLogout(); break
+      case 'verification': navigate('/me/verification'); break
+      case 'logout': handleLogout().then(() => navigate('/')); break
     }
   }
 
   return (
     <Layout style={{ minHeight: '100vh', background: 'var(--color-bg-primary)' }}>
+      <a href="#main-content" style={{ position: 'absolute', left: '-9999px', top: 'auto', width: '1px', height: '1px', overflow: 'hidden', zIndex: 9999 }} onFocus={(e) => { e.currentTarget.style.position = 'static'; e.currentTarget.style.width = 'auto'; e.currentTarget.style.height = 'auto'; }}>Skip to main content</a>
       {/* ─── Header ─── */}
       <Header
         style={{
@@ -70,7 +89,7 @@ export function AppLayout() {
           zIndex: 1000,
           height: 64,
           lineHeight: '64px',
-          padding: '0 48px',
+          padding: isMobile ? '0 16px' : '0 48px',
           background: isDark ? 'rgba(15, 15, 15, 0.95)' : 'rgba(250, 250, 247, 0.95)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
@@ -80,25 +99,36 @@ export function AppLayout() {
           justifyContent: 'space-between',
         }}
       >
-        {/* Left: Logo */}
-        <Link
-          to="/"
-          style={{
-            fontFamily: SERIF_FONT,
-            fontSize: 24,
-            letterSpacing: '0.1em',
-            color: 'var(--color-text-primary)',
-            textDecoration: 'none',
-            fontWeight: 400,
-          }}
-        >
-          OIO
-        </Link>
+        {/* Left: Hamburger (mobile) + Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {isMobile && (
+            <Button
+              type="text"
+              icon={<MenuOutlined />}
+              onClick={() => setMobileMenuOpen(true)}
+              aria-label="Open menu"
+              style={{ color: 'var(--color-text-primary)', fontSize: 18 }}
+            />
+          )}
+          <Link
+            to="/"
+            style={{
+              fontFamily: SERIF_FONT,
+              fontSize: 24,
+              letterSpacing: '0.1em',
+              color: 'var(--color-text-primary)',
+              textDecoration: 'none',
+              fontWeight: 400,
+            }}
+          >
+            OIO
+          </Link>
+        </div>
 
-        {/* Center: Nav links */}
+        {/* Center: Nav links (hidden on mobile) */}
         <nav
           style={{
-            display: 'flex',
+            display: isMobile ? 'none' : 'flex',
             gap: 32,
             position: 'absolute',
             left: '50%',
@@ -119,7 +149,7 @@ export function AppLayout() {
             {t('common:menu.auctions', 'Auctions')}
           </Link>
           <Link
-            to="/categories"
+            to="/items"
             style={{
               fontFamily: SANS_FONT,
               fontSize: 14,
@@ -129,7 +159,20 @@ export function AppLayout() {
               transition: 'color 200ms ease',
             }}
           >
-            {t('common:menu.categories', 'Categories')}
+            {t('common:menu.items', 'Items')}
+          </Link>
+          <Link
+            to="/sellers"
+            style={{
+              fontFamily: SANS_FONT,
+              fontSize: 14,
+              fontWeight: 500,
+              color: 'var(--color-text-primary)',
+              textDecoration: 'none',
+              transition: 'color 200ms ease',
+            }}
+          >
+            {t('common:menu.sellers', 'Sellers')}
           </Link>
           <Link
             to="/about"
@@ -196,6 +239,7 @@ export function AppLayout() {
           {/* Language toggle */}
           <Button
             type="text"
+            aria-label="Switch language"
             onClick={() => {
               const next = i18n.language === 'vi' ? 'en' : 'vi'
               i18n.changeLanguage(next)
@@ -212,6 +256,7 @@ export function AppLayout() {
           {/* Theme toggle */}
           <Button
             type="text"
+            aria-label="Toggle dark mode"
             icon={isDark ? <SunOutlined /> : <MoonOutlined />}
             onClick={toggleTheme}
             style={{ color: 'var(--color-text-primary)' }}
@@ -267,15 +312,80 @@ export function AppLayout() {
         </Space>
       </Header>
 
+      {/* ─── Mobile Navigation Drawer ─── */}
+      <Drawer
+        title={
+          <span style={{ fontFamily: SERIF_FONT, fontSize: 20, letterSpacing: '0.1em' }}>
+            OIO
+          </span>
+        }
+        placement="left"
+        onClose={() => setMobileMenuOpen(false)}
+        open={mobileMenuOpen}
+        width={280}
+        closeIcon={<CloseOutlined />}
+        styles={{ body: { padding: 0 } }}
+      >
+        <nav style={{ display: 'flex', flexDirection: 'column', padding: '8px 0' }}>
+          {[
+            { to: '/auctions', label: t('common:menu.auctions', 'Auctions') },
+            { to: '/items', label: t('common:menu.items', 'Items') },
+            { to: '/sellers', label: t('common:menu.sellers', 'Sellers') },
+            { to: '/about', label: t('common:menu.about', 'About') },
+            ...(isAuthenticated && roles.includes('admin')
+              ? [{ to: '/admin', label: t('common:menu.admin', 'Admin') }]
+              : []),
+            ...(isAuthenticated && (roles.includes('inspector') || roles.includes('warehousemanager'))
+              ? [{ to: '/inspector', label: t('common:menu.inspector', 'Inspector') }]
+              : []),
+            ...(isAuthenticated && roles.includes('seller')
+              ? [{ to: '/seller', label: t('common:menu.seller', 'Seller') }]
+              : []),
+          ].map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              onClick={() => setMobileMenuOpen(false)}
+              style={{
+                fontFamily: SANS_FONT,
+                fontSize: 15,
+                fontWeight: 500,
+                color: location.pathname.startsWith(item.to)
+                  ? 'var(--color-accent)'
+                  : 'var(--color-text-primary)',
+                textDecoration: 'none',
+                padding: '12px 24px',
+                borderLeft: location.pathname.startsWith(item.to)
+                  ? '3px solid var(--color-accent)'
+                  : '3px solid transparent',
+                background: location.pathname.startsWith(item.to)
+                  ? 'var(--color-accent-light, rgba(196, 147, 61, 0.08))'
+                  : 'transparent',
+              }}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+      </Drawer>
+
+      {/* ─── Terms Acceptance Banner ─── */}
+      {isAuthenticated && (
+        <div style={{ marginTop: 64 }}>
+          <TermsAcceptanceBanner />
+        </div>
+      )}
+
       {/* ─── Content ─── */}
       <Content
+        id="main-content"
         style={{
           marginTop: 64,
           width: '100%',
           maxWidth: 1440,
           marginLeft: 'auto',
           marginRight: 'auto',
-          padding: '0 48px',
+          padding: isMobile ? '0 16px' : '0 48px',
           minHeight: 'calc(100vh - 64px - 200px)',
         }}
       >
@@ -289,7 +399,7 @@ export function AppLayout() {
         style={{
           background: 'var(--color-bg-primary)',
           borderTop: '1px solid var(--color-border)',
-          padding: '64px 48px',
+          padding: isMobile ? '32px 16px' : '64px 48px',
         }}
       >
         <div
@@ -297,8 +407,8 @@ export function AppLayout() {
             maxWidth: 1440,
             margin: '0 auto',
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 48,
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+            gap: isMobile ? 24 : 48,
           }}
         >
           {/* Column 1 */}

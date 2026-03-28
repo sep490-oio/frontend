@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Table, Button, Space, Modal, Flex, Tooltip, message } from 'antd'
+import { Button, Space, Modal, Flex, Tooltip, message } from 'antd'
 import {
   PlusOutlined,
   EditOutlined,
@@ -22,6 +22,7 @@ import {
   useConfirmInspectedCondition,
   useResubmitItem,
 } from '@/features/item/api'
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ItemStatus } from '@/types/enums'
@@ -40,6 +41,7 @@ const STATUS_PILLS = [
   { value: ItemStatus.InAuction, label: 'In Auction' },
   { value: ItemStatus.Sold, label: 'Sold' },
   { value: ItemStatus.Rejected, label: 'Rejected' },
+  { value: ItemStatus.Removed, label: 'Removed' },
 ] as const
 
 const pillBase: React.CSSProperties = {
@@ -121,7 +123,7 @@ export default function MyItemsPage() {
   }
 
   const handleResubmit = (id: string) => {
-    resubmitItem.mutate(id, {
+    resubmitItem.mutate({ itemId: id }, {
       onSuccess: () => msgApi.success(t('resubmitSuccess', 'Item resubmitted')),
     })
   }
@@ -398,7 +400,8 @@ export default function MyItemsPage() {
           }
         />
       ) : (
-        <Table<ItemDto>
+        <ResponsiveTable<ItemDto>
+          mobileMode="card"
           rowKey="id"
           columns={columns}
           dataSource={data?.items ?? []}

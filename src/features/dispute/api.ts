@@ -17,13 +17,14 @@ export interface DisputeFilterParams extends PaginationParams {
   status?: string
 }
 
-export function useDisputes(params?: DisputeFilterParams) {
+export function useDisputes(params?: DisputeFilterParams, options?: { refetchInterval?: number }) {
   return useQuery({
     queryKey: queryKeys.disputes.list(params),
     queryFn: async () => {
       const res = await apiClient.get<PagedList<DisputeDto>>('/disputes', { params })
       return res.data
     },
+    ...options,
   })
 }
 
@@ -38,7 +39,13 @@ export function useDisputeThread(id: string) {
   })
 }
 
-export function useDisputeMessages(disputeId: string, params?: PaginationParams) {
+export interface DisputeMessageCursorParams {
+  beforeCreatedAt?: string
+  beforeId?: string
+  pageSize?: number
+}
+
+export function useDisputeMessages(disputeId: string, params?: DisputeMessageCursorParams) {
   return useQuery({
     queryKey: queryKeys.disputes.messages(disputeId, params),
     queryFn: async () => {
@@ -68,11 +75,21 @@ export function useSendDisputeMessage() {
 export function useMarkDisputeRead() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (disputeId: string) => {
-      await apiClient.post(`/disputes/${disputeId}/read`)
+    mutationFn: async ({ disputeId, lastReadMessageId }: { disputeId: string; lastReadMessageId: string }) => {
+      await apiClient.post(`/disputes/${disputeId}/read`, { lastReadMessageId })
     },
-    onSuccess: (_data, disputeId) => {
+    onSuccess: (_data, { disputeId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.disputes.detail(disputeId) })
+    },
+  })
+}
+
+export function useMyReports(params?: PaginationParams) {
+  return useQuery({
+    queryKey: queryKeys.reports.my(params),
+    queryFn: async () => {
+      const res = await apiClient.get<PagedList<ReportDto>>('/me/reports', { params })
+      return res.data
     },
   })
 }

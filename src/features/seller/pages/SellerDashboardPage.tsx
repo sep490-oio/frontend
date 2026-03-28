@@ -1,4 +1,4 @@
-import { Row, Col, Card, Table, Button, Space, Spin, Empty, Tag } from 'antd'
+import { Row, Col, Card, Button, Space, Spin, Empty, Tag, Tabs } from 'antd'
 import {
   ShoppingOutlined,
   ThunderboltOutlined,
@@ -9,15 +9,20 @@ import {
   WalletOutlined,
   OrderedListOutlined,
   CheckCircleOutlined,
+  HistoryOutlined,
+  SendOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useMemo } from 'react'
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { useMySellerProfile } from '@/features/seller/api'
 import { useMyAuctions } from '@/features/auction/api'
 import { useMyItems } from '@/features/item/api'
+import { useWallet } from '@/features/payment/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatCurrency, formatDateTime } from '@/utils/format'
+import { SellerProfileStatus } from '@/types/enums'
 import type { AuctionListItemDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
 
@@ -67,6 +72,7 @@ export default function SellerDashboardPage() {
   const navigate = useNavigate()
 
   const { data: profile, isLoading: profileLoading } = useMySellerProfile()
+  const { data: wallet } = useWallet()
 
   // Fetch all items (large page to get status counts)
   const { data: itemsData } = useMyItems({ pageNumber: 1, pageSize: 200 })
@@ -90,6 +96,7 @@ export default function SellerDashboardPage() {
 
   const totalItems = itemsData?.metadata?.totalCount ?? 0
   const activeAuctions = auctionCounts['active']
+  const soldAuctions = auctionCounts['sold'] ?? 0
   const pendingReview =
     (itemCounts['pending'] ?? 0) +
     (itemCounts['submitted'] ?? 0)
@@ -116,13 +123,13 @@ export default function SellerDashboardPage() {
 
   if (!profile) {
     return (
-      <Empty description={t('noProfile', 'Bạn chưa tạo hồ sơ người bán')}>
+      <Empty description={t('noProfile', 'Ban chua tao ho so nguoi ban')}>
         <Button
           type="primary"
           onClick={() => navigate('/seller/register')}
           style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
         >
-          {t('createProfile', 'Tạo hồ sơ người bán')}
+          {t('createProfile', 'Tao ho so nguoi ban')}
         </Button>
       </Empty>
     )
@@ -132,7 +139,7 @@ export default function SellerDashboardPage() {
 
   const auctionColumns: ColumnsType<AuctionListItemDto> = [
     {
-      title: t('auctionTitle', 'Tiêu đề'),
+      title: t('auctionTitle', 'Tieu de'),
       dataIndex: 'itemTitle',
       key: 'itemTitle',
       ellipsis: true,
@@ -147,7 +154,7 @@ export default function SellerDashboardPage() {
       ),
     },
     {
-      title: t('currentPrice', 'Giá hiện tại'),
+      title: t('currentPrice', 'Gia hien tai'),
       dataIndex: 'currentPrice',
       key: 'currentPrice',
       width: 150,
@@ -165,7 +172,7 @@ export default function SellerDashboardPage() {
       },
     },
     {
-      title: t('bids', 'Lượt đấu'),
+      title: t('bids', 'Luot dau'),
       dataIndex: 'bidCount',
       key: 'bidCount',
       width: 80,
@@ -174,14 +181,14 @@ export default function SellerDashboardPage() {
       ),
     },
     {
-      title: t('status', 'Trạng thái'),
+      title: t('status', 'Trang thai'),
       dataIndex: 'status',
       key: 'status',
       width: 130,
       render: (status: string) => <StatusBadge status={status} size="small" />,
     },
     {
-      title: t('endTime', 'Kết thúc'),
+      title: t('endTime', 'Ket thuc'),
       dataIndex: 'endTime',
       key: 'endTime',
       width: 160,
@@ -193,59 +200,31 @@ export default function SellerDashboardPage() {
     },
   ]
 
-  /* ── Render ──────────────────────────────────────────────────────── */
+  /* ── Tab navigation handler ──────────────────────────────────────── */
 
-  return (
-    <div>
-      {/* ── Header ─────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32 }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-            <h1
-              style={{
-                fontFamily: serifFont,
-                fontWeight: 400,
-                fontSize: 28,
-                color: 'var(--color-text-primary)',
-                margin: 0,
-                letterSpacing: '-0.01em',
-              }}
-            >
-              {profile.storeName}
-            </h1>
-            {profile.status === 'approved' && (
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  background: 'var(--color-success)',
-                  color: '#fff',
-                  borderRadius: 100,
-                  padding: '3px 12px',
-                  fontSize: 11,
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.04em',
-                  lineHeight: '18px',
-                }}
-              >
-                <CheckCircleOutlined style={{ fontSize: 12 }} />
-                {t('verified', 'Đã xác minh')}
-              </span>
-            )}
-            {profile.status !== 'approved' && (
-              <StatusBadge status={profile.status} />
-            )}
-          </div>
-          {profile.description && (
-            <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, margin: 0 }}>
-              {profile.description}
-            </p>
-          )}
-        </div>
-      </div>
+  const handleTabChange = (key: string) => {
+    switch (key) {
+      case 'overview':
+        break // stay on current page
+      case 'auctions':
+        navigate('/seller/auctions')
+        break
+      case 'items':
+        navigate('/seller/items')
+        break
+      case 'orders':
+        navigate('/seller/orders')
+        break
+      case 'disputes':
+        navigate('/seller/disputes')
+        break
+    }
+  }
 
+  /* ── Dashboard content (Tong quan tab) ──────────────────────────── */
+
+  const dashboardContent = (
+    <>
       {/* ── Stats Row ──────────────────────────────────────────────── */}
       <Row gutter={[16, 16]} style={{ marginBottom: 32 }}>
         <Col xs={12} sm={6}>
@@ -253,7 +232,7 @@ export default function SellerDashboardPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
               <AppstoreOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />
               <span style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
-                {t('totalItems', 'Tổng sản phẩm')}
+                {t('totalItems', 'Tong san pham')}
               </span>
             </div>
             <div style={{ fontFamily: monoFont, fontSize: 24, fontWeight: 500, color: 'var(--color-text-primary)' }}>
@@ -266,7 +245,7 @@ export default function SellerDashboardPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
               <ThunderboltOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />
               <span style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
-                {t('activeAuctions', 'Phiên đấu giá')}
+                {t('activeAuctions', 'Phien dau gia')}
               </span>
             </div>
             <div style={{ fontFamily: monoFont, fontSize: 24, fontWeight: 500, color: 'var(--color-text-primary)' }}>
@@ -279,7 +258,7 @@ export default function SellerDashboardPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
               <ClockCircleOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />
               <span style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
-                {t('pendingReview', 'Chờ duyệt')}
+                {t('pendingReview', 'Cho duyet')}
               </span>
             </div>
             <div style={{ fontFamily: monoFont, fontSize: 24, fontWeight: 500, color: 'var(--color-text-primary)' }}>
@@ -292,11 +271,11 @@ export default function SellerDashboardPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
               <DollarOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />
               <span style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
-                {t('totalSales', 'Tổng bán')}
+                {t('totalSold', 'Da ban')}
               </span>
             </div>
             <div style={{ fontFamily: monoFont, fontSize: 24, fontWeight: 500, color: 'var(--color-text-primary)' }}>
-              0
+              {soldAuctions}
             </div>
           </Card>
         </Col>
@@ -304,7 +283,7 @@ export default function SellerDashboardPage() {
 
       {/* ── Item Status Overview ───────────────────────────────────── */}
       <Card
-        title={<span style={sectionTitleStyle}>{t('itemStatusOverview', 'Tổng quan sản phẩm')}</span>}
+        title={<span style={sectionTitleStyle}>{t('itemStatusOverview', 'Tong quan san pham')}</span>}
         style={{ marginBottom: 24 }}
       >
         <Space wrap size={[8, 8]}>
@@ -324,7 +303,7 @@ export default function SellerDashboardPage() {
 
       {/* ── Auction Status Overview ────────────────────────────────── */}
       <Card
-        title={<span style={sectionTitleStyle}>{t('auctionStatusOverview', 'Tổng quan đấu giá')}</span>}
+        title={<span style={sectionTitleStyle}>{t('auctionStatusOverview', 'Tong quan dau gia')}</span>}
         style={{ marginBottom: 24 }}
       >
         <Space wrap size={[8, 8]}>
@@ -344,7 +323,7 @@ export default function SellerDashboardPage() {
 
       {/* ── Quick Actions ──────────────────────────────────────────── */}
       <Card
-        title={<span style={sectionTitleStyle}>{t('quickActions', 'Thao tác nhanh')}</span>}
+        title={<span style={sectionTitleStyle}>{t('quickActions', 'Thao tac nhanh')}</span>}
         style={{ marginBottom: 24 }}
       >
         <Space wrap size={12}>
@@ -358,65 +337,66 @@ export default function SellerDashboardPage() {
               fontWeight: 500,
             }}
           >
-            {t('createAuction', 'Tạo phiên đấu giá')}
+            {t('createAuction', 'Tao phien dau gia')}
           </Button>
           <Button
             icon={<ShoppingOutlined />}
             onClick={() => navigate('/seller/items')}
             style={outlinedBtnStyle}
           >
-            {t('manageItems', 'Quản lý sản phẩm')}
+            {t('manageItems', 'Quan ly san pham')}
           </Button>
           <Button
             icon={<OrderedListOutlined />}
             onClick={() => navigate('/seller/orders')}
             style={outlinedBtnStyle}
           >
-            {t('viewOrders', 'Đơn hàng')}
+            {t('viewOrders', 'Don hang')}
           </Button>
           <Button
             icon={<WalletOutlined />}
             onClick={() => navigate('/seller/wallet')}
             style={outlinedBtnStyle}
           >
-            {t('wallet', 'Ví')}
+            {t('wallet', 'Vi')}
           </Button>
         </Space>
       </Card>
 
       {/* ── Recent Auctions ────────────────────────────────────────── */}
       <Card
-        title={<span style={sectionTitleStyle}>{t('recentAuctions', 'Phiên đấu giá gần đây')}</span>}
+        title={<span style={sectionTitleStyle}>{t('recentAuctions', 'Phien dau gia gan day')}</span>}
         style={{ marginBottom: hasPendingActions ? 24 : 0 }}
       >
-        <Table<AuctionListItemDto>
+        <ResponsiveTable<AuctionListItemDto>
+          mobileMode="card"
           rowKey="id"
           columns={auctionColumns}
           dataSource={recentAuctions}
           loading={auctionsLoading}
           pagination={false}
-          locale={{ emptyText: t('noAuctions', 'Chưa có phiên đấu giá nào') }}
+          locale={{ emptyText: t('noAuctions', 'Chua co phien dau gia nao') }}
         />
       </Card>
 
       {/* ── Pending Actions ────────────────────────────────────────── */}
       {hasPendingActions && (
         <Card
-          title={<span style={sectionTitleStyle}>{t('pendingActions', 'Cần xử lý')}</span>}
+          title={<span style={sectionTitleStyle}>{t('pendingActions', 'Can xu ly')}</span>}
         >
           <Space direction="vertical" size={12} style={{ width: '100%' }}>
             {pendingItems > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ color: 'var(--color-text-secondary)', fontSize: 14 }}>
                   <ClockCircleOutlined style={{ marginRight: 8 }} />
-                  {t('itemsPendingReview', '{{count}} sản phẩm đang chờ duyệt', { count: pendingItems })}
+                  {t('itemsPendingReview', '{{count}} san pham dang cho duyet', { count: pendingItems })}
                 </span>
                 <Button
                   type="link"
                   onClick={() => navigate('/seller/items?status=pending')}
                   style={{ color: 'var(--color-accent)', padding: 0 }}
                 >
-                  {t('viewAll', 'Xem tất cả')}
+                  {t('viewAll', 'Xem tat ca')}
                 </Button>
               </div>
             )}
@@ -424,20 +404,183 @@ export default function SellerDashboardPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ color: 'var(--color-text-secondary)', fontSize: 14 }}>
                   <ClockCircleOutlined style={{ marginRight: 8 }} />
-                  {t('draftAuctionsNeedSubmission', '{{count}} phiên đấu giá nháp cần gửi duyệt', { count: draftAuctions })}
+                  {t('draftAuctionsNeedSubmission', '{{count}} phien dau gia nhap can gui duyet', { count: draftAuctions })}
                 </span>
                 <Button
                   type="link"
                   onClick={() => navigate('/seller/auctions?status=draft')}
                   style={{ color: 'var(--color-accent)', padding: 0 }}
                 >
-                  {t('viewAll', 'Xem tất cả')}
+                  {t('viewAll', 'Xem tat ca')}
                 </Button>
               </div>
             )}
           </Space>
         </Card>
       )}
+    </>
+  )
+
+  /* ── Render ──────────────────────────────────────────────────────── */
+
+  return (
+    <div>
+      {/* ── Welcome Banner + Wallet ─────────────────────────────────── */}
+      <Row gutter={[24, 16]} style={{ marginBottom: 24 }}>
+        {/* Left: Welcome */}
+        <Col xs={24} md={16}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+            <h1
+              style={{
+                fontFamily: serifFont,
+                fontWeight: 400,
+                fontSize: 28,
+                color: 'var(--color-text-primary)',
+                margin: 0,
+                letterSpacing: '-0.01em',
+              }}
+            >
+              {profile.storeName}
+            </h1>
+            {profile.status === SellerProfileStatus.Verified && (
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  background: 'var(--color-success)',
+                  color: '#fff',
+                  borderRadius: 100,
+                  padding: '3px 12px',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                  lineHeight: '18px',
+                }}
+              >
+                <CheckCircleOutlined style={{ fontSize: 12 }} />
+                {t('verified', 'Da xac minh')}
+              </span>
+            )}
+            {profile.status !== SellerProfileStatus.Verified && (
+              <StatusBadge status={profile.status} />
+            )}
+          </div>
+          {profile.description && (
+            <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, margin: 0 }}>
+              {profile.description}
+            </p>
+          )}
+        </Col>
+
+        {/* Right: Wallet summary */}
+        <Col xs={24} md={8}>
+          <Card
+            style={{
+              borderColor: 'var(--color-border)',
+              background: 'var(--color-accent-light)',
+              borderRadius: 12,
+            }}
+            styles={{ body: { padding: '16px 20px' } }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <WalletOutlined style={{ color: 'var(--color-accent)', fontSize: 18 }} />
+              <span style={{ fontFamily: serifFont, fontSize: 15, color: 'var(--color-text-primary)' }}>
+                {t('walletBalance', 'So du vi')}
+              </span>
+            </div>
+            <div
+              style={{
+                fontFamily: monoFont,
+                fontSize: 22,
+                fontWeight: 600,
+                color: 'var(--color-text-primary)',
+                marginBottom: 14,
+              }}
+            >
+              {wallet
+                ? formatCurrency(wallet.availableBalance, wallet.currency)
+                : '--'}
+            </div>
+            {wallet && wallet.pendingBalance > 0 && (
+              <div
+                style={{
+                  fontSize: 12,
+                  color: 'var(--color-text-secondary)',
+                  marginBottom: 14,
+                  fontFamily: monoFont,
+                }}
+              >
+                {t('pendingBalance', 'Dang cho')}: {formatCurrency(wallet.pendingBalance, wallet.currency)}
+              </div>
+            )}
+            <Space size={8}>
+              <Button
+                type="primary"
+                size="small"
+                icon={<SendOutlined />}
+                onClick={() => navigate('/seller/wallet/withdraw')}
+                style={{
+                  background: 'var(--color-accent)',
+                  borderColor: 'var(--color-accent)',
+                  fontWeight: 500,
+                  borderRadius: 6,
+                }}
+              >
+                {t('withdraw', 'Rut tien')}
+              </Button>
+              <Button
+                size="small"
+                icon={<HistoryOutlined />}
+                onClick={() => navigate('/seller/wallet')}
+                style={{
+                  borderColor: 'var(--color-accent)',
+                  color: 'var(--color-accent)',
+                  fontWeight: 500,
+                  borderRadius: 6,
+                }}
+              >
+                {t('history', 'Lich su')}
+              </Button>
+            </Space>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* ── Tab Bar ─────────────────────────────────────────────────── */}
+      <Tabs
+        defaultActiveKey="overview"
+        onChange={handleTabChange}
+        style={{ marginBottom: 24 }}
+        items={[
+          {
+            key: 'overview',
+            label: t('tabOverview', 'Tong quan'),
+            children: dashboardContent,
+          },
+          {
+            key: 'auctions',
+            label: t('tabAuctions', 'Dau gia dang tham gia'),
+            children: null,
+          },
+          {
+            key: 'items',
+            label: t('tabItems', 'Vat pham'),
+            children: null,
+          },
+          {
+            key: 'orders',
+            label: t('tabOrders', 'Giao hang'),
+            children: null,
+          },
+          {
+            key: 'disputes',
+            label: t('tabDisputes', 'Tranh chap'),
+            children: null,
+          },
+        ]}
+      />
     </div>
   )
 }

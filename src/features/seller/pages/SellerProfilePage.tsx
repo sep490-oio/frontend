@@ -3,6 +3,7 @@ import { Typography, Card, Descriptions, Button, Space, Spin, Empty, Form, Input
 import { EditOutlined, ArrowLeftOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useMySellerProfile, useUpdateSellerProfile } from '@/features/seller/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
@@ -13,6 +14,7 @@ export default function SellerProfilePage() {
   const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
   const { message } = App.useApp()
+  const { isMobile } = useBreakpoint()
 
   const { data: profile, isLoading } = useMySellerProfile()
   const updateProfile = useUpdateSellerProfile()
@@ -42,7 +44,7 @@ export default function SellerProfilePage() {
 
   if (isLoading) {
     return (
-      <div style={{ textAlign: 'center', padding: 100 }}>
+      <div style={{ textAlign: 'center', padding: isMobile ? 48 : 100 }}>
         <Spin size="large" />
       </div>
     )
@@ -59,15 +61,18 @@ export default function SellerProfilePage() {
   }
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto' }}>
+    <div style={{ maxWidth: 800, margin: '0 auto', padding: isMobile ? '0 12px' : undefined }}>
       <Space style={{ marginBottom: 16 }}>
-        <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate('/me/seller')}>
+        <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate('/seller')}>
           {tc('action.back', 'Back')}
         </Button>
       </Space>
 
-      <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 24 }}>
-        <Typography.Title level={2} style={{ margin: 0 }}>
+      <Space
+        direction={isMobile ? 'vertical' : 'horizontal'}
+        style={{ width: '100%', justifyContent: 'space-between', marginBottom: 24 }}
+      >
+        <Typography.Title level={isMobile ? 3 : 2} style={{ margin: 0 }}>
           {t('sellerProfile', 'Seller Profile')}
         </Typography.Title>
         {!editing && (

@@ -60,6 +60,29 @@ export async function confirmUpload(
   return data
 }
 
+// Batch: Request multiple upload signatures
+export async function requestBatchUploadSignatures(
+  files: { context: string; fileName: string }[],
+): Promise<UploadSignatureResponse[]> {
+  const { data } = await idempotentPost<UploadSignatureResponse[]>('/media/batch-upload-signatures', { files })
+  return data
+}
+
+// Batch: Confirm multiple uploads
+export async function batchConfirmUploads(
+  requests: ConfirmUploadRequest[],
+): Promise<ConfirmUploadResponse[]> {
+  const { data } = await idempotentPost<ConfirmUploadResponse[]>('/media/batch-confirm', requests)
+  return data
+}
+
+// Get available upload contexts
+export async function getUploadContexts(): Promise<{ contexts: string[] }> {
+  const { default: apiClient } = await import('./axios')
+  const { data } = await apiClient.get<{ contexts: string[] }>('/media/contexts')
+  return data
+}
+
 // Combined 3-step upload (single file)
 export async function uploadMedia(
   file: File,

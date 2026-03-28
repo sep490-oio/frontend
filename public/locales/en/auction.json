@@ -79,5 +79,14 @@
     "ended": "Ended",
     "sold": "Sold",
     "cancelled": "Cancelled"
-  }
+  },
+  "auctionCancelled": "This auction has been cancelled.",
+  "auctionEndedNoSale": "Auction ended without a sale.",
+  "auctionLostMessage": "This auction has ended. You did not win.",
+  "auctionEndedGeneric": "This auction has ended.",
+  "auctionNotStarted": "This auction has not started yet.",
+  "outbidMessage": "You have been outbid! Place a higher bid now.",
+  "qualifiedMessage": "You are qualified. Place your bid!",
+  "depositRequired": "Place a deposit to qualify for bidding.",
+  "bidButton": "Bid"
 }

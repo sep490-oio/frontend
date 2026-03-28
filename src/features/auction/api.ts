@@ -1,11 +1,12 @@
 import apiClient, { idempotentPost } from '@/lib/axios'
-import { queryKeys } from '@/lib/queryClient'
+import { queryKeys, queryClient as _queryClient } from '@/lib/queryClient'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type {
   AuctionListItemDto,
   AuctionDetailDto,
   AuctionDto,
   BidDto,
+  PlaceBidResultDto,
   AutoBidDto,
   SealedBidDto,
   WinnerOfferDto,
@@ -18,13 +19,14 @@ import type {
 
 // ── Auctions ─────────────────────────────────────────────────────────
 
-export function useAuctions(params?: AuctionFilterParams) {
+export function useAuctions(params?: AuctionFilterParams, options?: { refetchInterval?: number }) {
   return useQuery({
     queryKey: queryKeys.auctions.list(params),
     queryFn: async () => {
       const res = await apiClient.get<PagedList<AuctionListItemDto>>('/auctions', { params })
       return res.data
     },
+    ...options,
   })
 }
 
@@ -50,21 +52,37 @@ export function useAuctionBids(auctionId: string) {
   })
 }
 
-export function useMyAuctions(params?: PaginationParams & { status?: string }) {
+export function useMyAuctions(params?: PaginationParams & { status?: string }, options?: { refetchInterval?: number }) {
   return useQuery({
     queryKey: queryKeys.auctions.myAuctions(params),
     queryFn: async () => {
       const res = await apiClient.get<PagedList<AuctionListItemDto>>('/me/auctions', { params })
       return res.data
     },
+    ...options,
   })
+}
+
+export interface WatchlistItemDto {
+  auctionId: string
+  itemTitle: string
+  primaryImageUrl?: string
+  currentPrice: MoneyDto
+  currency: string
+  auctionStatus: string
+  bidCount: number
+  endTime?: string
+  remainingTime?: string
+  notifyOnBid: boolean
+  notifyOnEnd: boolean
+  watchedAt: string
 }
 
 export function useWatchlist(params?: PaginationParams) {
   return useQuery({
     queryKey: queryKeys.auctions.watchlist(params),
     queryFn: async () => {
-      const res = await apiClient.get<PagedList<AuctionListItemDto>>('/me/auctions/watch-list', { params })
+      const res = await apiClient.get<PagedList<WatchlistItemDto>>('/me/auctions/watch-list', { params })
       return res.data
     },
   })
@@ -84,11 +102,23 @@ export interface MyBidDto {
   createdAt: string
 }
 
-export function useMyBids(params?: PaginationParams & { status?: string }) {
+export function useMyBids(params?: PaginationParams & { status?: string; sortBy?: string }) {
   return useQuery({
-    queryKey: ['myBids', params] as const,
+    queryKey: queryKeys.auctions.myBids(params),
     queryFn: async () => {
       const res = await apiClient.get<PagedList<MyBidDto>>('/me/bids', { params })
+      return res.data
+    },
+  })
+}
+
+// ── Winner Offers ────────────────────────────────────────────────────
+
+export function useMyPendingWinnerOffers() {
+  return useQuery({
+    queryKey: queryKeys.auctions.myPendingWinnerOffers(),
+    queryFn: async () => {
+      const res = await apiClient.get<WinnerOfferDto[]>('/me/winner-offers')
       return res.data
     },
   })
@@ -119,6 +149,7 @@ export interface CreateAuctionRequest {
   extensionMinutes?: number
   currency?: string
   auctionType?: string
+  verifyByPlatform?: boolean
 }
 
 export function useCreateAuction() {
@@ -146,12 +177,13 @@ export function usePlaceBid() {
       amount: number
       currency?: string
     }) => {
-      const res = await idempotentPost<BidDto>(`/auctions/${auctionId}/bids`, { amount, currency })
+      const res = await idempotentPost<PlaceBidResultDto>(`/auctions/${auctionId}/bids`, { amount, currency })
       return res.data
     },
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.auctions.bids(variables.auctionId) })
       qc.invalidateQueries({ queryKey: queryKeys.auctions.detail(variables.auctionId) })
+      qc.invalidateQueries({ queryKey: ['myBids'] })
     },
   })
 }
@@ -162,8 +194,29 @@ export function useWatchAuction() {
     mutationFn: async ({ auctionId, notifyOnBid = true, notifyOnEnd = true }: { auctionId: string; notifyOnBid?: boolean; notifyOnEnd?: boolean }) => {
       await apiClient.post(`/auctions/${auctionId}/watch`, { notifyOnBid, notifyOnEnd })
     },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.watchlist() })
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.detail(variables.auctionId) })
+    },
+  })
+}
+
+export function useUpdateWatcherPreferences() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ auctionId, notifyOnBid, notifyOnEnd }: { auctionId: string; notifyOnBid?: boolean; notifyOnEnd?: boolean }) => {
+      await apiClient.patch(`/auctions/${auctionId}/watch/preferences`, { notifyOnBid, notifyOnEnd })
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.auctions.watchlist() })
+    },
+  })
+}
+
+export function useRecordAuctionView() {
+  return useMutation({
+    mutationFn: async (auctionId: string) => {
+      await apiClient.post(`/auctions/${auctionId}/view`)
     },
   })
 }
@@ -173,9 +226,11 @@ export function useUnwatchAuction() {
   return useMutation({
     mutationFn: async (auctionId: string) => {
       await apiClient.delete(`/auctions/${auctionId}/watch`)
+      return auctionId
     },
-    onSuccess: () => {
+    onSuccess: (auctionId) => {
       qc.invalidateQueries({ queryKey: queryKeys.auctions.watchlist() })
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.detail(auctionId) })
     },
   })
 }
@@ -280,7 +335,7 @@ export function useSubmitSealedBid() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ auctionId, amount }: { auctionId: string; amount: number }) => {
-      const res = await apiClient.post<SealedBidDto>(`/auctions/${auctionId}/sealed-bids`, { amount })
+      const res = await idempotentPost<SealedBidDto>(`/auctions/${auctionId}/sealed-bids`, { amount })
       return res.data
     },
     onSuccess: (_, { auctionId }) => {
@@ -339,6 +394,7 @@ export function useRespondRunnerUpOffer() {
     },
     onSuccess: (_, { auctionId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.auctions.detail(auctionId) })
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.myPendingWinnerOffers() })
     },
   })
 }
@@ -358,8 +414,8 @@ export function useCloseAuction() {
 export function useRelistAuction() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (auctionId: string) => {
-      const res = await apiClient.post<AuctionDto>(`/auctions/${auctionId}/relist`)
+    mutationFn: async ({ auctionId, qualificationStartAt, qualificationEndAt, startAt, endAt }: { auctionId: string; qualificationStartAt: string; qualificationEndAt: string; startAt: string; endAt: string }) => {
+      const res = await apiClient.post<AuctionDto>(`/auctions/${auctionId}/relist`, { qualificationStartAt, qualificationEndAt, startAt, endAt })
       return res.data
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: queryKeys.auctions.all }) },
@@ -370,8 +426,8 @@ export function useRelistAuction() {
 export function useChooseAuctionShipping() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ auctionId, shippingOptionId }: { auctionId: string; shippingOptionId: string }) => {
-      await apiClient.post(`/auctions/${auctionId}/shipping`, { shippingOptionId })
+    mutationFn: async ({ auctionId, senderName, senderPhone, senderAddress, senderWard, senderDistrict, senderProvince, weightGrams, insuranceValue }: { auctionId: string; senderName: string; senderPhone: string; senderAddress: string; senderWard: string; senderDistrict: string; senderProvince: string; weightGrams: number; insuranceValue: number }) => {
+      await apiClient.post(`/auctions/${auctionId}/shipping`, { senderName, senderPhone, senderAddress, senderWard, senderDistrict, senderProvince, weightGrams, insuranceValue })
     },
     onSuccess: (_, { auctionId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.auctions.detail(auctionId) })
@@ -379,12 +435,41 @@ export function useChooseAuctionShipping() {
   })
 }
 
+// Create auction from existing item (POST /items/{itemId}/auctions)
+export function useCreateAuctionFromItem() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: {
+      itemId: string
+      startingPrice: number
+      bidIncrement: number
+      reservePrice?: number
+      buyNowPrice?: number
+      extensionMinutes?: number
+      currency?: string
+      auctionType?: string
+    }) => {
+      const { itemId, ...body } = data
+      const res = await apiClient.post<AuctionDto>(`/items/${itemId}/auctions`, body)
+      return res.data
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.all })
+    },
+  })
+}
+
 // Buy now via REST
 export function useBuyNow() {
+  const qc = useQueryClient()
   return useMutation({
     mutationFn: async (auctionId: string) => {
       const res = await idempotentPost<BuyNowCheckoutDto>(`/auctions/${auctionId}/buy-now`)
       return res.data
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.all })
+      qc.invalidateQueries({ queryKey: queryKeys.wallet.all })
     },
   })
 }

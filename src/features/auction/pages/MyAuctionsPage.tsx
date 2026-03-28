@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Table, Button, Space, Modal, Flex, Tooltip, Input, message, DatePicker, Switch } from 'antd'
+import { Button, Space, Modal, Flex, Tooltip, Input, message, DatePicker, Switch, Card, List } from 'antd'
 import {
   PlusOutlined,
   EditOutlined,
@@ -27,6 +27,8 @@ import {
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { PriceDisplay } from '@/components/ui/PriceDisplay'
 import { CountdownTimer } from '@/components/ui/CountdownTimer'
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { AuctionStatus } from '@/types/enums'
 import { formatDateTime } from '@/utils/format'
@@ -43,6 +45,8 @@ const STATUS_PILLS = [
   { value: AuctionStatus.Sold, label: 'Sold' },
   { value: AuctionStatus.Failed, label: 'Failed' },
   { value: AuctionStatus.Cancelled, label: 'Cancelled' },
+  { value: AuctionStatus.Pending, label: 'Pending' },
+  { value: AuctionStatus.Terminated, label: 'Terminated' },
 ] as const
 
 const pillBase: React.CSSProperties = {
@@ -89,6 +93,7 @@ export default function MyAuctionsPage() {
   const navigate = useNavigate()
   const prefix = useRoutePrefix()
   const [msgApi, contextHolder] = message.useMessage()
+  const { isMobile } = useBreakpoint()
 
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [page, setPage] = useState(1)
@@ -110,7 +115,7 @@ export default function MyAuctionsPage() {
     ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
   }
 
-  const { data, isLoading } = useMyAuctions(params)
+  const { data, isLoading } = useMyAuctions(params, { refetchInterval: 30000 })
   const submitAuction = useSubmitAuction()
   const publishAuction = usePublishAuction()
   const cancelAuction = useCancelAuction()
@@ -186,10 +191,45 @@ export default function MyAuctionsPage() {
     })
   }
 
-  const handleRelist = (id: string) => {
-    relistAuction.mutate(id, {
-      onSuccess: () => msgApi.success(t('relistSuccess', 'Auction relisted')),
-    })
+  // Relist modal state
+  const [relistModalOpen, setRelistModalOpen] = useState(false)
+  const [relistAuctionId, setRelistAuctionId] = useState<string | null>(null)
+  const [relistForm, setRelistForm] = useState<{
+    qualificationStartAt: dayjs.Dayjs | null
+    qualificationEndAt: dayjs.Dayjs | null
+    startAt: dayjs.Dayjs | null
+    endAt: dayjs.Dayjs | null
+  }>({ qualificationStartAt: null, qualificationEndAt: null, startAt: null, endAt: null })
+
+  const openRelistModal = (id: string) => {
+    setRelistAuctionId(id)
+    setRelistForm({ qualificationStartAt: null, qualificationEndAt: null, startAt: null, endAt: null })
+    setRelistModalOpen(true)
+  }
+
+  const handleRelistConfirm = () => {
+    if (!relistAuctionId || !relistForm.qualificationStartAt || !relistForm.qualificationEndAt || !relistForm.startAt || !relistForm.endAt) return
+    // Validate qualification period is before auction period
+    if (relistForm.qualificationEndAt.isAfter(relistForm.startAt)) {
+      msgApi.error(t('relistValidation', 'Thời gian đăng ký phải trước thời gian đấu giá'))
+      return
+    }
+    relistAuction.mutate(
+      {
+        auctionId: relistAuctionId,
+        qualificationStartAt: relistForm.qualificationStartAt.toISOString(),
+        qualificationEndAt: relistForm.qualificationEndAt.toISOString(),
+        startAt: relistForm.startAt.toISOString(),
+        endAt: relistForm.endAt.toISOString(),
+      },
+      {
+        onSuccess: () => {
+          msgApi.success(t('relistSuccess', 'Auction relisted'))
+          setRelistModalOpen(false)
+          setRelistAuctionId(null)
+        },
+      },
+    )
   }
 
   const handleOfferRunnerUp = (id: string) => {
@@ -215,12 +255,17 @@ export default function MyAuctionsPage() {
                 onClick={() => navigate(`${prefix}/auctions/${record.id}/edit`)}
               />
             </Tooltip>
-            <Tooltip title={tc('action.submit', 'Submit')}>
+            <Tooltip title={
+              ((record as any)).itemStatus && ((record as any)).itemStatus !== 'approved'
+                ? t('itemMustBeApproved', 'Item must be approved before submitting auction')
+                : tc('action.submit', 'Submit')
+            }>
               <Button
                 type="text"
                 size="small"
                 icon={<SendOutlined />}
                 loading={submitAuction.isPending}
+                disabled={!!((record as any)).itemStatus && ((record as any)).itemStatus !== 'approved'}
                 onClick={() => handleSubmit(record.id)}
               />
             </Tooltip>
@@ -341,20 +386,7 @@ export default function MyAuctionsPage() {
           </>
         )}
 
-        {/* Failed: Relist */}
-        {s === AuctionStatus.Failed && (
-          <Tooltip title={t('relist', 'Relist')}>
-            <Button
-              type="text"
-              size="small"
-              icon={<ReloadOutlined />}
-              loading={relistAuction.isPending}
-              onClick={() => handleRelist(record.id)}
-            />
-          </Tooltip>
-        )}
-
-        {/* Payment Defaulted: Relist, Offer Runner-up */}
+        {/* Payment Defaulted: Relist, Offer Runner-up (BE only supports relist for PaymentDefaulted) */}
         {s === AuctionStatus.PaymentDefaulted && (
           <>
             <Tooltip title={t('relist', 'Relist')}>
@@ -363,7 +395,7 @@ export default function MyAuctionsPage() {
                 size="small"
                 icon={<ReloadOutlined />}
                 loading={relistAuction.isPending}
-                onClick={() => handleRelist(record.id)}
+                onClick={() => openRelistModal(record.id)}
               />
             </Tooltip>
             <Tooltip title={t('offerRunnerUp', 'Offer Runner-up')}>
@@ -378,18 +410,7 @@ export default function MyAuctionsPage() {
           </>
         )}
 
-        {/* Cancelled: Relist */}
-        {s === AuctionStatus.Cancelled && (
-          <Tooltip title={t('relist', 'Relist')}>
-            <Button
-              type="text"
-              size="small"
-              icon={<ReloadOutlined />}
-              loading={relistAuction.isPending}
-              onClick={() => handleRelist(record.id)}
-            />
-          </Tooltip>
-        )}
+        {/* Cancelled: no relist (BE does not support relist for Cancelled) */}
       </Space>
     )
   }
@@ -514,7 +535,7 @@ export default function MyAuctionsPage() {
         ))}
       </Flex>
 
-      {/* Table / Empty */}
+      {/* Table / Cards / Empty */}
       {!isLoading && !data?.items?.length ? (
         <EmptyState
           title={t('noAuctions', 'No auctions found')}
@@ -534,13 +555,77 @@ export default function MyAuctionsPage() {
             </Button>
           }
         />
+      ) : isMobile ? (
+        /* Mobile card view */
+        <List
+          dataSource={data?.items ?? []}
+          loading={isLoading}
+          pagination={{
+            current: data?.metadata?.currentPage ?? page,
+            pageSize: data?.metadata?.pageSize ?? pageSize,
+            total: data?.metadata?.totalCount ?? 0,
+            onChange: (p, ps) => {
+              setPage(p)
+              setPageSize(ps)
+            },
+          }}
+          renderItem={(record: AuctionListItemDto) => (
+            <List.Item style={{ padding: '8px 0', border: 'none' }}>
+              <Card
+                size="small"
+                style={{ width: '100%', borderRadius: 10 }}
+                styles={{ body: { padding: '12px 16px' } }}
+              >
+                <Flex vertical gap={8}>
+                  <Flex justify="space-between" align="center">
+                    <Button
+                      type="link"
+                      style={{ padding: 0, fontWeight: 600, fontSize: 15 }}
+                      onClick={() => navigate(`/auctions/${record.id}`)}
+                    >
+                      {record.itemTitle}
+                    </Button>
+                    <StatusBadge status={record.status} />
+                  </Flex>
+                  <Flex justify="space-between" align="center">
+                    <span style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
+                      {t('currentPrice', 'Current Price')}
+                    </span>
+                    {record.currentPrice && typeof record.currentPrice === 'object' && 'amount' in record.currentPrice ? (
+                      <PriceDisplay price={{ amount: (record.currentPrice as { amount: number; currency: string }).amount, currency: (record.currentPrice as { amount: number; currency: string }).currency, symbol: '' }} size="small" />
+                    ) : (
+                      <PriceDisplay price={(record.currentPrice as number) ?? 0} size="small" />
+                    )}
+                  </Flex>
+                  <Flex justify="space-between" align="center">
+                    <span style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
+                      {t('bids', 'Bids')}: {record.bidCount ?? 0}
+                    </span>
+                    {record.endTime ? (
+                      record.status === AuctionStatus.Active ? (
+                        <CountdownTimer endTime={record.endTime} size="small" />
+                      ) : (
+                        <span style={{ color: 'var(--color-text-secondary)', fontSize: 12 }}>{formatDateTime(record.endTime)}</span>
+                      )
+                    ) : (
+                      <span style={{ color: 'var(--color-text-secondary)' }}>-</span>
+                    )}
+                  </Flex>
+                  <Flex justify="flex-end" style={{ marginTop: 4 }}>
+                    {renderActions(record)}
+                  </Flex>
+                </Flex>
+              </Card>
+            </List.Item>
+          )}
+        />
       ) : (
-        <Table<AuctionListItemDto>
+        <ResponsiveTable<AuctionListItemDto>
+          mobileMode="card"
           rowKey="id"
           columns={columns}
           dataSource={data?.items ?? []}
           loading={isLoading}
-          scroll={{ x: 960 }}
           pagination={{
             current: data?.metadata?.currentPage ?? page,
             pageSize: data?.metadata?.pageSize ?? pageSize,
@@ -685,6 +770,73 @@ export default function MyAuctionsPage() {
               />
             </div>
           )}
+        </Flex>
+      </Modal>
+
+      {/* Relist modal */}
+      <Modal
+        title={t('relistAuction', 'Đăng lại phiên đấu giá')}
+        open={relistModalOpen}
+        onCancel={() => { setRelistModalOpen(false); setRelistAuctionId(null) }}
+        onOk={handleRelistConfirm}
+        okText={t('confirmRelist', 'Đăng lại')}
+        okButtonProps={{
+          loading: relistAuction.isPending,
+          disabled: !relistForm.qualificationStartAt || !relistForm.qualificationEndAt || !relistForm.startAt || !relistForm.endAt,
+          style: { background: 'var(--color-accent)', borderColor: 'var(--color-accent)' },
+        }}
+        centered
+        width={480}
+      >
+        <Flex vertical gap={16} style={{ marginTop: 16 }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13 }}>
+              Bắt đầu đăng ký *
+            </label>
+            <DatePicker
+              showTime
+              style={{ width: '100%' }}
+              value={relistForm.qualificationStartAt}
+              onChange={(v) => setRelistForm((prev) => ({ ...prev, qualificationStartAt: v }))}
+              placeholder="Chọn thời gian bắt đầu đăng ký"
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13 }}>
+              Kết thúc đăng ký *
+            </label>
+            <DatePicker
+              showTime
+              style={{ width: '100%' }}
+              value={relistForm.qualificationEndAt}
+              onChange={(v) => setRelistForm((prev) => ({ ...prev, qualificationEndAt: v }))}
+              placeholder="Chọn thời gian kết thúc đăng ký"
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13 }}>
+              Bắt đầu đấu giá *
+            </label>
+            <DatePicker
+              showTime
+              style={{ width: '100%' }}
+              value={relistForm.startAt}
+              onChange={(v) => setRelistForm((prev) => ({ ...prev, startAt: v }))}
+              placeholder="Chọn thời gian bắt đầu đấu giá"
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13 }}>
+              Kết thúc đấu giá *
+            </label>
+            <DatePicker
+              showTime
+              style={{ width: '100%' }}
+              value={relistForm.endAt}
+              onChange={(v) => setRelistForm((prev) => ({ ...prev, endAt: v }))}
+              placeholder="Chọn thời gian kết thúc đấu giá"
+            />
+          </div>
         </Flex>
       </Modal>
     </div>

@@ -78,5 +78,12 @@
   "withdrawalError": "Failed to submit withdrawal request",
   "withdrawalCancelled": "Withdrawal cancelled",
   "withdrawalCancelError": "Failed to cancel withdrawal",
-  "confirmCancelWithdrawal": "Cancel this withdrawal?"
+  "confirmCancelWithdrawal": "Cancel this withdrawal?",
+  "walletPayment": "Platform Wallet",
+  "payFromWallet": "Pay from Wallet",
+  "payWalletPlusVnpay": "Pay (Wallet + VnPay)",
+  "hybridNote": "Wallet covers {{wallet}}, VnPay covers remaining {{vnpay}}",
+  "insufficientBalance": "Insufficient balance — top up your wallet first",
+  "noSavedMethods": "No saved payment methods",
+  "otherMethods": "Other methods"
 }

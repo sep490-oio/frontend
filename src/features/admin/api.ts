@@ -51,7 +51,7 @@ export function useAdminUserDetail(id: string) {
 export function useAdminCreateUser() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (data: { userName: string; email: string; password: string; roles?: string[] }) => {
+    mutationFn: async (data: { userName: string; email: string; password: string; currency: string; firstName: string; lastName: string; roles?: string[] }) => {
       const res = await apiClient.post<UserDto>('/admin/users', data)
       return res.data
     },
@@ -77,7 +77,7 @@ export function useChangeUserStatus() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const res = await apiClient.post(`/admin/users/${id}/status`, { status })
+      const res = await apiClient.patch(`/admin/users/${id}/status`, { status })
       return res.data
     },
     onSuccess: () => {
@@ -90,7 +90,7 @@ export function useUnlockUser() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (id: string) => {
-      const res = await apiClient.post(`/admin/users/${id}/unlock`)
+      const res = await apiClient.patch(`/admin/users/${id}/unlock`)
       return res.data
     },
     onSuccess: () => {
@@ -151,8 +151,8 @@ export function usePermissions() {
 export function useTogglePermission() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ role, permission }: { role: string; permission: string }) => {
-      const res = await apiClient.put(`/admin/roles/${role}/permissions/${permission}`)
+    mutationFn: async ({ role, permission, isActive }: { role: string; permission: string; isActive: boolean }) => {
+      const res = await apiClient.put(`/admin/roles/${role}/permissions/${permission}`, { isActive })
       return res.data
     },
     onSuccess: () => {
@@ -216,8 +216,8 @@ export function useAdminSellerProfiles(params?: PaginationParams & { status?: st
   return useQuery({
     queryKey: queryKeys.admin.sellerProfiles(params),
     queryFn: async () => {
-      const res = await apiClient.get<PagedList<SellerProfileDto>>('/admin/seller-profiles', { params })
-      return res.data
+      const res = await apiClient.get<SellerProfileDto[]>('/admin/seller-profiles', { params })
+      return extractArray<SellerProfileDto>(res.data)
     },
   })
 }
@@ -235,6 +235,7 @@ export function useVerifySellerProfile() {
   })
 }
 
+// NOTE: BE does not accept a reason body - rejection reason is not recorded. Consider adding to BE.
 export function useRejectSellerProfile() {
   const qc = useQueryClient()
   return useMutation({
@@ -300,8 +301,8 @@ export function useRejectItem() {
 export function useAssignReviewer() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ itemId, reviewerId }: { itemId: string; reviewerId: string }) => {
-      const res = await apiClient.post(`/admin/items/${itemId}/assign`, { reviewerId })
+    mutationFn: async ({ itemId, adminId }: { itemId: string; adminId: string }) => {
+      const res = await apiClient.post(`/admin/items/${itemId}/assign`, { adminId })
       return res.data
     },
     onSuccess: () => {
@@ -316,7 +317,7 @@ export function useSetCuration() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ auctionId, isFeatured, priority }: { auctionId: string; isFeatured: boolean; priority: number }) => {
-      const res = await apiClient.post(`/admin/auctions/${auctionId}/curation`, { isFeatured, priority })
+      const res = await apiClient.put(`/admin/auctions/${auctionId}/curation`, { isFeatured, priority })
       return res.data
     },
     onSuccess: () => {
@@ -328,8 +329,8 @@ export function useSetCuration() {
 export function useTriggerEmergency() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ auctionId, reason }: { auctionId: string; reason: string }) => {
-      const res = await apiClient.post<AuctionEmergencyDto>(`/admin/auctions/${auctionId}/emergencies`, { reason })
+    mutationFn: async ({ auctionId, reason, triggerSource, payload }: { auctionId: string; reason: string; triggerSource: string; payload: object }) => {
+      const res = await apiClient.post<AuctionEmergencyDto>(`/admin/auctions/${auctionId}/emergencies`, { reason, triggerSource, payload })
       return res.data
     },
     onSuccess: () => {
@@ -341,8 +342,8 @@ export function useTriggerEmergency() {
 export function useResolveEmergency() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ auctionId, emergencyId, resolution }: { auctionId: string; emergencyId: string; resolution: string }) => {
-      const res = await apiClient.post(`/admin/auctions/${auctionId}/emergencies/${emergencyId}/resolve`, { resolution })
+    mutationFn: async ({ auctionId, emergencyId, status, payload }: { auctionId: string; emergencyId: string; status: string; payload: object }) => {
+      const res = await apiClient.post(`/admin/auctions/${auctionId}/emergencies/${emergencyId}/resolve`, { status, payload })
       return res.data
     },
     onSuccess: () => {
@@ -380,8 +381,8 @@ export function useAdminReports(params?: PaginationParams & { status?: string })
 export function useAssignReport() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, assigneeId }: { id: string; assigneeId: string }) => {
-      const res = await apiClient.post(`/admin/reports/${id}/assign`, { assigneeId })
+    mutationFn: async ({ id, assignedToUserId }: { id: string; assignedToUserId: string }) => {
+      const res = await apiClient.post(`/admin/reports/${id}/assign`, { assignedToUserId })
       return res.data
     },
     onSuccess: () => {
@@ -393,8 +394,8 @@ export function useAssignReport() {
 export function useResolveReport() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, notes }: { id: string; notes: string }) => {
-      const res = await apiClient.post(`/admin/reports/${id}/resolve`, { notes })
+    mutationFn: async ({ id, dismissed, resolutionNotes }: { id: string; dismissed: boolean; resolutionNotes: string }) => {
+      const res = await apiClient.post(`/admin/reports/${id}/resolve`, { dismissed, resolutionNotes })
       return res.data
     },
     onSuccess: () => {
@@ -409,8 +410,8 @@ export function useMonitoringAlerts(params?: PaginationParams & { severity?: str
   return useQuery({
     queryKey: queryKeys.admin.alerts(params),
     queryFn: async () => {
-      const res = await apiClient.get<PagedList<MonitoringAlertDto>>('/admin/monitoring-alerts', { params })
-      return res.data
+      const res = await apiClient.get<MonitoringAlertDto[]>('/admin/monitoring-alerts', { params })
+      return extractArray<MonitoringAlertDto>(res.data)
     },
   })
 }
@@ -418,8 +419,8 @@ export function useMonitoringAlerts(params?: PaginationParams & { severity?: str
 export function useAcknowledgeAlert() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (id: string) => {
-      const res = await apiClient.post(`/admin/monitoring-alerts/${id}/acknowledge`)
+    mutationFn: async ({ id, notes }: { id: string; notes?: string }) => {
+      const res = await apiClient.post(`/admin/monitoring-alerts/${id}/acknowledge`, { notes })
       return res.data
     },
     onSuccess: () => {
@@ -431,8 +432,8 @@ export function useAcknowledgeAlert() {
 export function useResolveAlert() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, notes }: { id: string; notes?: string }) => {
-      const res = await apiClient.post(`/admin/monitoring-alerts/${id}/resolve`, { notes })
+    mutationFn: async ({ id, notes, ignored }: { id: string; notes?: string; ignored: boolean }) => {
+      const res = await apiClient.post(`/admin/monitoring-alerts/${id}/resolve`, { notes, ignored })
       return res.data
     },
     onSuccess: () => {
@@ -444,8 +445,8 @@ export function useResolveAlert() {
 export function useFlagUser() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ userId, severity, reason }: { userId: string; severity: string; reason: string }) => {
-      const res = await apiClient.post<UserRiskFlagDto>(`/admin/users/${userId}/risk-flags`, { severity, reason })
+    mutationFn: async ({ userId, severity, reason, flagType }: { userId: string; severity: string; reason: string; flagType: string }) => {
+      const res = await apiClient.post<UserRiskFlagDto>(`/admin/users/${userId}/risk-flags`, { severity, reason, flagType })
       return res.data
     },
     onSuccess: (_data, variables) => {
@@ -457,8 +458,8 @@ export function useFlagUser() {
 export function useFlagAuction() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ auctionId, severity, message }: { auctionId: string; severity: string; message: string }) => {
-      const res = await apiClient.post(`/admin/auctions/${auctionId}/alerts`, { severity, message })
+    mutationFn: async ({ auctionId, alertType, payload, severity }: { auctionId: string; alertType: string; payload: object; severity?: string }) => {
+      const res = await apiClient.post(`/admin/auctions/${auctionId}/alerts`, { alertType, payload, severity })
       return res.data
     },
     onSuccess: () => {
@@ -485,15 +486,15 @@ export function useAdminResolveDispute() {
     mutationFn: async ({
       id,
       resolutionType,
-      refundAmount,
+      amount,
       notes,
     }: {
       id: string
       resolutionType: string
-      refundAmount?: number
+      amount?: number
       notes?: string
     }) => {
-      const res = await apiClient.post(`/admin/disputes/${id}/resolve`, { resolutionType, refundAmount, notes })
+      const res = await apiClient.post(`/admin/disputes/${id}/resolve`, { resolutionType, amount, notes })
       return res.data
     },
     onSuccess: () => {
@@ -553,6 +554,19 @@ export function useRejectWithdrawal() {
   })
 }
 
+export function useCompleteWithdrawal() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await apiClient.post(`/admin/payments/withdrawals/${id}/complete`)
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.admin.withdrawals() })
+      qc.invalidateQueries({ queryKey: queryKeys.admin.paymentSummary() })
+    },
+  })
+}
+
 export function useAdminTransactions(params?: PaginationParams & { status?: string; type?: string }) {
   return useQuery({
     queryKey: queryKeys.admin.transactions(params),
@@ -563,6 +577,17 @@ export function useAdminTransactions(params?: PaginationParams & { status?: stri
   })
 }
 
+export function useAdminTransactionById(id: string) {
+  return useQuery({
+    queryKey: [...queryKeys.admin.transactions(), 'detail', id],
+    queryFn: async () => {
+      const res = await apiClient.get<PaymentTransactionDto>(`/admin/payments/transactions/${id}`)
+      return res.data
+    },
+    enabled: !!id,
+  })
+}
+
 export function useAdminEscrows(params?: PaginationParams & { status?: string }) {
   return useQuery({
     queryKey: queryKeys.admin.escrows(params),
@@ -570,6 +595,17 @@ export function useAdminEscrows(params?: PaginationParams & { status?: string })
       const res = await apiClient.get<PagedList<EscrowDto>>('/admin/payments/escrows', { params })
       return res.data
     },
+  })
+}
+
+export function useAdminEscrowById(id: string) {
+  return useQuery({
+    queryKey: [...queryKeys.admin.escrows(), 'detail', id],
+    queryFn: async () => {
+      const res = await apiClient.get<EscrowDto>(`/admin/payments/escrows/${id}`)
+      return res.data
+    },
+    enabled: !!id,
   })
 }
 
@@ -631,6 +667,45 @@ export function useActivateTerms() {
   })
 }
 
+// ── Categories (Admin) ──────────────────────────────────────────────
+
+export function useCreateCategory() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: { name: string; parentId?: string; slug?: string; description?: string }) => {
+      const res = await apiClient.post('/categories', data)
+      return res.data
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.categories.all })
+    },
+  })
+}
+
+export function useUpdateCategory() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, ...data }: { id: string; name?: string; slug?: string; description?: string }) => {
+      const res = await apiClient.put(`/categories/${id}`, data)
+      return res.data
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.categories.all })
+    },
+  })
+}
+
+// ── Shipping Provider Config ────────────────────────────────────────
+
+export function useUpdateShippingProviderConfig() {
+  return useMutation({
+    mutationFn: async ({ configId, ...data }: { configId: string; [key: string]: unknown }) => {
+      const res = await apiClient.put(`/warehouse/shipping-provider-configs/${configId}`, data)
+      return res.data
+    },
+  })
+}
+
 // ── Permissions ──────────────────────────────────────────────────────
 
 // Grant permission to user
@@ -639,6 +714,19 @@ export function useGrantPermission() {
   return useMutation({
     mutationFn: async ({ userId, permission }: { userId: string; permission: string }) => {
       await apiClient.post(`/admin/users/${userId}/permissions/${permission}`)
+    },
+    onSuccess: (_, { userId }) => {
+      qc.invalidateQueries({ queryKey: queryKeys.admin.userDetail(userId) })
+    },
+  })
+}
+
+// Deny permission for user
+export function useDenyPermission() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ userId, permission }: { userId: string; permission: string }) => {
+      await apiClient.put(`/admin/users/${userId}/permissions/${permission}`, { action: 'deny' })
     },
     onSuccess: (_, { userId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.admin.userDetail(userId) })

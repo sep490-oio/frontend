@@ -5,19 +5,16 @@ import { useRoutePrefix } from '@/hooks/useRoutePrefix'
 import { useTranslation } from 'react-i18next'
 import { useBookInbound } from '@/features/warehouse/api'
 import { useMyItems } from '@/features/item/api'
-
-const PROVIDER_OPTIONS = [
-  { label: 'GHN (Giao Hang Nhanh)', value: 'GHN' },
-  { label: 'GHTK (Giao Hang Tiet Kiem)', value: 'GHTK' },
-  { label: 'VNPost', value: 'VNPOST' },
-  { label: 'J&T Express', value: 'JT' },
-  { label: 'Viettel Post', value: 'VIETTELPOST' },
-]
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 
 const SHIPMENT_MODE_OPTIONS = [
-  { label: 'Standard', value: 'standard' },
-  { label: 'Express', value: 'express' },
-  { label: 'Economy', value: 'economy' },
+  { label: 'Platform Managed (GHN)', value: 'platform_managed' },
+  { label: 'External Carrier', value: 'external_carrier' },
+]
+
+const PROVIDER_OPTIONS = [
+  { label: 'GHN (Giao Hang Nhanh)', value: 'ghn' },
+  { label: 'External Carrier', value: 'external' },
 ]
 
 export default function BookInboundPage() {
@@ -26,6 +23,7 @@ export default function BookInboundPage() {
   const navigate = useNavigate()
   const prefix = useRoutePrefix()
   const { message } = App.useApp()
+  const { isMobile } = useBreakpoint()
   const [form] = Form.useForm()
 
   const bookInbound = useBookInbound()
@@ -38,25 +36,38 @@ export default function BookInboundPage() {
 
   const onFinish = async (values: {
     itemId: string
-    providerCode: string
     shipmentMode: string
+    externalCarrierName?: string
     senderName: string
     senderPhone: string
     senderAddress: string
+    senderWard?: string
+    senderDistrict?: string
+    senderProvince?: string
     weight: number
     length: number
     width: number
     height: number
+    insuranceValue?: number
     notes?: string
   }) => {
+    const selectedItem = (itemsData?.items ?? []).find((i) => i.id === values.itemId)
+    const isExternal = values.shipmentMode === 'external_carrier'
     try {
       const result = await bookInbound.mutateAsync({
         itemId: values.itemId,
-        providerCode: values.providerCode,
+        itemName: selectedItem?.title ?? 'Item',
+        itemPrice: (selectedItem as any)?.price ?? 0,
+        insuranceValue: values.insuranceValue ?? (selectedItem as any)?.price ?? 0,
+        providerCode: isExternal ? 'external' : 'ghn',
         shipmentMode: values.shipmentMode,
+        externalCarrierName: isExternal ? values.externalCarrierName : undefined,
         senderName: values.senderName,
         senderPhone: values.senderPhone,
         senderAddress: values.senderAddress,
+        senderWard: values.senderWard,
+        senderDistrict: values.senderDistrict,
+        senderProvince: values.senderProvince,
         weightGrams: values.weight,
         lengthCm: values.length,
         widthCm: values.width,
@@ -71,7 +82,7 @@ export default function BookInboundPage() {
   }
 
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto' }}>
+    <div style={{ maxWidth: 720, margin: '0 auto', padding: isMobile ? '0 12px' : undefined }}>
       <Space style={{ marginBottom: 16 }}>
         <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate(`${prefix}/warehouse/inbound`)}>
           {tc('action.back', 'Back')}
@@ -153,13 +164,17 @@ export default function BookInboundPage() {
 
           <Divider>{t('dimensions', 'Package Dimensions')}</Divider>
 
-          <Space wrap style={{ width: '100%' }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)',
+            gap: isMobile ? '0 12px' : '0 16px',
+          }}>
             <Form.Item
               name="weight"
               label={t('weight', 'Weight (g)')}
               rules={[{ required: true, message: t('weightRequired', 'Required') }]}
             >
-              <InputNumber min={1} max={50000} style={{ width: 150 }} />
+              <InputNumber min={1} max={50000} style={{ width: '100%' }} />
             </Form.Item>
 
             <Form.Item
@@ -167,7 +182,7 @@ export default function BookInboundPage() {
               label={t('length', 'Length (cm)')}
               rules={[{ required: true, message: t('lengthRequired', 'Required') }]}
             >
-              <InputNumber min={1} max={200} style={{ width: 150 }} />
+              <InputNumber min={1} max={200} style={{ width: '100%' }} />
             </Form.Item>
 
             <Form.Item
@@ -175,7 +190,7 @@ export default function BookInboundPage() {
               label={t('width', 'Width (cm)')}
               rules={[{ required: true, message: t('widthRequired', 'Required') }]}
             >
-              <InputNumber min={1} max={200} style={{ width: 150 }} />
+              <InputNumber min={1} max={200} style={{ width: '100%' }} />
             </Form.Item>
 
             <Form.Item
@@ -183,9 +198,9 @@ export default function BookInboundPage() {
               label={t('height', 'Height (cm)')}
               rules={[{ required: true, message: t('heightRequired', 'Required') }]}
             >
-              <InputNumber min={1} max={200} style={{ width: 150 }} />
+              <InputNumber min={1} max={200} style={{ width: '100%' }} />
             </Form.Item>
-          </Space>
+          </div>
 
           <Form.Item
             name="notes"

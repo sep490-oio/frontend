@@ -9,9 +9,11 @@ import {
   ThunderboltOutlined,
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
-import { useNotifications, useMarkAsRead, useMarkAllAsRead } from '@/features/notification/api'
+import { useNavigate } from 'react-router'
+import { useNotifications, useMarkAsRead, useMarkAllAsRead, parseNotificationActions, getActionRoute, getEntityRoute } from '@/features/notification/api'
 import type { NotificationFilterParams } from '@/features/notification/api'
 import { NotificationStatus } from '@/types/enums'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import type { NotificationDto } from '@/types'
 import dayjs from 'dayjs'
 
@@ -29,6 +31,8 @@ function getNotificationIcon(type: string): React.ReactNode {
 export default function NotificationsPage() {
   const { t } = useTranslation('notification')
   const { t: tc } = useTranslation('common')
+  const navigate = useNavigate()
+  const { isMobile } = useBreakpoint()
 
   const [filters, setFilters] = useState<NotificationFilterParams>({
     pageNumber: 1,
@@ -51,6 +55,8 @@ export default function NotificationsPage() {
     if (notification.status === NotificationStatus.Unread) {
       markAsRead.mutate(notification.id)
     }
+    const route = getEntityRoute(notification.entityType, notification.entityId)
+    if (route) navigate(route)
   }
 
   const handleMarkAllAsRead = () => {
@@ -58,12 +64,12 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <Typography.Title level={2} style={{ margin: 0 }}>
+    <div style={{ padding: isMobile ? 16 : 0 }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? 12 : 0, marginBottom: isMobile ? 16 : 24 }}>
+        <Typography.Title level={2} style={{ margin: 0, fontSize: isMobile ? 22 : undefined }}>
           {t('notifications', 'Notifications')}
         </Typography.Title>
-        <Button type="primary" icon={<CheckOutlined />} onClick={handleMarkAllAsRead} loading={markAllAsRead.isPending}>
+        <Button type="primary" icon={<CheckOutlined />} onClick={handleMarkAllAsRead} loading={markAllAsRead.isPending} size={isMobile ? 'middle' : 'large'}>
           {t('markAllAsRead', 'Mark all as read')}
         </Button>
       </div>
@@ -95,7 +101,7 @@ export default function NotificationsPage() {
                   onClick={() => handleNotificationClick(item)}
                   style={{
                     cursor: 'pointer',
-                    padding: '12px 16px',
+                    padding: isMobile ? '8px 12px' : '12px 16px',
                     backgroundColor: item.status === NotificationStatus.Unread ? '#f0f5ff' : 'transparent',
                     borderRadius: 6,
                     marginBottom: 4,
@@ -125,6 +131,32 @@ export default function NotificationsPage() {
                         <Typography.Paragraph type="secondary" style={{ marginBottom: 4 }}>
                           {item.message}
                         </Typography.Paragraph>
+                        {(() => {
+                          const actions = parseNotificationActions(item.actions)
+                          if (actions.length === 0) return null
+                          return (
+                            <Space size={8} style={{ marginBottom: 8 }}>
+                              {actions.map((action, i) => {
+                                const route = getActionRoute(action, item.entityId)
+                                return (
+                                  <Button
+                                    key={i}
+                                    size="small"
+                                    type={i === 0 ? 'primary' : 'default'}
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      if (route) navigate(route)
+                                    }}
+                                    disabled={!route}
+                                    style={i === 0 ? { background: 'var(--color-accent)', borderColor: 'var(--color-accent)' } : undefined}
+                                  >
+                                    {action.label}
+                                  </Button>
+                                )
+                              })}
+                            </Space>
+                          )
+                        })()}
                         <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                           {dayjs(item.createdAt).format('DD/MM/YYYY HH:mm')}
                           {item.readAt && (

@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -5,20 +6,21 @@ import { useTranslation } from 'react-i18next'
 import { App, Typography, Input, Button, Form, Space } from 'antd'
 import { Link } from 'react-router'
 import { useForgotPassword } from '@/features/auth/api'
-import { emailSchema } from '@/utils/validation'
+import { createEmailSchema } from '@/utils/validation'
 import type { AxiosError } from 'axios'
 import type { ApiError } from '@/types'
 
-const forgotPasswordSchema = z.object({
-  email: emailSchema,
-})
-
-type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>
+type ForgotPasswordFormValues = { email: string }
 
 export default function ForgotPasswordPage() {
   const { t } = useTranslation('auth')
+  const { t: tv } = useTranslation('validation')
   const { message } = App.useApp()
   const forgotMutation = useForgotPassword()
+
+  const forgotPasswordSchema = useMemo(() => z.object({
+    email: createEmailSchema(tv),
+  }), [tv])
 
   const {
     control,

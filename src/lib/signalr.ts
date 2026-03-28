@@ -17,10 +17,37 @@ function createHubConnection(hubPath: string): signalR.HubConnection {
     .build()
 }
 
+let retryTimeoutId: ReturnType<typeof setTimeout> | null = null
+
 // Lazy-initialized hub connections
 let auctionHub: signalR.HubConnection | null = null
 let disputeHub: signalR.HubConnection | null = null
 let notificationHub: signalR.HubConnection | null = null
+let userHub: signalR.HubConnection | null = null
+
+function waitForConnectionReady(
+  connection: signalR.HubConnection,
+  timeoutMs = 10000,
+): Promise<boolean> {
+  return new Promise((resolve) => {
+    const startedAt = Date.now()
+    const intervalId = setInterval(() => {
+      if (connection.state === signalR.HubConnectionState.Connected) {
+        clearInterval(intervalId)
+        resolve(true)
+        return
+      }
+
+      if (
+        connection.state === signalR.HubConnectionState.Disconnected ||
+        Date.now() - startedAt >= timeoutMs
+      ) {
+        clearInterval(intervalId)
+        resolve(false)
+      }
+    }, 100)
+  })
+}
 
 export function getAuctionHub(): signalR.HubConnection {
   if (!auctionHub) {
@@ -43,28 +70,50 @@ export function getNotificationHub(): signalR.HubConnection {
   return notificationHub
 }
 
-export async function startConnection(connection: signalR.HubConnection): Promise<void> {
-  if (connection.state === signalR.HubConnectionState.Disconnected) {
-    try {
-      await connection.start()
-    } catch (err) {
-      console.error('SignalR connection error:', err)
-      // Retry after 5 seconds
-      setTimeout(() => startConnection(connection), 5000)
-    }
+export function getUserHub(): signalR.HubConnection {
+  if (!userHub) {
+    userHub = createHubConnection('/user')
+  }
+  return userHub
+}
+
+export async function startConnection(connection: signalR.HubConnection): Promise<boolean> {
+  if (connection.state === signalR.HubConnectionState.Connected) {
+    return true
+  }
+
+  if (connection.state !== signalR.HubConnectionState.Disconnected) {
+    return waitForConnectionReady(connection)
+  }
+
+  try {
+    await connection.start()
+    return true
+  } catch (err) {
+    console.error('SignalR connection error:', err)
+    // Retry after 5 seconds
+    retryTimeoutId = setTimeout(() => {
+      void startConnection(connection)
+    }, 5000)
+    return false
   }
 }
 
 export async function stopConnection(connection: signalR.HubConnection): Promise<void> {
+  if (retryTimeoutId) {
+    clearTimeout(retryTimeoutId)
+    retryTimeoutId = null
+  }
   if (connection.state !== signalR.HubConnectionState.Disconnected) {
     await connection.stop()
   }
 }
 
 export async function stopAllConnections(): Promise<void> {
-  const hubs = [auctionHub, disputeHub, notificationHub]
+  const hubs = [auctionHub, disputeHub, notificationHub, userHub]
   await Promise.all(hubs.filter(Boolean).map((hub) => stopConnection(hub!)))
   auctionHub = null
   disputeHub = null
   notificationHub = null
+  userHub = null
 }

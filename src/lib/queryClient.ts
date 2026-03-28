@@ -35,12 +35,15 @@ export const queryKeys = {
     myAuctions: (params?: unknown) => [...queryKeys.auctions.all, 'my', params] as const,
     myAutoBid: (auctionId: string) => [...queryKeys.auctions.all, 'autoBid', auctionId] as const,
     watchlist: (params?: unknown) => [...queryKeys.auctions.all, 'watchlist', params] as const,
+    myBids: (params?: unknown) => ['myBids', params] as const,
+    myPendingWinnerOffers: () => [...queryKeys.auctions.all, 'myPendingWinnerOffers'] as const,
   },
   items: {
     all: ['items'] as const,
     list: (params?: unknown) => [...queryKeys.items.all, 'list', params] as const,
     detail: (id: string) => [...queryKeys.items.all, 'detail', id] as const,
     my: (params?: unknown) => [...queryKeys.items.all, 'my', params] as const,
+    questionsRoot: (itemId: string) => [...queryKeys.items.all, 'questions', itemId] as const,
     questions: (itemId: string, params?: unknown) => [...queryKeys.items.all, 'questions', itemId, params] as const,
   },
   categories: {
@@ -73,11 +76,13 @@ export const queryKeys = {
   },
   warehouse: {
     all: ['warehouse'] as const,
-    inbound: (params?: unknown) => [...queryKeys.warehouse.all, 'inbound', params] as const,
-    inboundDetail: (id: string) => [...queryKeys.warehouse.all, 'inbound', id] as const,
-    outbound: (params?: unknown) => [...queryKeys.warehouse.all, 'outbound', params] as const,
+    inbound: (params?: unknown) => [...queryKeys.warehouse.all, 'inbound', 'list', params] as const,
+    inboundDetail: (id: string) => [...queryKeys.warehouse.all, 'inbound', 'detail', id] as const,
+    outbound: (params?: unknown) => [...queryKeys.warehouse.all, 'outbound', 'list', params] as const,
+    outboundDetail: (id: string) => [...queryKeys.warehouse.all, 'outbound', 'detail', id] as const,
     items: (params?: unknown) => [...queryKeys.warehouse.all, 'items', params] as const,
     locations: () => [...queryKeys.warehouse.all, 'locations'] as const,
+    inspectionQueue: (params?: unknown) => [...queryKeys.warehouse.all, 'inspectionQueue', params] as const,
   },
   notifications: {
     all: ['notifications'] as const,

@@ -8,6 +8,7 @@ export interface SellerProfileDto {
   logo?: string
   rating: number
   reviewCount: number
+  trustScore?: number
   status: SellerProfileStatus
   createdAt: string
   approvedAt?: string
@@ -67,6 +68,17 @@ export interface VerificationDto {
   createdAt: string
   modifiedAt?: string
   documents: VerificationDocumentDto[]
+}
+
+export interface VerificationSummaryDto {
+  id: string
+  verificationType: string
+  autoVerified: boolean
+  fullName?: string
+  status: string
+  submittedAt?: string
+  attemptCount: number
+  createdAt: string
 }
 
 export interface PublicSellerItemDto {

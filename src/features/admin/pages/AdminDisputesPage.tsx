@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Typography, Table, Select, Space, Button, Modal, Input, InputNumber, App } from 'antd'
+import { Typography, Select, Space, Button, Modal, Input, InputNumber, App } from 'antd'
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { ExceptionOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useAdminDisputes, useAdminResolveDispute } from '@/features/admin/api'
@@ -11,12 +12,14 @@ import type { ColumnsType } from 'antd/es/table'
 
 const STATUS_OPTIONS = [
   { value: '', label: '' },
+  { value: DisputeStatus.Draft, label: 'Draft' },
   { value: DisputeStatus.Open, label: 'Open' },
-  { value: DisputeStatus.Assigned, label: 'Assigned' },
-  { value: DisputeStatus.InProgress, label: 'In Progress' },
-  { value: DisputeStatus.PendingResponse, label: 'Pending Response' },
+  { value: DisputeStatus.UnderReview, label: 'Under Review' },
+  { value: DisputeStatus.AwaitingResponse, label: 'Awaiting Response' },
+  { value: DisputeStatus.Escalated, label: 'Escalated' },
   { value: DisputeStatus.Resolved, label: 'Resolved' },
   { value: DisputeStatus.Closed, label: 'Closed' },
+  { value: DisputeStatus.Cancelled, label: 'Cancelled' },
 ] as const
 
 const RESOLUTION_TYPES = [
@@ -53,7 +56,7 @@ export default function AdminDisputesPage() {
       await resolveDispute.mutateAsync({
         id: resolveDisputeId,
         resolutionType,
-        refundAmount: refundAmount ?? undefined,
+        amount: refundAmount ?? undefined,
         notes: notes || undefined,
       })
       message.success(t('disputes.resolveSuccess'))
@@ -144,12 +147,12 @@ export default function AdminDisputesPage() {
         />
       </Space>
 
-      <Table<DisputeDto>
+      <ResponsiveTable<DisputeDto>
         rowKey="id"
         columns={columns}
         dataSource={data?.items ?? []}
         loading={isLoading}
-        scroll={{ x: 800 }}
+        mobileMode="card"
         pagination={{
           current: data?.metadata?.currentPage ?? page,
           pageSize: data?.metadata?.pageSize ?? pageSize,

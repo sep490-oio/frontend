@@ -1,9 +1,14 @@
+import { useState } from 'react'
 import { Typography, Form, Input, Select, InputNumber, Button, Card, Space, App } from 'antd'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
 import { useTranslation } from 'react-i18next'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useCreateItem, useCategories } from '@/features/item/api'
+import { useMediaUpload } from '@/hooks/useMediaUpload'
+import { MultiCaptureUploader } from '@/components/ui/MultiCaptureUploader'
+import type { CapturedPhoto } from '@/components/ui/MultiCaptureUploader'
 import { ItemCondition } from '@/types/enums'
 import type { CreateItemRequest } from '@/types'
 
@@ -18,10 +23,14 @@ export default function CreateItemPage() {
   const navigate = useNavigate()
   const prefix = useRoutePrefix()
   const { message } = App.useApp()
+  const { isMobile } = useBreakpoint()
   const [form] = Form.useForm<CreateItemRequest>()
 
   const createItem = useCreateItem()
+  const mediaUpload = useMediaUpload('item_image')
   const { data: categories, isLoading: categoriesLoading } = useCategories()
+  const [capturedPhotos, setCapturedPhotos] = useState<CapturedPhoto[]>([])
+  const [submitting, setSubmitting] = useState(false)
 
   const categoryOptions = (categories ?? []).map((cat) => ({
     label: cat.name,
@@ -29,17 +38,42 @@ export default function CreateItemPage() {
   }))
 
   const onFinish = async (values: CreateItemRequest) => {
+    if (capturedPhotos.length === 0) {
+      message.warning(t('captureRequiredError', 'Please capture at least 1 photo'))
+      return
+    }
+
+    setSubmitting(true)
     try {
-      await createItem.mutateAsync(values)
+      // Step 1: Upload each captured photo to Cloudinary via the 3-step upload flow
+      const files = capturedPhotos.map((photo, i) =>
+        new File([photo.blob], `item-photo-${i + 1}.jpg`, { type: 'image/jpeg' })
+      )
+      const uploadResults = await mediaUpload.uploadMultiple(files)
+
+      // Step 2: Map upload results to the format BE expects (mediaUploadId only)
+      const images = uploadResults.map((result, i) => ({
+        mediaUploadId: result.mediaUploadId,
+        isPrimary: i === 0,
+        sortOrder: i,
+      }))
+
+      // Step 3: Create the item with uploaded media IDs
+      await createItem.mutateAsync({
+        ...values,
+        images,
+      })
       message.success(t('createSuccess', 'Item created successfully'))
       navigate(`${prefix}/items`)
     } catch {
       message.error(t('createError', 'Failed to create item'))
+    } finally {
+      setSubmitting(false)
     }
   }
 
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto' }}>
+    <div style={{ maxWidth: 720, margin: '0 auto', padding: isMobile ? '0 12px' : undefined }}>
       <Space style={{ marginBottom: 16 }}>
         <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate(`${prefix}/items`)}>
           {tc('action.back', 'Back')}
@@ -108,20 +142,23 @@ export default function CreateItemPage() {
             <InputNumber min={1} max={9999} style={{ width: '100%' }} />
           </Form.Item>
 
-          {/* Media upload placeholder */}
-          <Form.Item label={t('media', 'Media')}>
-            <Card
-              style={{ borderStyle: 'dashed', textAlign: 'center', padding: 24 }}
-            >
-              <Typography.Text type="secondary">
-                {t('mediaUploadPlaceholder', 'Media upload will be available here')}
-              </Typography.Text>
-            </Card>
+          <Form.Item
+            label={t('media', 'Photos')}
+            required
+            validateStatus={capturedPhotos.length === 0 ? 'warning' : undefined}
+            help={capturedPhotos.length === 0 ? t('mediaHint', 'Capture at least 1 photo using your camera') : undefined}
+          >
+            <MultiCaptureUploader
+              maxPhotos={10}
+              step="item_photo"
+              facingMode="environment"
+              onPhotosChange={setCapturedPhotos}
+            />
           </Form.Item>
 
           <Form.Item>
             <Space>
-              <Button type="primary" htmlType="submit" loading={createItem.isPending}>
+              <Button type="primary" htmlType="submit" loading={submitting || createItem.isPending}>
                 {tc('action.create', 'Create')}
               </Button>
               <Button onClick={() => navigate(`${prefix}/items`)}>

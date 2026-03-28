@@ -32,12 +32,17 @@ export function AuctionCard({ auction }: AuctionCardProps) {
     <div
       className="oio-card-hover oio-press"
       onClick={() => navigate(`/auctions/${auction.id}`)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/auctions/${auction.id}`) } }}
+      tabIndex={0}
+      role="link"
+      aria-label={`${auction.itemTitle} — ${auction.status}`}
       style={{
         cursor: 'pointer',
         background: 'var(--color-bg-card)',
         borderRadius: 2,
         overflow: 'hidden',
         transition: 'transform 200ms ease, box-shadow 200ms ease',
+        outline: 'none',
       }}
     >
       {/* Image */}

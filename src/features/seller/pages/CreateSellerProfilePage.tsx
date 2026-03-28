@@ -1,8 +1,11 @@
+import { useState } from 'react'
 import { Typography, Form, Input, Button, Card, Space, App, Spin } from 'antd'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useCreateSellerProfile, useMySellerProfile } from '@/features/seller/api'
+import { TermsAcceptanceGate } from '@/features/user/components/TermsAcceptanceGate'
 import { useEffect } from 'react'
 import type { CreateSellerProfileRequest } from '@/types'
 
@@ -11,7 +14,9 @@ export default function CreateSellerProfilePage() {
   const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
   const { message } = App.useApp()
+  const { isMobile } = useBreakpoint()
   const [form] = Form.useForm<CreateSellerProfileRequest>()
+  const [hasPendingTerms, setHasPendingTerms] = useState(false)
 
   const { data: existingProfile, isLoading: profileLoading } = useMySellerProfile()
   const createProfile = useCreateSellerProfile()
@@ -19,7 +24,7 @@ export default function CreateSellerProfilePage() {
   // Redirect if already has profile
   useEffect(() => {
     if (existingProfile) {
-      navigate('/me/seller', { replace: true })
+      navigate('/seller', { replace: true })
     }
   }, [existingProfile, navigate])
 
@@ -27,7 +32,7 @@ export default function CreateSellerProfilePage() {
     try {
       await createProfile.mutateAsync(values)
       message.success(t('createSuccess', 'Seller profile created successfully'))
-      navigate('/me/seller')
+      navigate('/seller')
     } catch {
       message.error(t('createError', 'Failed to create seller profile'))
     }
@@ -35,14 +40,14 @@ export default function CreateSellerProfilePage() {
 
   if (profileLoading) {
     return (
-      <div style={{ textAlign: 'center', padding: 100 }}>
+      <div style={{ textAlign: 'center', padding: isMobile ? 48 : 100 }}>
         <Spin size="large" />
       </div>
     )
   }
 
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto' }}>
+    <div style={{ maxWidth: 720, margin: '0 auto', padding: isMobile ? '0 12px' : undefined }}>
       <Space style={{ marginBottom: 16 }}>
         <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)}>
           {tc('action.back', 'Back')}
@@ -51,6 +56,13 @@ export default function CreateSellerProfilePage() {
 
       <Typography.Title level={2}>{t('createProfile', 'Create Seller Profile')}</Typography.Title>
 
+      <TermsAcceptanceGate
+        termType="seller"
+        title={t('sellerTermsRequired', 'Seller Agreement Required')}
+        description={t('sellerTermsDesc', 'Please accept the seller agreement before creating your profile.')}
+        onPendingChange={setHasPendingTerms}
+        redirect
+      >
       <Card>
         <Form<CreateSellerProfileRequest>
           form={form}
@@ -83,7 +95,7 @@ export default function CreateSellerProfilePage() {
 
           <Form.Item>
             <Space>
-              <Button type="primary" htmlType="submit" loading={createProfile.isPending}>
+              <Button type="primary" htmlType="submit" loading={createProfile.isPending} disabled={hasPendingTerms}>
                 {tc('action.create', 'Create')}
               </Button>
               <Button onClick={() => navigate(-1)}>
@@ -93,6 +105,7 @@ export default function CreateSellerProfilePage() {
           </Form.Item>
         </Form>
       </Card>
+      </TermsAcceptanceGate>
     </div>
   )
 }
