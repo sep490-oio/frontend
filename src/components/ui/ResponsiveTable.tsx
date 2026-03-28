@@ -99,17 +99,16 @@ function MobileCardView<T extends Record<string, any>>({
   pagination,
   rowKey,
 }: MobileCardViewProps<T>) {
-  const [page, setPage] = useState(1)
-  const pageSize = typeof pagination === 'object' ? (pagination.pageSize ?? 10) : 10
-  const showPagination = pagination !== false && data.length > pageSize
-
-  const paginatedData = showPagination
-    ? data.slice((page - 1) * pageSize, page * pageSize)
-    : data
+  // Server-side pagination: data is already paginated, use server pagination props for controls
+  const paginationConfig = typeof pagination === 'object' ? pagination : null
+  const totalItems = paginationConfig?.total ?? data.length
+  const pageSize = paginationConfig?.pageSize ?? 10
+  const currentPage = paginationConfig?.current ?? 1
+  const showPagination = pagination !== false && totalItems > pageSize
 
   return (
     <Flex vertical gap={12}>
-      {paginatedData.map((record, index) => {
+      {data.map((record, index) => {
         const key = getRowKey(record, index, rowKey)
         return (
           <Card key={key} size="small" style={{ borderRadius: 8 }}>
@@ -136,15 +135,16 @@ function MobileCardView<T extends Record<string, any>>({
           </Card>
         )
       })}
-      {showPagination && (
+      {showPagination && paginationConfig && (
         <Flex justify="center" style={{ marginTop: 8 }}>
           <Pagination
-            current={page}
-            total={data.length}
+            current={currentPage}
+            total={totalItems}
             pageSize={pageSize}
-            onChange={setPage}
+            onChange={paginationConfig.onChange}
             size="small"
             simple
+            showSizeChanger={false}
           />
         </Flex>
       )}
@@ -172,18 +172,17 @@ function MobileListView<T extends Record<string, any>>({
   rowKey,
 }: MobileListViewProps<T>) {
   const [expandedKey, setExpandedKey] = useState<string | null>(null)
-  const [page, setPage] = useState(1)
-  const pageSize = typeof pagination === 'object' ? (pagination.pageSize ?? 10) : 10
-  const showPagination = pagination !== false && data.length > pageSize
-
-  const paginatedData = showPagination
-    ? data.slice((page - 1) * pageSize, page * pageSize)
-    : data
+  // Server-side pagination: data is already paginated, use server pagination props for controls
+  const paginationConfig = typeof pagination === 'object' ? pagination : null
+  const totalItems = paginationConfig?.total ?? data.length
+  const pageSize = paginationConfig?.pageSize ?? 10
+  const currentPage = paginationConfig?.current ?? 1
+  const showPagination = pagination !== false && totalItems > pageSize
 
   return (
     <Flex vertical>
       <List
-        dataSource={paginatedData as T[]}
+        dataSource={data as T[]}
         renderItem={(record, index) => {
           const key = getRowKey(record, index, rowKey)
           const isExpanded = expandedKey === key
@@ -252,15 +251,16 @@ function MobileListView<T extends Record<string, any>>({
           )
         }}
       />
-      {showPagination && (
+      {showPagination && paginationConfig && (
         <Flex justify="center" style={{ marginTop: 8 }}>
           <Pagination
-            current={page}
-            total={data.length}
+            current={currentPage}
+            total={totalItems}
             pageSize={pageSize}
-            onChange={setPage}
+            onChange={paginationConfig.onChange}
             size="small"
             simple
+            showSizeChanger={false}
           />
         </Flex>
       )}

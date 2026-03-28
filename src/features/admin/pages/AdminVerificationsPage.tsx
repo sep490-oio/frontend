@@ -54,29 +54,24 @@ export default function AdminVerificationsPage() {
 
   const columns: ColumnsType<VerificationDto> = [
     {
-      title: t('verifications.user'),
-      dataIndex: 'userId',
-      key: 'userId',
+      title: t('verifications.fullName', 'Full Name'),
+      dataIndex: 'fullName',
+      key: 'fullName',
       ellipsis: true,
+      render: (name: string) => name || '-',
     },
     {
       title: t('verifications.type'),
-      dataIndex: 'type',
-      key: 'type',
-      width: 120,
-      render: (type: string) => <StatusBadge status={type} size="small" />,
-    },
-    {
-      title: t('verifications.idType'),
-      dataIndex: 'idType',
-      key: 'idType',
+      dataIndex: 'verificationType',
+      key: 'verificationType',
       width: 140,
+      render: (type: string) => <StatusBadge status={type} size="small" />,
     },
     {
       title: t('verifications.status'),
       dataIndex: 'status',
       key: 'status',
-      width: 120,
+      width: 130,
       render: (status: string) => <StatusBadge status={status} />,
     },
     {
@@ -87,6 +82,13 @@ export default function AdminVerificationsPage() {
       render: (date: string) => date ? formatDateTime(date) : '-',
     },
     {
+      title: t('verifications.attempts', 'Attempts'),
+      dataIndex: 'attemptCount',
+      key: 'attemptCount',
+      width: 90,
+      align: 'center' as const,
+    },
+    {
       title: t('verifications.actions'),
       key: 'actions',
       width: 220,
@@ -95,7 +97,9 @@ export default function AdminVerificationsPage() {
           <Button type="link" size="small" onClick={() => navigate(`/admin/verifications/${record.id}`)}>
             {t('verifications.view')}
           </Button>
-          {record.status === IdentityVerificationStatus.Pending && (
+          {(record.status === IdentityVerificationStatus.Pending ||
+            record.status === IdentityVerificationStatus.Submitted ||
+            record.status === IdentityVerificationStatus.UnderReview) && (
             <>
               <Button type="link" size="small" onClick={() => handleApprove(record.id)}>
                 {t('verifications.approve')}

@@ -46,7 +46,9 @@ export default function AdminVerificationDetailPage() {
     }
   }
 
-  const isPending = verification.status === IdentityVerificationStatus.Pending
+  const isPending = verification.status === IdentityVerificationStatus.Pending ||
+    verification.status === IdentityVerificationStatus.Submitted ||
+    verification.status === IdentityVerificationStatus.UnderReview
 
   return (
     <div>

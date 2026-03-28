@@ -10,15 +10,18 @@ export type PermissionName = string
 
 export interface MonitoringAlertDto {
   id: string
-  type: string
+  alertType: string
   severity: AlertSeverity
   status: AlertStatus
-  message: string
-  entityType?: string
-  entityId?: string
-  createdAt: string
+  payload: string
+  entityType: string
+  entityId: string
+  notes?: string
+  acknowledgedBy?: string
   acknowledgedAt?: string
+  resolvedBy?: string
   resolvedAt?: string
+  createdAt: string
 }
 
 export interface UserRiskFlagDto {

@@ -95,9 +95,10 @@ export default function AdminMonitoringPage() {
   const columns: ColumnsType<MonitoringAlertDto> = [
     {
       title: t('monitoring.type'),
-      dataIndex: 'type',
-      key: 'type',
-      width: 120,
+      dataIndex: 'alertType',
+      key: 'alertType',
+      width: 140,
+      render: (type: string) => <StatusBadge status={type} size="small" />,
     },
     {
       title: t('monitoring.severity'),
@@ -118,10 +119,24 @@ export default function AdminMonitoringPage() {
       render: (status: string) => <StatusBadge status={status} />,
     },
     {
-      title: t('monitoring.message'),
-      dataIndex: 'message',
-      key: 'message',
+      title: t('monitoring.entity', 'Entity'),
+      dataIndex: 'entityType',
+      key: 'entityType',
+      width: 120,
+    },
+    {
+      title: t('monitoring.payload', 'Details'),
+      dataIndex: 'payload',
+      key: 'payload',
       ellipsis: true,
+      render: (payload: string) => {
+        try {
+          const parsed = JSON.parse(payload)
+          return parsed.message || parsed.reason || JSON.stringify(parsed).slice(0, 80)
+        } catch {
+          return payload?.slice(0, 80) || '-'
+        }
+      },
     },
     {
       title: t('monitoring.createdAt'),
