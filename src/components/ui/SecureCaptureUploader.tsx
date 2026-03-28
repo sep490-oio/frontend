@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { Button, Typography, Alert, Upload, Flex } from 'antd'
 import { CameraOutlined, ReloadOutlined, CheckOutlined, UploadOutlined } from '@ant-design/icons'
 import { useCamera } from '@/hooks/useCamera'
@@ -53,14 +53,15 @@ export function SecureCaptureUploader({
   const [capturedMeta, setCapturedMeta] = useState<Partial<CaptureMetadata> | null>(null)
   const [qualityIssues, setQualityIssues] = useState<string[]>([])
   const [showLiveness, setShowLiveness] = useState(step === 'selfie')
+  const [cameraStarted, setCameraStarted] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
-  useEffect(() => {
-    if (isSupported) {
-      startCamera({ facingMode })
-    }
-    return () => stopCamera()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  // Camera must be started from a user gesture (tap/click) for Safari iOS compatibility.
+  // Do NOT auto-start in useEffect — getUserMedia requires user interaction on mobile browsers.
+  const handleStartCamera = () => {
+    startCamera({ facingMode })
+    setCameraStarted(true)
+  }
 
   const handleCapture = () => {
     const result = takeSnapshot(step)
@@ -108,7 +109,7 @@ export function SecureCaptureUploader({
     setCapturedBlob(null)
     setCapturedMeta(null)
     setQualityIssues([])
-    if (!isActive) startCamera({ facingMode })
+    if (!isActive) handleStartCamera()
   }
 
   // Fallback: file picker when camera not supported
@@ -145,6 +146,36 @@ export function SecureCaptureUploader({
             Use this photo
           </Button>
         </Flex>
+      </div>
+    )
+  }
+
+  // Show "Open Camera" button if camera hasn't been started yet (user gesture required for mobile)
+  if (!cameraStarted && !preview) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 12,
+          padding: 32,
+          background: 'var(--color-bg-surface)',
+          borderRadius: 8,
+          border: '2px dashed var(--color-border)',
+          minHeight: 200,
+          cursor: 'pointer',
+        }}
+        onClick={handleStartCamera}
+      >
+        <CameraOutlined style={{ fontSize: 48, color: 'var(--color-accent)' }} />
+        <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-text-primary)' }}>
+          {instruction || STEP_INSTRUCTIONS[step] || 'Tap to open camera'}
+        </span>
+        <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+          Tap here to activate your camera
+        </span>
       </div>
     )
   }

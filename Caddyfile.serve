@@ -2,7 +2,7 @@
 # Serves the built React SPA with:
 #   - try_files fallback to index.html (client-side routing)
 #   - gzip compression
-:80 {
+newlsun.com {
 	root * /srv
 	try_files {path} /index.html
 	file_server

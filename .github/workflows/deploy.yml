@@ -53,7 +53,7 @@ jobs:
              docker pull ${{ env.IMAGE }}:latest && \
              docker stop oio-frontend || true && \
              docker rm oio-frontend || true && \
-             docker run -d --name oio-frontend -p 3000:80 --restart unless-stopped ${{ env.IMAGE }}:latest"
+             docker run -d --name oio-frontend -p 80:80 -p 443:443 --restart unless-stopped ${{ env.IMAGE }}:latest"
 
           # Clean up
           rm -f ~/.ssh/deploy_key
