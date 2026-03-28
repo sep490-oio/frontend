@@ -49,9 +49,10 @@ jobs:
           # Log in to ghcr.io on VPS, then pull and restart
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key root@${{ secrets.VPS_HOST }} \
             "echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin && \
-             cd /opt/myapp && \
-             docker compose pull frontend && \
-             docker compose up -d frontend"
+             docker pull ${{ env.IMAGE }}:latest && \
+             docker stop oio-frontend || true && \
+             docker rm oio-frontend || true && \
+             docker run -d --name oio-frontend -p 3000:80 --restart unless-stopped ${{ env.IMAGE }}:latest"
 
           # Clean up
           rm -f ~/.ssh/deploy_key
