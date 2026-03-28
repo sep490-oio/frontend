@@ -37,8 +37,8 @@ jobs:
             ${{ env.IMAGE }}:${{ github.sha }}
             ${{ env.IMAGE }}:latest
           build-args: |
-            VITE_API_URL=${{ vars.VITE_API_URL }}
-            VITE_SIGNALR_URL=${{ vars.VITE_SIGNALR_URL }}
+            VITE_API_URL=${{ vars.VITE_API_URL || 'https://api.newlsun.com/api' }}
+            VITE_SIGNALR_URL=${{ vars.VITE_SIGNALR_URL || 'https://api.newlsun.com/hubs' }}
 
       - name: Deploy to VPS
         run: |
