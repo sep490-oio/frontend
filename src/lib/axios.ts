@@ -1,5 +1,5 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
-import { API_URL, STORAGE_KEYS } from '@/utils/constants'
+import { API_URL, STORAGE_KEYS, uuid } from '@/utils/constants'
 
 const apiClient = axios.create({
   baseURL: API_URL,
@@ -38,7 +38,7 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
       config.headers.Authorization = `Bearer ${token}`
     }
   }
-  config.headers['X-Correlation-Id'] = crypto.randomUUID()
+  config.headers['X-Correlation-Id'] = uuid()
   return config
 })
 
@@ -122,14 +122,14 @@ apiClient.interceptors.response.use(
 export function idempotentPost<T = unknown>(url: string, data?: unknown, config?: Parameters<typeof apiClient.post>[2]) {
   return apiClient.post<T>(url, data, {
     ...config,
-    headers: { ...config?.headers, 'Idempotency-Key': crypto.randomUUID() },
+    headers: { ...config?.headers, 'Idempotency-Key': uuid() },
   })
 }
 
 export function idempotentPut<T = unknown>(url: string, data?: unknown, config?: Parameters<typeof apiClient.put>[2]) {
   return apiClient.put<T>(url, data, {
     ...config,
-    headers: { ...config?.headers, 'Idempotency-Key': crypto.randomUUID() },
+    headers: { ...config?.headers, 'Idempotency-Key': uuid() },
   })
 }
 

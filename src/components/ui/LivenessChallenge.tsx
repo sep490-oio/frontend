@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Typography, Button, Flex } from 'antd'
 import { EyeOutlined, ArrowLeftOutlined, ArrowRightOutlined, ReloadOutlined } from '@ant-design/icons'
 import type { CaptureMetadata, LivenessChallenge as ChallengeType } from '@/types/capture'
+import { uuid } from '@/utils/constants'
 
 interface LivenessChallengeProps {
   videoRef: React.RefObject<HTMLVideoElement | null>
@@ -22,7 +23,7 @@ export function LivenessChallengeOverlay({ videoRef, onComplete, onFail, step }:
   const [attempts, setAttempts] = useState(0)
   const [countdown, setCountdown] = useState(10)
   const framesRef = useRef<{ blob: Blob; metadata: Partial<CaptureMetadata> }[]>([])
-  const burstId = useRef(crypto.randomUUID())
+  const burstId = useRef(uuid())
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const captureRef = useRef<ReturnType<typeof setInterval> | null>(null)
 

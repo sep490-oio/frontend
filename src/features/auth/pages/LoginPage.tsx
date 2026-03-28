@@ -6,7 +6,7 @@ import { App, Input, Button, Form } from 'antd'
 import { Link, useNavigate } from 'react-router'
 import { useAppDispatch, setCredentials, set2FARequired } from '@/app/store'
 import { useLogin } from '@/features/auth/api'
-import { STORAGE_KEYS } from '@/utils/constants'
+import { STORAGE_KEYS, uuid } from '@/utils/constants'
 import type { AxiosError } from 'axios'
 import type { ApiError } from '@/types'
 
@@ -27,7 +27,7 @@ function getRedirectPath(token: string): string {
 function getOrCreateDeviceId(): string {
   let deviceId = localStorage.getItem(STORAGE_KEYS.DEVICE_ID)
   if (!deviceId) {
-    deviceId = crypto.randomUUID()
+    deviceId = uuid()
     localStorage.setItem(STORAGE_KEYS.DEVICE_ID, deviceId)
   }
   return deviceId
