@@ -6,6 +6,7 @@ import { useRoutePrefix } from '@/hooks/useRoutePrefix'
 import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useCreateItem, useCategories } from '@/features/item/api'
+import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { MultiCaptureUploader } from '@/components/ui/MultiCaptureUploader'
 import type { CapturedPhoto } from '@/components/ui/MultiCaptureUploader'
 import { ItemCondition } from '@/types/enums'
@@ -26,8 +27,10 @@ export default function CreateItemPage() {
   const [form] = Form.useForm<CreateItemRequest>()
 
   const createItem = useCreateItem()
+  const mediaUpload = useMediaUpload('item_image')
   const { data: categories, isLoading: categoriesLoading } = useCategories()
   const [capturedPhotos, setCapturedPhotos] = useState<CapturedPhoto[]>([])
+  const [submitting, setSubmitting] = useState(false)
 
   const categoryOptions = (categories ?? []).map((cat) => ({
     label: cat.name,
@@ -40,22 +43,32 @@ export default function CreateItemPage() {
       return
     }
 
+    setSubmitting(true)
     try {
-      const images = capturedPhotos.map((photo, i) => ({
-        blob: photo.blob,
-        metadata: photo.metadata,
+      // Step 1: Upload each captured photo to Cloudinary via the 3-step upload flow
+      const files = capturedPhotos.map((photo, i) =>
+        new File([photo.blob], `item-photo-${i + 1}.jpg`, { type: 'image/jpeg' })
+      )
+      const uploadResults = await mediaUpload.uploadMultiple(files)
+
+      // Step 2: Map upload results to the format BE expects (mediaUploadId only)
+      const images = uploadResults.map((result, i) => ({
+        mediaUploadId: result.mediaUploadId,
         isPrimary: i === 0,
         sortOrder: i,
       }))
 
+      // Step 3: Create the item with uploaded media IDs
       await createItem.mutateAsync({
         ...values,
-        images: images as any,
+        images,
       })
       message.success(t('createSuccess', 'Item created successfully'))
       navigate(`${prefix}/items`)
     } catch {
       message.error(t('createError', 'Failed to create item'))
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -145,7 +158,7 @@ export default function CreateItemPage() {
 
           <Form.Item>
             <Space>
-              <Button type="primary" htmlType="submit" loading={createItem.isPending}>
+              <Button type="primary" htmlType="submit" loading={submitting || createItem.isPending}>
                 {tc('action.create', 'Create')}
               </Button>
               <Button onClick={() => navigate(`${prefix}/items`)}>

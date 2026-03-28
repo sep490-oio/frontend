@@ -23,6 +23,7 @@ import { useCreateAuction, useCreateAuctionFromItem, useUpdateAuction, useSubmit
 import { useCategories, useSubmitItem, useItemById } from '@/features/item/api'
 import { MultiCaptureUploader } from '@/components/ui/MultiCaptureUploader'
 import type { CapturedPhoto } from '@/components/ui/MultiCaptureUploader'
+import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { AuctionTimingSection } from '@/features/auction/components/AuctionTimingSection'
 import { AuctionType, ItemCondition } from '@/types/enums'
@@ -108,6 +109,7 @@ export default function CreateAuctionPage() {
   const [form] = Form.useForm<FormValues>()
   const createAuction = useCreateAuction()
   const createAuctionFromItem = useCreateAuctionFromItem()
+  const mediaUpload = useMediaUpload('item_image')
   const { data: categories } = useCategories()
   const [capturedPhotos, setCapturedPhotos] = useState<CapturedPhoto[]>([])
   const [requireVerification, setRequireVerification] = useState(false)
@@ -161,7 +163,15 @@ export default function CreateAuctionPage() {
     })
   }
 
-  const buildPayload = (values: FormValues): CreateAuctionRequest => ({
+  const uploadCapturedPhotos = async () => {
+    if (capturedPhotos.length === 0) return []
+    const files = capturedPhotos.map((photo, i) =>
+      new File([photo.blob], `auction-item-photo-${i + 1}.jpg`, { type: 'image/jpeg' })
+    )
+    return mediaUpload.uploadMultiple(files)
+  }
+
+  const buildPayload = (values: FormValues, uploadedImages?: { mediaUploadId: string }[]): CreateAuctionRequest => ({
     title: values.title,
     condition: values.condition,
     categoryId: values.categoryId,
@@ -174,11 +184,10 @@ export default function CreateAuctionPage() {
     buyNowPrice: values.buyNowPrice,
     extensionMinutes: values.extensionMinutes,
     currency: values.currency,
-    capturedPhotos: capturedPhotos.map((photo, index) => ({
-      blob: photo.blob,
-      metadata: photo.metadata,
-      isPrimary: index === 0,
-      sortOrder: index,
+    images: uploadedImages?.map((img, i) => ({
+      mediaUploadId: img.mediaUploadId,
+      isPrimary: i === 0,
+      sortOrder: i,
     })),
     verifyByPlatform: requireVerification,
   }) as any as CreateAuctionRequest
@@ -216,7 +225,8 @@ export default function CreateAuctionPage() {
             auctionType: values.auctionType,
           })
         } else {
-          result = await createAuction.mutateAsync(buildPayload(values))
+          const uploadedImages = await uploadCapturedPhotos()
+          result = await createAuction.mutateAsync(buildPayload(values, uploadedImages))
         }
         // Chain: set timing if provided
         if (hasTimingValues(values)) {
@@ -303,7 +313,8 @@ export default function CreateAuctionPage() {
           message.success(t('auctionCreated', 'Auction created successfully'))
         }
       } else {
-        const payload = buildPayload(values)
+        const uploadedImages2 = await uploadCapturedPhotos()
+        const payload = buildPayload(values, uploadedImages2)
         const result = await createAuction.mutateAsync(payload)
         // Auto-submit item for admin review
         try {
