@@ -365,7 +365,7 @@ export default function CreateAuctionPage() {
   const pricingSectionNumber = hideItemFields ? 1 : 3
 
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto' }}>
+    <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 clamp(12px,3vw,0px)' }}>
       <Space style={{ marginBottom: 16 }}>
         <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate(`${prefix}/auctions`)}>
           {tc('action.back', 'Back')}
@@ -385,7 +385,7 @@ export default function CreateAuctionPage() {
           style={{ borderRadius: 12, border: '1px solid var(--color-border)', marginBottom: 16 }}
         >
           <SectionHeader number={1} title="Vật phẩm đã chọn" />
-          <div style={{ display: 'flex', gap: 16 }}>
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             {existingItemForPreview.images && existingItemForPreview.images.length > 0 && (
               <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
                 <Image.PreviewGroup>
@@ -634,11 +634,12 @@ export default function CreateAuctionPage() {
 
           {/* ── Submit Buttons ── */}
           <Form.Item style={{ marginTop: 24, marginBottom: 0 }}>
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
               <Button
                 size="large"
                 onClick={() => navigate(`${prefix}/auctions`)}
                 style={{
+                  flex: '0 1 auto',
                   borderRadius: 8,
                   borderColor: 'var(--color-border)',
                   color: 'var(--color-text-secondary)',
@@ -652,6 +653,7 @@ export default function CreateAuctionPage() {
                 loading={savingDraft && (createAuction.isPending || createAuctionFromItem.isPending || updateAuction.isPending)}
                 disabled={(!hideItemFields && capturedPhotos.length === 0) || createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending}
                 style={{
+                  flex: '1 1 120px',
                   borderRadius: 8,
                   borderColor: 'var(--color-accent)',
                   color: 'var(--color-accent)',
@@ -666,6 +668,7 @@ export default function CreateAuctionPage() {
                 loading={!savingDraft && (createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending)}
                 disabled={(!hideItemFields && capturedPhotos.length === 0) || createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending}
                 style={{
+                  flex: '1 1 140px',
                   background: 'var(--color-accent)',
                   borderColor: 'var(--color-accent)',
                   borderRadius: 8,

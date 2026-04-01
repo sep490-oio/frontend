@@ -40,6 +40,15 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>
 
+// ✅ responsive fix: inject mobile styles once
+const mobileStyles = `
+  @media (max-width: 768px) {
+    .oio-login-heading { font-size: 22px !important; }
+    .oio-login-btn { height: 44px !important; font-size: 14px !important; }
+    .oio-login-input { height: 44px !important; }
+  }
+`
+
 export default function LoginPage() {
   const { t } = useTranslation('auth')
   const { message } = App.useApp()
@@ -87,9 +96,12 @@ export default function LoginPage() {
 
   return (
     <div className="oio-fade-in" style={{ width: '100%' }}>
+      {/* ✅ responsive fix: inject scoped media query */}
+      <style>{mobileStyles}</style>
+
       {/* Heading */}
       <h2
-        className="oio-serif"
+        className="oio-serif oio-login-heading"
         style={{ fontSize: 28, margin: '0 0 4px', color: 'var(--color-text-primary)' }}
       >
         {t('login.title', 'Sign In')}
@@ -113,6 +125,7 @@ export default function LoginPage() {
                 {...field}
                 placeholder={t('login.accountPlaceholder')}
                 autoFocus
+                className="oio-login-input"
                 style={{
                   height: 48,
                   borderRadius: 2,
@@ -136,6 +149,7 @@ export default function LoginPage() {
               <Input.Password
                 {...field}
                 placeholder={t('login.passwordPlaceholder')}
+                className="oio-login-input"
                 style={{
                   height: 48,
                   borderRadius: 2,
@@ -162,6 +176,7 @@ export default function LoginPage() {
             htmlType="submit"
             block
             loading={loginMutation.isPending}
+            className="oio-login-btn"
             style={{
               height: 48,
               borderRadius: 2,

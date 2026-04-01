@@ -31,66 +31,173 @@ export default function AuctionListPage() {
       {/* ════════════════════════════════════════════════════════════════
           SECTION 1: HERO
           ════════════════════════════════════════════════════════════════ */}
-      <section style={{ padding: '64px 24px', background: 'var(--color-bg-surface)' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <Row gutter={[48, 32]} align="middle">
-            <Col xs={24} md={12}>
-              <h1 style={{ fontFamily: SERIF, fontSize: 42, fontWeight: 400, lineHeight: 1.15, color: 'var(--color-text-primary)', marginBottom: 16, letterSpacing: '-0.02em' }}>
-                {t('heroTitle', 'Sở hữu tuyệt tác —')}<br />
-                <span style={{ color: 'var(--color-accent)' }}>{t('heroHighlight', 'Đã được kiểm định')}</span>
-              </h1>
-              <p style={{ fontSize: 16, color: 'var(--color-text-secondary)', lineHeight: 1.6, marginBottom: 24, maxWidth: 400 }}>
-                {t('heroSubtitle', 'Nền tảng đấu giá trực tuyến hàng đầu. Trải nghiệm những sản phẩm xác thực chuyên nghiệp, minh bạch và đáng tin cậy.')}
-              </p>
-              <Flex gap={12} style={{ marginBottom: 32 }}>
-                <Button type="primary" size="large" onClick={() => navigate('/auctions')} style={{ borderRadius: 4, background: 'var(--color-accent)', borderColor: 'var(--color-accent)', fontWeight: 500 }}>
-                  {t('heroExplore', 'Khám phá đấu giá')} <ArrowRightOutlined />
-                </Button>
-                <Button size="large" onClick={() => navigate('/seller/register')} style={{ borderRadius: 4, borderColor: 'var(--color-accent)', color: 'var(--color-accent)', fontWeight: 500 }}>
-                  {t('heroConsign', 'Ký gửi vật phẩm')}
-                </Button>
-              </Flex>
-              <Flex gap={40}>
-                {[
-                  { value: '12K+', label: t('heroStatItems', 'Sản phẩm') },
-                  { value: '45K+', label: t('heroStatUsers', 'Người dùng') },
-                  { value: '100%', label: t('heroStatVerified', 'Kiểm định') },
-                ].map((s) => (
-                  <div key={s.label}>
-                    <div style={{ fontFamily: MONO, fontSize: 24, fontWeight: 600, color: 'var(--color-text-primary)' }}>{s.value}</div>
-                    <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{s.label}</div>
-                  </div>
-                ))}
-              </Flex>
-            </Col>
-            {heroItem && (
-              <Col xs={24} md={12}>
-                <div onClick={() => navigate(`/auctions/${heroItem.id}`)} className="oio-card-hover" style={{ cursor: 'pointer', borderRadius: 12, overflow: 'hidden', background: 'var(--color-bg-card)', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-md)' }}>
-                  {heroItem.primaryImageUrl && (
-                    <div style={{ aspectRatio: '16/10', overflow: 'hidden' }}>
-                      <img src={heroItem.primaryImageUrl} alt={heroItem.itemTitle} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    </div>
-                  )}
-                  <div style={{ padding: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>Đấu giá nổi bật</div>
-                      <div style={{ fontFamily: MONO, fontSize: 20, fontWeight: 600, color: 'var(--color-accent)' }}>
-                        {formatCurrency(heroItem.currentPrice?.amount ?? 0, heroItem.currency)}
-                      </div>
-                    </div>
-                    {heroItem.endTime && <CountdownTimer endTime={heroItem.endTime} size="default" />}
-                  </div>
-                </div>
-              </Col>
-            )}
-          </Row>
+      <section style={{ padding: 'clamp(32px, 6vw, 64px) clamp(16px, 4vw, 24px)', background: 'var(--color-bg-surface)' }}>
+  <style>{`
+    .hero-btn-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 32px;
+      justify-content: flex-start;
+    }
+    @media (max-width: 767px) {
+      .hero-btn-group {
+        justify-content: center;
+      }
+      .hero-btn-group .ant-btn {
+        flex: 1;
+        min-width: 0;
+      }
+      .hero-stats-row {
+        justify-content: center;
+      }
+    }
+  `}</style>
+
+  <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+    <Row gutter={[48, 32]} align="middle">
+      <Col xs={24} md={12}>
+        <h1 style={{
+          fontFamily: SERIF,
+          fontSize: 'clamp(26px, 5vw, 42px)',
+          fontWeight: 400,
+          lineHeight: 1.15,
+          color: 'var(--color-text-primary)',
+          marginBottom: 16,
+          letterSpacing: '-0.02em',
+        }}>
+          {t('heroTitle', 'Sở hữu tuyệt tác —')}<br />
+          <span style={{ color: 'var(--color-accent)' }}>{t('heroHighlight', 'Đã được kiểm định')}</span>
+        </h1>
+
+        <p style={{
+          fontSize: 'clamp(14px, 2vw, 16px)',
+          color: 'var(--color-text-secondary)',
+          lineHeight: 1.6,
+          marginBottom: 24,
+          maxWidth: 400,
+        }}>
+          {t('heroSubtitle', 'Nền tảng đấu giá trực tuyến hàng đầu. Trải nghiệm những sản phẩm xác thực chuyên nghiệp, minh bạch và đáng tin cậy.')}
+        </p>
+
+        <div className="hero-btn-group">
+          <Button
+            type="primary"
+            size="large"
+            onClick={() => navigate('/auctions')}
+            style={{
+              borderRadius: 4,
+              background: 'var(--color-accent)',
+              borderColor: 'var(--color-accent)',
+              fontWeight: 500,
+            }}
+          >
+            {t('heroExplore', 'Khám phá đấu giá')}
+          </Button>
+          <Button
+            size="large"
+            onClick={() => navigate('/seller/register')}
+            style={{
+              borderRadius: 4,
+              borderColor: 'var(--color-accent)',
+              color: 'var(--color-accent)',
+              fontWeight: 500,
+            }}
+          >
+            {t('heroConsign', 'Ký gửi vật phẩm')}
+          </Button>
         </div>
-      </section>
+
+        <Flex gap={24} wrap="wrap" className="hero-stats-row">
+          {[
+            { value: '12K+', label: t('heroStatItems', 'Sản phẩm') },
+            { value: '45K+', label: t('heroStatUsers', 'Người dùng') },
+            { value: '100%', label: t('heroStatVerified', 'Kiểm định') },
+          ].map((s) => (
+            <div key={s.label} style={{ minWidth: 60 }}>
+              <div style={{
+                fontFamily: MONO,
+                fontSize: 'clamp(18px, 3vw, 24px)',
+                fontWeight: 600,
+                color: 'var(--color-text-primary)',
+              }}>
+                {s.value}
+              </div>
+              <div style={{
+                fontSize: 11,
+                color: 'var(--color-text-secondary)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+              }}>
+                {s.label}
+              </div>
+            </div>
+          ))}
+        </Flex>
+      </Col>
+
+      {heroItem && (
+        <Col xs={24} md={12}>
+          <div
+            onClick={() => navigate(`/auctions/${heroItem.id}`)}
+            className="oio-card-hover"
+            style={{
+              cursor: 'pointer',
+              borderRadius: 12,
+              overflow: 'hidden',
+              background: 'var(--color-bg-card)',
+              border: '1px solid var(--color-border)',
+              boxShadow: 'var(--shadow-md)',
+            }}
+          >
+            {heroItem.primaryImageUrl && (
+              <div style={{ aspectRatio: '16/10', overflow: 'hidden' }}>
+                <img
+                  src={heroItem.primaryImageUrl}
+                  alt={heroItem.itemTitle}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </div>
+            )}
+            <div style={{
+              padding: 'clamp(12px, 3vw, 20px)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: 8,
+            }}>
+              <div>
+                <div style={{
+                  fontSize: 11,
+                  color: 'var(--color-text-secondary)',
+                  textTransform: 'uppercase',
+                  marginBottom: 4,
+                }}>
+                  Đấu giá nổi bật
+                </div>
+                <div style={{
+                  fontFamily: MONO,
+                  fontSize: 'clamp(16px, 3vw, 20px)',
+                  fontWeight: 600,
+                  color: 'var(--color-accent)',
+                }}>
+                  {formatCurrency(heroItem.currentPrice?.amount ?? 0, heroItem.currency)}
+                </div>
+              </div>
+              {heroItem.endTime && <CountdownTimer endTime={heroItem.endTime} size="default" />}
+            </div>
+          </div>
+        </Col>
+      )}
+    </Row>
+  </div>
+</section>
 
       {/* ════════════════════════════════════════════════════════════════
           SECTION 1B: NEWLY LISTED
           ════════════════════════════════════════════════════════════════ */}
-      <section style={{ padding: '48px 24px' }}>
+      <section style={{ padding: 'clamp(32px,5vw,48px) clamp(12px,4vw,24px)' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <Flex justify="space-between" align="center" style={{ marginBottom: 24 }}>
             <h2 style={{ fontFamily: SERIF, fontWeight: 400, fontSize: 24, color: 'var(--color-text-primary)', margin: 0 }}>
@@ -144,7 +251,7 @@ export default function AuctionListPage() {
       {/* ════════════════════════════════════════════════════════════════
           SECTION 1C: TRENDING
           ════════════════════════════════════════════════════════════════ */}
-      <section style={{ padding: '48px 24px', background: 'var(--color-bg-surface)' }}>
+      <section style={{ padding: 'clamp(32px,5vw,48px) clamp(12px,4vw,24px)', background: 'var(--color-bg-surface)' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <Flex justify="space-between" align="center" style={{ marginBottom: 24 }}>
             <h2 style={{ fontFamily: SERIF, fontWeight: 400, fontSize: 24, color: 'var(--color-text-primary)', margin: 0 }}>
@@ -198,13 +305,13 @@ export default function AuctionListPage() {
       {/* ════════════════════════════════════════════════════════════════
           SECTION 2: CATEGORIES
           ════════════════════════════════════════════════════════════════ */}
-      <section style={{ padding: '64px 24px' }}>
+      <section style={{ padding: 'clamp(32px,5vw,64px) clamp(12px,4vw,24px)' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 40 }}>
             <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--color-accent)', marginBottom: 8 }}>
               {t('categoriesLabel', 'TẤT CẢ DANH MỤC')}
             </div>
-            <h2 style={{ fontFamily: SERIF, fontWeight: 400, fontSize: 32, color: 'var(--color-text-primary)', margin: '0 0 8px' }}>
+            <h2 style={{ fontFamily: SERIF, fontWeight: 400, fontSize: 'clamp(22px,4vw,32px)', color: 'var(--color-text-primary)', margin: '0 0 8px' }}>
               {t('categoriesTitle', 'Danh mục')}
             </h2>
             <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', margin: 0 }}>
@@ -214,7 +321,7 @@ export default function AuctionListPage() {
           {!categories?.length ? (
             <div style={{ textAlign: 'center', color: 'var(--color-text-secondary)', padding: '24px 0' }}>...</div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, maxWidth: 900, margin: '0 auto' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 12, maxWidth: 900, margin: '0 auto' }}>
               {categories.slice(0, 6).map((cat) => (
                 <div
                   key={cat.id}
@@ -223,10 +330,10 @@ export default function AuctionListPage() {
                   role="link"
                   onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/auctions?categoryId=${cat.id}`) }}
                   className="oio-card-hover"
-                  style={{ padding: 24, border: '1px solid var(--color-border)', borderRadius: 8, cursor: 'pointer', background: 'var(--color-bg-card)', transition: 'box-shadow 200ms ease, border-color 200ms ease' }}
+                  style={{ padding: 'clamp(14px,3vw,24px)', border: '1px solid var(--color-border)', borderRadius: 8, cursor: 'pointer', background: 'var(--color-bg-card)', transition: 'box-shadow 200ms ease, border-color 200ms ease' }}
                 >
-                  <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 4 }}>{cat.name}</div>
-                  <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{cat.slug}</div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 4 }}>{cat.name}</div>
+                  <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{cat.slug}</div>
                 </div>
               ))}
             </div>
@@ -237,7 +344,7 @@ export default function AuctionListPage() {
       {/* ════════════════════════════════════════════════════════════════
           SECTION 3: TRUST & SECURITY
           ════════════════════════════════════════════════════════════════ */}
-      <section style={{ padding: '64px 24px' }}>
+      <section style={{ padding: 'clamp(32px,5vw,64px) clamp(12px,4vw,24px)' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', textAlign: 'center' }}>
           <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--color-accent)', marginBottom: 8 }}>
             {tc('about.trustLabel', 'Trust & Security')}
@@ -266,7 +373,7 @@ export default function AuctionListPage() {
       {/* ════════════════════════════════════════════════════════════════
           SECTION 4: FEATURED AUCTIONS
           ════════════════════════════════════════════════════════════════ */}
-      <section style={{ padding: '48px 24px' }}>
+      <section style={{ padding: 'clamp(32px,5vw,48px) clamp(12px,4vw,24px)' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <Flex justify="space-between" align="center" style={{ marginBottom: 24 }}>
             <h2 style={{ fontFamily: SERIF, fontWeight: 400, fontSize: 24, color: 'var(--color-text-primary)', margin: 0 }}>
@@ -276,7 +383,7 @@ export default function AuctionListPage() {
               {t('viewAll', 'Xem tất cả')} <ArrowRightOutlined />
             </a>
           </Flex>
-          <div className="oio-stagger" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 24 }}>
+          <div className="oio-stagger" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 260px), 1fr))', gap: 16 }}>
             {featured.map((auction) => (
               <AuctionCard key={auction.id} auction={auction} />
             ))}
@@ -287,17 +394,17 @@ export default function AuctionListPage() {
       {/* ════════════════════════════════════════════════════════════════
           SECTION 5: CTA BANNER
           ════════════════════════════════════════════════════════════════ */}
-      <section style={{ padding: '48px 24px 80px' }}>
-        <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 48px', borderRadius: 16, background: 'var(--color-accent-light)', border: '1px solid var(--color-border)', textAlign: 'center' }}>
-          <h2 style={{ fontFamily: SERIF, fontWeight: 400, fontSize: 24, color: 'var(--color-text-primary)', marginBottom: 8 }}>
+      <section style={{ padding: 'clamp(32px,5vw,48px) clamp(12px,4vw,24px) clamp(40px,6vw,80px)' }}>
+        <div style={{ maxWidth: 800, margin: '0 auto', padding: 'clamp(24px,5vw,40px) clamp(16px,5vw,48px)', borderRadius: 16, background: 'var(--color-accent-light)', border: '1px solid var(--color-border)', textAlign: 'center' }}>
+          <h2 style={{ fontFamily: SERIF, fontWeight: 400, fontSize: 'clamp(18px,4vw,24px)', color: 'var(--color-text-primary)', marginBottom: 8 }}>
             {tc('about.ctaTitle', 'Start Exploring')}
           </h2>
-          <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, marginBottom: 24, maxWidth: 400, margin: '0 auto 24px' }}>
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, maxWidth: 400, margin: '0 auto 24px' }}>
             {tc('about.ctaDescription', 'Discover thousands of unique products waiting for you on OIO.')}
           </p>
-          <Flex gap={12} justify="center">
-            <Input placeholder="Nhập email của bạn" style={{ maxWidth: 300, height: 44, borderRadius: 4, borderColor: 'var(--color-border)' }} />
-            <Button type="primary" style={{ height: 44, borderRadius: 4, background: 'var(--color-accent)', borderColor: 'var(--color-accent)', fontWeight: 500 }}>
+          <Flex gap={12} justify="center" wrap="wrap">
+            <Input placeholder="Nhập email của bạn" style={{ maxWidth: 300, flex: '1 1 200px', height: 44, borderRadius: 4, borderColor: 'var(--color-border)' }} />
+            <Button type="primary" style={{ height: 44, borderRadius: 4, background: 'var(--color-accent)', borderColor: 'var(--color-accent)', fontWeight: 500, whiteSpace: 'nowrap' }}>
               {tc('about.ctaButton', 'Explore Now')}
             </Button>
           </Flex>

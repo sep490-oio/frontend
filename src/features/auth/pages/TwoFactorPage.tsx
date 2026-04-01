@@ -47,6 +47,15 @@ const totpSchema = z.object({
 
 type TotpFormValues = z.infer<typeof totpSchema>
 
+// ✅ responsive fix: scoped mobile styles
+const mobileStyles = `
+  @media (max-width: 768px) {
+    .oio-2fa-heading { font-size: 22px !important; }
+    .oio-2fa-btn { height: 44px !important; font-size: 14px !important; }
+    .oio-2fa-input { height: 48px !important; font-size: 20px !important; letter-spacing: 6px !important; }
+  }
+`
+
 export default function TwoFactorPage() {
   const { t } = useTranslation('auth')
   const { message } = App.useApp()
@@ -144,8 +153,11 @@ export default function TwoFactorPage() {
 
   return (
     <div className="oio-fade-in" style={{ width: '100%' }}>
+      {/* ✅ responsive fix: inject scoped media query */}
+      <style>{mobileStyles}</style>
+
       <h2
-        className="oio-serif"
+        className="oio-serif oio-2fa-heading"
         style={{ fontSize: 28, margin: '0 0 4px', color: 'var(--color-text-primary)' }}
       >
         {t('twoFactor.title', 'Two-Factor Authentication')}
@@ -203,6 +215,7 @@ export default function TwoFactorPage() {
                 maxLength={6}
                 autoFocus
                 disabled={expired}
+                className="oio-2fa-input"
                 style={{
                   textAlign: 'center',
                   letterSpacing: 8,
@@ -223,6 +236,7 @@ export default function TwoFactorPage() {
             block
             loading={verifyMutation.isPending}
             disabled={expired}
+            className="oio-2fa-btn"
             style={{
               height: 52,
               borderRadius: 2,

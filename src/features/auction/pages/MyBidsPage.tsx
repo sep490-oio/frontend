@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Typography, Row, Col, Card, Button, Select, Space, Pagination, Spin, Empty } from 'antd'
+import { Typography, Row, Col, Card, Button, Select, Pagination, Spin, Empty } from 'antd'
 import { HistoryOutlined, EyeOutlined, ThunderboltOutlined, TrophyOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -53,9 +53,9 @@ export default function MyBidsPage() {
   const totalCount = data?.metadata?.totalCount ?? 0
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px 80px' }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 16px 80px' }}>
       {/* Header */}
-      <div style={{ marginBottom: 32 }}>
+      <div style={{ marginBottom: 24 }}>
         <Typography.Title
           level={2}
           style={{
@@ -111,8 +111,8 @@ export default function MyBidsPage() {
       )}
 
       {/* Filter pills + sort */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 24 }}>
-        <Space style={{ flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 24 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, flex: 1 }}>
           {STATUS_PILLS.map((pill) => {
             const isActive = statusFilter === pill.value
             return (
@@ -140,7 +140,7 @@ export default function MyBidsPage() {
               </button>
             )
           })}
-        </Space>
+        </div>
         <Select
           value={sortBy}
           onChange={(v) => { setSortBy(v); setPage(1) }}
@@ -301,13 +301,13 @@ export default function MyBidsPage() {
                     </div>
 
                     {/* Buttons */}
-                    <div style={{ display: 'flex', gap: 8 }}>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       <Button
                         type="primary"
                         icon={<ThunderboltOutlined />}
                         onClick={() => navigate(`/auctions/${bid.auctionId}`)}
                         style={{
-                          flex: 1,
+                          flex: '1 1 100px',
                           borderRadius: 8,
                           fontFamily: SANS_FONT,
                           fontWeight: 500,
@@ -322,7 +322,7 @@ export default function MyBidsPage() {
                         icon={<EyeOutlined />}
                         onClick={() => navigate(`/auctions/${bid.auctionId}`)}
                         style={{
-                          flex: 1,
+                          flex: '1 1 100px',
                           borderRadius: 8,
                           fontFamily: SANS_FONT,
                           fontWeight: 500,

@@ -12,6 +12,14 @@ import type { ApiError } from '@/types'
 
 type ForgotPasswordFormValues = { email: string }
 
+// ✅ responsive fix: scoped mobile styles
+const mobileStyles = `
+  @media (max-width: 768px) {
+    .oio-forgot-btn { height: 44px !important; font-size: 14px !important; }
+    .oio-forgot-input { height: 44px !important; }
+  }
+`
+
 export default function ForgotPasswordPage() {
   const { t } = useTranslation('auth')
   const { t: tv } = useTranslation('validation')
@@ -49,6 +57,9 @@ export default function ForgotPasswordPage() {
 
   return (
     <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+      {/* ✅ responsive fix: inject scoped media query */}
+      <style>{mobileStyles}</style>
+
       <div>
         <Typography.Title level={3} style={{ marginBottom: 4 }}>
           {t('forgotPassword.title')}
@@ -72,13 +83,21 @@ export default function ForgotPasswordPage() {
                 size="large"
                 type="email"
                 autoFocus
+                className="oio-forgot-input"
               />
             )}
           />
         </Form.Item>
 
         <Form.Item>
-          <Button type="primary" htmlType="submit" block size="large" loading={forgotMutation.isPending}>
+          <Button
+            type="primary"
+            htmlType="submit"
+            block
+            size="large"
+            loading={forgotMutation.isPending}
+            className="oio-forgot-btn"
+          >
             {t('forgotPassword.submit')}
           </Button>
         </Form.Item>

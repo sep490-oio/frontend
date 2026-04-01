@@ -487,15 +487,17 @@ export default function AuctionDetailPage() {
 
   return (
     <div className="oio-fade-in" style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px 12px 48px' : '24px 24px 80px' }}>
-      {/* Breadcrumb */}
-      <Breadcrumb
-        items={[
-          { title: <a onClick={() => navigate('/')}>Home</a> },
-          { title: <a onClick={() => navigate('/auctions')}>Auctions</a> },
-          { title: item?.title ?? t('auctionDetail', 'Auction Detail') },
-        ]}
-        style={{ marginBottom: 16 }}
-      />
+      {/* Breadcrumb — desktop only */}
+      {!isMobile && (
+        <Breadcrumb
+          items={[
+            { title: <a onClick={() => navigate('/')}>Home</a> },
+            { title: <a onClick={() => navigate('/auctions')}>Auctions</a> },
+            { title: item?.title ?? t('auctionDetail', 'Auction Detail') },
+          ]}
+          style={{ marginBottom: 16 }}
+        />
+      )}
 
       {/* Back link */}
       <button
@@ -526,6 +528,11 @@ export default function AuctionDetailPage() {
             borderRadius: 8,
             background: 'rgba(196, 147, 61, 0.08)',
             border: '1px solid rgba(196, 147, 61, 0.2)',
+            display: 'flex',
+            alignItems: isMobile ? 'flex-start' : 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 10,
           }}
         >
           <Typography.Text style={{ color: 'var(--color-accent)', fontWeight: 600, fontSize: 14 }}>
@@ -534,7 +541,7 @@ export default function AuctionDetailPage() {
           <Button
             type="primary"
             size="small"
-            style={{ marginTop: 8, background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
+            style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
             onClick={() => { shippingForm.resetFields(); setShippingModalOpen(true) }}
           >
             Cấu hình vận chuyển
@@ -614,7 +621,8 @@ export default function AuctionDetailPage() {
 
         {/* ══ RIGHT COLUMN ═════════════════════════════════ */}
         <Col xs={24} lg={10} className="oio-fade-in oio-fade-in-delay-1">
-          <AuctionSidebar
+          <div style={isMobile ? {} : { position: 'sticky', top: 24 }}>
+            <AuctionSidebar
             auction={auction}
             item={item}
             currentPrice={currentPrice}
@@ -686,6 +694,7 @@ export default function AuctionDetailPage() {
             }}
             currentUserId={currentUser?.id}
           />
+          </div>
         </Col>
       </Row>
 

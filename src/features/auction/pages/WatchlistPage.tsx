@@ -67,9 +67,9 @@ export default function WatchlistPage() {
   const sortedItems = data?.items ? sortItems(data.items, sortKey) : []
 
   return (
-    <div>
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: 'clamp(16px,4vw,32px) clamp(12px,3vw,24px) 80px' }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 24 }}>
         <h1 style={{ fontFamily: SERIF_FONT, fontWeight: 400, fontSize: 28, color: 'var(--color-text-primary)', margin: 0 }}>
           {t('watchlist', 'Watchlist')}
         </h1>
@@ -173,7 +173,7 @@ export default function WatchlistPage() {
                     )}
 
                     {/* Notification preferences */}
-                    <div style={{ display: 'flex', gap: 12, borderTop: '1px solid var(--color-border-light)', paddingTop: 8 }}>
+                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', borderTop: '1px solid var(--color-border-light)', paddingTop: 8 }}>
                       <Tooltip title={t('notifyOnBid', 'Notify on new bids')}>
                         <Space size={4} style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
                           <BellOutlined style={{ fontSize: 12 }} />

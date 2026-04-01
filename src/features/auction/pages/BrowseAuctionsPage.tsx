@@ -80,7 +80,7 @@ export default function BrowseAuctionsPage() {
             type="button"
             onClick={() => updateFilter('status', pill.value)}
             style={{
-              padding: isMobile ? '6px 14px' : '8px 20px',
+              padding: isMobile ? '5px 12px' : '8px 20px',
               borderRadius: 100,
               fontSize: 13,
               fontWeight: 500,
@@ -116,6 +116,8 @@ export default function BrowseAuctionsPage() {
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           onPressEnter={() => handleSearch(searchText)}
+          onBlur={() => handleSearch(searchText)}
+          allowClear
           style={{ width: isMobile ? '100%' : 260, borderRadius: 100, height: 40, borderColor: 'var(--color-border)' }}
         />
       </Flex>

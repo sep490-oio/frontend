@@ -50,7 +50,7 @@ const STATUS_PILLS = [
 ] as const
 
 const pillBase: React.CSSProperties = {
-  padding: '8px 20px',
+  padding: '6px 14px',
   borderRadius: 100,
   fontSize: 13,
   fontWeight: 500,
@@ -486,11 +486,11 @@ export default function MyAuctionsPage() {
   ]
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 24px 80px' }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: 'clamp(20px,4vw,40px) clamp(12px,3vw,24px) 80px' }}>
       {contextHolder}
 
       {/* Header */}
-      <Flex justify="space-between" align="center" style={{ marginBottom: 32 }}>
+      <Flex justify="space-between" align="center" wrap="wrap" gap={12} style={{ marginBottom: 24 }}>
         <h2
           className="oio-serif"
           style={{
