@@ -40,7 +40,7 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>
 
-// ✅ responsive fix: inject mobile styles once
+//  responsive fix: inject mobile styles once
 const mobileStyles = `
   @media (max-width: 768px) {
     .oio-login-heading { font-size: 22px !important; }
@@ -96,7 +96,7 @@ export default function LoginPage() {
 
   return (
     <div className="oio-fade-in" style={{ width: '100%' }}>
-      {/* ✅ responsive fix: inject scoped media query */}
+      {/*  responsive fix: inject scoped media query */}
       <style>{mobileStyles}</style>
 
       {/* Heading */}

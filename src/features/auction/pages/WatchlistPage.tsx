@@ -8,6 +8,7 @@ import type { WatchlistItemDto } from '@/features/auction/api'
 import { CountdownTimer } from '@/components/ui/CountdownTimer'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatCurrency } from '@/utils/format'
+import { useBreakpoint } from '@/hooks/useBreakpoint' //  responsive fix
 
 type SortKey = 'endingSoon' | 'newest' | 'priceLow' | 'priceHigh'
 
@@ -42,6 +43,7 @@ export default function WatchlistPage() {
   const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
   const { message } = App.useApp()
+  const { isMobile } = useBreakpoint() //  responsive fix
 
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(12)
@@ -68,9 +70,17 @@ export default function WatchlistPage() {
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', padding: 'clamp(16px,4vw,32px) clamp(12px,3vw,24px) 80px' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 24 }}>
-        <h1 style={{ fontFamily: SERIF_FONT, fontWeight: 400, fontSize: 28, color: 'var(--color-text-primary)', margin: 0 }}>
+      {/* Header —  responsive fix: stack on mobile */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: isMobile ? 'flex-start' : 'flex-start',
+        flexDirection: isMobile ? 'column' : 'row', //  responsive fix
+        flexWrap: 'wrap',
+        gap: 12,
+        marginBottom: 24,
+      }}>
+        <h1 style={{ fontFamily: SERIF_FONT, fontWeight: 400, fontSize: isMobile ? 24 : 28, color: 'var(--color-text-primary)', margin: 0 }}>
           {t('watchlist', 'Watchlist')}
         </h1>
         {sortedItems.length > 0 && (
@@ -78,7 +88,12 @@ export default function WatchlistPage() {
             <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
               {tc('action.filter', 'Sort')}:
             </span>
-            <Select value={sortKey} onChange={setSortKey} style={{ width: 180 }} options={SORT_OPTIONS} />
+            <Select
+              value={sortKey}
+              onChange={setSortKey}
+              style={{ width: isMobile ? 160 : 180 }} //  responsive fix: slightly smaller on mobile
+              options={SORT_OPTIONS}
+            />
           </Space>
         )}
       </div>
@@ -102,9 +117,10 @@ export default function WatchlistPage() {
         </Empty>
       ) : (
         <>
+          {/*  responsive fix: xs={12} for 2 columns on mobile */}
           <Row gutter={[16, 16]}>
             {sortedItems.map((item) => (
-              <Col xs={24} sm={12} lg={6} key={item.auctionId}>
+              <Col xs={12} sm={12} lg={6} key={item.auctionId}>
                 <div
                   style={{
                     background: 'var(--color-bg-card)',
@@ -142,6 +158,9 @@ export default function WatchlistPage() {
                         background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(4px)',
                         cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                         boxShadow: '0 1px 4px rgba(0,0,0,0.12)',
+                        //  responsive fix: larger touch target on mobile
+                        minWidth: isMobile ? 36 : 32,
+                        minHeight: isMobile ? 36 : 32,
                       }}
                       title={t('removeFromWatchlist', 'Remove')}
                     >
@@ -154,15 +173,26 @@ export default function WatchlistPage() {
                   </div>
 
                   {/* Info */}
-                  <div style={{ padding: 12 }}>
+                  <div style={{ padding: isMobile ? 8 : 12 }}> {/*  responsive fix: tighter padding on mobile */}
                     <div
                       onClick={() => navigate(`/auctions/${item.auctionId}`)}
-                      style={{ cursor: 'pointer', fontSize: 14, fontWeight: 500, color: 'var(--color-text-primary)', marginBottom: 4, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+                      style={{
+                        cursor: 'pointer',
+                        fontSize: isMobile ? 12 : 14, //  responsive fix: smaller font on mobile
+                        fontWeight: 500,
+                        color: 'var(--color-text-primary)',
+                        marginBottom: 4,
+                        lineHeight: 1.3,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                      }}
                     >
                       {item.itemTitle}
                     </div>
 
-                    <div style={{ fontFamily: MONO_FONT, fontSize: 16, fontWeight: 600, color: 'var(--color-accent)', marginBottom: 4 }}>
+                    <div style={{ fontFamily: MONO_FONT, fontSize: isMobile ? 13 : 16, fontWeight: 600, color: 'var(--color-accent)', marginBottom: 4 }}>
                       {formatCurrency(item.currentPrice?.amount ?? 0, item.currency)}
                     </div>
 
@@ -172,8 +202,15 @@ export default function WatchlistPage() {
                       </div>
                     )}
 
-                    {/* Notification preferences */}
-                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', borderTop: '1px solid var(--color-border-light)', paddingTop: 8 }}>
+                    {/* Notification preferences —  responsive fix: vertical on mobile */}
+                    <div style={{
+                      display: 'flex',
+                      gap: isMobile ? 8 : 12,
+                      flexDirection: isMobile ? 'column' : 'row', //  responsive fix
+                      flexWrap: 'wrap',
+                      borderTop: '1px solid var(--color-border-light)',
+                      paddingTop: 8,
+                    }}>
                       <Tooltip title={t('notifyOnBid', 'Notify on new bids')}>
                         <Space size={4} style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
                           <BellOutlined style={{ fontSize: 12 }} />
@@ -210,9 +247,10 @@ export default function WatchlistPage() {
               current={data?.metadata?.currentPage ?? page}
               pageSize={data?.metadata?.pageSize ?? pageSize}
               total={data?.metadata?.totalCount ?? 0}
-              showSizeChanger
-              showTotal={(total) => tc('pagination.total', { total })}
+              showSizeChanger={!isMobile} //  responsive fix
+              showTotal={isMobile ? undefined : (total) => tc('pagination.total', { total })} //  responsive fix
               onChange={(p, ps) => { setPage(p); setPageSize(ps) }}
+              size={isMobile ? 'small' : undefined} //  responsive fix
             />
           </div>
         </>

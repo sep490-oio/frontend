@@ -14,7 +14,7 @@ const SERIF_FONT = "'DM Serif Display', Georgia, serif"
 
 type ResetPasswordFormValues = { newPassword: string; confirmPassword: string }
 
-// ✅ responsive fix: scoped mobile styles
+//  responsive fix: scoped mobile styles
 const mobileStyles = `
   @media (max-width: 768px) {
     .oio-reset-heading { font-size: 22px !important; }
@@ -96,7 +96,7 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="oio-fade-in" style={{ width: '100%' }}>
-      {/* ✅ responsive fix: inject scoped media query */}
+      {/*  responsive fix: inject scoped media query */}
       <style>{mobileStyles}</style>
 
       <h2

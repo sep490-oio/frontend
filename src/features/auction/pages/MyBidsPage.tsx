@@ -10,6 +10,7 @@ import { PriceDisplay } from '@/components/ui/PriceDisplay'
 import { BidStatus } from '@/types/enums'
 import { formatDateTime } from '@/utils/format'
 import { WinnerOfferPanel } from '@/features/auction/components/WinnerOfferPanel'
+import { useBreakpoint } from '@/hooks/useBreakpoint' //  responsive fix: import breakpoint hook
 
 interface StatusPill {
   value: string
@@ -31,6 +32,7 @@ export default function MyBidsPage() {
   const { t } = useTranslation('auction')
   const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
+  const { isMobile } = useBreakpoint() //  responsive fix
 
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(12)
@@ -53,11 +55,11 @@ export default function MyBidsPage() {
   const totalCount = data?.metadata?.totalCount ?? 0
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 16px 80px' }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px 12px 80px' : '24px 16px 80px' /*  responsive fix */ }}>
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
         <Typography.Title
-          level={2}
+          level={isMobile ? 3 : 2} //  responsive fix: smaller heading on mobile
           style={{
             fontFamily: SANS_FONT,
             fontWeight: 600,
@@ -110,9 +112,27 @@ export default function MyBidsPage() {
         </div>
       )}
 
-      {/* Filter pills + sort */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 24 }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, flex: 1 }}>
+      {/* Filter pills + sort —  responsive fix: stack on mobile */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'space-between',
+        flexDirection: isMobile ? 'column' : 'row', //  responsive fix
+        gap: 12,
+        marginBottom: 24,
+      }}>
+        {/*  responsive fix: horizontal scroll for pills on mobile */}
+        <div style={{
+          display: 'flex',
+          flexWrap: isMobile ? 'nowrap' : 'wrap',
+          gap: 8,
+          flex: 1,
+          overflowX: isMobile ? 'auto' : 'visible',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: isMobile ? 4 : 0,
+          scrollbarWidth: 'none',
+          width: '100%',
+        }}>
           {STATUS_PILLS.map((pill) => {
             const isActive = statusFilter === pill.value
             return (
@@ -134,6 +154,8 @@ export default function MyBidsPage() {
                   background: isActive ? 'var(--color-accent)' : 'transparent',
                   color: isActive ? '#fff' : 'var(--color-text-secondary)',
                   transition: 'all 200ms ease',
+                  flexShrink: 0, //  responsive fix
+                  whiteSpace: 'nowrap',
                 }}
               >
                 {pill.label}
@@ -144,7 +166,7 @@ export default function MyBidsPage() {
         <Select
           value={sortBy}
           onChange={(v) => { setSortBy(v); setPage(1) }}
-          style={{ width: 160 }}
+          style={{ width: isMobile ? '100%' : 160 }} //  responsive fix: full width on mobile
           options={[
             { value: 'BidPlacedAt Desc', label: t('sortNewest', 'Newest') },
             { value: 'BidPlacedAt Asc', label: t('sortOldest', 'Oldest') },
@@ -163,8 +185,9 @@ export default function MyBidsPage() {
         <Empty description={t('noBids', 'Bạn chưa tham gia đấu giá nào')} />
       ) : (
         <>
-          <Row gutter={[20, 20]}>
+          <Row gutter={[16, 16]}> {/*  responsive fix: reduced gutter on mobile */}
             {items.map((bid: MyBidDto) => (
+              //  responsive fix: xs={24} full width on mobile, sm={12} 2-col on tablet
               <Col key={bid.id} xs={24} sm={12} lg={8}>
                 <Card
                   hoverable
@@ -300,14 +323,15 @@ export default function MyBidsPage() {
                       />
                     </div>
 
-                    {/* Buttons */}
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {/* Buttons —  responsive fix: full width stacked on mobile */}
+                    <div style={{ display: 'flex', gap: 8, flexDirection: isMobile ? 'column' : 'row' }}>
                       <Button
                         type="primary"
                         icon={<ThunderboltOutlined />}
                         onClick={() => navigate(`/auctions/${bid.auctionId}`)}
                         style={{
-                          flex: '1 1 100px',
+                          flex: isMobile ? 'unset' : '1 1 100px',
+                          width: isMobile ? '100%' : undefined, //  responsive fix
                           borderRadius: 8,
                           fontFamily: SANS_FONT,
                           fontWeight: 500,
@@ -322,7 +346,8 @@ export default function MyBidsPage() {
                         icon={<EyeOutlined />}
                         onClick={() => navigate(`/auctions/${bid.auctionId}`)}
                         style={{
-                          flex: '1 1 100px',
+                          flex: isMobile ? 'unset' : '1 1 100px',
+                          width: isMobile ? '100%' : undefined, //  responsive fix
                           borderRadius: 8,
                           fontFamily: SANS_FONT,
                           fontWeight: 500,
@@ -346,12 +371,13 @@ export default function MyBidsPage() {
               current={data?.metadata?.currentPage ?? page}
               pageSize={data?.metadata?.pageSize ?? pageSize}
               total={totalCount}
-              showSizeChanger
-              showTotal={(total) => tc('pagination.total', { total })}
+              showSizeChanger={!isMobile} //  responsive fix: hide sizeChanger on mobile
+              showTotal={isMobile ? undefined : (total) => tc('pagination.total', { total })} //  responsive fix
               onChange={(p, ps) => {
                 setPage(p)
                 setPageSize(ps)
               }}
+              size={isMobile ? 'small' : undefined} //  responsive fix
             />
           </div>
         </>

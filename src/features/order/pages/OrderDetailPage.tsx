@@ -102,19 +102,30 @@ export default function OrderDetailPage() {
     RETURN_ELIGIBLE_STATUSES.has(order.status) && !order.return
 
   return (
-    <div style={{ padding: isMobile ? '0 12px' : undefined }}>
+    //  responsive fix: consistent horizontal padding on mobile
+    <div style={{ padding: isMobile ? '0 12px' : undefined, maxWidth: '100%', overflowX: 'hidden' }}>
       <Space style={{ marginBottom: 16 }}>
         <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(`${prefix}/orders`)}>
           {tc('action.back', 'Back')}
         </Button>
       </Space>
 
-      <Typography.Title level={isMobile ? 3 : 2} style={{ marginBottom: isMobile ? 16 : 24 }}>
+      {/*  responsive fix: title truncates gracefully with order number on mobile */}
+      <Typography.Title
+        level={isMobile ? 3 : 2}
+        style={{
+          marginBottom: isMobile ? 16 : 24,
+          //  responsive fix: prevent very long order numbers from overflowing
+          wordBreak: 'break-word',
+          overflowWrap: 'break-word',
+        }}
+      >
         {t('orderDetail', 'Order Detail')} #{order.orderNumber}
       </Typography.Title>
 
       {/* Status stepper */}
-      <Card style={{ marginBottom: 24 }}>
+      {/*  responsive fix: allow stepper to scroll horizontally on very small screens */}
+      <Card style={{ marginBottom: 24, overflowX: 'auto' }}>
         <OrderStatusStepper status={order.status} />
       </Card>
 
@@ -125,7 +136,8 @@ export default function OrderDetailPage() {
           showIcon
           style={{ marginBottom: 24 }}
           message={
-            <span>
+            //  responsive fix: wrap content so countdown doesn't overflow on narrow screens
+            <span style={{ display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
               {t('payBy', 'Pay by')} {formatDateTime(order.paymentDueAt)} —{' '}
               <CountdownTimer endTime={order.paymentDueAt} size="small" /> {t('remaining', 'remaining')}
             </span>
@@ -143,7 +155,8 @@ export default function OrderDetailPage() {
       <Card title={t('orderInfo', 'Order Information')} style={{ marginBottom: isMobile ? 16 : 24 }}>
         <Descriptions column={isMobile ? 1 : { xs: 1, sm: 2 }} bordered size="small">
           <Descriptions.Item label={t('orderNumber', 'Order Number')}>
-            {order.orderNumber}
+            {/*  responsive fix: allow long order numbers to wrap */}
+            <span style={{ wordBreak: 'break-all' }}>{order.orderNumber}</span>
           </Descriptions.Item>
           <Descriptions.Item label={t('statusLabel', 'Status')}>
             <StatusBadge status={order.status} />
@@ -155,10 +168,11 @@ export default function OrderDetailPage() {
             {order.currency}
           </Descriptions.Item>
           <Descriptions.Item label={t('buyerId', 'Buyer')}>
-            {order.buyerId}
+            {/*  responsive fix: UUIDs/IDs can be long — allow break */}
+            <span style={{ wordBreak: 'break-all' }}>{order.buyerId}</span>
           </Descriptions.Item>
           <Descriptions.Item label={t('sellerId', 'Seller')}>
-            {order.sellerId}
+            <span style={{ wordBreak: 'break-all' }}>{order.sellerId}</span>
           </Descriptions.Item>
           <Descriptions.Item label={t('createdAt', 'Created')}>
             {formatDateTime(order.createdAt)}
@@ -198,37 +212,36 @@ export default function OrderDetailPage() {
         confirmedAt={(order as any).confirmedAt}
       />
 
-      {/* Seller Rating */}
-      {isBuyer &&
-        order.status === OrderStatus.Completed &&
-        (order as any).confirmedAt &&
-        !(order as any).review &&
-        !reviewSubmitted && (
-          <Card
-            title={t('rateThisSeller', 'Rate this Seller')}
-            style={{ marginBottom: isMobile ? 16 : 24 }}
-          >
-            <SellerRatingForm
-              orderId={order.id}
-              loading={createReview.isPending}
-              onSubmit={async (data) => {
-                try {
-                  await createReview.mutateAsync(data)
-                  message.success(t('reviewSubmitted', 'Review submitted successfully'))
-                  setReviewSubmitted(true)
-                } catch {
-                  message.error(t('reviewError', 'Failed to submit review'))
-                }
-              }}
-            />
-          </Card>
-        )}
+      {/* Seller rating form */}
+      {isBuyer && order.status === OrderStatus.Completed && !reviewSubmitted && (
+        <Card
+          title={t('rateThisSeller', 'Rate this Seller')}
+          style={{ marginBottom: isMobile ? 16 : 24 }}
+        >
+          <SellerRatingForm
+            orderId={order.id}
+            loading={createReview.isPending}
+            onSubmit={async (data) => {
+              try {
+                await createReview.mutateAsync(data)
+                message.success(t('reviewSubmitted', 'Review submitted successfully'))
+                setReviewSubmitted(true)
+              } catch {
+                message.error(t('reviewError', 'Failed to submit review'))
+              }
+            }}
+          />
+        </Card>
+      )}
 
       {/* Tracking */}
       {order.trackingNumber && (
         <Card title={t('tracking', 'Tracking')} style={{ marginBottom: isMobile ? 16 : 24 }}>
           <Typography.Text strong>{t('trackingNumber', 'Tracking Number')}: </Typography.Text>
-          <Typography.Text copyable>{order.trackingNumber}</Typography.Text>
+          {/*  responsive fix: copyable tracking numbers can be long — allow break */}
+          <Typography.Text copyable style={{ wordBreak: 'break-all' }}>
+            {order.trackingNumber}
+          </Typography.Text>
         </Card>
       )}
 
@@ -260,6 +273,7 @@ export default function OrderDetailPage() {
 
             {/* Return action buttons */}
             <Divider style={{ margin: '16px 0' }} />
+            {/*  responsive fix: Space wrap already handles stacking; ensure buttons meet touch target size */}
             <Space wrap>
               {/* Seller: Approve/Reject when requested */}
               {isSeller && order.return.status === OrderReturnStatus.Requested && (
@@ -273,13 +287,27 @@ export default function OrderDetailPage() {
                       } catch { message.error(t('returnError', 'Action failed')) }
                     }}
                   >
-                    <Button type="primary" icon={<CheckOutlined />} loading={approveReturn.isPending}
-                      style={{ background: 'var(--color-success)', borderColor: 'var(--color-success)' }}>
+                    <Button
+                      type="primary"
+                      icon={<CheckOutlined />}
+                      loading={approveReturn.isPending}
+                      style={{
+                        background: 'var(--color-success)',
+                        borderColor: 'var(--color-success)',
+                        //  responsive fix: minimum touch target height
+                        minHeight: 36,
+                      }}
+                    >
                       {t('approveReturn', 'Approve')}
                     </Button>
                   </Popconfirm>
-                  <Button danger icon={<CloseOutlined />} loading={rejectReturn.isPending}
-                    onClick={() => { setRejectReason(''); setRejectModalOpen(true) }}>
+                  <Button
+                    danger
+                    icon={<CloseOutlined />}
+                    loading={rejectReturn.isPending}
+                    onClick={() => { setRejectReason(''); setRejectModalOpen(true) }}
+                    style={{ minHeight: 36 }} //  responsive fix: minimum touch target height
+                  >
                     {t('rejectReturn', 'Reject')}
                   </Button>
                 </>
@@ -287,8 +315,13 @@ export default function OrderDetailPage() {
 
               {/* Buyer: Ship return after approval */}
               {isBuyer && order.return.status === OrderReturnStatus.Approved && (
-                <Button type="primary" icon={<SendOutlined />} loading={shipReturn.isPending}
-                  onClick={() => { setShipProviderCode(''); setShipTrackingNumber(''); setShipModalOpen(true) }}>
+                <Button
+                  type="primary"
+                  icon={<SendOutlined />}
+                  loading={shipReturn.isPending}
+                  onClick={() => { setShipProviderCode(''); setShipTrackingNumber(''); setShipModalOpen(true) }}
+                  style={{ minHeight: 36 }} //  responsive fix: minimum touch target height
+                >
                   {t('shipReturn', 'Ship Return')}
                 </Button>
               )}
@@ -304,7 +337,12 @@ export default function OrderDetailPage() {
                     } catch { message.error(t('returnError', 'Action failed')) }
                   }}
                 >
-                  <Button type="primary" icon={<CheckOutlined />} loading={confirmReturnReceived.isPending}>
+                  <Button
+                    type="primary"
+                    icon={<CheckOutlined />}
+                    loading={confirmReturnReceived.isPending}
+                    style={{ minHeight: 36 }} //  responsive fix: minimum touch target height
+                  >
                     {t('confirmReceived', 'Confirm Received')}
                   </Button>
                 </Popconfirm>
@@ -316,6 +354,7 @@ export default function OrderDetailPage() {
             type="primary"
             icon={<RollbackOutlined />}
             onClick={() => navigate(`${prefix}/orders/${order.id}/return`)}
+            style={{ minHeight: 36 }} //  responsive fix: minimum touch target height
           >
             {t('requestReturn', 'Request Return')}
           </Button>
@@ -329,13 +368,18 @@ export default function OrderDetailPage() {
       {/* Action buttons */}
       <Space>
         {order.status === OrderStatus.PendingPayment && (
-          <Button type="primary" onClick={() => navigate(`/checkout/${order.id}`)}>
+          <Button
+            type="primary"
+            onClick={() => navigate(`/checkout/${order.id}`)}
+            style={{ minHeight: 36 }} //  responsive fix: minimum touch target height
+          >
             {t('payNow', 'Pay Now')}
           </Button>
         )}
       </Space>
 
       {/* Reject Return Modal */}
+      {/*  responsive fix: centered + width 100% on mobile via antd's responsive modal defaults */}
       <Modal
         title={t('rejectReturn', 'Reject Return')}
         open={rejectModalOpen}
@@ -351,6 +395,8 @@ export default function OrderDetailPage() {
         okText={tc('action.confirm', 'Confirm')}
         okButtonProps={{ danger: true, loading: rejectReturn.isPending, disabled: !rejectReason.trim() }}
         centered
+        //  responsive fix: ensure modal doesn't overflow on small screens
+        style={{ maxWidth: 'calc(100vw - 32px)' }}
       >
         <Form layout="vertical">
           <Form.Item label="Lý do từ chối" required>
@@ -385,6 +431,8 @@ export default function OrderDetailPage() {
         okText={tc('action.confirm', 'Confirm')}
         okButtonProps={{ loading: shipReturn.isPending, disabled: !shipProviderCode.trim() || !shipTrackingNumber.trim() }}
         centered
+        //  responsive fix: ensure modal doesn't overflow on small screens
+        style={{ maxWidth: 'calc(100vw - 32px)' }}
       >
         <Form layout="vertical">
           <Form.Item label="Mã nhà vận chuyển" required>

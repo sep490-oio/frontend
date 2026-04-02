@@ -8,7 +8,7 @@ import type { ApiError } from '@/types'
 
 const SERIF_FONT = "'DM Serif Display', Georgia, serif"
 
-// ✅ responsive fix: scoped mobile styles
+//  responsive fix: scoped mobile styles
 const mobileStyles = `
   @media (max-width: 768px) {
     .oio-confirm-heading { font-size: 20px !important; }
@@ -41,7 +41,7 @@ export default function ConfirmEmailPage() {
   if (!userId || !token) {
     return (
       <div className="oio-fade-in" style={{ textAlign: 'center' }}>
-        {/* ✅ responsive fix: inject scoped media query */}
+        {/*  responsive fix: inject scoped media query */}
         <style>{mobileStyles}</style>
         <div style={{ fontSize: 48, marginBottom: 16, color: 'var(--color-danger)' }}>!</div>
         <h2 className="oio-confirm-heading" style={{ fontFamily: SERIF_FONT, fontWeight: 400, fontSize: 24, color: 'var(--color-text-primary)', marginBottom: 8 }}>
@@ -134,7 +134,7 @@ export default function ConfirmEmailPage() {
         <p style={{ color: 'var(--color-text-secondary)', marginBottom: 24 }}>
           {detail ?? t('confirmEmail.errorDesc', 'Token đã hết hạn hoặc không hợp lệ.')}
         </p>
-        {/* ✅ responsive fix: stack buttons vertically on mobile */}
+        {/*  responsive fix: stack buttons vertically on mobile */}
         <div className="oio-confirm-btn-group" style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
           {email && (
             <Button onClick={handleResend} loading={resendMutation.isPending} style={{ borderColor: 'var(--color-accent)', color: 'var(--color-accent)' }}>

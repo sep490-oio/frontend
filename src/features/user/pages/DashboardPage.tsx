@@ -99,7 +99,7 @@ export default function DashboardPage() {
         </Col>
       </Row>
 
-      <Row gutter={isMobile ? [16, 24] : [24, 24]}> {/* ✅ responsive fix: reduce horizontal gutter on mobile */}
+      <Row gutter={isMobile ? [16, 24] : [24, 24]}> {/*  responsive fix: reduce horizontal gutter on mobile */}
         {/* Active Bids */}
         <Col xs={24} lg={16}>
           <Card
@@ -150,7 +150,7 @@ export default function DashboardPage() {
                       <span style={{ fontWeight: 500 }}>#{order.orderNumber}</span>
                       <StatusBadge status={order.status} size="small" />
                     </div>
-                    <div style={{ overflowX: 'auto' }}> {/* ✅ responsive fix: allow horizontal scroll for Steps on mobile */}
+                    <div style={{ overflowX: 'auto' }}> {/*  responsive fix: allow horizontal scroll for Steps on mobile */}
                       <Steps
                         size="small"
                         current={
@@ -221,7 +221,7 @@ export default function DashboardPage() {
             <Button
               type="primary"
               onClick={() => navigate('/seller/register')}
-              style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)', fontWeight: 500, width: isMobile ? '100%' : 'auto' }} // ✅ responsive fix: full width button on mobile
+              style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)', fontWeight: 500, width: isMobile ? '100%' : 'auto' }} //  responsive fix: full width button on mobile
             >
               Đăng ký bán hàng
             </Button>

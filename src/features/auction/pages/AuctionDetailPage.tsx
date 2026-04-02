@@ -514,6 +514,8 @@ export default function AuctionDetailPage() {
           gap: 6,
           padding: 0,
           marginBottom: isMobile ? 16 : 32,
+          //  responsive fix: larger touch target on mobile
+          minHeight: isMobile ? 36 : 'auto',
         }}
       >
         <ArrowLeftOutlined /> Back to Auctions
@@ -620,6 +622,7 @@ export default function AuctionDetailPage() {
         </Col>
 
         {/* ══ RIGHT COLUMN ═════════════════════════════════ */}
+        {/*  responsive fix: sidebar renders below on mobile naturally via Col xs={24} */}
         <Col xs={24} lg={10} className="oio-fade-in oio-fade-in-delay-1">
           <div style={isMobile ? {} : { position: 'sticky', top: 24 }}>
             <AuctionSidebar
@@ -707,6 +710,9 @@ export default function AuctionDetailPage() {
         confirmLoading={autoBidMutation.isPending}
         okText={t('confirmAutoBid', 'Confirm Auto-Bid')}
         okButtonProps={{ disabled: !autoBidMax || autoBidMax <= currentPrice }}
+        //  responsive fix: full-width modal on mobile
+        width={isMobile ? '95%' : 520}
+        centered={isMobile}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Typography.Paragraph style={{ margin: 0, fontSize: 13, color: 'var(--color-text-secondary)' }}>
@@ -785,6 +791,9 @@ export default function AuctionDetailPage() {
         onOk={handleBuyNow}
         okText={t('confirm', 'Confirm')}
         okButtonProps={{ danger: true }}
+        //  responsive fix: full-width on mobile
+        width={isMobile ? '95%' : undefined}
+        centered={isMobile}
       >
         <Typography.Paragraph>
           {t('buyNowConfirmText', 'You are about to purchase this item at the Buy Now price of {{price}}.', {

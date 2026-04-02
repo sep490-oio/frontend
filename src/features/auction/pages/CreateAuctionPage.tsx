@@ -29,6 +29,7 @@ import { AuctionTimingSection } from '@/features/auction/components/AuctionTimin
 import { AuctionType, ItemCondition } from '@/types/enums'
 import { DEFAULT_CURRENCY } from '@/utils/constants'
 import type { CreateAuctionRequest } from '@/features/auction/api'
+import { useBreakpoint } from '@/hooks/useBreakpoint' //  responsive fix
 
 const SERIF_FONT = "'DM Serif Display', Georgia, serif"
 
@@ -96,6 +97,7 @@ export default function CreateAuctionPage() {
   const navigate = useNavigate()
   const prefix = useRoutePrefix()
   const { message } = App.useApp()
+  const { isMobile } = useBreakpoint() //  responsive fix
 
   const [searchParams] = useSearchParams()
   const itemId = searchParams.get('itemId')
@@ -336,7 +338,8 @@ export default function CreateAuctionPage() {
 
   if ((itemId && itemLoading) || (editLoading && isEditMode)) {
     return (
-      <div style={{ maxWidth: 720, margin: '0 auto', paddingTop: 40 }}>
+      //  responsive fix: clamp padding on mobile
+      <div style={{ maxWidth: 720, margin: '0 auto', padding: 'clamp(16px,4vw,40px) clamp(12px,3vw,24px)' }}>
         <Skeleton active paragraph={{ rows: 6 }} />
       </div>
     )
@@ -344,7 +347,8 @@ export default function CreateAuctionPage() {
 
   if (itemId && itemError) {
     return (
-      <div style={{ maxWidth: 720, margin: '0 auto', paddingTop: 40 }}>
+      //  responsive fix: clamp padding on mobile
+      <div style={{ maxWidth: 720, margin: '0 auto', padding: 'clamp(16px,4vw,40px) clamp(12px,3vw,24px)' }}>
         <Alert
           type="error"
           showIcon
@@ -365,7 +369,8 @@ export default function CreateAuctionPage() {
   const pricingSectionNumber = hideItemFields ? 1 : 3
 
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 clamp(12px,3vw,0px)' }}>
+    //  responsive fix: proper horizontal padding on mobile
+    <div style={{ maxWidth: 720, margin: '0 auto', padding: `0 clamp(12px, 3vw, 24px) clamp(40px, 6vw, 80px)` }}>
       <Space style={{ marginBottom: 16 }}>
         <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate(`${prefix}/auctions`)}>
           {tc('action.back', 'Back')}
@@ -373,7 +378,7 @@ export default function CreateAuctionPage() {
       </Space>
 
       <Typography.Title
-        level={2}
+        level={isMobile ? 3 : 2} //  responsive fix: smaller heading on mobile
         style={{ fontFamily: SERIF_FONT, color: 'var(--color-text-primary)', marginBottom: 24 }}
       >
         {isEditMode ? t('editAuction', 'Edit Auction') : t('createAuction', 'Tạo đấu giá mới')}
@@ -385,16 +390,17 @@ export default function CreateAuctionPage() {
           style={{ borderRadius: 12, border: '1px solid var(--color-border)', marginBottom: 16 }}
         >
           <SectionHeader number={1} title="Vật phẩm đã chọn" />
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+          {/*  responsive fix: stack preview vertically on mobile */}
+          <div style={{ display: 'flex', gap: 16, flexDirection: isMobile ? 'column' : 'row', flexWrap: 'wrap' }}>
             {existingItemForPreview.images && existingItemForPreview.images.length > 0 && (
-              <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+              <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
                 <Image.PreviewGroup>
                   {existingItemForPreview.images.slice(0, 4).map((img: any) => (
                     <Image
                       key={img.id}
                       src={img.thumbnailUrl ?? img.url}
-                      width={64}
-                      height={64}
+                      width={isMobile ? 56 : 64} //  responsive fix: slightly smaller on mobile
+                      height={isMobile ? 56 : 64}
                       style={{ objectFit: 'cover', borderRadius: 8 }}
                     />
                   ))}
@@ -454,7 +460,7 @@ export default function CreateAuctionPage() {
                 <Input placeholder={t('titlePlaceholder', 'Enter item title')} />
               </Form.Item>
 
-              {/* Condition as pill/segmented toggle */}
+              {/* Condition as pill/segmented toggle —  responsive fix: wrap and allow scroll */}
               <Form.Item
                 name="condition"
                 label={t('condition', 'Condition')}
@@ -470,7 +476,7 @@ export default function CreateAuctionPage() {
                         form.setFieldsValue({ condition: opt.value })
                       }}
                       style={{
-                        padding: '8px 20px',
+                        padding: isMobile ? '6px 14px' : '8px 20px', //  responsive fix
                         borderRadius: 20,
                         border: `1.5px solid ${selectedCondition === opt.value ? 'var(--color-accent)' : 'var(--color-border)'}`,
                         background: selectedCondition === opt.value ? 'var(--color-accent)' : 'var(--color-bg-card)',
@@ -479,6 +485,8 @@ export default function CreateAuctionPage() {
                         fontSize: 13,
                         cursor: 'pointer',
                         transition: 'all 0.2s',
+                        //  responsive fix: minimum touch target
+                        minHeight: 36,
                       }}
                     >
                       {opt.label}
@@ -608,14 +616,15 @@ export default function CreateAuctionPage() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '16px 20px',
+                padding: isMobile ? '12px 14px' : '16px 20px', //  responsive fix
                 borderRadius: 12,
                 background: 'var(--color-accent-light)',
                 border: '1px solid var(--color-border-light)',
+                gap: 12,
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1 }}>
-                <SafetyCertificateOutlined style={{ fontSize: 20, color: 'var(--color-accent)' }} />
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, flex: 1 }}>
+                <SafetyCertificateOutlined style={{ fontSize: 20, color: 'var(--color-accent)', marginTop: 2, flexShrink: 0 }} />
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-text-primary)' }}>
                     Xác thực bởi Nền tảng
@@ -632,14 +641,21 @@ export default function CreateAuctionPage() {
             </div>
           </div>
 
-          {/* ── Submit Buttons ── */}
+          {/* ── Submit Buttons —  responsive fix: full width stacked on mobile ── */}
           <Form.Item style={{ marginTop: 24, marginBottom: 0 }}>
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+            <div style={{
+              display: 'flex',
+              gap: 12,
+              justifyContent: isMobile ? 'stretch' : 'flex-end', //  responsive fix
+              flexDirection: isMobile ? 'column' : 'row', //  responsive fix: stack on mobile
+              flexWrap: 'wrap',
+            }}>
               <Button
                 size="large"
                 onClick={() => navigate(`${prefix}/auctions`)}
                 style={{
-                  flex: '0 1 auto',
+                  flex: isMobile ? 'unset' : '0 1 auto',
+                  width: isMobile ? '100%' : undefined,
                   borderRadius: 8,
                   borderColor: 'var(--color-border)',
                   color: 'var(--color-text-secondary)',
@@ -653,7 +669,8 @@ export default function CreateAuctionPage() {
                 loading={savingDraft && (createAuction.isPending || createAuctionFromItem.isPending || updateAuction.isPending)}
                 disabled={(!hideItemFields && capturedPhotos.length === 0) || createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending}
                 style={{
-                  flex: '1 1 120px',
+                  flex: isMobile ? 'unset' : '1 1 120px',
+                  width: isMobile ? '100%' : undefined,
                   borderRadius: 8,
                   borderColor: 'var(--color-accent)',
                   color: 'var(--color-accent)',
@@ -668,7 +685,8 @@ export default function CreateAuctionPage() {
                 loading={!savingDraft && (createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending)}
                 disabled={(!hideItemFields && capturedPhotos.length === 0) || createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending}
                 style={{
-                  flex: '1 1 140px',
+                  flex: isMobile ? 'unset' : '1 1 140px',
+                  width: isMobile ? '100%' : undefined,
                   background: 'var(--color-accent)',
                   borderColor: 'var(--color-accent)',
                   borderRadius: 8,

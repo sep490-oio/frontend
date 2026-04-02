@@ -75,7 +75,13 @@ export default function OrderReturnPage() {
         {t('requestReturn', 'Request Return')}
       </Typography.Title>
 
-      <Card style={{ maxWidth: isMobile ? '100%' : 600 }}>
+      <Card
+        style={{
+          // responsive fix: full width on mobile, capped on desktop
+          maxWidth: isMobile ? '100%' : 600,
+          width: '100%',
+        }}
+      >
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
           <Form.Item
             label={t('returnReason', 'Reason')}
@@ -90,6 +96,7 @@ export default function OrderReturnPage() {
                 <Select
                   {...field}
                   placeholder={t('selectReason', 'Select a reason')}
+                  style={{ width: '100%' }}
                   options={RETURN_REASONS.map((reason) => ({
                     value: reason,
                     label: t(`returnReasons.${reason}`, reason.replace(/_/g, ' ')),
@@ -118,11 +125,22 @@ export default function OrderReturnPage() {
           </Form.Item>
 
           <Form.Item>
-            <Space>
-              <Button type="primary" htmlType="submit" loading={createReturn.isPending}>
+            <Space
+              direction={isMobile ? 'vertical' : 'horizontal'}
+              style={isMobile ? { width: '100%' } : undefined}
+            >
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={createReturn.isPending}
+                style={isMobile ? { width: '100%', minHeight: 40 } : { minHeight: 36 }}
+              >
                 {tc('action.submit', 'Submit')}
               </Button>
-              <Button onClick={() => navigate(`${prefix}/orders/${orderId}`)}>
+              <Button
+                onClick={() => navigate(`${prefix}/orders/${orderId}`)}
+                style={isMobile ? { width: '100%', minHeight: 40 } : { minHeight: 36 }}
+              >
                 {tc('action.cancel', 'Cancel')}
               </Button>
             </Space>

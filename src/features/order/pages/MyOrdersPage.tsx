@@ -199,39 +199,43 @@ export default function MyOrdersPage() {
       </p>
 
       {/* Status tabs styled as pills */}
-      <Tabs
-        activeKey={statusFilter}
-        onChange={(key) => {
-          setStatusFilter(key)
-          setPage(1)
-        }}
-        items={STATUS_TABS.map((tab) => ({
-          key: tab.key,
-          label: (
-            <span
-              style={{
-                padding: '4px 14px',
-                borderRadius: 100,
-                fontSize: 13,
-                fontWeight: 500,
-                transition: 'all 200ms ease',
-                ...(statusFilter === tab.key
-                  ? {
-                      background: 'var(--color-accent)',
-                      color: '#fff',
-                    }
-                  : {
-                      background: 'transparent',
-                      color: 'var(--color-text-secondary)',
-                    }),
-              }}
-            >
-              {t(`statusTab.${tab.label}`, tab.label)}
-            </span>
-          ),
-        }))}
-        style={{ marginBottom: 16 }}
-      />
+      {/*responsive fix: allow horizontal scroll on mobile so pills don't wrap/break layout */}
+      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', marginBottom: 0 }}>
+        <Tabs
+          activeKey={statusFilter}
+          onChange={(key) => {
+            setStatusFilter(key)
+            setPage(1)
+          }}
+          items={STATUS_TABS.map((tab) => ({
+            key: tab.key,
+            label: (
+              <span
+                style={{
+                  padding: '4px 14px',
+                  borderRadius: 100,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  transition: 'all 200ms ease',
+                  whiteSpace: 'nowrap', // responsive fix: prevent pill labels from wrapping
+                  ...(statusFilter === tab.key
+                    ? {
+                        background: 'var(--color-accent)',
+                        color: '#fff',
+                      }
+                    : {
+                        background: 'transparent',
+                        color: 'var(--color-text-secondary)',
+                      }),
+                }}
+              >
+                {t(`statusTab.${tab.label}`, tab.label)}
+              </span>
+            ),
+          }))}
+          style={{ marginBottom: 16 }}
+        />
+      </div>
 
       {isMobile ? (
         /* Mobile card view */
@@ -242,6 +246,8 @@ export default function MyOrdersPage() {
             current: data?.metadata?.currentPage ?? page,
             pageSize: data?.metadata?.pageSize ?? pageSize,
             total: data?.metadata?.totalCount ?? 0,
+            //responsive fix: smaller pagination controls on mobile
+            simple: true,
             onChange: (p, ps) => {
               setPage(p)
               setPageSize(ps)
@@ -263,12 +269,17 @@ export default function MyOrdersPage() {
                         fontFamily: 'var(--font-mono)',
                         fontWeight: 500,
                         fontSize: 13,
+                        // responsive fix: prevent long order numbers from overflowing
+                        maxWidth: '60%',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
                       }}
                       onClick={() => navigate(`${prefix}/orders/${record.id}`)}
                     >
                       {record.orderNumber}
                     </Button>
-                    <Flex gap={4} align="center">
+                    <Flex gap={4} align="center" style={{ flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                       <StatusBadge status={record.status} />
                       {record.decisionWindowEndsAt && record.status === OrderStatus.Delivered && (
                         <DecisionCountdown endsAt={record.decisionWindowEndsAt} />
@@ -295,11 +306,13 @@ export default function MyOrdersPage() {
                     <span style={{ color: 'var(--color-text-secondary)', fontSize: 12 }}>
                       {formatDateTime(record.createdAt)}
                     </span>
+                    {/*  responsive fix: ensure touch target is large enough */}
                     <Button
                       type="default"
                       size="small"
                       icon={<EyeOutlined />}
                       onClick={() => navigate(`${prefix}/orders/${record.id}`)}
+                      style={{ minHeight: 32, minWidth: 44 }}
                     >
                       {t('viewDetail', 'View Detail')}
                     </Button>
@@ -310,24 +323,27 @@ export default function MyOrdersPage() {
           )}
         />
       ) : (
-        <ResponsiveTable<OrderDto>
-          mobileMode="card"
-          rowKey="id"
-          columns={columns}
-          dataSource={data?.items ?? []}
-          loading={isLoading}
-          pagination={{
-            current: data?.metadata?.currentPage ?? page,
-            pageSize: data?.metadata?.pageSize ?? pageSize,
-            total: data?.metadata?.totalCount ?? 0,
-            showSizeChanger: true,
-            showTotal: (total) => tc('pagination.total', { total }),
-            onChange: (p, ps) => {
-              setPage(p)
-              setPageSize(ps)
-            },
-          }}
-        />
+        // responsive fix: wrap table in overflow-x container as safety net for edge-case viewports
+        <div style={{ overflowX: 'auto' }}>
+          <ResponsiveTable<OrderDto>
+            mobileMode="card"
+            rowKey="id"
+            columns={columns}
+            dataSource={data?.items ?? []}
+            loading={isLoading}
+            pagination={{
+              current: data?.metadata?.currentPage ?? page,
+              pageSize: data?.metadata?.pageSize ?? pageSize,
+              total: data?.metadata?.totalCount ?? 0,
+              showSizeChanger: true,
+              showTotal: (total) => tc('pagination.total', { total }),
+              onChange: (p, ps) => {
+                setPage(p)
+                setPageSize(ps)
+              },
+            }}
+          />
+        </div>
       )}
     </div>
   )

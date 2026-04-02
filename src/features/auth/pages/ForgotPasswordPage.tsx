@@ -12,7 +12,7 @@ import type { ApiError } from '@/types'
 
 type ForgotPasswordFormValues = { email: string }
 
-// ✅ responsive fix: scoped mobile styles
+//  responsive fix: scoped mobile styles
 const mobileStyles = `
   @media (max-width: 768px) {
     .oio-forgot-btn { height: 44px !important; font-size: 14px !important; }
@@ -57,7 +57,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-      {/* ✅ responsive fix: inject scoped media query */}
+      {/*  responsive fix: inject scoped media query */}
       <style>{mobileStyles}</style>
 
       <div>

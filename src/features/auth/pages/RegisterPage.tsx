@@ -108,7 +108,7 @@ const trustLabelStyle: React.CSSProperties = {
   textTransform: 'uppercase' as const,
 }
 
-// ✅ responsive fix: scoped media queries for mobile
+//  responsive fix: scoped media queries for mobile
 const mobileStyles = `
   @media (max-width: 768px) {
     .oio-register-heading { font-size: 22px !important; }
@@ -182,7 +182,7 @@ export default function RegisterPage() {
 
   return (
     <div className="oio-fade-in" style={{ width: '100%' }}>
-      {/* ✅ responsive fix: inject scoped media query */}
+      {/*  responsive fix: inject scoped media query */}
       <style>{mobileStyles}</style>
 
       {/* Heading */}
@@ -204,7 +204,7 @@ export default function RegisterPage() {
 
       <Form layout="vertical" onFinish={handleSubmit(onSubmit)} style={labelStyle}>
         {/* ── Section 1: Thong tin ca nhan ── */}
-        {/* ✅ responsive fix: added oio-register-section-box class for padding reduction on mobile */}
+        {/*  responsive fix: added oio-register-section-box class for padding reduction on mobile */}
         <div style={sectionBoxStyle} className="oio-register-section-box">
           <div style={sectionHeaderStyle}>
             <UserOutlined style={sectionIconStyle} />
@@ -470,7 +470,7 @@ export default function RegisterPage() {
       </p>
 
       {/* Trust badges */}
-      {/* ✅ responsive fix: added oio-register-trust class to reduce gap on mobile */}
+      {/*  responsive fix: added oio-register-trust class to reduce gap on mobile */}
       <div
         className="oio-register-trust"
         style={{

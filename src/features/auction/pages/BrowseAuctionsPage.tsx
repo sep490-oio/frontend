@@ -72,8 +72,19 @@ export default function BrowseAuctionsPage() {
         {t('browseSubtitle', 'Tìm kiếm và lọc các phiên đấu giá theo danh mục, trạng thái và giá')}
       </p>
 
-      {/* Status pills */}
-      <Flex gap={8} wrap="wrap" style={{ marginBottom: 16 }}>
+      {/* Status pills —  responsive fix: horizontal scroll on mobile */}
+      <div
+        style={{
+          display: 'flex',
+          gap: 8,
+          flexWrap: isMobile ? 'nowrap' : 'wrap', //  responsive fix: nowrap + scroll on mobile
+          overflowX: isMobile ? 'auto' : 'visible',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: isMobile ? 4 : 0,
+          marginBottom: 16,
+          scrollbarWidth: 'none', //  responsive fix: hide scrollbar on mobile
+        }}
+      >
         {STATUS_PILLS.map((pill) => (
           <button
             key={pill.value}
@@ -89,14 +100,16 @@ export default function BrowseAuctionsPage() {
               background: activeStatus === pill.value ? 'var(--color-accent)' : 'transparent',
               color: activeStatus === pill.value ? '#fff' : 'var(--color-text-secondary)',
               transition: 'all 200ms ease',
+              flexShrink: 0, //  responsive fix: prevent pills from shrinking on mobile
+              whiteSpace: 'nowrap',
             }}
           >
             {pill.label}
           </button>
         ))}
-      </Flex>
+      </div>
 
-      {/* Filters row */}
+      {/* Filters row —  responsive fix: stack vertically on mobile */}
       <Flex wrap="wrap" gap={12} align="center" style={{ marginBottom: isMobile ? 20 : 32 }} vertical={isMobile}>
         <Select
           style={{ width: isMobile ? '100%' : 200 }}
@@ -126,7 +139,8 @@ export default function BrowseAuctionsPage() {
       {isLoading ? (
         <Row gutter={[16, 16]}>
           {[...Array(8)].map((_, i) => (
-            <Col key={i} xs={24} sm={12} xl={6}>
+            //  responsive fix: xs={12} for 2 columns on mobile instead of full-width
+            <Col key={i} xs={12} sm={12} xl={6}>
               <div className="oio-skeleton" style={{ aspectRatio: '3/4', borderRadius: 4 }} />
             </Col>
           ))}
@@ -137,7 +151,8 @@ export default function BrowseAuctionsPage() {
         <>
           <Row className="oio-stagger" gutter={[16, 16]}>
             {data.items.map((auction) => (
-              <Col key={auction.id} xs={24} sm={12} xl={6}>
+              //  responsive fix: xs={12} for 2 columns on mobile
+              <Col key={auction.id} xs={12} sm={12} xl={6}>
                 <AuctionCard auction={auction} />
               </Col>
             ))}
