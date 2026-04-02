@@ -281,19 +281,22 @@ export function AppLayout() {
             </>
           ) : (
             <Space size={12}>
-              <Button
-                type="text"
-                onClick={() => navigate('/login')}
-                style={{
-                  fontFamily: SANS_FONT,
-                  fontSize: 14,
-                  fontWeight: 500,
-                  color: 'var(--color-text-primary)',
-                  height: 36,
-                }}
-              >
-                {t('common:action.login', 'Sign In')}
-              </Button>
+              {/* responsive fix: hide Sign In on mobile — available via drawer */}
+              {!isMobile && (
+                <Button
+                  type="text"
+                  onClick={() => navigate('/login')}
+                  style={{
+                    fontFamily: SANS_FONT,
+                    fontSize: 14,
+                    fontWeight: 500,
+                    color: 'var(--color-text-primary)',
+                    height: 36,
+                  }}
+                >
+                  {t('common:action.login', 'Sign In')}
+                </Button>
+              )}
               <Button
                 type="primary"
                 onClick={() => navigate('/register')}

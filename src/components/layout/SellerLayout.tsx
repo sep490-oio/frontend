@@ -290,14 +290,7 @@ export function SellerLayout() {
             justifyContent: collapsed ? 'center' : 'flex-start',
           }}
         >
-          <span
-            style={{
-              fontFamily: SANS_FONT,
-              fontSize: 11,
-              color: 'var(--color-text-secondary)',
-              opacity: 0.6,
-            }}
-          >
+          <span style={{ fontFamily: SANS_FONT, fontSize: 11, color: 'var(--color-text-secondary)', opacity: 0.6 }}>
             {collapsed ? 'v1' : 'v1.0'}
           </span>
         </div>
@@ -385,12 +378,13 @@ export function SellerLayout() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0 24px',
+          // responsive fix: tighter padding on mobile
+          padding: isMobile ? '0 12px' : '0 24px',
           transition: 'left 200ms ease',
           zIndex: 99,
         }}
       >
-        {/* Left side: collapse toggle (desktop) / hamburger (mobile) + breadcrumb */}
+        {/* Left: toggle + title */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           {isMobile ? (
             <button
@@ -435,12 +429,14 @@ export function SellerLayout() {
               color: 'var(--color-text-primary)',
             }}
           >
-            OIO Seller
+            {/* responsive fix: shorten title on mobile */}
+            {isMobile ? 'Seller' : 'OIO Seller'}
           </span>
         </div>
 
-        {/* Right side: back link, theme, lang, user */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {/* Right: back, theme, lang, avatar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 4 : 8 }}>
+          {/* responsive fix: icon-only back button on mobile */}
           <button
             onClick={() => navigate('/')}
             style={{
@@ -448,7 +444,7 @@ export function SellerLayout() {
               border: '1px solid var(--color-border)',
               borderRadius: 6,
               cursor: 'pointer',
-              padding: '6px 12px',
+              padding: isMobile ? '6px 8px' : '6px 12px',
               display: 'flex',
               alignItems: 'center',
               gap: 6,
@@ -467,7 +463,7 @@ export function SellerLayout() {
             }}
           >
             <ArrowLeftOutlined style={{ fontSize: 11 }} />
-            Back to Platform
+            {!isMobile && 'Back to Platform'}
           </button>
 
           <Tooltip title={isDark ? 'Light mode' : 'Dark mode'}>
@@ -492,50 +488,38 @@ export function SellerLayout() {
             </button>
           </Tooltip>
 
-          <Tooltip title="Switch language">
-            <button
-              onClick={toggleLanguage}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 8,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 4,
-                color: 'var(--color-text-secondary)',
-                fontSize: 12,
-                fontFamily: SANS_FONT,
-                fontWeight: 500,
-                borderRadius: 6,
-                transition: 'color 150ms ease',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-accent)' }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-secondary)' }}
-            >
-              <GlobalOutlined style={{ fontSize: 14 }} />
-              {i18n.language === 'en' ? 'EN' : 'UK'}
-            </button>
-          </Tooltip>
+          {/* responsive fix: hide lang toggle on mobile */}
+          {!isMobile && (
+            <Tooltip title="Switch language">
+              <button
+                onClick={toggleLanguage}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 8,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  color: 'var(--color-text-secondary)',
+                  fontSize: 12,
+                  fontFamily: SANS_FONT,
+                  fontWeight: 500,
+                  borderRadius: 6,
+                  transition: 'color 150ms ease',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-accent)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-secondary)' }}
+              >
+                <GlobalOutlined style={{ fontSize: 14 }} />
+                {i18n.language === 'en' ? 'EN' : 'UK'}
+              </button>
+            </Tooltip>
+          )}
 
-          <div
-            style={{
-              width: 1,
-              height: 24,
-              background: 'var(--color-border)',
-              margin: '0 4px',
-            }}
-          />
+          <div style={{ width: 1, height: 24, background: 'var(--color-border)', margin: '0 4px' }} />
 
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '4px 8px',
-              borderRadius: 8,
-            }}
-          >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 8px', borderRadius: 8 }}>
             <Avatar
               size={32}
               src={avatarUrl}
@@ -545,7 +529,8 @@ export function SellerLayout() {
                 color: avatarUrl ? undefined : 'var(--color-accent)',
               }}
             />
-            {!collapsed && (
+            {/* responsive fix: hide username on mobile */}
+            {!isMobile && (
               <span
                 style={{
                   fontFamily: SANS_FONT,

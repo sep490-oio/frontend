@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router'
 import { useNotifications, useUnreadCount, useMarkAsRead, useMarkAllAsRead, parseNotificationActions, getActionRoute, getEntityRoute } from '@/features/notification/api'
 import { useNotificationHub } from '@/features/notification/hooks/useNotificationHub'
 import { useAuth } from '@/hooks/useAuth'
+import { useBreakpoint } from '@/hooks/useBreakpoint' // responsive fix: import breakpoint hook
 import { NotificationStatus } from '@/types/enums'
 import type { NotificationDto } from '@/types'
 import dayjs from 'dayjs'
@@ -32,6 +33,7 @@ export function NotificationDropdown() {
   const { t } = useTranslation('notification')
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
+  const { isMobile } = useBreakpoint() // responsive fix
 
   const { data: notificationsData, isLoading } = useNotifications(
     isAuthenticated ? { pageNumber: 1, pageSize: 5 } : undefined,
@@ -48,14 +50,14 @@ export function NotificationDropdown() {
     if (n.status === NotificationStatus.Unread) {
       markAsRead.mutate(n.id)
     }
-    // Navigate to entity if available
     const route = getEntityRoute(n.entityType, n.entityId)
     if (route) navigate(route)
   }
 
   const content = useMemo(
     () => (
-      <div style={{ width: 400 }}>
+      // responsive fix: use 92vw on mobile so popover never overflows the screen
+      <div style={{ width: isMobile ? '92vw' : 400, maxWidth: 400 }}>
         {/* Header */}
         <div
           style={{
@@ -211,7 +213,7 @@ export function NotificationDropdown() {
                       const actions = parseNotificationActions(item.actions)
                       if (actions.length === 0) return null
                       return (
-                        <div style={{ marginTop: 6, display: 'flex', gap: 6 }}>
+                        <div style={{ marginTop: 6, display: 'flex', gap: 6, flexWrap: 'wrap' }}> {/* responsive fix: wrap action buttons */}
                           {actions.slice(0, 2).map((action, i) => {
                             const route = getActionRoute(action, item.entityId)
                             return (
@@ -274,16 +276,20 @@ export function NotificationDropdown() {
         </div>
       </div>
     ),
-    [notifications, unreadCount, isLoading, t, navigate],
+    // responsive fix: add isMobile to memo deps so width recomputes on resize
+    [notifications, unreadCount, isLoading, t, navigate, isMobile],
   )
 
   return (
     <Popover
       content={content}
       trigger="click"
-      placement="bottomRight"
+      // responsive fix: center on mobile, bottomRight on desktop
+      placement={isMobile ? 'bottom' : 'bottomRight'}
       arrow={false}
       overlayInnerStyle={{ padding: 0, borderRadius: 4, overflow: 'hidden' }}
+      // responsive fix: prevent popover from being clipped on narrow screens
+      overlayStyle={{ maxWidth: '95vw' }}
     >
       <Badge count={unreadCount} size="small" offset={[-2, 2]}>
         <Button type="text" aria-label="Notifications" icon={<BellOutlined style={{ fontSize: 20 }} />} />

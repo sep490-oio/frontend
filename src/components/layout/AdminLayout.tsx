@@ -279,7 +279,8 @@ export function AdminLayout() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0 24px',
+          // responsive fix: tighter horizontal padding on mobile
+          padding: isMobile ? '0 12px' : '0 24px',
           transition: 'left 200ms ease',
           zIndex: 99,
         }}
@@ -329,12 +330,14 @@ export function AdminLayout() {
               color: 'var(--color-text-primary)',
             }}
           >
-            OIO Admin
+            {/* responsive fix: shorten title on mobile */}
+            {isMobile ? 'Admin' : 'OIO Admin'}
           </span>
         </div>
 
         {/* Right side: back link, theme, lang, user */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 4 : 8 }}>
+          {/* responsive fix: hide "Back to Platform" text on mobile, show icon only */}
           <button
             onClick={() => navigate('/')}
             style={{
@@ -342,7 +345,7 @@ export function AdminLayout() {
               border: '1px solid var(--color-border)',
               borderRadius: 6,
               cursor: 'pointer',
-              padding: '6px 12px',
+              padding: isMobile ? '6px 8px' : '6px 12px',
               display: 'flex',
               alignItems: 'center',
               gap: 6,
@@ -361,7 +364,8 @@ export function AdminLayout() {
             }}
           >
             <ArrowLeftOutlined style={{ fontSize: 11 }} />
-            Back to Platform
+            {/* responsive fix: hide label text on mobile */}
+            {!isMobile && 'Back to Platform'}
           </button>
 
           <Tooltip title={isDark ? 'Light mode' : 'Dark mode'}>
@@ -386,31 +390,34 @@ export function AdminLayout() {
             </button>
           </Tooltip>
 
-          <Tooltip title="Switch language">
-            <button
-              onClick={toggleLanguage}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 8,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 4,
-                color: 'var(--color-text-secondary)',
-                fontSize: 12,
-                fontFamily: SANS_FONT,
-                fontWeight: 500,
-                borderRadius: 6,
-                transition: 'color 150ms ease',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-accent)' }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-secondary)' }}
-            >
-              <GlobalOutlined style={{ fontSize: 14 }} />
-              {i18n.language === 'en' ? 'EN' : 'UK'}
-            </button>
-          </Tooltip>
+          {/* responsive fix: hide language toggle on mobile to save space */}
+          {!isMobile && (
+            <Tooltip title="Switch language">
+              <button
+                onClick={toggleLanguage}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 8,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  color: 'var(--color-text-secondary)',
+                  fontSize: 12,
+                  fontFamily: SANS_FONT,
+                  fontWeight: 500,
+                  borderRadius: 6,
+                  transition: 'color 150ms ease',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-accent)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-secondary)' }}
+              >
+                <GlobalOutlined style={{ fontSize: 14 }} />
+                {i18n.language === 'en' ? 'EN' : 'UK'}
+              </button>
+            </Tooltip>
+          )}
 
           <div
             style={{
@@ -439,7 +446,8 @@ export function AdminLayout() {
                 color: avatarUrl ? undefined : 'var(--color-accent)',
               }}
             />
-            {!collapsed && (
+            {/* responsive fix: hide username on mobile — avatar alone is enough */}
+            {!isMobile && (
               <span
                 style={{
                   fontFamily: SANS_FONT,
