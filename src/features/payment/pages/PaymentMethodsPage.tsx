@@ -147,15 +147,36 @@ export default function PaymentMethodsPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', gap: isMobile ? 12 : 0, marginBottom: 24 }}>
+      {/*  responsive fix: header row stacks on mobile, already handled via isMobile — preserved as-is */}
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          justifyContent: 'space-between',
+          alignItems: isMobile ? 'stretch' : 'center',
+          gap: isMobile ? 12 : 0,
+          marginBottom: 24,
+        }}
+      >
         <Typography.Title level={2} style={{ margin: 0 }}>
           {t('paymentMethods', 'Payment Methods')}
         </Typography.Title>
-        <Space style={{ flexWrap: 'wrap' }}>
-          <Button icon={<LinkOutlined />} onClick={handleLinkVnPay} loading={linkVnPay.isPending}>
+        {/*  responsive fix: wrap action buttons on mobile */}
+        <Space wrap style={{ flexWrap: 'wrap' }}>
+          <Button
+            icon={<LinkOutlined />}
+            onClick={handleLinkVnPay}
+            loading={linkVnPay.isPending}
+            style={isMobile ? { width: '100%' } : undefined} //  responsive fix: full-width on mobile
+          >
             {t('linkVnPay', 'Link Card via VnPay')}
           </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setAddModalOpen(true)}>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setAddModalOpen(true)}
+            style={isMobile ? { width: '100%' } : undefined} //  responsive fix: full-width on mobile
+          >
             {t('addMethod', 'Add Method')}
           </Button>
         </Space>
@@ -199,8 +220,8 @@ export default function PaymentMethodsPage() {
                 <Card.Meta
                   avatar={TYPE_ICONS[method.type] ?? <CreditCardOutlined style={{ fontSize: 24 }} />}
                   title={
-                    <Space>
-                      <span>{method.maskedCardNumber ?? method.type.toUpperCase()}</span>
+                    <Space wrap> {/*  responsive fix: allow title+tag to wrap on narrow cards */}
+                      <span style={{ wordBreak: 'break-word' }}>{method.maskedCardNumber ?? method.type.toUpperCase()}</span>
                       {method.isDefault && <Tag color="gold">{t('default', 'Default')}</Tag>}
                     </Space>
                   }
@@ -229,12 +250,16 @@ export default function PaymentMethodsPage() {
         onOk={handleAdd}
         onCancel={() => { setAddModalOpen(false); resetAddForm() }}
         confirmLoading={addMethod.isPending}
+        //  responsive fix: modal fills screen width on mobile
+        style={{ maxWidth: '100%' }}
+        width={isMobile ? '95vw' : 520}
       >
         <Form layout="vertical">
           <Form.Item label={t('methodType', 'Type')}>
             <Select
               value={addType}
               onChange={(v) => { setAddType(v); setAddProvider(''); setAddAccountNumber(''); setAddHolderName(''); setAddLastFour('') }}
+              style={{ width: '100%' }} //  responsive fix: full-width select
               options={[
                 { value: PaymentMethodType.BankAccount, label: t('typeBankAccount', 'Bank Account') },
                 { value: PaymentMethodType.CreditCard, label: t('typeCreditCard', 'Credit Card') },
@@ -269,14 +294,15 @@ export default function PaymentMethodsPage() {
               <Form.Item label={t('lastFourDigits', 'Last 4 Digits')}>
                 <Input value={addLastFour} onChange={(e) => setAddLastFour(e.target.value)} maxLength={4} placeholder="1234" />
               </Form.Item>
-              <Space>
-                <Form.Item label={t('expiryMonth', 'Expiry Month')}>
-                  <InputNumber min={1} max={12} value={addExpiryMonth} onChange={(v) => setAddExpiryMonth(v ?? undefined)} />
+              {/*  responsive fix: expiry fields stack on very narrow modals */}
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <Form.Item label={t('expiryMonth', 'Expiry Month')} style={{ flex: 1, minWidth: 120 }}>
+                  <InputNumber style={{ width: '100%' }} min={1} max={12} value={addExpiryMonth} onChange={(v) => setAddExpiryMonth(v ?? undefined)} />
                 </Form.Item>
-                <Form.Item label={t('expiryYear', 'Expiry Year')}>
-                  <InputNumber min={2024} max={2040} value={addExpiryYear} onChange={(v) => setAddExpiryYear(v ?? undefined)} />
+                <Form.Item label={t('expiryYear', 'Expiry Year')} style={{ flex: 1, minWidth: 120 }}>
+                  <InputNumber style={{ width: '100%' }} min={2024} max={2040} value={addExpiryYear} onChange={(v) => setAddExpiryYear(v ?? undefined)} />
                 </Form.Item>
-              </Space>
+              </div>
               <Form.Item label={t('holderName', 'Cardholder Name')}>
                 <Input value={addHolderName} onChange={(e) => setAddHolderName(e.target.value)} placeholder={t('holderNamePlaceholder', 'Full name as on card')} />
               </Form.Item>

@@ -173,7 +173,11 @@ export default function WithdrawPage() {
       </Card>
 
       {/* Withdraw form */}
-      <Card title={t('withdrawForm', 'Withdrawal Request')} style={{ marginBottom: 24, maxWidth: 600 }}>
+      {/*  responsive fix: maxWidth constrained but fluid on mobile */}
+      <Card
+        title={t('withdrawForm', 'Withdrawal Request')}
+        style={{ marginBottom: 24, maxWidth: 600, width: '100%' }}
+      >
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
           <Form.Item
             label={t('amount', 'Amount')}
@@ -244,7 +248,12 @@ export default function WithdrawPage() {
           </Form.Item>
 
           <Form.Item>
-            <Button type="primary" htmlType="submit" loading={createWithdrawal.isPending}>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={createWithdrawal.isPending}
+              style={{ width: '100%' }} //  responsive fix: full-width submit on mobile
+            >
               {tc('action.submit', 'Submit')}
             </Button>
           </Form.Item>
@@ -253,24 +262,27 @@ export default function WithdrawPage() {
 
       {/* Recent withdrawals */}
       <Card title={t('recentWithdrawals', 'Recent Withdrawals')}>
-        <ResponsiveTable<WithdrawalRequestDto>
-          mobileMode="list"
-          rowKey="id"
-          columns={columns}
-          dataSource={withdrawals?.items ?? []}
-          loading={wdLoading}
-          pagination={{
-            current: withdrawals?.metadata?.currentPage ?? page,
-            pageSize: withdrawals?.metadata?.pageSize ?? pageSize,
-            total: withdrawals?.metadata?.totalCount ?? 0,
-            showSizeChanger: true,
-            showTotal: (total) => tc('pagination.total', { total }),
-            onChange: (p, ps) => {
-              setPage(p)
-              setPageSize(ps)
-            },
-          }}
-        />
+        {/*  responsive fix: horizontal scroll wrapper for table on narrow screens */}
+        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <ResponsiveTable<WithdrawalRequestDto>
+            mobileMode="list"
+            rowKey="id"
+            columns={columns}
+            dataSource={withdrawals?.items ?? []}
+            loading={wdLoading}
+            pagination={{
+              current: withdrawals?.metadata?.currentPage ?? page,
+              pageSize: withdrawals?.metadata?.pageSize ?? pageSize,
+              total: withdrawals?.metadata?.totalCount ?? 0,
+              showSizeChanger: true,
+              showTotal: (total) => tc('pagination.total', { total }),
+              onChange: (p, ps) => {
+                setPage(p)
+                setPageSize(ps)
+              },
+            }}
+          />
+        </div>
       </Card>
     </div>
   )

@@ -27,10 +27,8 @@ export default function VnPayReturnPage() {
   const [result, setResult] = useState<VnPayCallbackResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  // Check if this was a deposit payment (auction ID stored before redirect)
   const depositAuctionId = localStorage.getItem('oio_deposit_auction_id')
 
-  // Parse VnPay params for display
   const transactionNo = searchParams.get('vnp_TransactionNo') ?? ''
   const amount = (Number(searchParams.get('vnp_Amount')) || 0) / 100
   const orderInfo = searchParams.get('vnp_OrderInfo') ?? ''
@@ -38,21 +36,18 @@ export default function VnPayReturnPage() {
   const bankCode = searchParams.get('vnp_BankCode') ?? ''
   const payDate = searchParams.get('vnp_PayDate') ?? ''
 
-  // Format VnPay date (yyyyMMddHHmmss → readable)
   const formattedPayDate = payDate
     ? formatDateTime(
         `${payDate.slice(0, 4)}-${payDate.slice(4, 6)}-${payDate.slice(6, 8)}T${payDate.slice(8, 10)}:${payDate.slice(10, 12)}:${payDate.slice(12, 14)}`,
       )
     : ''
 
-  // Clean up localStorage on unmount
   useEffect(() => {
     return () => {
       localStorage.removeItem('oio_deposit_auction_id')
     }
   }, [])
 
-  // Call BE to confirm the payment
   useEffect(() => {
     if (calledRef.current) return
     calledRef.current = true
@@ -64,7 +59,6 @@ export default function VnPayReturnPage() {
         setResult(res.data)
       })
       .catch((err) => {
-        // Try to extract error detail
         const detail = err?.response?.data?.detail || err?.response?.data?.message || t('payment:vnpayReturn.verificationFailed', 'Payment verification failed')
         setError(detail)
       })
@@ -73,7 +67,6 @@ export default function VnPayReturnPage() {
       })
   }, [])
 
-  // Loading
   if (loading) {
     return (
       <div
@@ -107,7 +100,7 @@ export default function VnPayReturnPage() {
         justifyContent: 'center',
         minHeight: '100vh',
         background: 'var(--color-bg-primary)',
-        padding: 24,
+        padding: isMobile ? 16 : 24, //  responsive fix: reduce padding on mobile
       }}
     >
       <div
@@ -117,7 +110,7 @@ export default function VnPayReturnPage() {
           background: 'var(--color-bg-card)',
           border: '1px solid var(--color-border)',
           borderRadius: 4,
-          padding: isMobile ? '32px 16px' : '48px 40px',
+          padding: isMobile ? '24px 16px' : '48px 40px', //  responsive fix: tighter padding on mobile
           textAlign: 'center',
         }}
       >
@@ -172,7 +165,7 @@ export default function VnPayReturnPage() {
             <span
               style={{
                 fontFamily: MONO_FONT,
-                fontSize: isMobile ? 28 : 36,
+                fontSize: isMobile ? 24 : 36, //  responsive fix: smaller amount font on mobile
                 fontWeight: 500,
                 color: isSuccess ? 'var(--color-success)' : 'var(--color-danger)',
               }}
@@ -188,7 +181,11 @@ export default function VnPayReturnPage() {
             column={1}
             size="small"
             labelStyle={{ color: 'var(--color-text-secondary)', fontSize: 13, width: isMobile ? 100 : 140 }}
-            contentStyle={{ fontFamily: MONO_FONT, fontSize: 13 }}
+            contentStyle={{
+              fontFamily: MONO_FONT,
+              fontSize: 13,
+              wordBreak: 'break-all', //  responsive fix: prevent long codes overflowing on mobile
+            }}
           >
             {txnRef && (
               <Descriptions.Item label={t('payment:vnpayReturn.transactionRef', 'Transaction Ref')}>
@@ -229,7 +226,15 @@ export default function VnPayReturnPage() {
         </div>
 
         {/* Actions */}
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', flexDirection: isMobile ? 'column' : 'row' }}>
+        <div
+          style={{
+            display: 'flex',
+            gap: 12,
+            justifyContent: 'center',
+            flexWrap: 'wrap',
+            flexDirection: 'column', //  responsive fix: always column to prevent overflow on narrow screens
+          }}
+        >
           {isSuccess && depositAuctionId && (
             <Button
               type="primary"
@@ -244,6 +249,7 @@ export default function VnPayReturnPage() {
                 fontWeight: 500,
                 background: 'var(--color-accent)',
                 borderColor: 'var(--color-accent)',
+                width: '100%', //  responsive fix: full-width buttons on mobile
               }}
             >
               {t('payment:vnpayReturn.backToAuction', 'Back to Auction')}
@@ -260,6 +266,7 @@ export default function VnPayReturnPage() {
                 fontWeight: 500,
                 background: 'var(--color-accent)',
                 borderColor: 'var(--color-accent)',
+                width: '100%', //  responsive fix
               }}
             >
               {t('payment:vnpayReturn.viewPaymentMethods', 'View Payment Methods')}
@@ -276,6 +283,7 @@ export default function VnPayReturnPage() {
                 fontWeight: 500,
                 background: 'var(--color-accent)',
                 borderColor: 'var(--color-accent)',
+                width: '100%', //  responsive fix
               }}
             >
               {t('payment:vnpayReturn.viewOrders', 'View Orders')}
@@ -292,6 +300,7 @@ export default function VnPayReturnPage() {
                 fontWeight: 500,
                 background: 'var(--color-accent)',
                 borderColor: 'var(--color-accent)',
+                width: '100%', //  responsive fix
               }}
             >
               {t('payment:vnpayReturn.retry', 'Try Again')}
@@ -303,7 +312,13 @@ export default function VnPayReturnPage() {
               localStorage.removeItem('oio_deposit_auction_id')
               navigate('/')
             }}
-            style={{ height: 48, padding: '0 32px', borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
+            style={{
+              height: 48,
+              padding: '0 32px',
+              borderColor: 'var(--color-border)',
+              color: 'var(--color-text-secondary)',
+              width: '100%', //  responsive fix
+            }}
           >
             {t('payment:vnpayReturn.backToHome', 'Back to Home')}
           </Button>

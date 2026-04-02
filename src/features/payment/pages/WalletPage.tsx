@@ -181,7 +181,8 @@ export default function WalletPage() {
       </Row>
 
       {/* Actions */}
-      <Space style={{ marginBottom: 24 }}>
+      {/*  responsive fix: wrap buttons on mobile */}
+      <Space wrap style={{ marginBottom: 24 }}>
         <Button
           type="primary"
           icon={<PlusOutlined />}
@@ -226,24 +227,27 @@ export default function WalletPage() {
           />
         </Space>
 
-        <ResponsiveTable<WalletTransactionDto>
-          mobileMode="list"
-          rowKey="id"
-          columns={columns}
-          dataSource={transactions?.items ?? []}
-          loading={txLoading}
-          pagination={{
-            current: transactions?.metadata?.currentPage ?? page,
-            pageSize: transactions?.metadata?.pageSize ?? pageSize,
-            total: transactions?.metadata?.totalCount ?? 0,
-            showSizeChanger: true,
-            showTotal: (total) => tc('pagination.total', { total }),
-            onChange: (p, ps) => {
-              setPage(p)
-              setPageSize(ps)
-            },
-          }}
-        />
+        {/*  responsive fix: wrap table in overflow-x scroll container for mobile */}
+        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <ResponsiveTable<WalletTransactionDto>
+            mobileMode="list"
+            rowKey="id"
+            columns={columns}
+            dataSource={transactions?.items ?? []}
+            loading={txLoading}
+            pagination={{
+              current: transactions?.metadata?.currentPage ?? page,
+              pageSize: transactions?.metadata?.pageSize ?? pageSize,
+              total: transactions?.metadata?.totalCount ?? 0,
+              showSizeChanger: true,
+              showTotal: (total) => tc('pagination.total', { total }),
+              onChange: (p, ps) => {
+                setPage(p)
+                setPageSize(ps)
+              },
+            }}
+          />
+        </div>
       </Card>
 
       {/* Top-up Modal */}
@@ -270,6 +274,9 @@ export default function WalletPage() {
         confirmLoading={topupMutation.isPending}
         okButtonProps={{ disabled: !topupAmount || topupAmount <= 0 }}
         okText={t('topupConfirm', 'Nap tien')}
+        //  responsive fix: full-width modal on mobile
+        style={{ maxWidth: '100%' }}
+        styles={{ body: { padding: '16px' } }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Typography.Paragraph style={{ margin: 0, color: 'var(--color-text-secondary)' }}>

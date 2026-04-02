@@ -21,7 +21,6 @@ export default function AboutPage() {
   const { isMobile } = useBreakpoint()
   const isVi = i18n.language === 'vi'
 
-  // Vietnamese doesn't render well in DM Serif Display — use Inter bold instead
   const headingFont = isVi ? SANS_FONT : SERIF_FONT
   const headingWeight = isVi ? 600 : 400
 
@@ -62,7 +61,7 @@ export default function AboutPage() {
         <p
           style={{
             fontFamily: SANS_FONT,
-            fontSize: 18,
+            fontSize: isMobile ? 16 : 18, //  responsive fix: slightly smaller hero body on mobile
             lineHeight: 1.7,
             color: 'var(--color-text-secondary)',
             maxWidth: 560,
@@ -82,7 +81,13 @@ export default function AboutPage() {
       {/* ─── Our Story ─── */}
       <section
         className="oio-fade-in oio-fade-in-delay-1"
-        style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 32 : 80, alignItems: 'center', padding: isMobile ? '48px 0' : '100px 0' }}
+        style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+          gap: isMobile ? 32 : 80,
+          alignItems: 'center',
+          padding: isMobile ? '48px 0' : '100px 0',
+        }}
       >
         <div>
           <p style={{ fontFamily: SANS_FONT, fontSize: 11, fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-accent)', marginBottom: 16 }}>
@@ -100,7 +105,18 @@ export default function AboutPage() {
         </div>
 
         {/* Stats column */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24, padding: isMobile ? '24px 20px' : '48px 40px', background: 'var(--color-bg-surface)', borderRadius: 2, position: 'relative' }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 24,
+            //  responsive fix: less padding on mobile
+            padding: isMobile ? '24px 16px' : '48px 40px',
+            background: 'var(--color-bg-surface)',
+            borderRadius: 2,
+            position: 'relative',
+          }}
+        >
           <div style={{ position: 'absolute', top: 24, right: 24, fontFamily: SERIF_FONT, fontSize: 72, color: 'var(--color-accent)', opacity: 0.08, lineHeight: 1 }}>
             OIO
           </div>
@@ -130,7 +146,15 @@ export default function AboutPage() {
           {t('about.howItWorksTitle', 'Ba bước đơn giản')}
         </h2>
 
-        <div className="oio-stagger" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? 24 : 48 }}>
+        <div
+          className="oio-stagger"
+          style={{
+            display: 'grid',
+            //  responsive fix: single column on mobile
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+            gap: isMobile ? 24 : 48,
+          }}
+        >
           {[
             { icon: <SearchOutlined style={{ fontSize: 28, color: 'var(--color-accent)' }} />, title: t('about.step1Title', 'Khám phá'), desc: t('about.step1Desc', 'Duyệt qua bộ sưu tập đa dạng với hàng ngàn sản phẩm được kiểm định chất lượng.') },
             { icon: <ThunderboltOutlined style={{ fontSize: 28, color: 'var(--color-accent)' }} />, title: t('about.step2Title', 'Đấu giá'), desc: t('about.step2Desc', 'Đặt giá thầu theo thời gian thực. Hệ thống tự động đấu giá thông minh hỗ trợ bạn.') },
@@ -160,21 +184,56 @@ export default function AboutPage() {
           {t('about.trustTitle', 'Đấu giá với sự an tâm tuyệt đối')}
         </h2>
 
-        <div className="oio-stagger" style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 12 : 32 }}>
+        <div
+          className="oio-stagger"
+          style={{
+            display: 'grid',
+            //  responsive fix: 2 cols on mobile (was already responsive), maintained
+            gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
+            gap: isMobile ? 12 : 32,
+          }}
+        >
           {[
             { icon: <CheckCircleOutlined style={{ fontSize: 24, color: 'var(--color-accent)' }} />, title: t('about.trust1Title', 'Người bán xác minh'), desc: t('about.trust1Desc', 'Mọi người bán đều trải qua quy trình xác minh danh tính nghiêm ngặt.') },
             { icon: <LockOutlined style={{ fontSize: 24, color: 'var(--color-accent)' }} />, title: t('about.trust2Title', 'Thanh toán an toàn'), desc: t('about.trust2Desc', 'Mã hóa SSL và hệ thống ví điện tử bảo mật tuyệt đối.') },
             { icon: <SafetyCertificateOutlined style={{ fontSize: 24, color: 'var(--color-accent)' }} />, title: t('about.trust3Title', 'Kiểm định chất lượng'), desc: t('about.trust3Desc', 'Đội ngũ chuyên gia kiểm tra từng sản phẩm trước khi đấu giá.') },
             { icon: <StarOutlined style={{ fontSize: 24, color: 'var(--color-accent)' }} />, title: t('about.trust4Title', 'Hỗ trợ 24/7'), desc: t('about.trust4Desc', 'Đội ngũ hỗ trợ khách hàng luôn sẵn sàng giải đáp mọi thắc mắc.') },
           ].map((item) => (
-            <div key={item.title} style={{ padding: isMobile ? '16px 12px' : '32px 24px', background: 'var(--color-bg-card)', borderRadius: 2, border: '1px solid var(--color-border-light)' }}>
+            <div
+              key={item.title}
+              style={{
+                padding: isMobile ? '16px 12px' : '32px 24px',
+                background: 'var(--color-bg-card)',
+                borderRadius: 2,
+                border: '1px solid var(--color-border-light)',
+                //  responsive fix: prevent content overflow in 2-col mobile grid
+                minWidth: 0,
+                overflow: 'hidden',
+              }}
+            >
               <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--color-accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
                 {item.icon}
               </div>
-              <h4 style={{ fontFamily: headingFont, fontSize: isVi ? 16 : 18, fontWeight: headingWeight, color: 'var(--color-text-primary)', marginBottom: 8 }}>
+              <h4
+                style={{
+                  fontFamily: headingFont,
+                  fontSize: isVi ? (isMobile ? 14 : 16) : (isMobile ? 15 : 18), //  responsive fix: smaller text in 2-col layout
+                  fontWeight: headingWeight,
+                  color: 'var(--color-text-primary)',
+                  marginBottom: 8,
+                }}
+              >
                 {item.title}
               </h4>
-              <p style={{ fontFamily: SANS_FONT, fontSize: 13, lineHeight: 1.7, color: 'var(--color-text-secondary)', margin: 0 }}>
+              <p
+                style={{
+                  fontFamily: SANS_FONT,
+                  fontSize: isMobile ? 12 : 13, //  responsive fix: tighter description in 2-col mobile
+                  lineHeight: 1.7,
+                  color: 'var(--color-text-secondary)',
+                  margin: 0,
+                }}
+              >
                 {item.desc}
               </p>
             </div>
@@ -196,7 +255,18 @@ export default function AboutPage() {
           size="large"
           onClick={() => navigate('/auctions')}
           className="oio-press"
-          style={{ height: 52, padding: '0 48px', borderRadius: 2, fontWeight: 500, fontSize: 15, fontFamily: SANS_FONT, background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
+          style={{
+            height: 52,
+            //  responsive fix: full-width CTA on mobile, fixed on desktop
+            width: isMobile ? '100%' : 'auto',
+            padding: isMobile ? '0 24px' : '0 48px',
+            borderRadius: 2,
+            fontWeight: 500,
+            fontSize: 15,
+            fontFamily: SANS_FONT,
+            background: 'var(--color-accent)',
+            borderColor: 'var(--color-accent)',
+          }}
         >
           {t('about.ctaButton', 'Khám phá ngay')}
         </Button>
