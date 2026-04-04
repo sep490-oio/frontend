@@ -106,7 +106,7 @@ export default function WalletPage() {
       <div style={{ marginBottom: 24 }}>
         <h1
           style={{
-            fontFamily: "'DM Serif Display', Georgia, serif",
+            fontFamily: "'Noto Serif', Georgia, serif",
             fontWeight: 400,
             fontSize: 28,
             color: 'var(--color-text-primary)',
@@ -135,7 +135,7 @@ export default function WalletPage() {
               formatter={(val) => formatCurrency(val as number, wallet?.currency)}
               valueStyle={{
                 color: 'var(--color-success)',
-                fontFamily: "'DM Mono', monospace",
+                fontFamily: "'JetBrains Mono', monospace",
                 fontSize: 28,
                 fontWeight: 500,
               }}
@@ -150,7 +150,7 @@ export default function WalletPage() {
               formatter={(val) => formatCurrency(val as number, wallet?.currency)}
               valueStyle={{
                 color: '#d48806',
-                fontFamily: "'DM Mono', monospace",
+                fontFamily: "'JetBrains Mono', monospace",
                 fontSize: 28,
                 fontWeight: 500,
               }}
@@ -168,7 +168,7 @@ export default function WalletPage() {
               formatter={(val) => formatCurrency(val as number, wallet?.currency)}
               valueStyle={{
                 color: 'var(--color-text-secondary)',
-                fontFamily: "'DM Mono', monospace",
+                fontFamily: "'JetBrains Mono', monospace",
                 fontSize: 28,
                 fontWeight: 500,
               }}
@@ -204,7 +204,7 @@ export default function WalletPage() {
       <Card
         title={
           <span style={{
-            fontFamily: "'DM Serif Display', Georgia, serif",
+            fontFamily: "'Noto Serif', Georgia, serif",
             fontWeight: 400,
             fontSize: 18,
           }}>

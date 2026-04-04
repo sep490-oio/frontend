@@ -23,7 +23,8 @@ import {
   useDeleteVerificationDocument,
 } from '@/features/seller/api'
 import { useMediaUpload } from '@/hooks/useMediaUpload'
-import { VerificationDocumentSlots, getRequiredSlots } from '@/features/seller/components/VerificationDocumentSlots'
+import { VerificationDocumentSlots } from '@/features/seller/components/VerificationDocumentSlots'
+import { getRequiredSlots } from '@/features/seller/components/verificationSlotUtils'
 import { IdentityVerificationStatus } from '@/types/enums'
 import { SendOutlined } from '@ant-design/icons'
 import { TermsAcceptanceGate } from '@/features/user/components/TermsAcceptanceGate'

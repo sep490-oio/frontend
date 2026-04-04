@@ -138,7 +138,7 @@ export default function AdminVerificationsPage() {
       <ResponsiveTable<VerificationDto>
         rowKey="id"
         columns={columns}
-        dataSource={(data as any)?.items ?? data ?? []}
+        dataSource={data?.items ?? []}
         loading={isLoading}
         mobileMode="list"
         pagination={{ pageSize: 20 }}

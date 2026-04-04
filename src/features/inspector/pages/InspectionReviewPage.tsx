@@ -8,7 +8,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
 import type { TablePaginationConfig } from 'antd'
 
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
+const SERIF_FONT = "'Noto Serif', Georgia, serif"
 
 export default function InspectionReviewPage() {
   const [page, setPage] = useState(1)

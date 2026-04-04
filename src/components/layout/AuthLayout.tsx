@@ -2,9 +2,9 @@ import { Outlet, Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint' // responsive fix: use hook instead of CSS hack
 
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
-const SANS_FONT = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-const MONO_FONT = "'DM Mono', monospace"
+const SERIF_FONT = "'Noto Serif', Georgia, serif"
+const SANS_FONT = "'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+const MONO_FONT = "'JetBrains Mono', monospace"
 
 const STATS = [
   { value: '12K+', label: 'items' },

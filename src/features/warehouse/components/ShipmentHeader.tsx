@@ -34,7 +34,7 @@ export function ShipmentHeader({ clientOrderCode, status, providerCode, shipment
 
       <Flex justify="space-between" align="center" wrap="wrap" gap={12} style={{ marginBottom: 8 }}>
         <Flex align="center" gap={12}>
-          <Typography.Title level={3} style={{ margin: 0, fontFamily: "'DM Mono', monospace" }}>
+          <Typography.Title level={3} style={{ margin: 0, fontFamily: "'JetBrains Mono', monospace" }}>
             {clientOrderCode}
           </Typography.Title>
           <Button

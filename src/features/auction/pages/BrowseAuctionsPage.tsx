@@ -11,7 +11,7 @@ import { AuctionStatus } from '@/types/enums'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import type { AuctionFilterParams } from '@/types'
 
-const SERIF = "'DM Serif Display', Georgia, serif"
+const SERIF = "'Noto Serif', Georgia, serif"
 
 const SORT_OPTIONS = [
   { value: 'EndTime Asc', label: 'Ending soon' },

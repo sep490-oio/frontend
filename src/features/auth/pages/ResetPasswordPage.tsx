@@ -10,7 +10,7 @@ import { createPasswordSchema } from '@/utils/validation'
 import type { AxiosError } from 'axios'
 import type { ApiError } from '@/types'
 
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
+const SERIF_FONT = "'Noto Serif', Georgia, serif"
 
 type ResetPasswordFormValues = { newPassword: string; confirmPassword: string }
 

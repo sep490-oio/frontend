@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { Typography, Card, Button, Space, Spin, Alert, Switch, InputNumber, Input, App, Popconfirm, Select } from 'antd'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
@@ -26,8 +26,11 @@ export default function AdminAuctionControlPage() {
   const flagAuction = useFlagAuction()
   const cancelBid = useCancelBid()
 
+  const auction = detail?.auction
+
   const [featured, setFeatured] = useState(false)
   const [priority, setPriority] = useState(0)
+  const [lastSyncedId, setLastSyncedId] = useState<string | null>(null)
   const [emergencyReason, setEmergencyReason] = useState('')
   const [emergencyTriggerSource, setEmergencyTriggerSource] = useState('')
   const [emergencyPayload, setEmergencyPayload] = useState('')
@@ -42,15 +45,12 @@ export default function AdminAuctionControlPage() {
   const [resolveEmPayload, setResolveEmPayload] = useState('')
   const [resolveEmId, setResolveEmId] = useState('')
 
-  const auction = detail?.auction
-
-  // Sync initial state from auction data
-  useEffect(() => {
-    if (auction) {
-      setFeatured(auction.isFeatured ?? false)
-      setPriority(auction.priority ?? 0)
-    }
-  }, [auction])
+  // Sync form state when a new auction loads (avoids setState-in-effect)
+  if (auction && auction.id !== lastSyncedId) {
+    setFeatured(auction.isFeatured ?? false)
+    setPriority(auction.priority ?? 0)
+    setLastSyncedId(auction.id)
+  }
 
   if (isLoading) return <div style={{ textAlign: 'center', padding: 80 }}><Spin size="large" /></div>
   if (error || !auction) return <Alert type="error" message={t('common.error')} showIcon />

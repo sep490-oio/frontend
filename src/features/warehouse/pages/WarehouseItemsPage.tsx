@@ -31,7 +31,7 @@ export default function WarehouseItemsPage() {
       key: 'itemId',
       ellipsis: true,
       render: (itemId: string) => (
-        <Button type="link" size="small" onClick={() => navigate(`/items/${itemId}`)} style={{ padding: 0, fontFamily: "'DM Mono', monospace", fontSize: 12 }}>
+        <Button type="link" size="small" onClick={() => navigate(`/items/${itemId}`)} style={{ padding: 0, fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }}>
           {itemId.slice(0, 12)}...
         </Button>
       ),

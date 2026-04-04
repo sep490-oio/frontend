@@ -22,8 +22,8 @@ import { useBreakpoint } from '@/hooks/useBreakpoint'
 
 const { Content } = Layout
 
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
-const SANS_FONT = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+const SERIF_FONT = "'Noto Serif', Georgia, serif"
+const SANS_FONT = "'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
 
 const SIDEBAR_WIDTH = 240
 const SIDEBAR_COLLAPSED = 72
@@ -350,10 +350,10 @@ export function InspectorLayout() {
             }}
           >
             <ArrowLeftOutlined style={{ fontSize: 11 }} />
-            {!isMobile && 'Back to Platform'}
+            {!isMobile && t('common:layout.backToPlatform')}
           </button>
 
-          <Tooltip title={isDark ? 'Light mode' : 'Dark mode'}>
+          <Tooltip title={isDark ? t('common:layout.lightMode') : t('common:layout.darkMode')}>
             <button
               onClick={toggleTheme}
               style={{
@@ -377,7 +377,7 @@ export function InspectorLayout() {
 
           {/* responsive fix: hide lang toggle on mobile */}
           {!isMobile && (
-            <Tooltip title="Switch language">
+            <Tooltip title={t('common:layout.switchLanguage')}>
               <button
                 onClick={toggleLanguage}
                 style={{

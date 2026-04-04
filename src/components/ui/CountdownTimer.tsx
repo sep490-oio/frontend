@@ -88,7 +88,7 @@ export function CountdownTimer({ endTime, onEnd, size = 'default' }: CountdownTi
       <span
         style={{
           color: 'var(--color-text-secondary)',
-          fontFamily: "'DM Mono', monospace",
+          fontFamily: "'JetBrains Mono', monospace",
           fontSize: FONT_SIZES[size],
         }}
       >
@@ -113,7 +113,7 @@ export function CountdownTimer({ endTime, onEnd, size = 'default' }: CountdownTi
       aria-atomic="true"
       style={{
         color,
-        fontFamily: "'DM Mono', monospace",
+        fontFamily: "'JetBrains Mono', monospace",
         fontSize: FONT_SIZES[size],
         fontVariantNumeric: 'tabular-nums',
       }}

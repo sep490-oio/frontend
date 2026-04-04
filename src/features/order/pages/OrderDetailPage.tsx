@@ -209,7 +209,7 @@ export default function OrderDetailPage() {
       <WarrantyNotice
         orderStatus={order.status}
         deliveredAt={order.deliveredAt}
-        confirmedAt={(order as any).confirmedAt}
+        confirmedAt={(order as unknown as { confirmedAt?: string }).confirmedAt}
       />
 
       {/* Seller rating form */}

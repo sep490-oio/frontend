@@ -47,7 +47,7 @@ export function PriceDisplay({
     <span
       className={`oio-price${pulse ? ' oio-price-pulse' : ''}`}
       style={{
-        fontFamily: "'DM Mono', monospace",
+        fontFamily: "'JetBrains Mono', monospace",
         fontSize: FONT_SIZES[size],
         fontVariantNumeric: 'tabular-nums',
         color: 'var(--color-accent)',

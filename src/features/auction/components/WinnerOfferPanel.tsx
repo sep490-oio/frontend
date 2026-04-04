@@ -14,7 +14,7 @@ interface WinnerOfferPanelProps {
     offerAmount: number
     currency: string
     status: string
-    expiresAt?: string
+    expiresAt?: string | null
     createdAt: string
   }
   onAccept?: (offerId: string) => void
@@ -63,7 +63,7 @@ export function WinnerOfferPanel({ offer, onAccept, onDecline, isAcceptLoading, 
 
       <div style={{ fontSize: 13, lineHeight: 1.8, color: 'var(--color-text-secondary)' }}>
         <div>
-          {t('offerAmount', 'Amount')}: <strong style={{ color: 'var(--color-accent)', fontFamily: "'DM Mono', monospace" }}>{formatCurrency(offer.offerAmount, offer.currency)}</strong>
+          {t('offerAmount', 'Amount')}: <strong style={{ color: 'var(--color-accent)', fontFamily: "'JetBrains Mono', monospace" }}>{formatCurrency(offer.offerAmount, offer.currency)}</strong>
         </div>
         {offer.expiresAt && !isExpired && (
           <div>

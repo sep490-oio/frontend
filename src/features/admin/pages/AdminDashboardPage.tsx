@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Typography, Card, Row, Col, List, Button, Space, Spin, Alert, Avatar, Progress, Tag } from 'antd'
 import {
   UserOutlined,
@@ -26,8 +27,8 @@ import { StatusBadge } from '@/components/ui/StatusBadge'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import type { ReportDto } from '@/types'
 
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
-const MONO_FONT = "'DM Mono', monospace"
+const SERIF_FONT = "'Noto Serif', Georgia, serif"
+const MONO_FONT = "'JetBrains Mono', monospace"
 
 /* ── Trend indicator component ─────────────────────────────────────── */
 
@@ -57,6 +58,11 @@ export default function AdminDashboardPage() {
   const { t } = useTranslation('admin')
   const navigate = useNavigate()
   const { isMobile } = useBreakpoint()
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1_000)
+    return () => clearInterval(id)
+  }, [])
 
   const { data: users, isLoading: usersLoading } = useAdminUsers({ pageNumber: 1, pageSize: 1 })
   const { data: verifications, isLoading: verificationsLoading } = usePendingVerifications({ pageNumber: 1, pageSize: 5, status: 'pending' })
@@ -310,7 +316,6 @@ export default function AdminDashboardPage() {
             {liveAuctions?.items?.length ? (
               <Space direction="vertical" size={16} style={{ width: '100%' }}>
                 {liveAuctions.items.map((auction) => {
-                  const now = Date.now()
                   const end = auction.endTime ? new Date(auction.endTime).getTime() : now
                   const start = auction.startTime ? new Date(auction.startTime).getTime() : now
                   const total = end - start

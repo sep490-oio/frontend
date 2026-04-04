@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { Badge, Popover, Button, Spin } from 'antd'
 import {
   BellOutlined,
@@ -44,15 +44,15 @@ export function NotificationDropdown() {
   const hub = useNotificationHub()
 
   const unreadCount = hub.unreadCount || unreadData?.count || 0
-  const notifications = notificationsData?.items ?? []
+  const notifications = useMemo(() => notificationsData?.items ?? [], [notificationsData?.items])
 
-  const handleClick = (n: NotificationDto) => {
+  const handleClick = useCallback((n: NotificationDto) => {
     if (n.status === NotificationStatus.Unread) {
       markAsRead.mutate(n.id)
     }
     const route = getEntityRoute(n.entityType, n.entityId)
     if (route) navigate(route)
-  }
+  }, [markAsRead, navigate])
 
   const content = useMemo(
     () => (
@@ -277,7 +277,7 @@ export function NotificationDropdown() {
       </div>
     ),
     // responsive fix: add isMobile to memo deps so width recomputes on resize
-    [notifications, unreadCount, isLoading, t, navigate, isMobile],
+    [notifications, unreadCount, isLoading, t, navigate, isMobile, handleClick, markAllAsRead],
   )
 
   return (

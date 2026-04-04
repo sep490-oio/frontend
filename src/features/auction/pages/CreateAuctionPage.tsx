@@ -31,7 +31,7 @@ import { DEFAULT_CURRENCY } from '@/utils/constants'
 import type { CreateAuctionRequest } from '@/features/auction/api'
 import { useBreakpoint } from '@/hooks/useBreakpoint' //  responsive fix
 
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
+const SERIF_FONT = "'Noto Serif', Georgia, serif"
 
 interface FormValues {
   title: string
@@ -186,13 +186,13 @@ export default function CreateAuctionPage() {
     buyNowPrice: values.buyNowPrice,
     extensionMinutes: values.extensionMinutes,
     currency: values.currency,
-    images: uploadedImages?.map((img, i) => ({
+    media: uploadedImages?.map((img, i) => ({
       mediaUploadId: img.mediaUploadId,
       isPrimary: i === 0,
       sortOrder: i,
     })),
     verifyByPlatform: requireVerification,
-  }) as any as CreateAuctionRequest
+  })
 
   // Save Draft: create auction as draft, optionally set timing
   const handleSaveDraft = async () => {
@@ -395,9 +395,9 @@ export default function CreateAuctionPage() {
             {existingItemForPreview.images && existingItemForPreview.images.length > 0 && (
               <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
                 <Image.PreviewGroup>
-                  {existingItemForPreview.images.slice(0, 4).map((img: any) => (
+                  {existingItemForPreview.images.slice(0, 4).map((img, idx) => (
                     <Image
-                      key={img.id}
+                      key={img.url ?? idx}
                       src={img.thumbnailUrl ?? img.url}
                       width={isMobile ? 56 : 64} //  responsive fix: slightly smaller on mobile
                       height={isMobile ? 56 : 64}

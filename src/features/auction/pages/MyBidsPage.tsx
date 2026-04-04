@@ -26,7 +26,7 @@ const STATUS_PILLS: StatusPill[] = [
   { value: BidStatus.Winning, label: 'Winning' },
 ]
 
-const SANS_FONT = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+const SANS_FONT = "'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
 
 export default function MyBidsPage() {
   const { t } = useTranslation('auction')
@@ -45,8 +45,7 @@ export default function MyBidsPage() {
     pageSize,
     ...(statusFilter ? { status: statusFilter } : {}),
     sortBy,
-    ...(connected ? {} : { refetchInterval: 30000 }) as any,
-  })
+  }, connected ? undefined : { refetchInterval: 30000 })
 
   const { data: pendingOffers } = useMyPendingWinnerOffers()
   const respondMutation = useRespondRunnerUpOffer()
@@ -101,9 +100,9 @@ export default function MyBidsPage() {
             {pendingOffers.map((offer) => (
               <WinnerOfferPanel
                 key={offer.offerId}
-                offer={offer as any}
-                onAccept={(_offerId) => respondMutation.mutate({ auctionId: offer.auctionId, accept: true })}
-                onDecline={(_offerId) => respondMutation.mutate({ auctionId: offer.auctionId, accept: false })}
+                offer={offer}
+                onAccept={() => respondMutation.mutate({ auctionId: offer.auctionId, accept: true })}
+                onDecline={() => respondMutation.mutate({ auctionId: offer.auctionId, accept: false })}
                 isAcceptLoading={respondMutation.isPending}
                 isDeclineLoading={respondMutation.isPending}
               />
@@ -239,11 +238,11 @@ export default function MyBidsPage() {
                         padding: '3px 10px',
                         borderRadius: 6,
                         fontSize: 11,
-                        fontFamily: "'DM Mono', monospace",
+                        fontFamily: "'JetBrains Mono', monospace",
                         fontWeight: 500,
                       }}
                     >
-                      {formatDateTime((bid as any).bidPlacedAt)}
+                      {formatDateTime(bid.bidPlacedAt ?? bid.createdAt)}
                     </div>
 
                     {/* Status badge (top-right) */}
@@ -290,7 +289,7 @@ export default function MyBidsPage() {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {(bid as any).itemTitle}
+                      {bid.itemTitle}
                     </h4>
 
                     {/* Price */}
@@ -309,7 +308,7 @@ export default function MyBidsPage() {
                     </div>
                     <div
                       style={{
-                        fontFamily: "'DM Mono', monospace",
+                        fontFamily: "'JetBrains Mono', monospace",
                         fontSize: 18,
                         fontWeight: 600,
                         color: 'var(--color-accent)',
@@ -317,8 +316,8 @@ export default function MyBidsPage() {
                       }}
                     >
                       <PriceDisplay
-                        amount={(bid as any).currentPrice?.amount ?? bid.amount.amount}
-                        currency={(bid as any).currentPrice?.currency ?? bid.amount.currency}
+                        amount={bid.currentPrice?.amount ?? bid.amount.amount}
+                        currency={bid.currentPrice?.currency ?? bid.amount.currency}
                         size="small"
                       />
                     </div>

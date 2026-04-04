@@ -12,7 +12,6 @@ import {
   SafetyCertificateOutlined,
   CheckCircleOutlined,
   CustomerServiceOutlined,
-  PhoneOutlined,
   MailOutlined,
 } from '@ant-design/icons'
 import { useRegister } from '@/features/auth/api'
@@ -43,7 +42,7 @@ const PROVINCE_OPTIONS = [
   { value: 'hue', label: 'Thua Thien Hue' },
 ]
 
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
+const SERIF_FONT = "'Noto Serif', Georgia, serif"
 const SANS_FONT = "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif"
 
 const fieldStyle: React.CSSProperties = {

@@ -90,7 +90,7 @@ export function ShipmentOverview({ shipment, currency = 'VND' }: ShipmentOvervie
             label={t('itemRef', 'Item Ref')}
             value={
               <Flex align="center" gap={4}>
-                <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 11 }}>{shipment.itemId}</span>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11 }}>{shipment.itemId}</span>
                 <Button
                   type="text"
                   size="small"

@@ -10,7 +10,7 @@ import { formatDateTime, formatFileSize } from '@/utils/format'
 import type { TermsDocumentDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
 
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
+const SERIF_FONT = "'Noto Serif', Georgia, serif"
 
 const TERMS_TYPES = [
   { value: 'bidder', label: 'Bidder Terms' },
@@ -73,7 +73,7 @@ export default function AdminTermsPage() {
       key: 'version',
       width: 80,
       render: (v: number) => (
-        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 13 }}>v{v}</span>
+        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13 }}>v{v}</span>
       ),
     },
     {

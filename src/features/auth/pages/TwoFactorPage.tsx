@@ -172,7 +172,7 @@ export default function TwoFactorPage() {
           style={{
             textAlign: 'center',
             marginBottom: 20,
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "'JetBrains Mono', monospace",
             fontSize: 14,
             color: remaining < 60 ? 'var(--color-danger)' : 'var(--color-text-secondary)',
           }}
@@ -222,7 +222,7 @@ export default function TwoFactorPage() {
                   fontSize: 24,
                   height: 56,
                   borderRadius: 2,
-                  fontFamily: "'DM Mono', monospace",
+                  fontFamily: "'JetBrains Mono', monospace",
                 }}
               />
             )}

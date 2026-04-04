@@ -24,7 +24,7 @@ export default function InboundDetailPage() {
   const { data: shipment, isLoading, error, refetch } = useInboundShipmentById(id ?? '')
   const cancelInbound = useCancelInbound()
   const setTracking = useSetExternalTracking()
-  const { data: _qrData } = useInboundShipmentQr(id ?? '')
+  useInboundShipmentQr(id ?? '')
 
   const handleCancel = async () => {
     if (!id) return
@@ -102,7 +102,7 @@ export default function InboundDetailPage() {
         providerCode={shipment.providerCode}
         shipmentMode={shipment.shipmentMode}
         externalCarrierName={shipment.externalCarrierName}
-        updatedAt={(shipment as any).updatedAt ?? shipment.createdAt}
+        updatedAt={(shipment as unknown as { updatedAt?: string }).updatedAt ?? shipment.createdAt}
       />
 
       {/* Mobile: action panel before stepper/content */}

@@ -57,8 +57,8 @@ export default function BookInboundPage() {
       const result = await bookInbound.mutateAsync({
         itemId: values.itemId,
         itemName: selectedItem?.title ?? 'Item',
-        itemPrice: (selectedItem as any)?.price ?? 0,
-        insuranceValue: values.insuranceValue ?? (selectedItem as any)?.price ?? 0,
+        itemPrice: (selectedItem as unknown as { price?: number })?.price ?? 0,
+        insuranceValue: values.insuranceValue ?? (selectedItem as unknown as { price?: number })?.price ?? 0,
         providerCode: isExternal ? 'external' : 'ghn',
         shipmentMode: values.shipmentMode,
         externalCarrierName: isExternal ? values.externalCarrierName : undefined,

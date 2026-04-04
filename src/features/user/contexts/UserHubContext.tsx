@@ -12,6 +12,7 @@ export function UserHubProvider({ children }: { children: React.ReactNode }) {
   return <UserHubContext.Provider value={state}>{children}</UserHubContext.Provider>
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useUserHubStatus() {
   return useContext(UserHubContext)
 }

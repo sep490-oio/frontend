@@ -25,7 +25,7 @@ import { useWarehouseItems } from '@/features/warehouse/api'
 import type { StorageLocationDto } from '@/features/inspector/api'
 import { formatDateTime } from '@/utils/format'
 
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
+const SERIF_FONT = "'Noto Serif', Georgia, serif"
 
 interface CreateLocationForm {
   zone: string

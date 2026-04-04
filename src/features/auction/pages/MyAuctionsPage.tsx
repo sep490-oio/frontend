@@ -256,7 +256,7 @@ export default function MyAuctionsPage() {
               />
             </Tooltip>
             <Tooltip title={
-              ((record as any)).itemStatus && ((record as any)).itemStatus !== 'approved'
+              record.itemStatus && record.itemStatus !== 'approved'
                 ? t('itemMustBeApproved', 'Item must be approved before submitting auction')
                 : tc('action.submit', 'Submit')
             }>
@@ -265,7 +265,7 @@ export default function MyAuctionsPage() {
                 size="small"
                 icon={<SendOutlined />}
                 loading={submitAuction.isPending}
-                disabled={!!((record as any)).itemStatus && ((record as any)).itemStatus !== 'approved'}
+                disabled={!!record.itemStatus && record.itemStatus !== 'approved'}
                 onClick={() => handleSubmit(record.id)}
               />
             </Tooltip>

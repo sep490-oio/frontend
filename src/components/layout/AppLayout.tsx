@@ -24,8 +24,8 @@ function getRolesFromToken(token: string | null): string[] {
 
 const { Header, Content, Footer } = Layout
 
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
-const SANS_FONT = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+const SERIF_FONT = "'Noto Serif', Georgia, serif"
+const SANS_FONT = "'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
 
 export function AppLayout() {
   const { t, i18n } = useTranslation()
@@ -239,7 +239,7 @@ export function AppLayout() {
           {/* Language toggle */}
           <Button
             type="text"
-            aria-label="Switch language"
+            aria-label={t('common:layout.switchLanguage')}
             onClick={() => {
               const next = i18n.language === 'vi' ? 'en' : 'vi'
               i18n.changeLanguage(next)

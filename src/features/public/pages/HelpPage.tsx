@@ -24,7 +24,7 @@ export default function HelpPage() {
     <div style={{ margin: '0 auto', maxWidth: 1100, padding: isMobile ? '16px 16px 40px' : '32px 0 80px' }}>
       <Typography.Title
         style={{
-          fontFamily: "'DM Serif Display', Georgia, serif",
+          fontFamily: "'Noto Serif', Georgia, serif",
           fontSize: isMobile ? 28 : 42,
           fontWeight: 400,
           marginBottom: 12,

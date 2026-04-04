@@ -10,7 +10,7 @@ import apiClient from '@/lib/axios'
 import { useQuery } from '@tanstack/react-query'
 import type { PagedList, PaginationParams, ItemDto } from '@/types'
 
-const SERIF = "'DM Serif Display', Georgia, serif"
+const SERIF = "'Noto Serif', Georgia, serif"
 
 function useBrowseItems(params?: PaginationParams & { categoryId?: string; search?: string; condition?: string }) {
   return useQuery({

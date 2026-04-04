@@ -181,5 +181,25 @@
   "noImage": "No image",
   "dragDropUpload": "Drag & drop or click to upload",
   "uploadLimit": "Up to {{max}} files ({{count}}/{{max}} uploaded)",
-  "selectFile": "Select a file"
+  "selectFile": "Select a file",
+  "capture": {
+    "idFrontInstruction": "Position the front of your ID within the frame",
+    "idBackInstruction": "Position the back of your ID within the frame",
+    "selfieInstruction": "Center your face in the oval",
+    "itemPhotoInstruction": "Take a clear photo of the item",
+    "cameraNotAvailable": "Camera not available on this device. Upload from file instead.",
+    "uploadFromFiles": "Upload from files",
+    "retake": "Retake",
+    "useThisPhoto": "Use this photo",
+    "tapToOpenCamera": "Tap to open camera",
+    "tapToActivateCamera": "Tap here to activate your camera",
+    "takeAClearPhoto": "Take a clear photo",
+    "qualityIssue": "Quality issue"
+  },
+  "layout": {
+    "backToPlatform": "Back to Platform",
+    "switchLanguage": "Switch language",
+    "lightMode": "Light mode",
+    "darkMode": "Dark mode"
+  }
 }

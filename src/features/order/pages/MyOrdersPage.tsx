@@ -40,15 +40,15 @@ function formatCountdown(targetDate: string): string {
 
 function DecisionCountdown({ endsAt }: { endsAt: string }) {
   const [display, setDisplay] = useState(() => formatCountdown(endsAt))
+  const [isExpired, setIsExpired] = useState(() => new Date(endsAt).getTime() <= Date.now())
 
   useEffect(() => {
     const interval = setInterval(() => {
       setDisplay(formatCountdown(endsAt))
+      setIsExpired(new Date(endsAt).getTime() <= Date.now())
     }, 60_000)
     return () => clearInterval(interval)
   }, [endsAt])
-
-  const isExpired = new Date(endsAt).getTime() <= Date.now()
 
   return (
     <Tooltip title={`Decision window ends: ${formatDateTime(endsAt)}`}>
@@ -184,7 +184,7 @@ export default function MyOrdersPage() {
       {/* Serif heading */}
       <h1
         style={{
-          fontFamily: "'DM Serif Display', Georgia, serif",
+          fontFamily: "'Noto Serif', Georgia, serif",
           fontWeight: 400,
           fontSize: 28,
           color: 'var(--color-text-primary)',

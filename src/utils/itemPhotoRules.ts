@@ -14,7 +14,7 @@ export function isHighRiskCategory(categoryId: string): boolean {
   return HIGH_RISK_CATEGORIES.has(categoryId.toLowerCase())
 }
 
-export function getPhotoChecklist(_categoryId?: string): string[] {
+export function getPhotoChecklist(): string[] {
   return [
     'Overview (full item)',
     'Front view',

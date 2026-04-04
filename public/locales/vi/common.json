@@ -181,5 +181,25 @@
   "noImage": "Không có hình ảnh",
   "dragDropUpload": "Kéo thả hoặc nhấn để tải lên",
   "uploadLimit": "Tối đa {{max}} tệp ({{count}}/{{max}} đã tải)",
-  "selectFile": "Chọn một tệp"
+  "selectFile": "Chọn một tệp",
+  "capture": {
+    "idFrontInstruction": "Đặt mặt trước CCCD/CMND vào khung hình",
+    "idBackInstruction": "Đặt mặt sau CCCD/CMND vào khung hình",
+    "selfieInstruction": "Đặt khuôn mặt vào giữa khung hình oval",
+    "itemPhotoInstruction": "Chụp ảnh rõ ràng của sản phẩm",
+    "cameraNotAvailable": "Camera không khả dụng trên thiết bị này. Vui lòng tải ảnh từ tệp.",
+    "uploadFromFiles": "Tải ảnh từ tệp",
+    "retake": "Chụp lại",
+    "useThisPhoto": "Dùng ảnh này",
+    "tapToOpenCamera": "Nhấn để mở camera",
+    "tapToActivateCamera": "Nhấn vào đây để kích hoạt camera",
+    "takeAClearPhoto": "Chụp ảnh rõ ràng",
+    "qualityIssue": "Vấn đề chất lượng"
+  },
+  "layout": {
+    "backToPlatform": "Quay lại nền tảng",
+    "switchLanguage": "Chuyển ngôn ngữ",
+    "lightMode": "Chế độ sáng",
+    "darkMode": "Chế độ tối"
+  }
 }

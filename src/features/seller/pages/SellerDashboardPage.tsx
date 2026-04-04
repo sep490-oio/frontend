@@ -28,8 +28,8 @@ import type { ColumnsType } from 'antd/es/table'
 
 /* ── Shared styles ───────────────────────────────────────────────────── */
 
-const serifFont = "'DM Serif Display', Georgia, serif"
-const monoFont = "'DM Mono', monospace"
+const serifFont = "'Noto Serif', Georgia, serif"
+const monoFont = "'JetBrains Mono', monospace"
 
 const statCardStyle: React.CSSProperties = {
   background: 'var(--color-accent-light)',
@@ -65,6 +65,9 @@ function countByStatus<T extends { status: string }>(
   return counts
 }
 
+const itemStatuses = ['draft', 'pending', 'submitted', 'approved', 'active', 'in_auction', 'sold', 'rejected']
+const auctionStatuses = ['draft', 'pending', 'scheduled', 'active', 'ended', 'sold', 'cancelled']
+
 /* ── Component ───────────────────────────────────────────────────────── */
 
 export default function SellerDashboardPage() {
@@ -80,9 +83,6 @@ export default function SellerDashboardPage() {
   const { data: auctionsData, isLoading: auctionsLoading } = useMyAuctions({ pageNumber: 1, pageSize: 200 })
 
   /* ── Derived data ────────────────────────────────────────────────── */
-
-  const itemStatuses = ['draft', 'pending', 'submitted', 'approved', 'active', 'in_auction', 'sold', 'rejected']
-  const auctionStatuses = ['draft', 'pending', 'scheduled', 'active', 'ended', 'sold', 'cancelled']
 
   const itemCounts = useMemo(
     () => countByStatus(itemsData?.items, itemStatuses),

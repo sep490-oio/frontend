@@ -35,8 +35,8 @@ function sortItems(items: WatchlistItemDto[], sortKey: SortKey): WatchlistItemDt
   }
 }
 
-const MONO_FONT = "'DM Mono', monospace"
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
+const MONO_FONT = "'JetBrains Mono', monospace"
+const SERIF_FONT = "'Noto Serif', Georgia, serif"
 
 export default function WatchlistPage() {
   const { t } = useTranslation('auction')

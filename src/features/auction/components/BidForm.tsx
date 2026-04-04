@@ -3,7 +3,6 @@ import { Typography, Button, InputNumber, Popconfirm } from 'antd'
 import { RobotOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
-import { PriceDisplay as _PriceDisplay } from '@/components/ui/PriceDisplay'
 import { AutoBidDashboard } from '@/features/auction/components/AutoBidDashboard'
 import { PriceHistoryChart } from '@/features/auction/components/PriceHistoryChart'
 import { formatCurrency } from '@/utils/format'
@@ -67,7 +66,7 @@ export default function BidForm({
 }: BidFormProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const inputRef = useRef<HTMLElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   // Outbid mode: auto-focus input and pre-fill with minBid
   useEffect(() => {
@@ -146,7 +145,7 @@ export default function BidForm({
               border: '1px solid var(--color-border)',
               background: 'var(--color-bg-surface)',
               color: 'var(--color-text-primary)',
-              fontFamily: "'DM Mono', monospace",
+              fontFamily: "'JetBrains Mono', monospace",
               fontSize: 12,
               fontWeight: 500,
               cursor: disabled ? 'not-allowed' : 'pointer',
@@ -167,7 +166,7 @@ export default function BidForm({
       </label>
       <InputNumber
         id="bid-amount-input"
-        ref={inputRef as any}
+        ref={inputRef as React.RefObject<never>}
         style={{
           width: '100%',
           height: 52,

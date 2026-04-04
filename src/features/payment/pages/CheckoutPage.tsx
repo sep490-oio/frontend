@@ -33,8 +33,8 @@ import { PaymentMethodType } from '@/types/enums'
 import { formatDateTime, formatCurrency } from '@/utils/format'
 import type { PaymentMethodDto } from '@/types'
 
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
-const MONO_FONT = "'DM Mono', monospace"
+const SERIF_FONT = "'Noto Serif', Georgia, serif"
+const MONO_FONT = "'JetBrains Mono', monospace"
 
 const WALLET_METHOD_ID = '__wallet__'
 

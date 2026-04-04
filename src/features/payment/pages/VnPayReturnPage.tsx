@@ -6,8 +6,8 @@ import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { formatCurrency, formatDateTime } from '@/utils/format'
 import apiClient from '@/lib/axios'
 
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
-const MONO_FONT = "'DM Mono', monospace"
+const SERIF_FONT = "'Noto Serif', Georgia, serif"
+const MONO_FONT = "'JetBrains Mono', monospace"
 
 interface VnPayCallbackResponse {
   transactionRef: string
@@ -65,7 +65,7 @@ export default function VnPayReturnPage() {
       .finally(() => {
         setLoading(false)
       })
-  }, [])
+  }, [t])
 
   if (loading) {
     return (
@@ -209,12 +209,12 @@ export default function VnPayReturnPage() {
             )}
             {formattedPayDate && (
               <Descriptions.Item label={t('payment:vnpayReturn.time', 'Time')}>
-                <span style={{ fontFamily: "'Inter', sans-serif" }}>{formattedPayDate}</span>
+                <span style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>{formattedPayDate}</span>
               </Descriptions.Item>
             )}
             {orderInfo && (
               <Descriptions.Item label={t('payment:vnpayReturn.content', 'Content')}>
-                <span style={{ fontFamily: "'Inter', sans-serif" }}>{orderInfo}</span>
+                <span style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>{orderInfo}</span>
               </Descriptions.Item>
             )}
             {!isSuccess && result?.responseCode && (

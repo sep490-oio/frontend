@@ -82,7 +82,7 @@ export default function AdminSellerProfilesPage() {
       key: 'trustScore',
       width: 120,
       render: (score: number) => (
-        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 13 }}>
+        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13 }}>
           {score != null ? score.toFixed(1) : '—'}
         </span>
       ),

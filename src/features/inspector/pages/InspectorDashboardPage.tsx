@@ -13,13 +13,14 @@ import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
+const SERIF_FONT = "'Noto Serif', Georgia, serif"
 
 const CATEGORY_PILLS = ['Tất cả', 'Đồng hồ', 'Thời trang', 'Nghệ thuật']
 
 export default function InspectorDashboardPage() {
   const navigate = useNavigate()
   const [activePill, setActivePill] = useState('Tất cả')
+  const { isMobile } = useBreakpoint()
 
   const { data: queue, isLoading: queueLoading } = useInspectionQueue({
     pageNumber: 1,
@@ -71,8 +72,6 @@ export default function InspectorDashboardPage() {
       trendColor: 'var(--color-success)',
     },
   ]
-
-  const { isMobile } = useBreakpoint()
 
   return (
     <div style={{ padding: isMobile ? 16 : 0 }}>

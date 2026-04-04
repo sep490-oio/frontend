@@ -10,8 +10,8 @@ import { PriceDisplay } from '@/components/ui/PriceDisplay'
 import { AuctionStatus } from '@/types/enums'
 import { formatCurrency } from '@/utils/format'
 
-const SERIF = "'DM Serif Display', Georgia, serif"
-const MONO = "'DM Mono', monospace"
+const SERIF = "'Noto Serif', Georgia, serif"
+const MONO = "'JetBrains Mono', monospace"
 
 export default function AuctionListPage() {
   const { t } = useTranslation('auction')

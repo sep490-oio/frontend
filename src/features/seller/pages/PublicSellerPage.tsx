@@ -10,8 +10,8 @@ import { formatDateTime, formatCurrency, formatNumber } from '@/utils/format'
 import { SellerProfileStatus } from '@/types/enums'
 import type { PublicSellerItemDto } from '@/types'
 
-const SANS_FONT = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
+const SANS_FONT = "'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+const SERIF_FONT = "'Noto Serif', Georgia, serif"
 
 export default function PublicSellerPage() {
   const { t, i18n } = useTranslation('seller')
@@ -213,7 +213,7 @@ export default function PublicSellerPage() {
               {trustScore > 0 && (
                 <span
                   style={{
-                    fontFamily: "'DM Mono', monospace",
+                    fontFamily: "'JetBrains Mono', monospace",
                     fontSize: 13,
                     fontWeight: 500,
                     color: trustScore > 90 ? '#16a34a' : trustScore > 70 ? 'var(--color-accent)' : 'var(--color-text-secondary)',
@@ -294,7 +294,7 @@ export default function PublicSellerPage() {
             ) : (
               <div
                 style={{
-                  fontFamily: "'DM Mono', monospace",
+                  fontFamily: "'JetBrains Mono', monospace",
                   fontSize: 28,
                   fontWeight: 500,
                   color: 'var(--color-text-primary)',
@@ -439,7 +439,7 @@ export default function PublicSellerPage() {
                     </h4>
                     <div
                       style={{
-                        fontFamily: "'DM Mono', monospace",
+                        fontFamily: "'JetBrains Mono', monospace",
                         fontSize: 16,
                         fontWeight: 500,
                         color: 'var(--color-accent)',
@@ -541,7 +541,7 @@ export default function PublicSellerPage() {
           >
             <div
               style={{
-                fontFamily: "'DM Mono', monospace",
+                fontFamily: "'JetBrains Mono', monospace",
                 fontSize: 36,
                 fontWeight: 500,
                 color: 'var(--color-text-primary)',

@@ -84,7 +84,7 @@ export function LivenessChallengeOverlay({ videoRef, onComplete, onFail, step }:
         onComplete(framesRef.current)
       }
     }, 500) // capture every 500ms = 5 frames in 2.5s
-  }, [captureFrame, onComplete])
+  }, [captureFrame, onComplete, onFail])
 
   // Countdown timer
   useEffect(() => {

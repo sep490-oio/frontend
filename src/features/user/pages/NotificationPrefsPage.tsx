@@ -15,7 +15,7 @@ import {
 import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useNotificationPreferences, useUpdateNotificationPreferences } from '../api'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 
 const { Title, Text } = Typography
@@ -31,7 +31,7 @@ const CHANNELS = [
 // -- Component -----------------------------------------------------------------
 
 export default function NotificationPrefsPage() {
-  const { t: _t } = useTranslation('common')
+  useTranslation('common')
   const { isMobile } = useBreakpoint()
   const { message } = App.useApp()
 
@@ -41,19 +41,21 @@ export default function NotificationPrefsPage() {
   const [isEnabled, setIsEnabled] = useState(true)
   const [selectedChannels, setSelectedChannels] = useState<string[]>([])
   const [dirty, setDirty] = useState(false)
+  const [lastSyncedKey, setLastSyncedKey] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (prefs) {
-      setIsEnabled(prefs.isEnabled)
-      try {
-        const parsed: unknown = JSON.parse(prefs.channels)
-        setSelectedChannels(Array.isArray(parsed) ? (parsed as string[]) : [])
-      } catch {
-        setSelectedChannels([])
-      }
-      setDirty(false)
+  // Sync form state when prefs data changes (avoids setState-in-effect)
+  const syncKey = prefs ? `${prefs.isEnabled}_${prefs.channels}` : null
+  if (syncKey && syncKey !== lastSyncedKey) {
+    setIsEnabled(prefs!.isEnabled)
+    try {
+      const parsed: unknown = JSON.parse(prefs!.channels)
+      setSelectedChannels(Array.isArray(parsed) ? (parsed as string[]) : [])
+    } catch {
+      setSelectedChannels([])
     }
-  }, [prefs])
+    setDirty(false)
+    setLastSyncedKey(syncKey)
+  }
 
   const toggleChannel = (key: string, checked: boolean) => {
     setSelectedChannels((prev) => (checked ? [...prev, key] : prev.filter((c) => c !== key)))

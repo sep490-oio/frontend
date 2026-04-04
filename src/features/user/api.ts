@@ -244,7 +244,7 @@ export function usePendingTerms(termType?: string) {
   const { data: acceptedTerms, isLoading: acceptedLoading } = useAcceptedTerms()
 
   const pendingTerms = useMemo(() => {
-    if (!activeTerms || !acceptedTerms) return []
+    if (!activeTerms || !acceptedTerms || !Array.isArray(acceptedTerms)) return []
     // BE returns TermsAcceptanceDto with nested Document object
     // Handle both shapes: flat { termsId } (old) and nested { document: { id } } (actual BE response)
     const acceptedDocIds = new Set(acceptedTerms.map((a: Record<string, unknown>) => {

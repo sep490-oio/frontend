@@ -16,8 +16,8 @@ import { useDisputes } from '@/features/dispute/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatCurrency, formatDateTime } from '@/utils/format'
 
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
-const MONO_FONT = "'DM Mono', monospace"
+const SERIF_FONT = "'Noto Serif', Georgia, serif"
+const MONO_FONT = "'JetBrains Mono', monospace"
 
 export default function DashboardPage() {
   const { t } = useTranslation('common')

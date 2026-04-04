@@ -552,7 +552,7 @@ function LoginHistorySection() {
 // -- Main Component ------------------------------------------------------------
 
 export default function SecurityPage() {
-  const { t: _t } = useTranslation('common')
+  useTranslation('common')
 
   const tabItems = [
     {

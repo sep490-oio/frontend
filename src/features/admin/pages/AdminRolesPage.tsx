@@ -1,7 +1,7 @@
 import { Card, Checkbox, Spin, Space, App, Row, Col } from 'antd'
 import { useRoles, usePermissions, useTogglePermission } from '@/features/admin/api'
 
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
+const SERIF_FONT = "'Noto Serif', Georgia, serif"
 
 export default function AdminRolesPage() {
   const { message } = App.useApp()
@@ -78,7 +78,7 @@ export default function AdminRolesPage() {
                           onChange={() => handleToggle(role.name, perm, hasPermission)}
                           style={{ fontSize: 13 }}
                         >
-                          <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 12 }}>
+                          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }}>
                             {perm}
                           </span>
                         </Checkbox>

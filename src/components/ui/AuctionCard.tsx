@@ -163,7 +163,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
         <div
           className="oio-serif"
           style={{
-            fontFamily: "'DM Serif Display', Georgia, serif",
+            fontFamily: "'Noto Serif', Georgia, serif",
             fontSize: 18,
             color: 'var(--color-text-primary)',
             lineHeight: 1.3,
@@ -206,7 +206,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
               marginTop: 4,
             }}
           >
-            {t('buyNowLabel', 'Buy Now')}: <span style={{ fontFamily: "'DM Mono', monospace", fontWeight: 500 }}>{auction.buyNowPrice.symbol ?? ''}{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: auction.buyNowPrice.currency ?? 'VND', maximumFractionDigits: 0 }).format(auction.buyNowPrice.amount)}</span>
+            {t('buyNowLabel', 'Buy Now')}: <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 500 }}>{auction.buyNowPrice.symbol ?? ''}{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: auction.buyNowPrice.currency ?? 'VND', maximumFractionDigits: 0 }).format(auction.buyNowPrice.amount)}</span>
           </div>
         )}
 

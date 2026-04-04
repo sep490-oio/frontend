@@ -97,6 +97,7 @@ export interface AuctionListItemDto {
   isEndingSoon: boolean
   isFeatured: boolean
   sellerId: string
+  itemStatus?: string
 }
 
 export interface BidDto {

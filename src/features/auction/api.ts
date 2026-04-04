@@ -1,5 +1,5 @@
 import apiClient, { idempotentPost } from '@/lib/axios'
-import { queryKeys, queryClient as _queryClient } from '@/lib/queryClient'
+import { queryKeys } from '@/lib/queryClient'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type {
   AuctionListItemDto,
@@ -100,15 +100,19 @@ export interface MyBidDto {
   isHighestBid: boolean
   auctionStatus: string
   createdAt: string
+  bidPlacedAt?: string
+  itemTitle?: string
+  currentPrice?: MoneyDto
 }
 
-export function useMyBids(params?: PaginationParams & { status?: string; sortBy?: string }) {
+export function useMyBids(params?: PaginationParams & { status?: string; sortBy?: string }, options?: { refetchInterval?: number }) {
   return useQuery({
     queryKey: queryKeys.auctions.myBids(params),
     queryFn: async () => {
       const res = await apiClient.get<PagedList<MyBidDto>>('/me/bids', { params })
       return res.data
     },
+    ...options,
   })
 }
 

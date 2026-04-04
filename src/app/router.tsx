@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createBrowserRouter, useRouteError, Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { AppLayout } from '@/components/layout/AppLayout'
@@ -38,7 +39,7 @@ function RouteErrorBoundary() {
     <Flex vertical align="center" justify="center" style={{ minHeight: '60vh', padding: 32, textAlign: 'center' }}>
       <h2
         style={{
-          fontFamily: "'DM Serif Display', Georgia, serif",
+          fontFamily: "'Noto Serif', Georgia, serif",
           fontWeight: 400,
           fontSize: 28,
           color: 'var(--color-text-primary)',

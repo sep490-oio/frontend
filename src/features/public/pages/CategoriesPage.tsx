@@ -4,8 +4,8 @@ import { Spin, Empty } from 'antd'
 import { useCategories } from '@/features/item/api'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 
-const SANS_FONT = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
+const SANS_FONT = "'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+const SERIF_FONT = "'Noto Serif', Georgia, serif"
 
 export default function CategoriesPage() {
   const { t, i18n } = useTranslation('common')
@@ -163,7 +163,7 @@ export default function CategoriesPage() {
               )}
               <span
                 style={{
-                  fontFamily: "'DM Mono', monospace",
+                  fontFamily: "'JetBrains Mono', monospace",
                   fontSize: 12,
                   color: 'var(--color-text-tertiary)',
                   letterSpacing: '0.02em',

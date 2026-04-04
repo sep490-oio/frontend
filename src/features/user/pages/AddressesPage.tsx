@@ -59,7 +59,7 @@ type AddressFormValues = z.infer<typeof addressSchema>
 // -- Component -----------------------------------------------------------------
 
 export default function AddressesPage() {
-  const { t: _t } = useTranslation('common')
+  useTranslation('common')
   const { isMobile } = useBreakpoint()
   const { message } = App.useApp()
 

@@ -4,7 +4,8 @@ import { IdcardOutlined, CameraOutlined, ShopOutlined, FileProtectOutlined, Send
 import { useTranslation } from 'react-i18next'
 import { useCreateVerification, useSubmitVerification, useUploadVerificationDocument, useDeleteVerificationDocument, useVerificationById } from '@/features/seller/api'
 import { useMediaUpload } from '@/hooks/useMediaUpload'
-import { VerificationDocumentSlots, getRequiredSlots } from '@/features/seller/components/VerificationDocumentSlots'
+import { VerificationDocumentSlots } from '@/features/seller/components/VerificationDocumentSlots'
+import { getRequiredSlots } from '@/features/seller/components/verificationSlotUtils'
 import { VerificationType } from '@/types/enums'
 
 interface VerificationWizardProps {

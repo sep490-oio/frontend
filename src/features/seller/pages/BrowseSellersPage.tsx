@@ -8,8 +8,8 @@ import apiClient from '@/lib/axios'
 import { useQuery } from '@tanstack/react-query'
 import type { PagedList, PaginationParams } from '@/types'
 
-const SERIF = "'DM Serif Display', Georgia, serif"
-const MONO = "'DM Mono', monospace"
+const SERIF = "'Noto Serif', Georgia, serif"
+const MONO = "'JetBrains Mono', monospace"
 
 interface SellerListItem {
   id: string

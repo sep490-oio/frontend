@@ -59,7 +59,7 @@ type ConfirmPhoneFormValues = z.infer<typeof confirmPhoneSchema>
 // -- Styles --------------------------------------------------------------------
 
 const sectionHeadingStyle: React.CSSProperties = {
-  fontFamily: "'DM Serif Display', Georgia, serif",
+  fontFamily: "'Noto Serif', Georgia, serif",
   fontWeight: 400,
   fontSize: 16,
   color: 'var(--color-text-primary)',
@@ -179,7 +179,7 @@ export default function ProfilePage() {
       {/* Page Heading */}
       <h1
         style={{
-          fontFamily: "'DM Serif Display', Georgia, serif",
+          fontFamily: "'Noto Serif', Georgia, serif",
           fontWeight: 400,
           fontSize: isMobile ? 22 : 28,
           color: 'var(--color-text-primary)',

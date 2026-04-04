@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { CountdownTimer } from '@/components/ui/CountdownTimer'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatCurrency } from '@/utils/format'
-import { ParticipantQualificationStatus, DepositStatus as _DepositStatus } from '@/types/enums'
+import { ParticipantQualificationStatus } from '@/types/enums'
 
 interface EligibilityPanelProps {
   qualificationStatus?: string
@@ -37,6 +37,22 @@ export function EligibilityPanel({
   isVnPayDepositLoading,
 }: EligibilityPanelProps) {
   const { t } = useTranslation('auction')
+
+  // Hooks must be called unconditionally (React rules-of-hooks).
+  // The interval only runs when status is pending (needs countdown).
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const resolvedStatuses: string[] = [
+      ParticipantQualificationStatus.Qualified,
+      ParticipantQualificationStatus.Waived,
+      ParticipantQualificationStatus.Rejected,
+      ParticipantQualificationStatus.Expired,
+    ]
+    const isPending = !resolvedStatuses.includes(qualificationStatus ?? '')
+    if (!isPending || isSeller) return
+    const id = setInterval(() => setNow(Date.now()), 30000)
+    return () => clearInterval(id)
+  }, [qualificationStatus, isSeller])
 
   if (isSeller) {
     return (
@@ -134,13 +150,6 @@ export function EligibilityPanel({
   }
 
   // Pending / not yet qualified — show deposit UI
-  // Use controlled state for time-dependent rendering (avoids flicker on re-render)
-  const [now, setNow] = useState(Date.now())
-  useEffect(() => {
-    const interval = setInterval(() => setNow(Date.now()), 30000)
-    return () => clearInterval(interval)
-  }, [])
-
   const windowStart = qualificationStartAt ? new Date(qualificationStartAt).getTime() : null
   const windowEnd = qualificationEndAt ? new Date(qualificationEndAt).getTime() : null
   const isBeforeWindow = windowStart && now < windowStart
