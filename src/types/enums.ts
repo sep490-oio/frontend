@@ -249,6 +249,7 @@ export type NotificationStatus = (typeof NotificationStatus)[keyof typeof Notifi
 export const ShipmentStatus = {
   AwaitingPickup: 'awaiting_pickup',
   InTransit: 'in_transit',
+  SellerClaimsArrived: 'seller_claims_arrived',
   Arrived: 'arrived',
   Inspected: 'inspected',
   Completed: 'completed',

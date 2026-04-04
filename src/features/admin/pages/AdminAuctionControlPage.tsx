@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
-import { Typography, Card, Button, Space, Spin, Alert, Switch, InputNumber, Input, App, Popconfirm, Select } from 'antd'
+import { Typography, Card, Button, Space, Spin, Switch, InputNumber, Input, App, Popconfirm, Select } from 'antd'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { ArrowLeftOutlined, ThunderboltOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
@@ -9,6 +9,7 @@ import { useSetCuration, useTriggerEmergency, useResolveEmergency, useCancelBid,
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime, formatCurrency } from '@/utils/format'
 import type { BidDto } from '@/types'
+import { AdminErrorState } from '@/features/admin/components/AdminErrorState'
 import type { ColumnsType } from 'antd/es/table'
 
 export default function AdminAuctionControlPage() {
@@ -17,7 +18,7 @@ export default function AdminAuctionControlPage() {
   const { message } = App.useApp()
   const navigate = useNavigate()
 
-  const { data: detail, isLoading, error } = useAuctionDetail(id!)
+  const { data: detail, isLoading, error, refetch } = useAuctionDetail(id!)
   const { data: bidsData } = useAuctionBids(id!)
 
   const setCuration = useSetCuration()
@@ -53,7 +54,7 @@ export default function AdminAuctionControlPage() {
   }
 
   if (isLoading) return <div style={{ textAlign: 'center', padding: 80 }}><Spin size="large" /></div>
-  if (error || !auction) return <Alert type="error" message={t('common.error')} showIcon />
+  if (error || !auction) return <AdminErrorState message={t('common.error')} onRetry={refetch} backPath="/admin/auctions" />
 
   const handleSaveCuration = async () => {
     try {

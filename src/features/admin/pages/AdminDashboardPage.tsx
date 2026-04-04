@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react'
 import { Typography, Card, Row, Col, List, Button, Space, Spin, Alert, Avatar, Progress, Tag } from 'antd'
 import {
   UserOutlined,
@@ -26,9 +25,7 @@ import { formatCurrency, formatDateTime } from '@/utils/format'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import type { ReportDto } from '@/types'
-
-const SERIF_FONT = "'Noto Serif', Georgia, serif"
-const MONO_FONT = "'JetBrains Mono', monospace"
+import { SERIF_FONT, MONO_FONT } from '@/styles/tokens'
 
 /* ── Trend indicator component ─────────────────────────────────────── */
 
@@ -42,7 +39,7 @@ function TrendIndicator({ value, suffix = '%' }: { value: number; suffix?: strin
         gap: 2,
         fontSize: 12,
         fontWeight: 600,
-        color: isUp ? 'var(--color-success)' : '#cf1322',
+        color: isUp ? 'var(--color-success)' : 'var(--color-danger)',
         background: isUp ? 'rgba(74, 124, 89, 0.1)' : 'rgba(207, 19, 34, 0.1)',
         borderRadius: 100,
         padding: '2px 8px',
@@ -58,11 +55,6 @@ export default function AdminDashboardPage() {
   const { t } = useTranslation('admin')
   const navigate = useNavigate()
   const { isMobile } = useBreakpoint()
-  const [now, setNow] = useState(() => Date.now())
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 1_000)
-    return () => clearInterval(id)
-  }, [])
 
   const { data: users, isLoading: usersLoading } = useAdminUsers({ pageNumber: 1, pageSize: 1 })
   const { data: verifications, isLoading: verificationsLoading } = usePendingVerifications({ pageNumber: 1, pageSize: 5, status: 'pending' })
@@ -164,7 +156,7 @@ export default function AdminDashboardPage() {
                     fontFamily: MONO_FONT,
                     fontSize: 28,
                     fontWeight: 600,
-                    color: (reports?.metadata?.totalCount ?? 0) > 0 ? '#cf1322' : 'var(--color-text-primary)',
+                    color: (reports?.metadata?.totalCount ?? 0) > 0 ? 'var(--color-danger)' : 'var(--color-text-primary)',
                   }}
                 >
                   {reports?.metadata?.totalCount ?? 0}
@@ -316,6 +308,7 @@ export default function AdminDashboardPage() {
             {liveAuctions?.items?.length ? (
               <Space direction="vertical" size={16} style={{ width: '100%' }}>
                 {liveAuctions.items.map((auction) => {
+                  const now = Date.now()
                   const end = auction.endTime ? new Date(auction.endTime).getTime() : now
                   const start = auction.startTime ? new Date(auction.startTime).getTime() : now
                   const total = end - start

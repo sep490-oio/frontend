@@ -46,6 +46,21 @@ export function useNotificationHub() {
       qc.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() })
     })
 
+    connection.onreconnecting(() => {
+      setState((prev) => ({ ...prev, connected: false }))
+    })
+
+    connection.onreconnected(() => {
+      setState((prev) => ({ ...prev, connected: true }))
+      // Refresh data that may have been missed during disconnect
+      qc.invalidateQueries({ queryKey: queryKeys.notifications.list() })
+      qc.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() })
+    })
+
+    connection.onclose(() => {
+      setState((prev) => ({ ...prev, connected: false }))
+    })
+
     connect()
 
     return () => {

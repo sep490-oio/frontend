@@ -1,9 +1,10 @@
-import { Tabs, Typography, Flex } from 'antd'
+import { Tabs, Typography, Flex, Tooltip } from 'antd'
 import { CheckCircleOutlined, SafetyOutlined } from '@ant-design/icons'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 
 import { StatusBadge } from '@/components/ui/StatusBadge'
+import { SafeHtmlRenderer } from '@/components/ui/SafeHtmlRenderer'
 import { ItemQA } from '@/features/item/components/ItemQA'
 import { formatCurrency, formatDate, formatDateTime } from '@/utils/format'
 
@@ -31,6 +32,7 @@ export interface AuctionDetailTabsProps {
   recentBids: Array<{
     id?: string
     bidderId?: string
+    bidderDisplayName?: string
     amount?: { amount: number; currency?: string } | number
     isAutoBid?: boolean
     status?: string
@@ -39,12 +41,13 @@ export interface AuctionDetailTabsProps {
   currency: string
   bidCount: number
   isSeller: boolean
+  sellerUsername?: string
   categoryName?: string
   qaConnected?: boolean
   qaLastSyncedAt?: number | null
 }
 
-function SellerIdentity({ sellerId }: { sellerId?: string }) {
+function SellerIdentity({ sellerId, sellerUsername }: { sellerId?: string; sellerUsername?: string }) {
   if (!sellerId) {
     return (
       <Typography.Text type="secondary">
@@ -52,6 +55,9 @@ function SellerIdentity({ sellerId }: { sellerId?: string }) {
       </Typography.Text>
     )
   }
+
+  const displayName = sellerUsername ?? `${sellerId.slice(0, 8)}…`
+  const avatarChar = displayName[0]?.toUpperCase()
 
   return (
     <>
@@ -69,11 +75,19 @@ function SellerIdentity({ sellerId }: { sellerId?: string }) {
           width: 56,
         }}
       >
-        {sellerId[0]?.toUpperCase()}
+        {avatarChar}
       </div>
       <div style={{ flex: 1 }}>
         <div style={{ color: 'var(--color-text-primary)', fontSize: 16, fontWeight: 600, marginBottom: 4 }}>
-          {sellerId}
+          <Link to={`/sellers/${sellerId}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+            {sellerUsername ? (
+              displayName
+            ) : (
+              <Tooltip title={sellerId}>
+                {displayName}
+              </Tooltip>
+            )}
+          </Link>
         </div>
         <Typography.Text type="secondary" style={{ fontSize: 13 }}>
           Public seller activity and catalogue are available on the seller profile page.
@@ -93,6 +107,7 @@ export function AuctionDetailTabs({
   currency,
   bidCount,
   isSeller,
+  sellerUsername,
   categoryName,
   qaConnected = false,
   qaLastSyncedAt = null,
@@ -141,9 +156,7 @@ export function AuctionDetailTabs({
                   {t('productOverview', 'Tổng quan sản phẩm')}
                 </h3>
                 {item.description ? (
-                  <Typography.Paragraph style={{ color: 'var(--color-text-secondary)', fontSize: 14, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>
-                    {item.description}
-                  </Typography.Paragraph>
+                  <SafeHtmlRenderer html={item.description} />
                 ) : (
                   <Typography.Text type="secondary">{t('noDescription', 'No description available.')}</Typography.Text>
                 )}
@@ -239,6 +252,11 @@ export function AuctionDetailTabs({
                     </span>
                     {bid.isAutoBid && <StatusBadge status="auto" size="small" />}
                     {bid.status && <StatusBadge status={bid.status} size="small" />}
+                    {(bid.bidderDisplayName || bid.bidderId) && (
+                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                        {bid.bidderDisplayName ?? bid.bidderId?.slice(0, 8)}
+                      </Typography.Text>
+                    )}
                   </Flex>
                   <Typography.Text style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
                     {bid.createdAt ? formatDateTime(bid.createdAt) : '—'}
@@ -254,7 +272,7 @@ export function AuctionDetailTabs({
           children: (
             <div style={{ maxWidth: 600 }}>
               <div style={{ alignItems: 'center', display: 'flex', gap: 16, marginBottom: 20 }}>
-                <SellerIdentity sellerId={sellerId} />
+                <SellerIdentity sellerId={sellerId} sellerUsername={sellerUsername} />
               </div>
             </div>
           ),

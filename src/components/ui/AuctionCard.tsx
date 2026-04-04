@@ -1,9 +1,14 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
+import { HeartOutlined, HeartFilled } from '@ant-design/icons'
 import { CountdownTimer } from './CountdownTimer'
 import { PriceDisplay } from './PriceDisplay'
 import { AuctionStatus } from '@/types/enums'
 import type { AuctionListItemDto } from '@/types'
+import { SERIF_FONT, MONO_FONT } from '@/styles/tokens'
+import { useAuth } from '@/hooks/useAuth'
+import { useWatchAuction, useUnwatchAuction } from '@/features/auction/api'
 
 interface AuctionCardProps {
   auction: AuctionListItemDto
@@ -22,11 +27,26 @@ function getQualificationLabel(
 export function AuctionCard({ auction }: AuctionCardProps) {
   const { t } = useTranslation('auction')
   const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
+  const watchMutation = useWatchAuction()
+  const unwatchMutation = useUnwatchAuction()
+  const [watching, setWatching] = useState(false)
 
   const isActive = auction.status === AuctionStatus.Active
   const isAtStartingPrice = auction.currentPrice?.amount === auction.startingPrice?.amount
 
   const qualLabel = getQualificationLabel(auction)
+
+  const handleWatchToggle = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (watching) {
+      setWatching(false)
+      unwatchMutation.mutate(auction.id)
+    } else {
+      setWatching(true)
+      watchMutation.mutate({ auctionId: auction.id })
+    }
+  }
 
   return (
     <div
@@ -141,6 +161,35 @@ export function AuctionCard({ auction }: AuctionCardProps) {
             }}
           />
         )}
+
+        {/* Watch button */}
+        {isAuthenticated && (
+          <button
+            type="button"
+            onClick={handleWatchToggle}
+            aria-label={watching ? t('unwatch', 'Unwatch') : t('watch', 'Watch')}
+            style={{
+              position: 'absolute',
+              bottom: 10,
+              right: 10,
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              border: 'none',
+              background: 'rgba(0, 0, 0, 0.45)',
+              color: watching ? '#ff4d4f' : '#ffffff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              fontSize: 16,
+              transition: 'background 200ms ease, color 200ms ease',
+              backdropFilter: 'blur(4px)',
+            }}
+          >
+            {watching ? <HeartFilled /> : <HeartOutlined />}
+          </button>
+        )}
       </div>
 
       {/* Info */}
@@ -163,7 +212,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
         <div
           className="oio-serif"
           style={{
-            fontFamily: "'Noto Serif', Georgia, serif",
+            fontFamily: SERIF_FONT,
             fontSize: 18,
             color: 'var(--color-text-primary)',
             lineHeight: 1.3,
@@ -206,7 +255,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
               marginTop: 4,
             }}
           >
-            {t('buyNowLabel', 'Buy Now')}: <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 500 }}>{auction.buyNowPrice.symbol ?? ''}{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: auction.buyNowPrice.currency ?? 'VND', maximumFractionDigits: 0 }).format(auction.buyNowPrice.amount)}</span>
+            {t('buyNowLabel', 'Buy Now')}: <span style={{ fontFamily: MONO_FONT, fontWeight: 500 }}>{auction.buyNowPrice.symbol ?? ''}{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: auction.buyNowPrice.currency ?? 'VND', maximumFractionDigits: 0 }).format(auction.buyNowPrice.amount)}</span>
           </div>
         )}
 

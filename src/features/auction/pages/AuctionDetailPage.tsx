@@ -12,8 +12,14 @@ import {
   App,
   Form,
   Breadcrumb,
+  Select,
+  Input,
+  Popconfirm,
+  DatePicker,
+  Flex,
 } from 'antd'
-import { ArrowLeftOutlined } from '@ant-design/icons'
+import dayjs from 'dayjs'
+import { ArrowLeftOutlined, FlagOutlined } from '@ant-design/icons'
 import { useParams, useNavigate, useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useTermsGate } from '@/features/user/hooks/useTermsGate'
@@ -27,9 +33,12 @@ import {
   useConfigureAutoBid,
   usePauseAutoBid,
   useResumeAutoBid,
+  useCancelAutoBid,
   useBuyNow,
   useChooseAuctionShipping,
   useRecordAuctionView,
+  useOfferRunnerUp,
+  useRelistAuction,
 } from '@/features/auction/api'
 import { useWallet, useCreateDepositPayment, useDepositFromWallet } from '@/features/payment/api'
 import { useAuctionHub } from '@/features/auction/hooks/useAuctionHub'
@@ -47,6 +56,7 @@ import { DEFAULT_CURRENCY } from '@/utils/constants'
 import { NotificationAggregator } from '@/features/auction/utils/NotificationAggregator'
 import { AuctionDetailTabs } from '@/features/auction/components/AuctionDetailTabs'
 import { AuctionSidebar } from '@/features/auction/components/AuctionSidebar'
+import { useCreateReport } from '@/features/dispute/api'
 
 // ── Qualification state helper ──────────────────────────────────────
 
@@ -81,6 +91,7 @@ function computeQualificationState(
 
 export default function AuctionDetailPage() {
   const { t } = useTranslation('auction')
+  const { t: td } = useTranslation('dispute')
   const navigate = useNavigate()
   const { message } = App.useApp()
   const { id } = useParams<{ id: string }>()
@@ -102,7 +113,7 @@ export default function AuctionDetailPage() {
     return found?.name ?? data?.item?.categoryId
   }, [categories, data?.item?.categoryId])
 
-  const hub = useAuctionHub(id ?? '', data?.item?.id)
+  const hub = useAuctionHub(id ?? '', data?.item?.id, currentUser?.id)
 
   const placeBidMutation = usePlaceBid()
   const watchMutation = useWatchAuction()
@@ -110,18 +121,33 @@ export default function AuctionDetailPage() {
   const autoBidMutation = useConfigureAutoBid()
   const pauseAutoBidMutation = usePauseAutoBid()
   const resumeAutoBidMutation = useResumeAutoBid()
+  const cancelAutoBidMutation = useCancelAutoBid()
   const depositMutation = useCreateDepositPayment()
   const walletDepositMutation = useDepositFromWallet()
   const buyNowMutation = useBuyNow()
   const chooseShipping = useChooseAuctionShipping()
+  const offerRunnerUp = useOfferRunnerUp()
+  const relistAuction = useRelistAuction()
   const [shippingForm] = Form.useForm<ShippingDetailsFormValues>()
 
   const [bidAmount, setBidAmount] = useState<number | null>(null)
   const [isWatching, setIsWatching] = useState(false)
   const [autoBidModalOpen, setAutoBidModalOpen] = useState(false)
   const [autoBidMax, setAutoBidMax] = useState<number | null>(null)
+  const [autoBidIncrement, setAutoBidIncrement] = useState<number | null>(null)
   const [buyNowConfirmOpen, setBuyNowConfirmOpen] = useState(false)
   const [shippingModalOpen, setShippingModalOpen] = useState(false)
+  const [relistModalOpen, setRelistModalOpen] = useState(false)
+  const [relistForm, setRelistForm] = useState<{
+    qualificationStartAt: dayjs.Dayjs | null
+    qualificationEndAt: dayjs.Dayjs | null
+    startAt: dayjs.Dayjs | null
+    endAt: dayjs.Dayjs | null
+  }>({ qualificationStartAt: null, qualificationEndAt: null, startAt: null, endAt: null })
+  const [reportModalOpen, setReportModalOpen] = useState(false)
+  const [reportReason, setReportReason] = useState('')
+  const [reportDescription, setReportDescription] = useState('')
+  const createReport = useCreateReport()
 
   // Qualification status — check localStorage + URL param after VnPay return
   const [searchParams] = useSearchParams()
@@ -172,10 +198,10 @@ export default function AuctionDetailPage() {
   const recentBids = bidsData?.items ?? data?.recentBids ?? []
   const isActive = auction?.status === AuctionStatus.Active
   const isScheduled = auction?.status === AuctionStatus.Scheduled
-  const currentPrice = hub.priceUpdate?.currentPrice ?? auction?.currentPrice?.amount ?? 0
+  const currentPrice = auction?.currentPrice?.amount ?? 0
   const currency = auction?.currency ?? DEFAULT_CURRENCY
   const minBid = auction?.minimumBidAmount?.amount ?? (currentPrice + (auction?.bidIncrement?.amount ?? 0))
-  const bidCount = hub.lastBid?.totalBids ?? hub.priceUpdate?.totalBids ?? auction?.bidCount ?? 0
+  const bidCount = hub.lastBid?.totalBids ?? auction?.bidCount ?? 0
   const watchCount = auction?.watchCount ?? 0
   const viewCount = auction?.viewCount ?? 0
   const walletBalance = walletData?.availableBalance ?? 0
@@ -272,7 +298,7 @@ export default function AuctionDetailPage() {
     if (hub.connected) return // SignalR handles realtime — no polling needed
     const interval = setInterval(() => {
       queryClient.invalidateQueries({ queryKey: queryKeys.auctions.detail(id!) })
-    }, 30000)
+    }, 5000)
     return () => clearInterval(interval)
   }, [auction?.status, id, hub.connected])
 
@@ -325,11 +351,36 @@ export default function AuctionDetailPage() {
     if (isSeller) return
     if (!id || !bidAmount) return
     try {
-      const result = await placeBidMutation.mutateAsync({ auctionId: id, amount: bidAmount, currency })
+      let result: { autoBidsCascaded?: number; finalPrice?: number; wasImmediatelyOutbid?: boolean } = {}
+
+      if (hub.connected) {
+        // Prefer SignalR for lower latency
+        const idempotencyKey = crypto.randomUUID()
+        const hubResult = await hub.placeBid(bidAmount, currency, idempotencyKey)
+        if (!hubResult.success) {
+          throw new Error(hubResult.error ?? t('bidError', 'Failed to place bid'))
+        }
+      } else {
+        // Fallback to REST when SignalR disconnected
+        result = await placeBidMutation.mutateAsync({ auctionId: id, amount: bidAmount, currency })
+      }
+
+      // Optimistic update — will be corrected by SignalR broadcast
+      queryClient.setQueryData(
+        queryKeys.auctions.detail(id),
+        (old: any) => old ? {
+          ...old,
+          auction: {
+            ...old.auction,
+            currentPrice: { ...old.auction.currentPrice, amount: bidAmount },
+            bidCount: (old.auction.bidCount ?? 0) + 1,
+          },
+        } : old,
+      )
       let successMsg = `${t('bidPlaced', 'Bid placed')}: ${formatCurrency(bidAmount, currency)}`
 
-      if (result.autoBidsCascaded > 0) {
-        successMsg += `. ${t('autoBidsCascaded', 'Your bid triggered {{count}} auto-bids. Current price: {{price}} VND.', { count: result.autoBidsCascaded, price: formatCurrency(result.finalPrice, currency) })}`
+      if (result.autoBidsCascaded && result.autoBidsCascaded > 0) {
+        successMsg += `. ${t('autoBidsCascaded', 'Your bid triggered {{count}} auto-bids. Current price: {{price}} VND.', { count: result.autoBidsCascaded, price: formatCurrency(result.finalPrice ?? bidAmount, currency) })}`
       }
 
       if (result.wasImmediatelyOutbid) {
@@ -341,7 +392,7 @@ export default function AuctionDetailPage() {
       setBidAmount(null)
     } catch (err) {
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      message.error(detail ?? t('bidError', 'Failed to place bid'))
+      message.error(detail ?? (err as Error)?.message ?? t('bidError', 'Failed to place bid'))
     }
   }
 
@@ -363,7 +414,7 @@ export default function AuctionDetailPage() {
   const handleAutoBid = async () => {
     if (!id || !autoBidMax) return
     try {
-      await autoBidMutation.mutateAsync({ auctionId: id, maxAmount: autoBidMax, currency })
+      await autoBidMutation.mutateAsync({ auctionId: id, maxAmount: autoBidMax, currency, incrementAmount: autoBidIncrement ?? undefined })
       message.success(t('autoBidConfigured', 'Auto-bid configured'))
       setAutoBidModalOpen(false)
     } catch {
@@ -487,17 +538,15 @@ export default function AuctionDetailPage() {
 
   return (
     <div className="oio-fade-in" style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px 12px 48px' : '24px 24px 80px' }}>
-      {/* Breadcrumb — desktop only */}
-      {!isMobile && (
-        <Breadcrumb
-          items={[
-            { title: <a onClick={() => navigate('/')}>Home</a> },
-            { title: <a onClick={() => navigate('/auctions')}>Auctions</a> },
-            { title: item?.title ?? t('auctionDetail', 'Auction Detail') },
-          ]}
-          style={{ marginBottom: 16 }}
-        />
-      )}
+      {/* Breadcrumb */}
+      <Breadcrumb
+        items={[
+          { title: <a onClick={() => navigate('/')}>Home</a> },
+          { title: <a onClick={() => navigate('/auctions')}>Auctions</a> },
+          { title: item?.title ?? t('auctionDetail', 'Auction Detail') },
+        ]}
+        style={{ marginBottom: 16 }}
+      />
 
       {/* Back link */}
       <button
@@ -514,12 +563,27 @@ export default function AuctionDetailPage() {
           gap: 6,
           padding: 0,
           marginBottom: isMobile ? 16 : 32,
-          //  responsive fix: larger touch target on mobile
-          minHeight: isMobile ? 36 : 'auto',
         }}
       >
         <ArrowLeftOutlined /> Back to Auctions
       </button>
+
+      {/* Report Auction button */}
+      {isAuthenticated && !isSeller && (
+        <Button
+          size="small"
+          icon={<FlagOutlined />}
+          danger
+          style={{ marginBottom: isMobile ? 16 : 32, marginLeft: 12 }}
+          onClick={() => {
+            setReportReason('')
+            setReportDescription('')
+            setReportModalOpen(true)
+          }}
+        >
+          {td('reportAuction', 'Report')}
+        </Button>
+      )}
 
       {/* Seller banner */}
       {isSeller && (
@@ -530,24 +594,55 @@ export default function AuctionDetailPage() {
             borderRadius: 8,
             background: 'rgba(196, 147, 61, 0.08)',
             border: '1px solid rgba(196, 147, 61, 0.2)',
-            display: 'flex',
-            alignItems: isMobile ? 'flex-start' : 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: 10,
           }}
         >
-          <Typography.Text style={{ color: 'var(--color-accent)', fontWeight: 600, fontSize: 14 }}>
-            {t('yourAuction', 'This is your auction')}
-          </Typography.Text>
-          <Button
-            type="primary"
-            size="small"
-            style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
-            onClick={() => { shippingForm.resetFields(); setShippingModalOpen(true) }}
-          >
-            Cấu hình vận chuyển
-          </Button>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+            <Typography.Text style={{ color: 'var(--color-accent)', fontWeight: 600, fontSize: 14 }}>
+              {t('yourAuction', 'This is your auction')}
+            </Typography.Text>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {auction?.verifyByPlatform && (auction?.status === AuctionStatus.Draft || auction?.status === AuctionStatus.Pending) && (
+                <Button
+                  type="primary"
+                  size="small"
+                  style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
+                  onClick={() => { shippingForm.resetFields(); setShippingModalOpen(true) }}
+                >
+                  {t('configShipping', 'Configure Shipping')}
+                </Button>
+              )}
+              {auction?.status === AuctionStatus.PaymentDefaulted && (
+                <>
+                  <Popconfirm
+                    title={t('offerRunnerUpConfirm', 'Offer this auction to the runner-up bidder?')}
+                    onConfirm={() => offerRunnerUp.mutateAsync(id ?? '').then(() => message.success(t('offerRunnerUpSuccess', 'Offer sent to runner-up'))).catch(() => message.error(t('offerRunnerUpError', 'Failed to send offer')))}
+                    okText={t('confirm', 'Confirm')}
+                    cancelText={t('cancel', 'Cancel')}
+                  >
+                    <Button size="small" loading={offerRunnerUp.isPending}>
+                      {t('offerRunnerUp', 'Offer to Runner-Up')}
+                    </Button>
+                  </Popconfirm>
+                  <Button
+                    size="small"
+                    loading={relistAuction.isPending}
+                    onClick={() => { setRelistForm({ qualificationStartAt: null, qualificationEndAt: null, startAt: null, endAt: null }); setRelistModalOpen(true) }}
+                  >
+                    {t('relist', 'Relist Auction')}
+                  </Button>
+                </>
+              )}
+              {auction?.status === AuctionStatus.Failed && (
+                <Button
+                  size="small"
+                  loading={relistAuction.isPending}
+                  onClick={() => { setRelistForm({ qualificationStartAt: null, qualificationEndAt: null, startAt: null, endAt: null }); setRelistModalOpen(true) }}
+                >
+                  {t('relist', 'Relist Auction')}
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -622,10 +717,8 @@ export default function AuctionDetailPage() {
         </Col>
 
         {/* ══ RIGHT COLUMN ═════════════════════════════════ */}
-        {/*  responsive fix: sidebar renders below on mobile naturally via Col xs={24} */}
         <Col xs={24} lg={10} className="oio-fade-in oio-fade-in-delay-1">
-          <div style={isMobile ? {} : { position: 'sticky', top: 24 }}>
-            <AuctionSidebar
+          <AuctionSidebar
             auction={auction}
             item={item}
             currentPrice={currentPrice}
@@ -675,12 +768,13 @@ export default function AuctionDetailPage() {
             }}
             onCancelAutoBid={async () => {
               try {
-                await pauseAutoBidMutation.mutateAsync(id!)
+                await cancelAutoBidMutation.mutateAsync(id!)
                 message.success(t('autoBidCancelled', 'Auto-bid cancelled'))
               } catch { message.error(t('autoBidError', 'Failed')) }
             }}
             isPauseLoading={pauseAutoBidMutation.isPending}
             isResumeLoading={resumeAutoBidMutation.isPending}
+            isCancelLoading={cancelAutoBidMutation.isPending}
             priceHistory={data?.priceHistory}
             qualificationStatus={data?.currentUserParticipant?.qualificationStatus ?? (qualState === 'qualified' ? 'qualified' : undefined)}
             depositStatus={data?.currentUserParticipant?.depositStatus}
@@ -695,9 +789,9 @@ export default function AuctionDetailPage() {
             onCountdownEnd={() => {
               queryClient.invalidateQueries({ queryKey: queryKeys.auctions.detail(id!) })
             }}
+            serverTimeOffset={hub.serverTimeOffset}
             currentUserId={currentUser?.id}
           />
-          </div>
         </Col>
       </Row>
 
@@ -710,9 +804,6 @@ export default function AuctionDetailPage() {
         confirmLoading={autoBidMutation.isPending}
         okText={t('confirmAutoBid', 'Confirm Auto-Bid')}
         okButtonProps={{ disabled: !autoBidMax || autoBidMax <= currentPrice }}
-        //  responsive fix: full-width modal on mobile
-        width={isMobile ? '95%' : 520}
-        centered={isMobile}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Typography.Paragraph style={{ margin: 0, fontSize: 13, color: 'var(--color-text-secondary)' }}>
@@ -741,6 +832,24 @@ export default function AuctionDetailPage() {
               {t('autoBidMinHelp', 'Must be higher than current price')}: {formatCurrency(currentPrice, currency)}
             </Typography.Text>
           </div>
+          <div>
+            <span className="oio-label" style={{ display: 'block', marginBottom: 6 }}>
+              {t('bidIncrement', 'Bid Increment')} <Typography.Text type="secondary" style={{ fontSize: 11 }}>({t('optional', 'optional')})</Typography.Text>
+            </span>
+            <InputNumber
+              style={{ width: '100%' }}
+              size="large"
+              min={auction?.bidIncrement?.amount ?? 1000}
+              step={auction?.bidIncrement?.amount ?? 1000}
+              value={autoBidIncrement}
+              onChange={(v) => setAutoBidIncrement(v)}
+              addonAfter={currency}
+              placeholder={t('autoBidIncrementPlaceholder', 'Default: auction increment ({{amount}})', { amount: formatCurrency(auction?.bidIncrement?.amount ?? 0, currency) })}
+            />
+            <Typography.Text style={{ fontSize: 12, color: 'var(--color-text-secondary)', display: 'block', marginTop: 4 }}>
+              {t('autoBidIncrementHelp', 'Custom step size for each auto-bid. Leave empty to use the auction default.')}
+            </Typography.Text>
+          </div>
           {autoBidMax && autoBidMax > currentPrice && (
             <div style={{ padding: '12px 16px', borderRadius: 8, background: 'rgba(139, 115, 85, 0.06)', border: '1px solid var(--color-border-light)' }}>
               <Typography.Text style={{ fontSize: 13, fontWeight: 500, display: 'block', marginBottom: 4 }}>
@@ -749,7 +858,7 @@ export default function AuctionDetailPage() {
               <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.8 }}>
                 <div>{t('maxBidAmount', 'Max bid')}: <strong>{formatCurrency(autoBidMax, currency)}</strong></div>
                 <div>{t('walletBalance', 'Wallet')}: {formatCurrency(walletBalance, currency)}</div>
-                <div>{t('bidIncrementLabel', 'Increment')}: {formatCurrency(bidInc, currency)}</div>
+                <div>{t('bidIncrementLabel', 'Increment')}: {formatCurrency(autoBidIncrement ?? bidInc, currency)}{autoBidIncrement ? ` (${t('custom', 'custom')})` : ''}</div>
               </div>
             </div>
           )}
@@ -791,15 +900,163 @@ export default function AuctionDetailPage() {
         onOk={handleBuyNow}
         okText={t('confirm', 'Confirm')}
         okButtonProps={{ danger: true }}
-        //  responsive fix: full-width on mobile
-        width={isMobile ? '95%' : undefined}
-        centered={isMobile}
       >
         <Typography.Paragraph>
           {t('buyNowConfirmText', 'You are about to purchase this item at the Buy Now price of {{price}}.', {
             price: formatCurrency(auction?.buyNowPrice?.amount ?? 0, currency),
           })}
         </Typography.Paragraph>
+      </Modal>
+
+      {/* Relist Auction Modal */}
+      <Modal
+        title={t('relistAuction', 'Relist Auction')}
+        open={relistModalOpen}
+        onCancel={() => setRelistModalOpen(false)}
+        onOk={async () => {
+          if (!relistForm.qualificationStartAt || !relistForm.qualificationEndAt || !relistForm.startAt || !relistForm.endAt) return
+          try {
+            const result = await relistAuction.mutateAsync({
+              auctionId: id ?? '',
+              qualificationStartAt: relistForm.qualificationStartAt.toISOString(),
+              qualificationEndAt: relistForm.qualificationEndAt.toISOString(),
+              startAt: relistForm.startAt.toISOString(),
+              endAt: relistForm.endAt.toISOString(),
+            })
+            message.success(t('relistSuccess', 'Auction relisted'))
+            setRelistModalOpen(false)
+            if ((result as any)?.id) navigate(`/auctions/${(result as any).id}`)
+          } catch {
+            message.error(t('relistError', 'Failed to relist auction'))
+          }
+        }}
+        okText={t('confirmRelist', 'Relist')}
+        okButtonProps={{
+          loading: relistAuction.isPending,
+          disabled: !relistForm.qualificationStartAt || !relistForm.qualificationEndAt || !relistForm.startAt || !relistForm.endAt,
+          style: { background: 'var(--color-accent)', borderColor: 'var(--color-accent)' },
+        }}
+        centered
+        width={480}
+      >
+        <Flex vertical gap={16} style={{ marginTop: 16 }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13 }}>
+              {t('qualificationStart', 'Qualification Start')} *
+            </label>
+            <DatePicker
+              showTime
+              style={{ width: '100%' }}
+              value={relistForm.qualificationStartAt}
+              onChange={(v) => setRelistForm((prev) => ({ ...prev, qualificationStartAt: v }))}
+              placeholder={t('selectStartTime', 'Select start time')}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13 }}>
+              {t('qualificationEnd', 'Qualification End')} *
+            </label>
+            <DatePicker
+              showTime
+              style={{ width: '100%' }}
+              value={relistForm.qualificationEndAt}
+              onChange={(v) => setRelistForm((prev) => ({ ...prev, qualificationEndAt: v }))}
+              placeholder={t('selectEndTime', 'Select end time')}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13 }}>
+              {t('auctionStart', 'Auction Start')} *
+            </label>
+            <DatePicker
+              showTime
+              style={{ width: '100%' }}
+              value={relistForm.startAt}
+              onChange={(v) => setRelistForm((prev) => ({ ...prev, startAt: v }))}
+              placeholder={t('selectStartTime', 'Select start time')}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13 }}>
+              {t('auctionEnd', 'Auction End')} *
+            </label>
+            <DatePicker
+              showTime
+              style={{ width: '100%' }}
+              value={relistForm.endAt}
+              onChange={(v) => setRelistForm((prev) => ({ ...prev, endAt: v }))}
+              placeholder={t('selectEndTime', 'Select end time')}
+            />
+          </div>
+        </Flex>
+      </Modal>
+
+      {/* Report Auction Modal */}
+      <Modal
+        title={td('reportAuction', 'Report Auction')}
+        open={reportModalOpen}
+        onCancel={() => setReportModalOpen(false)}
+        onOk={async () => {
+          if (!reportReason || reportDescription.trim().length < 20) return
+          try {
+            await createReport.mutateAsync({
+              entityType: 'auction',
+              entityId: id!,
+              reasonCode: reportReason,
+              description: reportDescription.trim(),
+            })
+            message.success(td('reportSuccess', 'Report submitted successfully'))
+            setReportModalOpen(false)
+          } catch {
+            message.error(td('reportError', 'Failed to submit report'))
+          }
+        }}
+        okButtonProps={{
+          danger: true,
+          loading: createReport.isPending,
+          disabled: !reportReason || reportDescription.trim().length < 20,
+        }}
+        centered
+      >
+        <Form layout="vertical">
+          <Form.Item label={td('reportReasonLabel', 'Reason')} required>
+            <Select
+              value={reportReason || undefined}
+              onChange={(val: string) => setReportReason(val)}
+              placeholder={td('selectReportReason', 'Select a reason')}
+              options={[
+                { value: 'suspicious_listing', label: td('reportReason.suspiciousListing', 'Suspicious listing') },
+                { value: 'counterfeit', label: td('reportReason.counterfeit', 'Counterfeit item') },
+                { value: 'prohibited_item', label: td('reportReason.prohibitedItem', 'Prohibited item') },
+                { value: 'misleading_description', label: td('reportReason.misleadingDescription', 'Misleading description') },
+                { value: 'other', label: td('reportReason.other', 'Other') },
+              ]}
+            />
+          </Form.Item>
+          <Form.Item
+            label={td('reportDescriptionLabel', 'Description')}
+            required
+            help={
+              reportDescription.trim().length > 0 && reportDescription.trim().length < 20
+                ? td('reportDescriptionMinLength', 'Please enter at least 20 characters')
+                : undefined
+            }
+            validateStatus={
+              reportDescription.trim().length > 0 && reportDescription.trim().length < 20
+                ? 'error'
+                : undefined
+            }
+          >
+            <Input.TextArea
+              rows={4}
+              value={reportDescription}
+              onChange={(e) => setReportDescription(e.target.value)}
+              placeholder={td('reportDescriptionPlaceholder', 'Describe the issue in detail (min. 20 characters)...')}
+              showCount
+              maxLength={1000}
+            />
+          </Form.Item>
+        </Form>
       </Modal>
     </div>
   )

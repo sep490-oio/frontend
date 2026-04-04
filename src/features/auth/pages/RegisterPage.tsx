@@ -12,6 +12,7 @@ import {
   SafetyCertificateOutlined,
   CheckCircleOutlined,
   CustomerServiceOutlined,
+  PhoneOutlined,
   MailOutlined,
 } from '@ant-design/icons'
 import { useRegister } from '@/features/auth/api'
@@ -42,8 +43,7 @@ const PROVINCE_OPTIONS = [
   { value: 'hue', label: 'Thua Thien Hue' },
 ]
 
-const SERIF_FONT = "'Noto Serif', Georgia, serif"
-const SANS_FONT = "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif"
+import { SERIF_FONT, SANS_FONT } from '@/styles/tokens'
 
 const fieldStyle: React.CSSProperties = {
   height: 48,
@@ -106,16 +106,6 @@ const trustLabelStyle: React.CSSProperties = {
   color: 'var(--color-text-secondary)',
   textTransform: 'uppercase' as const,
 }
-
-//  responsive fix: scoped media queries for mobile
-const mobileStyles = `
-  @media (max-width: 768px) {
-    .oio-register-heading { font-size: 22px !important; }
-    .oio-register-section-box { padding: 16px 16px 4px !important; }
-    .oio-register-trust { gap: 16px !important; }
-    .oio-register-btn { height: 44px !important; font-size: 14px !important; }
-  }
-`
 
 export default function RegisterPage() {
   const { t } = useTranslation('auth')
@@ -181,12 +171,9 @@ export default function RegisterPage() {
 
   return (
     <div className="oio-fade-in" style={{ width: '100%' }}>
-      {/*  responsive fix: inject scoped media query */}
-      <style>{mobileStyles}</style>
-
       {/* Heading */}
       <h2
-        className="oio-serif oio-register-heading"
+        className="oio-serif"
         style={{
           fontFamily: SERIF_FONT,
           fontSize: 28,
@@ -203,8 +190,7 @@ export default function RegisterPage() {
 
       <Form layout="vertical" onFinish={handleSubmit(onSubmit)} style={labelStyle}>
         {/* ── Section 1: Thong tin ca nhan ── */}
-        {/*  responsive fix: added oio-register-section-box class for padding reduction on mobile */}
-        <div style={sectionBoxStyle} className="oio-register-section-box">
+        <div style={sectionBoxStyle}>
           <div style={sectionHeaderStyle}>
             <UserOutlined style={sectionIconStyle} />
             <h3 style={sectionTitleStyle}>
@@ -212,7 +198,6 @@ export default function RegisterPage() {
             </h3>
           </div>
 
-          {/* Row uses xs={24} sm={12} already — responsive by default */}
           <Row gutter={16}>
             <Col xs={24} sm={12}>
               <Form.Item
@@ -258,10 +243,21 @@ export default function RegisterPage() {
               </Form.Item>
             </Col>
           </Row>
+
+          <Form.Item
+            label={t('register.phone', 'So dien thoai')}
+            style={{ marginBottom: 20 }}
+          >
+            <Input
+              prefix={<PhoneOutlined style={{ color: 'var(--color-text-secondary)' }} />}
+              placeholder={t('register.phonePlaceholder', 'Nhap so dien thoai')}
+              style={fieldStyle}
+            />
+          </Form.Item>
         </div>
 
         {/* ── Section 2: Thong tin tai khoan ── */}
-        <div style={sectionBoxStyle} className="oio-register-section-box">
+        <div style={sectionBoxStyle}>
           <div style={sectionHeaderStyle}>
             <LockOutlined style={sectionIconStyle} />
             <h3 style={sectionTitleStyle}>
@@ -360,7 +356,7 @@ export default function RegisterPage() {
         </div>
 
         {/* ── Section 3: Dia chi ── */}
-        <div style={sectionBoxStyle} className="oio-register-section-box">
+        <div style={sectionBoxStyle}>
           <div style={sectionHeaderStyle}>
             <EnvironmentOutlined style={sectionIconStyle} />
             <h3 style={sectionTitleStyle}>
@@ -442,7 +438,6 @@ export default function RegisterPage() {
             block
             disabled={!agreed}
             loading={registerMutation.isPending}
-            className="oio-register-btn"
             style={{
               height: 52,
               borderRadius: 8,
@@ -469,9 +464,7 @@ export default function RegisterPage() {
       </p>
 
       {/* Trust badges */}
-      {/*  responsive fix: added oio-register-trust class to reduce gap on mobile */}
       <div
-        className="oio-register-trust"
         style={{
           display: 'flex',
           justifyContent: 'center',

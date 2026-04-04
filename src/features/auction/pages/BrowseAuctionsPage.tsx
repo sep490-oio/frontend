@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Input, Select, Pagination, Flex, Row, Col } from 'antd'
+import { useState, useEffect } from 'react'
+import { Input, Select, Pagination, Flex, Row, Col, InputNumber } from 'antd'
 import { SearchOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
@@ -7,11 +7,19 @@ import { useAuctions } from '@/features/auction/api'
 import { useCategories } from '@/features/item/api'
 import { AuctionCard } from '@/components/ui/AuctionCard'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { AuctionStatus } from '@/types/enums'
+import { AuctionStatus, AuctionType } from '@/types/enums'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { useDebounce } from '@/hooks/useDebounce'
 import type { AuctionFilterParams } from '@/types'
+import { SERIF_FONT } from '@/styles/tokens'
 
-const SERIF = "'Noto Serif', Georgia, serif"
+const SERIF = SERIF_FONT
+
+const AUCTION_TYPE_OPTIONS = [
+  { value: '', label: 'Tất cả loại' },
+  { value: AuctionType.Regular, label: 'Regular' },
+  { value: AuctionType.Sealed, label: 'Sealed' },
+]
 
 const SORT_OPTIONS = [
   { value: 'EndTime Asc', label: 'Ending soon' },
@@ -35,14 +43,23 @@ export default function BrowseAuctionsPage() {
   const [searchParams] = useSearchParams()
 
   const initialCategoryId = searchParams.get('categoryId') ?? ''
+  const initialSearch = searchParams.get('search') ?? ''
 
   const [filters, setFilters] = useState<AuctionFilterParams>({
     pageNumber: 1,
     pageSize: 12,
     status: AuctionStatus.Active,
     categoryId: initialCategoryId || undefined,
+    search: initialSearch || undefined,
   })
-  const [searchText, setSearchText] = useState('')
+  const [searchText, setSearchText] = useState(initialSearch)
+  const [minPrice, setMinPrice] = useState<number | null>(null)
+  const [maxPrice, setMaxPrice] = useState<number | null>(null)
+  const debouncedSearch = useDebounce(searchText, 500)
+
+  useEffect(() => {
+    setFilters((prev) => ({ ...prev, search: debouncedSearch || undefined, pageNumber: 1 }))
+  }, [debouncedSearch])
 
   const { data, isLoading } = useAuctions(filters, { refetchInterval: 30000 })
   const { data: categories } = useCategories()
@@ -51,10 +68,6 @@ export default function BrowseAuctionsPage() {
     { value: '', label: 'Tất cả danh mục' },
     ...(categories ?? []).map((cat) => ({ value: cat.id, label: cat.name })),
   ]
-
-  const handleSearch = (value: string) => {
-    setFilters((prev) => ({ ...prev, search: value || undefined, pageNumber: 1 }))
-  }
 
   const updateFilter = (key: keyof AuctionFilterParams, value: unknown) => {
     setFilters((prev) => ({ ...prev, [key]: value || undefined, pageNumber: 1 }))
@@ -72,26 +85,15 @@ export default function BrowseAuctionsPage() {
         {t('browseSubtitle', 'Tìm kiếm và lọc các phiên đấu giá theo danh mục, trạng thái và giá')}
       </p>
 
-      {/* Status pills —  responsive fix: horizontal scroll on mobile */}
-      <div
-        style={{
-          display: 'flex',
-          gap: 8,
-          flexWrap: isMobile ? 'nowrap' : 'wrap', //  responsive fix: nowrap + scroll on mobile
-          overflowX: isMobile ? 'auto' : 'visible',
-          WebkitOverflowScrolling: 'touch',
-          paddingBottom: isMobile ? 4 : 0,
-          marginBottom: 16,
-          scrollbarWidth: 'none', //  responsive fix: hide scrollbar on mobile
-        }}
-      >
+      {/* Status pills */}
+      <Flex gap={8} wrap="wrap" style={{ marginBottom: 16 }}>
         {STATUS_PILLS.map((pill) => (
           <button
             key={pill.value}
             type="button"
             onClick={() => updateFilter('status', pill.value)}
             style={{
-              padding: isMobile ? '5px 12px' : '8px 20px',
+              padding: isMobile ? '6px 14px' : '8px 20px',
               borderRadius: 100,
               fontSize: 13,
               fontWeight: 500,
@@ -100,16 +102,14 @@ export default function BrowseAuctionsPage() {
               background: activeStatus === pill.value ? 'var(--color-accent)' : 'transparent',
               color: activeStatus === pill.value ? '#fff' : 'var(--color-text-secondary)',
               transition: 'all 200ms ease',
-              flexShrink: 0, //  responsive fix: prevent pills from shrinking on mobile
-              whiteSpace: 'nowrap',
             }}
           >
             {pill.label}
           </button>
         ))}
-      </div>
+      </Flex>
 
-      {/* Filters row —  responsive fix: stack vertically on mobile */}
+      {/* Filters row */}
       <Flex wrap="wrap" gap={12} align="center" style={{ marginBottom: isMobile ? 20 : 32 }} vertical={isMobile}>
         <Select
           style={{ width: isMobile ? '100%' : 200 }}
@@ -125,13 +125,39 @@ export default function BrowseAuctionsPage() {
         />
         <Input
           prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
-          placeholder={t('searchPlaceholder', 'Tìm kiếm...')}
+          placeholder={t('searchPlaceholder', 'Search auctions...')}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
-          onPressEnter={() => handleSearch(searchText)}
-          onBlur={() => handleSearch(searchText)}
-          allowClear
-          style={{ width: isMobile ? '100%' : 260, borderRadius: 100, height: 40, borderColor: 'var(--color-border)' }}
+          onPressEnter={() => setFilters((prev) => ({ ...prev, search: searchText || undefined, pageNumber: 1 }))}
+          style={{ width: isMobile ? '100%' : 220, borderRadius: 100, height: 40, borderColor: 'var(--color-border)' }}
+        />
+        <InputNumber
+          placeholder="Min"
+          min={0}
+          value={minPrice}
+          addonAfter="VND"
+          style={{ width: isMobile ? '100%' : 150 }}
+          onChange={(val) => {
+            setMinPrice(val)
+            setFilters((prev) => ({ ...prev, minPrice: val ?? undefined, pageNumber: 1 }))
+          }}
+        />
+        <InputNumber
+          placeholder="Max"
+          min={0}
+          value={maxPrice}
+          addonAfter="VND"
+          style={{ width: isMobile ? '100%' : 150 }}
+          onChange={(val) => {
+            setMaxPrice(val)
+            setFilters((prev) => ({ ...prev, maxPrice: val ?? undefined, pageNumber: 1 }))
+          }}
+        />
+        <Select
+          style={{ width: isMobile ? '100%' : 140 }}
+          options={AUCTION_TYPE_OPTIONS}
+          value={filters.auctionType ?? ''}
+          onChange={(v) => updateFilter('auctionType', v)}
         />
       </Flex>
 
@@ -139,8 +165,7 @@ export default function BrowseAuctionsPage() {
       {isLoading ? (
         <Row gutter={[16, 16]}>
           {[...Array(8)].map((_, i) => (
-            //  responsive fix: xs={12} for 2 columns on mobile instead of full-width
-            <Col key={i} xs={12} sm={12} xl={6}>
+            <Col key={i} xs={24} sm={12} xl={6}>
               <div className="oio-skeleton" style={{ aspectRatio: '3/4', borderRadius: 4 }} />
             </Col>
           ))}
@@ -151,8 +176,7 @@ export default function BrowseAuctionsPage() {
         <>
           <Row className="oio-stagger" gutter={[16, 16]}>
             {data.items.map((auction) => (
-              //  responsive fix: xs={12} for 2 columns on mobile
-              <Col key={auction.id} xs={12} sm={12} xl={6}>
+              <Col key={auction.id} xs={24} sm={12} xl={6}>
                 <AuctionCard auction={auction} />
               </Col>
             ))}

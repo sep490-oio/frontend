@@ -6,23 +6,16 @@ import { useInspectionQueue, useReviewInspection } from '@/features/inspector/ap
 import type { InspectionQueueItem } from '@/features/inspector/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
-import type { TablePaginationConfig } from 'antd'
-
-const SERIF_FONT = "'Noto Serif', Georgia, serif"
+import { SERIF_FONT } from '@/styles/tokens'
 
 export default function InspectionReviewPage() {
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(12)
   const [reviewModalOpen, setReviewModalOpen] = useState(false)
   const [selectedItem, setSelectedItem] = useState<InspectionQueueItem | null>(null)
   const [decision, setDecision] = useState<string>('')
   const [reason, setReason] = useState('')
 
-  const { data, isLoading } = useInspectionQueue({
-    pageNumber: page,
-    pageSize,
-    status: 'inspected',
-  })
+  // Fetch inspected items that need review
+  const { data, isLoading } = useInspectionQueue({ pageNumber: 1, pageSize: 50, status: 'awaiting_review' })
 
   const reviewMutation = useReviewInspection()
 
@@ -38,11 +31,11 @@ export default function InspectionReviewPage() {
 
     try {
       await reviewMutation.mutateAsync({
-        shipmentId: selectedItem.id,
+        shipmentId: selectedItem.inboundShipmentId,
         decision,
         reason: reason || undefined,
       })
-      message.success(`Inspection ${decision === 'approved' ? 'approved' : 'rejected'} successfully`)
+      message.success(`Inspection ${decision === 'approve' ? 'approved' : 'rejected'} successfully`)
       setReviewModalOpen(false)
       setSelectedItem(null)
     } catch {
@@ -58,33 +51,45 @@ export default function InspectionReviewPage() {
       ellipsis: true,
     },
     {
-      title: 'Seller',
-      dataIndex: 'sellerName',
-      key: 'sellerName',
+      title: 'Declared Condition',
+      dataIndex: 'declaredCondition',
+      key: 'declaredCondition',
+      width: 140,
+      render: (v: string) => <StatusBadge status={v} size="small" />,
     },
     {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
+      title: 'Actual Condition',
+      dataIndex: 'conditionOnArrival',
+      key: 'conditionOnArrival',
+      width: 140,
+      render: (v: string) => v ? <StatusBadge status={v} size="small" /> : '-',
+    },
+    {
+      title: 'Queue Status',
+      dataIndex: 'queueStatus',
+      key: 'queueStatus',
+      width: 140,
       render: (status: string) => <StatusBadge status={status} />,
     },
     {
-      title: 'Arrived',
-      dataIndex: 'arrivedAt',
-      key: 'arrivedAt',
-      render: (date: string) => formatDateTime(date),
+      title: 'Inspected',
+      dataIndex: 'inspectedAt',
+      key: 'inspectedAt',
+      width: 160,
+      render: (date: string) => date ? formatDateTime(date) : '-',
     },
     {
       title: 'Actions',
       key: 'actions',
+      width: 200,
       render: (_: unknown, record: InspectionQueueItem) => (
         <Space>
           <Button
             type="primary"
             size="small"
             icon={<CheckOutlined />}
-            onClick={() => openReviewModal(record, 'approved')}
-            style={{ background: '#4A7C59', borderColor: '#4A7C59' }}
+            onClick={() => openReviewModal(record, 'approve')}
+            style={{ background: 'var(--color-success)', borderColor: 'var(--color-success)' }}
           >
             Approve
           </Button>
@@ -92,7 +97,7 @@ export default function InspectionReviewPage() {
             danger
             size="small"
             icon={<CloseOutlined />}
-            onClick={() => openReviewModal(record, 'rejected')}
+            onClick={() => openReviewModal(record, 'reject')}
           >
             Reject
           </Button>
@@ -100,11 +105,6 @@ export default function InspectionReviewPage() {
       ),
     },
   ]
-
-  const handleTableChange = (pagination: TablePaginationConfig) => {
-    setPage(pagination.current ?? 1)
-    setPageSize(pagination.pageSize ?? 12)
-  }
 
   return (
     <div>
@@ -120,13 +120,9 @@ export default function InspectionReviewPage() {
           mobileMode="card"
           columns={columns}
           dataSource={data?.items ?? []}
-          rowKey="id"
+          rowKey="inboundShipmentId"
           loading={isLoading}
-          onChange={handleTableChange}
           pagination={{
-            current: page,
-            pageSize,
-            total: data?.metadata?.totalCount ?? 0,
             showSizeChanger: true,
             showTotal: (total) => `Total ${total} items`,
           }}
@@ -139,10 +135,10 @@ export default function InspectionReviewPage() {
         onCancel={() => setReviewModalOpen(false)}
         onOk={handleReview}
         confirmLoading={reviewMutation.isPending}
-        okText={decision === 'approved' ? 'Approve' : 'Reject'}
+        okText={decision === 'approve' ? 'Approve' : 'Reject'}
         okButtonProps={{
-          danger: decision === 'rejected',
-          style: decision === 'approved' ? { background: '#4A7C59', borderColor: '#4A7C59' } : undefined,
+          danger: decision === 'reject',
+          style: decision === 'approve' ? { background: 'var(--color-success)', borderColor: 'var(--color-success)' } : undefined,
         }}
       >
         {selectedItem && (
@@ -152,6 +148,17 @@ export default function InspectionReviewPage() {
               <Typography.Text>{selectedItem.itemTitle}</Typography.Text>
             </div>
             <div>
+              <Typography.Text strong>Declared:</Typography.Text>{' '}
+              <StatusBadge status={selectedItem.declaredCondition} size="small" />
+              {selectedItem.conditionOnArrival && (
+                <>
+                  {' → '}
+                  <Typography.Text strong>Actual:</Typography.Text>{' '}
+                  <StatusBadge status={selectedItem.conditionOnArrival} size="small" />
+                </>
+              )}
+            </div>
+            <div>
               <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>
                 Decision
               </Typography.Text>
@@ -159,20 +166,20 @@ export default function InspectionReviewPage() {
                 value={decision}
                 onChange={setDecision}
                 options={[
-                  { value: 'approved', label: 'Approve' },
-                  { value: 'rejected', label: 'Reject' },
+                  { value: 'approve', label: 'Approve' },
+                  { value: 'reject', label: 'Reject' },
                 ]}
                 style={{ width: '100%' }}
               />
             </div>
             <div>
               <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>
-                Notes
+                Notes {decision === 'reject' && '(required)'}
               </Typography.Text>
               <Input.TextArea
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                placeholder="Add review notes (required for rejections)"
+                placeholder="Add review notes"
                 rows={3}
               />
             </div>

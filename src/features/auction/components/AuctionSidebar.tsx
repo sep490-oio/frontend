@@ -172,6 +172,7 @@ export interface AuctionSidebarProps {
   onCancelAutoBid: () => Promise<void>
   isPauseLoading: boolean
   isResumeLoading: boolean
+  isCancelLoading?: boolean
 
   // Price history
   priceHistory?: { price: number; timestamp: string }[]
@@ -194,6 +195,7 @@ export interface AuctionSidebarProps {
 
   // Countdown
   onCountdownEnd?: () => void
+  serverTimeOffset?: number
 
   // Current user (for outcome detection)
   currentUserId?: string
@@ -236,6 +238,7 @@ export function AuctionSidebar({
   onCancelAutoBid,
   isPauseLoading,
   isResumeLoading,
+  isCancelLoading,
   priceHistory,
   qualificationStatus,
   depositStatus,
@@ -248,6 +251,7 @@ export function AuctionSidebar({
   isBuyNowLoading,
   onCheckoutClick,
   onCountdownEnd,
+  serverTimeOffset = 0,
   currentUserId,
 }: AuctionSidebarProps) {
   const { t } = useTranslation('auction')
@@ -282,6 +286,7 @@ export function AuctionSidebar({
           onWatch={onWatch}
           watchLoading={watchLoading}
           onCountdownEnd={onCountdownEnd}
+          serverTimeOffset={serverTimeOffset}
         />
 
         {/* 2. Bid Form — immediately after price, ALWAYS VISIBLE at top when qualified & active */}
@@ -305,6 +310,7 @@ export function AuctionSidebar({
             onCancelAutoBid={onCancelAutoBid}
             isPauseLoading={isPauseLoading}
             isResumeLoading={isResumeLoading}
+            isCancelLoading={isCancelLoading}
             priceHistory={priceHistory}
             outbidMode={!!outbid}
           />
@@ -505,9 +511,11 @@ export function AuctionSidebar({
               step={bidIncrement}
               value={bidAmount}
               onChange={(v) => onBidAmountChange(v)}
-              style={{ width: 120 }}
+              style={{ width: 140 }}
               formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
               parser={(v) => Number(v?.replace(/,/g, '') ?? 0)}
+              addonAfter={currency}
+              placeholder={`Min: ${formatCurrency(minBid, currency)}`}
             />
             <Popconfirm
               title={t('confirmBidTitle', 'Confirm your bid')}
@@ -515,6 +523,7 @@ export function AuctionSidebar({
                 <div style={{ fontSize: 12, lineHeight: 1.8 }}>
                   <div>{t('bidAmount', 'Bid amount')}: <strong>{formatCurrency(bidAmount ?? 0, currency)}</strong></div>
                   <div>{t('currentPrice', 'Current price')}: {formatCurrency(currentPrice, currency)}</div>
+                  <div>{t('walletBalance', 'Wallet balance')}: {formatCurrency(walletBalance, currency)}</div>
                 </div>
               }
               onConfirm={onPlaceBid}

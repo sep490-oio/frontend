@@ -11,7 +11,7 @@ import type {
 
 // ── Inbound Shipments ───────────────────────────────────────────────
 
-export function useInboundShipments(params?: PaginationParams & { status?: string }) {
+export function useInboundShipments(params?: PaginationParams & { status?: string; search?: string }) {
   return useQuery({
     queryKey: queryKeys.warehouse.inbound(params),
     queryFn: async () => {
@@ -32,30 +32,37 @@ export function useInboundShipmentById(id: string) {
   })
 }
 
+export interface BookInboundShipmentItem {
+  itemId: string
+  itemPrice?: number
+  weightGrams: number
+}
+
+export interface BookInboundShipmentRequest {
+  items: BookInboundShipmentItem[]
+  weightGrams: number
+  insuranceValue: number
+  senderName?: string
+  senderPhone?: string
+  senderAddress?: string
+  senderWard?: string
+  senderDistrict?: string
+  senderProvince?: string
+  shipmentMode?: string
+  externalCarrierName?: string
+  lengthCm?: number
+  widthCm?: number
+  heightCm?: number
+  providerCode?: string
+  notes?: string
+  ghnHandlingNote?: string
+}
+
 export function useBookInbound() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (data: {
-      itemId: string
-      itemName: string
-      itemPrice: number
-      insuranceValue: number
-      providerCode: string
-      shipmentMode: string
-      externalCarrierName?: string
-      senderName: string
-      senderPhone: string
-      senderAddress: string
-      senderWard?: string
-      senderDistrict?: string
-      senderProvince?: string
-      weightGrams: number
-      lengthCm?: number
-      widthCm?: number
-      heightCm?: number
-      notes?: string
-    }) => {
-      const res = await apiClient.post<InboundShipmentDto>('/warehouse/inbound-shipments', data)
+    mutationFn: async (data: BookInboundShipmentRequest) => {
+      const res = await apiClient.post<InboundShipmentDto[]>('/warehouse/inbound-shipments', data)
       return res.data
     },
     onSuccess: () => {
@@ -67,8 +74,8 @@ export function useBookInbound() {
 export function useCancelInbound() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (id: string) => {
-      const res = await apiClient.post<InboundShipmentDto>(`/warehouse/inbound-shipments/${id}/cancel`)
+    mutationFn: async ({ id, reason }: { id: string; reason?: string }) => {
+      const res = await apiClient.post<InboundShipmentDto>(`/warehouse/inbound-shipments/${id}/cancel`, { reason })
       return res.data
     },
     onSuccess: () => {
@@ -81,18 +88,25 @@ export function useInboundShipmentQr(id: string) {
   return useQuery({
     queryKey: [...queryKeys.warehouse.inboundDetail(id), 'qr'],
     queryFn: async () => {
-      const res = await apiClient.get<{ qrCode: string; shipmentId: string }>(`/warehouse/inbound-shipments/${id}/qr`)
-      return res.data
+      const res = await apiClient.get(`/warehouse/inbound-shipments/${id}/qr`, {
+        responseType: 'blob',
+      })
+      return URL.createObjectURL(res.data as Blob)
     },
     enabled: !!id,
+    staleTime: Infinity,
   })
 }
 
 export function useScanShipment() {
+  const qc = useQueryClient()
   return useMutation({
     mutationFn: async (params: { code?: string; trackingNumber?: string }) => {
-      const res = await apiClient.get('/warehouse/inbound-shipments/scan', { params })
+      const res = await apiClient.get<InboundShipmentDto[]>('/warehouse/inbound-shipments/scan', { params })
       return res.data
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.warehouse.all })
     },
   })
 }
@@ -194,6 +208,44 @@ export function useWarehouseItems(params?: PaginationParams & { condition?: stri
     queryKey: queryKeys.warehouse.items(params),
     queryFn: async () => {
       const res = await apiClient.get<PagedList<WarehouseItemDto>>('/warehouse/warehouse-items', { params })
+      return res.data
+    },
+  })
+}
+
+// Shipping fee calculation
+export function useCalculateShippingFee() {
+  return useMutation({
+    mutationFn: async (data: {
+      providerCode: string
+      weightGrams: number
+      insuranceValue?: number
+      codAmount?: number
+      recipientIsWarehouse?: boolean
+      recipientUserId?: string
+      recipientDistrict?: string
+      recipientProvince?: string
+    }) => {
+      const res = await apiClient.post<number>('/warehouse/shipping/calculate-fee', data)
+      return res.data
+    },
+  })
+}
+
+// Expected delivery time calculation
+export function useCalculateDeliveryTime() {
+  return useMutation({
+    mutationFn: async (data: {
+      providerCode: string
+      senderUserId?: string
+      senderDistrict?: string
+      senderProvince?: string
+      recipientIsWarehouse?: boolean
+      recipientUserId?: string
+      recipientDistrict?: string
+      recipientProvince?: string
+    }) => {
+      const res = await apiClient.post<string | null>('/warehouse/shipping/calculate-lead-time', data)
       return res.data
     },
   })

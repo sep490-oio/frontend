@@ -1,4 +1,5 @@
 import { formatCurrency } from '@/utils/format'
+import { MONO_FONT } from '@/styles/tokens'
 import type { MoneyDto } from '@/types/api'
 
 interface PriceDisplayProps {
@@ -47,7 +48,7 @@ export function PriceDisplay({
     <span
       className={`oio-price${pulse ? ' oio-price-pulse' : ''}`}
       style={{
-        fontFamily: "'JetBrains Mono', monospace",
+        fontFamily: MONO_FONT,
         fontSize: FONT_SIZES[size],
         fontVariantNumeric: 'tabular-nums',
         color: 'var(--color-accent)',

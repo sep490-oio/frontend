@@ -15,23 +15,14 @@ import {
 import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useNotificationPreferences, useUpdateNotificationPreferences } from '../api'
-import { useState } from 'react'
-
+import { useState, useEffect } from 'react'
 
 const { Title, Text } = Typography
-
-// -- Channel Definitions -------------------------------------------------------
-
-const CHANNELS = [
-  { key: 'email', label: 'Email', icon: <MailOutlined />, description: 'Nhan thong bao qua email' },
-  { key: 'push', label: 'Push', icon: <BellOutlined />, description: 'Thong bao day tren trinh duyet' },
-  { key: 'sms', label: 'SMS', icon: <MessageOutlined />, description: 'Nhan tin nhan SMS' },
-] as const
 
 // -- Component -----------------------------------------------------------------
 
 export default function NotificationPrefsPage() {
-  useTranslation('common')
+  const { t } = useTranslation('user')
   const { isMobile } = useBreakpoint()
   const { message } = App.useApp()
 
@@ -41,21 +32,25 @@ export default function NotificationPrefsPage() {
   const [isEnabled, setIsEnabled] = useState(true)
   const [selectedChannels, setSelectedChannels] = useState<string[]>([])
   const [dirty, setDirty] = useState(false)
-  const [lastSyncedKey, setLastSyncedKey] = useState<string | null>(null)
 
-  // Sync form state when prefs data changes (avoids setState-in-effect)
-  const syncKey = prefs ? `${prefs.isEnabled}_${prefs.channels}` : null
-  if (syncKey && syncKey !== lastSyncedKey) {
-    setIsEnabled(prefs!.isEnabled)
-    try {
-      const parsed: unknown = JSON.parse(prefs!.channels)
-      setSelectedChannels(Array.isArray(parsed) ? (parsed as string[]) : [])
-    } catch {
-      setSelectedChannels([])
+  const channels = [
+    { key: 'email', label: 'Email', icon: <MailOutlined />, description: t('notificationPrefs.channelEmail') },
+    { key: 'push', label: 'Push', icon: <BellOutlined />, description: t('notificationPrefs.channelPush') },
+    { key: 'sms', label: 'SMS', icon: <MessageOutlined />, description: t('notificationPrefs.channelSms') },
+  ]
+
+  useEffect(() => {
+    if (prefs) {
+      setIsEnabled(prefs.isEnabled)
+      try {
+        const parsed: unknown = JSON.parse(prefs.channels)
+        setSelectedChannels(Array.isArray(parsed) ? (parsed as string[]) : [])
+      } catch {
+        setSelectedChannels([])
+      }
+      setDirty(false)
     }
-    setDirty(false)
-    setLastSyncedKey(syncKey)
-  }
+  }, [prefs])
 
   const toggleChannel = (key: string, checked: boolean) => {
     setSelectedChannels((prev) => (checked ? [...prev, key] : prev.filter((c) => c !== key)))
@@ -76,9 +71,9 @@ export default function NotificationPrefsPage() {
         channels: JSON.stringify(selectedChannels),
       })
       setDirty(false)
-      message.success('Cap nhat cai dat thong bao thanh cong')
+      message.success(t('notificationPrefs.saveSuccess'))
     } catch {
-      message.error('Khong the cap nhat cai dat thong bao')
+      message.error(t('notificationPrefs.saveError'))
     }
   }
 
@@ -93,28 +88,28 @@ export default function NotificationPrefsPage() {
   return (
     <div style={{ maxWidth: 700, margin: '0 auto', padding: isMobile ? '0 12px' : undefined }}>
       <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', gap: isMobile ? 12 : 0, marginBottom: 24 }}>
-        <Title level={2} style={{ margin: 0 }}>Cai dat thong bao</Title>
+        <Title level={2} style={{ margin: 0 }}>{t('notificationPrefs.title')}</Title>
         <Button type="primary" onClick={onSave} loading={updatePrefs.isPending} disabled={!dirty}>
-          Luu thay doi
+          {t('notificationPrefs.save')}
         </Button>
       </div>
 
       {/* Master toggle */}
-      <Card title="Thong bao" style={{ marginBottom: 24 }}>
+      <Card title={t('notificationPrefs.masterToggle')} style={{ marginBottom: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <Text strong>Bat thong bao</Text>
+            <Text strong>{t('notificationPrefs.enableNotifications')}</Text>
             <br />
-            <Text type="secondary" style={{ fontSize: 12 }}>Bat/tat toan bo thong bao</Text>
+            <Text type="secondary" style={{ fontSize: 12 }}>{t('notificationPrefs.enableDesc')}</Text>
           </div>
           <Switch checked={isEnabled} onChange={toggleEnabled} />
         </div>
       </Card>
 
       {/* Notification Channels */}
-      <Card title="Kenh nhan thong bao">
+      <Card title={t('notificationPrefs.channels')}>
         <Space direction="vertical" style={{ width: '100%' }} size="middle">
-          {CHANNELS.map((ch) => (
+          {channels.map((ch) => (
             <div
               key={ch.key}
               style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}

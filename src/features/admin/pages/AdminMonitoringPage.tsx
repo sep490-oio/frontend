@@ -1,250 +1,286 @@
 import { useState } from 'react'
-import { Typography, Select, Space, Button, Tag, App, Modal, Input, Switch } from 'antd'
-import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
-import { AlertOutlined } from '@ant-design/icons'
+import {
+  Typography, Card, Tabs, Tag, Button, Space, App,
+  Tooltip, Flex, Badge,
+} from 'antd'
+import {
+  AlertOutlined, CheckCircleOutlined, BellOutlined,
+  WarningOutlined, FireOutlined, ExclamationCircleOutlined,
+  EyeOutlined, LinkOutlined,
+} from '@ant-design/icons'
+import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useMonitoringAlerts, useAcknowledgeAlert, useResolveAlert } from '@/features/admin/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { formatDateTime } from '@/utils/format'
 import { AlertSeverity, AlertStatus } from '@/types/enums'
+import { MonitoringDashboard } from '@/features/admin/components/MonitoringDashboard'
+import { MonitoringAlertDrawer } from '@/features/admin/components/MonitoringAlertDrawer'
+import { parseAlertPayload, formatAlertType } from '@/features/admin/utils/parseAlertPayload'
 import type { MonitoringAlertDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
 
-const SEVERITY_OPTIONS = [
-  { value: '', label: '' },
-  { value: AlertSeverity.Low, label: 'Low' },
-  { value: AlertSeverity.Medium, label: 'Medium' },
-  { value: AlertSeverity.High, label: 'High' },
-  { value: AlertSeverity.Critical, label: 'Critical' },
-] as const
+const SEVERITY_CONFIG: Record<string, { color: string; icon: React.ReactNode; label: string }> = {
+  low: { color: '#52c41a', icon: <CheckCircleOutlined />, label: 'Low' },
+  medium: { color: '#faad14', icon: <ExclamationCircleOutlined />, label: 'Medium' },
+  high: { color: '#ff4d4f', icon: <WarningOutlined />, label: 'High' },
+  critical: { color: 'var(--color-danger)', icon: <FireOutlined />, label: 'Critical' },
+}
 
-const STATUS_OPTIONS = [
-  { value: '', label: '' },
-  { value: AlertStatus.Open, label: 'Open' },
-  { value: AlertStatus.Acknowledged, label: 'Acknowledged' },
-  { value: AlertStatus.Resolved, label: 'Resolved' },
-  { value: AlertStatus.Ignored, label: 'Ignored' },
-] as const
-
-const SEVERITY_COLORS: Record<string, string> = {
-  low: 'green',
-  medium: 'orange',
-  high: 'red',
-  critical: 'magenta',
+const ENTITY_ROUTES: Record<string, (id: string) => string> = {
+  user: (id) => `/admin/users/${id}`,
+  auction: (id) => `/admin/auctions/${id}`,
+  order: (id) => `/admin/orders/${id}`,
+  inbound_shipment: (id) => `/admin/warehouse/inbound/${id}`,
 }
 
 export default function AdminMonitoringPage() {
   const { t } = useTranslation('admin')
   const { message } = App.useApp()
+  const navigate = useNavigate()
 
-  const [severityFilter, setSeverityFilter] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
+  const [statusTab, setStatusTab] = useState<string>('open')
+  const [page, setPage] = useState(1)
+  const [drawerAlert, setDrawerAlert] = useState<MonitoringAlertDto | null>(null)
 
-  // Acknowledge modal state
-  const [ackModalOpen, setAckModalOpen] = useState(false)
-  const [ackAlertId, setAckAlertId] = useState<string>('')
-  const [ackNotes, setAckNotes] = useState('')
-
-  // Resolve modal state
-  const [resolveModalOpen, setResolveModalOpen] = useState(false)
-  const [resolveAlertId, setResolveAlertId] = useState<string>('')
-  const [resolveIgnored, setResolveIgnored] = useState(false)
-  const [resolveNotes, setResolveNotes] = useState('')
-
-  const { data, isLoading } = useMonitoringAlerts({
-    ...(severityFilter ? { severity: severityFilter } : {}),
-    ...(statusFilter ? { status: statusFilter } : {}),
+  // Fetch all alerts for dashboard stats (no filter)
+  const { data: allAlerts } = useMonitoringAlerts({})
+  // Fetch filtered alerts for table
+  const { data: filteredAlerts, isLoading } = useMonitoringAlerts({
+    ...(statusTab && statusTab !== 'all' ? { status: statusTab } : {}),
   })
 
   const acknowledgeAlert = useAcknowledgeAlert()
   const resolveAlert = useResolveAlert()
 
-  const handleAcknowledge = (id: string) => {
-    setAckAlertId(id)
-    setAckNotes('')
-    setAckModalOpen(true)
-  }
+  const openCount = (allAlerts ?? []).filter((a) => a.status === AlertStatus.Open).length
 
-  const handleAcknowledgeConfirm = async () => {
+  const handleAcknowledge = async (id: string) => {
     try {
-      await acknowledgeAlert.mutateAsync({ id: ackAlertId, notes: ackNotes || undefined })
-      message.success(t('monitoring.acknowledgeSuccess'))
-      setAckModalOpen(false)
+      await acknowledgeAlert.mutateAsync({ id })
+      message.success(t('monitoring.acknowledgeSuccess', 'Alert acknowledged'))
     } catch {
-      message.error(t('common.error'))
+      message.error(t('common.error', 'An error occurred'))
     }
   }
 
-  const handleResolve = (id: string) => {
-    setResolveAlertId(id)
-    setResolveIgnored(false)
-    setResolveNotes('')
-    setResolveModalOpen(true)
+  const handleResolve = async (id: string) => {
+    try {
+      await resolveAlert.mutateAsync({ id, ignored: false })
+      message.success(t('monitoring.resolveSuccess', 'Alert resolved'))
+    } catch {
+      message.error(t('common.error', 'An error occurred'))
+    }
   }
 
-  const handleResolveConfirm = async () => {
-    try {
-      await resolveAlert.mutateAsync({ id: resolveAlertId, ignored: resolveIgnored, notes: resolveNotes || undefined })
-      message.success(t('monitoring.resolveSuccess'))
-      setResolveModalOpen(false)
-    } catch {
-      message.error(t('common.error'))
-    }
+  const navigateToEntity = (entityType: string, entityId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    const routeFn = ENTITY_ROUTES[entityType?.toLowerCase()]
+    if (routeFn) navigate(routeFn(entityId))
   }
 
   const columns: ColumnsType<MonitoringAlertDto> = [
     {
-      title: t('monitoring.type'),
+      title: t('monitoring.type', 'Type'),
       dataIndex: 'alertType',
       key: 'alertType',
-      width: 140,
-      render: (type: string) => <StatusBadge status={type} size="small" />,
-    },
-    {
-      title: t('monitoring.severity'),
-      dataIndex: 'severity',
-      key: 'severity',
-      width: 100,
-      render: (severity: string) => (
-        <Tag color={SEVERITY_COLORS[severity] ?? 'default'}>
-          {severity.toUpperCase()}
-        </Tag>
+      width: 200,
+      render: (type: string) => (
+        <Typography.Text strong style={{ fontSize: 13 }}>
+          {formatAlertType(type)}
+        </Typography.Text>
       ),
     },
     {
-      title: t('monitoring.status'),
+      title: t('monitoring.severity', 'Severity'),
+      dataIndex: 'severity',
+      key: 'severity',
+      width: 110,
+      filters: [
+        { text: 'Low', value: 'low' },
+        { text: 'Medium', value: 'medium' },
+        { text: 'High', value: 'high' },
+        { text: 'Critical', value: 'critical' },
+      ],
+      onFilter: (value, record) => record.severity === value,
+      render: (severity: string) => {
+        const cfg = SEVERITY_CONFIG[severity] ?? SEVERITY_CONFIG.low
+        return (
+          <Tag icon={cfg.icon} color={cfg.color} style={{ fontWeight: 600 }}>
+            {cfg.label}
+          </Tag>
+        )
+      },
+    },
+    {
+      title: t('monitoring.status', 'Status'),
       dataIndex: 'status',
       key: 'status',
-      width: 120,
+      width: 130,
       render: (status: string) => <StatusBadge status={status} />,
     },
     {
       title: t('monitoring.entity', 'Entity'),
-      dataIndex: 'entityType',
-      key: 'entityType',
-      width: 120,
-    },
-    {
-      title: t('monitoring.payload', 'Details'),
-      dataIndex: 'payload',
-      key: 'payload',
-      ellipsis: true,
-      render: (payload: string) => {
-        try {
-          const parsed = JSON.parse(payload)
-          return parsed.message || parsed.reason || JSON.stringify(parsed).slice(0, 80)
-        } catch {
-          return payload?.slice(0, 80) || '-'
-        }
+      key: 'entity',
+      width: 140,
+      render: (_, record) => {
+        const hasRoute = !!ENTITY_ROUTES[record.entityType?.toLowerCase()]
+        return (
+          <Tooltip title={hasRoute ? t('monitoring.viewEntity', 'View entity') : record.entityId}>
+            <Button
+              type="link"
+              size="small"
+              icon={hasRoute ? <LinkOutlined /> : undefined}
+              onClick={(e) => navigateToEntity(record.entityType, record.entityId, e)}
+              disabled={!hasRoute}
+              style={{ padding: 0, fontSize: 12 }}
+            >
+              {record.entityType}
+            </Button>
+          </Tooltip>
+        )
       },
     },
     {
-      title: t('monitoring.createdAt'),
+      title: t('monitoring.details', 'Details'),
+      dataIndex: 'payload',
+      key: 'payload',
+      ellipsis: true,
+      render: (payload: string, record) => {
+        const parsed = parseAlertPayload(record.alertType, payload)
+        return (
+          <Typography.Text style={{ fontSize: 13 }} type="secondary">
+            {parsed.summary}
+          </Typography.Text>
+        )
+      },
+    },
+    {
+      title: t('monitoring.createdAt', 'Created'),
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 160,
-      render: (date: string) => formatDateTime(date),
+      sorter: (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      defaultSortOrder: 'descend',
+      render: (date: string) => (
+        <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+          {formatDateTime(date)}
+        </Typography.Text>
+      ),
     },
     {
-      title: t('monitoring.actions'),
+      title: t('monitoring.actions', 'Actions'),
       key: 'actions',
-      width: 200,
+      width: 160,
       render: (_, record) => (
         <Space size={4}>
+          <Tooltip title={t('monitoring.viewDetails', 'View details')}>
+            <Button
+              type="text"
+              size="small"
+              icon={<EyeOutlined />}
+              onClick={(e) => { e.stopPropagation(); setDrawerAlert(record) }}
+            />
+          </Tooltip>
           {record.status === AlertStatus.Open && (
-            <Button type="link" size="small" onClick={() => handleAcknowledge(record.id)}>
-              {t('monitoring.acknowledge')}
-            </Button>
+            <Tooltip title={t('monitoring.acknowledge', 'Acknowledge')}>
+              <Button
+                type="text"
+                size="small"
+                icon={<BellOutlined />}
+                loading={acknowledgeAlert.isPending}
+                onClick={(e) => { e.stopPropagation(); void handleAcknowledge(record.id) }}
+              />
+            </Tooltip>
           )}
           {(record.status === AlertStatus.Open || record.status === AlertStatus.Acknowledged) && (
-            <Button type="link" size="small" onClick={() => handleResolve(record.id)}>
-              {t('monitoring.resolve')}
-            </Button>
+            <Tooltip title={t('monitoring.resolve', 'Resolve')}>
+              <Button
+                type="text"
+                size="small"
+                icon={<CheckCircleOutlined style={{ color: 'var(--color-success)' }} />}
+                loading={resolveAlert.isPending}
+                onClick={(e) => { e.stopPropagation(); void handleResolve(record.id) }}
+              />
+            </Tooltip>
           )}
         </Space>
       ),
     },
   ]
 
+  const tabItems = [
+    {
+      key: 'open',
+      label: (
+        <Badge count={openCount} size="small" offset={[8, -2]}>
+          <span style={{ padding: '0 4px' }}>{t('monitoring.open', 'Open')}</span>
+        </Badge>
+      ),
+    },
+    { key: 'acknowledged', label: t('monitoring.acknowledged', 'Acknowledged') },
+    { key: 'resolved', label: t('monitoring.resolved', 'Resolved') },
+    { key: 'all', label: t('monitoring.all', 'All') },
+  ]
+
   return (
     <div>
-      <Typography.Title level={2} style={{ marginBottom: 24 }}>
-        <AlertOutlined /> {t('monitoring.title')}
-      </Typography.Title>
+      <style>{`
+        .oio-row-critical td { background: #fff1f0 !important; border-left: 3px solid #ff4d4f; }
+      `}</style>
 
-      <Space wrap style={{ marginBottom: 16 }}>
-        <Select
-          placeholder={t('monitoring.filterSeverity')}
-          value={severityFilter}
-          onChange={(val) => setSeverityFilter(val)}
-          style={{ width: 200 }}
-          allowClear
-          onClear={() => setSeverityFilter('')}
-          options={SEVERITY_OPTIONS.map((opt) => ({
-            value: opt.value,
-            label: opt.value ? opt.label : t('monitoring.allSeverities'),
-          }))}
-        />
-        <Select
-          placeholder={t('monitoring.filterStatus')}
-          value={statusFilter}
-          onChange={(val) => setStatusFilter(val)}
-          style={{ width: 200 }}
-          allowClear
-          onClear={() => setStatusFilter('')}
-          options={STATUS_OPTIONS.map((opt) => ({
-            value: opt.value,
-            label: opt.value ? opt.label : t('monitoring.allStatuses'),
-          }))}
-        />
-      </Space>
+      {/* Header */}
+      <Flex justify="space-between" align="center" style={{ marginBottom: 24 }}>
+        <Typography.Title level={3} style={{ margin: 0 }}>
+          <AlertOutlined style={{ marginRight: 8 }} />
+          {t('monitoring.title', 'System Monitoring')}
+        </Typography.Title>
+      </Flex>
 
-      <ResponsiveTable<MonitoringAlertDto>
-        rowKey="id"
-        columns={columns}
-        dataSource={data ?? []}
-        loading={isLoading}
-        mobileMode="list"
-        pagination={{ pageSize: 20 }}
+      {/* Dashboard Summary Cards */}
+      <MonitoringDashboard alerts={allAlerts ?? []} />
+
+      {/* Tabs + Table */}
+      <Card>
+        <Tabs
+          activeKey={statusTab}
+          onChange={(key) => { setStatusTab(key); setPage(1) }}
+          items={tabItems}
+          style={{ marginBottom: 0 }}
+        />
+
+        <ResponsiveTable<MonitoringAlertDto>
+          rowKey="id"
+          columns={columns}
+          dataSource={filteredAlerts ?? []}
+          loading={isLoading}
+          mobileMode="list"
+          pagination={{
+            current: page,
+            pageSize: 15,
+            onChange: setPage,
+            showTotal: (total) => `${total} alerts`,
+            showSizeChanger: false,
+          }}
+          rowClassName={(record) =>
+            record.severity === AlertSeverity.Critical && record.status === AlertStatus.Open
+              ? 'oio-row-critical'
+              : ''
+          }
+          onRow={(record) => ({
+            onClick: () => setDrawerAlert(record),
+            style: { cursor: 'pointer' },
+          })}
+        />
+      </Card>
+
+      {/* Detail Drawer */}
+      <MonitoringAlertDrawer
+        alert={drawerAlert}
+        open={!!drawerAlert}
+        onClose={() => setDrawerAlert(null)}
       />
-
-      {/* Acknowledge Modal */}
-      <Modal
-        title={t('monitoring.acknowledge')}
-        open={ackModalOpen}
-        onOk={handleAcknowledgeConfirm}
-        onCancel={() => setAckModalOpen(false)}
-        confirmLoading={acknowledgeAlert.isPending}
-      >
-        <div style={{ marginBottom: 8 }}>Ghi ch\u00fa</div>
-        <Input.TextArea
-          rows={3}
-          value={ackNotes}
-          onChange={(e) => setAckNotes(e.target.value)}
-          placeholder="Nh\u1eadp ghi ch\u00fa (kh\u00f4ng b\u1eaft bu\u1ed9c)"
-        />
-      </Modal>
-
-      {/* Resolve Modal */}
-      <Modal
-        title={t('monitoring.resolve')}
-        open={resolveModalOpen}
-        onOk={handleResolveConfirm}
-        onCancel={() => setResolveModalOpen(false)}
-        confirmLoading={resolveAlert.isPending}
-      >
-        <div style={{ marginBottom: 8 }}>
-          <span style={{ marginRight: 8 }}>B\u1ecf qua</span>
-          <Switch checked={resolveIgnored} onChange={setResolveIgnored} />
-        </div>
-        <div style={{ marginBottom: 8 }}>Ghi ch\u00fa</div>
-        <Input.TextArea
-          rows={3}
-          value={resolveNotes}
-          onChange={(e) => setResolveNotes(e.target.value)}
-          placeholder="Nh\u1eadp ghi ch\u00fa (kh\u00f4ng b\u1eaft bu\u1ed9c)"
-        />
-      </Modal>
     </div>
   )
 }

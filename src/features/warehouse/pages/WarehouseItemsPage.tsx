@@ -8,6 +8,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
 import type { WarehouseItemDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
+import { MONO_FONT } from '@/styles/tokens'
 
 export default function WarehouseItemsPage() {
   const { t } = useTranslation('warehouse')
@@ -31,44 +32,38 @@ export default function WarehouseItemsPage() {
       key: 'itemId',
       ellipsis: true,
       render: (itemId: string) => (
-        <Button type="link" size="small" onClick={() => navigate(`/items/${itemId}`)} style={{ padding: 0, fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }}>
+        <Button type="link" size="small" onClick={() => navigate(`/items/${itemId}`)} style={{ padding: 0, fontFamily: MONO_FONT, fontSize: 12 }}>
           {itemId.slice(0, 12)}...
         </Button>
       ),
     },
     {
-      title: t('quantity', 'Quantity'),
-      dataIndex: 'quantity',
-      key: 'quantity',
-      width: 100,
-    },
-    {
-      title: t('condition', 'Condition'),
-      dataIndex: 'condition',
-      key: 'condition',
-      width: 120,
-      render: (condition: string) => <StatusBadge status={condition} size="small" />,
+      title: tc('tableHeader.status', 'Status'),
+      dataIndex: 'status',
+      key: 'status',
+      width: 130,
+      render: (status: string) => <StatusBadge status={status} size="small" />,
     },
     {
       title: t('storageLocation', 'Storage Location'),
       dataIndex: 'storageLocationId',
       key: 'storageLocationId',
       width: 160,
-      render: (val: string) => val || '-',
+      render: (val: string) => val ? val.slice(0, 8) + '...' : '-',
     },
     {
-      title: t('arrivedAt', 'Arrived'),
-      dataIndex: 'arrivedAt',
-      key: 'arrivedAt',
+      title: t('receivedAt', 'Received'),
+      dataIndex: 'receivedAt',
+      key: 'receivedAt',
+      width: 160,
+      render: (date: string) => date ? formatDateTime(date) : '-',
+    },
+    {
+      title: tc('tableHeader.createdAt', 'Created'),
+      dataIndex: 'createdAt',
+      key: 'createdAt',
       width: 160,
       render: (date: string) => formatDateTime(date),
-    },
-    {
-      title: t('storedAt', 'Stored'),
-      dataIndex: 'storedAt',
-      key: 'storedAt',
-      width: 160,
-      render: (date: string) => (date ? formatDateTime(date) : '-'),
     },
   ]
 

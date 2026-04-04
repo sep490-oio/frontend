@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Typography, Row, Col, Card, Button, Select, Pagination, Spin, Empty } from 'antd'
+import { Typography, Row, Col, Card, Button, Select, Space, Pagination, Spin, Empty } from 'antd'
 import { HistoryOutlined, EyeOutlined, ThunderboltOutlined, TrophyOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -7,32 +7,22 @@ import { useMyBids, useMyPendingWinnerOffers, useRespondRunnerUpOffer } from '@/
 import { useUserHubStatus } from '@/features/user/contexts/UserHubContext'
 import type { MyBidDto } from '@/features/auction/api'
 import { PriceDisplay } from '@/components/ui/PriceDisplay'
-import { BidStatus } from '@/types/enums'
+import { BidStatus, AuctionStatus } from '@/types/enums'
 import { formatDateTime } from '@/utils/format'
 import { WinnerOfferPanel } from '@/features/auction/components/WinnerOfferPanel'
-import { useBreakpoint } from '@/hooks/useBreakpoint' //  responsive fix: import breakpoint hook
+import { MONO_FONT, SANS_FONT } from '@/styles/tokens'
 
 interface StatusPill {
   value: string
   label: string
 }
 
-const STATUS_PILLS: StatusPill[] = [
-  { value: '', label: 'Tất cả' },
-  { value: 'active', label: 'Đang dẫn đầu' },
-  { value: 'outbid', label: 'Bị vượt giá' },
-  { value: 'won', label: 'Đã thắng' },
-  { value: 'cancelled', label: 'Đã hủy' },
-  { value: BidStatus.Winning, label: 'Winning' },
-]
-
-const SANS_FONT = "'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+// Status pills are built inside component for i18n access
 
 export default function MyBidsPage() {
   const { t } = useTranslation('auction')
   const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
-  const { isMobile } = useBreakpoint() //  responsive fix
 
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(12)
@@ -45,7 +35,17 @@ export default function MyBidsPage() {
     pageSize,
     ...(statusFilter ? { status: statusFilter } : {}),
     sortBy,
-  }, connected ? undefined : { refetchInterval: 30000 })
+    ...(connected ? {} : { refetchInterval: 30000 }) as any,
+  })
+
+  const STATUS_PILLS: StatusPill[] = [
+    { value: '', label: t('bidStatusAll', 'All') },
+    { value: 'active', label: t('bidStatusActive', 'Leading') },
+    { value: 'outbid', label: t('bidStatusOutbid', 'Outbid') },
+    { value: 'won', label: t('bidStatusWon', 'Won') },
+    { value: 'cancelled', label: t('bidStatusCancelled', 'Cancelled') },
+    { value: BidStatus.Winning, label: t('bidStatusWinning', 'Winning') },
+  ]
 
   const { data: pendingOffers } = useMyPendingWinnerOffers()
   const respondMutation = useRespondRunnerUpOffer()
@@ -54,11 +54,11 @@ export default function MyBidsPage() {
   const totalCount = data?.metadata?.totalCount ?? 0
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px 12px 80px' : '24px 16px 80px' /*  responsive fix */ }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px 80px' }}>
       {/* Header */}
-      <div style={{ marginBottom: 24 }}>
+      <div style={{ marginBottom: 32 }}>
         <Typography.Title
-          level={isMobile ? 3 : 2} //  responsive fix: smaller heading on mobile
+          level={2}
           style={{
             fontFamily: SANS_FONT,
             fontWeight: 600,
@@ -67,7 +67,7 @@ export default function MyBidsPage() {
           }}
         >
           <HistoryOutlined style={{ marginRight: 10 }} />
-          Đấu giá của tôi
+          {t('myBids', 'My Bids')}
         </Typography.Title>
         <p
           style={{
@@ -77,7 +77,7 @@ export default function MyBidsPage() {
             margin: 0,
           }}
         >
-          Theo dõi và quản lý các phiên đấu giá bạn đã tham gia
+          {t('myBidsSubtitle', 'Track and manage the auctions you have participated in')}
         </p>
       </div>
 
@@ -100,9 +100,21 @@ export default function MyBidsPage() {
             {pendingOffers.map((offer) => (
               <WinnerOfferPanel
                 key={offer.offerId}
-                offer={offer}
-                onAccept={() => respondMutation.mutate({ auctionId: offer.auctionId, accept: true })}
-                onDecline={() => respondMutation.mutate({ auctionId: offer.auctionId, accept: false })}
+                offer={offer as any}
+                onAccept={(_offerId) => respondMutation.mutate(
+                  { auctionId: offer.auctionId, accept: true },
+                  {
+                    onSuccess: (result) => {
+                      const orderId = (result as any)?.orderId
+                      if (orderId) {
+                        navigate(`/checkout/${orderId}`)
+                      } else {
+                        navigate(`/auctions/${offer.auctionId}`)
+                      }
+                    },
+                  }
+                )}
+                onDecline={(_offerId) => respondMutation.mutate({ auctionId: offer.auctionId, accept: false })}
                 isAcceptLoading={respondMutation.isPending}
                 isDeclineLoading={respondMutation.isPending}
               />
@@ -111,27 +123,9 @@ export default function MyBidsPage() {
         </div>
       )}
 
-      {/* Filter pills + sort —  responsive fix: stack on mobile */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'flex-start',
-        justifyContent: 'space-between',
-        flexDirection: isMobile ? 'column' : 'row', //  responsive fix
-        gap: 12,
-        marginBottom: 24,
-      }}>
-        {/*  responsive fix: horizontal scroll for pills on mobile */}
-        <div style={{
-          display: 'flex',
-          flexWrap: isMobile ? 'nowrap' : 'wrap',
-          gap: 8,
-          flex: 1,
-          overflowX: isMobile ? 'auto' : 'visible',
-          WebkitOverflowScrolling: 'touch',
-          paddingBottom: isMobile ? 4 : 0,
-          scrollbarWidth: 'none',
-          width: '100%',
-        }}>
+      {/* Filter pills + sort */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 24 }}>
+        <Space style={{ flexWrap: 'wrap' }}>
           {STATUS_PILLS.map((pill) => {
             const isActive = statusFilter === pill.value
             return (
@@ -153,19 +147,17 @@ export default function MyBidsPage() {
                   background: isActive ? 'var(--color-accent)' : 'transparent',
                   color: isActive ? '#fff' : 'var(--color-text-secondary)',
                   transition: 'all 200ms ease',
-                  flexShrink: 0, //  responsive fix
-                  whiteSpace: 'nowrap',
                 }}
               >
                 {pill.label}
               </button>
             )
           })}
-        </div>
+        </Space>
         <Select
           value={sortBy}
           onChange={(v) => { setSortBy(v); setPage(1) }}
-          style={{ width: isMobile ? '100%' : 160 }} //  responsive fix: full width on mobile
+          style={{ width: 160 }}
           options={[
             { value: 'BidPlacedAt Desc', label: t('sortNewest', 'Newest') },
             { value: 'BidPlacedAt Asc', label: t('sortOldest', 'Oldest') },
@@ -181,12 +173,11 @@ export default function MyBidsPage() {
           <Spin size="large" />
         </div>
       ) : items.length === 0 ? (
-        <Empty description={t('noBids', 'Bạn chưa tham gia đấu giá nào')} />
+        <Empty description={t('noBidsYet', 'You have not participated in any auctions yet')} />
       ) : (
         <>
-          <Row gutter={[16, 16]}> {/*  responsive fix: reduced gutter on mobile */}
+          <Row gutter={[20, 20]}>
             {items.map((bid: MyBidDto) => (
-              //  responsive fix: xs={24} full width on mobile, sm={12} 2-col on tablet
               <Col key={bid.id} xs={24} sm={12} lg={8}>
                 <Card
                   hoverable
@@ -238,39 +229,62 @@ export default function MyBidsPage() {
                         padding: '3px 10px',
                         borderRadius: 6,
                         fontSize: 11,
-                        fontFamily: "'JetBrains Mono', monospace",
+                        fontFamily: MONO_FONT,
                         fontWeight: 500,
                       }}
                     >
-                      {formatDateTime(bid.bidPlacedAt ?? bid.createdAt)}
+                      {formatDateTime((bid as any).bidPlacedAt)}
                     </div>
 
                     {/* Status badge (top-right) */}
-                    <span
-                      style={{
-                        position: 'absolute',
-                        top: 8,
-                        right: 8,
-                        padding: '3px 10px',
-                        borderRadius: 100,
-                        fontSize: 10,
-                        fontWeight: 700,
-                        fontFamily: SANS_FONT,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.04em',
-                        background: bid.isHighestBid
-                          ? 'rgba(22, 163, 106, 0.12)'
-                          : 'rgba(220, 38, 38, 0.12)',
-                        color: bid.isHighestBid
-                          ? '#16a34a'
-                          : '#dc2626',
-                        border: bid.isHighestBid
-                          ? '1px solid rgba(22, 163, 106, 0.25)'
-                          : '1px solid rgba(220, 38, 38, 0.25)',
-                      }}
-                    >
-                      {bid.isHighestBid ? 'ĐANG DẪN ĐẦU' : 'BỊ VƯỢT GIÁ'}
-                    </span>
+                    {(() => {
+                      const isEnded = bid.auctionStatus === AuctionStatus.Ended || bid.auctionStatus === AuctionStatus.Sold
+                      const isWon = isEnded && bid.isHighestBid
+                      const isLost = isEnded && !bid.isHighestBid
+                      let bg: string, color: string, border: string, label: string
+                      if (isWon) {
+                        bg = 'rgba(180, 140, 20, 0.12)'
+                        color = '#B8860B'
+                        border = '1px solid rgba(180, 140, 20, 0.3)'
+                        label = t('bidWon', 'WON')
+                      } else if (isLost) {
+                        bg = 'rgba(100, 100, 100, 0.12)'
+                        color = 'var(--color-text-secondary)'
+                        border = '1px solid rgba(100, 100, 100, 0.25)'
+                        label = t('bidLost', 'LOST')
+                      } else if (bid.isHighestBid) {
+                        bg = 'rgba(22, 163, 106, 0.12)'
+                        color = 'var(--color-success)'
+                        border = '1px solid rgba(22, 163, 106, 0.25)'
+                        label = t('bidLeading', 'LEADING')
+                      } else {
+                        bg = 'rgba(220, 38, 38, 0.12)'
+                        color = 'var(--color-danger)'
+                        border = '1px solid rgba(220, 38, 38, 0.25)'
+                        label = t('bidOutbid', 'OUTBID')
+                      }
+                      return (
+                        <span
+                          style={{
+                            position: 'absolute',
+                            top: 8,
+                            right: 8,
+                            padding: '3px 10px',
+                            borderRadius: 100,
+                            fontSize: 10,
+                            fontWeight: 700,
+                            fontFamily: SANS_FONT,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.04em',
+                            background: bg,
+                            color,
+                            border,
+                          }}
+                        >
+                          {label}
+                        </span>
+                      )
+                    })()}
                   </div>
 
                   {/* Card body */}
@@ -289,7 +303,7 @@ export default function MyBidsPage() {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {bid.itemTitle}
+                      {(bid as any).itemTitle}
                     </h4>
 
                     {/* Price */}
@@ -303,12 +317,14 @@ export default function MyBidsPage() {
                           letterSpacing: '0.06em',
                         }}
                       >
-                        Giá hiện tại
+                        {(bid.auctionStatus === AuctionStatus.Ended || bid.auctionStatus === AuctionStatus.Sold)
+                          ? t('finalPriceLabel', 'Final Price')
+                          : t('currentPriceLabel', 'Current Price')}
                       </span>
                     </div>
                     <div
                       style={{
-                        fontFamily: "'JetBrains Mono', monospace",
+                        fontFamily: MONO_FONT,
                         fontSize: 18,
                         fontWeight: 600,
                         color: 'var(--color-accent)',
@@ -316,48 +332,78 @@ export default function MyBidsPage() {
                       }}
                     >
                       <PriceDisplay
-                        amount={bid.currentPrice?.amount ?? bid.amount.amount}
-                        currency={bid.currentPrice?.currency ?? bid.amount.currency}
+                        amount={(bid as any).currentPrice?.amount ?? bid.amount.amount}
+                        currency={(bid as any).currentPrice?.currency ?? bid.amount.currency}
                         size="small"
                       />
                     </div>
 
-                    {/* Buttons —  responsive fix: full width stacked on mobile */}
-                    <div style={{ display: 'flex', gap: 8, flexDirection: isMobile ? 'column' : 'row' }}>
-                      <Button
-                        type="primary"
-                        icon={<ThunderboltOutlined />}
-                        onClick={() => navigate(`/auctions/${bid.auctionId}`)}
-                        style={{
-                          flex: isMobile ? 'unset' : '1 1 100px',
-                          width: isMobile ? '100%' : undefined, //  responsive fix
-                          borderRadius: 8,
-                          fontFamily: SANS_FONT,
-                          fontWeight: 500,
-                          fontSize: 13,
-                          background: 'var(--color-accent)',
-                          borderColor: 'var(--color-accent)',
-                        }}
-                      >
-                        Đặt giá nhanh
-                      </Button>
-                      <Button
-                        icon={<EyeOutlined />}
-                        onClick={() => navigate(`/auctions/${bid.auctionId}`)}
-                        style={{
-                          flex: isMobile ? 'unset' : '1 1 100px',
-                          width: isMobile ? '100%' : undefined, //  responsive fix
-                          borderRadius: 8,
-                          fontFamily: SANS_FONT,
-                          fontWeight: 500,
-                          fontSize: 13,
-                          borderColor: 'var(--color-border)',
-                          color: 'var(--color-text-secondary)',
-                        }}
-                      >
-                        Xem chi tiết
-                      </Button>
-                    </div>
+                    {/* Buttons */}
+                    {(() => {
+                      const isEnded = bid.auctionStatus === AuctionStatus.Ended || bid.auctionStatus === AuctionStatus.Sold
+                      const isWon = isEnded && bid.isHighestBid
+                      return (
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          {isWon ? (
+                            <Button
+                              type="primary"
+                              icon={<TrophyOutlined />}
+                              onClick={() => {
+                                const orderId = (bid as any).orderId
+                                if (orderId) {
+                                  navigate(`/orders/${orderId}`)
+                                } else {
+                                  navigate(`/auctions/${bid.auctionId}`)
+                                }
+                              }}
+                              style={{
+                                flex: 1,
+                                borderRadius: 8,
+                                fontFamily: SANS_FONT,
+                                fontWeight: 500,
+                                fontSize: 13,
+                                background: '#B8860B',
+                                borderColor: '#B8860B',
+                              }}
+                            >
+                              {(bid as any).orderId ? t('viewOrder', 'View Order') : t('payNow', 'Pay Now')}
+                            </Button>
+                          ) : !isEnded ? (
+                            <Button
+                              type="primary"
+                              icon={<ThunderboltOutlined />}
+                              onClick={() => navigate(`/auctions/${bid.auctionId}`)}
+                              style={{
+                                flex: 1,
+                                borderRadius: 8,
+                                fontFamily: SANS_FONT,
+                                fontWeight: 500,
+                                fontSize: 13,
+                                background: 'var(--color-accent)',
+                                borderColor: 'var(--color-accent)',
+                              }}
+                            >
+                              {t('quickBid', 'Quick Bid')}
+                            </Button>
+                          ) : null}
+                          <Button
+                            icon={<EyeOutlined />}
+                            onClick={() => navigate(`/auctions/${bid.auctionId}`)}
+                            style={{
+                              flex: 1,
+                              borderRadius: 8,
+                              fontFamily: SANS_FONT,
+                              fontWeight: 500,
+                              fontSize: 13,
+                              borderColor: 'var(--color-border)',
+                              color: 'var(--color-text-secondary)',
+                            }}
+                          >
+                            {t('viewDetails', 'View Details')}
+                          </Button>
+                        </div>
+                      )
+                    })()}
                   </div>
                 </Card>
               </Col>
@@ -370,13 +416,12 @@ export default function MyBidsPage() {
               current={data?.metadata?.currentPage ?? page}
               pageSize={data?.metadata?.pageSize ?? pageSize}
               total={totalCount}
-              showSizeChanger={!isMobile} //  responsive fix: hide sizeChanger on mobile
-              showTotal={isMobile ? undefined : (total) => tc('pagination.total', { total })} //  responsive fix
+              showSizeChanger
+              showTotal={(total) => tc('pagination.total', { total })}
               onChange={(p, ps) => {
                 setPage(p)
                 setPageSize(ps)
               }}
-              size={isMobile ? 'small' : undefined} //  responsive fix
             />
           </div>
         </>

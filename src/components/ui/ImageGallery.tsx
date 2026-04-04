@@ -78,17 +78,20 @@ export function ImageGallery({
           borderRadius: 8,
           overflow: 'hidden',
           background: 'var(--color-bg-surface)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          aspectRatio: '4 / 3',
         }}
       >
         <Image
           src={selected}
           alt={alt}
           style={{
-            width: '100%',
-            maxHeight: 560,
+            maxWidth: '100%',
+            maxHeight: '100%',
             objectFit: 'contain',
             display: 'block',
-            margin: '0 auto',
           }}
           preview
         />

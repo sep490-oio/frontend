@@ -3,9 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Spin, Empty } from 'antd'
 import { useCategories } from '@/features/item/api'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
-
-const SANS_FONT = "'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-const SERIF_FONT = "'Noto Serif', Georgia, serif"
+import { SANS_FONT, SERIF_FONT, MONO_FONT } from '@/styles/tokens'
 
 export default function CategoriesPage() {
   const { t, i18n } = useTranslation('common')
@@ -56,7 +54,7 @@ export default function CategoriesPage() {
             letterSpacing: isVi ? '-0.01em' : '-0.02em',
           }}
         >
-          {t('categories.title', 'Danh mục')}
+          {t('categories.title', 'Danh m\u1ee5c')}
         </h1>
         <p
           style={{
@@ -68,7 +66,7 @@ export default function CategoriesPage() {
             margin: '0 auto',
           }}
         >
-          {t('categories.subtitle', 'Khám phá các danh mục sản phẩm đấu giá của chúng tôi')}
+          {t('categories.subtitle', 'Kh\u00e1m ph\u00e1 c\u00e1c danh m\u1ee5c s\u1ea3n ph\u1ea9m \u0111\u1ea5u gi\u00e1 c\u1ee7a ch\u00fang t\u00f4i')}
         </p>
       </section>
 
@@ -78,7 +76,7 @@ export default function CategoriesPage() {
       {/* Grid */}
       {activeCategories.length === 0 ? (
         <Empty
-          description={t('categories.empty', 'Chưa có danh mục nào')}
+          description={t('categories.empty', 'Ch\u01b0a c\u00f3 danh m\u1ee5c n\u00e0o')}
           style={{ padding: '80px 0' }}
         />
       ) : (
@@ -86,7 +84,6 @@ export default function CategoriesPage() {
           className="oio-stagger"
           style={{
             display: 'grid',
-            //  responsive fix: single column on very small screens, 2 cols on mobile, 3 on desktop
             gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
             gap: isMobile ? 12 : 24,
             paddingBottom: isMobile ? 40 : 80,
@@ -106,9 +103,6 @@ export default function CategoriesPage() {
                 cursor: 'pointer',
                 textAlign: 'left',
                 transition: 'border-color 0.2s, box-shadow 0.2s',
-                //  responsive fix: prevent content overflow inside grid cells
-                minWidth: 0,
-                overflow: 'hidden',
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = 'var(--color-accent)'
@@ -129,16 +123,11 @@ export default function CategoriesPage() {
               <h3
                 style={{
                   fontFamily: headingFont,
-                  fontSize: isMobile ? 16 : 20, //  responsive fix: smaller heading on mobile grid cells
+                  fontSize: 20,
                   fontWeight: headingWeight,
                   color: 'var(--color-text-primary)',
                   margin: '0 0 8px',
                   lineHeight: 1.3,
-                  //  responsive fix: truncate long category names gracefully
-                  overflow: 'hidden',
-                  display: '-webkit-box',
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical',
                 }}
               >
                 {category.name}
@@ -147,15 +136,10 @@ export default function CategoriesPage() {
                 <p
                   style={{
                     fontFamily: SANS_FONT,
-                    fontSize: 13, //  responsive fix: slightly smaller description on mobile
+                    fontSize: 14,
                     lineHeight: 1.6,
                     color: 'var(--color-text-secondary)',
                     margin: '0 0 12px',
-                    //  responsive fix: clamp description to 3 lines on mobile to prevent tall cards
-                    overflow: 'hidden',
-                    display: '-webkit-box',
-                    WebkitLineClamp: isMobile ? 3 : 999,
-                    WebkitBoxOrient: 'vertical',
                   }}
                 >
                   {category.description}
@@ -163,15 +147,10 @@ export default function CategoriesPage() {
               )}
               <span
                 style={{
-                  fontFamily: "'JetBrains Mono', monospace",
+                  fontFamily: MONO_FONT,
                   fontSize: 12,
                   color: 'var(--color-text-tertiary)',
                   letterSpacing: '0.02em',
-                  //  responsive fix: prevent slug overflow
-                  display: 'block',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
                 }}
               >
                 {category.slug}

@@ -9,19 +9,9 @@ import { useResetPassword } from '@/features/auth/api'
 import { createPasswordSchema } from '@/utils/validation'
 import type { AxiosError } from 'axios'
 import type { ApiError } from '@/types'
-
-const SERIF_FONT = "'Noto Serif', Georgia, serif"
+import { SERIF_FONT } from '@/styles/tokens'
 
 type ResetPasswordFormValues = { newPassword: string; confirmPassword: string }
-
-//  responsive fix: scoped mobile styles
-const mobileStyles = `
-  @media (max-width: 768px) {
-    .oio-reset-heading { font-size: 22px !important; }
-    .oio-reset-btn { height: 44px !important; font-size: 14px !important; }
-    .oio-reset-input { height: 44px !important; }
-  }
-`
 
 export default function ResetPasswordPage() {
   const { t } = useTranslation('auth')
@@ -96,11 +86,7 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="oio-fade-in" style={{ width: '100%' }}>
-      {/*  responsive fix: inject scoped media query */}
-      <style>{mobileStyles}</style>
-
       <h2
-        className="oio-reset-heading"
         style={{ fontFamily: SERIF_FONT, fontWeight: 400, fontSize: 28, color: 'var(--color-text-primary)', margin: '0 0 4px' }}
       >
         {t('resetPassword.title', 'Đặt lại mật khẩu')}
@@ -124,7 +110,6 @@ export default function ResetPasswordPage() {
                 {...field}
                 placeholder={t('resetPassword.newPasswordPlaceholder', 'Nhập mật khẩu mới')}
                 autoFocus
-                className="oio-reset-input"
                 style={{ height: 48, borderRadius: 2, borderColor: 'var(--color-border)' }}
               />
             )}
@@ -144,7 +129,6 @@ export default function ResetPasswordPage() {
               <Input.Password
                 {...field}
                 placeholder={t('resetPassword.confirmPasswordPlaceholder', 'Nhập lại mật khẩu')}
-                className="oio-reset-input"
                 style={{ height: 48, borderRadius: 2, borderColor: 'var(--color-border)' }}
               />
             )}
@@ -157,7 +141,6 @@ export default function ResetPasswordPage() {
             htmlType="submit"
             block
             loading={resetMutation.isPending}
-            className="oio-reset-btn"
             style={{ height: 48, fontWeight: 500, fontSize: 15, background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
           >
             {t('resetPassword.submit', 'Đặt lại mật khẩu')}

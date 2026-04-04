@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Outlet, useNavigate, useLocation, Link } from 'react-router'
-import { Layout, Avatar, Dropdown, Button, Space, Drawer } from 'antd'
-import { UserOutlined, LogoutOutlined, SettingOutlined, HistoryOutlined, SunOutlined, MoonOutlined, HeartOutlined, WalletOutlined, ShoppingOutlined, CommentOutlined, SafetyCertificateOutlined, MenuOutlined, CloseOutlined } from '@ant-design/icons'
+import { Layout, Avatar, Dropdown, Button, Space, Drawer, Input } from 'antd'
+import { UserOutlined, LogoutOutlined, SettingOutlined, HistoryOutlined, SunOutlined, MoonOutlined, HeartOutlined, WalletOutlined, ShoppingOutlined, CommentOutlined, SafetyCertificateOutlined, MenuOutlined, CloseOutlined, SearchOutlined } from '@ant-design/icons'
+import { useDebounce } from '@/hooks/useDebounce'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/hooks/useTheme'
@@ -9,7 +10,8 @@ import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useAppSelector } from '@/app/store'
 import { NotificationDropdown } from '@/features/notification/components/NotificationDropdown'
 import { TermsAcceptanceBanner } from '@/features/user/components/TermsAcceptanceBanner'
-import { usePendingTerms } from '@/features/user/api'
+import { usePendingTerms, useCurrentUser } from '@/features/user/api'
+import { SERIF_FONT, SANS_FONT } from '@/styles/tokens'
 
 function getRolesFromToken(token: string | null): string[] {
   if (!token) return []
@@ -24,19 +26,25 @@ function getRolesFromToken(token: string | null): string[] {
 
 const { Header, Content, Footer } = Layout
 
-const SERIF_FONT = "'Noto Serif', Georgia, serif"
-const SANS_FONT = "'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-
 export function AppLayout() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, isAuthenticated, logout: handleLogout } = useAuth()
+  const { isAuthenticated, logout: handleLogout } = useAuth()
+  const { data: currentUserData } = useCurrentUser()
   const { isDark, toggle: toggleTheme } = useTheme()
   const accessToken = useAppSelector((state) => state.auth.accessToken)
   const roles = getRolesFromToken(accessToken)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const debouncedSearch = useDebounce(searchQuery, 500)
   const { isMobile } = useBreakpoint()
+
+  useEffect(() => {
+    if (debouncedSearch.trim()) {
+      navigate('/auctions?search=' + encodeURIComponent(debouncedSearch.trim()))
+    }
+  }, [debouncedSearch, navigate])
 
   // Platform terms redirect — enforce before any app usage
   const { data: platformTerms } = usePendingTerms('platform')
@@ -217,6 +225,21 @@ export function AppLayout() {
               {t('common:menu.inspector', 'Inspector')}
             </Link>
           )}
+          {isAuthenticated && (roles.includes('warehouse_staff') || roles.includes('warehousemanager') || roles.includes('admin')) && (
+            <Link
+              to="/warehouse-staff"
+              style={{
+                fontFamily: SANS_FONT,
+                fontSize: 14,
+                fontWeight: 500,
+                color: 'var(--color-accent)',
+                textDecoration: 'none',
+                transition: 'color 200ms ease',
+              }}
+            >
+              {t('common:menu.warehouse', 'Warehouse')}
+            </Link>
+          )}
           {isAuthenticated && roles.includes('seller') && (
             <Link
               to="/seller"
@@ -236,10 +259,31 @@ export function AppLayout() {
 
         {/* Right: Actions */}
         <Space size="middle">
+          {/* Search bar (desktop only) */}
+          {!isMobile && (
+            <Input
+              prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
+              placeholder={t('common:action.search', 'Search...')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onPressEnter={() => {
+                if (searchQuery.trim()) {
+                  navigate('/auctions?search=' + encodeURIComponent(searchQuery.trim()))
+                }
+              }}
+              style={{
+                width: 180,
+                borderRadius: 100,
+                height: 32,
+                borderColor: 'var(--color-border)',
+                background: 'transparent',
+              }}
+            />
+          )}
           {/* Language toggle */}
           <Button
             type="text"
-            aria-label={t('common:layout.switchLanguage')}
+            aria-label="Switch language"
             onClick={() => {
               const next = i18n.language === 'vi' ? 'en' : 'vi'
               i18n.changeLanguage(next)
@@ -272,7 +316,7 @@ export function AppLayout() {
                 <Space style={{ cursor: 'pointer' }}>
                   <Avatar
                     size={32}
-                    src={user?.profile?.avatarUrl}
+                    src={currentUserData?.profile?.avatarUrl}
                     icon={<UserOutlined />}
                     style={{ border: '1px solid var(--color-border)' }}
                   />
@@ -281,22 +325,19 @@ export function AppLayout() {
             </>
           ) : (
             <Space size={12}>
-              {/* responsive fix: hide Sign In on mobile — available via drawer */}
-              {!isMobile && (
-                <Button
-                  type="text"
-                  onClick={() => navigate('/login')}
-                  style={{
-                    fontFamily: SANS_FONT,
-                    fontSize: 14,
-                    fontWeight: 500,
-                    color: 'var(--color-text-primary)',
-                    height: 36,
-                  }}
-                >
-                  {t('common:action.login', 'Sign In')}
-                </Button>
-              )}
+              <Button
+                type="text"
+                onClick={() => navigate('/login')}
+                style={{
+                  fontFamily: SANS_FONT,
+                  fontSize: 14,
+                  fontWeight: 500,
+                  color: 'var(--color-text-primary)',
+                  height: 36,
+                }}
+              >
+                {t('common:action.login', 'Sign In')}
+              </Button>
               <Button
                 type="primary"
                 onClick={() => navigate('/register')}
@@ -329,6 +370,21 @@ export function AppLayout() {
         closeIcon={<CloseOutlined />}
         styles={{ body: { padding: 0 } }}
       >
+        <div style={{ padding: '12px 16px 8px' }}>
+          <Input
+            prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
+            placeholder={t('common:action.search', 'Search auctions...')}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onPressEnter={() => {
+              if (searchQuery.trim()) {
+                setMobileMenuOpen(false)
+                navigate('/auctions?search=' + encodeURIComponent(searchQuery.trim()))
+              }
+            }}
+            style={{ borderRadius: 100, height: 40, borderColor: 'var(--color-border)' }}
+          />
+        </div>
         <nav style={{ display: 'flex', flexDirection: 'column', padding: '8px 0' }}>
           {[
             { to: '/auctions', label: t('common:menu.auctions', 'Auctions') },
@@ -340,6 +396,9 @@ export function AppLayout() {
               : []),
             ...(isAuthenticated && (roles.includes('inspector') || roles.includes('warehousemanager'))
               ? [{ to: '/inspector', label: t('common:menu.inspector', 'Inspector') }]
+              : []),
+            ...(isAuthenticated && (roles.includes('warehouse_staff') || roles.includes('warehousemanager') || roles.includes('admin'))
+              ? [{ to: '/warehouse-staff', label: t('common:menu.warehouse', 'Warehouse') }]
               : []),
             ...(isAuthenticated && roles.includes('seller')
               ? [{ to: '/seller', label: t('common:menu.seller', 'Seller') }]

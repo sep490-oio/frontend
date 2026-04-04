@@ -8,6 +8,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
 import { SellerProfileStatus } from '@/types/enums'
 import type { SellerProfileDto } from '@/types'
+import { MONO_FONT } from '@/styles/tokens'
 import type { ColumnsType } from 'antd/es/table'
 
 const STATUS_OPTIONS = [
@@ -82,7 +83,7 @@ export default function AdminSellerProfilesPage() {
       key: 'trustScore',
       width: 120,
       render: (score: number) => (
-        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13 }}>
+        <span style={{ fontFamily: MONO_FONT, fontSize: 13 }}>
           {score != null ? score.toFixed(1) : '—'}
         </span>
       ),

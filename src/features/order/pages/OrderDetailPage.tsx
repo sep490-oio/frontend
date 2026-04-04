@@ -14,9 +14,10 @@ import {
   Divider,
   Modal,
   Input,
+  Select,
   Form,
 } from 'antd'
-import { ArrowLeftOutlined, RollbackOutlined, CheckOutlined, CloseOutlined, SendOutlined } from '@ant-design/icons'
+import { ArrowLeftOutlined, RollbackOutlined, CheckOutlined, CloseOutlined, SendOutlined, WarningOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import {
   useOrderById,
@@ -26,6 +27,7 @@ import {
   useConfirmReturnReceived,
   useCreateSellerReview,
 } from '@/features/order/api'
+import { useCreateReport } from '@/features/dispute/api'
 import { SellerRatingForm } from '@/features/order/components/SellerRatingForm'
 import { useAuth } from '@/hooks/useAuth'
 import { useQueryClient } from '@tanstack/react-query'
@@ -43,6 +45,12 @@ import { formatDateTime } from '@/utils/format'
 const RETURN_ELIGIBLE_STATUSES = new Set<string>([
   OrderStatus.Delivered,
   OrderStatus.Completed,
+])
+
+const SELLER_REPORT_ELIGIBLE_STATUSES = new Set<string>([
+  OrderStatus.Paid,
+  OrderStatus.Shipped,
+  OrderStatus.Delivered,
 ])
 
 export default function OrderDetailPage() {
@@ -83,6 +91,12 @@ export default function OrderDetailPage() {
   const [shipProviderCode, setShipProviderCode] = useState('')
   const [shipTrackingNumber, setShipTrackingNumber] = useState('')
 
+  // Dispute modal state
+  const [disputeModalOpen, setDisputeModalOpen] = useState(false)
+  const [disputeReason, setDisputeReason] = useState('')
+  const [disputeDescription, setDisputeDescription] = useState('')
+  const createReport = useCreateReport()
+
   const isSeller = user?.id === order?.sellerId
   const isBuyer = user?.id === order?.buyerId
 
@@ -102,30 +116,34 @@ export default function OrderDetailPage() {
     RETURN_ELIGIBLE_STATUSES.has(order.status) && !order.return
 
   return (
-    //  responsive fix: consistent horizontal padding on mobile
-    <div style={{ padding: isMobile ? '0 12px' : undefined, maxWidth: '100%', overflowX: 'hidden' }}>
+    <div style={{ padding: isMobile ? '0 12px' : undefined }}>
       <Space style={{ marginBottom: 16 }}>
         <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(`${prefix}/orders`)}>
           {tc('action.back', 'Back')}
         </Button>
       </Space>
 
-      {/*  responsive fix: title truncates gracefully with order number on mobile */}
-      <Typography.Title
-        level={isMobile ? 3 : 2}
-        style={{
-          marginBottom: isMobile ? 16 : 24,
-          //  responsive fix: prevent very long order numbers from overflowing
-          wordBreak: 'break-word',
-          overflowWrap: 'break-word',
-        }}
-      >
+      <Typography.Title level={isMobile ? 3 : 2} style={{ marginBottom: isMobile ? 16 : 24 }}>
         {t('orderDetail', 'Order Detail')} #{order.orderNumber}
       </Typography.Title>
 
+      {/* Escrow decision window banner */}
+      {order.status === 'delivered' && (order as any).decisionWindowEndsAt && new Date((order as any).decisionWindowEndsAt) > new Date() && (
+        <Alert
+          type="warning"
+          showIcon
+          style={{ marginBottom: 16, borderRadius: 8 }}
+          message={t('decisionWindowActive', 'Action Required')}
+          description={
+            <span>
+              {t('decisionWindowDesc', 'You have until')} <CountdownTimer endTime={(order as any).decisionWindowEndsAt} size="small" /> {t('decisionWindowDesc2', 'to accept delivery or raise a dispute. After this window, funds will be automatically released to the seller.')}
+            </span>
+          }
+        />
+      )}
+
       {/* Status stepper */}
-      {/*  responsive fix: allow stepper to scroll horizontally on very small screens */}
-      <Card style={{ marginBottom: 24, overflowX: 'auto' }}>
+      <Card style={{ marginBottom: 24 }}>
         <OrderStatusStepper status={order.status} />
       </Card>
 
@@ -136,8 +154,7 @@ export default function OrderDetailPage() {
           showIcon
           style={{ marginBottom: 24 }}
           message={
-            //  responsive fix: wrap content so countdown doesn't overflow on narrow screens
-            <span style={{ display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
+            <span>
               {t('payBy', 'Pay by')} {formatDateTime(order.paymentDueAt)} —{' '}
               <CountdownTimer endTime={order.paymentDueAt} size="small" /> {t('remaining', 'remaining')}
             </span>
@@ -155,8 +172,7 @@ export default function OrderDetailPage() {
       <Card title={t('orderInfo', 'Order Information')} style={{ marginBottom: isMobile ? 16 : 24 }}>
         <Descriptions column={isMobile ? 1 : { xs: 1, sm: 2 }} bordered size="small">
           <Descriptions.Item label={t('orderNumber', 'Order Number')}>
-            {/*  responsive fix: allow long order numbers to wrap */}
-            <span style={{ wordBreak: 'break-all' }}>{order.orderNumber}</span>
+            {order.orderNumber}
           </Descriptions.Item>
           <Descriptions.Item label={t('statusLabel', 'Status')}>
             <StatusBadge status={order.status} />
@@ -168,11 +184,25 @@ export default function OrderDetailPage() {
             {order.currency}
           </Descriptions.Item>
           <Descriptions.Item label={t('buyerId', 'Buyer')}>
-            {/*  responsive fix: UUIDs/IDs can be long — allow break */}
-            <span style={{ wordBreak: 'break-all' }}>{order.buyerId}</span>
+            {isBuyer ? (
+              order.buyerId
+            ) : (
+              <Typography.Text
+                copyable={{ text: order.buyerId }}
+                style={{ fontFamily: 'monospace', fontSize: 12 }}
+              >
+                {order.buyerId.slice(0, 8)}…
+              </Typography.Text>
+            )}
           </Descriptions.Item>
           <Descriptions.Item label={t('sellerId', 'Seller')}>
-            <span style={{ wordBreak: 'break-all' }}>{order.sellerId}</span>
+            {isSeller ? (
+              order.sellerId
+            ) : (
+              <a href={`/sellers/${order.sellerId}`} style={{ fontFamily: 'monospace', fontSize: 12 }}>
+                {order.sellerId.slice(0, 8)}…
+              </a>
+            )}
           </Descriptions.Item>
           <Descriptions.Item label={t('createdAt', 'Created')}>
             {formatDateTime(order.createdAt)}
@@ -209,39 +239,40 @@ export default function OrderDetailPage() {
       <WarrantyNotice
         orderStatus={order.status}
         deliveredAt={order.deliveredAt}
-        confirmedAt={(order as unknown as { confirmedAt?: string }).confirmedAt}
+        confirmedAt={(order as any).confirmedAt}
       />
 
-      {/* Seller rating form */}
-      {isBuyer && order.status === OrderStatus.Completed && !reviewSubmitted && (
-        <Card
-          title={t('rateThisSeller', 'Rate this Seller')}
-          style={{ marginBottom: isMobile ? 16 : 24 }}
-        >
-          <SellerRatingForm
-            orderId={order.id}
-            loading={createReview.isPending}
-            onSubmit={async (data) => {
-              try {
-                await createReview.mutateAsync(data)
-                message.success(t('reviewSubmitted', 'Review submitted successfully'))
-                setReviewSubmitted(true)
-              } catch {
-                message.error(t('reviewError', 'Failed to submit review'))
-              }
-            }}
-          />
-        </Card>
-      )}
+      {/* Seller Rating */}
+      {isBuyer &&
+        order.status === OrderStatus.Completed &&
+        (order as any).confirmedAt &&
+        !(order as any).review &&
+        !reviewSubmitted && (
+          <Card
+            title={t('rateThisSeller', 'Rate this Seller')}
+            style={{ marginBottom: isMobile ? 16 : 24 }}
+          >
+            <SellerRatingForm
+              orderId={order.id}
+              loading={createReview.isPending}
+              onSubmit={async (data) => {
+                try {
+                  await createReview.mutateAsync(data)
+                  message.success(t('reviewSubmitted', 'Review submitted successfully'))
+                  setReviewSubmitted(true)
+                } catch {
+                  message.error(t('reviewError', 'Failed to submit review'))
+                }
+              }}
+            />
+          </Card>
+        )}
 
       {/* Tracking */}
       {order.trackingNumber && (
         <Card title={t('tracking', 'Tracking')} style={{ marginBottom: isMobile ? 16 : 24 }}>
           <Typography.Text strong>{t('trackingNumber', 'Tracking Number')}: </Typography.Text>
-          {/*  responsive fix: copyable tracking numbers can be long — allow break */}
-          <Typography.Text copyable style={{ wordBreak: 'break-all' }}>
-            {order.trackingNumber}
-          </Typography.Text>
+          <Typography.Text copyable>{order.trackingNumber}</Typography.Text>
         </Card>
       )}
 
@@ -273,7 +304,6 @@ export default function OrderDetailPage() {
 
             {/* Return action buttons */}
             <Divider style={{ margin: '16px 0' }} />
-            {/*  responsive fix: Space wrap already handles stacking; ensure buttons meet touch target size */}
             <Space wrap>
               {/* Seller: Approve/Reject when requested */}
               {isSeller && order.return.status === OrderReturnStatus.Requested && (
@@ -287,27 +317,13 @@ export default function OrderDetailPage() {
                       } catch { message.error(t('returnError', 'Action failed')) }
                     }}
                   >
-                    <Button
-                      type="primary"
-                      icon={<CheckOutlined />}
-                      loading={approveReturn.isPending}
-                      style={{
-                        background: 'var(--color-success)',
-                        borderColor: 'var(--color-success)',
-                        //  responsive fix: minimum touch target height
-                        minHeight: 36,
-                      }}
-                    >
+                    <Button type="primary" icon={<CheckOutlined />} loading={approveReturn.isPending}
+                      style={{ background: 'var(--color-success)', borderColor: 'var(--color-success)' }}>
                       {t('approveReturn', 'Approve')}
                     </Button>
                   </Popconfirm>
-                  <Button
-                    danger
-                    icon={<CloseOutlined />}
-                    loading={rejectReturn.isPending}
-                    onClick={() => { setRejectReason(''); setRejectModalOpen(true) }}
-                    style={{ minHeight: 36 }} //  responsive fix: minimum touch target height
-                  >
+                  <Button danger icon={<CloseOutlined />} loading={rejectReturn.isPending}
+                    onClick={() => { setRejectReason(''); setRejectModalOpen(true) }}>
                     {t('rejectReturn', 'Reject')}
                   </Button>
                 </>
@@ -315,13 +331,8 @@ export default function OrderDetailPage() {
 
               {/* Buyer: Ship return after approval */}
               {isBuyer && order.return.status === OrderReturnStatus.Approved && (
-                <Button
-                  type="primary"
-                  icon={<SendOutlined />}
-                  loading={shipReturn.isPending}
-                  onClick={() => { setShipProviderCode(''); setShipTrackingNumber(''); setShipModalOpen(true) }}
-                  style={{ minHeight: 36 }} //  responsive fix: minimum touch target height
-                >
+                <Button type="primary" icon={<SendOutlined />} loading={shipReturn.isPending}
+                  onClick={() => { setShipProviderCode(''); setShipTrackingNumber(''); setShipModalOpen(true) }}>
                   {t('shipReturn', 'Ship Return')}
                 </Button>
               )}
@@ -337,12 +348,7 @@ export default function OrderDetailPage() {
                     } catch { message.error(t('returnError', 'Action failed')) }
                   }}
                 >
-                  <Button
-                    type="primary"
-                    icon={<CheckOutlined />}
-                    loading={confirmReturnReceived.isPending}
-                    style={{ minHeight: 36 }} //  responsive fix: minimum touch target height
-                  >
+                  <Button type="primary" icon={<CheckOutlined />} loading={confirmReturnReceived.isPending}>
                     {t('confirmReceived', 'Confirm Received')}
                   </Button>
                 </Popconfirm>
@@ -354,7 +360,6 @@ export default function OrderDetailPage() {
             type="primary"
             icon={<RollbackOutlined />}
             onClick={() => navigate(`${prefix}/orders/${order.id}/return`)}
-            style={{ minHeight: 36 }} //  responsive fix: minimum touch target height
           >
             {t('requestReturn', 'Request Return')}
           </Button>
@@ -368,18 +373,43 @@ export default function OrderDetailPage() {
       {/* Action buttons */}
       <Space>
         {order.status === OrderStatus.PendingPayment && (
-          <Button
-            type="primary"
-            onClick={() => navigate(`/checkout/${order.id}`)}
-            style={{ minHeight: 36 }} //  responsive fix: minimum touch target height
-          >
+          <Button type="primary" onClick={() => navigate(`/checkout/${order.id}`)}>
             {t('payNow', 'Pay Now')}
           </Button>
         )}
+        {isBuyer &&
+          RETURN_ELIGIBLE_STATUSES.has(order.status) &&
+          !(order as any).activeDispute && (
+            <Button
+              danger
+              icon={<WarningOutlined />}
+              onClick={() => {
+                setDisputeReason('')
+                setDisputeDescription('')
+                setDisputeModalOpen(true)
+              }}
+            >
+              {t('openDispute', 'Report Issue / Open Dispute')}
+            </Button>
+          )}
+        {isSeller &&
+          SELLER_REPORT_ELIGIBLE_STATUSES.has(order.status) &&
+          !(order as any).activeDispute && (
+            <Button
+              danger
+              icon={<WarningOutlined />}
+              onClick={() => {
+                setDisputeReason('')
+                setDisputeDescription('')
+                setDisputeModalOpen(true)
+              }}
+            >
+              {t('sellerReportIssue', 'Report Buyer Issue')}
+            </Button>
+          )}
       </Space>
 
       {/* Reject Return Modal */}
-      {/*  responsive fix: centered + width 100% on mobile via antd's responsive modal defaults */}
       <Modal
         title={t('rejectReturn', 'Reject Return')}
         open={rejectModalOpen}
@@ -395,8 +425,6 @@ export default function OrderDetailPage() {
         okText={tc('action.confirm', 'Confirm')}
         okButtonProps={{ danger: true, loading: rejectReturn.isPending, disabled: !rejectReason.trim() }}
         centered
-        //  responsive fix: ensure modal doesn't overflow on small screens
-        style={{ maxWidth: 'calc(100vw - 32px)' }}
       >
         <Form layout="vertical">
           <Form.Item label="Lý do từ chối" required>
@@ -431,8 +459,6 @@ export default function OrderDetailPage() {
         okText={tc('action.confirm', 'Confirm')}
         okButtonProps={{ loading: shipReturn.isPending, disabled: !shipProviderCode.trim() || !shipTrackingNumber.trim() }}
         centered
-        //  responsive fix: ensure modal doesn't overflow on small screens
-        style={{ maxWidth: 'calc(100vw - 32px)' }}
       >
         <Form layout="vertical">
           <Form.Item label="Mã nhà vận chuyển" required>
@@ -447,6 +473,81 @@ export default function OrderDetailPage() {
               value={shipTrackingNumber}
               onChange={(e) => setShipTrackingNumber(e.target.value)}
               placeholder={t('trackingNumberPlaceholder', 'Nhập mã vận đơn...')}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Open Dispute Modal */}
+      <Modal
+        title={t('openDispute', 'Report Issue / Open Dispute')}
+        open={disputeModalOpen}
+        onCancel={() => setDisputeModalOpen(false)}
+        onOk={async () => {
+          if (!disputeReason || disputeDescription.trim().length < 20) return
+          try {
+            await createReport.mutateAsync({
+              entityType: 'order',
+              entityId: order.id,
+              reasonCode: disputeReason,
+              description: disputeDescription.trim(),
+            })
+            message.success(t('disputeCreated', 'Dispute created successfully'))
+            setDisputeModalOpen(false)
+            navigate(`${prefix}/disputes`)
+          } catch {
+            message.error(t('disputeError', 'Failed to create dispute'))
+          }
+        }}
+        okText={tc('action.confirm', 'Confirm')}
+        okButtonProps={{
+          danger: true,
+          loading: createReport.isPending,
+          disabled: !disputeReason || disputeDescription.trim().length < 20,
+        }}
+        centered
+      >
+        <Form layout="vertical">
+          <Form.Item label={t('disputeReason', 'Reason')} required>
+            <Select
+              value={disputeReason || undefined}
+              onChange={(val) => setDisputeReason(val)}
+              placeholder={t('selectDisputeReason', 'Select a reason')}
+              options={isSeller ? [
+                { value: 'buyer_non_payment', label: t('disputeReason.buyerNonPayment', 'Buyer non-payment') },
+                { value: 'buyer_fraud', label: t('disputeReason.buyerFraud', 'Buyer fraud') },
+                { value: 'communication_issue', label: t('disputeReason.communicationIssue', 'Communication issue') },
+                { value: 'other', label: t('disputeReason.other', 'Other') },
+              ] : [
+                { value: 'item_not_as_described', label: t('disputeReason.notAsDescribed', 'Item not as described') },
+                { value: 'item_damaged', label: t('disputeReason.damaged', 'Item damaged') },
+                { value: 'item_not_received', label: t('disputeReason.notReceived', 'Item not received') },
+                { value: 'wrong_item', label: t('disputeReason.wrongItem', 'Wrong item') },
+                { value: 'other', label: t('disputeReason.other', 'Other') },
+              ]}
+            />
+          </Form.Item>
+          <Form.Item
+            label={t('disputeDescription', 'Description')}
+            required
+            help={
+              disputeDescription.trim().length > 0 && disputeDescription.trim().length < 20
+                ? t('disputeDescriptionMinLength', 'Please enter at least 20 characters')
+                : undefined
+            }
+            validateStatus={
+              disputeDescription.trim().length > 0 && disputeDescription.trim().length < 20
+                ? 'error'
+                : undefined
+            }
+          >
+            <Input.TextArea
+              rows={4}
+              value={disputeDescription}
+              onChange={(e) => setDisputeDescription(e.target.value)}
+              placeholder={t('disputeDescriptionPlaceholder', 'Describe the issue in detail (min. 20 characters)...')}
+              showCount
+              maxLength={1000}
             />
           </Form.Item>
         </Form>

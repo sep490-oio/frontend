@@ -1,4 +1,5 @@
-import { Button, Card, Result, Timeline, Typography, Flex, Space } from 'antd'
+import { useState } from 'react'
+import { Button, Card, Result, Timeline, Typography, Flex, Space, Modal, Input, App } from 'antd'
 import {
   SafetyCertificateOutlined,
   ClockCircleOutlined,
@@ -9,6 +10,7 @@ import {
 import { useTranslation } from 'react-i18next'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { IdentityVerificationStatus } from '@/types/enums'
+import { useCreateVerificationDispute } from '@/features/seller/api'
 import { formatDateTime } from '@/utils/format'
 import type { VerificationDto } from '@/types'
 
@@ -28,6 +30,10 @@ export function VerificationStatusView({
   hasPendingTerms,
 }: VerificationStatusViewProps) {
   const { t } = useTranslation('seller')
+  const { message } = App.useApp()
+  const [correctionModalOpen, setCorrectionModalOpen] = useState(false)
+  const [correctionReason, setCorrectionReason] = useState('')
+  const createDispute = useCreateVerificationDispute()
 
   // ── No verification ─────────────────────────────────────────
   if (status === 'none') {
@@ -131,20 +137,66 @@ export function VerificationStatusView({
   // ── Approved ────────────────────────────────────────────────
   if (status === IdentityVerificationStatus.Approved) {
     return (
-      <Result
-        status="success"
-        title={t('identityVerified', 'Identity Verified')}
-        subTitle={t('verifiedDesc', 'Your identity has been verified. You can now create a seller profile and participate in all auctions.')}
-        extra={
-          <Flex vertical gap={8} align="center">
-            {verification?.verifiedAt && (
-              <Typography.Text type="secondary">
-                {t('verifiedOn', 'Verified on')}: {formatDateTime(verification.verifiedAt)}
-              </Typography.Text>
-            )}
-          </Flex>
-        }
-      />
+      <>
+        <Result
+          status="success"
+          title={t('identityVerified', 'Identity Verified')}
+          subTitle={t('verifiedDesc', 'Your identity has been verified. You can now create a seller profile and participate in all auctions.')}
+          extra={
+            <Flex vertical gap={8} align="center">
+              {verification?.verifiedAt && (
+                <Typography.Text type="secondary">
+                  {t('verifiedOn', 'Verified on')}: {formatDateTime(verification.verifiedAt)}
+                </Typography.Text>
+              )}
+              {verification?.autoVerified && (
+                <Button
+                  size="small"
+                  onClick={() => { setCorrectionReason(''); setCorrectionModalOpen(true) }}
+                >
+                  {t('requestCorrection', 'Request Correction')}
+                </Button>
+              )}
+            </Flex>
+          }
+        />
+        {/* Correction dispute modal */}
+        <Modal
+          title={t('requestCorrection', 'Request Correction')}
+          open={correctionModalOpen}
+          onCancel={() => setCorrectionModalOpen(false)}
+          onOk={async () => {
+            if (!correctionReason.trim() || !verification?.id) return
+            try {
+              await createDispute.mutateAsync({
+                verificationId: verification.id,
+                reason: correctionReason.trim(),
+              })
+              message.success(t('correctionSubmitted', 'Correction request submitted. Check your disputes for updates.'))
+              setCorrectionModalOpen(false)
+            } catch {
+              message.error(t('correctionError', 'Failed to submit correction request'))
+            }
+          }}
+          okButtonProps={{
+            loading: createDispute.isPending,
+            disabled: correctionReason.trim().length < 10,
+          }}
+          centered
+        >
+          <Typography.Paragraph type="secondary">
+            {t('correctionDesc', 'If your verification was auto-approved with incorrect information, describe what needs to be corrected.')}
+          </Typography.Paragraph>
+          <Input.TextArea
+            rows={4}
+            value={correctionReason}
+            onChange={(e) => setCorrectionReason(e.target.value)}
+            placeholder={t('correctionPlaceholder', 'Describe what information is incorrect and what the correct information should be (min. 10 characters)...')}
+            showCount
+            maxLength={500}
+          />
+        </Modal>
+      </>
     )
   }
 

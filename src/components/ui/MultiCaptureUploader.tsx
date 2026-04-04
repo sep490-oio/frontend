@@ -1,10 +1,12 @@
 import { useState, useCallback } from 'react'
-import { Button, Flex, Typography } from 'antd'
-import { CameraOutlined, DeleteOutlined } from '@ant-design/icons'
+import { Button, Flex, Typography, Upload } from 'antd'
+import { CameraOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { SecureCaptureUploader } from '@/components/ui/SecureCaptureUploader'
 import { LiveCapturedBadge } from '@/components/ui/LiveCapturedBadge'
 import type { CaptureMetadata, CaptureStep } from '@/types/capture'
+
+const ALLOW_UPLOAD = import.meta.env.VITE_ALLOW_UPLOAD === 'true'
 
 export interface CapturedPhoto {
   blob: Blob
@@ -38,6 +40,22 @@ export function MultiCaptureUploader({
       blob,
       metadata,
       previewUrl: URL.createObjectURL(blob),
+    }
+    setPhotos((prev) => {
+      const updated = [...prev, newPhoto]
+      onPhotosChange(updated)
+      if (updated.length >= maxPhotos) {
+        setShowCamera(false)
+      }
+      return updated
+    })
+  }, [maxPhotos, onPhotosChange])
+
+  const handleFileUpload = useCallback((file: File) => {
+    const newPhoto: CapturedPhoto = {
+      blob: file,
+      metadata: { source: 'upload' } as Partial<CaptureMetadata>,
+      previewUrl: URL.createObjectURL(file),
     }
     setPhotos((prev) => {
       const updated = [...prev, newPhoto]
@@ -132,26 +150,63 @@ export function MultiCaptureUploader({
         </Flex>
       )}
 
-      {/* Camera viewfinder */}
+      {/* Camera viewfinder or upload option */}
       {showCamera && canCapture && (
-        <SecureCaptureUploader
-          step={step}
-          facingMode={facingMode}
-          overlayType="document"
-          onCapture={handleCapture}
-          instruction={instruction || t('captureItemPhoto', 'Take a clear photo of your item')}
-        />
+        <>
+          {ALLOW_UPLOAD && (
+            <Upload
+              showUploadList={false}
+              accept="image/*"
+              multiple
+              beforeUpload={(file) => {
+                if (photos.length < maxPhotos) {
+                  handleFileUpload(file)
+                }
+                return false
+              }}
+            >
+              <Button icon={<UploadOutlined />} style={{ marginBottom: 8 }}>
+                {t('uploadPhoto', 'Upload photo')}
+              </Button>
+            </Upload>
+          )}
+          <SecureCaptureUploader
+            step={step}
+            facingMode={facingMode}
+            overlayType="document"
+            onCapture={handleCapture}
+            instruction={instruction || t('captureItemPhoto', 'Take a clear photo of your item')}
+          />
+        </>
       )}
 
       {/* Re-open camera button when closed manually */}
       {!showCamera && canCapture && (
-        <Button
-          icon={<CameraOutlined />}
-          onClick={() => setShowCamera(true)}
-          style={{ alignSelf: 'flex-start' }}
-        >
-          {t('captureMore', 'Capture more photos')}
-        </Button>
+        <Flex gap={8} wrap="wrap">
+          <Button
+            icon={<CameraOutlined />}
+            onClick={() => setShowCamera(true)}
+          >
+            {t('captureMore', 'Capture more photos')}
+          </Button>
+          {ALLOW_UPLOAD && (
+            <Upload
+              showUploadList={false}
+              accept="image/*"
+              multiple
+              beforeUpload={(file) => {
+                if (photos.length < maxPhotos) {
+                  handleFileUpload(file)
+                }
+                return false
+              }}
+            >
+              <Button icon={<UploadOutlined />}>
+                {t('uploadPhoto', 'Upload photo')}
+              </Button>
+            </Upload>
+          )}
+        </Flex>
       )}
 
       {/* Max reached message */}

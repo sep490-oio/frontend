@@ -10,8 +10,7 @@ import { formatDateTime, formatCurrency, formatNumber } from '@/utils/format'
 import { SellerProfileStatus } from '@/types/enums'
 import type { PublicSellerItemDto } from '@/types'
 
-const SANS_FONT = "'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-const SERIF_FONT = "'Noto Serif', Georgia, serif"
+import { SANS_FONT, SERIF_FONT, MONO_FONT } from '@/styles/tokens'
 
 export default function PublicSellerPage() {
   const { t, i18n } = useTranslation('seller')
@@ -132,7 +131,7 @@ export default function PublicSellerPage() {
                   width: 22,
                   height: 22,
                   borderRadius: '50%',
-                  background: '#16a34a',
+                  background: 'var(--color-success)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -213,10 +212,10 @@ export default function PublicSellerPage() {
               {trustScore > 0 && (
                 <span
                   style={{
-                    fontFamily: "'JetBrains Mono', monospace",
+                    fontFamily: MONO_FONT,
                     fontSize: 13,
                     fontWeight: 500,
-                    color: trustScore > 90 ? '#16a34a' : trustScore > 70 ? 'var(--color-accent)' : 'var(--color-text-secondary)',
+                    color: trustScore > 90 ? 'var(--color-success)' : trustScore > 70 ? 'var(--color-accent)' : 'var(--color-text-secondary)',
                   }}
                 >
                   Trust: {trustScore}/100
@@ -294,7 +293,7 @@ export default function PublicSellerPage() {
             ) : (
               <div
                 style={{
-                  fontFamily: "'JetBrains Mono', monospace",
+                  fontFamily: MONO_FONT,
                   fontSize: 28,
                   fontWeight: 500,
                   color: 'var(--color-text-primary)',
@@ -439,7 +438,7 @@ export default function PublicSellerPage() {
                     </h4>
                     <div
                       style={{
-                        fontFamily: "'JetBrains Mono', monospace",
+                        fontFamily: MONO_FONT,
                         fontSize: 16,
                         fontWeight: 500,
                         color: 'var(--color-accent)',
@@ -541,7 +540,7 @@ export default function PublicSellerPage() {
           >
             <div
               style={{
-                fontFamily: "'JetBrains Mono', monospace",
+                fontFamily: MONO_FONT,
                 fontSize: 36,
                 fontWeight: 500,
                 color: 'var(--color-text-primary)',

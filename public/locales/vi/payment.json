@@ -85,5 +85,23 @@
   "hybridNote": "Ví thanh toán {{wallet}}, VnPay thanh toán {{vnpay}} còn lại",
   "insufficientBalance": "Số dư không đủ — hãy nạp thêm vào ví",
   "noSavedMethods": "Chưa có phương thức thanh toán nào",
-  "otherMethods": "Phương thức khác"
+  "otherMethods": "Phương thức khác",
+  "topup": "Nạp tiền",
+  "topupConfirm": "Nạp tiền",
+  "topupError": "Nạp tiền thất bại",
+  "topupExplain": "Nhập số tiền bạn muốn nạp vào ví. Bạn sẽ được chuyển đến VnPay để thanh toán.",
+  "topupAmount": "Số tiền",
+  "walletSubtitle": "Quản lý số dư và giao dịch của bạn",
+  "reservedFunds": "Đang giữ",
+  "reservedFundsHelp": "Tiền giữ cho đặt cọc, đấu giá tự động, và yêu cầu rút tiền đang chờ.",
+  "totalBalanceHelp": "Tổng số dư khả dụng và đang giữ.",
+  "txTypeLabel": {
+    "all": "Tất cả",
+    "credit": "Nạp tiền",
+    "debit": "Trừ tiền",
+    "hold": "Tạm giữ",
+    "release": "Giải phóng",
+    "refund": "Hoàn tiền",
+    "fee": "Phí"
+  }
 }

@@ -1,5 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
-import { createBrowserRouter, useRouteError, Link } from 'react-router'
+import { createBrowserRouter, useRouteError, Link, Navigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { AuthLayout } from '@/components/layout/AuthLayout'
@@ -9,8 +8,11 @@ import { GuestGuard } from '@/components/guards/GuestGuard'
 import { SellerGuard } from '@/components/guards/SellerGuard'
 import { RoleGuard } from '@/components/guards/RoleGuard'
 import { InspectorGuard } from '@/components/guards/InspectorGuard'
+import { SERIF_FONT } from '@/styles/tokens'
 import { InspectorLayout } from '@/components/layout/InspectorLayout'
 import { SellerLayout } from '@/components/layout/SellerLayout'
+import { WarehouseStaffGuard } from '@/components/guards/WarehouseStaffGuard'
+import { WarehouseStaffLayout } from '@/components/layout/WarehouseStaffLayout'
 
 // Lazy imports for pages
 import { lazy, Suspense } from 'react'
@@ -39,7 +41,7 @@ function RouteErrorBoundary() {
     <Flex vertical align="center" justify="center" style={{ minHeight: '60vh', padding: 32, textAlign: 'center' }}>
       <h2
         style={{
-          fontFamily: "'Noto Serif', Georgia, serif",
+          fontFamily: SERIF_FONT,
           fontWeight: 400,
           fontSize: 28,
           color: 'var(--color-text-primary)',
@@ -157,9 +159,8 @@ const AdminSellerProfilesPage = () => lazyPage(() => import('@/features/admin/pa
 const AdminReviewQueuePage = () => lazyPage(() => import('@/features/admin/pages/AdminReviewQueuePage'))
 const AdminItemDetailPage = () => lazyPage(() => import('@/features/admin/pages/AdminItemDetailPage'))
 const AdminAuctionControlPage = () => lazyPage(() => import('@/features/admin/pages/AdminAuctionControlPage'))
-const AdminReportsPage = () => lazyPage(() => import('@/features/admin/pages/AdminReportsPage'))
 const AdminMonitoringPage = () => lazyPage(() => import('@/features/admin/pages/AdminMonitoringPage'))
-const AdminDisputesPage = () => lazyPage(() => import('@/features/admin/pages/AdminDisputesPage'))
+const AdminModerationPage = () => lazyPage(() => import('@/features/admin/pages/AdminModerationPage'))
 const AdminPaymentsPage = () => lazyPage(() => import('@/features/admin/pages/AdminPaymentsPage'))
 const AdminTermsPage = () => lazyPage(() => import('@/features/admin/pages/AdminTermsPage'))
 const AdminRolesPage = () => lazyPage(() => import('@/features/admin/pages/AdminRolesPage'))
@@ -170,6 +171,13 @@ const InspectionQueuePage = () => lazyPage(() => import('@/features/inspector/pa
 const InspectionDetailPage = () => lazyPage(() => import('@/features/inspector/pages/InspectionDetailPage'))
 const InspectionReviewPage = () => lazyPage(() => import('@/features/inspector/pages/InspectionReviewPage'))
 const StorageManagementPage = () => lazyPage(() => import('@/features/inspector/pages/StorageManagementPage'))
+
+// Warehouse Staff pages
+const WarehouseStaffDashboardPage = () => lazyPage(() => import('@/features/warehouse-staff/pages/WarehouseStaffDashboardPage'))
+const ReceivingPage = () => lazyPage(() => import('@/features/warehouse-staff/pages/ReceivingPage'))
+const ScanPage = () => lazyPage(() => import('@/features/warehouse-staff/pages/ScanPage'))
+const StaffShipmentDetailPage = () => lazyPage(() => import('@/features/warehouse-staff/pages/StaffShipmentDetailPage'))
+const LocationsPage = () => lazyPage(() => import('@/features/warehouse-staff/pages/LocationsPage'))
 
 export const router = createBrowserRouter([
   // Auth routes (guest only)
@@ -205,6 +213,7 @@ export const router = createBrowserRouter([
     children: [
       // Public routes
       { index: true, element: <AuctionListPage /> },
+      { path: '/terms', element: <Navigate to="/me/terms" replace /> },
       { path: '/auctions', element: <BrowseAuctionsPage /> },
       { path: '/auctions/:id', element: <AuctionDetailPage /> },
       { path: '/items', element: <BrowseItemsPage /> },
@@ -272,7 +281,6 @@ export const router = createBrowserRouter([
           { path: '/seller/auctions', element: <MyAuctionsPage /> },
           { path: '/seller/auctions/create', element: <CreateAuctionPage /> },
           { path: '/seller/auctions/:id/edit', element: <CreateAuctionPage /> },
-          { path: '/seller/bids', element: <MyBidsPage /> },
           // Business
           { path: '/seller/orders', element: <MyOrdersPage /> },
           { path: '/seller/orders/:id', element: <OrderDetailPage /> },
@@ -309,9 +317,11 @@ export const router = createBrowserRouter([
           { path: '/admin/items/review', element: <AdminReviewQueuePage /> },
           { path: '/admin/items/:id', element: <AdminItemDetailPage /> },
           { path: '/admin/auctions/:id', element: <AdminAuctionControlPage /> },
-          { path: '/admin/reports', element: <AdminReportsPage /> },
+          { path: '/admin/moderation', element: <AdminModerationPage /> },
+          { path: '/admin/reports', element: <Navigate to="/admin/moderation" replace /> },
           { path: '/admin/monitoring', element: <AdminMonitoringPage /> },
-          { path: '/admin/disputes', element: <AdminDisputesPage /> },
+          { path: '/admin/disputes', element: <Navigate to="/admin/moderation" replace /> },
+          { path: '/admin/disputes/:id', element: <DisputeDetailPage /> },
           { path: '/admin/payments', element: <AdminPaymentsPage /> },
           { path: '/admin/terms', element: <AdminTermsPage /> },
           { path: '/admin/roles', element: <AdminRolesPage /> },
@@ -335,5 +345,20 @@ export const router = createBrowserRouter([
         ],
       },
     ],
+  },
+  // Warehouse Staff routes
+  {
+    errorElement: <RouteErrorBoundary />,
+    element: <WarehouseStaffGuard />,
+    children: [{
+      element: <WarehouseStaffLayout />,
+      children: [
+        { path: '/warehouse-staff', element: <WarehouseStaffDashboardPage /> },
+        { path: '/warehouse-staff/receiving', element: <ReceivingPage /> },
+        { path: '/warehouse-staff/scan', element: <ScanPage /> },
+        { path: '/warehouse-staff/shipments/:id', element: <StaffShipmentDetailPage /> },
+        { path: '/warehouse-staff/locations', element: <LocationsPage /> },
+      ],
+    }],
   },
 ])

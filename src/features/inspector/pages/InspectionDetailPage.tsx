@@ -6,26 +6,25 @@ import {
   Select,
   Input,
   Button,
-  Upload,
   Space,
   Spin,
   Result,
   message,
   Image,
 } from 'antd'
-import { UploadOutlined, CheckCircleOutlined } from '@ant-design/icons'
+import { CheckCircleOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useParams, useNavigate } from 'react-router'
 import { useInboundShipmentById } from '@/features/warehouse/api'
 import { useInspectItem } from '@/features/inspector/api'
 import type { WarehouseInspectionDto } from '@/features/inspector/api'
 import { useMediaUpload } from '@/hooks/useMediaUpload'
+import { MultiCaptureUploader } from '@/components/ui/MultiCaptureUploader'
+import type { CapturedPhoto } from '@/components/ui/MultiCaptureUploader'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
-import type { UploadFile } from 'antd'
-
-const SERIF_FONT = "'Noto Serif', Georgia, serif"
+import { SERIF_FONT } from '@/styles/tokens'
 
 export default function InspectionDetailPage() {
   const { shipmentId } = useParams<{ shipmentId: string }>()
@@ -42,12 +41,13 @@ export default function InspectionDetailPage() {
   ]
   const { data: shipment, isLoading, isError } = useInboundShipmentById(shipmentId ?? '')
   const inspectMutation = useInspectItem()
-  const mediaUpload = useMediaUpload('item_inspection')
+  const mediaUpload = useMediaUpload('warehouse_inspection_image')
 
   const [condition, setCondition] = useState<string>('')
   const [notes, setNotes] = useState('')
-  const [uploadedMediaIds, setUploadedMediaIds] = useState<string[]>([])
-  const [fileList, setFileList] = useState<UploadFile[]>([])
+  const [capturedPhotos, setCapturedPhotos] = useState<CapturedPhoto[]>([])
+  const [_uploadedMediaIds, setUploadedMediaIds] = useState<string[]>([])
+  const [uploading, setUploading] = useState(false)
   const [inspectionResult, setInspectionResult] = useState<WarehouseInspectionDto | null>(null)
 
   if (isLoading) {
@@ -71,24 +71,6 @@ export default function InspectionDetailPage() {
     )
   }
 
-  const handleUpload = async (file: File) => {
-    try {
-      const media = await mediaUpload.upload(file)
-      setUploadedMediaIds((prev) => [...prev, media.mediaUploadId])
-      setFileList((prev) => [
-        ...prev,
-        {
-          uid: media.mediaUploadId,
-          name: file.name,
-          status: 'done',
-          url: media.secureUrl,
-        },
-      ])
-    } catch {
-      message.error(t('inspector:inspectionDetail.uploadPhotoError', 'Failed to upload photo'))
-    }
-  }
-
   const handleSubmit = async () => {
     if (!condition) {
       message.warning(t('inspector:inspectionDetail.selectConditionWarning', 'Please select a condition'))
@@ -97,16 +79,28 @@ export default function InspectionDetailPage() {
     if (!shipmentId) return
 
     try {
+      setUploading(true)
+      // Upload all captured photos first
+      const mediaIds: string[] = []
+      for (const photo of capturedPhotos) {
+        const file = new File([photo.blob], `inspection-${Date.now()}.jpg`, { type: 'image/jpeg' })
+        const media = await mediaUpload.upload(file)
+        mediaIds.push(media.mediaUploadId)
+      }
+      setUploadedMediaIds(mediaIds)
+
       const result = await inspectMutation.mutateAsync({
         shipmentId,
         condition: condition,
         inspectionNotes: notes || undefined,
-        inspectionMediaUploadIds: uploadedMediaIds.length > 0 ? uploadedMediaIds : undefined,
+        inspectionMediaUploadIds: mediaIds.length > 0 ? mediaIds : undefined,
       })
       setInspectionResult(result)
       message.success(t('inspector:inspectionDetail.submitSuccess', 'Inspection submitted successfully'))
     } catch {
       message.error(t('inspector:inspectionDetail.submitError', 'Failed to submit inspection'))
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -209,27 +203,15 @@ export default function InspectionDetailPage() {
 
           <div>
             <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>
-              {t('inspector:inspectionDetail.photos', 'Photos')}
+              {t('inspector:inspectionDetail.photos', 'Evidence Photos')} *
             </Typography.Text>
-            <Upload
-              fileList={fileList}
-              beforeUpload={(file) => {
-                void handleUpload(file)
-                return false
-              }}
-              onRemove={(file) => {
-                setFileList((prev) => prev.filter((f) => f.uid !== file.uid))
-                setUploadedMediaIds((prev) => prev.filter((id) => id !== file.uid))
-              }}
-              listType="picture-card"
-              accept="image/*"
-            >
-              <div>
-                <UploadOutlined />
-                <div style={{ marginTop: 8 }}>{t('inspector:inspectionDetail.upload', 'Upload')}</div>
-              </div>
-            </Upload>
-            {mediaUpload.uploading && <Spin size="small" style={{ marginLeft: 8 }} />}
+            <MultiCaptureUploader
+              maxPhotos={10}
+              step="item_photo"
+              facingMode="environment"
+              onPhotosChange={setCapturedPhotos}
+              instruction={t('inspector:inspectionDetail.captureInstruction', 'Take clear photos of the item from multiple angles')}
+            />
           </div>
 
           <div>
@@ -237,7 +219,7 @@ export default function InspectionDetailPage() {
               type="primary"
               size="large"
               onClick={handleSubmit}
-              loading={inspectMutation.isPending}
+              loading={uploading || inspectMutation.isPending}
               style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
             >
               {t('inspector:inspectionDetail.submitInspection', 'Submit Inspection')}

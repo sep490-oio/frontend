@@ -2,10 +2,11 @@ import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useTranslation } from 'react-i18next'
-import { App, Input, Button, Form } from 'antd'
+import { useState } from 'react'
+import { App, Input, Button, Form, Alert, Modal } from 'antd'
 import { Link, useNavigate } from 'react-router'
 import { useAppDispatch, setCredentials, set2FARequired } from '@/app/store'
-import { useLogin } from '@/features/auth/api'
+import { useLogin, useResendConfirmEmail } from '@/features/auth/api'
 import { STORAGE_KEYS, uuid } from '@/utils/constants'
 import type { AxiosError } from 'axios'
 import type { ApiError } from '@/types'
@@ -55,6 +56,10 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const loginMutation = useLogin()
+  const resendEmail = useResendConfirmEmail()
+  const [emailNotConfirmed, setEmailNotConfirmed] = useState<string | null>(null)
+  const [resendModalOpen, setResendModalOpen] = useState(false)
+  const [resendEmailInput, setResendEmailInput] = useState('')
 
   const {
     control,
@@ -87,8 +92,15 @@ export default function LoginPage() {
         },
         onError: (error) => {
           const axiosError = error as AxiosError<ApiError>
-          const detail = axiosError.response?.data?.detail
-          message.error(detail ?? t('login.error'))
+          const detail = axiosError.response?.data?.detail ?? ''
+          const code = axiosError.response?.data?.code ?? ''
+          // Detect email-not-confirmed error (BE code: "User.Email.NotConfirmed")
+          if (code === 'User.Email.NotConfirmed' || code.includes('EmailNotConfirmed')) {
+            setEmailNotConfirmed(values.account)
+          } else {
+            setEmailNotConfirmed(null)
+            message.error(detail || t('login.error'))
+          }
         },
       },
     )
@@ -170,6 +182,29 @@ export default function LoginPage() {
           </Link>
         </div>
 
+        {emailNotConfirmed && (
+          <Alert
+            type="warning"
+            showIcon
+            style={{ marginBottom: 16, borderRadius: 8 }}
+            message={t('login.emailNotConfirmed', 'Email not verified')}
+            description={
+              <div>
+                <p style={{ margin: '0 0 12px', fontSize: 13 }}>
+                  {t('login.emailNotConfirmedDesc', 'Your email address has not been verified yet. Please check your inbox or resend the verification email.')}
+                </p>
+                <Button
+                  size="small"
+                  onClick={() => { setResendEmailInput(''); setResendModalOpen(true) }}
+                  style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)', color: '#fff' }}
+                >
+                  {t('login.resendEmail', 'Resend Verification Email')}
+                </Button>
+              </div>
+            }
+          />
+        )}
+
         <Form.Item style={{ marginBottom: 24 }}>
           <Button
             type="primary"
@@ -207,6 +242,53 @@ export default function LoginPage() {
           {t('login.registerNow', 'Create account')}
         </Link>
       </p>
+
+      {/* Resend Verification Email Modal */}
+      <Modal
+        title={t('login.resendModalTitle', 'Resend Verification Email')}
+        open={resendModalOpen}
+        onCancel={() => setResendModalOpen(false)}
+        onOk={async () => {
+          if (!resendEmailInput.trim()) return
+          try {
+            await resendEmail.mutateAsync({ email: resendEmailInput.trim() })
+            message.success(t('login.resendSuccess', 'Verification email sent! Check your inbox.'))
+            setResendModalOpen(false)
+          } catch {
+            message.error(t('login.resendError', 'Failed to send. Please wait 60 seconds between attempts.'))
+          }
+        }}
+        okText={t('login.sendEmail', 'Send')}
+        okButtonProps={{
+          loading: resendEmail.isPending,
+          disabled: !resendEmailInput.trim() || !resendEmailInput.includes('@'),
+          style: { background: 'var(--color-accent)', borderColor: 'var(--color-accent)' },
+        }}
+        centered
+        width={420}
+      >
+        <p style={{ margin: '0 0 12px', fontSize: 13, color: 'var(--color-text-secondary)' }}>
+          {t('login.resendModalDesc', 'Enter the email address you used to register. We will send a new verification link.')}
+        </p>
+        <Input
+          type="email"
+          placeholder={t('login.emailPlaceholder', 'Enter your email address')}
+          value={resendEmailInput}
+          onChange={(e) => setResendEmailInput(e.target.value)}
+          onPressEnter={async () => {
+            if (!resendEmailInput.trim() || !resendEmailInput.includes('@')) return
+            try {
+              await resendEmail.mutateAsync({ email: resendEmailInput.trim() })
+              message.success(t('login.resendSuccess', 'Verification email sent! Check your inbox.'))
+              setResendModalOpen(false)
+            } catch {
+              message.error(t('login.resendError', 'Failed to send. Please wait 60 seconds between attempts.'))
+            }
+          }}
+          style={{ height: 44, borderRadius: 8 }}
+          autoFocus
+        />
+      </Modal>
     </div>
   )
 }

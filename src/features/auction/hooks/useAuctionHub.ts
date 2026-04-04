@@ -2,7 +2,6 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 
 import { upsertItemQuestionCaches } from '@/features/item/api'
-import { useAuth } from '@/hooks/useAuth'
 import { queryKeys } from '@/lib/queryClient'
 import { getAuctionHub, startConnection } from '@/lib/signalr'
 import { DEFAULT_CURRENCY } from '@/utils/constants'
@@ -22,7 +21,6 @@ import type {
   ItemQuestionNotification,
   OutbidNotification,
   PagedList,
-  PriceUpdateNotification,
 } from '@/types'
 
 interface AuctionHubState {
@@ -32,13 +30,13 @@ interface AuctionHubState {
   auctionEnded: AuctionEndedNotification | null
   auctionExtended: AuctionExtendedNotification | null
   auctionCancelled: AuctionCancelledNotification | null
-  priceUpdate: PriceUpdateNotification | null
   buyNowReserved: BuyNowReservedNotification | null
   buyNowReservationReleased: BuyNowReservationReleasedNotification | null
   buyNowExecuted: BuyNowNotification | null
   lastError: { message: string; code?: string } | null
   connected: boolean
   lastSyncedAt: number | null
+  serverTimeOffset: number
 }
 
 const initialState: AuctionHubState = {
@@ -48,13 +46,13 @@ const initialState: AuctionHubState = {
   auctionEnded: null,
   auctionExtended: null,
   auctionCancelled: null,
-  priceUpdate: null,
   buyNowReserved: null,
   buyNowReservationReleased: null,
   buyNowExecuted: null,
   lastError: null,
   connected: false,
   lastSyncedAt: null,
+  serverTimeOffset: 0,
 }
 
 function toBidDto(data: BidNotification, currency: string): BidDto {
@@ -62,6 +60,7 @@ function toBidDto(data: BidNotification, currency: string): BidDto {
     id: data.bidId,
     auctionId: data.auctionId,
     bidderId: data.bidderId,
+    bidderDisplayName: data.bidderDisplayName,
     amount: {
       amount: data.amount,
       currency,
@@ -122,15 +121,13 @@ function patchAuctionDetail(
   return updater(data)
 }
 
-export function useAuctionHub(auctionId?: string, itemId?: string) {
+export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId?: string) {
   const [state, setState] = useState<AuctionHubState>(initialState)
   const connectionRef = useRef<ReturnType<typeof getAuctionHub> | null>(null)
-  const outbidTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const qc = useQueryClient()
-  const { isAuthenticated } = useAuth()
 
   useEffect(() => {
-    if ((!auctionId && !itemId) || !isAuthenticated) {
+    if (!auctionId && !itemId) {
       return
     }
 
@@ -178,6 +175,16 @@ export function useAuctionHub(auctionId?: string, itemId?: string) {
         }
 
         markConnected()
+
+        try {
+          const serverTime = await connection.invoke<string>('GetServerTime')
+          const serverMs = new Date(serverTime).getTime()
+          const clientMs = Date.now()
+          const offset = serverMs - clientMs
+          setState((prev) => ({ ...prev, serverTimeOffset: offset }))
+        } catch {
+          // Ignore — fallback to client time
+        }
       } catch (error) {
         if (!isActive) {
           return
@@ -209,7 +216,8 @@ export function useAuctionHub(auctionId?: string, itemId?: string) {
           bidCount: data.totalBids,
           currency: eventCurrency,
         },
-        outbid: null, // Clear stale outbid state — bid situation has changed
+        // Clear outbid only when the current user placed a new bid
+        outbid: currentUserId && data.bidderId === currentUserId ? null : prev.outbid,
         connected: true,
         lastSyncedAt: Date.now(),
       }))
@@ -261,11 +269,6 @@ export function useAuctionHub(auctionId?: string, itemId?: string) {
         : undefined
       const eventCurrency = detail?.auction.currency || DEFAULT_CURRENCY
 
-      // Clear any existing auto-fade timer before setting new outbid
-      if (outbidTimerRef.current) {
-        clearTimeout(outbidTimerRef.current)
-      }
-
       setState((prev) => ({
         ...prev,
         outbid: {
@@ -276,12 +279,6 @@ export function useAuctionHub(auctionId?: string, itemId?: string) {
         connected: true,
         lastSyncedAt: Date.now(),
       }))
-
-      // Auto-fade: clear outbid after 10 seconds if no other event clears it first
-      outbidTimerRef.current = setTimeout(() => {
-        setState((prev) => ({ ...prev, outbid: null }))
-        outbidTimerRef.current = null
-      }, 10_000)
 
       if (!auctionId || data.auctionId !== auctionId) {
         return
@@ -438,48 +435,6 @@ export function useAuctionHub(auctionId?: string, itemId?: string) {
       })
     }
 
-    const priceUpdatedHandler = (data: PriceUpdateNotification) => {
-      if (auctionId && data.auctionId !== auctionId) {
-        return
-      }
-
-      const detail = qc.getQueryData<AuctionDetailDto>(queryKeys.auctions.detail(data.auctionId))
-      const eventCurrency = detail?.auction.currency || DEFAULT_CURRENCY
-
-      setState((prev) => ({
-        ...prev,
-        priceUpdate: {
-          ...data,
-          currency: eventCurrency,
-        },
-        connected: true,
-        lastSyncedAt: Date.now(),
-      }))
-
-      qc.setQueryData<AuctionDetailDto>(queryKeys.auctions.detail(data.auctionId), (current) => {
-        if (!current) {
-          return current
-        }
-
-        return {
-          ...current,
-          auction: {
-            ...current.auction,
-            currentPrice: {
-              ...current.auction.currentPrice,
-              amount: data.currentPrice,
-            },
-            minimumBidAmount: {
-              ...current.auction.minimumBidAmount,
-              amount: data.minimumNextBid,
-            },
-            bidCount: data.totalBids,
-            remainingTime: data.remainingTime,
-          },
-        }
-      })
-    }
-
     const buyNowReservedHandler = (data: BuyNowReservedNotification) => {
       if (auctionId && data.auctionId !== auctionId) {
         return
@@ -621,7 +576,6 @@ export function useAuctionHub(auctionId?: string, itemId?: string) {
     connection.on('AuctionEnded', auctionEndedHandler)
     connection.on('AuctionExtended', auctionExtendedHandler)
     connection.on('AuctionCancelled', auctionCancelledHandler)
-    connection.on('PriceUpdated', priceUpdatedHandler)
     connection.on('BuyNowReserved', buyNowReservedHandler)
     connection.on('BuyNowReservationReleased', buyNowReservationReleasedHandler)
     connection.on('BuyNowExecuted', buyNowExecutedHandler)
@@ -634,6 +588,9 @@ export function useAuctionHub(auctionId?: string, itemId?: string) {
     })
     connection.onreconnected(() => {
       void joinRooms()
+      // Reconcile any events missed during disconnection
+      if (auctionId) qc.invalidateQueries({ queryKey: queryKeys.auctions.detail(auctionId) })
+      if (itemId) qc.invalidateQueries({ queryKey: queryKeys.items.detail(itemId) })
     })
     connection.onclose(() => {
       markDisconnected()
@@ -643,12 +600,6 @@ export function useAuctionHub(auctionId?: string, itemId?: string) {
 
     return () => {
       isActive = false
-
-      // Clear outbid auto-fade timer
-      if (outbidTimerRef.current) {
-        clearTimeout(outbidTimerRef.current)
-        outbidTimerRef.current = null
-      }
 
       if (auctionId) {
         void connection.invoke('LeaveAuction', auctionId).catch(() => undefined)
@@ -664,7 +615,6 @@ export function useAuctionHub(auctionId?: string, itemId?: string) {
       connection.off('AuctionEnded', auctionEndedHandler)
       connection.off('AuctionExtended', auctionExtendedHandler)
       connection.off('AuctionCancelled', auctionCancelledHandler)
-      connection.off('PriceUpdated', priceUpdatedHandler)
       connection.off('BuyNowReserved', buyNowReservedHandler)
       connection.off('BuyNowReservationReleased', buyNowReservationReleasedHandler)
       connection.off('BuyNowExecuted', buyNowExecutedHandler)
@@ -674,7 +624,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string) {
 
       setState(initialState)
     }
-  }, [auctionId, itemId, isAuthenticated, qc])
+  }, [auctionId, itemId, qc])
 
   const placeBid = useCallback(
     async (amount: number, currency: string, idempotencyKey: string) => {

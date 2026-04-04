@@ -56,9 +56,13 @@ export function useUpdateProfile() {
 // ── Password ──────────────────────────────────────────────────────────
 
 export function useChangePassword() {
+  const qc = useQueryClient()
   return useMutation({
     mutationFn: async (data: ChangePasswordRequest) => {
       await apiClient.put('/me/password', data)
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.auth.currentUser() })
     },
   })
 }
@@ -66,9 +70,13 @@ export function useChangePassword() {
 // ── Phone Number ──────────────────────────────────────────────────────
 
 export function useSetPhoneNumber() {
+  const qc = useQueryClient()
   return useMutation({
     mutationFn: async (data: SetPhoneNumberRequest) => {
       await apiClient.put('/me/phone', data)
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.auth.currentUser() })
     },
   })
 }
@@ -174,18 +182,26 @@ export function useLoginHistory(params?: PaginationParams) {
 // ── Two-Factor Authentication ─────────────────────────────────────────
 
 export function useEnable2FA() {
+  const qc = useQueryClient()
   return useMutation({
     mutationFn: async (provider: string) => {
       await apiClient.post('/me/two-factor/enable', { provider })
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.auth.currentUser() })
     },
   })
 }
 
 export function useSetupTotp() {
+  const qc = useQueryClient()
   return useMutation({
     mutationFn: async () => {
       const res = await apiClient.post<SetupTotpResponse>('/me/two-factor/setup')
       return res.data
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.auth.currentUser() })
     },
   })
 }
@@ -216,15 +232,35 @@ export function useDisable2FA() {
 }
 
 export function useRegenerateRecoveryCodes() {
+  const qc = useQueryClient()
   return useMutation({
     mutationFn: async (code: string) => {
       const res = await apiClient.post<{ recoveryCodes: string[] }>('/me/two-factor/recovery-codes', { code })
       return res.data
     },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.auth.currentUser() })
+    },
   })
 }
 
 // ── Terms & Conditions ───────────────────────────────────────────────
+
+/**
+ * Fetches active terms filtered by type from the BE endpoint.
+ * Uses GET /terms/active/{type} instead of fetching all and filtering client-side.
+ */
+export function useActiveTermsByType(termType: string) {
+  return useQuery({
+    queryKey: [...queryKeys.terms.all, 'active', termType],
+    queryFn: async () => {
+      const res = await apiClient.get<{ id: string; type: string; version: number; isActive: boolean; contentUrl?: string; fileName?: string }[]>(`/terms/active/${termType}`)
+      return res.data
+    },
+    enabled: !!termType,
+    staleTime: 5 * 60 * 1000,
+  })
+}
 
 /**
  * Computes pending terms client-side by comparing active terms with user's accepted terms.

@@ -1,35 +1,52 @@
-import { Row, Col, Skeleton, Alert, Button, App } from 'antd'
-import { useParams } from 'react-router'
+import { Row, Col, Skeleton, Alert, Button, App, Card, Typography, List, Space } from 'antd'
+import { useParams, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
+import { useRoutePrefix } from '@/hooks/useRoutePrefix'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { StatusBadge } from '@/components/ui/StatusBadge'
 import {
   useInboundShipmentById,
+  useInboundShipments,
   useCancelInbound,
   useSetExternalTracking,
+  useUpdateExternalStatus,
   useInboundShipmentQr,
 } from '@/features/warehouse/api'
 import { ShipmentHeader } from '@/features/warehouse/components/ShipmentHeader'
 import { ShipmentStepper } from '@/features/warehouse/components/ShipmentStepper'
 import { ShipmentActionPanel } from '@/features/warehouse/components/ShipmentActionPanel'
 import { ShipmentOverview } from '@/features/warehouse/components/ShipmentOverview'
+import { useItemById } from '@/features/item/api'
 
 export default function InboundDetailPage() {
   const { t } = useTranslation('warehouse')
   const { t: tc } = useTranslation('common')
   const { message } = App.useApp()
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+  const prefix = useRoutePrefix()
   const { isMobile } = useBreakpoint()
   const isDesktop = !isMobile
 
   const { data: shipment, isLoading, error, refetch } = useInboundShipmentById(id ?? '')
   const cancelInbound = useCancelInbound()
   const setTracking = useSetExternalTracking()
-  useInboundShipmentQr(id ?? '')
+  const updateStatus = useUpdateExternalStatus()
+  const { data: qrCodeUrl } = useInboundShipmentQr(id ?? '')
+  const { data: itemData } = useItemById(shipment?.itemId ?? '')
 
-  const handleCancel = async () => {
+  // Fetch sibling shipments in the same package
+  const { data: siblingsData } = useInboundShipments(
+    shipment?.clientOrderCode ? { search: shipment.clientOrderCode, pageSize: 50 } : undefined,
+  )
+  const siblingShipments = shipment?.clientOrderCode
+    ? (siblingsData?.items ?? []).filter((s) => s.id !== id)
+    : []
+
+  const handleCancel = async (reason?: string) => {
     if (!id) return
     try {
-      await cancelInbound.mutateAsync(id)
+      await cancelInbound.mutateAsync({ id, reason })
       message.success(t('cancelSuccess', 'Shipment cancelled'))
     } catch {
       message.error(t('cancelError', 'Failed to cancel shipment'))
@@ -43,6 +60,16 @@ export default function InboundDetailPage() {
       message.success(t('trackingSet', 'Tracking number updated'))
     } catch {
       message.error(t('trackingError', 'Failed to update tracking number'))
+    }
+  }
+
+  const handleAdvanceStatus = async (status: string) => {
+    if (!id) return
+    try {
+      await updateStatus.mutateAsync({ shipmentId: id, status })
+      message.success(t('statusAdvanced', 'Status updated'))
+    } catch {
+      message.error(t('statusError', 'Failed to update status'))
     }
   }
 
@@ -86,11 +113,13 @@ export default function InboundDetailPage() {
       status={shipment.status}
       carrierTrackingNumber={shipment.carrierTrackingNumber}
       providerCode={shipment.providerCode}
-      qrData={id ? `/api/warehouse/inbound-shipments/${id}/qr-code` : undefined}
+      qrData={qrCodeUrl}
       onCancel={handleCancel}
       onSetTracking={handleSetTracking}
+      onAdvanceStatus={handleAdvanceStatus}
       cancelLoading={cancelInbound.isPending}
       trackingLoading={setTracking.isPending}
+      advanceLoading={updateStatus.isPending}
     />
   )
 
@@ -102,7 +131,7 @@ export default function InboundDetailPage() {
         providerCode={shipment.providerCode}
         shipmentMode={shipment.shipmentMode}
         externalCarrierName={shipment.externalCarrierName}
-        updatedAt={(shipment as unknown as { updatedAt?: string }).updatedAt ?? shipment.createdAt}
+        updatedAt={(shipment as any).updatedAt ?? shipment.createdAt}
       />
 
       {/* Mobile: action panel before stepper/content */}
@@ -113,7 +142,38 @@ export default function InboundDetailPage() {
       <Row gutter={[24, 16]}>
         {/* Left: content sections */}
         <Col xs={24} md={14}>
-          <ShipmentOverview shipment={shipment} />
+          <ShipmentOverview
+            shipment={shipment}
+            itemInfo={itemData ? {
+              title: itemData.title,
+              imageUrl: (itemData.images?.find((m) => m.isPrimary) ?? itemData.images?.[0])?.url,
+              condition: itemData.condition,
+            } : undefined}
+          />
+
+          {/* Other items in this package */}
+          {siblingShipments.length > 0 && (
+            <Card size="small" style={{ marginTop: 16 }}>
+              <Typography.Text strong style={{ display: 'block', marginBottom: 12 }}>
+                {t('otherItemsInPackage', 'Other items in this package')} ({siblingShipments.length})
+              </Typography.Text>
+              <List
+                size="small"
+                dataSource={siblingShipments}
+                renderItem={(s) => (
+                  <List.Item
+                    style={{ cursor: 'pointer', padding: '8px 0' }}
+                    onClick={() => navigate(`${prefix}/warehouse/inbound/${s.id}`)}
+                  >
+                    <Space>
+                      <Typography.Text>{(s as any).itemTitle ?? s.id.slice(0, 12)}</Typography.Text>
+                      <StatusBadge status={s.status} size="small" />
+                    </Space>
+                  </List.Item>
+                )}
+              />
+            </Card>
+          )}
         </Col>
 
         {/* Right: sticky action panel (desktop only) */}

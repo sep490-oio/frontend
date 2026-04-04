@@ -4,7 +4,7 @@ import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { UserOutlined, PlusOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { useAdminUsers, useAdminDeleteUser, useUnlockUser, useChangeUserStatus, useAdminCreateUser, useFlagUser } from '@/features/admin/api'
+import { useAdminUsers, useAdminDeleteUser, useUnlockUser, useChangeUserStatus, useAdminCreateUser, useFlagUser, useRoles } from '@/features/admin/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
 import { UserStatus } from '@/types/enums'
@@ -48,6 +48,7 @@ export default function AdminUsersPage() {
   const changeStatus = useChangeUserStatus()
   const createUser = useAdminCreateUser()
   const flagUser = useFlagUser()
+  const { data: availableRoles, isLoading: rolesLoading } = useRoles()
 
   // Flag user modal state
   const [flagModalOpen, setFlagModalOpen] = useState(false)
@@ -266,11 +267,7 @@ export default function AdminUsersPage() {
           >
             <Input.Password />
           </Form.Item>
-          <Form.Item
-            label={t('admin:users.currencyLabel', 'Currency')}
-            name="currency"
-            rules={[{ required: true, message: t('admin:users.currencyRequired', 'Please enter currency') }]}
-          >
+          <Form.Item name="currency" hidden initialValue="VND">
             <Input />
           </Form.Item>
           <Form.Item
@@ -286,6 +283,18 @@ export default function AdminUsersPage() {
             rules={[{ required: true, message: t('admin:users.lastNameRequired', 'Please enter last name') }]}
           >
             <Input />
+          </Form.Item>
+          <Form.Item
+            label={t('admin:users.rolesLabel', 'Roles')}
+            name="roles"
+          >
+            <Select
+              mode="multiple"
+              placeholder={t('admin:users.rolesPlaceholder', 'Select roles (optional)')}
+              options={availableRoles?.map((r) => ({ label: r.name, value: r.name }))}
+              loading={rolesLoading}
+              allowClear
+            />
           </Form.Item>
         </Form>
       </Modal>

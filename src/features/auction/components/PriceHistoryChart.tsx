@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react'
 import { formatCurrency, formatDateTime } from '@/utils/format'
-
-const SANS_FONT = "'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+import { SANS_FONT } from '@/styles/tokens'
 
 interface PriceHistoryPoint {
   timestamp?: string

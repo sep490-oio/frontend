@@ -122,6 +122,7 @@ export function useCheckout() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.orders.all })
       qc.invalidateQueries({ queryKey: queryKeys.wallet.all })
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.all })
     },
   })
 }
@@ -175,6 +176,7 @@ export function useCancelWithdrawal() {
 // ── Deposit Payment ─────────────────────────────────────────────────
 
 export function useCreateDepositPayment() {
+  const qc = useQueryClient()
   return useMutation({
     mutationFn: async (data: { amount: number; currency: string; auctionId: string; description: string }) => {
       const res = await apiClient.post<{ transactionId: string; transactionRef: string; paymentUrl: string }>('/payments/vnpay/create-url', {
@@ -185,6 +187,10 @@ export function useCreateDepositPayment() {
         auctionId: data.auctionId,
       })
       return res.data
+    },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: queryKeys.wallet.all })
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.detail(variables.auctionId) })
     },
   })
 }

@@ -15,9 +15,7 @@ import { useMyOrders } from '@/features/order/api'
 import { useDisputes } from '@/features/dispute/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatCurrency, formatDateTime } from '@/utils/format'
-
-const SERIF_FONT = "'Noto Serif', Georgia, serif"
-const MONO_FONT = "'JetBrains Mono', monospace"
+import { SERIF_FONT, MONO_FONT } from '@/styles/tokens'
 
 export default function DashboardPage() {
   const { t } = useTranslation('common')
@@ -90,7 +88,7 @@ export default function DashboardPage() {
           <Card style={{ background: 'var(--color-accent-light)', borderColor: 'var(--color-border)', borderRadius: 12, cursor: 'pointer' }} onClick={() => navigate('/me/disputes')}>
             <CommentOutlined style={{ color: 'var(--color-accent)', fontSize: 20, marginBottom: 8 }} />
             <div style={{ color: 'var(--color-text-secondary)', fontSize: 12, marginBottom: 4 }}>
-              {t('menu.myDisputes', 'Disputes')}
+              Disputes
             </div>
             <div style={{ fontFamily: MONO_FONT, fontSize: 22, fontWeight: 600, color: 'var(--color-text-primary)' }}>
               {disputes.length}
@@ -99,7 +97,7 @@ export default function DashboardPage() {
         </Col>
       </Row>
 
-      <Row gutter={isMobile ? [16, 24] : [24, 24]}> {/*  responsive fix: reduce horizontal gutter on mobile */}
+      <Row gutter={[24, 24]}>
         {/* Active Bids */}
         <Col xs={24} lg={16}>
           <Card
@@ -150,23 +148,21 @@ export default function DashboardPage() {
                       <span style={{ fontWeight: 500 }}>#{order.orderNumber}</span>
                       <StatusBadge status={order.status} size="small" />
                     </div>
-                    <div style={{ overflowX: 'auto' }}> {/*  responsive fix: allow horizontal scroll for Steps on mobile */}
-                      <Steps
-                        size="small"
-                        current={
-                          order.status === 'delivered' ? 3
-                            : order.status === 'shipped' ? 2
-                            : order.status === 'paid' ? 1
-                            : 0
-                        }
-                        items={[
-                          { title: 'Thanh toán' },
-                          { title: 'Đang giao' },
-                          { title: 'Đã nhận' },
-                          { title: 'Hoàn tất' },
-                        ]}
-                      />
-                    </div>
+                    <Steps
+                      size="small"
+                      current={
+                        order.status === 'delivered' ? 3
+                          : order.status === 'shipped' ? 2
+                          : order.status === 'paid' ? 1
+                          : 0
+                      }
+                      items={[
+                        { title: 'Thanh toán' },
+                        { title: 'Đang giao' },
+                        { title: 'Đã nhận' },
+                        { title: 'Hoàn tất' },
+                      ]}
+                    />
                   </div>
                 ))}
               </Space>
@@ -221,7 +217,7 @@ export default function DashboardPage() {
             <Button
               type="primary"
               onClick={() => navigate('/seller/register')}
-              style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)', fontWeight: 500, width: isMobile ? '100%' : 'auto' }} //  responsive fix: full width button on mobile
+              style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)', fontWeight: 500 }}
             >
               Đăng ký bán hàng
             </Button>

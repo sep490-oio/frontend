@@ -45,11 +45,18 @@ export interface DisputeMessageCursorParams {
   pageSize?: number
 }
 
+interface DisputeMessagePageDto {
+  messages: DisputeMessageDto[]
+  hasMore: boolean
+  nextBeforeCreatedAt?: string
+  nextBeforeId?: string
+}
+
 export function useDisputeMessages(disputeId: string, params?: DisputeMessageCursorParams) {
   return useQuery({
     queryKey: queryKeys.disputes.messages(disputeId, params),
     queryFn: async () => {
-      const res = await apiClient.get<PagedList<DisputeMessageDto>>(`/disputes/${disputeId}/messages`, { params })
+      const res = await apiClient.get<DisputeMessagePageDto>(`/disputes/${disputeId}/messages`, { params })
       return res.data
     },
     enabled: !!disputeId,

@@ -12,6 +12,7 @@ const MODE_LABELS: Record<string, string> = {
 const STATUS_LABELS: Record<string, string> = {
   awaiting_pickup: 'Awaiting Pickup',
   in_transit: 'In Transit',
+  seller_claims_arrived: 'Seller Claims Arrived',
   arrived: 'Arrived',
   inspected: 'Inspected',
   completed: 'Completed',
@@ -22,6 +23,7 @@ const STATUS_LABELS: Record<string, string> = {
 const NEXT_STEP_MESSAGES: Record<string, string> = {
   awaiting_pickup: 'Waiting for carrier pickup. Update tracking number after handover.',
   in_transit: 'Your shipment is on the way to the warehouse.',
+  seller_claims_arrived: 'Seller reports package delivered. Warehouse staff must confirm.',
   arrived: 'Package arrived at warehouse. Inspection pending.',
   inspected: 'Inspection complete. Awaiting final processing.',
   completed: 'Item is stored in warehouse and ready for auction.',
@@ -32,9 +34,10 @@ const NEXT_STEP_MESSAGES: Record<string, string> = {
 const STEP_INDEX: Record<string, number> = {
   awaiting_pickup: 0,
   in_transit: 1,
-  arrived: 2,
-  inspected: 3,
-  completed: 4,
+  seller_claims_arrived: 2,
+  arrived: 3,
+  inspected: 4,
+  completed: 5,
 }
 
 export function getProviderLabel(code?: string): string {

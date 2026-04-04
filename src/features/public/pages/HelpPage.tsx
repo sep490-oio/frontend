@@ -1,6 +1,7 @@
 import { Card, Col, Row, Typography } from 'antd'
 import { Link } from 'react-router'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { SERIF_FONT } from '@/styles/tokens'
 
 const SUPPORT_TOPICS = [
   {
@@ -24,7 +25,7 @@ export default function HelpPage() {
     <div style={{ margin: '0 auto', maxWidth: 1100, padding: isMobile ? '16px 16px 40px' : '32px 0 80px' }}>
       <Typography.Title
         style={{
-          fontFamily: "'Noto Serif', Georgia, serif",
+          fontFamily: SERIF_FONT,
           fontSize: isMobile ? 28 : 42,
           fontWeight: 400,
           marginBottom: 12,
@@ -71,18 +72,11 @@ export default function HelpPage() {
         <Typography.Paragraph style={{ color: 'var(--color-text-secondary)', marginBottom: 12 }}>
           Browse active listings, review seller profiles, or sign in to manage your wallet and orders.
         </Typography.Paragraph>
-        {/*  responsive fix: links wrap naturally and use larger tap targets on mobile */}
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: isMobile ? 12 : 16,
-          }}
-        >
-          <Link to="/auctions" style={isMobile ? { padding: '4px 0', fontSize: 15 } : undefined}>Browse auctions</Link>
-          <Link to="/items" style={isMobile ? { padding: '4px 0', fontSize: 15 } : undefined}>Browse items</Link>
-          <Link to="/sellers" style={isMobile ? { padding: '4px 0', fontSize: 15 } : undefined}>Browse sellers</Link>
-          <Link to="/login" style={isMobile ? { padding: '4px 0', fontSize: 15 } : undefined}>Sign in</Link>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+          <Link to="/auctions">Browse auctions</Link>
+          <Link to="/items">Browse items</Link>
+          <Link to="/sellers">Browse sellers</Link>
+          <Link to="/login">Sign in</Link>
         </div>
       </Card>
     </div>

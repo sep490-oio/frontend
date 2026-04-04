@@ -187,7 +187,7 @@ export function usePlaceBid() {
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.auctions.bids(variables.auctionId) })
       qc.invalidateQueries({ queryKey: queryKeys.auctions.detail(variables.auctionId) })
-      qc.invalidateQueries({ queryKey: ['myBids'] })
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.myBids() })
     },
   })
 }
@@ -211,8 +211,9 @@ export function useUpdateWatcherPreferences() {
     mutationFn: async ({ auctionId, notifyOnBid, notifyOnEnd }: { auctionId: string; notifyOnBid?: boolean; notifyOnEnd?: boolean }) => {
       await apiClient.patch(`/auctions/${auctionId}/watch/preferences`, { notifyOnBid, notifyOnEnd })
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.auctions.watchlist() })
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.detail(variables.auctionId) })
     },
   })
 }
@@ -370,6 +371,21 @@ export function useResumeAutoBid() {
     },
     onSuccess: (_, auctionId) => {
       qc.invalidateQueries({ queryKey: queryKeys.auctions.myAutoBid(auctionId) })
+    },
+  })
+}
+
+// Cancel auto-bid
+export function useCancelAutoBid() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (auctionId: string) => {
+      await apiClient.post(`/auctions/${auctionId}/auto-bid/cancel`)
+    },
+    onSuccess: (_data, auctionId) => {
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.detail(auctionId) })
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.myBids() })
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.myAuctions() })
     },
   })
 }

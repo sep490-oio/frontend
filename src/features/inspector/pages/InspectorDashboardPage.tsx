@@ -12,26 +12,26 @@ import { useInspectionQueue, useStorageLocations } from '@/features/inspector/ap
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
-
-const SERIF_FONT = "'Noto Serif', Georgia, serif"
+import { SERIF_FONT } from '@/styles/tokens'
 
 const CATEGORY_PILLS = ['Tất cả', 'Đồng hồ', 'Thời trang', 'Nghệ thuật']
 
 export default function InspectorDashboardPage() {
   const navigate = useNavigate()
-  const [activePill, setActivePill] = useState('Tất cả')
   const { isMobile } = useBreakpoint()
+  const [activePill, setActivePill] = useState('Tất cả')
 
-  const { data: queue, isLoading: queueLoading } = useInspectionQueue({
+  const { data: queueData, isLoading: queueLoading } = useInspectionQueue({
     pageNumber: 1,
     pageSize: 5,
-    status: 'pending',
   })
-  const { data: completedToday, isLoading: completedLoading } = useInspectionQueue({
+  const { data: completedData, isLoading: completedLoading } = useInspectionQueue({
     pageNumber: 1,
-    pageSize: 1,
-    status: 'completed',
+    pageSize: 100,
+    status: 'awaiting_review',
   })
+  const queue = queueData?.items ?? []
+  const completedToday = completedData?.items ?? []
   const { data: locations, isLoading: locationsLoading } = useStorageLocations()
 
   const isLoading = queueLoading || completedLoading || locationsLoading
@@ -46,8 +46,8 @@ export default function InspectorDashboardPage() {
 
   const occupiedCount = locations?.filter((l) => l.isOccupied).length ?? 0
   const totalLocations = locations?.length ?? 0
-  const pendingCount = queue?.metadata?.totalCount ?? 0
-  const completedCount = completedToday?.metadata?.totalCount ?? 0
+  const pendingCount = queue?.length ?? 0
+  const completedCount = completedToday?.length ?? 0
 
   const statCards = [
     {
@@ -192,10 +192,10 @@ export default function InspectorDashboardPage() {
           </Button>
         </div>
 
-        {queue?.items?.length ? (
+        {queue?.length ? (
           <Row gutter={[16, 16]}>
-            {queue.items.map((item) => (
-              <Col xs={24} sm={12} md={8} lg={6} key={item.id}>
+            {queue.map((item) => (
+              <Col xs={24} sm={12} md={8} lg={6} key={item.inboundShipmentId}>
                 <div
                   style={{
                     borderRadius: 12,
@@ -269,21 +269,21 @@ export default function InspectorDashboardPage() {
                         marginBottom: 8,
                       }}
                     >
-                      {item.providerCode || item.id.slice(0, 8).toUpperCase()}
+                      {item.carrierTrackingNumber || item.inboundShipmentId.slice(0, 8).toUpperCase()}
                     </Typography.Text>
 
                     <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 4 }}>
                       <ClockCircleOutlined style={{ marginRight: 4 }} />
-                      {formatDateTime(item.arrivedAt)}
+                      {item.arrivedAt ? formatDateTime(item.arrivedAt) : '-'}
                     </div>
 
                     <div style={{ marginTop: 'auto', paddingTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <StatusBadge status={item.status} />
+                      <StatusBadge status={item.queueStatus} />
                       <Button
                         type="primary"
                         size="small"
                         icon={<EyeOutlined />}
-                        onClick={() => navigate(`/inspector/inspections/${item.id}`)}
+                        onClick={() => navigate(`/inspector/inspections/${item.inboundShipmentId}`)}
                         style={{
                           background: 'var(--color-accent)',
                           borderColor: 'var(--color-accent)',
@@ -314,7 +314,7 @@ export default function InspectorDashboardPage() {
           </Button>
         }
       >
-        {completedToday?.items?.length ? (
+        {completedToday?.length ? (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
@@ -326,12 +326,12 @@ export default function InspectorDashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {completedToday.items.map((item) => (
-                  <tr key={item.id} style={{ borderBottom: '1px solid var(--color-border-light)' }}>
+                {completedToday.map((item) => (
+                  <tr key={item.inboundShipmentId} style={{ borderBottom: '1px solid var(--color-border-light)' }}>
                     <td style={{ padding: '10px 12px', fontSize: 13 }}>{item.itemTitle}</td>
-                    <td style={{ padding: '10px 12px', fontSize: 13, color: 'var(--color-text-secondary)' }}>{item.sellerName}</td>
-                    <td style={{ padding: '10px 12px' }}><StatusBadge status={item.status} /></td>
-                    <td style={{ padding: '10px 12px', fontSize: 13, color: 'var(--color-text-secondary)' }}>{formatDateTime(item.arrivedAt)}</td>
+                    <td style={{ padding: '10px 12px', fontSize: 13, color: 'var(--color-text-secondary)' }}>{item.sellerId.slice(0, 8)}...</td>
+                    <td style={{ padding: '10px 12px' }}><StatusBadge status={item.queueStatus} /></td>
+                    <td style={{ padding: '10px 12px', fontSize: 13, color: 'var(--color-text-secondary)' }}>{item.arrivedAt ? formatDateTime(item.arrivedAt) : '-'}</td>
                   </tr>
                 ))}
               </tbody>

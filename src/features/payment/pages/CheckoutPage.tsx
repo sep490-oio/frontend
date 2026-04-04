@@ -29,12 +29,11 @@ import { useTermsGate } from '@/features/user/hooks/useTermsGate'
 import { useOrderById } from '@/features/order/api'
 import { usePaymentMethods, useCheckout, useCreateVnPayUrl, useWallet } from '@/features/payment/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
+import { CountdownTimer } from '@/components/ui/CountdownTimer'
 import { PaymentMethodType } from '@/types/enums'
 import { formatDateTime, formatCurrency } from '@/utils/format'
 import type { PaymentMethodDto } from '@/types'
-
-const SERIF_FONT = "'Noto Serif', Georgia, serif"
-const MONO_FONT = "'JetBrains Mono', monospace"
+import { SERIF_FONT, MONO_FONT } from '@/styles/tokens'
 
 const WALLET_METHOD_ID = '__wallet__'
 
@@ -77,15 +76,19 @@ export default function CheckoutPage() {
     if (bidderTerms.hasPending) { bidderTerms.redirect(); return }
     if (!order || order.status !== 'pending_payment') return
 
+    // Wallet payment
     if (isWalletSelected) {
       const paymentMethod = walletCoversAll ? 'wallet' : 'wallet_vnpay'
+
       checkout.mutate(
         { orderId: order.id, paymentMethod },
         {
           onSuccess: (data) => {
             if (data.paymentUrl) {
+              // Hybrid: redirect to VnPay for remainder
               window.location.href = data.paymentUrl
             } else {
+              // Full wallet: done
               message.success(t('paymentSuccess', 'Payment successful'))
               navigate(`/me/orders/${order.id}`)
             }
@@ -98,6 +101,7 @@ export default function CheckoutPage() {
       return
     }
 
+    // VnPay flow: redirect to VnPay (saved card or new card)
     if (selectedMethod?.type === PaymentMethodType.VnPay || selectedMethodId === '__vnpay_new__') {
       const isNewVnPay = selectedMethodId === '__vnpay_new__'
       createVnPayUrl.mutate(
@@ -122,6 +126,7 @@ export default function CheckoutPage() {
       return
     }
 
+    // Standard checkout for other methods
     checkout.mutate(
       { orderId: order.id, paymentMethod: selectedMethod?.type },
       {
@@ -178,6 +183,7 @@ export default function CheckoutPage() {
     )
   }
 
+  // Determine button text
   let payButtonText = t('payNow', 'Pay Now')
   if (isWalletSelected) {
     payButtonText = walletCoversAll
@@ -186,7 +192,6 @@ export default function CheckoutPage() {
   }
 
   return (
-    //  responsive fix: fluid padding on mobile, constrained max-width
     <div style={{ maxWidth: 720, margin: '0 auto', padding: isMobile ? '0 12px' : undefined }}>
       <Space style={{ marginBottom: 16 }}>
         <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(`/me/orders/${orderId}`)}>
@@ -200,19 +205,31 @@ export default function CheckoutPage() {
           fontWeight: 400,
           fontSize: isMobile ? 22 : 28,
           color: 'var(--color-text-primary)',
-          marginBottom: 24,
+          marginBottom: isMobile ? 16 : 24,
         }}
       >
         {t('checkout', 'Checkout')}
       </h1>
 
+      {/* Payment deadline countdown */}
+      {(order as any).paymentDueAt && (
+        <Alert
+          type="warning"
+          showIcon
+          style={{ marginBottom: 16 }}
+          message={
+            <span>
+              {t('paymentDeadline', 'Payment deadline')}: <CountdownTimer endTime={(order as any).paymentDueAt} size="small" />
+            </span>
+          }
+        />
+      )}
+
       {/* Order summary */}
       <Card style={{ marginBottom: 24 }}>
-        {/*  responsive fix: Descriptions column prop already responsive via xs:1, sm:2 */}
         <Descriptions column={{ xs: 1, sm: 2 }} size="small">
           <Descriptions.Item label={t('orderNumber', 'Order Number')}>
-            {/*  responsive fix: prevent long order numbers from overflowing */}
-            <span style={{ wordBreak: 'break-all' }}>{order.orderNumber}</span>
+            {order.orderNumber}
           </Descriptions.Item>
           <Descriptions.Item label={t('status', 'Status')}>
             <StatusBadge status={order.status} />
@@ -253,10 +270,9 @@ export default function CheckoutPage() {
                 borderBottom: '1px solid var(--color-border-light)',
               }}
             >
-              {/*  responsive fix: wrap Flex content on very narrow screens */}
-              <Flex align="flex-start" gap={12} wrap="wrap">
-                <WalletOutlined style={{ fontSize: 20, color: 'var(--color-accent)', marginTop: 2 }} />
-                <div style={{ flex: 1, minWidth: 0 }}>
+              <Flex align="center" gap={12}>
+                <WalletOutlined style={{ fontSize: 20, color: 'var(--color-accent)' }} />
+                <div>
                   <div style={{ fontWeight: 500 }}>
                     {t('walletPayment', 'Platform Wallet')}
                   </div>
@@ -281,7 +297,7 @@ export default function CheckoutPage() {
                   )}
                 </div>
                 {walletCoversAll && (
-                  <CheckCircleOutlined style={{ color: 'var(--color-success)', fontSize: 16 }} />
+                  <CheckCircleOutlined style={{ color: 'var(--color-success)', fontSize: 16, marginLeft: 'auto' }} />
                 )}
               </Flex>
             </Radio>
@@ -305,11 +321,10 @@ export default function CheckoutPage() {
                   value={method.id}
                   style={{ width: '100%', padding: '12px 0', borderBottom: '1px solid var(--color-border-light)' }}
                 >
-                  {/*  responsive fix: wrap method info on narrow screens */}
-                  <Flex align="center" gap={12} wrap="wrap">
+                  <Flex align="center" gap={12}>
                     {TYPE_ICONS[method.type] ?? <CreditCardOutlined />}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <span style={{ fontWeight: 500, wordBreak: 'break-word' }}>
+                    <div>
+                      <span style={{ fontWeight: 500 }}>
                         {method.maskedCardNumber ?? method.type.toUpperCase()}
                       </span>
                       {method.holderName && (
@@ -378,13 +393,7 @@ export default function CheckoutPage() {
 
       {/* Pay summary + button */}
       <Card style={{ background: 'var(--color-accent-light)' }}>
-        {/*  responsive fix: vertical layout on mobile, horizontal on desktop — already handled via isMobile prop */}
-        <Flex
-          justify="space-between"
-          align={isMobile ? 'stretch' : 'center'}
-          vertical={isMobile}
-          gap={isMobile ? 16 : 0}
-        >
+        <Flex justify="space-between" align={isMobile ? 'stretch' : 'center'} vertical={isMobile} gap={isMobile ? 16 : 0}>
           <div>
             <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 4 }}>
               {t('totalToPay', 'Total to pay')}
@@ -409,7 +418,7 @@ export default function CheckoutPage() {
               style={{
                 height: 48,
                 paddingInline: isMobile ? 16 : 32,
-                width: isMobile ? '100%' : undefined, //  responsive fix: full-width pay button on mobile
+                width: isMobile ? '100%' : undefined,
                 background: 'var(--color-accent)',
                 borderColor: 'var(--color-accent)',
                 fontWeight: 500,

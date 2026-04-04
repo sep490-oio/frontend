@@ -5,18 +5,7 @@ import { Link, useSearchParams } from 'react-router'
 import { useConfirmEmail, useResendConfirmEmail } from '@/features/auth/api'
 import type { AxiosError } from 'axios'
 import type { ApiError } from '@/types'
-
-const SERIF_FONT = "'Noto Serif', Georgia, serif"
-
-//  responsive fix: scoped mobile styles
-const mobileStyles = `
-  @media (max-width: 768px) {
-    .oio-confirm-heading { font-size: 20px !important; }
-    .oio-confirm-icon { width: 52px !important; height: 52px !important; }
-    .oio-confirm-btn-group { flex-direction: column !important; align-items: stretch !important; }
-    .oio-confirm-btn-group a, .oio-confirm-btn-group button { width: 100% !important; }
-  }
-`
+import { SERIF_FONT } from '@/styles/tokens'
 
 export default function ConfirmEmailPage() {
   const { t } = useTranslation('auth')
@@ -35,16 +24,14 @@ export default function ConfirmEmailPage() {
       calledRef.current = true
       confirmMutation.mutate({ userId, token })
     }
-  }, [userId, token, confirmMutation])
+  }, [userId, token])
 
   // Invalid link
   if (!userId || !token) {
     return (
       <div className="oio-fade-in" style={{ textAlign: 'center' }}>
-        {/*  responsive fix: inject scoped media query */}
-        <style>{mobileStyles}</style>
         <div style={{ fontSize: 48, marginBottom: 16, color: 'var(--color-danger)' }}>!</div>
-        <h2 className="oio-confirm-heading" style={{ fontFamily: SERIF_FONT, fontWeight: 400, fontSize: 24, color: 'var(--color-text-primary)', marginBottom: 8 }}>
+        <h2 style={{ fontFamily: SERIF_FONT, fontWeight: 400, fontSize: 24, color: 'var(--color-text-primary)', marginBottom: 8 }}>
           {t('confirmEmail.invalidLink', 'Link xác nhận không hợp lệ')}
         </h2>
         <p style={{ color: 'var(--color-text-secondary)', marginBottom: 24 }}>
@@ -63,7 +50,6 @@ export default function ConfirmEmailPage() {
   if (confirmMutation.isPending) {
     return (
       <div className="oio-fade-in" style={{ textAlign: 'center', padding: '48px 0' }}>
-        <style>{mobileStyles}</style>
         <Spin size="large" />
         <p style={{ color: 'var(--color-text-secondary)', marginTop: 16 }}>
           {t('confirmEmail.verifying', 'Đang xác nhận email...')}
@@ -76,13 +62,12 @@ export default function ConfirmEmailPage() {
   if (confirmMutation.isSuccess) {
     return (
       <div className="oio-fade-in" style={{ textAlign: 'center' }}>
-        <style>{mobileStyles}</style>
-        <div className="oio-confirm-icon" style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(74,124,89,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+        <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(74,124,89,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="20 6 9 17 4 12" />
           </svg>
         </div>
-        <h2 className="oio-confirm-heading" style={{ fontFamily: SERIF_FONT, fontWeight: 400, fontSize: 24, color: 'var(--color-text-primary)', marginBottom: 8 }}>
+        <h2 style={{ fontFamily: SERIF_FONT, fontWeight: 400, fontSize: 24, color: 'var(--color-text-primary)', marginBottom: 8 }}>
           {t('confirmEmail.success', 'Email đã được xác nhận!')}
         </h2>
         <p style={{ color: 'var(--color-text-secondary)', marginBottom: 32 }}>
@@ -122,20 +107,18 @@ export default function ConfirmEmailPage() {
 
     return (
       <div className="oio-fade-in" style={{ textAlign: 'center' }}>
-        <style>{mobileStyles}</style>
-        <div className="oio-confirm-icon" style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(196,81,61,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+        <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(196,81,61,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-danger)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         </div>
-        <h2 className="oio-confirm-heading" style={{ fontFamily: SERIF_FONT, fontWeight: 400, fontSize: 24, color: 'var(--color-text-primary)', marginBottom: 8 }}>
+        <h2 style={{ fontFamily: SERIF_FONT, fontWeight: 400, fontSize: 24, color: 'var(--color-text-primary)', marginBottom: 8 }}>
           {t('confirmEmail.error', 'Xác nhận thất bại')}
         </h2>
         <p style={{ color: 'var(--color-text-secondary)', marginBottom: 24 }}>
           {detail ?? t('confirmEmail.errorDesc', 'Token đã hết hạn hoặc không hợp lệ.')}
         </p>
-        {/*  responsive fix: stack buttons vertically on mobile */}
-        <div className="oio-confirm-btn-group" style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
           {email && (
             <Button onClick={handleResend} loading={resendMutation.isPending} style={{ borderColor: 'var(--color-accent)', color: 'var(--color-accent)' }}>
               {t('confirmEmail.resend', 'Gửi lại email')}

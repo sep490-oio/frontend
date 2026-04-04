@@ -1,23 +1,62 @@
 import * as signalR from '@microsoft/signalr'
-import { SIGNALR_URL, STORAGE_KEYS } from '@/utils/constants'
+import axios from 'axios'
+import { API_URL, SIGNALR_URL, STORAGE_KEYS } from '@/utils/constants'
+
+/**
+ * Attempt to refresh the access token using the stored refresh token.
+ * Returns the new access token, or empty string if refresh fails.
+ */
+async function ensureFreshToken(): Promise<string> {
+  const current = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN) ?? ''
+  if (!current) return ''
+
+  const refreshToken = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
+  if (!refreshToken) return current
+
+  try {
+    const { data } = await axios.post(`${API_URL}/auth/refresh`, { refreshToken })
+    const newAccessToken = data.accessToken as string
+    const newRefreshToken = data.refreshToken as string
+    localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, newAccessToken)
+    localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, newRefreshToken)
+    return newAccessToken
+  } catch {
+    // Refresh failed — return current token (may be expired)
+    return current
+  }
+}
 
 function createHubConnection(hubPath: string): signalR.HubConnection {
-  return new signalR.HubConnectionBuilder()
+  const connection = new signalR.HubConnectionBuilder()
     .withUrl(`${SIGNALR_URL}${hubPath}`, {
-      accessTokenFactory: () => localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN) ?? '',
+      accessTokenFactory: async () => {
+        const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
+        if (token) await ensureFreshToken()
+        return token ?? ''
+      },
     })
     .withAutomaticReconnect({
       nextRetryDelayInMilliseconds: (retryContext) => {
-        // Exponential backoff: 0s, 1s, 2s, 4s, 8s, 16s, max 30s
         const delay = Math.min(1000 * Math.pow(2, retryContext.previousRetryCount), 30000)
         return delay
       },
     })
     .configureLogging(signalR.LogLevel.Warning)
     .build()
+
+  // When connection closes with error (e.g. token expired),
+  // refresh token and restart after a short delay.
+  connection.onclose(async (error) => {
+    if (error) {
+      await ensureFreshToken()
+      setTimeout(() => void startConnection(connection), 3000)
+    }
+  })
+
+  return connection
 }
 
-let retryTimeoutId: ReturnType<typeof setTimeout> | null = null
+const retryTimeouts = new Map<signalR.HubConnection, ReturnType<typeof setTimeout>>()
 
 // Lazy-initialized hub connections
 let auctionHub: signalR.HubConnection | null = null
@@ -92,17 +131,21 @@ export async function startConnection(connection: signalR.HubConnection): Promis
   } catch (err) {
     console.error('SignalR connection error:', err)
     // Retry after 5 seconds
-    retryTimeoutId = setTimeout(() => {
+    const existing = retryTimeouts.get(connection)
+    if (existing) clearTimeout(existing)
+    retryTimeouts.set(connection, setTimeout(() => {
+      retryTimeouts.delete(connection)
       void startConnection(connection)
-    }, 5000)
+    }, 5000))
     return false
   }
 }
 
 export async function stopConnection(connection: signalR.HubConnection): Promise<void> {
-  if (retryTimeoutId) {
-    clearTimeout(retryTimeoutId)
-    retryTimeoutId = null
+  const existing = retryTimeouts.get(connection)
+  if (existing) {
+    clearTimeout(existing)
+    retryTimeouts.delete(connection)
   }
   if (connection.state !== signalR.HubConnectionState.Disconnected) {
     await connection.stop()
