@@ -143,3 +143,9 @@ vite.config.ts.timestamp-*
 
 # OMC
 .omc/
+
+# E2E test artifacts
+e2e/
+
+# Figma reference images
+figma-reference/
