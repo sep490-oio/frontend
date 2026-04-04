@@ -14,8 +14,14 @@ import {
   Alert,
   Image,
   Tag,
+  Steps,
 } from 'antd'
-import { ArrowLeftOutlined, SafetyCertificateOutlined } from '@ant-design/icons'
+import {
+  ArrowLeftOutlined,
+  SafetyCertificateOutlined,
+  LoadingOutlined,
+  CheckCircleOutlined,
+} from '@ant-design/icons'
 import { useNavigate, useSearchParams, useParams } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
 import { useTranslation } from 'react-i18next'
@@ -29,8 +35,7 @@ import { AuctionTimingSection } from '@/features/auction/components/AuctionTimin
 import { AuctionType, ItemCondition } from '@/types/enums'
 import { DEFAULT_CURRENCY } from '@/utils/constants'
 import type { CreateAuctionRequest } from '@/features/auction/api'
-
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
+import { SERIF_FONT } from '@/styles/tokens'
 
 interface FormValues {
   title: string
@@ -114,6 +119,11 @@ export default function CreateAuctionPage() {
   const [capturedPhotos, setCapturedPhotos] = useState<CapturedPhoto[]>([])
   const [requireVerification, setRequireVerification] = useState(false)
   const [selectedCondition, setSelectedCondition] = useState<string | null>(null)
+
+  // Submission state for partial failure recovery
+  const [submissionStep, setSubmissionStep] = useState<string | null>(null)
+  const [submissionError, setSubmissionError] = useState<string | null>(null)
+  const [partialAuctionId, setPartialAuctionId] = useState<string | null>(null)
 
   const isFromItem = !!itemId && !!existingItem && !itemError
   const hideItemFields = isFromItem || isEditMode
@@ -249,6 +259,32 @@ export default function CreateAuctionPage() {
     }
   }
 
+  // Retry from the last failed step
+  const handleRetry = async () => {
+    if (!partialAuctionId || !submissionStep) return
+    setSubmissionError(null)
+    try {
+      const values = form.getFieldsValue()
+      if (submissionStep === 'timing') {
+        setSubmissionStep('timing')
+        await applyTiming(partialAuctionId, values)
+        setSubmissionStep('submitting')
+        await submitAuction.mutateAsync(partialAuctionId)
+        message.success(t('auctionScheduled', 'Auction scheduled successfully!'))
+        setSubmissionStep(null)
+        navigate(`${prefix}/auctions`)
+      } else if (submissionStep === 'submit') {
+        setSubmissionStep('submitting')
+        await submitAuction.mutateAsync(partialAuctionId)
+        message.success(t('auctionScheduled', 'Auction scheduled successfully!'))
+        setSubmissionStep(null)
+        navigate(`${prefix}/auctions`)
+      }
+    } catch {
+      setSubmissionError(t('retryFailed', 'Retry failed. Please try again or go to My Auctions.'))
+    }
+  }
+
   // Continue: create auction, set timing, submit item/auction
   const onFinish = async (values: FormValues) => {
     if (!hideItemFields && capturedPhotos.length === 0) {
@@ -256,8 +292,14 @@ export default function CreateAuctionPage() {
       return
     }
 
+    // Clear previous partial failure state
+    setSubmissionError(null)
+    setSubmissionStep(null)
+    setPartialAuctionId(null)
+
     try {
       if (isEditMode) {
+        setSubmissionStep('updating')
         const pricingFields = {
           auctionId: editId!,
           startingPrice: values.startingPrice,
@@ -271,21 +313,29 @@ export default function CreateAuctionPage() {
         await updateAuction.mutateAsync(pricingFields)
         // Apply timing if provided
         if (hasTimingValues(values)) {
+          setSubmissionStep('timing')
           try {
             await applyTiming(editId!, values)
           } catch {
-            message.warning(t('updatedTimingFailed', 'Auction updated but timing not set. You can configure timing later.'))
-            navigate(`${prefix}/auctions`)
+            setSubmissionStep(null)
+            setSubmissionError(t('updatedTimingFailed', 'Auction updated but timing not set. You can configure timing later.'))
+            setPartialAuctionId(editId!)
             return
           }
         }
+        setSubmissionStep('submitting')
         try {
           await submitAuction.mutateAsync(editId!)
           message.success(t('auctionUpdatedAndSubmitted', 'Auction updated and submitted successfully!'))
+          setSubmissionStep(null)
         } catch {
-          message.warning(t('updatedSubmitFailed', 'Auction updated but submission failed. Submit from My Auctions.'))
+          setSubmissionStep(null)
+          setSubmissionError(t('updatedSubmitFailed', 'Auction updated but submission failed. Submit from My Auctions.'))
+          setPartialAuctionId(editId!)
+          return
         }
       } else if (isFromItem) {
+        setSubmissionStep('creating')
         const result = await createAuctionFromItem.mutateAsync({
           itemId: itemId!,
           startingPrice: values.startingPrice,
@@ -296,40 +346,57 @@ export default function CreateAuctionPage() {
           currency: values.currency,
           auctionType: values.auctionType,
         })
+        setPartialAuctionId(result.id)
         // Chain: timing → submit auction (item already approved → goes to Scheduled)
         if (hasTimingValues(values)) {
+          setSubmissionStep('timing')
           try {
             await applyTiming(result.id, values)
-            try {
-              await submitAuction.mutateAsync(result.id)
-              message.success(t('auctionScheduled', 'Auction scheduled successfully!'))
-            } catch {
-              message.warning(t('timingSetSubmitFailed', 'Auction created with timing but submission failed. Submit from My Auctions.'))
-            }
           } catch {
-            message.warning(t('createdTimingFailed', 'Auction created but timing not set. Configure timing in My Auctions.'))
+            setSubmissionStep(null)
+            setSubmissionError(t('createdTimingFailed', 'Auction created but timing not set. Configure timing in My Auctions.'))
+            return
+          }
+          setSubmissionStep('submitting')
+          try {
+            await submitAuction.mutateAsync(result.id)
+            message.success(t('auctionScheduled', 'Auction scheduled successfully!'))
+            setSubmissionStep(null)
+          } catch {
+            setSubmissionStep(null)
+            setSubmissionError(t('timingSetSubmitFailed', 'Auction created with timing but submission failed. Submit from My Auctions.'))
+            return
           }
         } else {
           message.success(t('auctionCreated', 'Auction created successfully'))
+          setSubmissionStep(null)
         }
       } else {
+        setSubmissionStep('uploading')
         const uploadedImages2 = await uploadCapturedPhotos()
+        setSubmissionStep('creating')
         const payload = buildPayload(values, uploadedImages2)
         const result = await createAuction.mutateAsync(payload)
+        setPartialAuctionId(result.id)
         // Auto-submit item for admin review
+        setSubmissionStep('submitting')
         try {
           await submitItemMutation.mutateAsync({
             id: result.itemId,
             verifyByPlatform: payload.verifyByPlatform ?? false,
           })
           message.success(t('itemSubmitted', 'Auction created and item submitted for review'))
+          setSubmissionStep(null)
         } catch {
-          // Draft saved but submission failed — warn but don't block
-          message.warning(t('draftSavedSubmitFailed', 'Draft saved but item submission failed. You can submit from My Auctions.'))
+          // Draft saved but submission failed — stay on page, show retry
+          setSubmissionStep(null)
+          setSubmissionError(t('draftSavedSubmitFailed', 'Draft saved but item submission failed. You can submit from My Auctions.'))
+          return
         }
       }
       navigate(`${prefix}/auctions`)
     } catch {
+      setSubmissionStep(null)
       message.error(t('createError', 'Failed to create auction'))
     }
   }
@@ -364,6 +431,66 @@ export default function CreateAuctionPage() {
 
   const pricingSectionNumber = hideItemFields ? 1 : 3
 
+  // Steps config
+  const isSubmitting = !!submissionStep
+  const stepsItems = hideItemFields
+    ? [
+        {
+          title: t('stepPricing', 'Pricing & Time'),
+          status: (submissionStep === 'updating' || submissionStep === 'timing'
+            ? 'process'
+            : 'wait') as 'process' | 'wait' | 'finish',
+          icon: (submissionStep === 'updating' || submissionStep === 'timing') ? <LoadingOutlined /> : undefined,
+        },
+        {
+          title: t('stepSubmit', 'Submit'),
+          status: (submissionStep === 'submitting'
+            ? 'process'
+            : submissionStep === null && !submissionError
+              ? 'wait'
+              : 'wait') as 'process' | 'wait' | 'finish',
+          icon: submissionStep === 'submitting' ? <LoadingOutlined /> : undefined,
+        },
+      ]
+    : [
+        {
+          title: t('stepItemDetails', 'Item Details'),
+          status: 'wait' as const,
+        },
+        {
+          title: t('stepPhotos', 'Photos'),
+          status: (submissionStep === 'uploading'
+            ? 'process'
+            : capturedPhotos.length > 0
+              ? 'finish'
+              : 'wait') as 'process' | 'wait' | 'finish',
+          icon: submissionStep === 'uploading' ? <LoadingOutlined /> : capturedPhotos.length > 0 ? <CheckCircleOutlined /> : undefined,
+        },
+        {
+          title: t('stepPricing', 'Pricing & Time'),
+          status: (submissionStep === 'timing'
+            ? 'process'
+            : 'wait') as 'process' | 'wait' | 'finish',
+          icon: submissionStep === 'timing' ? <LoadingOutlined /> : undefined,
+        },
+        {
+          title: t('stepSubmit', 'Submit'),
+          status: (submissionStep === 'creating' || submissionStep === 'submitting'
+            ? 'process'
+            : 'wait') as 'process' | 'wait' | 'finish',
+          icon: (submissionStep === 'creating' || submissionStep === 'submitting') ? <LoadingOutlined /> : undefined,
+        },
+      ]
+
+  // Step label while submitting
+  const stepStatusText: Record<string, string> = {
+    uploading: t('stepStatusUploading', 'Uploading photos...'),
+    creating: t('stepStatusCreating', 'Creating auction...'),
+    timing: t('stepStatusTiming', 'Setting timing...'),
+    submitting: t('stepStatusSubmitting', 'Submitting...'),
+    updating: t('stepStatusUpdating', 'Updating auction...'),
+  }
+
   return (
     <div style={{ maxWidth: 720, margin: '0 auto' }}>
       <Space style={{ marginBottom: 16 }}>
@@ -378,6 +505,47 @@ export default function CreateAuctionPage() {
       >
         {isEditMode ? t('editAuction', 'Edit Auction') : t('createAuction', 'Tạo đấu giá mới')}
       </Typography.Title>
+
+      {/* ══════════════ Steps Progress Indicator ══════════════ */}
+      <Card style={{ borderRadius: 12, border: '1px solid var(--color-border)', marginBottom: 16 }}>
+        <Steps
+          size="small"
+          items={stepsItems}
+          style={{ padding: '4px 0' }}
+        />
+        {isSubmitting && submissionStep && stepStatusText[submissionStep] && (
+          <div style={{ textAlign: 'center', marginTop: 8, fontSize: 13, color: 'var(--color-text-secondary)' }}>
+            {stepStatusText[submissionStep]}
+          </div>
+        )}
+      </Card>
+
+      {/* ══════════════ Partial Failure Alert ══════════════ */}
+      {submissionError && (
+        <Alert
+          type="warning"
+          showIcon
+          message={t('partialFailureTitle', 'Submission partially completed')}
+          description={submissionError}
+          style={{ marginBottom: 16, borderRadius: 8 }}
+          action={
+            partialAuctionId && (submissionStep === null) ? (
+              <Space direction="vertical" size={4}>
+                <Button size="small" type="primary" onClick={handleRetry} style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}>
+                  {t('retry', 'Retry')}
+                </Button>
+                <Button size="small" onClick={() => navigate(`${prefix}/auctions`)}>
+                  {t('goToMyAuctions', 'Go to My Auctions')}
+                </Button>
+              </Space>
+            ) : (
+              <Button size="small" onClick={() => navigate(`${prefix}/auctions`)}>
+                {t('goToMyAuctions', 'Go to My Auctions')}
+              </Button>
+            )
+          }
+        />
+      )}
 
       {/* ══════════════ Item Preview (from existing item or edit mode) ══════════════ */}
       {(isFromItem || (isEditMode && existingItemForPreview)) && existingItemForPreview && (
@@ -588,7 +756,7 @@ export default function CreateAuctionPage() {
             />
           </Form.Item>
 
-          <Form.Item name="currency" label={t('currency', 'Currency')}>
+          <Form.Item name="currency" hidden>
             <Input />
           </Form.Item>
 

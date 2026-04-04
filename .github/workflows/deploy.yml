@@ -3,7 +3,7 @@ name: Deploy Frontend
 # Auto-deploy when code is pushed to master
 on:
   push:
-    branches: [master]
+    branches: [test]
 
 env:
   IMAGE: ghcr.io/sep490-oio/frontend
@@ -39,6 +39,7 @@ jobs:
           build-args: |
             VITE_API_URL=${{ vars.VITE_API_URL || 'https://api.newlsun.com/api' }}
             VITE_SIGNALR_URL=${{ vars.VITE_SIGNALR_URL || 'https://api.newlsun.com/hubs' }}
+            VITE_ALLOW_UPLOAD=${{ vars.VITE_ALLOW_UPLOAD }}
 
       - name: Deploy to VPS
         run: |

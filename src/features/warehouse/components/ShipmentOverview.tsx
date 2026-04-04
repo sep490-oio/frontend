@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { getProviderLabel, getModeLabel, formatWeight } from '../utils/shipmentLabels'
 import { formatCurrency, formatDateTime } from '@/utils/format'
+import { MONO_FONT } from '@/styles/tokens'
 
 interface TrackingEvent {
   status: string
@@ -12,7 +13,14 @@ interface TrackingEvent {
   notes?: string
 }
 
+interface ItemInfo {
+  title: string
+  imageUrl?: string
+  condition?: string
+}
+
 interface ShipmentOverviewProps {
+  itemInfo?: ItemInfo
   shipment: {
     clientOrderCode: string
     itemId?: string
@@ -51,7 +59,7 @@ function StatRow({ label, value }: { label: string; value: React.ReactNode }) {
   )
 }
 
-export function ShipmentOverview({ shipment, currency = 'VND' }: ShipmentOverviewProps) {
+export function ShipmentOverview({ shipment, itemInfo, currency = 'VND' }: ShipmentOverviewProps) {
   const { t } = useTranslation('warehouse')
   const { message } = App.useApp()
 
@@ -66,6 +74,29 @@ export function ShipmentOverview({ shipment, currency = 'VND' }: ShipmentOvervie
 
   return (
     <>
+      {/* Item Info */}
+      {itemInfo && (
+        <Card title={t('overview.itemInfo', 'Item Information')} size="small" style={{ marginBottom: 16 }}>
+          <Flex gap={12} align="start">
+            {itemInfo.imageUrl && (
+              <img
+                src={itemInfo.imageUrl}
+                alt={itemInfo.title}
+                style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8, flexShrink: 0 }}
+              />
+            )}
+            <Flex vertical gap={4} style={{ flex: 1 }}>
+              <Typography.Text strong style={{ fontSize: 14 }}>{itemInfo.title}</Typography.Text>
+              {itemInfo.condition && (
+                <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                  {t('overview.declaredCondition', 'Declared condition')}: {itemInfo.condition}
+                </Typography.Text>
+              )}
+            </Flex>
+          </Flex>
+        </Card>
+      )}
+
       {/* Overview */}
       <Card size="small" style={{ marginBottom: 12 }}>
         <Typography.Text strong style={{ fontSize: 14, display: 'block', marginBottom: 8 }}>
@@ -90,7 +121,7 @@ export function ShipmentOverview({ shipment, currency = 'VND' }: ShipmentOvervie
             label={t('itemRef', 'Item Ref')}
             value={
               <Flex align="center" gap={4}>
-                <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 11 }}>{shipment.itemId}</span>
+                <span style={{ fontFamily: MONO_FONT, fontSize: 11 }}>{shipment.itemId}</span>
                 <Button
                   type="text"
                   size="small"

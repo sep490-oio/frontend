@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { getProviderLabel, getModeLabel, getNextStepMessage } from '../utils/shipmentLabels'
 import { formatDateTime } from '@/utils/format'
+import { MONO_FONT } from '@/styles/tokens'
 
 interface ShipmentHeaderProps {
   clientOrderCode: string
@@ -14,9 +15,11 @@ interface ShipmentHeaderProps {
   shipmentMode?: string
   externalCarrierName?: string
   updatedAt?: string
+  backTo?: string
+  backLabel?: string
 }
 
-export function ShipmentHeader({ clientOrderCode, status, providerCode, shipmentMode, externalCarrierName, updatedAt }: ShipmentHeaderProps) {
+export function ShipmentHeader({ clientOrderCode, status, providerCode, shipmentMode, externalCarrierName, updatedAt, backTo, backLabel }: ShipmentHeaderProps) {
   const { t } = useTranslation('warehouse')
   const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
@@ -28,13 +31,13 @@ export function ShipmentHeader({ clientOrderCode, status, providerCode, shipment
 
   return (
     <div style={{ marginBottom: 20 }}>
-      <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate(`${prefix}/warehouse/inbound`)} style={{ marginBottom: 8 }}>
-        {tc('action.back', 'Back')}
+      <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate(backTo ?? `${prefix}/warehouse/inbound`)} style={{ marginBottom: 8 }}>
+        {backLabel ?? tc('action.back', 'Back')}
       </Button>
 
       <Flex justify="space-between" align="center" wrap="wrap" gap={12} style={{ marginBottom: 8 }}>
         <Flex align="center" gap={12}>
-          <Typography.Title level={3} style={{ margin: 0, fontFamily: "'DM Mono', monospace" }}>
+          <Typography.Title level={3} style={{ margin: 0, fontFamily: MONO_FONT }}>
             {clientOrderCode}
           </Typography.Title>
           <Button

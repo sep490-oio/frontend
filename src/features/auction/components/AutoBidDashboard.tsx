@@ -27,8 +27,10 @@ interface AutoBidDashboardProps {
   onResume: () => Promise<void>
   onModify: () => void
   onCancel: () => Promise<void>
+  onCancelAutoBid: () => Promise<void>
   isPauseLoading: boolean
   isResumeLoading: boolean
+  isCancelLoading?: boolean
 }
 
 function getBudgetColor(percent: number): string {
@@ -44,8 +46,10 @@ export function AutoBidDashboard({
   onResume,
   onModify,
   onCancel,
+  onCancelAutoBid,
   isPauseLoading,
   isResumeLoading,
+  isCancelLoading,
 }: AutoBidDashboardProps) {
   const { t } = useTranslation('auction')
 
@@ -195,25 +199,43 @@ export function AutoBidDashboard({
 
       {/* Action buttons */}
       {!isTerminal && (
-        <Flex gap={12}>
+        <Flex gap={12} wrap="wrap">
           <Button icon={<EditOutlined />} onClick={onModify}>
             {t('autoBid.modify', 'Modify')}
           </Button>
-          <Popconfirm
-            title={t('autoBid.cancelTitle', 'Cancel Auto-Bid')}
-            description={t(
-              'autoBid.cancelWarning',
-              'Cancelling will release any held wallet funds back to your available balance. This action cannot be undone.',
-            )}
-            onConfirm={onCancel}
-            okText={t('common.confirm', 'Confirm')}
-            cancelText={t('common.cancel', 'Cancel')}
-            okButtonProps={{ danger: true }}
-          >
-            <Button danger icon={<CloseCircleOutlined />}>
-              {t('autoBid.cancel', 'Cancel Auto-Bid')}
-            </Button>
-          </Popconfirm>
+          {isActive && (
+            <Popconfirm
+              title={t('autoBid.pauseTitle', 'Pause Auto-Bid')}
+              description={t(
+                'autoBid.pauseWarning',
+                'Pausing will stop automatic bids but keep your funds held. You can resume anytime.',
+              )}
+              onConfirm={onPause}
+              okText={t('common.confirm', 'Confirm')}
+              cancelText={t('common.cancel', 'Cancel')}
+            >
+              <Button icon={<PauseCircleOutlined />} loading={isPauseLoading}>
+                {t('autoBid.pause', 'Pause Auto-Bid')}
+              </Button>
+            </Popconfirm>
+          )}
+          {(isActive || isPaused) && (
+            <Popconfirm
+              title={t('autoBid.cancelTitle', 'Cancel Auto-Bid')}
+              description={t(
+                'autoBid.cancelWarning',
+                'Cancelling will permanently stop auto-bidding and release held funds back to your wallet. This cannot be undone.',
+              )}
+              onConfirm={onCancelAutoBid}
+              okText={t('common.confirm', 'Confirm')}
+              cancelText={t('common.cancel', 'Cancel')}
+              okButtonProps={{ danger: true }}
+            >
+              <Button danger icon={<CloseCircleOutlined />} loading={isCancelLoading}>
+                {t('autoBid.cancel', 'Cancel Auto-Bid')}
+              </Button>
+            </Popconfirm>
+          )}
         </Flex>
       )}
     </div>

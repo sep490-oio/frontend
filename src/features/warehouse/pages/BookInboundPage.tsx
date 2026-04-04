@@ -1,4 +1,4 @@
-import { Typography, Form, Input, Select, InputNumber, Button, Card, Space, App, Divider } from 'antd'
+import { Typography, Form, Input, Select, InputNumber, Button, Card, Space, App, Divider, Alert } from 'antd'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
@@ -12,9 +12,10 @@ const SHIPMENT_MODE_OPTIONS = [
   { label: 'External Carrier', value: 'external_carrier' },
 ]
 
-const PROVIDER_OPTIONS = [
-  { label: 'GHN (Giao Hang Nhanh)', value: 'ghn' },
-  { label: 'External Carrier', value: 'external' },
+const GHN_HANDLING_OPTIONS = [
+  { label: 'Cho thử hàng', value: 'CHOTHUHANG' },
+  { label: 'Cho xem hàng không thử', value: 'CHOXEMHANGKHONGTHU' },
+  { label: 'Không cho xem hàng', value: 'KHONGCHOXEMHANG' },
 ]
 
 export default function BookInboundPage() {
@@ -29,13 +30,17 @@ export default function BookInboundPage() {
   const bookInbound = useBookInbound()
   const { data: itemsData, isLoading: itemsLoading } = useMyItems({ pageNumber: 1, pageSize: 100 })
 
-  const itemOptions = (itemsData?.items ?? []).map((item) => ({
+  const allItems = itemsData?.items ?? []
+  const itemOptions = allItems.map((item) => ({
     label: item.title,
     value: item.id,
   }))
 
+  const shipmentMode = Form.useWatch('shipmentMode', form)
+  const isExternal = shipmentMode === 'external_carrier'
+
   const onFinish = async (values: {
-    itemId: string
+    itemIds: string[]
     shipmentMode: string
     externalCarrierName?: string
     senderName: string
@@ -50,32 +55,44 @@ export default function BookInboundPage() {
     height: number
     insuranceValue?: number
     notes?: string
+    ghnHandlingNote?: string
   }) => {
-    const selectedItem = (itemsData?.items ?? []).find((i) => i.id === values.itemId)
-    const isExternal = values.shipmentMode === 'external_carrier'
+    const isExt = values.shipmentMode === 'external_carrier'
+
+    const items = values.itemIds.map((itemId) => {
+      const item = allItems.find((i) => i.id === itemId)
+      return {
+        itemId,
+        itemPrice: (item as any)?.price ?? 0,
+        weightGrams: values.weight,
+      }
+    })
+
+    const totalInsurance = values.insuranceValue ?? items.reduce((sum, i) => sum + (i.itemPrice ?? 0), 0)
+
     try {
-      const result = await bookInbound.mutateAsync({
-        itemId: values.itemId,
-        itemName: selectedItem?.title ?? 'Item',
-        itemPrice: (selectedItem as any)?.price ?? 0,
-        insuranceValue: values.insuranceValue ?? (selectedItem as any)?.price ?? 0,
-        providerCode: isExternal ? 'external' : 'ghn',
+      const results = await bookInbound.mutateAsync({
+        items,
+        weightGrams: values.weight,
+        insuranceValue: totalInsurance,
+        providerCode: isExt ? 'external' : 'ghn',
         shipmentMode: values.shipmentMode,
-        externalCarrierName: isExternal ? values.externalCarrierName : undefined,
+        externalCarrierName: isExt ? values.externalCarrierName : undefined,
         senderName: values.senderName,
         senderPhone: values.senderPhone,
         senderAddress: values.senderAddress,
         senderWard: values.senderWard,
         senderDistrict: values.senderDistrict,
         senderProvince: values.senderProvince,
-        weightGrams: values.weight,
         lengthCm: values.length,
         widthCm: values.width,
         heightCm: values.height,
         notes: values.notes,
+        ghnHandlingNote: isExt ? undefined : values.ghnHandlingNote,
       })
       message.success(t('bookSuccess', 'Inbound shipment booked successfully'))
-      navigate(`${prefix}/warehouse/inbound/${result.id}`)
+      const firstResult = results[0]
+      navigate(`${prefix}/warehouse/inbound/${firstResult.id}`)
     } catch {
       message.error(t('bookError', 'Failed to book inbound shipment'))
     }
@@ -96,35 +113,25 @@ export default function BookInboundPage() {
           form={form}
           layout="vertical"
           onFinish={onFinish}
-          initialValues={{ weight: 1, length: 10, width: 10, height: 10 }}
+          initialValues={{ weight: 1, length: 10, width: 10, height: 10, shipmentMode: 'platform_managed' }}
         >
-          {/* Item Selection */}
+          {/* Item Selection — multi-select */}
           <Form.Item
-            name="itemId"
-            label={t('selectItem', 'Select Item')}
-            rules={[{ required: true, message: t('itemRequired', 'Please select an item') }]}
+            name="itemIds"
+            label={t('selectItems', 'Select Items')}
+            rules={[{ required: true, message: t('itemRequired', 'Please select at least one item') }]}
           >
             <Select
+              mode="multiple"
               options={itemOptions}
               loading={itemsLoading}
               showSearch
               optionFilterProp="label"
-              placeholder={t('selectItemPlaceholder', 'Search and select an item')}
+              placeholder={t('selectItemsPlaceholder', 'Search and select items to ship')}
             />
           </Form.Item>
 
-          {/* Shipping Settings */}
-          <Form.Item
-            name="providerCode"
-            label={t('provider', 'Shipping Provider')}
-            rules={[{ required: true, message: t('providerRequired', 'Please select a provider') }]}
-          >
-            <Select
-              options={PROVIDER_OPTIONS}
-              placeholder={t('selectProvider', 'Select shipping provider')}
-            />
-          </Form.Item>
-
+          {/* Shipment Mode */}
           <Form.Item
             name="shipmentMode"
             label={t('shipmentMode', 'Shipment Mode')}
@@ -135,6 +142,31 @@ export default function BookInboundPage() {
               placeholder={t('selectMode', 'Select shipment mode')}
             />
           </Form.Item>
+
+          {/* External Carrier Name — only when external */}
+          {isExternal && (
+            <Form.Item
+              name="externalCarrierName"
+              label={t('externalCarrierName', 'Carrier Name')}
+              rules={[{ required: true, message: t('carrierNameRequired', 'Please enter the carrier name') }]}
+            >
+              <Input placeholder={t('carrierNamePlaceholder', 'e.g. DHL, FedEx, Viettel Post')} />
+            </Form.Item>
+          )}
+
+          {/* GHN Handling Note — only when platform managed */}
+          {!isExternal && (
+            <Form.Item
+              name="ghnHandlingNote"
+              label={t('ghnHandlingNote', 'GHN Handling Note')}
+            >
+              <Select
+                options={GHN_HANDLING_OPTIONS}
+                placeholder={t('ghnHandlingPlaceholder', 'Select handling preference (optional)')}
+                allowClear
+              />
+            </Form.Item>
+          )}
 
           <Divider>{t('senderInfo', 'Sender Information')}</Divider>
 
@@ -163,6 +195,15 @@ export default function BookInboundPage() {
           </Form.Item>
 
           <Divider>{t('dimensions', 'Package Dimensions')}</Divider>
+
+          {isExternal && (
+            <Alert
+              type="info"
+              showIcon
+              style={{ marginBottom: 16 }}
+              message={t('externalDimensionsNote', 'Enter the total package dimensions for all items.')}
+            />
+          )}
 
           <div style={{
             display: 'grid',
@@ -201,6 +242,14 @@ export default function BookInboundPage() {
               <InputNumber min={1} max={200} style={{ width: '100%' }} />
             </Form.Item>
           </div>
+
+          <Form.Item
+            name="insuranceValue"
+            label={t('insuranceValue', 'Insurance Value (VND)')}
+            help={t('insuranceHelp', 'Leave empty to use total item price')}
+          >
+            <InputNumber min={0} style={{ width: '100%' }} placeholder="0" />
+          </Form.Item>
 
           <Form.Item
             name="notes"

@@ -43,6 +43,7 @@ export interface AuctionPriceHeaderProps {
   onWatch: () => void
   watchLoading: boolean
   onCountdownEnd?: () => void
+  serverTimeOffset?: number
 }
 
 export const AuctionPriceHeader: React.FC<AuctionPriceHeaderProps> = ({
@@ -61,6 +62,7 @@ export const AuctionPriceHeader: React.FC<AuctionPriceHeaderProps> = ({
   onWatch,
   watchLoading,
   onCountdownEnd,
+  serverTimeOffset = 0,
 }) => {
   const { t } = useTranslation()
 
@@ -157,6 +159,7 @@ export const AuctionPriceHeader: React.FC<AuctionPriceHeaderProps> = ({
               endTime={endTime}
               size="large"
               onEnd={onCountdownEnd}
+              serverTimeOffset={serverTimeOffset}
             />
           </div>
         )}
@@ -170,6 +173,7 @@ export const AuctionPriceHeader: React.FC<AuctionPriceHeaderProps> = ({
               endTime={auction.startTime}
               size="large"
               onEnd={onCountdownEnd}
+              serverTimeOffset={serverTimeOffset}
             />
           </div>
         )}

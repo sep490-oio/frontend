@@ -79,7 +79,7 @@ export function useSellerReviews(sellerId: string, params?: { pageNumber?: numbe
   return useQuery({
     queryKey: [...queryKeys.seller.all, sellerId, 'reviews', params],
     queryFn: async () => {
-      const res = await apiClient.get(`/api/sellers/${sellerId}/reviews`, { params })
+      const res = await apiClient.get(`/sellers/${sellerId}/reviews`, { params })
       return res.data
     },
     enabled: !!sellerId,

@@ -103,6 +103,7 @@ export interface BidDto {
   id: string
   auctionId: string
   bidderId: string
+  bidderDisplayName?: string
   amount: MoneyDto
   isAutoBid: boolean
   status: BidStatus
@@ -277,7 +278,6 @@ export interface AuctionFilterParams {
   minPrice?: number
   maxPrice?: number
   sortBy?: string
-  sortOrder?: 'asc' | 'desc'
   pageNumber?: number
   pageSize?: number
 }

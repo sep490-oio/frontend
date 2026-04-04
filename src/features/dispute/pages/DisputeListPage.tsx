@@ -3,6 +3,8 @@ import { Typography, Tag, Select, Space, Button } from 'antd'
 import { EyeOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
+import * as signalR from '@microsoft/signalr'
+import { getDisputeHub } from '@/lib/signalr'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { useDisputes } from '@/features/dispute/api'
 import type { DisputeFilterParams } from '@/features/dispute/api'
@@ -51,7 +53,9 @@ export default function DisputeListPage() {
     pageSize: 10,
   })
 
-  const { data, isLoading } = useDisputes(filters, { refetchInterval: 30000 })
+  // Only poll when SignalR is disconnected — hub pushes updates in realtime when connected
+  const hubConnected = getDisputeHub().state === signalR.HubConnectionState.Connected
+  const { data, isLoading } = useDisputes(filters, { refetchInterval: hubConnected ? undefined : 30000 })
 
   const handleTableChange = (pagination: TablePaginationConfig) => {
     setFilters((prev) => ({

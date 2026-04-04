@@ -1,4 +1,5 @@
-import { Form, Input, InputNumber } from 'antd'
+import { useState } from 'react'
+import { Form, Input, InputNumber, Select, Row, Col, Divider, Typography } from 'antd'
 import { useTranslation } from 'react-i18next'
 
 export interface ShippingDetailsFormValues {
@@ -10,40 +11,153 @@ export interface ShippingDetailsFormValues {
   senderProvince: string
   weightGrams: number
   insuranceValue: number
+  providerCode?: string
+  lengthCm?: number
+  widthCm?: number
+  heightCm?: number
+  externalTrackingNumber?: string
+  externalCarrierName?: string
+  notes?: string
 }
 
 interface ShippingDetailsFormProps {
   form: ReturnType<typeof Form.useForm<ShippingDetailsFormValues>>[0]
 }
 
+const SHIPPING_MODE_OPTIONS = [
+  { value: 'platform', label: 'GHN (Giao Hàng Nhanh)' },
+  { value: 'external', label: 'Tự vận chuyển / Hãng khác' },
+]
+
 export default function ShippingDetailsForm({ form }: ShippingDetailsFormProps) {
   const { t } = useTranslation('warehouse')
+  const [shippingMode, setShippingMode] = useState<string>('platform')
 
   return (
     <Form form={form} layout="vertical" requiredMark>
-      <Form.Item name="senderName" label={t('senderName', 'Tên người gửi')} rules={[{ required: true, message: t('senderNameRequired', 'Vui lòng nhập tên người gửi') }]}>
-        <Input placeholder={t('senderNamePlaceholder', 'Nhập tên người gửi')} />
+      {/* Sender Info */}
+      <Typography.Text strong style={{ display: 'block', marginBottom: 12, fontSize: 13 }}>
+        {t('senderInfo', 'Sender Information')}
+      </Typography.Text>
+
+      <Row gutter={12}>
+        <Col span={12}>
+          <Form.Item name="senderName" label={t('senderName', 'Sender Name')} rules={[{ required: true, message: t('senderNameRequired', 'Required') }]}>
+            <Input placeholder={t('senderNamePlaceholder', 'Full name')} />
+          </Form.Item>
+        </Col>
+        <Col span={12}>
+          <Form.Item name="senderPhone" label={t('senderPhone', 'Phone Number')} rules={[{ required: true, message: t('senderPhoneRequired', 'Required') }]}>
+            <Input placeholder="e.g. 0912345678" />
+          </Form.Item>
+        </Col>
+      </Row>
+
+      <Form.Item name="senderAddress" label={t('senderAddress', 'Address')} rules={[{ required: true, message: t('senderAddressRequired', 'Required') }]}>
+        <Input placeholder={t('senderAddressPlaceholder', 'Full address')} />
       </Form.Item>
-      <Form.Item name="senderPhone" label={t('senderPhone', 'Số điện thoại')} rules={[{ required: true, message: t('senderPhoneRequired', 'Vui lòng nhập số điện thoại') }]}>
-        <Input placeholder={t('senderPhonePlaceholder', 'Nhập số điện thoại')} />
+
+      <Row gutter={12}>
+        <Col span={8}>
+          <Form.Item name="senderWard" label={t('ward', 'Ward')} rules={[{ required: true, message: t('wardRequired', 'Required') }]}>
+            <Input placeholder={t('wardPlaceholder', 'Enter ward')} />
+          </Form.Item>
+        </Col>
+        <Col span={8}>
+          <Form.Item name="senderDistrict" label={t('district', 'District')} rules={[{ required: true, message: t('districtRequired', 'Required') }]}>
+            <Input placeholder={t('districtPlaceholder', 'Enter district')} />
+          </Form.Item>
+        </Col>
+        <Col span={8}>
+          <Form.Item name="senderProvince" label={t('province', 'Province/City')} rules={[{ required: true, message: t('provinceRequired', 'Required') }]}>
+            <Input placeholder={t('provincePlaceholder', 'Enter province/city')} />
+          </Form.Item>
+        </Col>
+      </Row>
+
+      <Divider style={{ margin: '12px 0 16px' }} />
+
+      {/* Package Info */}
+      <Typography.Text strong style={{ display: 'block', marginBottom: 12, fontSize: 13 }}>
+        {t('packageInfo', 'Package Information')}
+      </Typography.Text>
+
+      <Row gutter={12}>
+        <Col span={12}>
+          <Form.Item name="weightGrams" label={t('weightGrams', 'Weight (grams)')} rules={[{ required: true, message: t('weightGramsRequired', 'Required') }]}>
+            <InputNumber min={1} style={{ width: '100%' }} placeholder="e.g. 500" />
+          </Form.Item>
+        </Col>
+        <Col span={12}>
+          <Form.Item name="insuranceValue" label={t('insuranceValueLabel', 'Insurance Value (VND)')} rules={[{ required: true, message: t('insuranceValueRequired', 'Required') }]}>
+            <InputNumber min={0} style={{ width: '100%' }} placeholder="e.g. 1000000" addonAfter="VND" />
+          </Form.Item>
+        </Col>
+      </Row>
+
+      <Row gutter={12}>
+        <Col span={8}>
+          <Form.Item name="lengthCm" label={t('lengthCm', 'Length (cm)')}>
+            <InputNumber min={1} style={{ width: '100%' }} placeholder="cm" />
+          </Form.Item>
+        </Col>
+        <Col span={8}>
+          <Form.Item name="widthCm" label={t('widthCm', 'Width (cm)')}>
+            <InputNumber min={1} style={{ width: '100%' }} placeholder="cm" />
+          </Form.Item>
+        </Col>
+        <Col span={8}>
+          <Form.Item name="heightCm" label={t('heightCm', 'Height (cm)')}>
+            <InputNumber min={1} style={{ width: '100%' }} placeholder="cm" />
+          </Form.Item>
+        </Col>
+      </Row>
+
+      <Divider style={{ margin: '12px 0 16px' }} />
+
+      {/* Shipping Method */}
+      <Typography.Text strong style={{ display: 'block', marginBottom: 12, fontSize: 13 }}>
+        {t('shippingMethod', 'Shipping Method')}
+      </Typography.Text>
+
+      <Form.Item label={t('shippingMode', 'Choose method')}>
+        <Select
+          value={shippingMode}
+          onChange={(v) => {
+            setShippingMode(v)
+            if (v === 'platform') {
+              form.setFieldsValue({ providerCode: 'ghn', externalTrackingNumber: undefined, externalCarrierName: undefined })
+            } else {
+              form.setFieldsValue({ providerCode: undefined })
+            }
+          }}
+          options={SHIPPING_MODE_OPTIONS}
+        />
       </Form.Item>
-      <Form.Item name="senderAddress" label={t('senderAddress', 'Địa chỉ')} rules={[{ required: true, message: t('senderAddressRequired', 'Vui lòng nhập địa chỉ') }]}>
-        <Input placeholder={t('senderAddressPlaceholder', 'Nhập địa chỉ')} />
-      </Form.Item>
-      <Form.Item name="senderWard" label={t('ward', 'Phường/Xã')} rules={[{ required: true, message: t('wardRequired', 'Vui lòng nhập phường/xã') }]}>
-        <Input placeholder={t('wardPlaceholder', 'Nhập phường/xã')} />
-      </Form.Item>
-      <Form.Item name="senderDistrict" label={t('district', 'Quận/Huyện')} rules={[{ required: true, message: t('districtRequired', 'Vui lòng nhập quận/huyện') }]}>
-        <Input placeholder={t('districtPlaceholder', 'Nhập quận/huyện')} />
-      </Form.Item>
-      <Form.Item name="senderProvince" label={t('province', 'Tỉnh/Thành phố')} rules={[{ required: true, message: t('provinceRequired', 'Vui lòng nhập tỉnh/thành phố') }]}>
-        <Input placeholder={t('provincePlaceholder', 'Nhập tỉnh/thành phố')} />
-      </Form.Item>
-      <Form.Item name="weightGrams" label={t('weightGrams', 'Khối lượng (gram)')} rules={[{ required: true, message: t('weightGramsRequired', 'Vui lòng nhập khối lượng') }]}>
-        <InputNumber min={1} style={{ width: '100%' }} placeholder={t('weightGramsPlaceholder', 'Nhập khối lượng')} />
-      </Form.Item>
-      <Form.Item name="insuranceValue" label={t('insuranceValueLabel', 'Giá trị bảo hiểm')} rules={[{ required: true, message: t('insuranceValueRequired', 'Vui lòng nhập giá trị bảo hiểm') }]}>
-        <InputNumber min={0} style={{ width: '100%' }} placeholder={t('insuranceValuePlaceholder', 'Nhập giá trị bảo hiểm (VND)')} />
+
+      {shippingMode === 'platform' && (
+        <Form.Item name="providerCode" label={t('providerCode', 'Carrier')} initialValue="ghn">
+          <Select
+            options={[
+              { value: 'ghn', label: 'GHN - Giao Hàng Nhanh' },
+            ]}
+          />
+        </Form.Item>
+      )}
+
+      {shippingMode === 'external' && (
+        <>
+          <Form.Item name="externalCarrierName" label={t('externalCarrierName', 'Carrier Name')} rules={[{ required: shippingMode === 'external', message: t('carrierRequired', 'Required') }]}>
+            <Input placeholder={t('externalCarrierPlaceholder', 'e.g. Viettel Post, J&T, self-delivery')} />
+          </Form.Item>
+          <Form.Item name="externalTrackingNumber" label={t('externalTracking', 'Tracking Number')}>
+            <Input placeholder={t('externalTrackingPlaceholder', 'Enter tracking number (if available)')} />
+          </Form.Item>
+        </>
+      )}
+
+      <Form.Item name="notes" label={t('notes', 'Notes')}>
+        <Input.TextArea rows={2} placeholder={t('notesPlaceholder', 'Special instructions (optional)')} />
       </Form.Item>
     </Form>
   )

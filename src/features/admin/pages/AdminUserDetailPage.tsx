@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
-import { Typography, Descriptions, Card, Tag, Button, Space, Spin, Alert, Select, Modal, Input, App, Row, Col } from 'antd'
+import { Typography, Descriptions, Card, Tag, Button, Space, Spin, Select, Modal, Input, App, Row, Col } from 'antd'
 import { ArrowLeftOutlined, PlusOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import {
@@ -15,6 +15,7 @@ import {
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
 import { UserStatus, AlertSeverity } from '@/types/enums'
+import { AdminErrorState } from '@/features/admin/components/AdminErrorState'
 
 export default function AdminUserDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -22,7 +23,7 @@ export default function AdminUserDetailPage() {
   const { message } = App.useApp()
   const navigate = useNavigate()
 
-  const { data: user, isLoading, error } = useAdminUserDetail(id!)
+  const { data: user, isLoading, error, refetch } = useAdminUserDetail(id!)
   const { data: roles } = useRoles()
 
   const assignRole = useAssignRole()
@@ -38,7 +39,7 @@ export default function AdminUserDetailPage() {
   const [flagReason, setFlagReason] = useState('')
 
   if (isLoading) return <div style={{ textAlign: 'center', padding: 80 }}><Spin size="large" /></div>
-  if (error || !user) return <Alert type="error" message={t('common.error')} showIcon />
+  if (error || !user) return <AdminErrorState message={t('common.error')} onRetry={refetch} backPath="/admin/users" />
 
   const handleAssignRole = async () => {
     if (!selectedRole) return

@@ -1,4 +1,4 @@
-import { Row, Col, Card, Button, Space, Spin, Empty, Tag, Tabs } from 'antd'
+import { Row, Col, Card, Button, Space, Spin, Empty, Tag } from 'antd'
 import {
   ShoppingOutlined,
   ThunderboltOutlined,
@@ -25,11 +25,9 @@ import { formatCurrency, formatDateTime } from '@/utils/format'
 import { SellerProfileStatus } from '@/types/enums'
 import type { AuctionListItemDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
+import { SERIF_FONT as serifFont, MONO_FONT as monoFont } from '@/styles/tokens'
 
 /* ── Shared styles ───────────────────────────────────────────────────── */
-
-const serifFont = "'DM Serif Display', Georgia, serif"
-const monoFont = "'DM Mono', monospace"
 
 const statCardStyle: React.CSSProperties = {
   background: 'var(--color-accent-light)',
@@ -200,28 +198,7 @@ export default function SellerDashboardPage() {
     },
   ]
 
-  /* ── Tab navigation handler ──────────────────────────────────────── */
-
-  const handleTabChange = (key: string) => {
-    switch (key) {
-      case 'overview':
-        break // stay on current page
-      case 'auctions':
-        navigate('/seller/auctions')
-        break
-      case 'items':
-        navigate('/seller/items')
-        break
-      case 'orders':
-        navigate('/seller/orders')
-        break
-      case 'disputes':
-        navigate('/seller/disputes')
-        break
-    }
-  }
-
-  /* ── Dashboard content (Tong quan tab) ──────────────────────────── */
+  /* ── Dashboard content ──────────────────────────────────────────── */
 
   const dashboardContent = (
     <>
@@ -232,7 +209,7 @@ export default function SellerDashboardPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
               <AppstoreOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />
               <span style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
-                {t('totalItems', 'Tong san pham')}
+                {t('dashboard.totalItems', 'Total Items')}
               </span>
             </div>
             <div style={{ fontFamily: monoFont, fontSize: 24, fontWeight: 500, color: 'var(--color-text-primary)' }}>
@@ -245,7 +222,7 @@ export default function SellerDashboardPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
               <ThunderboltOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />
               <span style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
-                {t('activeAuctions', 'Phien dau gia')}
+                {t('dashboard.activeAuctions', 'Active Auctions')}
               </span>
             </div>
             <div style={{ fontFamily: monoFont, fontSize: 24, fontWeight: 500, color: 'var(--color-text-primary)' }}>
@@ -258,7 +235,7 @@ export default function SellerDashboardPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
               <ClockCircleOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />
               <span style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
-                {t('pendingReview', 'Cho duyet')}
+                {t('dashboard.pendingReview', 'Pending Review')}
               </span>
             </div>
             <div style={{ fontFamily: monoFont, fontSize: 24, fontWeight: 500, color: 'var(--color-text-primary)' }}>
@@ -271,7 +248,7 @@ export default function SellerDashboardPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
               <DollarOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />
               <span style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
-                {t('totalSold', 'Da ban')}
+                {t('dashboard.sold', 'Sold')}
               </span>
             </div>
             <div style={{ fontFamily: monoFont, fontSize: 24, fontWeight: 500, color: 'var(--color-text-primary)' }}>
@@ -283,7 +260,7 @@ export default function SellerDashboardPage() {
 
       {/* ── Item Status Overview ───────────────────────────────────── */}
       <Card
-        title={<span style={sectionTitleStyle}>{t('itemStatusOverview', 'Tong quan san pham')}</span>}
+        title={<span style={sectionTitleStyle}>{t('dashboard.itemOverview', 'Item Overview')}</span>}
         style={{ marginBottom: 24 }}
       >
         <Space wrap size={[8, 8]}>
@@ -303,7 +280,7 @@ export default function SellerDashboardPage() {
 
       {/* ── Auction Status Overview ────────────────────────────────── */}
       <Card
-        title={<span style={sectionTitleStyle}>{t('auctionStatusOverview', 'Tong quan dau gia')}</span>}
+        title={<span style={sectionTitleStyle}>{t('dashboard.auctionOverview', 'Auction Overview')}</span>}
         style={{ marginBottom: 24 }}
       >
         <Space wrap size={[8, 8]}>
@@ -323,42 +300,49 @@ export default function SellerDashboardPage() {
 
       {/* ── Quick Actions ──────────────────────────────────────────── */}
       <Card
-        title={<span style={sectionTitleStyle}>{t('quickActions', 'Thao tac nhanh')}</span>}
+        title={<span style={sectionTitleStyle}>{t('dashboard.quickActions', 'Quick Actions')}</span>}
         style={{ marginBottom: 24 }}
       >
         <Space wrap size={12}>
           <Button
             type="primary"
             icon={<PlusOutlined />}
-            onClick={() => navigate('/seller/auctions/create')}
+            onClick={() => navigate('/seller/items/create')}
             style={{
               background: 'var(--color-accent)',
               borderColor: 'var(--color-accent)',
               fontWeight: 500,
             }}
           >
-            {t('createAuction', 'Tao phien dau gia')}
+            {t('dashboard.createItem', 'Create Item')}
           </Button>
           <Button
             icon={<ShoppingOutlined />}
             onClick={() => navigate('/seller/items')}
             style={outlinedBtnStyle}
           >
-            {t('manageItems', 'Quan ly san pham')}
+            {t('dashboard.manageItems', 'Manage Items')}
           </Button>
           <Button
             icon={<OrderedListOutlined />}
             onClick={() => navigate('/seller/orders')}
             style={outlinedBtnStyle}
           >
-            {t('viewOrders', 'Don hang')}
+            {t('dashboard.orders', 'Orders')}
           </Button>
           <Button
             icon={<WalletOutlined />}
             onClick={() => navigate('/seller/wallet')}
             style={outlinedBtnStyle}
           >
-            {t('wallet', 'Vi')}
+            {t('dashboard.wallet', 'Wallet')}
+          </Button>
+          <Button
+            icon={<SendOutlined />}
+            onClick={() => navigate('/seller/orders?status=paid')}
+            style={outlinedBtnStyle}
+          >
+            {t('dashboard.ordersAwaitingShipment', 'Orders Awaiting Shipment')}
           </Button>
         </Space>
       </Card>
@@ -487,7 +471,7 @@ export default function SellerDashboardPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
               <WalletOutlined style={{ color: 'var(--color-accent)', fontSize: 18 }} />
               <span style={{ fontFamily: serifFont, fontSize: 15, color: 'var(--color-text-primary)' }}>
-                {t('walletBalance', 'So du vi')}
+                {t('dashboard.walletBalance', 'Wallet Balance')}
               </span>
             </div>
             <div
@@ -528,7 +512,7 @@ export default function SellerDashboardPage() {
                   borderRadius: 6,
                 }}
               >
-                {t('withdraw', 'Rut tien')}
+                {t('dashboard.withdraw', 'Withdraw')}
               </Button>
               <Button
                 size="small"
@@ -541,46 +525,15 @@ export default function SellerDashboardPage() {
                   borderRadius: 6,
                 }}
               >
-                {t('history', 'Lich su')}
+                {t('dashboard.history', 'History')}
               </Button>
             </Space>
           </Card>
         </Col>
       </Row>
 
-      {/* ── Tab Bar ─────────────────────────────────────────────────── */}
-      <Tabs
-        defaultActiveKey="overview"
-        onChange={handleTabChange}
-        style={{ marginBottom: 24 }}
-        items={[
-          {
-            key: 'overview',
-            label: t('tabOverview', 'Tong quan'),
-            children: dashboardContent,
-          },
-          {
-            key: 'auctions',
-            label: t('tabAuctions', 'Dau gia dang tham gia'),
-            children: null,
-          },
-          {
-            key: 'items',
-            label: t('tabItems', 'Vat pham'),
-            children: null,
-          },
-          {
-            key: 'orders',
-            label: t('tabOrders', 'Giao hang'),
-            children: null,
-          },
-          {
-            key: 'disputes',
-            label: t('tabDisputes', 'Tranh chap'),
-            children: null,
-          },
-        ]}
-      />
+      {/* ── Dashboard Content ───────────────────────────────────────── */}
+      {dashboardContent}
     </div>
   )
 }

@@ -27,7 +27,9 @@ import dayjs from 'dayjs'
 import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useCurrentUser, useCurrentUserProfile, useUpdateProfile, useSetPhoneNumber, useConfirmPhoneNumber } from '../api'
+import { useResendConfirmEmail } from '@/features/auth/api'
 import type { Gender } from '@/types/enums'
+import { SERIF_FONT } from '@/styles/tokens'
 
 const { Text } = Typography
 
@@ -59,7 +61,7 @@ type ConfirmPhoneFormValues = z.infer<typeof confirmPhoneSchema>
 // -- Styles --------------------------------------------------------------------
 
 const sectionHeadingStyle: React.CSSProperties = {
-  fontFamily: "'DM Serif Display', Georgia, serif",
+  fontFamily: SERIF_FONT,
   fontWeight: 400,
   fontSize: 16,
   color: 'var(--color-text-primary)',
@@ -88,6 +90,7 @@ export default function ProfilePage() {
   const queryClient = useQueryClient()
   const { data: user, isLoading: userLoading } = useCurrentUser()
   const { data: profile, isLoading: profileLoading } = useCurrentUserProfile()
+  const resendEmail = useResendConfirmEmail()
   const updateProfile = useUpdateProfile()
   const setPhoneNumber = useSetPhoneNumber()
   const confirmPhone = useConfirmPhoneNumber()
@@ -179,7 +182,7 @@ export default function ProfilePage() {
       {/* Page Heading */}
       <h1
         style={{
-          fontFamily: "'DM Serif Display', Georgia, serif",
+          fontFamily: SERIF_FONT,
           fontWeight: 400,
           fontSize: isMobile ? 22 : 28,
           color: 'var(--color-text-primary)',
@@ -192,6 +195,35 @@ export default function ProfilePage() {
       <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, marginBottom: isMobile ? 20 : 32 }}>
         {t('user:profile.subtitle', 'Manage your account information')}
       </p>
+
+      {/* Email not confirmed banner */}
+      {user && !user.emailConfirmed && (
+        <Alert
+          type="warning"
+          showIcon
+          style={{ marginBottom: 24, borderRadius: 8 }}
+          message={t('user:profile.emailNotConfirmed', 'Your email is not verified')}
+          description={t('user:profile.emailNotConfirmedDesc', 'Please verify your email address to access all features. Check your inbox or click the button to resend.')}
+          action={
+            <Button
+              size="small"
+              type="primary"
+              loading={resendEmail.isPending}
+              onClick={async () => {
+                try {
+                  await resendEmail.mutateAsync({ email: user.email })
+                  message.success(t('user:profile.resendSuccess', 'Verification email sent! Please check your inbox.'))
+                } catch {
+                  message.error(t('user:profile.resendError', 'Failed to send verification email. Please wait 60 seconds between attempts.'))
+                }
+              }}
+              style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
+            >
+              {t('user:profile.resendEmail', 'Resend Verification Email')}
+            </Button>
+          }
+        />
+      )}
 
       {/* Avatar Section */}
       <Card style={{ marginBottom: 32 }}>

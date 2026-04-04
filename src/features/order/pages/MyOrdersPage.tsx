@@ -13,6 +13,7 @@ import { OrderStatus } from '@/types/enums'
 import { formatDateTime } from '@/utils/format'
 import type { OrderDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
+import { SERIF_FONT } from '@/styles/tokens'
 
 const STATUS_TABS = [
   { key: 'all', label: 'all' },
@@ -184,7 +185,7 @@ export default function MyOrdersPage() {
       {/* Serif heading */}
       <h1
         style={{
-          fontFamily: "'DM Serif Display', Georgia, serif",
+          fontFamily: SERIF_FONT,
           fontWeight: 400,
           fontSize: 28,
           color: 'var(--color-text-primary)',

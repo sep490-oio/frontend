@@ -7,25 +7,17 @@ import { useMyBids, useMyPendingWinnerOffers, useRespondRunnerUpOffer } from '@/
 import { useUserHubStatus } from '@/features/user/contexts/UserHubContext'
 import type { MyBidDto } from '@/features/auction/api'
 import { PriceDisplay } from '@/components/ui/PriceDisplay'
-import { BidStatus } from '@/types/enums'
+import { BidStatus, AuctionStatus } from '@/types/enums'
 import { formatDateTime } from '@/utils/format'
 import { WinnerOfferPanel } from '@/features/auction/components/WinnerOfferPanel'
+import { MONO_FONT, SANS_FONT } from '@/styles/tokens'
 
 interface StatusPill {
   value: string
   label: string
 }
 
-const STATUS_PILLS: StatusPill[] = [
-  { value: '', label: 'Tất cả' },
-  { value: 'active', label: 'Đang dẫn đầu' },
-  { value: 'outbid', label: 'Bị vượt giá' },
-  { value: 'won', label: 'Đã thắng' },
-  { value: 'cancelled', label: 'Đã hủy' },
-  { value: BidStatus.Winning, label: 'Winning' },
-]
-
-const SANS_FONT = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+// Status pills are built inside component for i18n access
 
 export default function MyBidsPage() {
   const { t } = useTranslation('auction')
@@ -45,6 +37,15 @@ export default function MyBidsPage() {
     sortBy,
     ...(connected ? {} : { refetchInterval: 30000 }) as any,
   })
+
+  const STATUS_PILLS: StatusPill[] = [
+    { value: '', label: t('bidStatusAll', 'All') },
+    { value: 'active', label: t('bidStatusActive', 'Leading') },
+    { value: 'outbid', label: t('bidStatusOutbid', 'Outbid') },
+    { value: 'won', label: t('bidStatusWon', 'Won') },
+    { value: 'cancelled', label: t('bidStatusCancelled', 'Cancelled') },
+    { value: BidStatus.Winning, label: t('bidStatusWinning', 'Winning') },
+  ]
 
   const { data: pendingOffers } = useMyPendingWinnerOffers()
   const respondMutation = useRespondRunnerUpOffer()
@@ -66,7 +67,7 @@ export default function MyBidsPage() {
           }}
         >
           <HistoryOutlined style={{ marginRight: 10 }} />
-          Đấu giá của tôi
+          {t('myBids', 'My Bids')}
         </Typography.Title>
         <p
           style={{
@@ -76,7 +77,7 @@ export default function MyBidsPage() {
             margin: 0,
           }}
         >
-          Theo dõi và quản lý các phiên đấu giá bạn đã tham gia
+          {t('myBidsSubtitle', 'Track and manage the auctions you have participated in')}
         </p>
       </div>
 
@@ -100,7 +101,19 @@ export default function MyBidsPage() {
               <WinnerOfferPanel
                 key={offer.offerId}
                 offer={offer as any}
-                onAccept={(_offerId) => respondMutation.mutate({ auctionId: offer.auctionId, accept: true })}
+                onAccept={(_offerId) => respondMutation.mutate(
+                  { auctionId: offer.auctionId, accept: true },
+                  {
+                    onSuccess: (result) => {
+                      const orderId = (result as any)?.orderId
+                      if (orderId) {
+                        navigate(`/checkout/${orderId}`)
+                      } else {
+                        navigate(`/auctions/${offer.auctionId}`)
+                      }
+                    },
+                  }
+                )}
                 onDecline={(_offerId) => respondMutation.mutate({ auctionId: offer.auctionId, accept: false })}
                 isAcceptLoading={respondMutation.isPending}
                 isDeclineLoading={respondMutation.isPending}
@@ -160,7 +173,7 @@ export default function MyBidsPage() {
           <Spin size="large" />
         </div>
       ) : items.length === 0 ? (
-        <Empty description={t('noBids', 'Bạn chưa tham gia đấu giá nào')} />
+        <Empty description={t('noBidsYet', 'You have not participated in any auctions yet')} />
       ) : (
         <>
           <Row gutter={[20, 20]}>
@@ -216,7 +229,7 @@ export default function MyBidsPage() {
                         padding: '3px 10px',
                         borderRadius: 6,
                         fontSize: 11,
-                        fontFamily: "'DM Mono', monospace",
+                        fontFamily: MONO_FONT,
                         fontWeight: 500,
                       }}
                     >
@@ -224,31 +237,54 @@ export default function MyBidsPage() {
                     </div>
 
                     {/* Status badge (top-right) */}
-                    <span
-                      style={{
-                        position: 'absolute',
-                        top: 8,
-                        right: 8,
-                        padding: '3px 10px',
-                        borderRadius: 100,
-                        fontSize: 10,
-                        fontWeight: 700,
-                        fontFamily: SANS_FONT,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.04em',
-                        background: bid.isHighestBid
-                          ? 'rgba(22, 163, 106, 0.12)'
-                          : 'rgba(220, 38, 38, 0.12)',
-                        color: bid.isHighestBid
-                          ? '#16a34a'
-                          : '#dc2626',
-                        border: bid.isHighestBid
-                          ? '1px solid rgba(22, 163, 106, 0.25)'
-                          : '1px solid rgba(220, 38, 38, 0.25)',
-                      }}
-                    >
-                      {bid.isHighestBid ? 'ĐANG DẪN ĐẦU' : 'BỊ VƯỢT GIÁ'}
-                    </span>
+                    {(() => {
+                      const isEnded = bid.auctionStatus === AuctionStatus.Ended || bid.auctionStatus === AuctionStatus.Sold
+                      const isWon = isEnded && bid.isHighestBid
+                      const isLost = isEnded && !bid.isHighestBid
+                      let bg: string, color: string, border: string, label: string
+                      if (isWon) {
+                        bg = 'rgba(180, 140, 20, 0.12)'
+                        color = '#B8860B'
+                        border = '1px solid rgba(180, 140, 20, 0.3)'
+                        label = t('bidWon', 'WON')
+                      } else if (isLost) {
+                        bg = 'rgba(100, 100, 100, 0.12)'
+                        color = 'var(--color-text-secondary)'
+                        border = '1px solid rgba(100, 100, 100, 0.25)'
+                        label = t('bidLost', 'LOST')
+                      } else if (bid.isHighestBid) {
+                        bg = 'rgba(22, 163, 106, 0.12)'
+                        color = 'var(--color-success)'
+                        border = '1px solid rgba(22, 163, 106, 0.25)'
+                        label = t('bidLeading', 'LEADING')
+                      } else {
+                        bg = 'rgba(220, 38, 38, 0.12)'
+                        color = 'var(--color-danger)'
+                        border = '1px solid rgba(220, 38, 38, 0.25)'
+                        label = t('bidOutbid', 'OUTBID')
+                      }
+                      return (
+                        <span
+                          style={{
+                            position: 'absolute',
+                            top: 8,
+                            right: 8,
+                            padding: '3px 10px',
+                            borderRadius: 100,
+                            fontSize: 10,
+                            fontWeight: 700,
+                            fontFamily: SANS_FONT,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.04em',
+                            background: bg,
+                            color,
+                            border,
+                          }}
+                        >
+                          {label}
+                        </span>
+                      )
+                    })()}
                   </div>
 
                   {/* Card body */}
@@ -281,12 +317,14 @@ export default function MyBidsPage() {
                           letterSpacing: '0.06em',
                         }}
                       >
-                        Giá hiện tại
+                        {(bid.auctionStatus === AuctionStatus.Ended || bid.auctionStatus === AuctionStatus.Sold)
+                          ? t('finalPriceLabel', 'Final Price')
+                          : t('currentPriceLabel', 'Current Price')}
                       </span>
                     </div>
                     <div
                       style={{
-                        fontFamily: "'DM Mono', monospace",
+                        fontFamily: MONO_FONT,
                         fontSize: 18,
                         fontWeight: 600,
                         color: 'var(--color-accent)',
@@ -301,39 +339,71 @@ export default function MyBidsPage() {
                     </div>
 
                     {/* Buttons */}
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <Button
-                        type="primary"
-                        icon={<ThunderboltOutlined />}
-                        onClick={() => navigate(`/auctions/${bid.auctionId}`)}
-                        style={{
-                          flex: 1,
-                          borderRadius: 8,
-                          fontFamily: SANS_FONT,
-                          fontWeight: 500,
-                          fontSize: 13,
-                          background: 'var(--color-accent)',
-                          borderColor: 'var(--color-accent)',
-                        }}
-                      >
-                        Đặt giá nhanh
-                      </Button>
-                      <Button
-                        icon={<EyeOutlined />}
-                        onClick={() => navigate(`/auctions/${bid.auctionId}`)}
-                        style={{
-                          flex: 1,
-                          borderRadius: 8,
-                          fontFamily: SANS_FONT,
-                          fontWeight: 500,
-                          fontSize: 13,
-                          borderColor: 'var(--color-border)',
-                          color: 'var(--color-text-secondary)',
-                        }}
-                      >
-                        Xem chi tiết
-                      </Button>
-                    </div>
+                    {(() => {
+                      const isEnded = bid.auctionStatus === AuctionStatus.Ended || bid.auctionStatus === AuctionStatus.Sold
+                      const isWon = isEnded && bid.isHighestBid
+                      return (
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          {isWon ? (
+                            <Button
+                              type="primary"
+                              icon={<TrophyOutlined />}
+                              onClick={() => {
+                                const orderId = (bid as any).orderId
+                                if (orderId) {
+                                  navigate(`/orders/${orderId}`)
+                                } else {
+                                  navigate(`/auctions/${bid.auctionId}`)
+                                }
+                              }}
+                              style={{
+                                flex: 1,
+                                borderRadius: 8,
+                                fontFamily: SANS_FONT,
+                                fontWeight: 500,
+                                fontSize: 13,
+                                background: '#B8860B',
+                                borderColor: '#B8860B',
+                              }}
+                            >
+                              {(bid as any).orderId ? t('viewOrder', 'View Order') : t('payNow', 'Pay Now')}
+                            </Button>
+                          ) : !isEnded ? (
+                            <Button
+                              type="primary"
+                              icon={<ThunderboltOutlined />}
+                              onClick={() => navigate(`/auctions/${bid.auctionId}`)}
+                              style={{
+                                flex: 1,
+                                borderRadius: 8,
+                                fontFamily: SANS_FONT,
+                                fontWeight: 500,
+                                fontSize: 13,
+                                background: 'var(--color-accent)',
+                                borderColor: 'var(--color-accent)',
+                              }}
+                            >
+                              {t('quickBid', 'Quick Bid')}
+                            </Button>
+                          ) : null}
+                          <Button
+                            icon={<EyeOutlined />}
+                            onClick={() => navigate(`/auctions/${bid.auctionId}`)}
+                            style={{
+                              flex: 1,
+                              borderRadius: 8,
+                              fontFamily: SANS_FONT,
+                              fontWeight: 500,
+                              fontSize: 13,
+                              borderColor: 'var(--color-border)',
+                              color: 'var(--color-text-secondary)',
+                            }}
+                          >
+                            {t('viewDetails', 'View Details')}
+                          </Button>
+                        </div>
+                      )
+                    })()}
                   </div>
                 </Card>
               </Col>

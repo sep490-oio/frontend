@@ -6,11 +6,12 @@ interface ShipmentStepperProps {
 }
 
 const STEPS = [
-  { title: 'Awaiting Pickup' },
-  { title: 'In Transit' },
+  { title: 'Pickup' },
+  { title: 'Transit' },
+  { title: 'Claimed' },
   { title: 'Arrived' },
   { title: 'Inspected' },
-  { title: 'Completed' },
+  { title: 'Done' },
 ]
 
 export function ShipmentStepper({ status }: ShipmentStepperProps) {
@@ -18,13 +19,13 @@ export function ShipmentStepper({ status }: ShipmentStepperProps) {
   const cancelled = isCancelledStatus(status) || isFailedStatus(status)
 
   return (
-    <div style={{ marginBottom: 24 }}>
+    <div style={{ marginBottom: 24, overflowX: 'auto' }}>
       <Steps
-        current={cancelled ? current : current}
+        current={current}
         status={cancelled ? 'error' : undefined}
         size="small"
         items={STEPS}
-        style={{ maxWidth: 600 }}
+        style={{ minWidth: 500 }}
       />
     </div>
   )

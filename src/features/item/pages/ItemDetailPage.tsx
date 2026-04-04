@@ -4,7 +4,6 @@ import {
   Row,
   Col,
   Card,
-  Image,
   Descriptions,
   Spin,
   Empty,
@@ -21,9 +20,12 @@ import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useItemById, useChooseItemShipping } from '@/features/item/api'
 import { useAuctionHub } from '@/features/auction/hooks/useAuctionHub'
 import { StatusBadge } from '@/components/ui/StatusBadge'
+import { SafeHtmlRenderer } from '@/components/ui/SafeHtmlRenderer'
+import { ImageGallery } from '@/components/ui/ImageGallery'
 import { formatDateTime } from '@/utils/format'
 import { useCurrentUser } from '@/features/user/api'
 import { ItemQA } from '@/features/item/components/ItemQA'
+import { ItemStatus } from '@/types/enums'
 import ShippingDetailsForm from '@/components/ui/ShippingDetailsForm'
 import type { ShippingDetailsFormValues } from '@/components/ui/ShippingDetailsForm'
 
@@ -56,8 +58,11 @@ export default function ItemDetailPage() {
     return <Empty description={t('notFound', 'Item not found')} />
   }
 
-  const primaryImage = item.images?.find((img) => img.isPrimary) ?? item.images?.[0]
-  const otherImages = item.images?.filter((img) => img.id !== primaryImage?.id) ?? []
+  const galleryImages = (item.images ?? []).map((img) => ({
+    url: img.url,
+    thumbnailUrl: img.thumbnailUrl,
+    isPrimary: img.isPrimary,
+  }))
 
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: isMobile ? '0 12px' : undefined }}>
@@ -70,43 +75,12 @@ export default function ItemDetailPage() {
       <Row gutter={[24, isMobile ? 16 : 24]}>
         {/* Image Gallery */}
         <Col xs={24} xl={12}>
-          <Card styles={{ body: { padding: 0 } }}>
-            {primaryImage ? (
-              <Image
-                src={primaryImage.url}
-                alt={item.title}
-                style={{ width: '100%', maxHeight: 500, objectFit: 'contain' }}
-                preview
-              />
-            ) : (
-              <Empty
-                description={t('noImages', 'No images')}
-                style={{ padding: 60 }}
-              />
-            )}
-          </Card>
-          {otherImages.length > 0 && (
-            <Space wrap style={{ marginTop: 12 }}>
-              <Image.PreviewGroup>
-                {otherImages.map((img) => (
-                  <Image
-                    key={img.id}
-                    src={img.thumbnailUrl ?? img.url}
-                    alt={item.title}
-                    width={80}
-                    height={80}
-                    style={{ objectFit: 'cover', borderRadius: 4, cursor: 'pointer' }}
-                    preview={{ src: img.url }}
-                  />
-                ))}
-              </Image.PreviewGroup>
-            </Space>
-          )}
+          <ImageGallery images={galleryImages} alt={item.title} />
         </Col>
 
         {/* Item Info */}
         <Col xs={24} xl={12}>
-          <Typography.Title level={2} style={{ marginTop: 0 }}>{item.title}</Typography.Title>
+          <Typography.Title level={2} style={{ marginTop: 0, marginBottom: 16 }}>{item.title}</Typography.Title>
 
           <Descriptions column={1} bordered size="small" style={{ marginBottom: 16 }}>
             <Descriptions.Item label={t('condition', 'Condition')}>
@@ -118,52 +92,60 @@ export default function ItemDetailPage() {
             <Descriptions.Item label={t('quantity', 'Quantity')}>
               {item.quantity}
             </Descriptions.Item>
+            {item.categoryId && (
+              <Descriptions.Item label={t('category', 'Category')}>
+                {item.categoryId}
+              </Descriptions.Item>
+            )}
             <Descriptions.Item label={t('createdAt', 'Listed')}>
               {formatDateTime(item.createdAt)}
             </Descriptions.Item>
           </Descriptions>
 
-          {item.description && (
-            <>
-              <Typography.Title level={5}>{t('description', 'Description')}</Typography.Title>
-              <Typography.Paragraph style={{ whiteSpace: 'pre-wrap' }}>
-                {item.description}
-              </Typography.Paragraph>
-            </>
+          {/* Shipping — Seller only, pending_verify status only */}
+          {isSeller && item.status === ItemStatus.PendingVerify && (
+            <Button
+              type="primary"
+              style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
+              onClick={() => { shippingForm.resetFields(); setShippingModalOpen(true) }}
+            >
+              {t('configShipping', 'Configure Shipping')}
+            </Button>
           )}
         </Col>
       </Row>
 
-      {/* Shipping Section — Seller only */}
-      {isSeller && (
-        <Card title="Vận chuyển" style={{ marginTop: isMobile ? 16 : 24, marginBottom: isMobile ? 16 : 24 }}>
-          <Typography.Paragraph type="secondary">
-            Cấu hình thông tin vận chuyển cho sản phẩm này.
-          </Typography.Paragraph>
-          <Button type="primary" onClick={() => { shippingForm.resetFields(); setShippingModalOpen(true) }}>
-            Cấu hình vận chuyển
-          </Button>
+      {/* Description — full width below image+info */}
+      {item.description && (
+        <Card
+          style={{ marginTop: isMobile ? 16 : 24 }}
+          styles={{ body: { padding: isMobile ? 16 : 24 } }}
+        >
+          <Typography.Title level={4} style={{ marginTop: 0, marginBottom: 16 }}>
+            {t('description', 'Description')}
+          </Typography.Title>
+          <SafeHtmlRenderer html={item.description} />
         </Card>
       )}
 
       {/* Shipping Modal */}
       <Modal
-        title="Thông tin vận chuyển"
+        title={t('shippingDetails', 'Shipping Details')}
         open={shippingModalOpen}
         onCancel={() => setShippingModalOpen(false)}
         onOk={async () => {
           try {
             const values = await shippingForm.validateFields()
             await chooseShipping.mutateAsync({ itemId: id!, ...values })
-            message.success('Đã lưu thông tin vận chuyển')
+            message.success(t('shippingSaved', 'Shipping details saved'))
             setShippingModalOpen(false)
             shippingForm.resetFields()
-          } catch { message.error('Vui lòng điền đầy đủ thông tin') }
+          } catch { message.error(t('shippingError', 'Please fill in all required fields')) }
         }}
-        okText="Xác nhận"
+        okText={tc('action.confirm', 'Confirm')}
         okButtonProps={{ loading: chooseShipping.isPending }}
         centered
-        width={isMobile ? '95vw' : 520}
+        width={isMobile ? '95vw' : 560}
       >
         <ShippingDetailsForm form={shippingForm} />
       </Modal>

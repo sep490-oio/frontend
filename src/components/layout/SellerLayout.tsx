@@ -6,8 +6,6 @@ import {
   ShoppingOutlined,
   PlusCircleOutlined,
   ThunderboltOutlined,
-  PlusOutlined,
-  HistoryOutlined,
   OrderedListOutlined,
   WalletOutlined,
   ImportOutlined,
@@ -27,11 +25,9 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/hooks/useTheme'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { SERIF_FONT, SANS_FONT } from '@/styles/tokens'
 
 const { Content } = Layout
-
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
-const SANS_FONT = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
 
 const SIDEBAR_WIDTH = 240
 const SIDEBAR_COLLAPSED = 72
@@ -78,8 +74,6 @@ export function SellerLayout() {
       label: t('menu.groupAuctions', 'Dau gia'),
       children: [
         { key: '/seller/auctions', icon: <ThunderboltOutlined />, label: t('menu.myAuctions', 'My Auctions') },
-        { key: '/seller/auctions/create', icon: <PlusOutlined />, label: t('menu.createAuction', 'Create Auction') },
-        { key: '/seller/bids', icon: <HistoryOutlined />, label: t('menu.myBids', 'My Bids') },
       ],
     },
     {

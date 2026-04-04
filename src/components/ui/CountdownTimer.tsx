@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
+import { MONO_FONT } from '@/styles/tokens'
 
 interface CountdownTimerProps {
   endTime: string
   onEnd?: () => void
   size?: 'small' | 'default' | 'large'
+  serverTimeOffset?: number
 }
 
 interface TimeLeft {
@@ -40,11 +42,11 @@ const FONT_SIZES: Record<string, number> = {
 const ONE_HOUR = 60 * 60 * 1000
 const FIVE_MIN = 5 * 60 * 1000
 
-export function CountdownTimer({ endTime, onEnd, size = 'default' }: CountdownTimerProps) {
+export function CountdownTimer({ endTime, onEnd, size = 'default', serverTimeOffset = 0 }: CountdownTimerProps) {
   const endTimestamp = new Date(endTime).getTime()
   const isValid = !!endTime && !Number.isNaN(endTimestamp)
 
-  const [now, setNow] = useState(() => Date.now())
+  const [now, setNow] = useState(() => Date.now() + serverTimeOffset)
   const onEndCalledRef = useRef(false)
   const onEndRef = useRef(onEnd)
 
@@ -62,11 +64,11 @@ export function CountdownTimer({ endTime, onEnd, size = 'default' }: CountdownTi
     }
 
     const timerId = setInterval(() => {
-      setNow(Date.now())
+      setNow(Date.now() + serverTimeOffset)
     }, 1000)
 
     return () => clearInterval(timerId)
-  }, [isValid])
+  }, [isValid, serverTimeOffset])
 
   const timeLeft = isValid ? calcTimeLeft(endTimestamp, now) : ZERO
 
@@ -88,7 +90,7 @@ export function CountdownTimer({ endTime, onEnd, size = 'default' }: CountdownTi
       <span
         style={{
           color: 'var(--color-text-secondary)',
-          fontFamily: "'DM Mono', monospace",
+          fontFamily: MONO_FONT,
           fontSize: FONT_SIZES[size],
         }}
       >
@@ -113,7 +115,7 @@ export function CountdownTimer({ endTime, onEnd, size = 'default' }: CountdownTi
       aria-atomic="true"
       style={{
         color,
-        fontFamily: "'DM Mono', monospace",
+        fontFamily: MONO_FONT,
         fontSize: FONT_SIZES[size],
         fontVariantNumeric: 'tabular-nums',
       }}

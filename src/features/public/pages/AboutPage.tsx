@@ -11,9 +11,7 @@ import {
   StarOutlined,
 } from '@ant-design/icons'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
-
-const SANS_FONT = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
+import { SANS_FONT, SERIF_FONT, MONO_FONT } from '@/styles/tokens'
 
 export default function AboutPage() {
   const { t, i18n } = useTranslation('common')
@@ -110,7 +108,7 @@ export default function AboutPage() {
             { number: '99.8%', label: t('about.statSatisfaction', 'Khách hàng hài lòng') },
           ].map((stat) => (
             <div key={stat.label} style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 32, fontWeight: 500, color: 'var(--color-text-primary)', marginBottom: 4 }}>
+              <div style={{ fontFamily: MONO_FONT, fontSize: 32, fontWeight: 500, color: 'var(--color-text-primary)', marginBottom: 4 }}>
                 {stat.number}
               </div>
               <div style={{ fontFamily: SANS_FONT, fontSize: 13, color: 'var(--color-text-secondary)' }}>

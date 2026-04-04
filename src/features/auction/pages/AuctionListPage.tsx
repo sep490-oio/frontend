@@ -9,9 +9,10 @@ import { CountdownTimer } from '@/components/ui/CountdownTimer'
 import { PriceDisplay } from '@/components/ui/PriceDisplay'
 import { AuctionStatus } from '@/types/enums'
 import { formatCurrency } from '@/utils/format'
+import { SERIF_FONT, MONO_FONT } from '@/styles/tokens'
 
-const SERIF = "'DM Serif Display', Georgia, serif"
-const MONO = "'DM Mono', monospace"
+const SERIF = SERIF_FONT
+const MONO = MONO_FONT
 
 export default function AuctionListPage() {
   const { t } = useTranslation('auction')
@@ -20,8 +21,8 @@ export default function AuctionListPage() {
 
   const { data: featuredData } = useAuctions({ pageNumber: 1, pageSize: 4, status: AuctionStatus.Active, sortBy: 'BidCount Desc' }, { refetchInterval: 30000 })
   const { data: categories } = useCategories()
-  const { data: newAuctions, isLoading: newLoading } = useAuctions({ status: AuctionStatus.Active, sortBy: 'CreatedAt', sortOrder: 'desc', pageSize: 8 })
-  const { data: trendingAuctions, isLoading: trendingLoading } = useAuctions({ status: AuctionStatus.Active, sortBy: 'ViewCount', sortOrder: 'desc', pageSize: 8 })
+  const { data: newAuctions, isLoading: newLoading } = useAuctions({ status: AuctionStatus.Active, sortBy: 'CreatedAt Desc', pageSize: 8 })
+  const { data: trendingAuctions, isLoading: trendingLoading } = useAuctions({ status: AuctionStatus.Active, sortBy: 'ViewCount Desc', pageSize: 8 })
 
   const featured = featuredData?.items ?? []
   const heroItem = featured[0]
@@ -31,7 +32,7 @@ export default function AuctionListPage() {
       {/* ════════════════════════════════════════════════════════════════
           SECTION 1: HERO
           ════════════════════════════════════════════════════════════════ */}
-      <section style={{ padding: '64px 24px', background: 'var(--color-bg-surface)' }}>
+      <section style={{ padding: '64px 24px', background: 'linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 50%, #DBEAFE 100%)' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <Row gutter={[48, 32]} align="middle">
             <Col xs={24} md={12}>
@@ -96,7 +97,7 @@ export default function AuctionListPage() {
             <h2 style={{ fontFamily: SERIF, fontWeight: 400, fontSize: 24, color: 'var(--color-text-primary)', margin: 0 }}>
               {t('newlyListed', 'Newly Listed')}
             </h2>
-            <Link to="/auctions?sortBy=CreatedAt" style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-accent)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <Link to="/auctions?sortBy=CreatedAt+Desc" style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-accent)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
               {t('viewAll', 'Xem tất cả')} <ArrowRightOutlined />
             </Link>
           </Flex>
@@ -150,7 +151,7 @@ export default function AuctionListPage() {
             <h2 style={{ fontFamily: SERIF, fontWeight: 400, fontSize: 24, color: 'var(--color-text-primary)', margin: 0 }}>
               {t('trending', 'Trending')}
             </h2>
-            <Link to="/auctions?sortBy=ViewCount" style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-accent)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <Link to="/auctions?sortBy=ViewCount+Desc" style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-accent)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
               {t('viewAll', 'Xem tất cả')} <ArrowRightOutlined />
             </Link>
           </Flex>

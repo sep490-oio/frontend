@@ -25,9 +25,7 @@ import { formatCurrency, formatDateTime } from '@/utils/format'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import type { ReportDto } from '@/types'
-
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
-const MONO_FONT = "'DM Mono', monospace"
+import { SERIF_FONT, MONO_FONT } from '@/styles/tokens'
 
 /* ── Trend indicator component ─────────────────────────────────────── */
 
@@ -41,7 +39,7 @@ function TrendIndicator({ value, suffix = '%' }: { value: number; suffix?: strin
         gap: 2,
         fontSize: 12,
         fontWeight: 600,
-        color: isUp ? 'var(--color-success)' : '#cf1322',
+        color: isUp ? 'var(--color-success)' : 'var(--color-danger)',
         background: isUp ? 'rgba(74, 124, 89, 0.1)' : 'rgba(207, 19, 34, 0.1)',
         borderRadius: 100,
         padding: '2px 8px',
@@ -158,7 +156,7 @@ export default function AdminDashboardPage() {
                     fontFamily: MONO_FONT,
                     fontSize: 28,
                     fontWeight: 600,
-                    color: (reports?.metadata?.totalCount ?? 0) > 0 ? '#cf1322' : 'var(--color-text-primary)',
+                    color: (reports?.metadata?.totalCount ?? 0) > 0 ? 'var(--color-danger)' : 'var(--color-text-primary)',
                   }}
                 >
                   {reports?.metadata?.totalCount ?? 0}

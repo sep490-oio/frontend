@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { CountdownTimer } from '@/components/ui/CountdownTimer'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatCurrency, formatDateTime } from '@/utils/format'
+import { MONO_FONT } from '@/styles/tokens'
 
 interface WinnerOfferPanelProps {
   offer: {
@@ -63,7 +64,7 @@ export function WinnerOfferPanel({ offer, onAccept, onDecline, isAcceptLoading, 
 
       <div style={{ fontSize: 13, lineHeight: 1.8, color: 'var(--color-text-secondary)' }}>
         <div>
-          {t('offerAmount', 'Amount')}: <strong style={{ color: 'var(--color-accent)', fontFamily: "'DM Mono', monospace" }}>{formatCurrency(offer.offerAmount, offer.currency)}</strong>
+          {t('offerAmount', 'Amount')}: <strong style={{ color: 'var(--color-accent)', fontFamily: MONO_FONT }}>{formatCurrency(offer.offerAmount, offer.currency)}</strong>
         </div>
         {offer.expiresAt && !isExpired && (
           <div>

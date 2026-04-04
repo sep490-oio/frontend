@@ -24,8 +24,7 @@ import {
 import { useWarehouseItems } from '@/features/warehouse/api'
 import type { StorageLocationDto } from '@/features/inspector/api'
 import { formatDateTime } from '@/utils/format'
-
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
+import { SERIF_FONT } from '@/styles/tokens'
 
 interface CreateLocationForm {
   zone: string
@@ -246,7 +245,7 @@ export default function StorageManagementPage() {
             options={(warehouseItems?.items ?? [])
               .filter((item) => !item.storageLocationId)
               .map((item) => ({
-                label: `${item.itemId.slice(0, 8)}... — ${item.condition}`,
+                label: `${item.itemId.slice(0, 8)}... — ${item.status}`,
                 value: item.id,
               }))}
           />

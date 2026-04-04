@@ -38,5 +38,32 @@
     "payment": "Payment Dispute",
     "item": "Item Dispute",
     "delivery": "Delivery Dispute"
+  },
+  "report": "Report",
+  "reportConfirm": "Report this dispute for review?",
+  "reportAuction": "Report Auction",
+  "reportSuccess": "Report submitted successfully",
+  "reportError": "Failed to submit report",
+  "reportReasonLabel": "Reason",
+  "selectReportReason": "Select a reason",
+  "reportDescriptionLabel": "Description",
+  "reportDescriptionPlaceholder": "Describe the issue in detail (min. 20 characters)...",
+  "reportDescriptionMinLength": "Please enter at least 20 characters",
+  "reportReason": {
+    "suspiciousListing": "Suspicious listing",
+    "counterfeit": "Counterfeit item",
+    "prohibitedItem": "Prohibited item",
+    "misleadingDescription": "Misleading description",
+    "other": "Other"
+  },
+  "disputeReason": {
+    "notAsDescribed": "Item not as described",
+    "damaged": "Item damaged",
+    "notReceived": "Item not received",
+    "wrongItem": "Wrong item",
+    "buyerNonPayment": "Buyer non-payment",
+    "buyerFraud": "Buyer fraud",
+    "communicationIssue": "Communication issue",
+    "other": "Other"
   }
 }

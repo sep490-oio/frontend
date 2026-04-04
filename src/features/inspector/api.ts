@@ -1,20 +1,24 @@
 import apiClient, { extractArray } from '@/lib/axios'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/queryClient'
-import type { PagedList, PaginationParams } from '@/types'
+import type { PagedList } from '@/types'
 
 // ── Types ────────────────────────────────────────────────────────────
 
 export interface InspectionQueueItem {
-  id: string
+  inboundShipmentId: string
   itemId: string
   itemTitle: string
   sellerId: string
-  sellerName: string
-  providerCode: string
-  status: string
-  arrivedAt: string
-  createdAt: string
+  warehouseItemId?: string
+  inspectionId?: string
+  shipmentStatus: string
+  queueStatus: string
+  carrierTrackingNumber?: string
+  arrivedAt?: string
+  declaredCondition: string
+  conditionOnArrival?: string
+  inspectedAt?: string
 }
 
 export interface WarehouseInspectionDto {
@@ -55,7 +59,7 @@ export interface StorageLocationDto {
 
 // ── Inspection Queue ─────────────────────────────────────────────────
 
-export function useInspectionQueue(params?: PaginationParams & { status?: string }) {
+export function useInspectionQueue(params?: { pageNumber?: number; pageSize?: number; status?: string }) {
   return useQuery({
     queryKey: [...queryKeys.warehouse.all, 'inspectionQueue', params],
     queryFn: async () => {

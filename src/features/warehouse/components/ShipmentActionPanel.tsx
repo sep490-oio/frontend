@@ -1,8 +1,30 @@
 import { useState } from 'react'
-import { Card, Button, Input, Popconfirm, Alert, Space, Typography } from 'antd'
-import { CloseCircleOutlined, SendOutlined, QrcodeOutlined } from '@ant-design/icons'
+import { Card, Button, Input, Popconfirm, Alert, Space, Typography, Select } from 'antd'
+import { CloseCircleOutlined, SendOutlined, QrcodeOutlined, ArrowRightOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { ShipmentStatus } from '@/types/enums'
+
+// Seller: AwaitingPickup→InTransit, InTransit→SellerClaimsArrived
+const SELLER_NEXT_STATUS: Partial<Record<string, string>> = {
+  [ShipmentStatus.AwaitingPickup]: ShipmentStatus.InTransit,
+  [ShipmentStatus.InTransit]: ShipmentStatus.SellerClaimsArrived,
+}
+const SELLER_NEXT_LABEL: Partial<Record<string, string>> = {
+  [ShipmentStatus.AwaitingPickup]: 'Mark as In Transit',
+  [ShipmentStatus.InTransit]: 'Mark as Arrived',
+}
+
+// Staff: AwaitingPickup→InTransit, InTransit→Arrived, SellerClaimsArrived→Arrived
+const STAFF_NEXT_STATUS: Partial<Record<string, string>> = {
+  [ShipmentStatus.AwaitingPickup]: ShipmentStatus.InTransit,
+  [ShipmentStatus.InTransit]: ShipmentStatus.Arrived,
+  [ShipmentStatus.SellerClaimsArrived]: ShipmentStatus.Arrived,
+}
+const STAFF_NEXT_LABEL: Partial<Record<string, string>> = {
+  [ShipmentStatus.AwaitingPickup]: 'Mark as In Transit',
+  [ShipmentStatus.InTransit]: 'Confirm Arrival',
+  [ShipmentStatus.SellerClaimsArrived]: 'Confirm Arrival',
+}
 
 interface ShipmentActionPanelProps {
   shipmentId: string
@@ -10,10 +32,13 @@ interface ShipmentActionPanelProps {
   carrierTrackingNumber?: string
   providerCode?: string
   qrData?: string
-  onCancel: () => Promise<void>
+  isStaff?: boolean
+  onCancel: (reason?: string) => Promise<void>
   onSetTracking: (trackingNumber: string) => Promise<void>
+  onAdvanceStatus?: (status: string) => Promise<void>
   cancelLoading: boolean
   trackingLoading: boolean
+  advanceLoading?: boolean
 }
 
 export function ShipmentActionPanel({
@@ -21,33 +46,51 @@ export function ShipmentActionPanel({
   carrierTrackingNumber,
   providerCode,
   qrData,
+  isStaff = false,
   onCancel,
   onSetTracking,
+  onAdvanceStatus,
   cancelLoading,
   trackingLoading,
+  advanceLoading,
 }: ShipmentActionPanelProps) {
   const { t } = useTranslation('warehouse')
   const [trackingInput, setTrackingInput] = useState(carrierTrackingNumber ?? '')
+  const [cancelReason, setCancelReason] = useState('')
   const [actionSuccess, setActionSuccess] = useState<string | null>(null)
 
   const canCancel = status === ShipmentStatus.AwaitingPickup
   const isExternal = providerCode === 'external'
   const canSetTracking = isExternal && (status === ShipmentStatus.AwaitingPickup || status === ShipmentStatus.InTransit)
+  const nextStatusMap = isStaff ? STAFF_NEXT_STATUS : SELLER_NEXT_STATUS
+  const nextLabelMap = isStaff ? STAFF_NEXT_LABEL : SELLER_NEXT_LABEL
+  const nextStatus = isExternal ? nextStatusMap[status] : undefined
+  const canAdvance = isExternal && !!nextStatus && !!onAdvanceStatus
+
+  const showSuccess = (msg: string) => {
+    setActionSuccess(msg)
+    setTimeout(() => setActionSuccess(null), 3000)
+  }
 
   const handleCancel = async () => {
-    await onCancel()
-    setActionSuccess(t('cancelSuccess', 'Shipment cancelled successfully'))
-    setTimeout(() => setActionSuccess(null), 3000)
+    await onCancel(cancelReason.trim() || undefined)
+    setCancelReason('')
+    showSuccess(t('cancelSuccess', 'Shipment cancelled successfully'))
   }
 
   const handleSetTracking = async () => {
     if (!trackingInput.trim()) return
     await onSetTracking(trackingInput.trim())
-    setActionSuccess(t('trackingSet', 'Tracking number updated'))
-    setTimeout(() => setActionSuccess(null), 3000)
+    showSuccess(t('trackingSet', 'Tracking number updated'))
   }
 
-  const hasActions = canCancel || canSetTracking || !!qrData
+  const handleAdvance = async () => {
+    if (!nextStatus || !onAdvanceStatus) return
+    await onAdvanceStatus(nextStatus)
+    showSuccess(t('statusAdvanced', 'Status updated'))
+  }
+
+  const hasActions = canCancel || canSetTracking || canAdvance || !!qrData
 
   return (
     <div style={{ position: 'sticky', top: 24 }}>
@@ -59,20 +102,29 @@ export function ShipmentActionPanel({
         <Space direction="vertical" style={{ width: '100%' }} size={12}>
           {/* Cancel */}
           {canCancel && (
-            <Popconfirm
-              title={t('cancelConfirm', 'Are you sure you want to cancel this shipment?')}
-              onConfirm={handleCancel}
-              okText={t('yes', 'Yes')}
-              cancelText={t('no', 'No')}
-              okButtonProps={{ danger: true }}
-            >
-              <Button block danger icon={<CloseCircleOutlined />} loading={cancelLoading}>
-                {t('cancelShipment', 'Cancel Shipment')}
-              </Button>
-            </Popconfirm>
+            <div>
+              <Input.TextArea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder={t('cancelReasonPlaceholder', 'Reason for cancellation (optional)')}
+                rows={2}
+                style={{ marginBottom: 8 }}
+              />
+              <Popconfirm
+                title={t('cancelConfirm', 'Are you sure you want to cancel this shipment?')}
+                onConfirm={handleCancel}
+                okText={t('yes', 'Yes')}
+                cancelText={t('no', 'No')}
+                okButtonProps={{ danger: true }}
+              >
+                <Button block danger icon={<CloseCircleOutlined />} loading={cancelLoading}>
+                  {t('cancelShipment', 'Cancel Shipment')}
+                </Button>
+              </Popconfirm>
+            </div>
           )}
 
-          {/* Tracking Number */}
+          {/* Tracking Number (external only) */}
           {canSetTracking && (
             <div>
               <Typography.Text style={{ fontSize: 12, fontWeight: 500, display: 'block', marginBottom: 4 }}>
@@ -98,6 +150,26 @@ export function ShipmentActionPanel({
                 </Button>
               </Space.Compact>
             </div>
+          )}
+
+          {/* Manual Status Advance (external only) */}
+          {canAdvance && (
+            <Popconfirm
+              title={t('advanceConfirm', 'Advance shipment status?')}
+              onConfirm={handleAdvance}
+              okText={t('yes', 'Yes')}
+              cancelText={t('no', 'No')}
+            >
+              <Button
+                block
+                type="primary"
+                icon={<ArrowRightOutlined />}
+                loading={advanceLoading}
+                style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
+              >
+                {t(`advanceTo.${nextStatus}`, nextLabelMap[status] ?? 'Advance')}
+              </Button>
+            </Popconfirm>
           )}
 
           {/* QR Code */}

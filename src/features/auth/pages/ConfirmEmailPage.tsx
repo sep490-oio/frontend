@@ -5,8 +5,7 @@ import { Link, useSearchParams } from 'react-router'
 import { useConfirmEmail, useResendConfirmEmail } from '@/features/auth/api'
 import type { AxiosError } from 'axios'
 import type { ApiError } from '@/types'
-
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
+import { SERIF_FONT } from '@/styles/tokens'
 
 export default function ConfirmEmailPage() {
   const { t } = useTranslation('auth')

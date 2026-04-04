@@ -7,20 +7,18 @@ import { useInspectionQueue } from '@/features/inspector/api'
 import type { InspectionQueueItem } from '@/features/inspector/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
-import type { TablePaginationConfig } from 'antd'
-
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
+import { SERIF_FONT } from '@/styles/tokens'
 
 const STATUS_OPTIONS = [
-  { value: '', label: 'All Statuses' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'in_progress', label: 'In Progress' },
-  { value: 'completed', label: 'Completed' },
+  { value: '', label: 'All' },
+  { value: 'awaiting_inspection', label: 'Awaiting Inspection' },
+  { value: 'pending_review', label: 'Pending Review' },
 ]
 
 export default function InspectionQueuePage() {
   const navigate = useNavigate()
   const [statusFilter, setStatusFilter] = useState('')
+
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(12)
 
@@ -38,35 +36,35 @@ export default function InspectionQueuePage() {
       ellipsis: true,
     },
     {
-      title: 'Seller',
-      dataIndex: 'sellerName',
-      key: 'sellerName',
+      title: 'Declared Condition',
+      dataIndex: 'declaredCondition',
+      key: 'declaredCondition',
+      width: 140,
+      render: (v: string) => <StatusBadge status={v} size="small" />,
     },
     {
-      title: 'Provider',
-      dataIndex: 'providerCode',
-      key: 'providerCode',
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
+      title: 'Queue Status',
+      dataIndex: 'queueStatus',
+      key: 'queueStatus',
+      width: 150,
       render: (status: string) => <StatusBadge status={status} />,
     },
     {
       title: 'Arrived',
       dataIndex: 'arrivedAt',
       key: 'arrivedAt',
-      render: (date: string) => formatDateTime(date),
+      width: 160,
+      render: (date: string) => date ? formatDateTime(date) : '-',
     },
     {
       title: 'Actions',
       key: 'actions',
+      width: 120,
       render: (_: unknown, record: InspectionQueueItem) => (
         <Button
           type="link"
           icon={<SearchOutlined />}
-          onClick={() => navigate(`/inspector/inspections/${record.id}`)}
+          onClick={() => navigate(`/inspector/inspections/${record.inboundShipmentId}`)}
           style={{ color: 'var(--color-accent)' }}
         >
           Inspect
@@ -74,11 +72,6 @@ export default function InspectionQueuePage() {
       ),
     },
   ]
-
-  const handleTableChange = (pagination: TablePaginationConfig) => {
-    setPage(pagination.current ?? 1)
-    setPageSize(pagination.pageSize ?? 12)
-  }
 
   return (
     <div>
@@ -95,7 +88,7 @@ export default function InspectionQueuePage() {
             value={statusFilter}
             onChange={setStatusFilter}
             options={STATUS_OPTIONS}
-            style={{ width: 180 }}
+            style={{ width: 200 }}
             placeholder="Filter by status"
           />
         </Space>
@@ -106,15 +99,15 @@ export default function InspectionQueuePage() {
           mobileMode="card"
           columns={columns}
           dataSource={data?.items ?? []}
-          rowKey="id"
+          rowKey="inboundShipmentId"
           loading={isLoading}
-          onChange={handleTableChange}
           pagination={{
-            current: page,
-            pageSize,
+            current: data?.metadata?.currentPage ?? page,
+            pageSize: data?.metadata?.pageSize ?? pageSize,
             total: data?.metadata?.totalCount ?? 0,
             showSizeChanger: true,
             showTotal: (total) => `Total ${total} items`,
+            onChange: (p, ps) => { setPage(p); setPageSize(ps); },
           }}
         />
       </Card>

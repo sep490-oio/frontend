@@ -424,31 +424,32 @@ export default function MyAuctionsPage() {
       key: 'itemTitle',
       ellipsis: true,
       render: (title: string, record) => (
-        <Button type="link" onClick={() => navigate(`/auctions/${record.id}`)} style={{ padding: 0 }}>
-          {title}
-        </Button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {record.primaryImageUrl && (
+            <img
+              src={record.primaryImageUrl}
+              alt=""
+              style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }}
+            />
+          )}
+          <Button type="link" onClick={() => navigate(`/auctions/${record.id}`)} style={{ padding: 0, textAlign: 'left' }}>
+            {title}
+          </Button>
+        </div>
       ),
-    },
-    {
-      title: t('type', 'Type'),
-      dataIndex: 'auctionType',
-      key: 'auctionType',
-      width: 100,
-      render: (type: string | undefined) =>
-        type ? <StatusBadge status={type} size="small" /> : <span style={{ color: 'var(--color-text-secondary)' }}>-</span>,
     },
     {
       title: t('status', 'Status'),
       dataIndex: 'status',
       key: 'status',
-      width: 140,
+      width: 170,
       render: (status: string) => <StatusBadge status={status} />,
     },
     {
       title: t('currentPrice', 'Current Price'),
       dataIndex: 'currentPrice',
       key: 'currentPrice',
-      width: 160,
+      width: 150,
       render: (price: unknown) => {
         if (price && typeof price === 'object' && 'amount' in price) {
           const m = price as { amount: number; currency: string }
@@ -461,14 +462,14 @@ export default function MyAuctionsPage() {
       title: t('bids', 'Bids'),
       dataIndex: 'bidCount',
       key: 'bidCount',
-      width: 80,
+      width: 70,
       align: 'center',
     },
     {
       title: t('endTime', 'End Time'),
       dataIndex: 'endTime',
       key: 'endTime',
-      width: 180,
+      width: 160,
       render: (endTime: string | undefined, record) => {
         if (!endTime) return <span style={{ color: 'var(--color-text-secondary)' }}>-</span>
         if (record.status === AuctionStatus.Active) {
@@ -480,7 +481,7 @@ export default function MyAuctionsPage() {
     {
       title: tc('action.actions', 'Actions'),
       key: 'actions',
-      width: 200,
+      width: 180,
       render: (_: unknown, record: AuctionListItemDto) => renderActions(record),
     },
   ]
@@ -502,20 +503,6 @@ export default function MyAuctionsPage() {
         >
           {t('myAuctions', 'My Auctions')}
         </h2>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => navigate(`${prefix}/auctions/create`)}
-          style={{
-            background: 'var(--color-accent)',
-            borderColor: 'var(--color-accent)',
-            borderRadius: 8,
-            height: 40,
-            fontWeight: 500,
-          }}
-        >
-          {t('createAuction', 'Create Auction')}
-        </Button>
       </Flex>
 
       {/* Status pills */}
@@ -544,14 +531,14 @@ export default function MyAuctionsPage() {
             <Button
               type="primary"
               icon={<PlusOutlined />}
-              onClick={() => navigate(`${prefix}/auctions/create`)}
+              onClick={() => navigate(`${prefix}/items/create`)}
               style={{
                 background: 'var(--color-accent)',
                 borderColor: 'var(--color-accent)',
                 borderRadius: 8,
               }}
             >
-              {t('createAuction', 'Create Auction')}
+              {t('createItem', 'Create Item')}
             </Button>
           }
         />

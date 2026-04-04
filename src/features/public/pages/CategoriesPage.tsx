@@ -3,9 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Spin, Empty } from 'antd'
 import { useCategories } from '@/features/item/api'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
-
-const SANS_FONT = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
+import { SANS_FONT, SERIF_FONT, MONO_FONT } from '@/styles/tokens'
 
 export default function CategoriesPage() {
   const { t, i18n } = useTranslation('common')
@@ -149,7 +147,7 @@ export default function CategoriesPage() {
               )}
               <span
                 style={{
-                  fontFamily: "'DM Mono', monospace",
+                  fontFamily: MONO_FONT,
                   fontSize: 12,
                   color: 'var(--color-text-tertiary)',
                   letterSpacing: '0.02em',

@@ -1,9 +1,6 @@
 import { Outlet, Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
-
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
-const SANS_FONT = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-const MONO_FONT = "'DM Mono', monospace"
+import { SERIF_FONT, SANS_FONT, MONO_FONT } from '@/styles/tokens'
 
 const STATS = [
   { value: '12K+', label: 'items' },

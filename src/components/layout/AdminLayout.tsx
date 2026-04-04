@@ -9,7 +9,6 @@ import {
   AuditOutlined,
   AlertOutlined,
   MonitorOutlined,
-  CommentOutlined,
   DollarOutlined,
   FileTextOutlined,
   LockOutlined,
@@ -26,11 +25,9 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/hooks/useTheme'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { SERIF_FONT, SANS_FONT } from '@/styles/tokens'
 
 const { Content } = Layout
-
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
-const SANS_FONT = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
 
 const SIDEBAR_WIDTH = 240
 const SIDEBAR_COLLAPSED = 72
@@ -54,9 +51,8 @@ export function AdminLayout() {
     { key: '/admin/verifications', icon: <SafetyCertificateOutlined />, label: t('menu.verifications', 'Verifications') },
     { key: '/admin/sellers', icon: <ShopOutlined />, label: t('menu.sellers', 'Sellers') },
     { key: '/admin/items/review', icon: <AuditOutlined />, label: t('menu.itemReview', 'Item Review') },
-    { key: '/admin/reports', icon: <AlertOutlined />, label: t('menu.reports', 'Reports') },
+    { key: '/admin/moderation', icon: <AlertOutlined />, label: t('menu.moderation', 'Moderation') },
     { key: '/admin/monitoring', icon: <MonitorOutlined />, label: t('menu.monitoring', 'Monitoring') },
-    { key: '/admin/disputes', icon: <CommentOutlined />, label: t('menu.disputes', 'Disputes') },
     { key: '/admin/payments', icon: <DollarOutlined />, label: t('menu.payments', 'Payments') },
     { key: '/admin/terms', icon: <FileTextOutlined />, label: t('menu.terms', 'Terms') },
     { key: '/admin/roles', icon: <LockOutlined />, label: t('menu.roles', 'Roles & Permissions') },

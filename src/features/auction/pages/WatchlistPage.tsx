@@ -8,6 +8,7 @@ import type { WatchlistItemDto } from '@/features/auction/api'
 import { CountdownTimer } from '@/components/ui/CountdownTimer'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatCurrency } from '@/utils/format'
+import { MONO_FONT, SERIF_FONT } from '@/styles/tokens'
 
 type SortKey = 'endingSoon' | 'newest' | 'priceLow' | 'priceHigh'
 
@@ -33,9 +34,6 @@ function sortItems(items: WatchlistItemDto[], sortKey: SortKey): WatchlistItemDt
       return copy
   }
 }
-
-const MONO_FONT = "'DM Mono', monospace"
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
 
 export default function WatchlistPage() {
   const { t } = useTranslation('auction')

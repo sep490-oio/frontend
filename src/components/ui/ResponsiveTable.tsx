@@ -54,9 +54,11 @@ export function ResponsiveTable<T extends Record<string, any>>({
   }
 
   const cols = (columns ?? []) as ColumnType<T>[]
+  const actionCol = cols.find((c) => String(c.key) === 'actions' || String(c.key) === 'action')
+  const nonActionCols = cols.filter((c) => c !== actionCol)
   const visibleCols = mobileColumns
     ? cols.filter((c) => mobileColumns.includes(String(c.key ?? c.dataIndex)))
-    : cols.slice(0, 4)
+    : [...nonActionCols.slice(0, 4), ...(actionCol ? [actionCol] : [])]
 
   if (mobileMode === 'card') {
     return (
@@ -74,7 +76,7 @@ export function ResponsiveTable<T extends Record<string, any>>({
     <MobileListView<T>
       data={data}
       columns={visibleCols}
-      allColumns={cols}
+      allColumns={visibleCols}
       mobileRender={mobileRender}
       pagination={pagination}
       rowKey={rowKey}

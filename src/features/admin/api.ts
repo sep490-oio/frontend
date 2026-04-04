@@ -281,6 +281,7 @@ export function useApproveItem() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.admin.reviewQueue() })
+      qc.invalidateQueries({ queryKey: queryKeys.items.all })
     },
   })
 }
@@ -294,6 +295,7 @@ export function useRejectItem() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.admin.reviewQueue() })
+      qc.invalidateQueries({ queryKey: queryKeys.items.all })
     },
   })
 }
@@ -394,12 +396,28 @@ export function useAssignReport() {
 export function useResolveReport() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, dismissed, resolutionNotes }: { id: string; dismissed: boolean; resolutionNotes: string }) => {
-      const res = await apiClient.post(`/admin/reports/${id}/resolve`, { dismissed, resolutionNotes })
+    mutationFn: async ({ id, dismissed, resolutionNotes, enforcementAction }: { id: string; dismissed: boolean; resolutionNotes: string; enforcementAction?: string }) => {
+      const res = await apiClient.post(`/admin/reports/${id}/resolve`, { dismissed, resolutionNotes, enforcementAction })
       return res.data
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.admin.reports() })
+    },
+  })
+}
+
+export function useEscalateReportToDispute() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ reportId, title, disputeType, priority }: {
+      reportId: string; title?: string; disputeType?: string; priority?: string
+    }) => {
+      const res = await apiClient.post(`/admin/reports/${reportId}/escalate-to-dispute`, { title, disputeType, priority })
+      return res.data
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.admin.reports() })
+      qc.invalidateQueries({ queryKey: queryKeys.admin.disputes() })
     },
   })
 }
@@ -474,7 +492,7 @@ export function useAdminDisputes(params?: PaginationParams & { status?: string }
   return useQuery({
     queryKey: queryKeys.admin.disputes(params),
     queryFn: async () => {
-      const res = await apiClient.get<PagedList<DisputeDto>>('/admin/disputes', { params })
+      const res = await apiClient.get<PagedList<DisputeDto>>('/disputes', { params })
       return res.data
     },
   })
@@ -782,5 +800,24 @@ export function useItemReviewHistory(itemId: string) {
       return extractArray<ItemReviewDto>(res.data)
     },
     enabled: !!itemId,
+  })
+}
+
+// Admin VnPay refund
+export function useRefundVnPay() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: {
+      originalTransactionRef: string
+      originalVnPayTransactionNo: string
+      amount: number
+      reason: string
+    }) => {
+      const res = await apiClient.post('/payments/vnpay/refund', data)
+      return res.data
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.admin.transactions() })
+    },
   })
 }

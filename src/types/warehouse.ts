@@ -34,35 +34,62 @@ export interface InboundShipmentDto {
 export interface OutboundShipmentDto {
   id: string
   orderId: string
-  buyerId: string
-  recipientAddress: string
-  shippingProvider: string
-  trackingNumber?: string
-  status: ShipmentStatus
-  shippedAt?: string
+  warehouseItemId?: string
+  shipmentMode: string
+  externalCarrierName?: string
+  providerCode?: string
+  clientOrderCode?: string
+  carrierTrackingNumber?: string
+  shippingLabelUrl?: string
+  shippingMethod?: string
+  weightGrams?: number
+  lengthCm?: number
+  widthCm?: number
+  heightCm?: number
+  shippingFee?: number
+  insuranceValue?: number
+  codAmount?: number
+  status: string
+  estimatedDeliveryAt?: string
+  packedAt?: string
+  dispatchedAt?: string
   deliveredAt?: string
   createdAt: string
+  modifiedAt?: string
+  trackingEvents?: TrackingEventDto[]
 }
 
 export interface WarehouseItemDto {
   id: string
   itemId: string
-  quantity: number
-  condition: string
+  inboundShipmentId?: string
   storageLocationId?: string
-  arrivedAt: string
-  storedAt?: string
+  status: string
+  receivedAt?: string
+  createdAt: string
+  modifiedAt?: string
+  media?: { id: string; secureUrl: string; resourceType: string }[]
 }
 
 export interface StorageLocationDto {
   id: string
-  name: string
-  capacity: number
-  currentOccupancy: number
+  zone: string
+  aisle: string
+  shelf: string
+  bin: string
+  label: string
+  isOccupied: boolean
   createdAt: string
 }
 
 export interface ShipmentTrackingEventDto {
+  timestamp: string
+  status: string
+  location?: string
+  notes?: string
+}
+
+export interface TrackingEventDto {
   timestamp: string
   status: string
   location?: string

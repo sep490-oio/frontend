@@ -7,6 +7,7 @@ import { PriceDisplay as _PriceDisplay } from '@/components/ui/PriceDisplay'
 import { AutoBidDashboard } from '@/features/auction/components/AutoBidDashboard'
 import { PriceHistoryChart } from '@/features/auction/components/PriceHistoryChart'
 import { formatCurrency } from '@/utils/format'
+import { MONO_FONT } from '@/styles/tokens'
 
 interface BidFormProps {
   currentPrice: number
@@ -36,6 +37,7 @@ interface BidFormProps {
   onCancelAutoBid: () => Promise<void>
   isPauseLoading: boolean
   isResumeLoading: boolean
+  isCancelLoading?: boolean
   // Price history
   priceHistory?: { price: number; timestamp: string }[]
   // Outbid mode
@@ -62,6 +64,7 @@ export default function BidForm({
   onCancelAutoBid,
   isPauseLoading,
   isResumeLoading,
+  isCancelLoading,
   priceHistory,
   outbidMode,
 }: BidFormProps) {
@@ -146,7 +149,7 @@ export default function BidForm({
               border: '1px solid var(--color-border)',
               background: 'var(--color-bg-surface)',
               color: 'var(--color-text-primary)',
-              fontFamily: "'DM Mono', monospace",
+              fontFamily: MONO_FONT,
               fontSize: 12,
               fontWeight: 500,
               cursor: disabled ? 'not-allowed' : 'pointer',
@@ -260,9 +263,11 @@ export default function BidForm({
             onPause={onPauseAutoBid}
             onResume={onResumeAutoBid}
             onModify={onModifyAutoBid}
-            onCancel={onCancelAutoBid}
+            onCancel={onPauseAutoBid}
+            onCancelAutoBid={onCancelAutoBid}
             isPauseLoading={isPauseLoading}
             isResumeLoading={isResumeLoading}
+            isCancelLoading={isCancelLoading}
           />
         </div>
       )}

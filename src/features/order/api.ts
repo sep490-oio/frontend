@@ -108,7 +108,7 @@ export function useCreateSellerReview() {
       itemAccuracyRating?: number
       title?: string
       comment?: string
-    }) => apiClient.post('/api/reviews', data),
+    }) => apiClient.post('/reviews', data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.orders.all })
     },

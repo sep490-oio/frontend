@@ -43,23 +43,35 @@ const { Title, Text } = Typography
 
 // -- Schema --------------------------------------------------------------------
 
-const addressSchema = z.object({
-  recipientName: z.string().min(1, 'Vui long nhap ten nguoi nhan'),
-  phoneNumber: z.string().min(1, 'Vui long nhap so dien thoai'),
-  street: z.string().min(1, 'Vui long nhap dia chi'),
-  ward: z.string().min(1, 'Vui long nhap phuong/xa'),
-  district: z.string().min(1, 'Vui long nhap quan/huyen'),
-  city: z.string().min(1, 'Vui long nhap tinh/thanh pho'),
-  postalCode: z.string().optional().or(z.literal('')),
-  type: z.string().min(1, 'Vui long chon loai dia chi'),
-})
+function useAddressSchema() {
+  const { t } = useTranslation('user')
+  return z.object({
+    recipientName: z.string().min(1, t('addresses.validation.recipientRequired')),
+    phoneNumber: z.string().min(1, t('addresses.validation.phoneRequired')),
+    street: z.string().min(1, t('addresses.validation.streetRequired')),
+    ward: z.string().min(1, t('addresses.validation.wardRequired')),
+    district: z.string().min(1, t('addresses.validation.districtRequired')),
+    city: z.string().min(1, t('addresses.validation.cityRequired')),
+    postalCode: z.string().optional().or(z.literal('')),
+    type: z.string().min(1, t('addresses.validation.typeRequired')),
+  })
+}
 
-type AddressFormValues = z.infer<typeof addressSchema>
+type AddressFormValues = {
+  recipientName: string
+  phoneNumber: string
+  street: string
+  ward: string
+  district: string
+  city: string
+  postalCode?: string
+  type: string
+}
 
 // -- Component -----------------------------------------------------------------
 
 export default function AddressesPage() {
-  const { t: _t } = useTranslation('common')
+  const { t } = useTranslation('user')
   const { isMobile } = useBreakpoint()
   const { message } = App.useApp()
 
@@ -71,6 +83,8 @@ export default function AddressesPage() {
   const updateAddress = useUpdateAddress()
   const removeAddress = useRemoveAddress()
   const setDefault = useSetDefaultAddress()
+
+  const addressSchema = useAddressSchema()
 
   const {
     control,
@@ -133,32 +147,32 @@ export default function AddressesPage() {
           id: editingAddress.id,
           ...payload,
         })
-        message.success('Cap nhat dia chi thanh cong')
+        message.success(t('addresses.updateSuccess'))
       } else {
         await addAddress.mutateAsync(payload)
-        message.success('Them dia chi thanh cong')
+        message.success(t('addresses.addSuccess'))
       }
       setModalOpen(false)
     } catch {
-      message.error('Khong the luu dia chi')
+      message.error(t('addresses.saveError'))
     }
   })
 
   const onDelete = async (id: string) => {
     try {
       await removeAddress.mutateAsync(id)
-      message.success('Xoa dia chi thanh cong')
+      message.success(t('addresses.deleteSuccess'))
     } catch {
-      message.error('Khong the xoa dia chi')
+      message.error(t('addresses.deleteError'))
     }
   }
 
   const onSetDefault = async (id: string) => {
     try {
       await setDefault.mutateAsync(id)
-      message.success('Da dat lam dia chi mac dinh')
+      message.success(t('addresses.setDefaultSuccess'))
     } catch {
-      message.error('Khong the dat dia chi mac dinh')
+      message.error(t('addresses.setDefaultError'))
     }
   }
 
@@ -173,14 +187,14 @@ export default function AddressesPage() {
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: isMobile ? '0 12px' : undefined }}>
       <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', gap: isMobile ? 12 : 0, marginBottom: 24 }}>
-        <Title level={2} style={{ margin: 0 }}>Dia chi</Title>
+        <Title level={2} style={{ margin: 0 }}>{t('addresses.title')}</Title>
         <Button type="primary" icon={<PlusOutlined />} onClick={openAddModal}>
-          Them dia chi
+          {t('addresses.addAddress')}
         </Button>
       </div>
 
       {!addresses?.length ? (
-        <Empty description="Chua co dia chi nao" />
+        <Empty description={t('addresses.empty')} />
       ) : (
         <Row gutter={[16, 16]}>
           {addresses.map((addr) => (
@@ -194,15 +208,15 @@ export default function AddressesPage() {
                     icon={<EditOutlined />}
                     onClick={() => openEditModal(addr)}
                   >
-                    Sua
+                    {t('addresses.edit')}
                   </Button>,
                   <Popconfirm
                     key="delete"
-                    title="Xoa dia chi?"
-                    description="Ban co chac muon xoa dia chi nay?"
+                    title={t('addresses.deleteConfirm')}
+                    description={t('addresses.deleteDesc')}
                     onConfirm={() => onDelete(addr.id)}
-                    okText="Xoa"
-                    cancelText="Huy"
+                    okText={t('addresses.deleteOk')}
+                    cancelText={t('addresses.deleteCancel')}
                   >
                     <Button
                       type="text"
@@ -210,12 +224,12 @@ export default function AddressesPage() {
                       icon={<DeleteOutlined />}
                       loading={removeAddress.isPending}
                     >
-                      Xoa
+                      {t('addresses.delete')}
                     </Button>
                   </Popconfirm>,
                   addr.isDefault ? (
                     <Button key="default" type="text" disabled icon={<StarFilled style={{ color: '#faad14' }} />}>
-                      Mac dinh
+                      {t('addresses.isDefault')}
                     </Button>
                   ) : (
                     <Button
@@ -225,7 +239,7 @@ export default function AddressesPage() {
                       onClick={() => onSetDefault(addr.id)}
                       loading={setDefault.isPending}
                     >
-                      Mac dinh
+                      {t('addresses.setDefault')}
                     </Button>
                   ),
                 ]}
@@ -236,9 +250,9 @@ export default function AddressesPage() {
                       icon={addr.type === 'home' ? <HomeOutlined /> : <BankOutlined />}
                       color={addr.type === 'home' ? 'blue' : 'green'}
                     >
-                      {addr.type === 'home' ? 'Nha rieng' : 'Co quan'}
+                      {addr.type === 'home' ? t('addresses.typeHome') : t('addresses.typeWork')}
                     </Tag>
-                    {addr.isDefault && <Tag color="gold">Mac dinh</Tag>}
+                    {addr.isDefault && <Tag color="gold">{t('addresses.isDefault')}</Tag>}
                   </Space>
                   <Text strong>{addr.recipientName} - {addr.phoneNumber}</Text>
                   <Text strong>{addr.street}</Text>
@@ -253,26 +267,26 @@ export default function AddressesPage() {
 
       {/* Add/Edit Modal */}
       <Modal
-        title={editingAddress ? 'Sua dia chi' : 'Them dia chi moi'}
+        title={editingAddress ? t('addresses.editAddress') : t('addresses.addNew')}
         open={modalOpen}
         onCancel={() => setModalOpen(false)}
         onOk={onSubmit}
         confirmLoading={addAddress.isPending || updateAddress.isPending}
-        okText={editingAddress ? 'Cap nhat' : 'Them'}
-        cancelText="Huy"
+        okText={editingAddress ? t('addresses.update') : t('addresses.add')}
+        cancelText={t('addresses.cancel')}
       >
         <form>
           <Row gutter={16}>
             <Col xs={24} sm={12}>
               <div style={{ marginBottom: 16 }}>
-                <label>Ten nguoi nhan *</label>
+                <label>{t('addresses.recipientName')} *</label>
                 <Controller
                   name="recipientName"
                   control={control}
                   render={({ field }) => (
                     <Input
                       {...field}
-                      placeholder="Ten nguoi nhan"
+                      placeholder={t('addresses.recipientNamePlaceholder')}
                       status={errors.recipientName ? 'error' : undefined}
                     />
                   )}
@@ -284,14 +298,14 @@ export default function AddressesPage() {
             </Col>
             <Col xs={24} sm={12}>
               <div style={{ marginBottom: 16 }}>
-                <label>So dien thoai *</label>
+                <label>{t('addresses.phoneNumber')} *</label>
                 <Controller
                   name="phoneNumber"
                   control={control}
                   render={({ field }) => (
                     <Input
                       {...field}
-                      placeholder="So dien thoai"
+                      placeholder={t('addresses.phoneNumberPlaceholder')}
                       status={errors.phoneNumber ? 'error' : undefined}
                     />
                   )}
@@ -304,14 +318,14 @@ export default function AddressesPage() {
           </Row>
 
           <div style={{ marginBottom: 16 }}>
-            <label>Dia chi *</label>
+            <label>{t('addresses.street')} *</label>
             <Controller
               name="street"
               control={control}
               render={({ field }) => (
                 <Input
                   {...field}
-                  placeholder="So nha, ten duong..."
+                  placeholder={t('addresses.streetPlaceholder')}
                   status={errors.street ? 'error' : undefined}
                 />
               )}
@@ -324,14 +338,14 @@ export default function AddressesPage() {
           <Row gutter={16}>
             <Col xs={24} sm={12}>
               <div style={{ marginBottom: 16 }}>
-                <label>Phuong/Xa *</label>
+                <label>{t('addresses.ward')} *</label>
                 <Controller
                   name="ward"
                   control={control}
                   render={({ field }) => (
                     <Input
                       {...field}
-                      placeholder="Phuong/Xa"
+                      placeholder={t('addresses.wardPlaceholder')}
                       status={errors.ward ? 'error' : undefined}
                     />
                   )}
@@ -343,14 +357,14 @@ export default function AddressesPage() {
             </Col>
             <Col xs={24} sm={12}>
               <div style={{ marginBottom: 16 }}>
-                <label>Quan/Huyen *</label>
+                <label>{t('addresses.district')} *</label>
                 <Controller
                   name="district"
                   control={control}
                   render={({ field }) => (
                     <Input
                       {...field}
-                      placeholder="Quan/Huyen"
+                      placeholder={t('addresses.districtPlaceholder')}
                       status={errors.district ? 'error' : undefined}
                     />
                   )}
@@ -365,14 +379,14 @@ export default function AddressesPage() {
           <Row gutter={16}>
             <Col xs={24} sm={12}>
               <div style={{ marginBottom: 16 }}>
-                <label>Tinh/Thanh pho *</label>
+                <label>{t('addresses.city')} *</label>
                 <Controller
                   name="city"
                   control={control}
                   render={({ field }) => (
                     <Input
                       {...field}
-                      placeholder="Tinh/Thanh pho"
+                      placeholder={t('addresses.cityPlaceholder')}
                       status={errors.city ? 'error' : undefined}
                     />
                   )}
@@ -384,14 +398,14 @@ export default function AddressesPage() {
             </Col>
             <Col xs={24} sm={12}>
               <div style={{ marginBottom: 16 }}>
-                <label>Ma buu chinh</label>
+                <label>{t('addresses.postalCode')}</label>
                 <Controller
                   name="postalCode"
                   control={control}
                   render={({ field }) => (
                     <Input
                       {...field}
-                      placeholder="Ma buu chinh"
+                      placeholder={t('addresses.postalCodePlaceholder')}
                       status={errors.postalCode ? 'error' : undefined}
                     />
                   )}
@@ -404,7 +418,7 @@ export default function AddressesPage() {
           </Row>
 
           <div style={{ marginBottom: 16 }}>
-            <label>Loai dia chi *</label>
+            <label>{t('addresses.addressType')} *</label>
             <Controller
               name="type"
               control={control}
@@ -413,8 +427,8 @@ export default function AddressesPage() {
                   {...field}
                   style={{ width: '100%' }}
                   options={[
-                    { value: 'home', label: 'Nha rieng' },
-                    { value: 'work', label: 'Co quan' },
+                    { value: 'home', label: t('addresses.typeHome') },
+                    { value: 'work', label: t('addresses.typeWork') },
                   ]}
                 />
               )}

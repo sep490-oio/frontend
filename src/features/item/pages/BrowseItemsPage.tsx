@@ -9,8 +9,9 @@ import { useBreakpoint } from '@/hooks/useBreakpoint'
 import apiClient from '@/lib/axios'
 import { useQuery } from '@tanstack/react-query'
 import type { PagedList, PaginationParams, ItemDto } from '@/types'
+import { SERIF_FONT } from '@/styles/tokens'
 
-const SERIF = "'DM Serif Display', Georgia, serif"
+const SERIF = SERIF_FONT
 
 function useBrowseItems(params?: PaginationParams & { categoryId?: string; search?: string; condition?: string }) {
   return useQuery({

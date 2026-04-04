@@ -50,7 +50,7 @@ export class NotificationAggregator {
     if (this.buffer.length > 3) {
       // Aggregate into a single summary
       const sorted = [...this.buffer].sort((a, b) => a.amount - b.amount)
-      const hasAutoBids = this.buffer.length > 1 // rapid succession implies auto-bids
+      const hasAutoBids = this.buffer.some((b) => b.isAutoBid)
       const aggregated: AggregatedBidNotification = {
         count: this.buffer.length,
         startPrice: sorted[0].amount,

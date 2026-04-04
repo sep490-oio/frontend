@@ -8,6 +8,7 @@ import { Link, useNavigate } from 'react-router'
 import { useAppDispatch, useAppSelector, setCredentials, logout } from '@/app/store'
 import { useVerifyTotp } from '@/features/auth/api'
 import { STORAGE_KEYS } from '@/utils/constants'
+import { MONO_FONT } from '@/styles/tokens'
 import type { AxiosError } from 'axios'
 import type { ApiError } from '@/types'
 
@@ -160,7 +161,7 @@ export default function TwoFactorPage() {
           style={{
             textAlign: 'center',
             marginBottom: 20,
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: MONO_FONT,
             fontSize: 14,
             color: remaining < 60 ? 'var(--color-danger)' : 'var(--color-text-secondary)',
           }}
@@ -209,7 +210,7 @@ export default function TwoFactorPage() {
                   fontSize: 24,
                   height: 56,
                   borderRadius: 2,
-                  fontFamily: "'DM Mono', monospace",
+                  fontFamily: MONO_FONT,
                 }}
               />
             )}

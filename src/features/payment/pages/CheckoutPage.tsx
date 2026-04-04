@@ -29,12 +29,11 @@ import { useTermsGate } from '@/features/user/hooks/useTermsGate'
 import { useOrderById } from '@/features/order/api'
 import { usePaymentMethods, useCheckout, useCreateVnPayUrl, useWallet } from '@/features/payment/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
+import { CountdownTimer } from '@/components/ui/CountdownTimer'
 import { PaymentMethodType } from '@/types/enums'
 import { formatDateTime, formatCurrency } from '@/utils/format'
 import type { PaymentMethodDto } from '@/types'
-
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
-const MONO_FONT = "'DM Mono', monospace"
+import { SERIF_FONT, MONO_FONT } from '@/styles/tokens'
 
 const WALLET_METHOD_ID = '__wallet__'
 
@@ -211,6 +210,20 @@ export default function CheckoutPage() {
       >
         {t('checkout', 'Checkout')}
       </h1>
+
+      {/* Payment deadline countdown */}
+      {(order as any).paymentDueAt && (
+        <Alert
+          type="warning"
+          showIcon
+          style={{ marginBottom: 16 }}
+          message={
+            <span>
+              {t('paymentDeadline', 'Payment deadline')}: <CountdownTimer endTime={(order as any).paymentDueAt} size="small" />
+            </span>
+          }
+        />
+      )}
 
       {/* Order summary */}
       <Card style={{ marginBottom: 24 }}>

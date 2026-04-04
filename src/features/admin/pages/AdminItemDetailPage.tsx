@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
-import { Typography, Descriptions, Card, Button, Space, Spin, Alert, Modal, Input, App, Image } from 'antd'
+import { Typography, Descriptions, Card, Button, Space, Spin, Modal, Input, App, Image } from 'antd'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
@@ -8,6 +8,7 @@ import { useAdminItemDetail, useApproveItem, useRejectItem } from '@/features/ad
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
 import type { ItemReviewDto } from '@/types'
+import { AdminErrorState } from '@/features/admin/components/AdminErrorState'
 import type { ColumnsType } from 'antd/es/table'
 
 export default function AdminItemDetailPage() {
@@ -16,7 +17,7 @@ export default function AdminItemDetailPage() {
   const { message } = App.useApp()
   const navigate = useNavigate()
 
-  const { data: item, isLoading, error } = useAdminItemDetail(id!)
+  const { data: item, isLoading, error, refetch } = useAdminItemDetail(id!)
   const approveItem = useApproveItem()
   const rejectItem = useRejectItem()
 
@@ -24,7 +25,7 @@ export default function AdminItemDetailPage() {
   const [rejectReason, setRejectReason] = useState('')
 
   if (isLoading) return <div style={{ textAlign: 'center', padding: 80 }}><Spin size="large" /></div>
-  if (error || !item) return <Alert type="error" message={t('common.error')} showIcon />
+  if (error || !item) return <AdminErrorState message={t('common.error')} onRetry={refetch} backPath="/admin/items/review" />
 
   const handleApprove = async () => {
     try {

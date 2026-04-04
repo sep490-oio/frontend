@@ -33,15 +33,14 @@ import type { ColumnsType } from 'antd/es/table'
 const STATUS_PILLS = [
   { value: 'all', label: 'All' },
   { value: ItemStatus.Draft, label: 'Draft' },
+  { value: ItemStatus.PendingVerify, label: 'Awaiting Shipment' },
   { value: ItemStatus.PendingReview, label: 'Pending Review' },
-  { value: ItemStatus.PendingVerify, label: 'Pending Verify' },
   { value: ItemStatus.PendingConditionConfirmation, label: 'Confirm Condition' },
   { value: ItemStatus.Approved, label: 'Approved' },
   { value: ItemStatus.Active, label: 'Active' },
   { value: ItemStatus.InAuction, label: 'In Auction' },
   { value: ItemStatus.Sold, label: 'Sold' },
   { value: ItemStatus.Rejected, label: 'Rejected' },
-  { value: ItemStatus.Removed, label: 'Removed' },
 ] as const
 
 const pillBase: React.CSSProperties = {
@@ -244,7 +243,10 @@ export default function MyItemsPage() {
               type="text"
               size="small"
               icon={<EyeOutlined />}
-              onClick={() => navigate(`/items/${record.id}`)}
+              onClick={() => {
+                const auctionId = (record as any).auctionId
+                navigate(auctionId ? `/auctions/${auctionId}` : `/items/${record.id}`)
+              }}
             />
           </Tooltip>
         )}
@@ -294,17 +296,29 @@ export default function MyItemsPage() {
       dataIndex: 'title',
       key: 'title',
       ellipsis: true,
-      render: (title: string, record) => (
-        <Button type="link" onClick={() => navigate(`/items/${record.id}`)} style={{ padding: 0 }}>
-          {title}
-        </Button>
-      ),
+      render: (title: string, record) => {
+        const primaryImg = record.images?.find((img) => img.isPrimary) ?? record.images?.[0]
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {primaryImg && (
+              <img
+                src={primaryImg.thumbnailUrl ?? primaryImg.url}
+                alt=""
+                style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }}
+              />
+            )}
+            <Button type="link" onClick={() => navigate(`/items/${record.id}`)} style={{ padding: 0, textAlign: 'left' }}>
+              {title}
+            </Button>
+          </div>
+        )
+      },
     },
     {
       title: t('condition', 'Condition'),
       dataIndex: 'condition',
       key: 'condition',
-      width: 120,
+      width: 110,
       render: (condition: string) => <StatusBadge status={condition} size="small" />,
     },
     {
@@ -318,13 +332,13 @@ export default function MyItemsPage() {
       title: t('createdAt', 'Created'),
       dataIndex: 'createdAt',
       key: 'createdAt',
-      width: 160,
+      width: 150,
       render: (date: string) => formatDateTime(date),
     },
     {
       title: tc('action.actions', 'Actions'),
       key: 'actions',
-      width: 200,
+      width: 180,
       render: (_: unknown, record: ItemDto) => renderActions(record),
     },
   ]

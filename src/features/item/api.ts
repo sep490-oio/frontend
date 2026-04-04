@@ -44,6 +44,7 @@ export function useCreateItem() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.items.all })
+      qc.invalidateQueries({ queryKey: queryKeys.items.my() })
     },
   })
 }
@@ -85,6 +86,7 @@ export function useActivateItem() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.items.all })
+      qc.invalidateQueries({ queryKey: queryKeys.items.my() })
     },
   })
 }
@@ -98,6 +100,7 @@ export function useConfirmInspectedCondition() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.items.all })
+      qc.invalidateQueries({ queryKey: queryKeys.items.my() })
     },
   })
 }
@@ -423,6 +426,7 @@ export function useResubmitItem() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.items.all })
+      qc.invalidateQueries({ queryKey: queryKeys.items.my() })
     },
   })
 }

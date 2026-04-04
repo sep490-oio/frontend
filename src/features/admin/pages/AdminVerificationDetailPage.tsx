@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
-import { Typography, Descriptions, Card, Button, Space, Spin, Alert, Modal, Input, App, Image } from 'antd'
+import { Typography, Descriptions, Card, Button, Space, Spin, Modal, Input, App, Image, Popconfirm } from 'antd'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useAdminVerificationDetail, useApproveVerification, useRejectVerification } from '@/features/admin/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
 import { IdentityVerificationStatus } from '@/types/enums'
+import { AdminErrorState } from '@/features/admin/components/AdminErrorState'
 
 export default function AdminVerificationDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -14,7 +15,7 @@ export default function AdminVerificationDetailPage() {
   const { message } = App.useApp()
   const navigate = useNavigate()
 
-  const { data: verification, isLoading, error } = useAdminVerificationDetail(id!)
+  const { data: verification, isLoading, error, refetch } = useAdminVerificationDetail(id!)
   const approveVerification = useApproveVerification()
   const rejectVerification = useRejectVerification()
 
@@ -22,7 +23,7 @@ export default function AdminVerificationDetailPage() {
   const [rejectReason, setRejectReason] = useState('')
 
   if (isLoading) return <div style={{ textAlign: 'center', padding: 80 }}><Spin size="large" /></div>
-  if (error || !verification) return <Alert type="error" message={t('common.error')} showIcon />
+  if (error || !verification) return <AdminErrorState message={t('common.error')} onRetry={refetch} backPath="/admin/verifications" />
 
   const handleApprove = async () => {
     try {
@@ -112,9 +113,14 @@ export default function AdminVerificationDetailPage() {
       {/* Actions */}
       {isPending && (
         <Space>
-          <Button type="primary" onClick={handleApprove} loading={approveVerification.isPending}>
-            {t('verifications.approve')}
-          </Button>
+          <Popconfirm
+            title={t('verifications.approveConfirm', 'Are you sure you want to approve this verification?')}
+            onConfirm={handleApprove}
+          >
+            <Button type="primary" loading={approveVerification.isPending}>
+              {t('verifications.approve')}
+            </Button>
+          </Popconfirm>
           <Button danger onClick={() => setRejectModalOpen(true)}>
             {t('verifications.reject')}
           </Button>

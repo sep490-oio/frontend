@@ -65,15 +65,10 @@ function useChangePasswordSchema() {
 
 type ChangePasswordFormValues = { currentPassword: string; newPassword: string; confirmPassword: string }
 
-const totpCodeSchema = z.object({
-  code: z.string().length(6, 'Ma xac nhan phai gom 6 chu so'),
-})
-
-type TotpCodeFormValues = z.infer<typeof totpCodeSchema>
-
 // -- Change Password Tab -------------------------------------------------------
 
 function ChangePasswordSection() {
+  const { t } = useTranslation('user')
   const { message } = App.useApp()
   const changePassword = useChangePassword()
   const changePasswordSchema = useChangePasswordSchema()
@@ -94,10 +89,10 @@ function ChangePasswordSection() {
         currentPassword: values.currentPassword,
         newPassword: values.newPassword,
       })
-      message.success('Doi mat khau thanh cong')
+      message.success(t('security.changePassword.success'))
       reset()
     } catch {
-      message.error('Khong the doi mat khau. Vui long kiem tra lai mat khau hien tai.')
+      message.error(t('security.changePassword.error'))
     }
   })
 
@@ -105,7 +100,7 @@ function ChangePasswordSection() {
     <Card>
       <form onSubmit={onSubmit} style={{ maxWidth: 400 }}>
         <div style={{ marginBottom: 16 }}>
-          <label>Mat khau hien tai</label>
+          <label>{t('security.changePassword.currentPassword')}</label>
           <Controller
             name="currentPassword"
             control={control}
@@ -113,7 +108,7 @@ function ChangePasswordSection() {
               <Input.Password
                 {...field}
                 prefix={<LockOutlined />}
-                placeholder="Nhap mat khau hien tai"
+                placeholder={t('security.changePassword.currentPasswordPlaceholder')}
                 status={errors.currentPassword ? 'error' : undefined}
               />
             )}
@@ -124,7 +119,7 @@ function ChangePasswordSection() {
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <label>Mat khau moi</label>
+          <label>{t('security.changePassword.newPassword')}</label>
           <Controller
             name="newPassword"
             control={control}
@@ -132,7 +127,7 @@ function ChangePasswordSection() {
               <Input.Password
                 {...field}
                 prefix={<LockOutlined />}
-                placeholder="Nhap mat khau moi"
+                placeholder={t('security.changePassword.newPasswordPlaceholder')}
                 status={errors.newPassword ? 'error' : undefined}
               />
             )}
@@ -143,7 +138,7 @@ function ChangePasswordSection() {
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <label>Nhap lai mat khau moi</label>
+          <label>{t('security.changePassword.confirmPassword')}</label>
           <Controller
             name="confirmPassword"
             control={control}
@@ -151,7 +146,7 @@ function ChangePasswordSection() {
               <Input.Password
                 {...field}
                 prefix={<LockOutlined />}
-                placeholder="Nhap lai mat khau moi"
+                placeholder={t('security.changePassword.confirmPasswordPlaceholder')}
                 status={errors.confirmPassword ? 'error' : undefined}
               />
             )}
@@ -162,7 +157,7 @@ function ChangePasswordSection() {
         </div>
 
         <Button type="primary" htmlType="submit" loading={changePassword.isPending}>
-          Doi mat khau
+          {t('security.changePassword.submit')}
         </Button>
       </form>
     </Card>
@@ -172,6 +167,7 @@ function ChangePasswordSection() {
 // -- Two-Factor Auth Tab -------------------------------------------------------
 
 function TwoFactorSection() {
+  const { t } = useTranslation('user')
   const { message } = App.useApp()
   const { data: user, isLoading } = useCurrentUser()
 
@@ -183,6 +179,12 @@ function TwoFactorSection() {
   const confirmTotp = useConfirmTotp()
   const disable2FA = useDisable2FA()
   const regenCodes = useRegenerateRecoveryCodes()
+
+  const totpCodeSchema = useMemo(() => z.object({
+    code: z.string().length(6, t('security.twoFactor.codeValidation')),
+  }), [t])
+
+  type TotpCodeFormValues = z.infer<typeof totpCodeSchema>
 
   const {
     control: confirmControl,
@@ -210,7 +212,7 @@ function TwoFactorSection() {
       const data = await setupTotp.mutateAsync()
       setTotpData(data)
     } catch {
-      message.error('Khong the kich hoat 2FA')
+      message.error(t('security.twoFactor.enableError'))
     }
   }
 
@@ -219,9 +221,9 @@ function TwoFactorSection() {
       await confirmTotp.mutateAsync(values)
       setTotpData(null)
       resetConfirm()
-      message.success('Kich hoat xac thuc hai lop thanh cong')
+      message.success(t('security.twoFactor.enableSuccess'))
     } catch {
-      message.error('Ma xac nhan khong chinh xac')
+      message.error(t('security.twoFactor.confirmError'))
     }
   })
 
@@ -229,9 +231,9 @@ function TwoFactorSection() {
     try {
       await disable2FA.mutateAsync(values)
       resetDisable()
-      message.success('Da tat xac thuc hai lop')
+      message.success(t('security.twoFactor.disableSuccess'))
     } catch {
-      message.error('Khong the tat xac thuc hai lop')
+      message.error(t('security.twoFactor.disableError'))
     }
   })
 
@@ -243,11 +245,11 @@ function TwoFactorSection() {
     try {
       const data = await regenCodes.mutateAsync(regenTotpCode)
       setRecoveryCodes(data.recoveryCodes)
-      message.success('Da tao lai ma khoi phuc')
+      message.success(t('security.twoFactor.regenerateSuccess'))
       setRegenModalOpen(false)
       setRegenTotpCode('')
     } catch {
-      message.error('Ma xac thuc khong chinh xac')
+      message.error(t('security.twoFactor.regenerateError'))
     }
   }
 
@@ -262,10 +264,10 @@ function TwoFactorSection() {
       <Space direction="vertical" style={{ width: '100%' }} size="large">
         <div>
           <Title level={4} style={{ margin: 0 }}>
-            <SafetyOutlined /> Xac thuc hai lop (2FA)
+            <SafetyOutlined /> {t('security.twoFactor.title')}
           </Title>
           <Text type="secondary">
-            Bao ve tai khoan bang ung dung xac thuc TOTP (Google Authenticator, Authy, ...)
+            {t('security.twoFactor.description')}
           </Text>
         </div>
 
@@ -274,12 +276,12 @@ function TwoFactorSection() {
             <Alert
               type="success"
               showIcon
-              message="Xac thuc hai lop dang duoc bat"
-              description="Tai khoan cua ban duoc bao ve boi xac thuc hai lop."
+              message={t('security.twoFactor.enabled')}
+              description={t('security.twoFactor.enabledDesc')}
             />
 
             {/* Disable 2FA */}
-            <Card size="small" title="Tat xac thuc hai lop">
+            <Card size="small" title={t('security.twoFactor.disableTitle')}>
               <form onSubmit={onDisable2FA}>
                 <Space>
                   <Controller
@@ -288,14 +290,14 @@ function TwoFactorSection() {
                     render={({ field }) => (
                       <Input
                         {...field}
-                        placeholder="Nhap ma TOTP"
+                        placeholder={t('security.twoFactor.totpPlaceholder')}
                         maxLength={6}
                         status={disableErrors.code ? 'error' : undefined}
                       />
                     )}
                   />
                   <Button danger htmlType="submit" loading={disable2FA.isPending}>
-                    Tat 2FA
+                    {t('security.twoFactor.disableSubmit')}
                   </Button>
                 </Space>
                 {disableErrors.code && (
@@ -307,16 +309,16 @@ function TwoFactorSection() {
             </Card>
 
             {/* Regenerate Recovery Codes */}
-            <Card size="small" title="Ma khoi phuc">
+            <Card size="small" title={t('security.twoFactor.recoveryTitle')}>
               <Paragraph type="secondary">
-                Ma khoi phuc giup ban truy cap tai khoan khi khong co ung dung xac thuc.
+                {t('security.twoFactor.recoveryDesc')}
               </Paragraph>
               <Button onClick={() => { setRegenTotpCode(''); setRegenModalOpen(true) }}>
-                Tao lai ma khoi phuc
+                {t('security.twoFactor.regenerate')}
               </Button>
               {recoveryCodes && (
                 <div style={{ marginTop: 16, padding: 16, background: '#f5f5f5', borderRadius: 8 }}>
-                  <Paragraph strong>Hay luu lai cac ma nay o noi an toan:</Paragraph>
+                  <Paragraph strong>{t('security.twoFactor.saveCodesWarning')}</Paragraph>
                   <div style={{ fontFamily: 'monospace', fontSize: 14 }}>
                     {recoveryCodes.map((code) => (
                       <div key={code}>{code}</div>
@@ -327,10 +329,10 @@ function TwoFactorSection() {
                     style={{ marginTop: 8 }}
                     onClick={() => {
                       navigator.clipboard.writeText(recoveryCodes.join('\n'))
-                      message.success('Da sao chep ma khoi phuc')
+                      message.success(t('security.twoFactor.copySuccess'))
                     }}
                   >
-                    Sao chep
+                    {t('security.twoFactor.copyCodes')}
                   </Button>
                 </div>
               )}
@@ -338,21 +340,21 @@ function TwoFactorSection() {
 
             {/* TOTP Verification Modal for Recovery Code Regeneration */}
             <Modal
-              title="Xác thực để tạo lại mã khôi phục"
+              title={t('security.twoFactor.regenerateModalTitle')}
               open={regenModalOpen}
               onCancel={() => setRegenModalOpen(false)}
               onOk={onRegenerateCodes}
-              okText="Xác nhận"
+              okText={t('security.twoFactor.confirm')}
               okButtonProps={{ loading: regenCodes.isPending, disabled: regenTotpCode.length !== 6 }}
               centered
             >
               <div style={{ marginBottom: 8 }}>
-                <Text>Nhập mã xác thực 6 chữ số từ ứng dụng TOTP:</Text>
+                <Text>{t('security.twoFactor.regenerateModalDesc')}</Text>
               </div>
               <Input
                 value={regenTotpCode}
                 onChange={(e) => setRegenTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="Mã xác thực"
+                placeholder={t('security.twoFactor.regenerateModalPlaceholder')}
                 maxLength={6}
                 style={{ fontSize: 18, letterSpacing: 4, textAlign: 'center' }}
               />
@@ -363,19 +365,19 @@ function TwoFactorSection() {
             <Alert
               type="warning"
               showIcon
-              message="Xac thuc hai lop chua duoc bat"
-              description="Bat xac thuc hai lop de tang cuong bao mat cho tai khoan."
+              message={t('security.twoFactor.disabled')}
+              description={t('security.twoFactor.disabledDesc')}
             />
 
             {!totpData ? (
               <Button type="primary" onClick={onStartSetup} loading={enable2FA.isPending || setupTotp.isPending}>
-                Bat xac thuc hai lop
+                {t('security.twoFactor.enable')}
               </Button>
             ) : (
-              <Card size="small" title="Thiet lap TOTP">
+              <Card size="small" title={t('security.twoFactor.setupTitle')}>
                 <Space direction="vertical" style={{ width: '100%' }}>
                   <Paragraph>
-                    Quet ma QR duoi day bang ung dung xac thuc hoac nhap khoa thu cong:
+                    {t('security.twoFactor.setupDesc')}
                   </Paragraph>
 
                   {/* QR Code */}
@@ -384,7 +386,7 @@ function TwoFactorSection() {
                   </div>
 
                   <div style={{ padding: 12, background: '#f5f5f5', borderRadius: 8, textAlign: 'center' }}>
-                    <Text type="secondary">Khoa thu cong:</Text>
+                    <Text type="secondary">{t('security.twoFactor.manualKey')}</Text>
                     <br />
                     <Text code copyable>{totpData.secret}</Text>
                   </div>
@@ -397,14 +399,14 @@ function TwoFactorSection() {
                         render={({ field }) => (
                           <Input
                             {...field}
-                            placeholder="Nhap ma 6 chu so"
+                            placeholder={t('security.twoFactor.codePlaceholder')}
                             maxLength={6}
                             status={confirmErrors.code ? 'error' : undefined}
                           />
                         )}
                       />
                       <Button type="primary" htmlType="submit" loading={confirmTotp.isPending}>
-                        Xac nhan
+                        {t('security.twoFactor.confirm')}
                       </Button>
                     </Space>
                     {confirmErrors.code && (
@@ -426,11 +428,12 @@ function TwoFactorSection() {
 // -- Sessions Tab --------------------------------------------------------------
 
 function SessionsSection() {
+  const { t } = useTranslation('user')
   const { data: sessions, isLoading } = useSessions()
 
   const columns: ColumnsType<UserSessionDto> = [
     {
-      title: 'Thiet bi',
+      title: t('security.sessions.device'),
       dataIndex: 'userAgent',
       key: 'userAgent',
       render: (text: string) => (
@@ -441,29 +444,31 @@ function SessionsSection() {
       ),
     },
     {
-      title: 'Dia chi IP',
+      title: t('security.sessions.ipAddress'),
       dataIndex: 'ipAddress',
       key: 'ipAddress',
     },
     {
-      title: 'Trang thai',
+      title: t('security.sessions.status'),
       dataIndex: 'isActive',
       key: 'isActive',
       render: (isActive: boolean, record: UserSessionDto) => (
         <Space>
-          <Tag color={isActive ? 'green' : 'default'}>{isActive ? 'Dang hoat dong' : 'Khong hoat dong'}</Tag>
-          {record.isCurrentDevice && <Tag color="blue">Thiet bi hien tai</Tag>}
+          <Tag color={isActive ? 'green' : 'default'}>
+            {isActive ? t('security.sessions.active') : t('security.sessions.inactive')}
+          </Tag>
+          {record.isCurrentDevice && <Tag color="blue">{t('security.sessions.currentDevice')}</Tag>}
         </Space>
       ),
     },
     {
-      title: 'Tao luc',
+      title: t('security.sessions.createdAt'),
       dataIndex: 'createdAt',
       key: 'createdAt',
       render: (text: string) => dayjs(text).format('DD/MM/YYYY HH:mm'),
     },
     {
-      title: 'Het han tuyet doi',
+      title: t('security.sessions.expiresAt'),
       dataIndex: 'absoluteExpiresAt',
       key: 'absoluteExpiresAt',
       render: (text: string) => dayjs(text).format('DD/MM/YYYY HH:mm'),
@@ -479,7 +484,7 @@ function SessionsSection() {
         rowKey="sessionId"
         loading={isLoading}
         pagination={false}
-        locale={{ emptyText: 'Khong co phien dang nhap nao' }}
+        locale={{ emptyText: t('security.sessions.empty') }}
       />
     </Card>
   )
@@ -488,6 +493,8 @@ function SessionsSection() {
 // -- Login History Tab ---------------------------------------------------------
 
 function LoginHistorySection() {
+  const { t } = useTranslation('user')
+  const { t: tc } = useTranslation('common')
   const [params, setParams] = useState<PaginationParams>({
     pageNumber: 1,
     pageSize: 10,
@@ -497,13 +504,13 @@ function LoginHistorySection() {
 
   const columns: ColumnsType<LoginHistoryDto> = [
     {
-      title: 'Thoi gian dang nhap',
+      title: t('security.loginHistory.loginAt'),
       dataIndex: 'loginAt',
       key: 'loginAt',
       render: (text: string) => dayjs(text).format('DD/MM/YYYY HH:mm:ss'),
     },
     {
-      title: 'Trang thai',
+      title: t('security.loginHistory.status'),
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => (
@@ -511,17 +518,17 @@ function LoginHistorySection() {
           color={status === 'success' ? 'green' : 'red'}
           icon={status === 'success' ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
         >
-          {status === 'success' ? 'Thanh cong' : 'That bai'}
+          {status === 'success' ? t('security.loginHistory.success') : t('security.loginHistory.failed')}
         </Tag>
       ),
     },
     {
-      title: 'Thiet bi',
+      title: t('security.loginHistory.device'),
       dataIndex: 'userAgent',
       key: 'userAgent',
     },
     {
-      title: 'Dia chi IP',
+      title: t('security.loginHistory.ipAddress'),
       dataIndex: 'ipAddress',
       key: 'ipAddress',
     },
@@ -540,10 +547,10 @@ function LoginHistorySection() {
           pageSize: data?.metadata?.pageSize,
           total: data?.metadata?.totalCount,
           showSizeChanger: true,
-          showTotal: (total) => `Tong ${total} muc`,
+          showTotal: (total) => tc('pagination.total', { total }),
           onChange: (page, pageSize) => setParams({ pageNumber: page, pageSize }),
         }}
-        locale={{ emptyText: 'Chua co lich su dang nhap' }}
+        locale={{ emptyText: t('security.loginHistory.empty') }}
       />
     </Card>
   )
@@ -552,14 +559,14 @@ function LoginHistorySection() {
 // -- Main Component ------------------------------------------------------------
 
 export default function SecurityPage() {
-  const { t: _t } = useTranslation('common')
+  const { t } = useTranslation('user')
 
   const tabItems = [
     {
       key: 'password',
       label: (
         <span>
-          <LockOutlined /> Mat khau
+          <LockOutlined /> {t('security.tabs.password')}
         </span>
       ),
       children: <ChangePasswordSection />,
@@ -568,7 +575,7 @@ export default function SecurityPage() {
       key: '2fa',
       label: (
         <span>
-          <SafetyOutlined /> Xac thuc hai lop
+          <SafetyOutlined /> {t('security.tabs.twoFactor')}
         </span>
       ),
       children: <TwoFactorSection />,
@@ -577,7 +584,7 @@ export default function SecurityPage() {
       key: 'sessions',
       label: (
         <span>
-          <DesktopOutlined /> Phien dang nhap
+          <DesktopOutlined /> {t('security.tabs.sessions')}
         </span>
       ),
       children: <SessionsSection />,
@@ -586,7 +593,7 @@ export default function SecurityPage() {
       key: 'history',
       label: (
         <span>
-          <HistoryOutlined /> Lich su dang nhap
+          <HistoryOutlined /> {t('security.tabs.history')}
         </span>
       ),
       children: <LoginHistorySection />,
@@ -595,7 +602,7 @@ export default function SecurityPage() {
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto' }}>
-      <Title level={2}>Bao mat</Title>
+      <Title level={2}>{t('security.title')}</Title>
       <Tabs items={tabItems} />
     </div>
   )

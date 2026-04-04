@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
-import { Typography, Card, Tag, Space, Spin, Empty, Button, Input, List, Divider, Avatar, Tooltip, Progress, Upload, Popconfirm } from 'antd'
-import { SendOutlined, PaperClipOutlined, UserOutlined, CloseCircleOutlined, FlagOutlined } from '@ant-design/icons'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Typography, Card, Tag, Space, Spin, Empty, Button, Input, List, Divider, Avatar, Tooltip, Progress, Upload, Alert, Image } from 'antd'
+import { SendOutlined, PaperClipOutlined, UserOutlined, CloseCircleOutlined, CheckOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router'
-import { useDisputeThread, useDisputeMessages, useSendDisputeMessage, useMarkDisputeRead, useCreateReport } from '@/features/dispute/api'
+import { useDisputeThread, useDisputeMessages, useSendDisputeMessage, useMarkDisputeRead } from '@/features/dispute/api'
 import { useDisputeHub } from '@/features/dispute/hooks/useDisputeHub'
 import { useMediaUpload } from '@/hooks/useMediaUpload'
-import { useAuth } from '@/hooks/useAuth'
+import { useCurrentUser } from '@/features/user/api'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { DisputeStatus } from '@/types/enums'
 import type { DisputeMessageDto } from '@/types'
@@ -37,9 +37,8 @@ export default function DisputeDetailPage() {
   })
   const sendMessage = useSendDisputeMessage()
   const markRead = useMarkDisputeRead()
-  const createReport = useCreateReport()
   const hub = useDisputeHub(disputeId)
-  const { user: currentUser } = useAuth()
+  const { data: currentUser } = useCurrentUser()
 
   const [messageText, setMessageText] = useState('')
   const [uploadedFiles, setUploadedFiles] = useState<{ id: string; name: string }[]>([])
@@ -47,12 +46,36 @@ export default function DisputeDetailPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Combine API messages with hub real-time messages
-  const apiMessages = messagesData?.items ?? []
+  const apiMessages = messagesData?.messages ?? []
   const hubMessageIds = new Set(hub.messages.map((m) => m.id))
   const allMessages: DisputeMessageDto[] = [
     ...apiMessages.filter((m) => !hubMessageIds.has(m.id)),
     ...hub.messages,
   ].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+
+  // Track other participants' read states (from hub broadcasts)
+  const [otherReadStates, setOtherReadStates] = useState<Record<string, string>>({}) // userId → lastReadAt
+  useEffect(() => {
+    if (hub.readState && hub.readState.userId !== currentUser?.id) {
+      setOtherReadStates((prev) => ({
+        ...prev,
+        [hub.readState!.userId]: hub.readState!.lastReadAt,
+      }))
+    }
+  }, [hub.readState, currentUser?.id])
+
+  // Find which participants have "seen" up to each message
+  const getSeenBy = useCallback((msg: DisputeMessageDto) => {
+    if (msg.senderId !== currentUser?.id) return [] // only show "seen" on own messages
+    const seenParticipants: string[] = []
+    for (const [userId, lastReadAt] of Object.entries(otherReadStates)) {
+      if (new Date(lastReadAt) >= new Date(msg.createdAt)) {
+        const participant = dispute?.participants.find((p) => p.userId === userId)
+        seenParticipants.push(participant?.displayName ?? participant?.role ?? userId.slice(0, 8))
+      }
+    }
+    return seenParticipants
+  }, [otherReadStates, currentUser?.id, dispute?.participants])
 
   // Mark as read when new messages arrive from others
   const prevCountRef = useRef(0)
@@ -113,7 +136,8 @@ export default function DisputeDetailPage() {
   // Use hub meta if available, otherwise API data
   const currentStatus = hub.disputeMeta?.status ?? dispute?.meta?.status
   const currentUpdatedAt = hub.disputeMeta?.updatedAt ?? dispute?.meta?.updatedAt
-  const isTerminal = ['Resolved', 'Closed', 'Cancelled'].includes(currentStatus ?? '')
+  const terminalStatuses: DisputeStatus[] = [DisputeStatus.Resolved, DisputeStatus.Closed, DisputeStatus.Cancelled]
+  const isTerminal = terminalStatuses.includes(currentStatus as DisputeStatus)
 
   if (isLoadingDispute) {
     return (
@@ -134,7 +158,7 @@ export default function DisputeDetailPage() {
         <Space wrap size={isMobile ? 'small' : 'middle'} direction={isMobile ? 'vertical' : 'horizontal'}>
           <Typography.Text strong>{t('dispute', 'Dispute')}: </Typography.Text>
           <Typography.Text copyable style={{ fontSize: 12 }}>
-            {dispute.meta.disputeId}
+            {dispute.meta.id ?? dispute.meta.disputeId}
           </Typography.Text>
           <Divider type="vertical" />
           <Space size={4}>
@@ -148,8 +172,8 @@ export default function DisputeDetailPage() {
             <Typography.Text type="secondary">{t('participants', 'Participants')}:</Typography.Text>
             <Avatar.Group size="small" max={{ count: 5 }}>
               {dispute.participants.map((p) => (
-                <Tooltip key={p.userId} title={`${p.role} (${p.userId.slice(0, 8)}...)`}>
-                  <Avatar icon={<UserOutlined />} size="small" />
+                <Tooltip key={p.userId} title={`${p.displayName ?? p.userId.slice(0, 8)} (${p.role})`}>
+                  <Avatar src={p.avatarUrl} icon={<UserOutlined />} size="small" />
                 </Tooltip>
               ))}
             </Avatar.Group>
@@ -162,28 +186,38 @@ export default function DisputeDetailPage() {
               </Typography.Text>
             </>
           )}
-          <Divider type="vertical" />
-          <Popconfirm
-            title={t('reportConfirm', 'Report this dispute for review?')}
-            onConfirm={async () => {
-              try {
-                await createReport.mutateAsync({
-                  entityType: 'dispute',
-                  entityId: disputeId,
-                  reasonCode: 'escalation',
-                  description: 'Reported from dispute detail',
-                })
-              } catch {
-                // error handled by mutation
-              }
-            }}
-          >
-            <Button size="small" icon={<FlagOutlined />} danger loading={createReport.isPending}>
-              {t('report', 'Report')}
-            </Button>
-          </Popconfirm>
         </Space>
       </Card>
+
+      {/* Resolution banner for terminal states */}
+      {isTerminal && (
+        <Alert
+          type={currentStatus === DisputeStatus.Resolved ? 'success' : 'info'}
+          showIcon
+          style={{ marginBottom: isMobile ? 8 : 16 }}
+          message={
+            currentStatus === DisputeStatus.Resolved
+              ? t('disputeResolved', 'This dispute has been resolved')
+              : currentStatus === DisputeStatus.Cancelled
+                ? t('disputeCancelled', 'This dispute was cancelled')
+                : t('disputeClosedTitle', 'This dispute is closed')
+          }
+          description={
+            <Space direction="vertical" size={4}>
+              {dispute.meta.resolvedAt && (
+                <Typography.Text type="secondary">
+                  {t('resolvedOn', 'Resolved on')}: {dayjs(dispute.meta.resolvedAt).format('DD/MM/YYYY HH:mm')}
+                </Typography.Text>
+              )}
+              {dispute.meta.title && (
+                <Typography.Text>
+                  {t('disputeTitle', 'Title')}: {dispute.meta.title}
+                </Typography.Text>
+              )}
+            </Space>
+          }
+        />
+      )}
 
       {/* Message list */}
       <Card
@@ -210,38 +244,82 @@ export default function DisputeDetailPage() {
         ) : (
           <List
             dataSource={allMessages}
-            renderItem={(msg: DisputeMessageDto) => (
-              <div style={{ marginBottom: 16 }}>
-                <Space size={8} align="start">
-                  <Avatar icon={<UserOutlined />} size="small" />
-                  <div>
-                    <Space size={8}>
-                      <Typography.Text strong style={{ fontSize: 13 }}>
-                        {msg.senderId.slice(0, 8)}...
+            renderItem={(msg: DisputeMessageDto) => {
+              const isSender = msg.senderId === currentUser?.id
+              return (
+                <div style={{
+                  marginBottom: 12,
+                  display: 'flex',
+                  flexDirection: isSender ? 'row-reverse' : 'row',
+                  gap: 8,
+                  alignItems: 'flex-start',
+                }}>
+                  <Avatar src={msg.senderAvatarUrl} icon={<UserOutlined />} size="small" style={{ flexShrink: 0 }} />
+                  <div style={{
+                    maxWidth: '70%',
+                    background: isSender ? 'var(--color-accent-light, #e6f7ff)' : 'var(--color-bg-card, #f5f5f5)',
+                    borderRadius: 12,
+                    borderTopRightRadius: isSender ? 4 : 12,
+                    borderTopLeftRadius: isSender ? 12 : 4,
+                    padding: '8px 12px',
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: 8,
+                      marginBottom: 4,
+                    }}>
+                      <Typography.Text strong style={{ fontSize: 12, color: isSender ? 'var(--color-accent)' : 'var(--color-text-primary)' }}>
+                        {msg.senderDisplayName || msg.senderId.slice(0, 8)}
                       </Typography.Text>
-                      <Typography.Text type="secondary" style={{ fontSize: 11 }}>
-                        {dayjs(msg.createdAt).format('DD/MM/YYYY HH:mm:ss')}
+                      <Typography.Text type="secondary" style={{ fontSize: 10, whiteSpace: 'nowrap' }}>
+                        {dayjs(msg.createdAt).format('HH:mm')}
                       </Typography.Text>
-                    </Space>
-                    <div style={{ marginTop: 4 }}>
-                      <Typography.Paragraph style={{ marginBottom: 0, whiteSpace: 'pre-wrap' }}>
+                    </div>
+                    {msg.message && (
+                      <Typography.Paragraph style={{ marginBottom: 0, whiteSpace: 'pre-wrap', fontSize: 13 }}>
                         {msg.message}
                       </Typography.Paragraph>
-                    </div>
-                    {msg.attachments && msg.attachments.length > 0 && (
-                      <Space size={4} style={{ marginTop: 4 }} wrap>
-                        <PaperClipOutlined style={{ color: '#999' }} />
-                        {msg.attachments.map((attachment) => (
-                          <Typography.Link key={attachment.id} href={attachment.url} target="_blank" style={{ fontSize: 12 }}>
-                            {attachment.fileName ?? t('attachment', 'Attachment')}
-                          </Typography.Link>
-                        ))}
-                      </Space>
                     )}
+                    {msg.attachments && msg.attachments.length > 0 && (
+                      <div style={{ marginTop: 6 }}>
+                        <Image.PreviewGroup>
+                          {msg.attachments.map((att) =>
+                            att.resourceType === 'image' || att.format?.match(/^(jpg|jpeg|png|gif|webp|svg)$/i) ? (
+                              <Image
+                                key={att.id}
+                                src={att.secureUrl}
+                                alt={att.fileName ?? 'attachment'}
+                                width={att.width && att.width > 200 ? 200 : att.width ?? 200}
+                                style={{ borderRadius: 8, marginRight: 4, marginTop: 4, cursor: 'pointer' }}
+                              />
+                            ) : (
+                              <Typography.Link key={att.id} href={att.secureUrl} target="_blank" style={{ fontSize: 12, display: 'block' }}>
+                                <PaperClipOutlined style={{ marginRight: 4 }} />
+                                {att.fileName ?? t('attachment', 'Attachment')}
+                              </Typography.Link>
+                            )
+                          )}
+                        </Image.PreviewGroup>
+                      </div>
+                    )}
+                    {(() => {
+                      const seenBy = getSeenBy(msg)
+                      if (seenBy.length === 0) return null
+                      return (
+                        <div style={{ marginTop: 4, textAlign: 'right' }}>
+                          <Typography.Text type="secondary" style={{ fontSize: 10 }}>
+                            <CheckOutlined style={{ fontSize: 9, marginRight: 3, color: 'var(--color-accent)' }} />
+                            {t('seenBy', 'Seen by')} {seenBy.join(', ')}
+                          </Typography.Text>
+                        </div>
+                      )
+                    })()}
                   </div>
-                </Space>
-              </div>
-            )}
+                </div>
+              )
+            }}
           />
         )}
         <div ref={messagesEndRef} />

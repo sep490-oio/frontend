@@ -5,9 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { formatCurrency, formatDateTime } from '@/utils/format'
 import apiClient from '@/lib/axios'
-
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
-const MONO_FONT = "'DM Mono', monospace"
+import { SERIF_FONT, MONO_FONT } from '@/styles/tokens'
 
 interface VnPayCallbackResponse {
   transactionRef: string

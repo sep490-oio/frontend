@@ -14,9 +14,10 @@ import {
   Divider,
   Modal,
   Input,
+  Select,
   Form,
 } from 'antd'
-import { ArrowLeftOutlined, RollbackOutlined, CheckOutlined, CloseOutlined, SendOutlined } from '@ant-design/icons'
+import { ArrowLeftOutlined, RollbackOutlined, CheckOutlined, CloseOutlined, SendOutlined, WarningOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import {
   useOrderById,
@@ -26,6 +27,7 @@ import {
   useConfirmReturnReceived,
   useCreateSellerReview,
 } from '@/features/order/api'
+import { useCreateReport } from '@/features/dispute/api'
 import { SellerRatingForm } from '@/features/order/components/SellerRatingForm'
 import { useAuth } from '@/hooks/useAuth'
 import { useQueryClient } from '@tanstack/react-query'
@@ -43,6 +45,12 @@ import { formatDateTime } from '@/utils/format'
 const RETURN_ELIGIBLE_STATUSES = new Set<string>([
   OrderStatus.Delivered,
   OrderStatus.Completed,
+])
+
+const SELLER_REPORT_ELIGIBLE_STATUSES = new Set<string>([
+  OrderStatus.Paid,
+  OrderStatus.Shipped,
+  OrderStatus.Delivered,
 ])
 
 export default function OrderDetailPage() {
@@ -83,6 +91,12 @@ export default function OrderDetailPage() {
   const [shipProviderCode, setShipProviderCode] = useState('')
   const [shipTrackingNumber, setShipTrackingNumber] = useState('')
 
+  // Dispute modal state
+  const [disputeModalOpen, setDisputeModalOpen] = useState(false)
+  const [disputeReason, setDisputeReason] = useState('')
+  const [disputeDescription, setDisputeDescription] = useState('')
+  const createReport = useCreateReport()
+
   const isSeller = user?.id === order?.sellerId
   const isBuyer = user?.id === order?.buyerId
 
@@ -112,6 +126,21 @@ export default function OrderDetailPage() {
       <Typography.Title level={isMobile ? 3 : 2} style={{ marginBottom: isMobile ? 16 : 24 }}>
         {t('orderDetail', 'Order Detail')} #{order.orderNumber}
       </Typography.Title>
+
+      {/* Escrow decision window banner */}
+      {order.status === 'delivered' && (order as any).decisionWindowEndsAt && new Date((order as any).decisionWindowEndsAt) > new Date() && (
+        <Alert
+          type="warning"
+          showIcon
+          style={{ marginBottom: 16, borderRadius: 8 }}
+          message={t('decisionWindowActive', 'Action Required')}
+          description={
+            <span>
+              {t('decisionWindowDesc', 'You have until')} <CountdownTimer endTime={(order as any).decisionWindowEndsAt} size="small" /> {t('decisionWindowDesc2', 'to accept delivery or raise a dispute. After this window, funds will be automatically released to the seller.')}
+            </span>
+          }
+        />
+      )}
 
       {/* Status stepper */}
       <Card style={{ marginBottom: 24 }}>
@@ -155,10 +184,25 @@ export default function OrderDetailPage() {
             {order.currency}
           </Descriptions.Item>
           <Descriptions.Item label={t('buyerId', 'Buyer')}>
-            {order.buyerId}
+            {isBuyer ? (
+              order.buyerId
+            ) : (
+              <Typography.Text
+                copyable={{ text: order.buyerId }}
+                style={{ fontFamily: 'monospace', fontSize: 12 }}
+              >
+                {order.buyerId.slice(0, 8)}…
+              </Typography.Text>
+            )}
           </Descriptions.Item>
           <Descriptions.Item label={t('sellerId', 'Seller')}>
-            {order.sellerId}
+            {isSeller ? (
+              order.sellerId
+            ) : (
+              <a href={`/sellers/${order.sellerId}`} style={{ fontFamily: 'monospace', fontSize: 12 }}>
+                {order.sellerId.slice(0, 8)}…
+              </a>
+            )}
           </Descriptions.Item>
           <Descriptions.Item label={t('createdAt', 'Created')}>
             {formatDateTime(order.createdAt)}
@@ -333,6 +377,36 @@ export default function OrderDetailPage() {
             {t('payNow', 'Pay Now')}
           </Button>
         )}
+        {isBuyer &&
+          RETURN_ELIGIBLE_STATUSES.has(order.status) &&
+          !(order as any).activeDispute && (
+            <Button
+              danger
+              icon={<WarningOutlined />}
+              onClick={() => {
+                setDisputeReason('')
+                setDisputeDescription('')
+                setDisputeModalOpen(true)
+              }}
+            >
+              {t('openDispute', 'Report Issue / Open Dispute')}
+            </Button>
+          )}
+        {isSeller &&
+          SELLER_REPORT_ELIGIBLE_STATUSES.has(order.status) &&
+          !(order as any).activeDispute && (
+            <Button
+              danger
+              icon={<WarningOutlined />}
+              onClick={() => {
+                setDisputeReason('')
+                setDisputeDescription('')
+                setDisputeModalOpen(true)
+              }}
+            >
+              {t('sellerReportIssue', 'Report Buyer Issue')}
+            </Button>
+          )}
       </Space>
 
       {/* Reject Return Modal */}
@@ -399,6 +473,81 @@ export default function OrderDetailPage() {
               value={shipTrackingNumber}
               onChange={(e) => setShipTrackingNumber(e.target.value)}
               placeholder={t('trackingNumberPlaceholder', 'Nhập mã vận đơn...')}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Open Dispute Modal */}
+      <Modal
+        title={t('openDispute', 'Report Issue / Open Dispute')}
+        open={disputeModalOpen}
+        onCancel={() => setDisputeModalOpen(false)}
+        onOk={async () => {
+          if (!disputeReason || disputeDescription.trim().length < 20) return
+          try {
+            await createReport.mutateAsync({
+              entityType: 'order',
+              entityId: order.id,
+              reasonCode: disputeReason,
+              description: disputeDescription.trim(),
+            })
+            message.success(t('disputeCreated', 'Dispute created successfully'))
+            setDisputeModalOpen(false)
+            navigate(`${prefix}/disputes`)
+          } catch {
+            message.error(t('disputeError', 'Failed to create dispute'))
+          }
+        }}
+        okText={tc('action.confirm', 'Confirm')}
+        okButtonProps={{
+          danger: true,
+          loading: createReport.isPending,
+          disabled: !disputeReason || disputeDescription.trim().length < 20,
+        }}
+        centered
+      >
+        <Form layout="vertical">
+          <Form.Item label={t('disputeReason', 'Reason')} required>
+            <Select
+              value={disputeReason || undefined}
+              onChange={(val) => setDisputeReason(val)}
+              placeholder={t('selectDisputeReason', 'Select a reason')}
+              options={isSeller ? [
+                { value: 'buyer_non_payment', label: t('disputeReason.buyerNonPayment', 'Buyer non-payment') },
+                { value: 'buyer_fraud', label: t('disputeReason.buyerFraud', 'Buyer fraud') },
+                { value: 'communication_issue', label: t('disputeReason.communicationIssue', 'Communication issue') },
+                { value: 'other', label: t('disputeReason.other', 'Other') },
+              ] : [
+                { value: 'item_not_as_described', label: t('disputeReason.notAsDescribed', 'Item not as described') },
+                { value: 'item_damaged', label: t('disputeReason.damaged', 'Item damaged') },
+                { value: 'item_not_received', label: t('disputeReason.notReceived', 'Item not received') },
+                { value: 'wrong_item', label: t('disputeReason.wrongItem', 'Wrong item') },
+                { value: 'other', label: t('disputeReason.other', 'Other') },
+              ]}
+            />
+          </Form.Item>
+          <Form.Item
+            label={t('disputeDescription', 'Description')}
+            required
+            help={
+              disputeDescription.trim().length > 0 && disputeDescription.trim().length < 20
+                ? t('disputeDescriptionMinLength', 'Please enter at least 20 characters')
+                : undefined
+            }
+            validateStatus={
+              disputeDescription.trim().length > 0 && disputeDescription.trim().length < 20
+                ? 'error'
+                : undefined
+            }
+          >
+            <Input.TextArea
+              rows={4}
+              value={disputeDescription}
+              onChange={(e) => setDisputeDescription(e.target.value)}
+              placeholder={t('disputeDescriptionPlaceholder', 'Describe the issue in detail (min. 20 characters)...')}
+              showCount
+              maxLength={1000}
             />
           </Form.Item>
         </Form>

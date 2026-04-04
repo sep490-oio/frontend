@@ -9,8 +9,7 @@ import { useResetPassword } from '@/features/auth/api'
 import { createPasswordSchema } from '@/utils/validation'
 import type { AxiosError } from 'axios'
 import type { ApiError } from '@/types'
-
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
+import { SERIF_FONT } from '@/styles/tokens'
 
 type ResetPasswordFormValues = { newPassword: string; confirmPassword: string }
 

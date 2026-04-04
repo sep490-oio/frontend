@@ -32,6 +32,8 @@ export interface DisputeParticipantDto {
   userId: string
   role: string
   joinedAt: string
+  displayName?: string
+  avatarUrl?: string
 }
 
 export interface DisputeMessageDto {
@@ -39,6 +41,7 @@ export interface DisputeMessageDto {
   disputeId: string
   senderId: string
   senderDisplayName: string
+  senderAvatarUrl?: string
   message: string
   isInternal: boolean
   createdAt: string
@@ -47,15 +50,29 @@ export interface DisputeMessageDto {
 
 export interface DisputeMessageAttachmentDto {
   id: string
-  url: string
+  secureUrl: string
   fileName?: string
-  fileSize?: number
+  bytes?: number
+  resourceType?: string
+  format?: string
+  width?: number
+  height?: number
 }
 
 export interface DisputeThreadMetaDto {
-  disputeId: string
+  id: string
+  disputeId?: string
+  disputeNumber?: string
+  title?: string
   status: DisputeStatus
-  updatedAt: string
+  priority?: string
+  complainantId?: string
+  respondentId?: string
+  assignedTo?: string
+  createdAt?: string
+  resolvedAt?: string
+  modifiedAt?: string
+  updatedAt?: string
 }
 
 export interface DisputeParticipantReadStateDto {
@@ -81,6 +98,7 @@ export interface ReportDto {
   createdAt: string
   resolvedAt?: string
   resolutionNotes?: string
+  disputeId?: string
 }
 
 export interface CreateReportRequest {

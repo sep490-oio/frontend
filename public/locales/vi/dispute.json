@@ -38,5 +38,32 @@
     "payment": "Tranh chấp thanh toán",
     "item": "Tranh chấp sản phẩm",
     "delivery": "Tranh chấp giao hàng"
+  },
+  "report": "Báo cáo",
+  "reportConfirm": "Báo cáo tranh chấp này để xem xét?",
+  "reportAuction": "Báo cáo phiên đấu giá",
+  "reportSuccess": "Báo cáo đã được gửi thành công",
+  "reportError": "Gửi báo cáo thất bại",
+  "reportReasonLabel": "Lý do",
+  "selectReportReason": "Chọn lý do",
+  "reportDescriptionLabel": "Mô tả",
+  "reportDescriptionPlaceholder": "Mô tả chi tiết vấn đề (tối thiểu 20 ký tự)...",
+  "reportDescriptionMinLength": "Vui lòng nhập ít nhất 20 ký tự",
+  "reportReason": {
+    "suspiciousListing": "Tin đăng đáng ngờ",
+    "counterfeit": "Hàng giả",
+    "prohibitedItem": "Hàng cấm",
+    "misleadingDescription": "Mô tả gây hiểu lầm",
+    "other": "Khác"
+  },
+  "disputeReason": {
+    "notAsDescribed": "Sản phẩm không đúng mô tả",
+    "damaged": "Sản phẩm bị hỏng",
+    "notReceived": "Chưa nhận được hàng",
+    "wrongItem": "Sai sản phẩm",
+    "buyerNonPayment": "Người mua không thanh toán",
+    "buyerFraud": "Người mua gian lận",
+    "communicationIssue": "Vấn đề liên lạc",
+    "other": "Khác"
   }
 }

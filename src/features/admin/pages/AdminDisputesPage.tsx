@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { Typography, Select, Space, Button, Modal, Input, InputNumber, App } from 'antd'
-import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
+import { Typography, Table, Select, Space, Button, Modal, Input, InputNumber, App } from 'antd'
 import { ExceptionOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useAdminDisputes, useAdminResolveDispute } from '@/features/admin/api'
@@ -56,7 +55,7 @@ export default function AdminDisputesPage() {
       await resolveDispute.mutateAsync({
         id: resolveDisputeId,
         resolutionType,
-        amount: refundAmount ?? undefined,
+        refundAmount: refundAmount ?? undefined,
         notes: notes || undefined,
       })
       message.success(t('disputes.resolveSuccess'))
@@ -147,12 +146,12 @@ export default function AdminDisputesPage() {
         />
       </Space>
 
-      <ResponsiveTable<DisputeDto>
+      <Table<DisputeDto>
         rowKey="id"
         columns={columns}
         dataSource={data?.items ?? []}
         loading={isLoading}
-        mobileMode="card"
+        scroll={{ x: 800 }}
         pagination={{
           current: data?.metadata?.currentPage ?? page,
           pageSize: data?.metadata?.pageSize ?? pageSize,

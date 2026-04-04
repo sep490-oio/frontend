@@ -43,8 +43,7 @@ const PROVINCE_OPTIONS = [
   { value: 'hue', label: 'Thua Thien Hue' },
 ]
 
-const SERIF_FONT = "'DM Serif Display', Georgia, serif"
-const SANS_FONT = "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif"
+import { SERIF_FONT, SANS_FONT } from '@/styles/tokens'
 
 const fieldStyle: React.CSSProperties = {
   height: 48,

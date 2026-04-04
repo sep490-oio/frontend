@@ -12,6 +12,7 @@ import { WalletTransactionType } from '@/types/enums'
 import { formatDateTime, formatCurrency } from '@/utils/format'
 import type { WalletTransactionDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
+import { SERIF_FONT, MONO_FONT } from '@/styles/tokens'
 
 const TX_TYPE_OPTIONS = [
   { value: '', label: 'All' },
@@ -106,7 +107,7 @@ export default function WalletPage() {
       <div style={{ marginBottom: 24 }}>
         <h1
           style={{
-            fontFamily: "'DM Serif Display', Georgia, serif",
+            fontFamily: SERIF_FONT,
             fontWeight: 400,
             fontSize: 28,
             color: 'var(--color-text-primary)',
@@ -135,7 +136,7 @@ export default function WalletPage() {
               formatter={(val) => formatCurrency(val as number, wallet?.currency)}
               valueStyle={{
                 color: 'var(--color-success)',
-                fontFamily: "'DM Mono', monospace",
+                fontFamily: MONO_FONT,
                 fontSize: 28,
                 fontWeight: 500,
               }}
@@ -150,7 +151,7 @@ export default function WalletPage() {
               formatter={(val) => formatCurrency(val as number, wallet?.currency)}
               valueStyle={{
                 color: '#d48806',
-                fontFamily: "'DM Mono', monospace",
+                fontFamily: MONO_FONT,
                 fontSize: 28,
                 fontWeight: 500,
               }}
@@ -168,7 +169,7 @@ export default function WalletPage() {
               formatter={(val) => formatCurrency(val as number, wallet?.currency)}
               valueStyle={{
                 color: 'var(--color-text-secondary)',
-                fontFamily: "'DM Mono', monospace",
+                fontFamily: MONO_FONT,
                 fontSize: 28,
                 fontWeight: 500,
               }}
@@ -188,14 +189,14 @@ export default function WalletPage() {
           onClick={() => setTopupModalOpen(true)}
           style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
         >
-          {t('topup', 'Nap tien')}
+          {t('topup', 'Top Up')}
         </Button>
         <Button
           icon={<ArrowDownOutlined />}
           onClick={() => navigate(`${prefix}/wallet/withdraw`)}
           style={{ borderColor: 'var(--color-accent)', color: 'var(--color-accent)' }}
         >
-          {t('withdraw', 'Rut tien')}
+          {t('withdraw', 'Withdraw')}
         </Button>
       </Space>
 
@@ -203,7 +204,7 @@ export default function WalletPage() {
       <Card
         title={
           <span style={{
-            fontFamily: "'DM Serif Display', Georgia, serif",
+            fontFamily: SERIF_FONT,
             fontWeight: 400,
             fontSize: 18,
           }}>
@@ -248,7 +249,7 @@ export default function WalletPage() {
 
       {/* Top-up Modal */}
       <Modal
-        title={t('topup', 'Nap tien')}
+        title={t('topup', 'Deposit')}
         open={topupModalOpen}
         onCancel={() => {
           setTopupModalOpen(false)
@@ -264,20 +265,20 @@ export default function WalletPage() {
             })
             window.location.href = result.paymentUrl
           } catch {
-            message.error(t('topupError', 'Nap tien that bai'))
+            message.error(t('topupError', 'Deposit failed'))
           }
         }}
         confirmLoading={topupMutation.isPending}
         okButtonProps={{ disabled: !topupAmount || topupAmount <= 0 }}
-        okText={t('topupConfirm', 'Nap tien')}
+        okText={t('topupConfirm', 'Deposit')}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Typography.Paragraph style={{ margin: 0, color: 'var(--color-text-secondary)' }}>
-            {t('topupExplain', 'Nhap so tien ban muon nap vao vi. Ban se duoc chuyen den VnPay de thanh toan.')}
+            {t('topupExplain', 'Enter the amount you want to deposit into your wallet. You will be redirected to VnPay for payment.')}
           </Typography.Paragraph>
           <div>
             <span className="oio-label" style={{ display: 'block', marginBottom: 6 }}>
-              {t('topupAmount', 'So tien')}
+              {t('topupAmount', 'Amount')}
             </span>
             <InputNumber
               style={{ width: '100%' }}

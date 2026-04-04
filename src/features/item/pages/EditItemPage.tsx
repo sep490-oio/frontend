@@ -1,20 +1,22 @@
-import { useEffect, useState, useMemo } from 'react'
-import { Typography, Form, Input, Select, InputNumber, Button, Card, Space, Spin, App } from 'antd'
-import { ArrowLeftOutlined } from '@ant-design/icons'
+import { useState, useMemo } from 'react'
+import { Typography, Button, Card, Space, Spin, App, Image, Popconfirm, Empty, Alert } from 'antd'
+import { ArrowLeftOutlined, DeleteOutlined, StarOutlined, PlusOutlined } from '@ant-design/icons'
 import { useNavigate, useParams } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
 import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
-import { useItemById, useUpdateItem, useCategories } from '@/features/item/api'
-import { MediaUploader } from '@/components/ui/MediaUploader'
-import { ItemCondition } from '@/types/enums'
-import type { CreateItemRequest } from '@/types'
-import type { UploadedFile } from '@/hooks/useMediaUpload'
-
-const CONDITION_OPTIONS = Object.entries(ItemCondition).map(([label, value]) => ({
-  label,
-  value,
-}))
+import {
+  useItemById,
+  useAddItemMedia,
+  useRemoveItemMedia,
+  useSetPrimaryImage,
+  useResubmitItem,
+} from '@/features/item/api'
+import { useMediaUpload } from '@/hooks/useMediaUpload'
+import { SafeHtmlRenderer } from '@/components/ui/SafeHtmlRenderer'
+import { MultiCaptureUploader } from '@/components/ui/MultiCaptureUploader'
+import type { CapturedPhoto } from '@/components/ui/MultiCaptureUploader'
+import { StatusBadge } from '@/components/ui/StatusBadge'
 
 export default function EditItemPage() {
   const { t } = useTranslation('item')
@@ -24,68 +26,92 @@ export default function EditItemPage() {
   const { message } = App.useApp()
   const { isMobile } = useBreakpoint()
   const { id } = useParams<{ id: string }>()
-  const [form] = Form.useForm<CreateItemRequest>()
 
-  const { data: item, isLoading } = useItemById(id ?? '')
-  const updateItem = useUpdateItem()
-  const { data: categories, isLoading: categoriesLoading } = useCategories()
-  const [uploadedMedia, setUploadedMedia] = useState<UploadedFile[]>([])
+  const { data: item, isLoading, isError } = useItemById(id ?? '')
+  const addMedia = useAddItemMedia()
+  const removeMedia = useRemoveItemMedia()
+  const setPrimary = useSetPrimaryImage()
+  const resubmitItem = useResubmitItem()
+  const mediaUpload = useMediaUpload('item_image')
 
-  // Convert existing item images to UploadedFile format for MediaUploader
-  const existingFiles: UploadedFile[] = useMemo(
-    () => (item?.images ?? []).map((img) => ({
-      mediaUploadId: img.id,
-      secureUrl: img.url,
-      publicId: img.id,
-      resourceType: img.type ?? 'image',
-      fileName: '',
-    })),
-    [item?.images],
-  )
+  const [capturedPhotos, setCapturedPhotos] = useState<CapturedPhoto[]>([])
+  const [uploading, setUploading] = useState(false)
 
-  const categoryOptions = (categories ?? []).map((cat) => ({
-    label: cat.name,
-    value: cat.id,
-  }))
+  const existingImages = useMemo(() => item?.images ?? [], [item?.images])
 
-  useEffect(() => {
-    if (item) {
-      form.setFieldsValue({
-        title: item.title,
-        description: item.description ?? '',
-        condition: item.condition,
-        categoryId: item.categoryId,
-        quantity: item.quantity,
-      })
-    }
-  }, [item, form])
-
-  const onFinish = async (values: CreateItemRequest) => {
+  const handleRemoveImage = async (mediaId: string) => {
     if (!id) return
-    // Only include newly uploaded media (not existing ones)
-    const newImages = uploadedMedia
-      .filter((f) => !existingFiles.some((e) => e.mediaUploadId === f.mediaUploadId))
-      .map((file, i) => ({
-        mediaUploadId: file.mediaUploadId,
-        isPrimary: i === 0 && existingFiles.length === 0,
-        sortOrder: existingFiles.length + i,
-      }))
     try {
-      await updateItem.mutateAsync({ id, ...values, images: newImages.length > 0 ? newImages : undefined })
-      message.success(t('updateSuccess', 'Item updated successfully'))
+      await removeMedia.mutateAsync({ itemId: id, mediaId })
+      message.success(t('mediaRemoved', 'Photo removed'))
+    } catch {
+      message.error(t('mediaRemoveError', 'Failed to remove photo'))
+    }
+  }
+
+  const handleSetPrimary = async (mediaId: string) => {
+    if (!id) return
+    try {
+      await setPrimary.mutateAsync({ itemId: id, mediaId })
+      message.success(t('primarySet', 'Primary photo updated'))
+    } catch {
+      message.error(t('primarySetError', 'Failed to set primary photo'))
+    }
+  }
+
+  const handleAddPhotos = async () => {
+    if (!id || capturedPhotos.length === 0) return
+    setUploading(true)
+    try {
+      const files = capturedPhotos.map((photo, i) =>
+        new File([photo.blob], `item-photo-${i + 1}.jpg`, { type: 'image/jpeg' })
+      )
+      const uploadResults = await mediaUpload.uploadMultiple(files)
+
+      for (const result of uploadResults) {
+        await addMedia.mutateAsync({
+          itemId: id,
+          mediaUploadId: result.mediaUploadId,
+          isPrimary: existingImages.length === 0 && uploadResults.indexOf(result) === 0,
+          sortOrder: existingImages.length + uploadResults.indexOf(result),
+        })
+      }
+      setCapturedPhotos([])
+      message.success(t('photosAdded', 'Photos added successfully'))
+    } catch {
+      message.error(t('photosAddError', 'Failed to add photos'))
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleResubmit = async () => {
+    if (!id) return
+    try {
+      await resubmitItem.mutateAsync({ itemId: id })
+      message.success(t('resubmitSuccess', 'Item resubmitted for review'))
       navigate(`${prefix}/items`)
     } catch {
-      message.error(t('updateError', 'Failed to update item'))
+      message.error(t('resubmitError', 'Failed to resubmit item'))
     }
   }
 
   if (isLoading) {
+    return <div style={{ textAlign: 'center', padding: 100 }}><Spin size="large" /></div>
+  }
+
+  if (isError || !item) {
     return (
-      <div style={{ textAlign: 'center', padding: 100 }}>
-        <Spin size="large" />
-      </div>
+      <Alert
+        type="error"
+        message={t('itemNotFound', 'Item not found')}
+        action={<Button onClick={() => navigate(`${prefix}/items`)}>{tc('action.back', 'Back')}</Button>}
+      />
     )
   }
+
+  const canResubmit = item.status === 'rejected' || item.status === 'draft'
+  const maxPhotos = 10 - existingImages.length
 
   return (
     <div style={{ maxWidth: 720, margin: '0 auto', padding: isMobile ? '0 12px' : undefined }}>
@@ -95,90 +121,97 @@ export default function EditItemPage() {
         </Button>
       </Space>
 
-      <Typography.Title level={2}>{t('editItem', 'Edit Item')}</Typography.Title>
+      <Typography.Title level={2}>
+        {t('editItem', 'Manage Item')}: {item.title}
+      </Typography.Title>
 
-      <Card>
-        <Form<CreateItemRequest>
-          form={form}
-          layout="vertical"
-          onFinish={onFinish}
-        >
-          <Form.Item
-            name="title"
-            label={t('title', 'Title')}
-            rules={[{ required: true, message: t('titleRequired', 'Please enter a title') }]}
-          >
-            <Input maxLength={200} showCount placeholder={t('titlePlaceholder', 'Enter item title')} />
-          </Form.Item>
-
-          <Form.Item
-            name="description"
-            label={t('description', 'Description')}
-          >
-            <Input.TextArea
-              rows={6}
-              maxLength={5000}
-              showCount
-              placeholder={t('descriptionPlaceholder', 'Describe your item in detail')}
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="condition"
-            label={t('condition', 'Condition')}
-            rules={[{ required: true, message: t('conditionRequired', 'Please select condition') }]}
-          >
-            <Select
-              options={CONDITION_OPTIONS}
-              placeholder={t('conditionPlaceholder', 'Select condition')}
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="categoryId"
-            label={t('category', 'Category')}
-          >
-            <Select
-              options={categoryOptions}
-              loading={categoriesLoading}
-              placeholder={t('categoryPlaceholder', 'Select category')}
-              allowClear
-              showSearch
-              optionFilterProp="label"
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="quantity"
-            label={t('quantity', 'Quantity')}
-            rules={[{ required: true, message: t('quantityRequired', 'Please enter quantity') }]}
-          >
-            <InputNumber min={1} max={9999} style={{ width: '100%' }} />
-          </Form.Item>
-
-          {/* Media upload */}
-          <Form.Item label={t('media', 'Images')}>
-            <MediaUploader
-              context="item_image"
-              maxFiles={10}
-              accept="image/jpeg,image/png,image/webp"
-              onUploadComplete={setUploadedMedia}
-              initialFiles={existingFiles}
-            />
-          </Form.Item>
-
-          <Form.Item>
-            <Space>
-              <Button type="primary" htmlType="submit" loading={updateItem.isPending}>
-                {tc('action.save', 'Save')}
-              </Button>
-              <Button onClick={() => navigate(`${prefix}/items`)}>
-                {tc('action.cancel', 'Cancel')}
-              </Button>
-            </Space>
-          </Form.Item>
-        </Form>
+      {/* Item Info (read-only) */}
+      <Card title={t('itemInfo', 'Item Information')} style={{ marginBottom: 24 }}>
+        <Space direction="vertical" style={{ width: '100%' }}>
+          <div><strong>{t('title', 'Title')}:</strong> {item.title}</div>
+          <div><strong>{t('condition', 'Condition')}:</strong> {item.condition}</div>
+          <div><strong>{t('category', 'Category')}:</strong> {item.categoryId ?? '-'}</div>
+          <div><strong>{t('quantity', 'Quantity')}:</strong> {item.quantity}</div>
+          <div><strong>{t('status', 'Status')}:</strong> <StatusBadge status={item.status} /></div>
+          {item.description && (
+            <div>
+              <strong>{t('description', 'Description')}:</strong>
+              <SafeHtmlRenderer html={item.description} style={{ marginTop: 4 }} />
+            </div>
+          )}
+        </Space>
+        <Alert
+          type="info"
+          message={t('editNote', 'Item details (title, description, condition) cannot be changed after creation. You can manage photos and resubmit for review.')}
+          style={{ marginTop: 16 }}
+          showIcon
+        />
       </Card>
+
+      {/* Existing Photos */}
+      <Card title={t('existingPhotos', 'Current Photos')} style={{ marginBottom: 24 }}>
+        {existingImages.length === 0 ? (
+          <Empty description={t('noPhotos', 'No photos yet')} />
+        ) : (
+          <Space wrap size="middle">
+            {existingImages.map((img: any) => (
+              <div key={img.id} style={{ position: 'relative', display: 'inline-block' }}>
+                <Image
+                  src={img.url || img.secureUrl}
+                  width={140}
+                  height={105}
+                  style={{ objectFit: 'cover', borderRadius: 8, border: img.isPrimary ? '3px solid var(--color-accent)' : '1px solid var(--color-border)' }}
+                />
+                <Space size={4} style={{ marginTop: 4, display: 'flex', justifyContent: 'center' }}>
+                  {!img.isPrimary && (
+                    <Button size="small" icon={<StarOutlined />} onClick={() => handleSetPrimary(img.id)}>
+                      {t('setPrimary', 'Primary')}
+                    </Button>
+                  )}
+                  <Popconfirm title={t('removeConfirm', 'Remove this photo?')} onConfirm={() => handleRemoveImage(img.id)}>
+                    <Button size="small" danger icon={<DeleteOutlined />} />
+                  </Popconfirm>
+                </Space>
+              </div>
+            ))}
+          </Space>
+        )}
+      </Card>
+
+      {/* Add New Photos */}
+      {maxPhotos > 0 && (
+        <Card title={t('addPhotos', 'Add New Photos')} style={{ marginBottom: 24 }}>
+          <MultiCaptureUploader
+            maxPhotos={maxPhotos}
+            step="item_photo"
+            facingMode="environment"
+            onPhotosChange={setCapturedPhotos}
+          />
+          {capturedPhotos.length > 0 && (
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleAddPhotos}
+              loading={uploading}
+              style={{ marginTop: 12 }}
+            >
+              {t('uploadPhotos', 'Upload {{count}} photo(s)', { count: capturedPhotos.length })}
+            </Button>
+          )}
+        </Card>
+      )}
+
+      {/* Actions */}
+      <Space>
+        {canResubmit && (
+          <Button type="primary" onClick={handleResubmit} loading={resubmitItem.isPending}>
+            {t('resubmitForReview', 'Resubmit for Review')}
+          </Button>
+        )}
+        <Button onClick={() => navigate(`${prefix}/items`)}>
+          {tc('action.back', 'Back to Items')}
+        </Button>
+      </Space>
     </div>
   )
 }
