@@ -1,4 +1,4 @@
-import DOMPurify from 'dompurify'
+import DOMPurify, { type Config } from 'dompurify'
 
 interface SafeHtmlRendererProps {
   html: string
@@ -6,7 +6,7 @@ interface SafeHtmlRendererProps {
   style?: React.CSSProperties
 }
 
-const PURIFY_CONFIG: DOMPurify.Config = {
+const PURIFY_CONFIG: Config = {
   ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'a', 'blockquote', 'pre', 'code', 'img', 'span', 'div', 'sub', 'sup'],
   ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'width', 'height', 'style', 'class'],
   ALLOW_DATA_ATTR: false,

@@ -35,7 +35,7 @@ const SEVERITY_CONFIG: Record<string, { color: string; icon: React.ReactNode; la
   [AlertSeverity.Critical]: { color: 'var(--color-danger)', icon: <FireOutlined />, label: 'Critical' },
 }
 
-const ENTITY_ROUTES: Record<string, (id: string) => string> = {
+const ENTITY_ROUTES: Partial<Record<string, (id: string) => string>> = {
   user: (id) => `/admin/users/${id}`,
   auction: (id) => `/admin/auctions/${id}`,
   order: (id) => `/admin/orders/${id}`,

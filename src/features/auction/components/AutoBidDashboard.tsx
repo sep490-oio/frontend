@@ -26,7 +26,7 @@ interface AutoBidDashboardProps {
   onPause: () => Promise<void>
   onResume: () => Promise<void>
   onModify: () => void
-  onCancel: () => Promise<void>
+  onCancel?: () => Promise<void>
   onCancelAutoBid: () => Promise<void>
   isPauseLoading: boolean
   isResumeLoading: boolean
@@ -45,7 +45,7 @@ export function AutoBidDashboard({
   onPause,
   onResume,
   onModify,
-  onCancel,
+  onCancel: _onCancel,
   onCancelAutoBid,
   isPauseLoading,
   isResumeLoading,

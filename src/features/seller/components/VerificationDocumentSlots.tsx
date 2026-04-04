@@ -257,10 +257,9 @@ export function VerificationDocumentSlots({
           width={isMobile ? '100vw' : 600}
           styles={{
             body: { padding: 0, overflow: 'hidden' },
-            content: { borderRadius: isMobile ? 0 : 12, overflow: 'hidden' },
             wrapper: isMobile ? { overflow: 'hidden' } : undefined,
           }}
-          style={isMobile ? { top: 0, maxWidth: '100vw', margin: 0, padding: 0, height: '100dvh' } : undefined}
+          style={isMobile ? { top: 0, maxWidth: '100vw', margin: 0, padding: 0, height: '100dvh' } : { borderRadius: 12, overflow: 'hidden' }}
           destroyOnClose
         >
           <div style={{ background: '#000', height: isMobile ? '100dvh' : 'auto', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>

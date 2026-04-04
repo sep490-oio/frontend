@@ -176,7 +176,7 @@ export default function ReceivingPage() {
         pagination={{
           current: pageNumber,
           pageSize,
-          total: data?.metadata?.totalCount ?? data?.totalCount ?? 0,
+          total: data?.metadata?.totalCount ?? 0,
           onChange: (p) => setPageNumber(p),
           showSizeChanger: false,
         }}

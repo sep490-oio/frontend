@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Card, Button, Input, Popconfirm, Alert, Space, Typography, Select } from 'antd'
+import { Card, Button, Input, Popconfirm, Alert, Space, Typography } from 'antd'
 import { CloseCircleOutlined, SendOutlined, QrcodeOutlined, ArrowRightOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { ShipmentStatus } from '@/types/enums'

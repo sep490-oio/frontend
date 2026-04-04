@@ -46,7 +46,7 @@ export default function InspectionDetailPage() {
   const [condition, setCondition] = useState<string>('')
   const [notes, setNotes] = useState('')
   const [capturedPhotos, setCapturedPhotos] = useState<CapturedPhoto[]>([])
-  const [uploadedMediaIds, setUploadedMediaIds] = useState<string[]>([])
+  const [_uploadedMediaIds, setUploadedMediaIds] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
   const [inspectionResult, setInspectionResult] = useState<WarehouseInspectionDto | null>(null)
 

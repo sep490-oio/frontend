@@ -23,7 +23,7 @@ export default function WarehouseStaffDashboardPage() {
           <Card>
             <Statistic
               title={t('dashboard.awaitingPickup', 'Awaiting Pickup')}
-              value={awaitingPickup?.totalCount ?? 0}
+              value={awaitingPickup?.metadata?.totalCount ?? 0}
             />
           </Card>
         </Col>
@@ -31,7 +31,7 @@ export default function WarehouseStaffDashboardPage() {
           <Card>
             <Statistic
               title={t('dashboard.inTransit', 'In Transit')}
-              value={inTransit?.totalCount ?? 0}
+              value={inTransit?.metadata?.totalCount ?? 0}
             />
           </Card>
         </Col>
@@ -39,7 +39,7 @@ export default function WarehouseStaffDashboardPage() {
           <Card>
             <Statistic
               title={t('dashboard.arrived', 'Arrived')}
-              value={arrived?.totalCount ?? 0}
+              value={arrived?.metadata?.totalCount ?? 0}
             />
           </Card>
         </Col>
@@ -47,7 +47,7 @@ export default function WarehouseStaffDashboardPage() {
           <Card>
             <Statistic
               title={t('dashboard.completed', 'Completed')}
-              value={completed?.totalCount ?? 0}
+              value={completed?.metadata?.totalCount ?? 0}
             />
           </Card>
         </Col>

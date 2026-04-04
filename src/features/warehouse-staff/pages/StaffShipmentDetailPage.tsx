@@ -1,5 +1,5 @@
 import { Row, Col, Spin, Alert, Button, App, Flex } from 'antd'
-import { useParams, useNavigate } from 'react-router'
+import { useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 // ArrowLeftOutlined removed — back button is in ShipmentHeader
 import {
@@ -13,7 +13,6 @@ import { ShipmentOverview } from '@/features/warehouse/components/ShipmentOvervi
 
 export default function StaffShipmentDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
   const { t } = useTranslation('warehouse')
   const { message } = App.useApp()
 
@@ -68,7 +67,7 @@ export default function StaffShipmentDetailPage() {
         providerCode={shipment.providerCode}
         shipmentMode={shipment.shipmentMode}
         externalCarrierName={shipment.externalCarrierName}
-        updatedAt={shipment.updatedAt}
+        updatedAt={shipment.modifiedAt ?? shipment.createdAt}
         backTo="/warehouse-staff/receiving"
         backLabel={t('action.backToReceiving', 'Back to Receiving')}
       />

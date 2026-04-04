@@ -14,7 +14,6 @@ import {
   GlobalOutlined,
   InboxOutlined,
   ScanOutlined,
-  SendOutlined,
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Typography, Card, Tag, Space, Spin, Empty, Button, Input, List, Divider, Avatar, Tooltip, Progress, Upload, Alert, Image } from 'antd'
 import { SendOutlined, PaperClipOutlined, UserOutlined, CloseCircleOutlined, CheckOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'

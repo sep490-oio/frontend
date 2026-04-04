@@ -1,4 +1,4 @@
-import { Row, Col, Skeleton, Alert, Button, App, Card, Typography, List, Tag, Space } from 'antd'
+import { Row, Col, Skeleton, Alert, Button, App, Card, Typography, List, Space } from 'antd'
 import { useParams, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
@@ -166,7 +166,7 @@ export default function InboundDetailPage() {
                     onClick={() => navigate(`${prefix}/warehouse/inbound/${s.id}`)}
                   >
                     <Space>
-                      <Typography.Text>{s.itemTitle ?? s.id.slice(0, 12)}</Typography.Text>
+                      <Typography.Text>{(s as any).itemTitle ?? s.id.slice(0, 12)}</Typography.Text>
                       <StatusBadge status={s.status} size="small" />
                     </Space>
                   </List.Item>
