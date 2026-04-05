@@ -38,6 +38,13 @@ export function EligibilityPanel({
 }: EligibilityPanelProps) {
   const { t } = useTranslation('auction')
 
+  // Hooks must be called before any early returns (React rules of hooks)
+  const [now, setNow] = useState(Date.now())
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 30000)
+    return () => clearInterval(interval)
+  }, [])
+
   if (isSeller) {
     return (
       <div style={panelStyle}>
@@ -134,13 +141,6 @@ export function EligibilityPanel({
   }
 
   // Pending / not yet qualified — show deposit UI
-  // Use controlled state for time-dependent rendering (avoids flicker on re-render)
-  const [now, setNow] = useState(Date.now())
-  useEffect(() => {
-    const interval = setInterval(() => setNow(Date.now()), 30000)
-    return () => clearInterval(interval)
-  }, [])
-
   const windowStart = qualificationStartAt ? new Date(qualificationStartAt).getTime() : null
   const windowEnd = qualificationEndAt ? new Date(qualificationEndAt).getTime() : null
   const isBeforeWindow = windowStart && now < windowStart

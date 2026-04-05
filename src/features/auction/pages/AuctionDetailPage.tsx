@@ -93,7 +93,7 @@ export default function AuctionDetailPage() {
   const { t } = useTranslation('auction')
   const { t: td } = useTranslation('dispute')
   const navigate = useNavigate()
-  const { message } = App.useApp()
+  const { message, modal } = App.useApp()
   const { id } = useParams<{ id: string }>()
   const { isMobile } = useBreakpoint()
   const bidderTerms = useTermsGate('bidder')
@@ -466,7 +466,7 @@ export default function AuctionDetailPage() {
     if (!id || !auction) return
     const depositAmount = auction.startingPrice?.amount ?? 0
 
-    Modal.confirm({
+    modal.confirm({
       title: t('confirmDeposit', 'Confirm Deposit'),
       content: (
         <div style={{ fontSize: 13, lineHeight: 1.8 }}>

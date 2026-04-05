@@ -111,7 +111,7 @@ export default function CreateItemPage() {
 
       if (includeAuction && values.startingPrice) {
         // Use POST /auctions — creates both item + auction in one call
-        await createAuction.mutateAsync({
+        const auctionResult = await createAuction.mutateAsync({
           title: values.title,
           condition: values.condition,
           categoryId: values.categoryId,
@@ -127,10 +127,11 @@ export default function CreateItemPage() {
           auctionType: values.auctionType,
         })
 
-        if (mode === 'draft') {
-          message.success(t('draftSaved', 'Item and auction saved as draft'))
+        if (mode === 'submit') {
+          await submitItem.mutateAsync({ id: auctionResult.itemId, verifyByPlatform })
+          message.success(t('createWithAuctionSuccess', 'Item and auction created and submitted'))
         } else {
-          message.success(t('createWithAuctionSuccess', 'Item and auction created successfully'))
+          message.success(t('draftSaved', 'Item and auction saved as draft'))
         }
       } else {
         // Item only — POST /items
@@ -154,8 +155,8 @@ export default function CreateItemPage() {
 
       navigate(`${prefix}/items`)
     } catch (err: any) {
-      if (err?.errorFields) return // form validation error, antd shows inline
-      message.error(t('createError', 'Failed to create item'))
+      if (err?.errorFields) return // form validation error
+      message.error(err?.response?.data?.detail ?? t('createError', 'Failed to create item'))
     } finally {
       setSubmitting(false)
     }

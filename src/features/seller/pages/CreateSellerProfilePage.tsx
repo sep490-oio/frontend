@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Typography, Form, Input, Button, Card, Space, App, Spin } from 'antd'
+import { RichTextEditor } from '@/components/ui/RichTextEditor'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -82,14 +83,13 @@ export default function CreateSellerProfilePage() {
           </Form.Item>
 
           <Form.Item
-            name="description"
-            label={t('storeDescription', 'Description')}
+            name="storeDescription"
+            label={t('storeDescription', 'Store Description')}
+            rules={[{ required: true, message: t('storeDescriptionRequired', 'Please describe your store') }]}
           >
-            <Input.TextArea
-              rows={6}
-              maxLength={2000}
-              showCount
+            <RichTextEditor
               placeholder={t('descriptionPlaceholder', 'Describe your store and what you sell')}
+              maxLength={2000}
             />
           </Form.Item>
 

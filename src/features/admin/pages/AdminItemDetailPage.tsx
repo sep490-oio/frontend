@@ -5,7 +5,9 @@ import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useAdminItemDetail, useApproveItem, useRejectItem } from '@/features/admin/api'
+import { useCategories } from '@/features/item/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
+import { SafeHtmlRenderer } from '@/components/ui/SafeHtmlRenderer'
 import { formatDateTime } from '@/utils/format'
 import type { ItemReviewDto } from '@/types'
 import { AdminErrorState } from '@/features/admin/components/AdminErrorState'
@@ -20,6 +22,7 @@ export default function AdminItemDetailPage() {
   const { data: item, isLoading, error, refetch } = useAdminItemDetail(id!)
   const approveItem = useApproveItem()
   const rejectItem = useRejectItem()
+  const { data: categories } = useCategories()
 
   const [rejectModalOpen, setRejectModalOpen] = useState(false)
   const [rejectReason, setRejectReason] = useState('')
@@ -103,13 +106,15 @@ export default function AdminItemDetailPage() {
           </Descriptions.Item>
           <Descriptions.Item label={t('users.createdAt')}>{formatDateTime(item.createdAt)}</Descriptions.Item>
           {item.categoryId && (
-            <Descriptions.Item label={t('itemDetail.category')}>{item.categoryId}</Descriptions.Item>
+            <Descriptions.Item label={t('itemDetail.category')}>
+              {categories?.find((c) => c.id === item.categoryId)?.name ?? item.categoryId}
+            </Descriptions.Item>
           )}
         </Descriptions>
         {item.description && (
           <div style={{ marginTop: 16 }}>
             <Typography.Text strong>Description:</Typography.Text>
-            <Typography.Paragraph style={{ marginTop: 8 }}>{item.description}</Typography.Paragraph>
+            <SafeHtmlRenderer html={item.description} style={{ marginTop: 8 }} />
           </div>
         )}
         {item.images && item.images.length > 0 && (

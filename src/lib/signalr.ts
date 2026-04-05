@@ -1,38 +1,19 @@
 import * as signalR from '@microsoft/signalr'
-import axios from 'axios'
-import { API_URL, SIGNALR_URL, STORAGE_KEYS } from '@/utils/constants'
-
-/**
- * Attempt to refresh the access token using the stored refresh token.
- * Returns the new access token, or empty string if refresh fails.
- */
-async function ensureFreshToken(): Promise<string> {
-  const current = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN) ?? ''
-  if (!current) return ''
-
-  const refreshToken = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
-  if (!refreshToken) return current
-
-  try {
-    const { data } = await axios.post(`${API_URL}/auth/refresh`, { refreshToken })
-    const newAccessToken = data.accessToken as string
-    const newRefreshToken = data.refreshToken as string
-    localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, newAccessToken)
-    localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, newRefreshToken)
-    return newAccessToken
-  } catch {
-    // Refresh failed — return current token (may be expired)
-    return current
-  }
-}
+import { SIGNALR_URL, STORAGE_KEYS } from '@/utils/constants'
+import { refreshToken, isTokenExpired } from '@/lib/tokenRefresh'
 
 function createHubConnection(hubPath: string): signalR.HubConnection {
   const connection = new signalR.HubConnectionBuilder()
     .withUrl(`${SIGNALR_URL}${hubPath}`, {
       accessTokenFactory: async () => {
-        const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
-        if (token) await ensureFreshToken()
-        return token ?? ''
+        if (isTokenExpired()) {
+          try {
+            return await refreshToken()
+          } catch {
+            return localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN) ?? ''
+          }
+        }
+        return localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN) ?? ''
       },
     })
     .withAutomaticReconnect({
@@ -48,7 +29,7 @@ function createHubConnection(hubPath: string): signalR.HubConnection {
   // refresh token and restart after a short delay.
   connection.onclose(async (error) => {
     if (error) {
-      await ensureFreshToken()
+      try { await refreshToken() } catch { /* handleRefreshFailure already called */ }
       setTimeout(() => void startConnection(connection), 3000)
     }
   })

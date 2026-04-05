@@ -68,8 +68,7 @@ export function useSubmitItem() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, verifyByPlatform }: { id: string; verifyByPlatform: boolean }) => {
-      const res = await apiClient.post<ItemDto>(`/items/${id}/submit`, { verifyByPlatform })
-      return res.data
+      await apiClient.post(`/items/${id}/submit`, { verifyByPlatform })
     },
     onSuccess: (_data, { id }) => {
       qc.invalidateQueries({ queryKey: queryKeys.items.detail(id) })

@@ -21,16 +21,29 @@ const PADDING = { top: 24, right: 24, bottom: 48, left: 80 }
 export function PriceHistoryChart({ priceHistory, currency = 'VND' }: PriceHistoryChartProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
-  // Normalize: extract numeric price and timestamp from various formats
+  // Normalize: extract numeric price and timestamp, filter out reprice/reset events,
+  // and ensure monotonically increasing prices for a clean chart line.
   const sorted = useMemo(() => {
-    return priceHistory
+    const normalized = priceHistory
       .map((p) => ({
         price: typeof p.price === 'object' && p.price !== null ? p.price.amount : (p.price as number),
         timestamp: p.recordedAt ?? p.timestamp ?? '',
         type: p.type,
       }))
       .filter((p) => p.timestamp)
+      // Exclude reprice/reset events that cause visual dips
+      .filter((p) => !p.type || !['repriced_after_cancellation', 'reset_to_starting_price'].includes(p.type))
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+
+    // Ensure monotonically increasing — skip any point lower than the running max
+    let maxPrice = 0
+    return normalized.filter((p) => {
+      if (p.price >= maxPrice) {
+        maxPrice = p.price
+        return true
+      }
+      return false
+    })
   }, [priceHistory])
 
   const { points, xLabels, yLabels } = useMemo(() => {

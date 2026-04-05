@@ -16,7 +16,7 @@ export interface SellerProfileDto {
 
 export interface CreateSellerProfileRequest {
   storeName: string
-  description?: string
+  storeDescription: string
 }
 
 export interface VerificationDocumentInfoDto {

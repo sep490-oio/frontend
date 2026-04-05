@@ -276,8 +276,7 @@ export function useApproveItem() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (id: string) => {
-      const res = await apiClient.post(`/admin/items/${id}/approve`)
-      return res.data
+      await apiClient.post(`/admin/items/${id}/approve`)
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.admin.reviewQueue() })
@@ -290,8 +289,7 @@ export function useRejectItem() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
-      const res = await apiClient.post(`/admin/items/${id}/reject`, { reason })
-      return res.data
+      await apiClient.post(`/admin/items/${id}/reject`, { reason })
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.admin.reviewQueue() })

@@ -8,6 +8,7 @@ import { useMySellerProfile, useUpdateSellerProfile } from '@/features/seller/ap
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
 import type { CreateSellerProfileRequest } from '@/types'
+import { RichTextEditor } from '@/components/ui/RichTextEditor'
 
 export default function SellerProfilePage() {
   const { t } = useTranslation('seller')
@@ -26,7 +27,7 @@ export default function SellerProfilePage() {
     if (profile) {
       form.setFieldsValue({
         storeName: profile.storeName,
-        description: profile.description ?? '',
+        storeDescription: profile.description ?? '',
       })
     }
     setEditing(true)
@@ -98,10 +99,14 @@ export default function SellerProfilePage() {
             </Form.Item>
 
             <Form.Item
-              name="description"
-              label={t('storeDescription', 'Description')}
+              name="storeDescription"
+              label={t('storeDescription', 'Store Description')}
+              rules={[{ required: true, message: t('storeDescriptionRequired', 'Please describe your store') }]}
             >
-              <Input.TextArea rows={6} maxLength={2000} showCount />
+              <RichTextEditor
+                placeholder={t('descriptionPlaceholder', 'Describe your store and what you sell')}
+                maxLength={2000}
+              />
             </Form.Item>
 
             {/* Logo upload placeholder */}

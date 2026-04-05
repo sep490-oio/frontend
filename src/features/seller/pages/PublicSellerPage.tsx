@@ -6,6 +6,7 @@ import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useSellerById, useSellerItems, useSellerReviews } from '@/features/seller/api'
 import { Rate } from 'antd'
 import { StatusBadge } from '@/components/ui/StatusBadge'
+import { SafeHtmlRenderer } from '@/components/ui/SafeHtmlRenderer'
 import { formatDateTime, formatCurrency, formatNumber } from '@/utils/format'
 import { SellerProfileStatus } from '@/types/enums'
 import type { PublicSellerItemDto } from '@/types'
@@ -233,18 +234,9 @@ export default function PublicSellerPage() {
             </div>
 
             {seller.description && (
-              <p
-                style={{
-                  fontFamily: SANS_FONT,
-                  fontSize: 14,
-                  lineHeight: 1.7,
-                  color: 'var(--color-text-secondary)',
-                  margin: 0,
-                  maxWidth: 600,
-                }}
-              >
-                {seller.description}
-              </p>
+              <div style={{ maxWidth: 600 }}>
+                <SafeHtmlRenderer html={seller.description} style={{ fontFamily: SANS_FONT }} />
+              </div>
             )}
           </div>
         </div>

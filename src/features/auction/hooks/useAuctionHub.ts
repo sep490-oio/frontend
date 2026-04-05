@@ -633,12 +633,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         throw new Error('SignalR not connected')
       }
 
-      return connection.invoke<HubCommandResult<unknown>>('PlaceBid', {
-        auctionId,
-        amount,
-        currency,
-        idempotencyKey,
-      })
+      return connection.invoke<HubCommandResult<unknown>>('PlaceBid', auctionId, amount, currency, idempotencyKey)
     },
     [auctionId],
   )
@@ -649,7 +644,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
       throw new Error('SignalR not connected')
     }
 
-    return connection.invoke<HubCommandResult<unknown>>('BuyNow', { auctionId })
+    return connection.invoke<HubCommandResult<unknown>>('BuyNow', auctionId)
   }, [auctionId])
 
   const configureAutoBid = useCallback(
@@ -659,11 +654,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         throw new Error('SignalR not connected')
       }
 
-      return connection.invoke<HubCommandResult<unknown>>('ConfigureAutoBid', {
-        auctionId,
-        maxAmount,
-        currency,
-      })
+      return connection.invoke<HubCommandResult<unknown>>('ConfigureAutoBid', auctionId, maxAmount, currency)
     },
     [auctionId],
   )

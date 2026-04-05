@@ -1,12 +1,13 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { API_URL, STORAGE_KEYS, uuid } from '@/utils/constants'
+import { refreshToken } from '@/lib/tokenRefresh'
 
 const apiClient = axios.create({
   baseURL: API_URL,
   headers: { 'Content-Type': 'application/json' },
 })
 
-// Request queue for token refresh
+// Axios request queue — gates retrying failed requests (separate from tokenRefresh mutex)
 let isRefreshing = false
 let failedQueue: Array<{
   resolve: (token: string) => void
@@ -74,42 +75,13 @@ apiClient.interceptors.response.use(
     isRefreshing = true
 
     try {
-      const refreshToken = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
-      if (!refreshToken) {
-        throw new Error('No refresh token')
-      }
-
-      const deviceId = getDeviceId()
-      // BE requires ExpiredTokenAllowed policy — must send the expired access token
-      const expiredAccessToken = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
-      const { data } = await axios.post(`${API_URL}/auth/refresh`, {
-        refreshToken,
-        deviceId,
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(expiredAccessToken ? { Authorization: `Bearer ${expiredAccessToken}` } : {}),
-        },
-      })
-
-      const newAccessToken = data.accessToken as string
-      const newRefreshToken = data.refreshToken as string
-
-      localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, newAccessToken)
-      localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, newRefreshToken)
-
+      const newAccessToken = await refreshToken()
       processQueue(null, newAccessToken)
-
       originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
       return apiClient(originalRequest)
     } catch (refreshError) {
       processQueue(refreshError, null)
-
-      // Logout: clear tokens and redirect
-      localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN)
-      localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
-      window.location.href = '/login'
-
+      // logout already handled by refreshToken() -> handleRefreshFailure()
       return Promise.reject(refreshError)
     } finally {
       isRefreshing = false

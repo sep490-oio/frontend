@@ -265,7 +265,7 @@ export default function MyAuctionsPage() {
                 size="small"
                 icon={<SendOutlined />}
                 loading={submitAuction.isPending}
-                disabled={!!((record as any)).itemStatus && ((record as any)).itemStatus !== 'approved'}
+                disabled={!!((record as any)).itemStatus && ((record as any)).itemStatus !== 'approved' && ((record as any)).itemStatus !== 'active'}
                 onClick={() => handleSubmit(record.id)}
               />
             </Tooltip>
