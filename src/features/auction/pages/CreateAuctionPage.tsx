@@ -168,7 +168,7 @@ export default function CreateAuctionPage() {
       endTime: values.endTime,
       qualificationStartAt: values.qualificationStartAt,
       qualificationEndAt: values.qualificationEndAt,
-      autoExtend: values.autoExtend ?? true,
+      autoExtend: values.autoExtend ?? false,
       extensionMinutes: values.extensionMinutes ?? 5,
     })
   }

@@ -41,9 +41,15 @@ export function EligibilityPanel({
   // Hooks must be called before any early returns (React rules of hooks)
   const [now, setNow] = useState(Date.now())
   useEffect(() => {
-    const interval = setInterval(() => setNow(Date.now()), 30000)
+    // Use fast 1s ticks when near a qualification boundary (within 60s), otherwise 10s
+    const boundaries = [qualificationStartAt, qualificationEndAt]
+      .filter((v): v is string => Boolean(v))
+      .map((v) => new Date(v).getTime())
+    const nearBoundary = boundaries.some((b) => Math.abs(b - Date.now()) < 60000)
+    const ms = nearBoundary ? 1000 : 10000
+    const interval = setInterval(() => setNow(Date.now()), ms)
     return () => clearInterval(interval)
-  }, [])
+  }, [qualificationStartAt, qualificationEndAt, now])
 
   if (isSeller) {
     return (
@@ -58,8 +64,11 @@ export function EligibilityPanel({
     )
   }
 
-  // Qualified
-  if (qualificationStatus === ParticipantQualificationStatus.Qualified) {
+  // Deposit already held — treat as qualified even if qualificationStatus hasn't caught up
+  const isDepositHeld = depositStatus === 'held' || depositStatus === 'applied'
+
+  // Qualified (by qualification status OR by deposit being held)
+  if (qualificationStatus === ParticipantQualificationStatus.Qualified || isDepositHeld) {
     return (
       <div style={{ ...panelStyle, borderColor: 'rgba(74, 124, 89, 0.2)' }}>
         <Flex align="center" gap={10}>

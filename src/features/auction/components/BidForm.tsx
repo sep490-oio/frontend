@@ -1,11 +1,12 @@
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import { Typography, Button, InputNumber, Popconfirm } from 'antd'
 import { RobotOutlined } from '@ant-design/icons'
+import type { InputNumberRef } from '@rc-component/input-number'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
-import { PriceDisplay as _PriceDisplay } from '@/components/ui/PriceDisplay'
 import { AutoBidDashboard } from '@/features/auction/components/AutoBidDashboard'
 import { PriceHistoryChart } from '@/features/auction/components/PriceHistoryChart'
+import type { PriceHistoryPoint } from '@/types'
 import { formatCurrency } from '@/utils/format'
 import { MONO_FONT } from '@/styles/tokens'
 
@@ -39,9 +40,8 @@ interface BidFormProps {
   isResumeLoading: boolean
   isCancelLoading?: boolean
   // Price history
-  priceHistory?: { price: number; timestamp: string }[]
-  // Outbid mode
-  outbidMode?: boolean
+  priceHistory?: PriceHistoryPoint[]
+  onExpandChart?: () => void
 }
 
 export default function BidForm({
@@ -66,44 +66,14 @@ export default function BidForm({
   isResumeLoading,
   isCancelLoading,
   priceHistory,
-  outbidMode,
+  onExpandChart,
 }: BidFormProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const inputRef = useRef<HTMLElement>(null)
-
-  // Outbid mode: auto-focus input and pre-fill with minBid
-  useEffect(() => {
-    if (outbidMode) {
-      onBidAmountChange(minBid)
-      // Focus the input after a tick so the DOM is ready
-      setTimeout(() => {
-        inputRef.current?.focus()
-      }, 50)
-    }
-  }, [outbidMode]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const bidInc = bidIncrement
+  const inputRef = useRef<InputNumberRef | null>(null)
 
   return (
     <div style={{ marginTop: 20 }}>
-      {/* Outbid warning */}
-      {outbidMode && (
-        <div
-          style={{
-            marginBottom: 12,
-            padding: '12px 16px',
-            borderRadius: 8,
-            background: 'rgba(255, 77, 79, 0.06)',
-            border: '1px solid rgba(255, 77, 79, 0.25)',
-          }}
-        >
-          <Typography.Text style={{ color: 'var(--color-danger)', fontWeight: 600, fontSize: 13 }}>
-            {t('outbidWarning', "You've been outbid!")}
-          </Typography.Text>
-        </div>
-      )}
-
       {/* 1. Insufficient balance warning */}
       {insufficientBalance && (
         <div
@@ -129,14 +99,14 @@ export default function BidForm({
 
       {/* 2. Price History Chart (mini) */}
       {priceHistory && priceHistory.length > 0 && (
-        <div style={{ marginBottom: 12, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--color-border-light)', padding: '8px 4px' }}>
-          <PriceHistoryChart priceHistory={priceHistory} currency={currency} />
+        <div style={{ marginBottom: 12, borderRadius: 8, border: '1px solid var(--color-border-light)', padding: '8px 4px', position: 'relative' }}>
+          <PriceHistoryChart priceHistory={priceHistory} currency={currency} mode="inline" onExpand={onExpandChart} />
         </div>
       )}
 
       {/* 3. Quick bid increment buttons */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-        {[bidInc, bidInc * 2, bidInc * 5].map((inc) => (
+        {[bidIncrement, bidIncrement * 2, bidIncrement * 5].map((inc) => (
           <button
             key={inc}
             type="button"
@@ -170,12 +140,11 @@ export default function BidForm({
       </label>
       <InputNumber
         id="bid-amount-input"
-        ref={inputRef as any}
+        ref={inputRef}
         style={{
           width: '100%',
           height: 52,
           borderRadius: 8,
-          ...(outbidMode ? { borderColor: 'var(--color-danger)' } : {}),
         }}
         size="large"
         min={minBid}
@@ -184,7 +153,7 @@ export default function BidForm({
         onChange={(v) => onBidAmountChange(v)}
         addonAfter={currency}
         placeholder={formatCurrency(minBid, currency)}
-        status={bidAmount != null && bidAmount < minBid ? 'error' : outbidMode ? 'error' : undefined}
+        status={bidAmount != null && bidAmount < minBid ? 'error' : undefined}
         disabled={disabled}
       />
       {bidAmount != null && bidAmount < minBid ? (
@@ -263,7 +232,7 @@ export default function BidForm({
             onPause={onPauseAutoBid}
             onResume={onResumeAutoBid}
             onModify={onModifyAutoBid}
-            onCancel={onPauseAutoBid}
+            onCancel={onCancelAutoBid}
             onCancelAutoBid={onCancelAutoBid}
             isPauseLoading={isPauseLoading}
             isResumeLoading={isResumeLoading}

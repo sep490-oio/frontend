@@ -50,6 +50,17 @@ export interface ParticipantInfoDto {
   depositCurrency?: string
 }
 
+export interface CurrentUserBidStateDto {
+  position: 'leading' | 'outbid' | 'won' | 'lost' | 'none'
+  isCurrentWinner: boolean
+  latestBidId?: string
+  latestBidAmount?: number
+  latestBidStatus?: string
+  latestBidAt?: string
+  hasAutoBid: boolean
+  autoBidStatus?: string
+}
+
 export interface AuctionDetailDto {
   auction: AuctionDto
   item: AuctionItemDto
@@ -57,6 +68,7 @@ export interface AuctionDetailDto {
   priceHistory: PriceHistoryPoint[]
   isWatched?: boolean
   currentUserParticipant?: ParticipantInfoDto
+  currentUserBidState?: CurrentUserBidStateDto
 }
 
 export interface AuctionItemDto {
@@ -156,8 +168,12 @@ export interface WinnerOfferDto {
 }
 
 export interface PriceHistoryPoint {
-  timestamp: string
-  price: number
+  timestamp?: string
+  recordedAt?: string
+  price: number | MoneyDto
+  type?: string
+  bidId?: string
+  bidderDisplayName?: string
 }
 
 // SignalR notification types
@@ -224,6 +240,44 @@ export interface PriceUpdateNotification {
   currency?: string
 }
 
+export interface AuctionStateLastBidInfo {
+  bidId: string
+  bidderId: string
+  bidderDisplayName: string
+  amount: number
+  isAutoBid: boolean
+  timestamp: string
+}
+
+export interface AuctionStatePriceHistoryPoint {
+  price: number
+  type: string
+  bidId?: string
+  bidderDisplayName?: string
+  recordedAt: string
+}
+
+export interface AuctionStateChangedNotification {
+  auctionId: string
+  status: AuctionStatus | string
+  currentPrice: number
+  minimumNextBid: number
+  currency: string
+  bidCount: number
+  endTime: string
+  winnerId?: string
+  isBuyNowReserved: boolean
+  buyNowReservedUntil?: string | null
+  autoExtend: boolean
+  extensionMinutes: number
+  extensionCount: number
+  isEndingSoon: boolean
+  lastBid?: AuctionStateLastBidInfo
+  newPriceHistoryPoint?: AuctionStatePriceHistoryPoint
+  serverTimestamp: string
+  versionTimestamp: string
+}
+
 export interface BuyNowReservedNotification {
   auctionId: string
   reservationId: string
@@ -247,6 +301,19 @@ export interface BuyNowNotification {
   buyerId: string
   price: number
   currency?: string
+}
+
+export interface AuctionPositionChangedNotification {
+  auctionId: string
+  position: 'leading' | 'outbid' | 'won' | 'lost'
+  isCurrentWinner: boolean
+  currentPrice: number
+  minimumNextBid: number
+  currency: string
+  latestBidId?: string
+  latestBidAmount?: number
+  latestBidStatus?: string
+  timestamp: string
 }
 
 export interface ItemQuestionNotification {

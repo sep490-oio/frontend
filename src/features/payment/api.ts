@@ -178,13 +178,14 @@ export function useCancelWithdrawal() {
 export function useCreateDepositPayment() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (data: { amount: number; currency: string; auctionId: string; description: string }) => {
+    mutationFn: async (data: { amount: number; currency: string; auctionId: string; description: string; clientReturnPath?: string }) => {
       const res = await apiClient.post<{ transactionId: string; transactionRef: string; paymentUrl: string }>('/payments/vnpay/create-url', {
         amount: data.amount,
         currency: data.currency,
         purpose: 'auction_deposit',
         description: data.description,
         auctionId: data.auctionId,
+        clientReturnPath: data.clientReturnPath,
       })
       return res.data
     },
@@ -219,13 +220,14 @@ export function useDepositFromWallet() {
 export function useWalletTopup() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ amount, currency, returnUrl }: { amount: number; currency?: string; returnUrl?: string }) => {
+    mutationFn: async ({ amount, currency, returnUrl, clientReturnPath }: { amount: number; currency?: string; returnUrl?: string; clientReturnPath?: string }) => {
       const res = await apiClient.post<{ paymentUrl: string }>('/payments/vnpay/create-url', {
         amount,
         currency: currency ?? 'VND',
         purpose: 'wallet_top_up',
         description: 'Nạp tiền vào ví OIO',
         returnUrl,
+        clientReturnPath,
       })
       return res.data
     },

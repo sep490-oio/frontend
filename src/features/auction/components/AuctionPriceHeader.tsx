@@ -16,8 +16,6 @@ export interface AuctionPriceHeaderProps {
     startTime?: string
     endTime?: string
     startingPrice?: { amount: number }
-    reservePrice?: { amount: number } | null
-    isReserveMet?: boolean
     buyNowPrice?: { amount: number } | null
     bidIncrement?: { amount: number }
     autoExtend?: boolean
@@ -113,17 +111,6 @@ export const AuctionPriceHeader: React.FC<AuctionPriceHeaderProps> = ({
       <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginTop: 4 }}>
         {t('startingPrice', 'Gia khoi diem')}: {formatCurrency(auction.startingPrice?.amount ?? 0, currency)}
       </div>
-
-      {/* Reserve indicator */}
-      {auction.reservePrice != null && (
-        <div style={{ fontSize: 13, marginTop: 4, fontWeight: 500 }}>
-          {auction.isReserveMet ? (
-            <span style={{ color: 'var(--color-success)' }}>&#10003; {t('reserveMet', 'Reserve met')}</span>
-          ) : (
-            <span style={{ color: 'var(--color-danger)' }}>&#10007; {t('reserveNotMet', 'Reserve not met')}</span>
-          )}
-        </div>
-      )}
 
       {/* Buy now price */}
       {auction.buyNowPrice != null && (

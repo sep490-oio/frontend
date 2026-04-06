@@ -1,13 +1,14 @@
-import { Typography, Button, InputNumber, Flex, Card, Popconfirm } from 'antd'
+import { Typography, Button, Flex, Card } from 'antd'
 import { ThunderboltOutlined, CheckCircleOutlined, InfoCircleOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
+import type { PriceHistoryPoint } from '@/types'
 
 import { AuctionPriceHeader } from '@/features/auction/components/AuctionPriceHeader'
 import BidForm from '@/features/auction/components/BidForm'
+import { BidderPositionBlock } from '@/features/auction/components/BidderPositionBlock'
 import { EligibilityPanel } from '@/features/auction/components/EligibilityPanel'
-import { PriceDisplay } from '@/components/ui/PriceDisplay'
-import { formatCurrency } from '@/utils/format'
+import { formatCurrency, formatDateTime } from '@/utils/format'
 
 // ── T011: State-specific CTA helper ─────────────────────────────────
 
@@ -33,6 +34,12 @@ function getAuctionAction(
   },
   currentUserId: string | undefined,
   t: (key: string, fallback: string) => string,
+  currentUserBidState?: {
+    position: 'leading' | 'outbid' | 'won' | 'lost' | 'none'
+    isCurrentWinner: boolean
+    latestBidAmount?: number
+    latestBidStatus?: string
+  },
 ): { type: AuctionAction; message: string } {
   // Cancelled
   if (auctionStatus === 'Cancelled' || auctionStatus === 'cancelled') {
@@ -61,7 +68,7 @@ function getAuctionAction(
 
   // Active states
   if (isActive) {
-    if (hub.outbid) {
+    if (currentUserBidState?.position === 'outbid') {
       return { type: 'outbid', message: t('outbidMessage', 'You have been outbid! Place a higher bid now.') }
     }
     if (qualState === 'qualified') {
@@ -95,6 +102,8 @@ export interface AuctionSidebarProps {
     reservePrice?: { amount: number } | null
     isReserveMet?: boolean
     buyNowPrice?: { amount: number } | null
+    isBuyNowReserved?: boolean
+    buyNowReservedUntil?: string
     bidIncrement?: { amount: number }
     autoExtend?: boolean
     extensionMinutes?: number
@@ -175,7 +184,8 @@ export interface AuctionSidebarProps {
   isCancelLoading?: boolean
 
   // Price history
-  priceHistory?: { price: number; timestamp: string }[]
+  priceHistory?: PriceHistoryPoint[]
+  onExpandChart?: () => void
 
   // Eligibility / deposit
   qualificationStatus?: string
@@ -199,6 +209,17 @@ export interface AuctionSidebarProps {
 
   // Current user (for outcome detection)
   currentUserId?: string
+
+  // Position-based bid state from server
+  currentUserBidState?: {
+    position: 'leading' | 'outbid' | 'won' | 'lost' | 'none'
+    isCurrentWinner: boolean
+    latestBidAmount?: number
+    latestBidStatus?: string
+  }
+
+  isMobile: boolean
+  isDesktop: boolean
 }
 
 // ── Component ────────────────────────────────────────────────────────
@@ -240,6 +261,7 @@ export function AuctionSidebar({
   isResumeLoading,
   isCancelLoading,
   priceHistory,
+  onExpandChart,
   qualificationStatus,
   depositStatus,
   depositAmount,
@@ -253,6 +275,9 @@ export function AuctionSidebar({
   onCountdownEnd,
   serverTimeOffset = 0,
   currentUserId,
+  currentUserBidState,
+  isMobile: _isMobile,
+  isDesktop,
 }: AuctionSidebarProps) {
   const { t } = useTranslation('auction')
 
@@ -264,11 +289,12 @@ export function AuctionSidebar({
     { outbid, auctionEnded },
     currentUserId,
     t,
+    currentUserBidState,
   )
 
   return (
     <>
-      <div style={{ position: 'sticky', top: 24 }}>
+      <div style={isDesktop ? { position: 'sticky', top: 24 } : undefined}>
         {/* 1. Price header — status badges, price, countdown, stats, watch */}
         <AuctionPriceHeader
           auction={auction}
@@ -290,30 +316,38 @@ export function AuctionSidebar({
         />
 
         {/* 2. Bid Form — immediately after price, ALWAYS VISIBLE at top when qualified & active */}
-        {isActive && qualState === 'qualified' && (
-          <BidForm
-            currentPrice={currentPrice}
-            minBid={minBid}
-            bidIncrement={bidIncrement}
-            currency={currency}
-            walletBalance={walletBalance}
-            bidAmount={bidAmount}
-            onBidAmountChange={onBidAmountChange}
-            onPlaceBid={onPlaceBid}
-            isPlacingBid={isPlacingBid}
-            insufficientBalance={insufficientBalance}
-            myAutoBid={myAutoBid}
-            onAutoBidClick={onAutoBidClick}
-            onPauseAutoBid={onPauseAutoBid}
-            onResumeAutoBid={onResumeAutoBid}
-            onModifyAutoBid={onModifyAutoBid}
-            onCancelAutoBid={onCancelAutoBid}
-            isPauseLoading={isPauseLoading}
-            isResumeLoading={isResumeLoading}
-            isCancelLoading={isCancelLoading}
-            priceHistory={priceHistory}
-            outbidMode={!!outbid}
-          />
+        {isActive && qualState === 'qualified' && isDesktop && (
+          <>
+            {currentUserBidState && currentUserBidState.position !== 'none' && (
+              <BidderPositionBlock
+                position={currentUserBidState.position}
+                currency={currency}
+              />
+            )}
+            <BidForm
+              currentPrice={currentPrice}
+              minBid={minBid}
+              bidIncrement={bidIncrement}
+              currency={currency}
+              walletBalance={walletBalance}
+              bidAmount={bidAmount}
+              onBidAmountChange={onBidAmountChange}
+              onPlaceBid={onPlaceBid}
+              isPlacingBid={isPlacingBid}
+              insufficientBalance={insufficientBalance}
+              myAutoBid={myAutoBid}
+              onAutoBidClick={onAutoBidClick}
+              onPauseAutoBid={onPauseAutoBid}
+              onResumeAutoBid={onResumeAutoBid}
+              onModifyAutoBid={onModifyAutoBid}
+              onCancelAutoBid={onCancelAutoBid}
+              isPauseLoading={isPauseLoading}
+              isResumeLoading={isResumeLoading}
+              isCancelLoading={isCancelLoading}
+              priceHistory={priceHistory}
+              onExpandChart={onExpandChart}
+            />
+          </>
         )}
 
         {/* 3. Eligibility Panel */}
@@ -342,7 +376,7 @@ export function AuctionSidebar({
                 icon={<ThunderboltOutlined />}
                 onClick={onBuyNowClick}
                 loading={isBuyNowLoading}
-                disabled={isBuyNowLoading}
+                disabled={isBuyNowLoading || auction.isBuyNowReserved}
                 style={{
                   height: 52,
                   borderRadius: 8,
@@ -351,8 +385,15 @@ export function AuctionSidebar({
                   fontWeight: 500,
                 }}
               >
-                {t('buyNow', 'Buy Now')} &mdash; {formatCurrency(auction.buyNowPrice?.amount ?? 0, currency)}
+                {auction.isBuyNowReserved
+                  ? t('buyNowReserved', 'Buy Now Reserved')
+                  : `${t('buyNow', 'Buy Now')} — ${formatCurrency(auction.buyNowPrice?.amount ?? 0, currency)}`}
               </Button>
+              {auction.isBuyNowReserved && auction.buyNowReservedUntil && (
+                <Typography.Text style={{ display: 'block', marginTop: 8, fontSize: 12, color: 'var(--color-text-secondary)' }}>
+                  {t('buyNowReservedUntil', 'Reserved until')}: {formatDateTime(auction.buyNowReservedUntil)}
+                </Typography.Text>
+              )}
             </>
           )}
         </div>
@@ -482,69 +523,6 @@ export function AuctionSidebar({
           </Card>
         )}
       </div>
-
-      {/* 9. Mobile sticky bid bar */}
-      {isActive && qualState === 'qualified' && (
-        <div
-          style={{
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: '12px 16px',
-            paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
-            background: 'var(--color-bg-card)',
-            borderTop: '1px solid var(--color-border)',
-            boxShadow: '0 -4px 12px rgba(0,0,0,0.08)',
-            display: 'none',
-            zIndex: 100,
-          }}
-          className="oio-mobile-bid-bar"
-        >
-          <Flex gap={8} align="center">
-            <div style={{ flex: 1 }}>
-              <PriceDisplay amount={currentPrice} currency={currency} size="small" />
-            </div>
-            <InputNumber
-              size="small"
-              min={minBid}
-              step={bidIncrement}
-              value={bidAmount}
-              onChange={(v) => onBidAmountChange(v)}
-              style={{ width: 140 }}
-              formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-              parser={(v) => Number(v?.replace(/,/g, '') ?? 0)}
-              addonAfter={currency}
-              placeholder={`Min: ${formatCurrency(minBid, currency)}`}
-            />
-            <Popconfirm
-              title={t('confirmBidTitle', 'Confirm your bid')}
-              description={
-                <div style={{ fontSize: 12, lineHeight: 1.8 }}>
-                  <div>{t('bidAmount', 'Bid amount')}: <strong>{formatCurrency(bidAmount ?? 0, currency)}</strong></div>
-                  <div>{t('currentPrice', 'Current price')}: {formatCurrency(currentPrice, currency)}</div>
-                  <div>{t('walletBalance', 'Wallet balance')}: {formatCurrency(walletBalance, currency)}</div>
-                </div>
-              }
-              onConfirm={onPlaceBid}
-              okText={t('confirmBid', 'Confirm')}
-              cancelText={t('cancel', 'Cancel')}
-              okButtonProps={{ loading: isPlacingBid }}
-              disabled={!bidAmount || bidAmount < minBid || isSeller}
-            >
-              <Button
-                type="primary"
-                size="small"
-                loading={isPlacingBid}
-                disabled={!bidAmount || bidAmount < minBid || isSeller}
-              >
-                {t('bidButton', 'Bid')}
-              </Button>
-            </Popconfirm>
-          </Flex>
-        </div>
-      )}
-      <style>{`@media (max-width: 768px) { .oio-mobile-bid-bar { display: block !important; } }`}</style>
     </>
   )
 }

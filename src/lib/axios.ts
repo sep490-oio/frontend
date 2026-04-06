@@ -53,6 +53,12 @@ apiClient.interceptors.response.use(
       return Promise.reject(error)
     }
 
+    // If no token exists (anonymous session), just reject — don't try refresh
+    const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
+    if (!token) {
+      return Promise.reject(error)
+    }
+
     // Skip refresh for auth endpoints (login, refresh, 2FA verify)
     if (
       originalRequest.url?.includes('/auth/login') ||

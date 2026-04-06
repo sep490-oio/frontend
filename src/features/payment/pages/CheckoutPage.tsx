@@ -113,6 +113,7 @@ export default function CheckoutPage() {
           orderId: order.id,
           paymentMethodId: isNewVnPay ? undefined : selectedMethodId || undefined,
           saveCard: isNewVnPay ? saveCard : undefined,
+          clientReturnPath: window.location.pathname,
         },
         {
           onSuccess: (data) => {

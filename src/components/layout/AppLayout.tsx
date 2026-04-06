@@ -31,7 +31,7 @@ export function AppLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const { isAuthenticated, logout: handleLogout } = useAuth()
-  const { data: currentUserData } = useCurrentUser()
+  const { data: currentUserData } = useCurrentUser({ enabled: isAuthenticated })
   const { isDark, toggle: toggleTheme } = useTheme()
   const accessToken = useAppSelector((state) => state.auth.accessToken)
   const roles = getRolesFromToken(accessToken)
@@ -47,7 +47,7 @@ export function AppLayout() {
   }, [debouncedSearch, navigate])
 
   // Platform terms redirect — enforce before any app usage
-  const { data: platformTerms } = usePendingTerms('platform')
+  const { data: platformTerms } = usePendingTerms('platform', { enabled: isAuthenticated })
   useEffect(() => {
     if (isAuthenticated && platformTerms?.hasPending && !location.pathname.startsWith('/me/terms')) {
       navigate(`/me/terms?type=platform&returnTo=${encodeURIComponent(location.pathname)}`)

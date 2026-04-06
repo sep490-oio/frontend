@@ -322,7 +322,7 @@ export function useCancelAuction() {
 export function useSetAuctionTiming() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ auctionId, ...timing }: { auctionId: string; startTime: string; endTime: string; qualificationStartAt?: string; qualificationEndAt?: string }) => {
+    mutationFn: async ({ auctionId, ...timing }: { auctionId: string; startTime: string; endTime: string; qualificationStartAt?: string; qualificationEndAt?: string; autoExtend?: boolean; extensionMinutes?: number }) => {
       await apiClient.put(`/auctions/${auctionId}/timing`, timing)
     },
     onSuccess: (_, { auctionId }) => {

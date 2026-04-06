@@ -262,6 +262,7 @@ export default function WalletPage() {
               amount: topupAmount,
               currency: wallet?.currency ?? 'VND',
               returnUrl: window.location.href,
+              clientReturnPath: '/me/wallet',
             })
             window.location.href = result.paymentUrl
           } catch {

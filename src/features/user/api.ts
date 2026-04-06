@@ -19,13 +19,14 @@ import type { UserSessionDto, LoginHistoryDto } from '@/types/auth'
 
 // ── Current User ──────────────────────────────────────────────────────
 
-export function useCurrentUser() {
+export function useCurrentUser(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.auth.currentUser(),
     queryFn: async () => {
       const res = await apiClient.get<UserDto>('/me')
       return res.data
     },
+    enabled: options?.enabled ?? true,
   })
 }
 
@@ -267,7 +268,9 @@ export function useActiveTermsByType(termType: string) {
  * Replaces the broken /me/terms/pending endpoint call.
  * @param termType - Optional filter by type (e.g., "platform", "seller", "bidder")
  */
-export function usePendingTerms(termType?: string) {
+export function usePendingTerms(termType?: string, options?: { enabled?: boolean }) {
+  const enabled = options?.enabled ?? true
+
   const { data: activeTerms, isLoading: activeLoading } = useQuery({
     queryKey: [...queryKeys.terms.all, 'active'],
     queryFn: async () => {
@@ -275,9 +278,10 @@ export function usePendingTerms(termType?: string) {
       return res.data
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled,
   })
 
-  const { data: acceptedTerms, isLoading: acceptedLoading } = useAcceptedTerms()
+  const { data: acceptedTerms, isLoading: acceptedLoading } = useAcceptedTerms({ enabled })
 
   const pendingTerms = useMemo(() => {
     if (!activeTerms || !acceptedTerms) return []
@@ -304,7 +308,7 @@ export function usePendingTerms(termType?: string) {
   }
 }
 
-export function useAcceptedTerms() {
+export function useAcceptedTerms(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.terms.myAccepted(),
     queryFn: async () => {
@@ -312,6 +316,7 @@ export function useAcceptedTerms() {
       const res = await apiClient.get<{ id: string; acceptedAt: string; document: { id: string; type: string; version: number } }[]>('/me/terms')
       return res.data
     },
+    enabled: options?.enabled ?? true,
   })
 }
 

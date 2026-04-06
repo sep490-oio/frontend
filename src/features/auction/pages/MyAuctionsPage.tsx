@@ -108,6 +108,8 @@ export default function MyAuctionsPage() {
   const [timingModalOpen, setTimingModalOpen] = useState(false)
   const [timingAuctionId, setTimingAuctionId] = useState<string | null>(null)
   const [timingForm, setTimingForm] = useState<TimingFormState>(INITIAL_TIMING)
+  // When true, handleTimingConfirm will submit auction first, then set timing
+  const [submitPendingTimingAuctionId, setSubmitPendingTimingAuctionId] = useState<string | null>(null)
 
   const params = {
     pageNumber: page,
@@ -153,36 +155,70 @@ export default function MyAuctionsPage() {
     setTimingModalOpen(true)
   }
 
-  const handleTimingConfirm = () => {
+  const handleTimingConfirm = async () => {
     if (!timingAuctionId || !timingForm.startTime || !timingForm.endTime) return
-    setAuctionTiming.mutate(
-      {
-        auctionId: timingAuctionId,
-        startTime: timingForm.startTime.toISOString(),
-        endTime: timingForm.endTime.toISOString(),
-        ...(timingForm.qualificationStartAt
-          ? { qualificationStartAt: timingForm.qualificationStartAt.toISOString() }
-          : {}),
-        ...(timingForm.qualificationEndAt
-          ? { qualificationEndAt: timingForm.qualificationEndAt.toISOString() }
-          : {}),
-      },
-      {
+
+    const isSubmitFlow = submitPendingTimingAuctionId === timingAuctionId
+
+    const timingPayload = {
+      auctionId: timingAuctionId,
+      startTime: timingForm.startTime.toISOString(),
+      endTime: timingForm.endTime.toISOString(),
+      ...(timingForm.qualificationStartAt
+        ? { qualificationStartAt: timingForm.qualificationStartAt.toISOString() }
+        : {}),
+      ...(timingForm.qualificationEndAt
+        ? { qualificationEndAt: timingForm.qualificationEndAt.toISOString() }
+        : {}),
+      autoExtend: timingForm.autoExtend,
+      extensionMinutes: timingForm.extensionMinutes,
+    }
+
+    if (isSubmitFlow) {
+      // Submit first, then set timing
+      try {
+        await submitAuction.mutateAsync(timingAuctionId)
+        try {
+          await setAuctionTiming.mutateAsync(timingPayload)
+          msgApi.success(t('submitAndTimingSuccess', 'Auction submitted and timing configured'))
+        } catch {
+          msgApi.warning(t('submitSuccessTimingFailed', 'Auction submitted successfully, but timing could not be set. Please set timing manually.'))
+        }
+      } catch {
+        msgApi.error(t('submitFailed', 'Failed to submit auction'))
+      }
+      setSubmitPendingTimingAuctionId(null)
+      setTimingModalOpen(false)
+      setTimingAuctionId(null)
+    } else {
+      // Normal timing-only flow
+      setAuctionTiming.mutate(timingPayload, {
         onSuccess: () => {
           msgApi.success(t('timingSuccess', 'Timing configured'))
           setTimingModalOpen(false)
           setTimingAuctionId(null)
         },
-      },
-    )
+      })
+    }
   }
 
   /* ── Simple action handlers ──────────────────────────────────────── */
 
   const handleSubmit = (id: string) => {
-    submitAuction.mutate(id, {
-      onSuccess: () => msgApi.success(t('submitSuccess', 'Auction submitted for review')),
-    })
+    // Check if this auction already has timing set
+    const auction = data?.items?.find((a: any) => a.id === id)
+    const hasTiming = auction?.startTime && auction?.endTime
+
+    if (hasTiming) {
+      // Timing already set — submit directly
+      submitAuction.mutate(id, {
+        onSuccess: () => msgApi.success(t('submitSuccess', 'Auction submitted for review')),
+      })
+    } else {
+      // No timing — open timing modal, mark as submit-pending
+      setSubmitPendingTimingAuctionId(id)
+      openTimingModal(id)
+    }
   }
 
   const handlePublish = (id: string) => {
@@ -657,11 +693,12 @@ export default function MyAuctionsPage() {
 
       {/* Timing modal */}
       <Modal
-        title={t('setTiming', 'Set Auction Timing')}
+        title={submitPendingTimingAuctionId ? t('submitAndSetTiming', 'Submit & Set Auction Timing') : t('setTiming', 'Set Auction Timing')}
         open={timingModalOpen}
         onCancel={() => {
           setTimingModalOpen(false)
           setTimingAuctionId(null)
+          setSubmitPendingTimingAuctionId(null)
         }}
         onOk={handleTimingConfirm}
         okText={t('saveTiming', 'Save Timing')}
@@ -674,41 +711,15 @@ export default function MyAuctionsPage() {
         width={480}
       >
         <Flex vertical gap={16} style={{ marginTop: 16 }}>
-          {/* Start Time */}
-          <div>
-            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13 }}>
-              {t('startTime', 'Start Time')} *
-            </label>
-            <DatePicker
-              showTime
-              style={{ width: '100%' }}
-              value={timingForm.startTime}
-              onChange={(v) => setTimingForm((prev) => ({ ...prev, startTime: v }))}
-              placeholder={t('selectStartTime', 'Select start time')}
-            />
-          </div>
-
-          {/* End Time */}
-          <div>
-            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13 }}>
-              {t('endTime', 'End Time')} *
-            </label>
-            <DatePicker
-              showTime
-              style={{ width: '100%' }}
-              value={timingForm.endTime}
-              onChange={(v) => setTimingForm((prev) => ({ ...prev, endTime: v }))}
-              placeholder={t('selectEndTime', 'Select end time')}
-            />
-          </div>
-
           {/* Qualification Start */}
           <div>
             <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13, color: 'var(--color-text-secondary)' }}>
               {t('qualificationStart', 'Qualification Start')}
             </label>
             <DatePicker
-              showTime
+              showTime={{ format: 'HH:mm' }}
+              format="YYYY-MM-DD HH:mm"
+              disabledDate={(current) => current && current.isBefore(dayjs().startOf('day'))}
               style={{ width: '100%' }}
               value={timingForm.qualificationStartAt}
               onChange={(v) => setTimingForm((prev) => ({ ...prev, qualificationStartAt: v }))}
@@ -722,11 +733,44 @@ export default function MyAuctionsPage() {
               {t('qualificationEnd', 'Qualification End')}
             </label>
             <DatePicker
-              showTime
+              showTime={{ format: 'HH:mm' }}
+              format="YYYY-MM-DD HH:mm"
+              disabledDate={(current) => current && current.isBefore(dayjs().startOf('day'))}
               style={{ width: '100%' }}
               value={timingForm.qualificationEndAt}
               onChange={(v) => setTimingForm((prev) => ({ ...prev, qualificationEndAt: v }))}
               placeholder={t('optional', 'Optional')}
+            />
+          </div>
+          {/* Start Time */}
+          <div>
+            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13 }}>
+              {t('startTime', 'Start Time')} 
+            </label>
+            <DatePicker
+              showTime={{ format: 'HH:mm' }}
+              format="YYYY-MM-DD HH:mm"
+              disabledDate={(current) => current && current.isBefore(dayjs().startOf('day'))}
+              style={{ width: '100%' }}
+              value={timingForm.startTime}
+              onChange={(v) => setTimingForm((prev) => ({ ...prev, startTime: v }))}
+              placeholder={t('selectStartTime', 'Select start time')}
+            />
+          </div>
+
+          {/* End Time */}
+          <div>
+            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13 }}>
+              {t('endTime', 'End Time')} 
+            </label>
+            <DatePicker
+              showTime={{ format: 'HH:mm' }}
+              format="YYYY-MM-DD HH:mm"
+              disabledDate={(current) => current && current.isBefore(dayjs().startOf('day'))}
+              style={{ width: '100%' }}
+              value={timingForm.endTime}
+              onChange={(v) => setTimingForm((prev) => ({ ...prev, endTime: v }))}
+              placeholder={t('selectEndTime', 'Select end time')}
             />
           </div>
 

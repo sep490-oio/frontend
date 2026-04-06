@@ -12,6 +12,7 @@ interface VnPayCallbackResponse {
   isSuccess: boolean
   responseCode: string
   message: string
+  clientReturnPath?: string
 }
 
 export default function VnPayReturnPage() {
@@ -26,7 +27,9 @@ export default function VnPayReturnPage() {
   const [error, setError] = useState<string | null>(null)
 
   // Check if this was a deposit payment (auction ID stored before redirect)
-  const depositAuctionId = localStorage.getItem('oio_deposit_auction_id')
+  // Capture in ref on first mount — StrictMode double-mount cleanup can delete the key early
+  const depositAuctionIdRef = useRef(localStorage.getItem('oio_deposit_auction_id'))
+  const depositAuctionId = depositAuctionIdRef.current
 
   // Parse VnPay params for display
   const transactionNo = searchParams.get('vnp_TransactionNo') ?? ''
@@ -43,12 +46,12 @@ export default function VnPayReturnPage() {
       )
     : ''
 
-  // Clean up localStorage on unmount
+  // Clean up localStorage after verification completes (not on unmount — StrictMode safe)
   useEffect(() => {
-    return () => {
+    if (!loading) {
       localStorage.removeItem('oio_deposit_auction_id')
     }
-  }, [])
+  }, [loading])
 
   // Call BE to confirm the payment
   useEffect(() => {
@@ -228,7 +231,26 @@ export default function VnPayReturnPage() {
 
         {/* Actions */}
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', flexDirection: isMobile ? 'column' : 'row' }}>
-          {isSuccess && depositAuctionId && (
+          {isSuccess && result?.clientReturnPath && (
+            <Button
+              type="primary"
+              size="large"
+              onClick={() => {
+                localStorage.removeItem('oio_deposit_auction_id')
+                navigate(result.clientReturnPath!)
+              }}
+              style={{
+                height: 48,
+                padding: '0 32px',
+                fontWeight: 500,
+                background: 'var(--color-accent)',
+                borderColor: 'var(--color-accent)',
+              }}
+            >
+              {t('payment:vnpayReturn.continue', 'Continue')}
+            </Button>
+          )}
+          {isSuccess && !result?.clientReturnPath && depositAuctionId && (
             <Button
               type="primary"
               size="large"
@@ -247,7 +269,7 @@ export default function VnPayReturnPage() {
               {t('payment:vnpayReturn.backToAuction', 'Back to Auction')}
             </Button>
           )}
-          {isSuccess && !depositAuctionId && txnRef.startsWith('LINK-') && (
+          {isSuccess && !result?.clientReturnPath && !depositAuctionId && txnRef.startsWith('LINK-') && (
             <Button
               type="primary"
               size="large"
@@ -263,7 +285,7 @@ export default function VnPayReturnPage() {
               {t('payment:vnpayReturn.viewPaymentMethods', 'View Payment Methods')}
             </Button>
           )}
-          {isSuccess && !depositAuctionId && !txnRef.startsWith('LINK-') && (
+          {isSuccess && !result?.clientReturnPath && !depositAuctionId && !txnRef.startsWith('LINK-') && (
             <Button
               type="primary"
               size="large"

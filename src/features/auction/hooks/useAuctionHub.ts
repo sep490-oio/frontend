@@ -1,16 +1,18 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import type { QueryClient } from '@tanstack/react-query'
 
 import { upsertItemQuestionCaches } from '@/features/item/api'
 import { queryKeys } from '@/lib/queryClient'
 import { getAuctionHub, startConnection } from '@/lib/signalr'
 import { DEFAULT_CURRENCY } from '@/utils/constants'
-import { AuctionStatus, BidStatus } from '@/types/enums'
+import { BidStatus } from '@/types/enums'
 import type {
   AuctionDetailDto,
   AuctionStartedNotification,
   AuctionEndedNotification,
   AuctionExtendedNotification,
+  AuctionStateChangedNotification,
   AuctionCancelledNotification,
   BidDto,
   BidNotification,
@@ -21,6 +23,7 @@ import type {
   ItemQuestionNotification,
   OutbidNotification,
   PagedList,
+  PriceHistoryPoint,
 } from '@/types'
 
 interface AuctionHubState {
@@ -55,34 +58,30 @@ const initialState: AuctionHubState = {
   serverTimeOffset: 0,
 }
 
-function toBidDto(data: BidNotification, currency: string): BidDto {
-  return {
-    id: data.bidId,
-    auctionId: data.auctionId,
-    bidderId: data.bidderId,
-    bidderDisplayName: data.bidderDisplayName,
-    amount: {
-      amount: data.amount,
-      currency,
-      symbol: currency,
-    },
-    isAutoBid: data.isAutoBid,
-    status: BidStatus.Winning,
-    createdAt: data.timestamp,
-  }
-}
-
 function appendPriceHistory(
-  history: AuctionDetailDto['priceHistory'],
-  timestamp: string,
-  price: number,
+  history: AuctionDetailDto['priceHistory'] | undefined,
+  point: PriceHistoryPoint,
 ): AuctionDetailDto['priceHistory'] {
-  const lastPoint = history[history.length - 1]
-  if (lastPoint && lastPoint.timestamp === timestamp && lastPoint.price === price) {
-    return history
+  const arr = history ?? []
+  const nextTimestamp = point.recordedAt ?? point.timestamp ?? ''
+  const nextPrice = typeof point.price === 'object' ? point.price.amount : point.price
+
+  const exists = arr.some((item) => {
+    const itemTimestamp = item.recordedAt ?? item.timestamp ?? ''
+    const itemPrice = typeof item.price === 'object' ? item.price.amount : item.price
+
+    if (point.bidId && item.bidId) {
+      return item.bidId === point.bidId
+    }
+
+    return itemTimestamp === nextTimestamp && itemPrice === nextPrice && item.type === point.type
+  })
+
+  if (exists) {
+    return arr
   }
 
-  return [...history, { timestamp, price }]
+  return [point, ...arr]
 }
 
 function upsertBidPage(
@@ -114,16 +113,82 @@ function upsertBidPage(
   }
 }
 
-function patchAuctionDetail(
-  data: AuctionDetailDto,
-  updater: (current: AuctionDetailDto) => AuctionDetailDto,
-): AuctionDetailDto {
-  return updater(data)
+function applyAuctionRealtimePatch(
+  qc: Pick<QueryClient, 'setQueryData' | 'getQueryData'>,
+  data: AuctionStateChangedNotification,
+) {
+  const currency = data.currency || DEFAULT_CURRENCY
+  const bid: BidDto | null = data.lastBid
+    ? {
+        id: data.lastBid.bidId,
+        auctionId: data.auctionId,
+        bidderId: data.lastBid.bidderId,
+        bidderDisplayName: data.lastBid.bidderDisplayName,
+        amount: { amount: data.lastBid.amount, currency, symbol: currency },
+        isAutoBid: data.lastBid.isAutoBid,
+        status: BidStatus.Winning,
+        createdAt: data.lastBid.timestamp,
+      }
+    : null
+
+  qc.setQueryData(queryKeys.auctions.detail(data.auctionId), (current: AuctionDetailDto | undefined) => {
+    if (!current) return current
+
+    return {
+      ...current,
+      auction: {
+        ...current.auction,
+        status: data.status,
+        currentPrice: {
+          ...current.auction.currentPrice,
+          amount: data.currentPrice,
+          currency,
+        },
+        minimumBidAmount: {
+          ...current.auction.minimumBidAmount,
+          amount: data.minimumNextBid,
+          currency,
+        },
+        bidCount: data.bidCount,
+        endTime: data.endTime,
+        currentWinnerId: data.winnerId ?? current.auction.currentWinnerId,
+        isBuyNowReserved: data.isBuyNowReserved,
+        buyNowReservedUntil: data.buyNowReservedUntil ?? undefined,
+        autoExtend: data.autoExtend,
+        extensionMinutes: data.extensionMinutes,
+        extensionCount: data.extensionCount,
+        isEndingSoon: data.isEndingSoon,
+      },
+      recentBids: bid
+        ? [bid, ...current.recentBids.filter((item) => item.id !== bid.id)].slice(0, 20)
+        : current.recentBids,
+      priceHistory: data.newPriceHistoryPoint
+        ? appendPriceHistory(
+            current.priceHistory,
+            {
+              price: data.newPriceHistoryPoint.price,
+              type: data.newPriceHistoryPoint.type,
+              bidId: data.newPriceHistoryPoint.bidId,
+              bidderDisplayName: data.newPriceHistoryPoint.bidderDisplayName,
+              recordedAt: data.newPriceHistoryPoint.recordedAt,
+            },
+          )
+        : current.priceHistory,
+    }
+  })
+
+  // Update bid page if lastBid is present
+  if (bid) {
+    qc.setQueryData(queryKeys.auctions.bids(data.auctionId), (current: PagedList<BidDto> | undefined) =>
+      upsertBidPage(current, bid, data.bidCount),
+    )
+  }
 }
 
 export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId?: string) {
   const [state, setState] = useState<AuctionHubState>(initialState)
   const connectionRef = useRef<ReturnType<typeof getAuctionHub> | null>(null)
+  const latestStateVersionRef = useRef(0)
   const qc = useQueryClient()
 
   useEffect(() => {
@@ -133,6 +198,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
 
     const connection = getAuctionHub()
     connectionRef.current = connection
+    latestStateVersionRef.current = 0
     let isActive = true
 
     const markConnected = () => {
@@ -222,44 +288,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         lastSyncedAt: Date.now(),
       }))
 
-      qc.setQueryData<AuctionDetailDto>(queryKeys.auctions.detail(data.auctionId), (current) => {
-        if (!current) {
-          return current
-        }
-
-        const currency = current.auction.currency || DEFAULT_CURRENCY
-        const bid = toBidDto(data, currency)
-
-        return patchAuctionDetail(current, (detail) => ({
-          ...detail,
-          auction: {
-            ...detail.auction,
-            currentPrice: {
-              ...detail.auction.currentPrice,
-              amount: data.currentPrice,
-              currency,
-              symbol: detail.auction.currentPrice.symbol || currency,
-            },
-            minimumBidAmount: {
-              ...detail.auction.minimumBidAmount,
-              amount: data.minimumNextBid,
-              currency,
-              symbol: detail.auction.minimumBidAmount.symbol || currency,
-            },
-            bidCount: data.totalBids,
-            currentWinnerId: data.bidderId,
-          },
-          recentBids: [bid, ...detail.recentBids.filter((item) => item.id !== bid.id)].slice(0, 10),
-          priceHistory: appendPriceHistory(detail.priceHistory, data.timestamp, data.currentPrice),
-        }))
-      })
-
-      qc.setQueryData<PagedList<BidDto>>(queryKeys.auctions.bids(data.auctionId), (current) => {
-        const detail = qc.getQueryData<AuctionDetailDto>(queryKeys.auctions.detail(data.auctionId))
-        const currency = detail?.auction.currency || DEFAULT_CURRENCY
-        return upsertBidPage(current, toBidDto(data, currency), data.totalBids)
-      })
-
+      // Cache patching handled by AuctionStateChanged — only keep wallet invalidation
       qc.invalidateQueries({ queryKey: queryKeys.wallet.summary() })
     }
 
@@ -280,30 +309,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         lastSyncedAt: Date.now(),
       }))
 
-      if (!auctionId || data.auctionId !== auctionId) {
-        return
-      }
-
-      qc.setQueryData<AuctionDetailDto>(queryKeys.auctions.detail(auctionId), (current) => {
-        if (!current) {
-          return current
-        }
-
-        return {
-          ...current,
-          auction: {
-            ...current.auction,
-            currentPrice: {
-              ...current.auction.currentPrice,
-              amount: data.newHighAmount,
-            },
-            minimumBidAmount: {
-              ...current.auction.minimumBidAmount,
-              amount: data.minimumNextBid,
-            },
-          },
-        }
-      })
+      // Cache patching handled by AuctionStateChanged
     }
 
     const auctionStartedHandler = (data: AuctionStartedNotification) => {
@@ -318,21 +324,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         lastSyncedAt: Date.now(),
       }))
 
-      qc.setQueryData<AuctionDetailDto>(queryKeys.auctions.detail(data.auctionId), (current) => {
-        if (!current) {
-          return current
-        }
-
-        return {
-          ...current,
-          auction: {
-            ...current.auction,
-            status: AuctionStatus.Active,
-            startTime: data.startTime,
-            endTime: data.endTime,
-          },
-        }
-      })
+      // Cache patching handled by AuctionStateChanged
     }
 
     const auctionEndedHandler = (data: AuctionEndedNotification) => {
@@ -355,27 +347,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         lastSyncedAt: Date.now(),
       }))
 
-      qc.setQueryData<AuctionDetailDto>(queryKeys.auctions.detail(data.auctionId), (current) => {
-        if (!current) {
-          return current
-        }
-
-        return {
-          ...current,
-          auction: {
-            ...current.auction,
-            status: data.winnerId ? AuctionStatus.Sold : AuctionStatus.Ended,
-            currentPrice: {
-              ...current.auction.currentPrice,
-              amount: data.finalPrice,
-            },
-            bidCount: data.totalBids,
-            currentWinnerId: data.winnerId,
-            isReserveMet: data.reserveMet,
-          },
-        }
-      })
-
+      // Cache patching handled by AuctionStateChanged — only keep wallet invalidation
       qc.invalidateQueries({ queryKey: queryKeys.wallet.summary() })
     }
 
@@ -391,20 +363,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         lastSyncedAt: Date.now(),
       }))
 
-      qc.setQueryData<AuctionDetailDto>(queryKeys.auctions.detail(data.auctionId), (current) => {
-        if (!current) {
-          return current
-        }
-
-        return {
-          ...current,
-          auction: {
-            ...current.auction,
-            endTime: data.newEndTime,
-            extensionCount: (current.auction.extensionCount || 0) + 1,
-          },
-        }
-      })
+      // Cache patching handled by AuctionStateChanged
     }
 
     const auctionCancelledHandler = (data: AuctionCancelledNotification) => {
@@ -420,19 +379,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         lastSyncedAt: Date.now(),
       }))
 
-      qc.setQueryData<AuctionDetailDto>(queryKeys.auctions.detail(data.auctionId), (current) => {
-        if (!current) {
-          return current
-        }
-
-        return {
-          ...current,
-          auction: {
-            ...current.auction,
-            status: AuctionStatus.Cancelled,
-          },
-        }
-      })
+      // Cache patching handled by AuctionStateChanged
     }
 
     const buyNowReservedHandler = (data: BuyNowReservedNotification) => {
@@ -447,20 +394,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         lastSyncedAt: Date.now(),
       }))
 
-      qc.setQueryData<AuctionDetailDto>(queryKeys.auctions.detail(data.auctionId), (current) => {
-        if (!current) {
-          return current
-        }
-
-        return {
-          ...current,
-          auction: {
-            ...current.auction,
-            isBuyNowReserved: true,
-            buyNowReservedUntil: data.expiresAt,
-          },
-        }
-      })
+      // Cache patching handled by AuctionStateChanged
     }
 
     const buyNowReservationReleasedHandler = (data: BuyNowReservationReleasedNotification) => {
@@ -475,20 +409,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         lastSyncedAt: Date.now(),
       }))
 
-      qc.setQueryData<AuctionDetailDto>(queryKeys.auctions.detail(data.auctionId), (current) => {
-        if (!current) {
-          return current
-        }
-
-        return {
-          ...current,
-          auction: {
-            ...current.auction,
-            isBuyNowReserved: false,
-            buyNowReservedUntil: undefined,
-          },
-        }
-      })
+      // Cache patching handled by AuctionStateChanged
     }
 
     const buyNowExecutedHandler = (data: BuyNowNotification) => {
@@ -510,26 +431,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         lastSyncedAt: Date.now(),
       }))
 
-      qc.setQueryData<AuctionDetailDto>(queryKeys.auctions.detail(data.auctionId), (current) => {
-        if (!current) {
-          return current
-        }
-
-        return {
-          ...current,
-          auction: {
-            ...current.auction,
-            status: AuctionStatus.Sold,
-            currentPrice: {
-              ...current.auction.currentPrice,
-              amount: data.price,
-            },
-            currentWinnerId: data.buyerId,
-            isBuyNowReserved: false,
-          },
-        }
-      })
-
+      // Cache patching handled by AuctionStateChanged — only keep wallet invalidation
       qc.invalidateQueries({ queryKey: queryKeys.wallet.summary() })
     }
 
@@ -555,6 +457,29 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
       qc.invalidateQueries({ queryKey: queryKeys.items.questionsRoot(data.itemId) })
     }
 
+    const auctionStateChangedHandler = (data: AuctionStateChangedNotification) => {
+      if (auctionId && data.auctionId !== auctionId) {
+        return
+      }
+
+      const versionMs = Date.parse(data.versionTimestamp || data.serverTimestamp)
+      if (Number.isFinite(versionMs) && versionMs < latestStateVersionRef.current) {
+        return
+      }
+
+      if (Number.isFinite(versionMs)) {
+        latestStateVersionRef.current = versionMs
+      }
+
+      applyAuctionRealtimePatch(qc, data)
+
+      setState((prev) => ({
+        ...prev,
+        connected: true,
+        lastSyncedAt: Date.now(),
+      }))
+    }
+
     const questionAnsweredHandler = (data: ItemQuestionNotification) => {
       if (itemId && data.itemId !== itemId) {
         return
@@ -570,6 +495,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
       qc.invalidateQueries({ queryKey: queryKeys.items.questionsRoot(data.itemId) })
     }
 
+    connection.on('AuctionStateChanged', auctionStateChangedHandler)
     connection.on('BidPlaced', bidPlacedHandler)
     connection.on('Outbid', outbidHandler)
     connection.on('AuctionStarted', auctionStartedHandler)
@@ -594,12 +520,19 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
     })
     connection.onclose(() => {
       markDisconnected()
+      // signalr.ts may restart the connection after onclose (manual retry).
+      // That path does NOT trigger onreconnected, so we must rejoin rooms ourselves.
+      // Wait for the restart attempt (signalr.ts retries after 3-5s) then rejoin.
+      setTimeout(() => {
+        if (isActive) void joinRooms()
+      }, 6000)
     })
 
     void joinRooms()
 
     return () => {
       isActive = false
+      latestStateVersionRef.current = 0
 
       if (auctionId) {
         void connection.invoke('LeaveAuction', auctionId).catch(() => undefined)
@@ -609,6 +542,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         void connection.invoke('LeaveItem', itemId).catch(() => undefined)
       }
 
+      connection.off('AuctionStateChanged', auctionStateChangedHandler)
       connection.off('BidPlaced', bidPlacedHandler)
       connection.off('Outbid', outbidHandler)
       connection.off('AuctionStarted', auctionStartedHandler)
@@ -624,7 +558,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
 
       setState(initialState)
     }
-  }, [auctionId, itemId, qc])
+  }, [auctionId, itemId, qc, currentUserId])
 
   const placeBid = useCallback(
     async (amount: number, currency: string, idempotencyKey: string) => {

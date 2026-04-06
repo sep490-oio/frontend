@@ -80,6 +80,7 @@ export interface VnPayUrlRequest {
   buyNowReservationId?: string
   paymentMethodId?: string
   saveCard?: boolean
+  clientReturnPath?: string
 }
 
 export interface PaymentSummaryDto {
