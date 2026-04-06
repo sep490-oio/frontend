@@ -91,15 +91,17 @@ export function useWatchlist(params?: PaginationParams) {
 // ── My Bids ─────────────────────────────────────────────────────────
 
 export interface MyBidDto {
-  id: string
   auctionId: string
-  auctionTitle: string
-  amount: MoneyDto
-  isAutoBid: boolean
-  status: string
-  isHighestBid: boolean
+  itemId: string
+  itemTitle: string
+  primaryImageUrl?: string
   auctionStatus: string
-  createdAt: string
+  currentPrice: MoneyDto
+  myLatestBidAmount: MoneyDto
+  position: string
+  wonAt?: string
+  lastBidAt: string
+  bidCountForUser: number
 }
 
 export function useMyBids(params?: PaginationParams & { status?: string; sortBy?: string }) {

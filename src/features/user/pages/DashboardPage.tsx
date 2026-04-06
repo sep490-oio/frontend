@@ -108,19 +108,19 @@ export default function DashboardPage() {
             {activeBids.length > 0 ? (
               <Row gutter={[16, 16]}>
                 {activeBids.map((bid) => (
-                  <Col xs={24} sm={12} md={8} key={bid.id}>
+                  <Col xs={24} sm={12} md={8} key={bid.auctionId}>
                     <Card
                       size="small"
                       hoverable
                       onClick={() => navigate(`/auctions/${bid.auctionId}`)}
                       style={{ borderRadius: 8 }}
                     >
-                      <div style={{ fontWeight: 500, fontSize: 13, marginBottom: 4 }}>{bid.auctionTitle ?? bid.auctionId?.slice(0, 12)}</div>
+                      <div style={{ fontWeight: 500, fontSize: 13, marginBottom: 4 }}>{bid.itemTitle ?? bid.auctionId?.slice(0, 12)}</div>
                       <div style={{ fontFamily: MONO_FONT, fontSize: 16, color: 'var(--color-accent)', fontWeight: 600 }}>
-                        {formatCurrency(bid.amount?.amount ?? 0, bid.amount?.currency)}
+                        {formatCurrency(bid.myLatestBidAmount?.amount ?? 0, bid.myLatestBidAmount?.currency)}
                       </div>
                       <div style={{ marginTop: 4 }}>
-                        <StatusBadge status={bid.isHighestBid ? 'winning' : 'outbid'} size="small" />
+                        <StatusBadge status={bid.position} size="small" />
                       </div>
                     </Card>
                   </Col>

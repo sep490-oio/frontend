@@ -367,8 +367,9 @@ export function AuctionSidebar({
             isVnPayDepositLoading={isVnPayDepositLoading}
           />
 
-          {/* 4. Buy Now — only during qualification window & if configured */}
-          {!isSeller && auction.buyNowPrice != null && (qualState === 'window_open' || qualState === 'qualified') && (
+          {/* 4. Buy Now — only before auction starts, during qualification window, with buyNowPrice set */}
+          {!isSeller && isScheduled && auction.buyNowPrice != null && !auction.isBuyNowReserved &&
+           (qualState === 'window_open' || qualState === 'qualified') && (
             <>
               <div style={{ height: 1, background: 'var(--color-border-light)', margin: '12px 0' }} />
               <Button
@@ -376,7 +377,7 @@ export function AuctionSidebar({
                 icon={<ThunderboltOutlined />}
                 onClick={onBuyNowClick}
                 loading={isBuyNowLoading}
-                disabled={isBuyNowLoading || auction.isBuyNowReserved}
+                disabled={isBuyNowLoading}
                 style={{
                   height: 52,
                   borderRadius: 8,
@@ -385,12 +386,18 @@ export function AuctionSidebar({
                   fontWeight: 500,
                 }}
               >
-                {auction.isBuyNowReserved
-                  ? t('buyNowReserved', 'Buy Now Reserved')
-                  : `${t('buyNow', 'Buy Now')} — ${formatCurrency(auction.buyNowPrice?.amount ?? 0, currency)}`}
+                {`${t('buyNow', 'Buy Now')} — ${formatCurrency(auction.buyNowPrice?.amount ?? 0, currency)}`}
               </Button>
-              {auction.isBuyNowReserved && auction.buyNowReservedUntil && (
-                <Typography.Text style={{ display: 'block', marginTop: 8, fontSize: 12, color: 'var(--color-text-secondary)' }}>
+            </>
+          )}
+          {!isSeller && isScheduled && auction.buyNowPrice != null && auction.isBuyNowReserved && (
+            <>
+              <div style={{ height: 1, background: 'var(--color-border-light)', margin: '12px 0' }} />
+              <Button block disabled style={{ height: 44, borderRadius: 8 }}>
+                {t('buyNowReserved', 'Buy Now Reserved')}
+              </Button>
+              {auction.buyNowReservedUntil && (
+                <Typography.Text style={{ display: 'block', marginTop: 4, fontSize: 12, color: 'var(--color-text-secondary)' }}>
                   {t('buyNowReservedUntil', 'Reserved until')}: {formatDateTime(auction.buyNowReservedUntil)}
                 </Typography.Text>
               )}

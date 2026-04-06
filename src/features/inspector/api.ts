@@ -59,7 +59,7 @@ export interface StorageLocationDto {
 
 // ── Inspection Queue ─────────────────────────────────────────────────
 
-export function useInspectionQueue(params?: { pageNumber?: number; pageSize?: number; status?: string }) {
+export function useInspectionQueue(params?: { pageNumber?: number; pageSize?: number; status?: string; requiresPlatformInspection?: boolean }) {
   return useQuery({
     queryKey: [...queryKeys.warehouse.all, 'inspectionQueue', params],
     queryFn: async () => {
