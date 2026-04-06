@@ -268,6 +268,20 @@ export function ItemQA({
                   Q
                 </div>
                 <div style={{ flex: 1 }}>
+                  {question.askerDisplayName && (
+                    <span
+                      style={{
+                        color: 'var(--color-text-primary)',
+                        display: 'block',
+                        fontFamily: SANS_FONT,
+                        fontSize: 13,
+                        fontWeight: 500,
+                        marginBottom: 4,
+                      }}
+                    >
+                      {question.askerDisplayName}
+                    </span>
+                  )}
                   <p
                     style={{
                       color: 'var(--color-text-primary)',
@@ -321,6 +335,20 @@ export function ItemQA({
                     A
                   </div>
                   <div style={{ flex: 1 }}>
+                    {question.answererDisplayName && (
+                      <span
+                        style={{
+                          color: 'var(--color-text-primary)',
+                          display: 'block',
+                          fontFamily: SANS_FONT,
+                          fontSize: 13,
+                          fontWeight: 500,
+                          marginBottom: 4,
+                        }}
+                      >
+                        {question.answererDisplayName}
+                      </span>
+                    )}
                     <p
                       style={{
                         color: 'var(--color-text-primary)',

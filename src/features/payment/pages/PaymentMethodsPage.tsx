@@ -123,9 +123,11 @@ export default function PaymentMethodsPage() {
     })
   }
 
+  const [linkCardType, setLinkCardType] = useState('01')
+
   const handleLinkVnPay = () => {
     linkVnPay.mutate(
-      { cardType: 'vnpay' },
+      { cardType: linkCardType },
       {
         onSuccess: (data) => {
           window.location.href = data.redirectUrl
@@ -152,6 +154,15 @@ export default function PaymentMethodsPage() {
           {t('paymentMethods', 'Payment Methods')}
         </Typography.Title>
         <Space style={{ flexWrap: 'wrap' }}>
+          <Select
+            value={linkCardType}
+            onChange={setLinkCardType}
+            options={[
+              { value: '01', label: 'ATM' },
+              { value: '02', label: 'Visa/Master' },
+            ]}
+            style={{ width: 130 }}
+          />
           <Button icon={<LinkOutlined />} onClick={handleLinkVnPay} loading={linkVnPay.isPending}>
             {t('linkVnPay', 'Link Card via VnPay')}
           </Button>

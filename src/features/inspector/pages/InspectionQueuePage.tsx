@@ -18,6 +18,7 @@ const STATUS_OPTIONS = [
 export default function InspectionQueuePage() {
   const navigate = useNavigate()
   const [statusFilter, setStatusFilter] = useState('')
+  const [inspectionFilter, setInspectionFilter] = useState<boolean | undefined>(true)
 
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(12)
@@ -26,6 +27,7 @@ export default function InspectionQueuePage() {
     pageNumber: page,
     pageSize,
     status: statusFilter || undefined,
+    requiresPlatformInspection: inspectionFilter,
   })
 
   const columns = [
@@ -83,13 +85,26 @@ export default function InspectionQueuePage() {
       </Typography.Title>
 
       <Card style={{ marginBottom: 16 }}>
-        <Space>
+        <Space wrap>
           <Select
             value={statusFilter}
             onChange={setStatusFilter}
             options={STATUS_OPTIONS}
             style={{ width: 200 }}
             placeholder="Filter by status"
+          />
+          <Select
+            value={inspectionFilter === undefined ? '' : inspectionFilter ? 'true' : 'false'}
+            onChange={(v) => {
+              setInspectionFilter(v === '' ? undefined : v === 'true')
+              setPage(1)
+            }}
+            options={[
+              { value: '', label: 'All' },
+              { value: 'true', label: 'Requires Platform Inspection' },
+              { value: 'false', label: 'No Platform Inspection' },
+            ]}
+            style={{ width: 220 }}
           />
         </Space>
       </Card>

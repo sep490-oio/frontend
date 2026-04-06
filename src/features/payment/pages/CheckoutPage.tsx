@@ -15,6 +15,7 @@ import {
   Result,
   Typography,
   Checkbox,
+  Select,
 } from 'antd'
 import {
   ArrowLeftOutlined,
@@ -55,6 +56,7 @@ export default function CheckoutPage() {
 
   const [selectedMethodId, setSelectedMethodId] = useState<string>(WALLET_METHOD_ID)
   const [saveCard, setSaveCard] = useState(false)
+  const [cardType, setCardType] = useState<string>('01') // 01=ATM/domestic, 02=international
   const bidderTerms = useTermsGate('bidder')
 
   const { data: order, isLoading: orderLoading } = useOrderById(orderId)
@@ -63,6 +65,7 @@ export default function CheckoutPage() {
   const checkout = useCheckout()
   const createVnPayUrl = useCreateVnPayUrl()
 
+  const checkoutMethods = (methods ?? []).filter((m: any) => m.type === 'vnpay')
   const selectedMethod = methods?.find((m: PaymentMethodDto) => m.id === selectedMethodId)
   const isWalletSelected = selectedMethodId === WALLET_METHOD_ID
 
@@ -113,6 +116,7 @@ export default function CheckoutPage() {
           orderId: order.id,
           paymentMethodId: isNewVnPay ? undefined : selectedMethodId || undefined,
           saveCard: isNewVnPay ? saveCard : undefined,
+          cardType: isNewVnPay && saveCard ? cardType : undefined,
           clientReturnPath: window.location.pathname,
         },
         {
@@ -308,7 +312,7 @@ export default function CheckoutPage() {
             </Divider>
 
             {/* ── Saved Payment Methods ── */}
-            {(!methods || methods.length === 0) ? (
+            {checkoutMethods.length === 0 ? (
               <div style={{ padding: '12px 0', color: 'var(--color-text-secondary)', fontSize: 13 }}>
                 {t('noSavedMethods', 'No saved payment methods')}.{' '}
                 <Button type="link" size="small" onClick={() => navigate('/me/payment-methods')} style={{ padding: 0 }}>
@@ -316,7 +320,7 @@ export default function CheckoutPage() {
                 </Button>
               </div>
             ) : (
-              methods.map((method: PaymentMethodDto) => (
+              checkoutMethods.map((method: PaymentMethodDto) => (
                 <Radio
                   key={method.id}
                   value={method.id}
@@ -362,6 +366,17 @@ export default function CheckoutPage() {
           <Checkbox checked={saveCard} onChange={(e) => setSaveCard(e.target.checked)}>
             {t('saveCardForFuture', 'Save this card for future payments')}
           </Checkbox>
+          {saveCard && selectedMethodId === '__vnpay_new__' && (
+            <Select
+              value={cardType}
+              onChange={setCardType}
+              style={{ width: '100%', marginTop: 8 }}
+              options={[
+                { value: '01', label: t('domesticCard', 'ATM / Domestic Card') },
+                { value: '02', label: t('internationalCard', 'International Card (Visa/Master)') },
+              ]}
+            />
+          )}
         </div>
       )}
 

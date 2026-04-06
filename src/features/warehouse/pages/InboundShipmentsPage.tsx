@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Typography, Button, Space, Tabs, App, Tooltip, Tag, Table, Spin } from 'antd'
+import { Typography, Button, Space, Tabs, App, Tooltip, Tag, Table, Spin, Select } from 'antd'
 import { PlusOutlined, EyeOutlined, CloseCircleOutlined, DownOutlined, RightOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
@@ -79,6 +79,7 @@ export default function InboundShipmentsPage() {
   const { message } = App.useApp()
 
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [inspectionFilter, setInspectionFilter] = useState<string>('')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
 
@@ -86,6 +87,7 @@ export default function InboundShipmentsPage() {
     pageNumber: page,
     pageSize,
     ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
+    ...(inspectionFilter !== '' ? { requiresPlatformInspection: inspectionFilter } : {}),
   }
 
   const { data, isLoading } = useInboundShipments(params)
@@ -232,6 +234,19 @@ export default function InboundShipmentsPage() {
           label: t(`statusTab.${tab.label}`, tab.label.charAt(0).toUpperCase() + tab.label.slice(1)),
         }))}
       />
+
+      <div style={{ marginBottom: 16 }}>
+        <Select
+          value={inspectionFilter}
+          onChange={(v) => { setInspectionFilter(v); setPage(1) }}
+          options={[
+            { value: '', label: t('inspectionFilter.all', 'All') },
+            { value: 'true', label: t('inspectionFilter.required', 'Requires Platform Inspection') },
+            { value: 'false', label: t('inspectionFilter.notRequired', 'No Platform Inspection') },
+          ]}
+          style={{ width: 220 }}
+        />
+      </div>
 
       <Table<PackageRow>
         rowKey="clientOrderCode"

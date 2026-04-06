@@ -39,6 +39,8 @@ export interface ItemQuestionDto {
   answer?: string
   createdAt: string
   answeredAt?: string
+  askerDisplayName?: string
+  answererDisplayName?: string
 }
 
 export interface CategoryDto {

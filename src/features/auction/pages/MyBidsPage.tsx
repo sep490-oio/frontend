@@ -7,7 +7,7 @@ import { useMyBids, useMyPendingWinnerOffers, useRespondRunnerUpOffer } from '@/
 import { useUserHubStatus } from '@/features/user/contexts/UserHubContext'
 import type { MyBidDto } from '@/features/auction/api'
 import { PriceDisplay } from '@/components/ui/PriceDisplay'
-import { BidStatus, AuctionStatus } from '@/types/enums'
+import { AuctionStatus } from '@/types/enums'
 import { formatDateTime } from '@/utils/format'
 import { WinnerOfferPanel } from '@/features/auction/components/WinnerOfferPanel'
 import { MONO_FONT, SANS_FONT } from '@/styles/tokens'
@@ -40,11 +40,10 @@ export default function MyBidsPage() {
 
   const STATUS_PILLS: StatusPill[] = [
     { value: '', label: t('bidStatusAll', 'All') },
-    { value: 'active', label: t('bidStatusActive', 'Leading') },
+    { value: 'leading', label: t('bidStatusLeading', 'Leading') },
     { value: 'outbid', label: t('bidStatusOutbid', 'Outbid') },
     { value: 'won', label: t('bidStatusWon', 'Won') },
-    { value: 'cancelled', label: t('bidStatusCancelled', 'Cancelled') },
-    { value: BidStatus.Winning, label: t('bidStatusWinning', 'Winning') },
+    { value: 'lost', label: t('bidStatusLost', 'Lost') },
   ]
 
   const { data: pendingOffers } = useMyPendingWinnerOffers()
@@ -178,7 +177,7 @@ export default function MyBidsPage() {
         <>
           <Row gutter={[20, 20]}>
             {items.map((bid: MyBidDto) => (
-              <Col key={bid.id} xs={24} sm={12} lg={8}>
+              <Col key={bid.auctionId} xs={24} sm={12} lg={8}>
                 <Card
                   hoverable
                   style={{
@@ -218,7 +217,7 @@ export default function MyBidsPage() {
                       <span>LOT {bid.auctionId.slice(0, 6).toUpperCase()}</span>
                     </div>
 
-                    {/* Countdown overlay (bottom-left) */}
+                    {/* Timestamp overlay (bottom-left) */}
                     <div
                       style={{
                         position: 'absolute',
@@ -233,26 +232,24 @@ export default function MyBidsPage() {
                         fontWeight: 500,
                       }}
                     >
-                      {formatDateTime((bid as any).bidPlacedAt)}
+                      {formatDateTime(bid.lastBidAt)}
                     </div>
 
-                    {/* Status badge (top-right) */}
+                    {/* Position badge (top-right) */}
                     {(() => {
-                      const isEnded = bid.auctionStatus === AuctionStatus.Ended || bid.auctionStatus === AuctionStatus.Sold
-                      const isWon = isEnded && bid.isHighestBid
-                      const isLost = isEnded && !bid.isHighestBid
+                      const pos = bid.position
                       let bg: string, color: string, border: string, label: string
-                      if (isWon) {
+                      if (pos === 'won') {
                         bg = 'rgba(180, 140, 20, 0.12)'
                         color = '#B8860B'
                         border = '1px solid rgba(180, 140, 20, 0.3)'
                         label = t('bidWon', 'WON')
-                      } else if (isLost) {
+                      } else if (pos === 'lost') {
                         bg = 'rgba(100, 100, 100, 0.12)'
                         color = 'var(--color-text-secondary)'
                         border = '1px solid rgba(100, 100, 100, 0.25)'
                         label = t('bidLost', 'LOST')
-                      } else if (bid.isHighestBid) {
+                      } else if (pos === 'leading') {
                         bg = 'rgba(22, 163, 106, 0.12)'
                         color = 'var(--color-success)'
                         border = '1px solid rgba(22, 163, 106, 0.25)'
@@ -289,7 +286,7 @@ export default function MyBidsPage() {
 
                   {/* Card body */}
                   <div style={{ padding: '14px 16px 16px' }}>
-                    {/* Auction title */}
+                    {/* Item title */}
                     <h4
                       style={{
                         fontFamily: SANS_FONT,
@@ -303,10 +300,10 @@ export default function MyBidsPage() {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {(bid as any).itemTitle}
+                      {bid.itemTitle}
                     </h4>
 
-                    {/* Price */}
+                    {/* Current price */}
                     <div style={{ marginBottom: 4 }}>
                       <span
                         style={{
@@ -328,34 +325,42 @@ export default function MyBidsPage() {
                         fontSize: 18,
                         fontWeight: 600,
                         color: 'var(--color-accent)',
-                        marginBottom: 14,
+                        marginBottom: 6,
                       }}
                     >
                       <PriceDisplay
-                        amount={(bid as any).currentPrice?.amount ?? bid.amount.amount}
-                        currency={(bid as any).currentPrice?.currency ?? bid.amount.currency}
+                        amount={bid.currentPrice.amount}
+                        currency={bid.currentPrice.currency}
                         size="small"
                       />
                     </div>
 
+                    {/* My bid amount */}
+                    <div style={{ marginBottom: 14, fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: SANS_FONT }}>
+                      {t('myBidLabel', 'My bid')}{': '}
+                      <PriceDisplay
+                        amount={bid.myLatestBidAmount.amount}
+                        currency={bid.myLatestBidAmount.currency}
+                        size="small"
+                      />
+                      {bid.bidCountForUser > 1 && (
+                        <span style={{ marginLeft: 6, opacity: 0.7 }}>
+                          ({bid.bidCountForUser} {t('bids', 'bids')})
+                        </span>
+                      )}
+                    </div>
+
                     {/* Buttons */}
                     {(() => {
-                      const isEnded = bid.auctionStatus === AuctionStatus.Ended || bid.auctionStatus === AuctionStatus.Sold
-                      const isWon = isEnded && bid.isHighestBid
+                      const isActive = bid.auctionStatus === AuctionStatus.Active
+                      const isWon = bid.position === 'won'
                       return (
                         <div style={{ display: 'flex', gap: 8 }}>
                           {isWon ? (
                             <Button
                               type="primary"
                               icon={<TrophyOutlined />}
-                              onClick={() => {
-                                const orderId = (bid as any).orderId
-                                if (orderId) {
-                                  navigate(`/orders/${orderId}`)
-                                } else {
-                                  navigate(`/auctions/${bid.auctionId}`)
-                                }
-                              }}
+                              onClick={() => navigate(`/auctions/${bid.auctionId}`)}
                               style={{
                                 flex: 1,
                                 borderRadius: 8,
@@ -366,9 +371,9 @@ export default function MyBidsPage() {
                                 borderColor: '#B8860B',
                               }}
                             >
-                              {(bid as any).orderId ? t('viewOrder', 'View Order') : t('payNow', 'Pay Now')}
+                              {t('viewAuction', 'View Auction')}
                             </Button>
-                          ) : !isEnded ? (
+                          ) : isActive ? (
                             <Button
                               type="primary"
                               icon={<ThunderboltOutlined />}
