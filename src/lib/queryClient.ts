@@ -29,8 +29,21 @@ export const queryKeys = {
   },
   auctions: {
     all: ['auctions'] as const,
+    // Root keys (no params) — use these for invalidation so we don't call
+    // the params factory with `undefined`, which produces a key segment
+    // that TanStack Query cannot match against real param-bearing keys.
+    listRoot: () => [...queryKeys.auctions.all, 'list'] as const,
+    myAuctionsRoot: () => [...queryKeys.auctions.all, 'my'] as const,
+    watchlistRoot: () => [...queryKeys.auctions.all, 'watchlist'] as const,
+    myBidsRoot: () => ['myBids'] as const,
     list: (params?: unknown) => [...queryKeys.auctions.all, 'list', params] as const,
+    // Prefix-only key used for invalidation. Matches all scopes (anon + every userScope).
     detail: (id: string) => [...queryKeys.auctions.all, 'detail', id] as const,
+    // Auth-scoped key: every query/read/write of a detail entry uses this so that
+    // the anonymous cache cannot shadow a user-specific response (which contains
+    // currentUserBidState). Invalidation via `detail(id)` still matches all scopes.
+    detailFor: (id: string, userScope: string | null | undefined) =>
+      [...queryKeys.auctions.all, 'detail', id, userScope ?? 'anon'] as const,
     bids: (auctionId: string) => [...queryKeys.auctions.all, 'bids', auctionId] as const,
     myAuctions: (params?: unknown) => [...queryKeys.auctions.all, 'my', params] as const,
     myAutoBid: (auctionId: string) => [...queryKeys.auctions.all, 'autoBid', auctionId] as const,
@@ -40,6 +53,8 @@ export const queryKeys = {
   },
   items: {
     all: ['items'] as const,
+    listRoot: () => [...queryKeys.items.all, 'list'] as const,
+    myRoot: () => [...queryKeys.items.all, 'my'] as const,
     list: (params?: unknown) => [...queryKeys.items.all, 'list', params] as const,
     detail: (id: string) => [...queryKeys.items.all, 'detail', id] as const,
     my: (params?: unknown) => [...queryKeys.items.all, 'my', params] as const,
@@ -54,12 +69,19 @@ export const queryKeys = {
   },
   orders: {
     all: ['orders'] as const,
+    listRoot: () => [...queryKeys.orders.all, 'list'] as const,
+    sellerDirectShipRoot: () => ['orders', 'seller-direct-ship'] as const,
     list: (params?: unknown) => [...queryKeys.orders.all, 'list', params] as const,
     detail: (id: string) => [...queryKeys.orders.all, 'detail', id] as const,
+  },
+  directShipments: {
+    all: ['directShipments'] as const,
+    detail: (id: string) => ['directShipments', 'detail', id] as const,
   },
   wallet: {
     all: ['wallet'] as const,
     summary: () => [...queryKeys.wallet.all, 'summary'] as const,
+    sellerOverview: () => [...queryKeys.wallet.all, 'sellerOverview'] as const,
     transactions: (params?: unknown) => [...queryKeys.wallet.all, 'transactions', params] as const,
     withdrawals: (params?: unknown) => [...queryKeys.wallet.all, 'withdrawals', params] as const,
   },
@@ -76,6 +98,9 @@ export const queryKeys = {
   },
   warehouse: {
     all: ['warehouse'] as const,
+    inboundRoot: () => [...queryKeys.warehouse.all, 'inbound', 'list'] as const,
+    outboundRoot: () => [...queryKeys.warehouse.all, 'outbound', 'list'] as const,
+    itemsRoot: () => [...queryKeys.warehouse.all, 'items'] as const,
     inbound: (params?: unknown) => [...queryKeys.warehouse.all, 'inbound', 'list', params] as const,
     inboundDetail: (id: string) => [...queryKeys.warehouse.all, 'inbound', 'detail', id] as const,
     outbound: (params?: unknown) => [...queryKeys.warehouse.all, 'outbound', 'list', params] as const,
@@ -83,9 +108,12 @@ export const queryKeys = {
     items: (params?: unknown) => [...queryKeys.warehouse.all, 'items', params] as const,
     locations: () => [...queryKeys.warehouse.all, 'locations'] as const,
     inspectionQueue: (params?: unknown) => [...queryKeys.warehouse.all, 'inspectionQueue', params] as const,
+    staffOutboundQueueRoot: () => ['warehouse-staff', 'outbound-queue'] as const,
+    staffOutboundQueue: (params?: unknown) => ['warehouse-staff', 'outbound-queue', params] as const,
   },
   notifications: {
     all: ['notifications'] as const,
+    listRoot: () => [...queryKeys.notifications.all, 'list'] as const,
     list: (params?: unknown) => [...queryKeys.notifications.all, 'list', params] as const,
     unreadCount: () => [...queryKeys.notifications.all, 'unreadCount'] as const,
   },
@@ -109,6 +137,19 @@ export const queryKeys = {
     contexts: () => [...queryKeys.media.all, 'contexts'] as const,
   },
   admin: {
+    // Root keys — use these for invalidation so params-based list queries are
+    // matched by prefix regardless of their concrete params object.
+    usersRoot: () => ['admin', 'users'] as const,
+    verificationsRoot: () => ['admin', 'verifications'] as const,
+    sellerProfilesRoot: () => ['admin', 'sellerProfiles'] as const,
+    reviewQueueRoot: () => ['admin', 'reviewQueue'] as const,
+    reportsRoot: () => ['admin', 'reports'] as const,
+    alertsRoot: () => ['admin', 'alerts'] as const,
+    disputesRoot: () => ['admin', 'disputes'] as const,
+    withdrawalsRoot: () => ['admin', 'withdrawals'] as const,
+    transactionsRoot: () => ['admin', 'transactions'] as const,
+    escrowsRoot: () => ['admin', 'escrows'] as const,
+    termsRoot: () => ['admin', 'terms'] as const,
     users: (params?: unknown) => ['admin', 'users', params] as const,
     userDetail: (id: string) => ['admin', 'users', id] as const,
     roles: () => ['admin', 'roles'] as const,
@@ -125,5 +166,8 @@ export const queryKeys = {
     paymentSummary: () => ['admin', 'paymentSummary'] as const,
     platformWallet: () => ['admin', 'platformWallet'] as const,
     terms: (params?: unknown) => ['admin', 'terms', params] as const,
+    completedAuctionsRoot: () => ['admin', 'completedAuctions'] as const,
+    completedAuctions: (params?: unknown) => ['admin', 'completedAuctions', params] as const,
+    completedAuctionDetail: (auctionId: string) => ['admin', 'completedAuctions', 'detail', auctionId] as const,
   },
 } as const

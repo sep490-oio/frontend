@@ -10,6 +10,8 @@ import { PriceDisplay } from '@/components/ui/PriceDisplay'
 import { AuctionStatus } from '@/types/enums'
 import { formatDateTime } from '@/utils/format'
 import { WinnerOfferPanel } from '@/features/auction/components/WinnerOfferPanel'
+import { MyBidPositionBadge } from '@/features/auction/components/MyBidPositionBadge'
+import type { MyBidPosition } from '@/features/auction/components/MyBidPositionBadge'
 import { MONO_FONT, SANS_FONT } from '@/styles/tokens'
 
 interface StatusPill {
@@ -27,7 +29,7 @@ export default function MyBidsPage() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(12)
   const [statusFilter, setStatusFilter] = useState<string>('')
-  const [sortBy, setSortBy] = useState<string>('BidPlacedAt Desc')
+  const [sortBy, setSortBy] = useState<string>('LastBidAt Desc')
   const { connected } = useUserHubStatus()
 
   const { data, isLoading } = useMyBids({
@@ -158,10 +160,10 @@ export default function MyBidsPage() {
           onChange={(v) => { setSortBy(v); setPage(1) }}
           style={{ width: 160 }}
           options={[
-            { value: 'BidPlacedAt Desc', label: t('sortNewest', 'Newest') },
-            { value: 'BidPlacedAt Asc', label: t('sortOldest', 'Oldest') },
-            { value: 'Amount Desc', label: t('sortHighest', 'Highest') },
-            { value: 'Amount Asc', label: t('sortLowest', 'Lowest') },
+            { value: 'LastBidAt Desc', label: t('sortNewest', 'Newest') },
+            { value: 'LastBidAt Asc', label: t('sortOldest', 'Oldest') },
+            { value: 'MyLatestBidAmount Desc', label: t('sortHighest', 'Highest') },
+            { value: 'MyLatestBidAmount Asc', label: t('sortLowest', 'Lowest') },
           ]}
         />
       </div>
@@ -200,9 +202,11 @@ export default function MyBidsPage() {
                       overflow: 'hidden',
                     }}
                   >
-                    {/* Placeholder */}
+                    {/* Placeholder — behind the image; shows when URL missing or load fails */}
                     <div
                       style={{
+                        position: 'absolute',
+                        inset: 0,
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
@@ -216,6 +220,26 @@ export default function MyBidsPage() {
                       <HistoryOutlined style={{ fontSize: 28, opacity: 0.4 }} />
                       <span>LOT {bid.auctionId.slice(0, 6).toUpperCase()}</span>
                     </div>
+
+                    {/* Real product image — hides itself on load error so placeholder shows through */}
+                    {bid.primaryImageUrl && (
+                      <img
+                        src={bid.primaryImageUrl}
+                        alt={bid.itemTitle ?? `LOT ${bid.auctionId.slice(0, 6).toUpperCase()}`}
+                        loading="lazy"
+                        onError={(e) => {
+                          ;(e.currentTarget as HTMLImageElement).style.display = 'none'
+                        }}
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          display: 'block',
+                        }}
+                      />
+                    )}
 
                     {/* Timestamp overlay (bottom-left) */}
                     <div
@@ -235,53 +259,19 @@ export default function MyBidsPage() {
                       {formatDateTime(bid.lastBidAt)}
                     </div>
 
-                    {/* Position badge (top-right) */}
-                    {(() => {
-                      const pos = bid.position
-                      let bg: string, color: string, border: string, label: string
-                      if (pos === 'won') {
-                        bg = 'rgba(180, 140, 20, 0.12)'
-                        color = '#B8860B'
-                        border = '1px solid rgba(180, 140, 20, 0.3)'
-                        label = t('bidWon', 'WON')
-                      } else if (pos === 'lost') {
-                        bg = 'rgba(100, 100, 100, 0.12)'
-                        color = 'var(--color-text-secondary)'
-                        border = '1px solid rgba(100, 100, 100, 0.25)'
-                        label = t('bidLost', 'LOST')
-                      } else if (pos === 'leading') {
-                        bg = 'rgba(22, 163, 106, 0.12)'
-                        color = 'var(--color-success)'
-                        border = '1px solid rgba(22, 163, 106, 0.25)'
-                        label = t('bidLeading', 'LEADING')
-                      } else {
-                        bg = 'rgba(220, 38, 38, 0.12)'
-                        color = 'var(--color-danger)'
-                        border = '1px solid rgba(220, 38, 38, 0.25)'
-                        label = t('bidOutbid', 'OUTBID')
+                    {/* Position badge (top-right) — opaque chip, theme-tokened */}
+                    <MyBidPositionBadge
+                      position={bid.position as MyBidPosition}
+                      label={
+                        bid.position === 'won'
+                          ? t('bidWon', 'WON')
+                          : bid.position === 'lost'
+                          ? t('bidLost', 'LOST')
+                          : bid.position === 'leading'
+                          ? t('bidLeading', 'LEADING')
+                          : t('bidOutbid', 'OUTBID')
                       }
-                      return (
-                        <span
-                          style={{
-                            position: 'absolute',
-                            top: 8,
-                            right: 8,
-                            padding: '3px 10px',
-                            borderRadius: 100,
-                            fontSize: 10,
-                            fontWeight: 700,
-                            fontFamily: SANS_FONT,
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.04em',
-                            background: bg,
-                            color,
-                            border,
-                          }}
-                        >
-                          {label}
-                        </span>
-                      )
-                    })()}
+                    />
                   </div>
 
                   {/* Card body */}
@@ -350,19 +340,31 @@ export default function MyBidsPage() {
                       )}
                     </div>
 
-                    {/* Buttons */}
+                    {/* Single state-appropriate CTA — no duplicate routes */}
                     {(() => {
                       const isActive = bid.auctionStatus === AuctionStatus.Active
                       const isWon = bid.position === 'won'
-                      return (
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          {isWon ? (
+                      const navState = {
+                        knownPosition: bid.position,
+                        returnTo: '/me/bids',
+                        returnLabel: t('myBids', 'My Bids'),
+                      }
+                      const goDetail = () => navigate(`/auctions/${bid.auctionId}`, { state: navState })
+
+                      // active           → Quick Bid (primary accent)
+                      // won + canPayNow   → Pay Now → /checkout/{orderId} (DIRECT, no list hop)
+                      // won + has order   → View Order → /me/orders/{orderId}
+                      // won legacy        → View Auction fallback
+                      // ended non-winning → View Details (neutral)
+                      if (isWon) {
+                        if (bid.canPayNow && bid.orderId) {
+                          return (
                             <Button
+                              block
                               type="primary"
-                              icon={<TrophyOutlined />}
-                              onClick={() => navigate(`/auctions/${bid.auctionId}`)}
+                              icon={<ThunderboltOutlined />}
+                              onClick={() => navigate(`/checkout/${bid.orderId}`)}
                               style={{
-                                flex: 1,
                                 borderRadius: 8,
                                 fontFamily: SANS_FONT,
                                 fontWeight: 500,
@@ -371,42 +373,85 @@ export default function MyBidsPage() {
                                 borderColor: '#B8860B',
                               }}
                             >
-                              {t('viewAuction', 'View Auction')}
+                              {t('payNow', 'Pay Now')}
                             </Button>
-                          ) : isActive ? (
+                          )
+                        }
+                        if (bid.orderId) {
+                          return (
                             <Button
+                              block
                               type="primary"
-                              icon={<ThunderboltOutlined />}
-                              onClick={() => navigate(`/auctions/${bid.auctionId}`)}
+                              icon={<EyeOutlined />}
+                              onClick={() => navigate(`/me/orders/${bid.orderId}`)}
                               style={{
-                                flex: 1,
                                 borderRadius: 8,
                                 fontFamily: SANS_FONT,
                                 fontWeight: 500,
                                 fontSize: 13,
-                                background: 'var(--color-accent)',
-                                borderColor: 'var(--color-accent)',
+                                background: '#B8860B',
+                                borderColor: '#B8860B',
                               }}
                             >
-                              {t('quickBid', 'Quick Bid')}
+                              {t('viewOrder', 'View Order')}
                             </Button>
-                          ) : null}
+                          )
+                        }
+                        return (
                           <Button
-                            icon={<EyeOutlined />}
-                            onClick={() => navigate(`/auctions/${bid.auctionId}`)}
+                            block
+                            type="primary"
+                            icon={<TrophyOutlined />}
+                            onClick={goDetail}
                             style={{
-                              flex: 1,
                               borderRadius: 8,
                               fontFamily: SANS_FONT,
                               fontWeight: 500,
                               fontSize: 13,
-                              borderColor: 'var(--color-border)',
-                              color: 'var(--color-text-secondary)',
+                              background: '#B8860B',
+                              borderColor: '#B8860B',
                             }}
                           >
-                            {t('viewDetails', 'View Details')}
+                            {t('viewAuction', 'View Auction')}
                           </Button>
-                        </div>
+                        )
+                      }
+                      if (isActive) {
+                        return (
+                          <Button
+                            block
+                            type="primary"
+                            icon={<ThunderboltOutlined />}
+                            onClick={goDetail}
+                            style={{
+                              borderRadius: 8,
+                              fontFamily: SANS_FONT,
+                              fontWeight: 500,
+                              fontSize: 13,
+                              background: 'var(--color-accent)',
+                              borderColor: 'var(--color-accent)',
+                            }}
+                          >
+                            {t('quickBid', 'Quick Bid')}
+                          </Button>
+                        )
+                      }
+                      return (
+                        <Button
+                          block
+                          icon={<EyeOutlined />}
+                          onClick={goDetail}
+                          style={{
+                            borderRadius: 8,
+                            fontFamily: SANS_FONT,
+                            fontWeight: 500,
+                            fontSize: 13,
+                            borderColor: 'var(--color-border)',
+                            color: 'var(--color-text-secondary)',
+                          }}
+                        >
+                          {t('viewDetails', 'View Details')}
+                        </Button>
                       )
                     })()}
                   </div>

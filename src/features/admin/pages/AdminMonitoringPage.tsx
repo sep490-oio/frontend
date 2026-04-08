@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import {
   Typography, Card, Tabs, Tag, Button, Space, App,
-  Tooltip, Flex, Badge,
+  Tooltip, Flex, Badge, Statistic, Row, Col,
 } from 'antd'
 import {
   AlertOutlined, CheckCircleOutlined, BellOutlined,
@@ -10,7 +10,7 @@ import {
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { useMonitoringAlerts, useAcknowledgeAlert, useResolveAlert } from '@/features/admin/api'
+import { useMonitoringAlerts, useAcknowledgeAlert, useResolveAlert, useAdminCompletedAuctions } from '@/features/admin/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { formatDateTime } from '@/utils/format'
@@ -50,6 +50,8 @@ export default function AdminMonitoringPage() {
   const { data: filteredAlerts, isLoading } = useMonitoringAlerts({
     ...(statusTab && statusTab !== 'all' ? { status: statusTab } : {}),
   })
+  // Completed auctions count (pageSize=1 just to get totalCount)
+  const { data: completedAuctions } = useAdminCompletedAuctions({ pageSize: 1 })
 
   const acknowledgeAlert = useAcknowledgeAlert()
   const resolveAlert = useResolveAlert()
@@ -240,6 +242,22 @@ export default function AdminMonitoringPage() {
 
       {/* Dashboard Summary Cards */}
       <MonitoringDashboard alerts={allAlerts ?? []} />
+
+      {/* Quick-links row */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col xs={12} sm={6}>
+          <Card
+            hoverable
+            onClick={() => navigate('/admin/auctions/completed')}
+            style={{ cursor: 'pointer' }}
+          >
+            <Statistic
+              title={t('monitoring.completedAuctions', 'Completed Auction Queue')}
+              value={completedAuctions?.metadata?.totalCount ?? 0}
+            />
+          </Card>
+        </Col>
+      </Row>
 
       {/* Tabs + Table */}
       <Card>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router'
+import { useParams, useNavigate, useLocation } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
 import {
   Typography,
@@ -17,7 +17,8 @@ import {
   Select,
   Form,
 } from 'antd'
-import { ArrowLeftOutlined, RollbackOutlined, CheckOutlined, CloseOutlined, SendOutlined, WarningOutlined } from '@ant-design/icons'
+import dayjs from 'dayjs'
+import { ArrowLeftOutlined, RollbackOutlined, CheckOutlined, CloseOutlined, SendOutlined, WarningOutlined, QrcodeOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import {
   useOrderById,
@@ -28,7 +29,19 @@ import {
   useCreateSellerReview,
 } from '@/features/order/api'
 import { useCreateReport } from '@/features/dispute/api'
+import {
+  useConfirmSellerOrder,
+  useUpdateOrderShipping,
+  useMarkOrderPickedUp,
+  useMarkOrderOnDelivering,
+  useMarkOrderDelivered,
+  useCreateSellerDirectShipment,
+  useConfirmOrderReceipt,
+} from '@/features/order/api'
+import { useAddresses, useCurrentUser, useCurrentUserProfile } from '@/features/user/api'
+import type { UpdateOrderShippingRequest } from '@/types'
 import { SellerRatingForm } from '@/features/order/components/SellerRatingForm'
+import { OrderItemSummary } from '@/features/order/components/OrderItemSummary'
 import { useAuth } from '@/hooks/useAuth'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/queryClient'
@@ -58,10 +71,13 @@ export default function OrderDetailPage() {
   const { t } = useTranslation('order')
   const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
+  const location = useLocation()
   const prefix = useRoutePrefix()
 
   const { message } = App.useApp()
-  const { user } = useAuth()
+  const { user: authUser } = useAuth()
+  const { data: currentUser } = useCurrentUser()
+  const user = currentUser ?? authUser
   const { isMobile } = useBreakpoint()
   const qc = useQueryClient()
   const { data: order, isLoading, error } = useOrderById(id)
@@ -96,9 +112,41 @@ export default function OrderDetailPage() {
   const [disputeReason, setDisputeReason] = useState('')
   const [disputeDescription, setDisputeDescription] = useState('')
   const createReport = useCreateReport()
+  const confirmSellerOrder = useConfirmSellerOrder()
+  const markPickedUp = useMarkOrderPickedUp()
+  const markOnDelivering = useMarkOrderOnDelivering()
+  const markDelivered = useMarkOrderDelivered()
+  const createDirectShipment = useCreateSellerDirectShipment()
+  const confirmOrderReceipt = useConfirmOrderReceipt()
+  // Buyer-side shipping edit (see BE flag order.buyerCanUpdateShipping)
+  const updateShipping = useUpdateOrderShipping()
+  const { data: addresses } = useAddresses()
+  const { data: currentProfile } = useCurrentUserProfile()
+  const [shippingForm] = Form.useForm<UpdateOrderShippingRequest>()
 
-  const isSeller = user?.id === order?.sellerId
-  const isBuyer = user?.id === order?.buyerId
+  // Viewer role is derived from the route prefix FIRST, then cross-checked
+  // against ownership. `/seller/orders/:id` → seller view, `/me/orders/:id`
+  // → buyer view. If the route does not match the caller's actual relation
+  // to the order (e.g. buyer lands on the seller route), we redirect to the
+  // correct prefix so buyer-only panels / CTAs render. This prevents the
+  // dead-end where the route says "seller" but the viewer is the buyer.
+  const routeIsSeller = location.pathname.startsWith('/seller/orders/')
+  const routeIsBuyer = location.pathname.startsWith('/me/orders/')
+  const ownsAsSeller = !!order && !!user && user.id === order.sellerId
+  const ownsAsBuyer = !!order && !!user && user.id === order.buyerId
+  const isSeller = routeIsSeller && ownsAsSeller
+  const isBuyer = routeIsBuyer && ownsAsBuyer
+
+  useEffect(() => {
+    if (!order || !user) return
+    if (routeIsSeller && !ownsAsSeller && ownsAsBuyer) {
+      navigate(`/me/orders/${order.id}`, { replace: true })
+      return
+    }
+    if (routeIsBuyer && !ownsAsBuyer && ownsAsSeller) {
+      navigate(`/seller/orders/${order.id}`, { replace: true })
+    }
+  }, [order, user, routeIsSeller, routeIsBuyer, ownsAsSeller, ownsAsBuyer, navigate])
 
   if (isLoading) {
     return (
@@ -115,6 +163,38 @@ export default function OrderDetailPage() {
   const canRequestReturn =
     RETURN_ELIGIBLE_STATUSES.has(order.status) && !order.return
 
+  // When a direct shipment is attached, the buyer delivered-state actions
+  // live inside the direct shipment panel. Hide the generic legacy CTAs
+  // (Accept & Release Funds, Raise Dispute, Request Return, Confirm Delivery
+  // for Warranty) while the order is still in the decision/delivery phase.
+  // They come back once the order is completed so warranty/return flows
+  // still work post-acceptance.
+  const hideLegacyDelivered =
+    isBuyer && !!order.directShipment && order.status !== OrderStatus.Completed
+
+  // Decision window open helper — buyer can still accept / dispute.
+  const decisionWindowEndsAtStr = (order as any).decisionWindowEndsAt as string | undefined
+  const decisionWindowOpen =
+    !decisionWindowEndsAtStr || new Date(decisionWindowEndsAtStr) > new Date()
+
+  // Shared buyer decision handlers. Passed to both the direct-shipment panel
+  // and EscrowTimeline so every surfaced CTA points at the same mutation.
+  const handleAcceptRelease = async () => {
+    try {
+      await confirmOrderReceipt.mutateAsync({ orderId: order.id })
+      message.success(
+        t('directShipment.confirmAndAccept', 'Inspected and Accept Item'),
+      )
+    } catch (e) {
+      message.error((e as Error)?.message ?? t('genericError', 'Something went wrong'))
+    }
+  }
+  const handleOpenDispute = () => {
+    setDisputeReason('')
+    setDisputeDescription('')
+    setDisputeModalOpen(true)
+  }
+
   return (
     <div style={{ padding: isMobile ? '0 12px' : undefined }}>
       <Space style={{ marginBottom: 16 }}>
@@ -127,8 +207,10 @@ export default function OrderDetailPage() {
         {t('orderDetail', 'Order Detail')} #{order.orderNumber}
       </Typography.Title>
 
-      {/* Escrow decision window banner */}
-      {order.status === 'delivered' && (order as any).decisionWindowEndsAt && new Date((order as any).decisionWindowEndsAt) > new Date() && (
+      {/* Escrow decision window banner — suppressed when the direct-shipment
+          panel owns the delivered-state CTAs, and for sellers (seller view
+          has no buyer action behind the banner). */}
+      {isBuyer && !hideLegacyDelivered && order.status === 'delivered' && (order as any).decisionWindowEndsAt && new Date((order as any).decisionWindowEndsAt) > new Date() && (
         <Alert
           type="warning"
           showIcon
@@ -166,7 +248,366 @@ export default function OrderDetailPage() {
       <EscrowTimeline
         order={order}
         isSeller={isSeller}
+        hideBuyerDecisionActions={hideLegacyDelivered}
+        onAcceptRelease={isBuyer ? handleAcceptRelease : undefined}
+        onDispute={isBuyer && order.status !== OrderStatus.Completed ? handleOpenDispute : undefined}
       />
+
+      {/* Buyer-facing direct shipment panel — only when the seller uses the
+          self-ship flow and a shipment record exists. Mirrors the seller
+          fulfillment panel above but in read-only form with buyer actions. */}
+      {isBuyer && !!order.directShipment && (() => {
+          const ds = order.directShipment!
+          const isDelivered = ds.status === 'delivered'
+          const isDisputed = ds.status === 'disputed' || !!(order as any).activeDispute
+          const canShowActions =
+            isDelivered &&
+            order.status !== OrderStatus.Completed &&
+            !isDisputed &&
+            decisionWindowOpen
+          return (
+            <Card
+              title={t('directShipment.shipmentDetail', 'Shipment Detail')}
+              style={{ marginBottom: isMobile ? 16 : 24 }}
+            >
+              <Descriptions column={isMobile ? 1 : { xs: 1, sm: 2 }} bordered size="small">
+                <Descriptions.Item label={t('directShipment.shipmentDetail', 'Shipment')}>
+                  <Typography.Text strong copyable={{ text: ds.shipmentIdDisplay }}>
+                    {ds.shipmentIdDisplay}
+                  </Typography.Text>
+                </Descriptions.Item>
+                <Descriptions.Item label={t('statusLabel', 'Status')}>
+                  <StatusBadge status={ds.status} />
+                </Descriptions.Item>
+                <Descriptions.Item label={t('directShipment.internalTracking', 'Internal Tracking')}>
+                  <Typography.Text copyable style={{ fontFamily: 'monospace' }}>
+                    {ds.internalTrackingCode}
+                  </Typography.Text>
+                </Descriptions.Item>
+                <Descriptions.Item label={t('directShipment.externalCarrier', 'External Carrier')}>
+                  {ds.externalCarrierName ?? (
+                    <Typography.Text type="secondary">{t('notYetAvailable', 'Chưa có')}</Typography.Text>
+                  )}
+                </Descriptions.Item>
+                <Descriptions.Item label={t('directShipment.externalTracking', 'External Tracking')}>
+                  {ds.externalTrackingCode ?? (
+                    <Typography.Text type="secondary">{t('notYetAvailable', 'Chưa có')}</Typography.Text>
+                  )}
+                </Descriptions.Item>
+                {ds.deliveredAt && (
+                  <Descriptions.Item label={t('directShipment.deliveredAt', 'Delivered At')}>
+                    {formatDateTime(ds.deliveredAt)}
+                  </Descriptions.Item>
+                )}
+                {ds.buyerReceivedPackageAt && (
+                  <Descriptions.Item label={t('directShipment.buyerReceivedAt', 'Buyer Received At')}>
+                    {formatDateTime(ds.buyerReceivedPackageAt)}
+                  </Descriptions.Item>
+                )}
+                {ds.buyerAcceptedAt && (
+                  <Descriptions.Item label={t('directShipment.buyerAcceptedAt', 'Buyer Accepted At')}>
+                    {formatDateTime(ds.buyerAcceptedAt)}
+                  </Descriptions.Item>
+                )}
+                {ds.buyerPackageCondition && (
+                  <Descriptions.Item label={t('directShipment.packageCondition', 'Package Condition')}>
+                    <StatusBadge status={t(`directShipment.conditions.${ds.buyerPackageCondition}`, ds.buyerPackageCondition)} />
+                  </Descriptions.Item>
+                )}
+              </Descriptions>
+              {ds.manualReviewRequired && (
+                <Alert
+                  type="warning"
+                  showIcon
+                  style={{ marginTop: 12 }}
+                  message={t('directShipment.manualReview.title', 'Đơn hàng đang được xem xét thủ công')}
+                  description={ds.manualReviewReason ?? undefined}
+                />
+              )}
+              <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <Button icon={<QrcodeOutlined />} onClick={() => navigate('/me/shipments/scan')}>
+                  {t('directShipment.scanParcelQr', 'Scan Parcel QR')}
+                </Button>
+                <Button onClick={() => navigate(`/me/shipments/${ds.id}`)}>
+                  {t('directShipment.viewShipment', 'View Shipment')}
+                </Button>
+                {canShowActions && !ds.buyerReceivedPackageAt && (ds.buyerDeliveryPhotos?.length ?? 0) === 0 && (
+                  <Button
+                    type="primary"
+                    onClick={() => navigate(`/me/shipments/${ds.id}/receive`)}
+                  >
+                    {t('directShipment.acknowledgeReceived', 'Đã nhận kiện')}
+                  </Button>
+                )}
+                {canShowActions && (
+                  <Popconfirm
+                    title={t(
+                      'directShipment.confirmAndAcceptConfirm',
+                      'Xác nhận đã kiểm tra và chấp nhận hàng? Tiền sẽ được giải ngân cho người bán.',
+                    )}
+                    onConfirm={handleAcceptRelease}
+                  >
+                    <Button type="primary" loading={confirmOrderReceipt.isPending}>
+                      {t('directShipment.confirmAndAccept', 'Đã kiểm tra và chấp nhận hàng')}
+                    </Button>
+                  </Popconfirm>
+                )}
+                {canShowActions && (
+                  <Button
+                    danger
+                    icon={<WarningOutlined />}
+                    onClick={handleOpenDispute}
+                  >
+                    {t('directShipment.openDispute', 'Có vấn đề / mở dispute')}
+                  </Button>
+                )}
+              </div>
+            </Card>
+          )
+        })()}
+
+      {/* Fallback buyer decision card — for orders without a direct shipment
+          record. Buyer still needs a one-click path to accept / dispute and
+          reach the shipments hub. Mirrors the direct-shipment panel CTAs
+          without the "Đã nhận kiện" acknowledge button (no shipment entity). */}
+      {isBuyer && !order.directShipment && order.status === OrderStatus.Delivered && decisionWindowOpen && !(order as any).activeDispute && (
+        <Card
+          title={t('directShipment.shipmentDetail', 'Shipment Detail')}
+          style={{ marginBottom: isMobile ? 16 : 24 }}
+        >
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <Button icon={<QrcodeOutlined />} onClick={() => navigate('/me/shipments/scan')}>
+              {t('directShipment.scanParcelQr', 'Scan Parcel QR')}
+            </Button>
+            <Popconfirm
+              title={t(
+                'directShipment.confirmAndAcceptConfirm',
+                'Xác nhận đã kiểm tra và chấp nhận hàng? Tiền sẽ được giải ngân cho người bán.',
+              )}
+              onConfirm={handleAcceptRelease}
+            >
+              <Button type="primary" loading={confirmOrderReceipt.isPending}>
+                {t('directShipment.confirmAndAccept', 'Đã kiểm tra và chấp nhận hàng')}
+              </Button>
+            </Popconfirm>
+            <Button danger icon={<WarningOutlined />} onClick={handleOpenDispute}>
+              {t('directShipment.openDispute', 'Có vấn đề / mở dispute')}
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {/* Seller fulfillment action panel — only for the seller, at the top
+          of the detail page so fulfillment actions are immediately reachable
+          without returning to the list. Driven by order.sellerFulfillment
+          which is populated by GET /api/orders/{id} for the seller viewer. */}
+      {isSeller && order.sellerFulfillment && (
+        <Card
+          style={{
+            marginBottom: isMobile ? 16 : 24,
+            borderColor: 'var(--color-accent)',
+            background: 'rgba(196, 147, 61, 0.06)',
+          }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <Typography.Text strong style={{ fontSize: 15 }}>
+              {t('fulfillmentActions', 'Fulfillment Actions')}
+            </Typography.Text>
+            {!order.shipping?.isStructured && (
+              <Alert
+                type="warning"
+                showIcon
+                message={t('shippingNotStructuredWarn', 'Buyer has not provided a valid shipping address yet.')}
+              />
+            )}
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {order.status === OrderStatus.Paid && (
+                <Button
+                  type="primary"
+                  loading={confirmSellerOrder.isPending}
+                  disabled={!order.shipping?.isStructured}
+                  onClick={() => {
+                    confirmSellerOrder.mutate(
+                      { orderId: order.id },
+                      {
+                        onSuccess: () => message.success(t('orderConfirmed', 'Order confirmed')),
+                        onError: () => message.error(t('orderConfirmFailed', 'Failed to confirm order')),
+                      },
+                    )
+                  }}
+                >
+                  {t('confirmOrder', 'Confirm Order')}
+                </Button>
+              )}
+              {order.status === OrderStatus.Processing && order.sellerFulfillment.hasActiveOutboundShipment && (
+                <Button
+                  type="primary"
+                  onClick={() => {
+                    const shipmentId = order.sellerFulfillment?.outboundShipmentId
+                    navigate(shipmentId ? `/seller/warehouse/outbound/${shipmentId}` : '/seller/warehouse/outbound')
+                  }}
+                >
+                  {t('viewShipment', 'View Shipment')}
+                </Button>
+              )}
+              {/* Legacy "Create Shipment" CTA suppressed for the self-ship
+                  flow — self-ship sellers now use the manual progression
+                  buttons below and do not touch outbound shipments. We
+                  only surface it for warehouse-managed orders where the
+                  "View Shipment" branch above has not already shown the
+                  active outbound. In practice that warehouse case is
+                  handled by warehouse staff booking the outbound, so the
+                  button disappears from the seller UI entirely. */}
+              {/* Self-ship: single "Open Shipment" CTA when a direct
+                  shipment exists — all progression (dispatch details,
+                  Confirm Picked Up, etc.) now lives on the shipment
+                  detail page. Create flow kept for orders without a
+                  shipment record yet. */}
+              {order.sellerFulfillment.fulfillmentFlow === 'seller_self_ship' && (() => {
+                const sf = order.sellerFulfillment!
+                const ds = order.directShipment
+                const useNewFlow = !!ds || !sf.outboundShipmentId
+                if (!useNewFlow) return null
+
+                if (ds) {
+                  return (
+                    <Button
+                      type="primary"
+                      onClick={() => navigate(`/seller/shipments/${ds.id}`)}
+                    >
+                      {t('directShipment.openShipment', 'Open Shipment')}
+                    </Button>
+                  )
+                }
+
+                if (order.status === OrderStatus.Processing) {
+                  return (
+                    <Button
+                      type="primary"
+                      loading={createDirectShipment.isPending}
+                      disabled={!order.shipping?.isStructured}
+                      onClick={() => {
+                        createDirectShipment.mutate(
+                          { orderId: order.id },
+                          {
+                            onSuccess: (data) => {
+                              message.success(t('directShipment.createShipmentSuccess', 'Shipment created'))
+                              navigate(`/seller/shipments/${data.id}`)
+                            },
+                            onError: (e) => message.error((e as Error)?.message ?? t('genericError', 'Something went wrong')),
+                          },
+                        )
+                      }}
+                    >
+                      {t('directShipment.createShipment', 'Create Shipment')}
+                    </Button>
+                  )
+                }
+                return null
+              })()}
+              {/* Legacy outbound-based self-ship progression fallback */}
+              {order.sellerFulfillment.fulfillmentFlow === 'seller_self_ship' &&
+                !order.directShipment &&
+                !!order.sellerFulfillment.outboundShipmentId &&
+                order.status === OrderStatus.Processing && (
+                <Button
+                  type="primary"
+                  loading={markPickedUp.isPending}
+                  onClick={() => {
+                    markPickedUp.mutate(
+                      { orderId: order.id },
+                      {
+                        onSuccess: () => message.success(t('sellerActions.confirmPickedUp', 'Confirm Picked Up')),
+                        onError: (e) => message.error((e as Error)?.message ?? t('genericError', 'Something went wrong')),
+                      },
+                    )
+                  }}
+                >
+                  {t('sellerActions.confirmPickedUp', 'Confirm Picked Up')}
+                </Button>
+              )}
+              {order.sellerFulfillment.fulfillmentFlow === 'seller_self_ship' &&
+                !order.directShipment &&
+                !!order.sellerFulfillment.outboundShipmentId &&
+                order.status === OrderStatus.PickedUp && (
+                <Button
+                  type="primary"
+                  loading={markOnDelivering.isPending}
+                  onClick={() => {
+                    markOnDelivering.mutate(
+                      { orderId: order.id },
+                      {
+                        onSuccess: () => message.success(t('sellerActions.confirmOnDelivering', 'Confirm On Delivering')),
+                        onError: (e) => message.error((e as Error)?.message ?? t('genericError', 'Something went wrong')),
+                      },
+                    )
+                  }}
+                >
+                  {t('sellerActions.confirmOnDelivering', 'Confirm On Delivering')}
+                </Button>
+              )}
+              {order.sellerFulfillment.fulfillmentFlow === 'seller_self_ship' &&
+                !order.directShipment &&
+                !!order.sellerFulfillment.outboundShipmentId &&
+                (order.status === OrderStatus.OnDelivering || order.status === OrderStatus.Shipped) && (
+                <Button
+                  type="primary"
+                  loading={markDelivered.isPending}
+                  onClick={() => {
+                    markDelivered.mutate(
+                      { orderId: order.id },
+                      {
+                        onSuccess: () => message.success(t('sellerActions.markDelivered', 'Mark Delivered')),
+                        onError: (e) => message.error((e as Error)?.message ?? t('genericError', 'Something went wrong')),
+                      },
+                    )
+                  }}
+                >
+                  {t('sellerActions.markDelivered', 'Mark Delivered')}
+                </Button>
+              )}
+              <Typography.Text type="secondary" style={{ fontSize: 12, alignSelf: 'center' }}>
+                {order.sellerFulfillment.fulfillmentMode === 'book_outbound'
+                  ? t('modeBookOutbound', 'Mode: Platform-supported provider')
+                  : t('modeSelfShip', 'Mode: Self-ship')}
+              </Typography.Text>
+
+              {/* SLA banner — only for direct-ship orders with a shipByAt deadline */}
+              {order.sellerFulfillment.fulfillmentFlow === 'seller_self_ship' && order.sellerFulfillment.shipByAt && (() => {
+                const sf = order.sellerFulfillment!
+                const isOverdue = sf.isShippingOverdue || dayjs().isAfter(dayjs(sf.shipByAt!))
+                const daysLeft = dayjs(sf.shipByAt!).diff(dayjs(), 'day')
+                return isOverdue ? (
+                  <Alert
+                    type="error"
+                    showIcon
+                    style={{ marginTop: 4 }}
+                    message={t('sla.overdue', 'Quá hạn')}
+                    description={sf.escalationReason ?? t('sla.shipBy', 'Hạn giao') + ': ' + dayjs(sf.shipByAt!).format('DD/MM/YYYY HH:mm')}
+                  />
+                ) : (
+                  <Alert
+                    type="warning"
+                    showIcon
+                    style={{ marginTop: 4 }}
+                    message={
+                      t('sla.shipBy', 'Hạn giao') + ': ' + dayjs(sf.shipByAt!).format('DD/MM/YYYY HH:mm')
+                      + ' — ' + t('sla.remainingDays', '{{count}} ngày còn lại', { count: daysLeft })
+                    }
+                  />
+                )
+              })()}
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Auction item summary — top of the page, from OrderDto.item */}
+      {order.item && (
+        <Card style={{ marginBottom: isMobile ? 16 : 24 }}>
+          <OrderItemSummary item={order.item} variant="card" linkToAuction />
+        </Card>
+      )}
 
       {/* Order info */}
       <Card title={t('orderInfo', 'Order Information')} style={{ marginBottom: isMobile ? 16 : 24 }}>
@@ -183,26 +624,33 @@ export default function OrderDetailPage() {
           <Descriptions.Item label={t('currency', 'Currency')}>
             {order.currency}
           </Descriptions.Item>
-          <Descriptions.Item label={t('buyerId', 'Buyer')}>
-            {isBuyer ? (
-              order.buyerId
-            ) : (
+          <Descriptions.Item label={t('buyer', 'Buyer')}>
+            <div>
+              <Typography.Text strong>
+                {order.buyerDisplayName ?? `${order.buyerId.slice(0, 8)}…`}
+              </Typography.Text>
               <Typography.Text
+                type="secondary"
                 copyable={{ text: order.buyerId }}
-                style={{ fontFamily: 'monospace', fontSize: 12 }}
+                style={{ display: 'block', fontFamily: 'monospace', fontSize: 11, marginTop: 2 }}
               >
                 {order.buyerId.slice(0, 8)}…
               </Typography.Text>
-            )}
+            </div>
           </Descriptions.Item>
-          <Descriptions.Item label={t('sellerId', 'Seller')}>
-            {isSeller ? (
-              order.sellerId
-            ) : (
-              <a href={`/sellers/${order.sellerId}`} style={{ fontFamily: 'monospace', fontSize: 12 }}>
-                {order.sellerId.slice(0, 8)}…
+          <Descriptions.Item label={t('seller', 'Seller')}>
+            <div>
+              <a href={`/sellers/${order.sellerId}`} style={{ fontWeight: 600 }}>
+                {order.sellerDisplayName ?? `${order.sellerId.slice(0, 8)}…`}
               </a>
-            )}
+              <Typography.Text
+                type="secondary"
+                copyable={{ text: order.sellerId }}
+                style={{ display: 'block', fontFamily: 'monospace', fontSize: 11, marginTop: 2 }}
+              >
+                {order.sellerId.slice(0, 8)}…
+              </Typography.Text>
+            </div>
           </Descriptions.Item>
           <Descriptions.Item label={t('createdAt', 'Created')}>
             {formatDateTime(order.createdAt)}
@@ -235,12 +683,15 @@ export default function OrderDetailPage() {
         </Descriptions>
       </Card>
 
-      {/* Warranty notice */}
-      <WarrantyNotice
-        orderStatus={order.status}
-        deliveredAt={order.deliveredAt}
-        confirmedAt={(order as any).confirmedAt}
-      />
+      {/* Warranty notice — suppressed while the direct shipment panel
+          owns the delivered-state CTAs. */}
+      {!hideLegacyDelivered && (
+        <WarrantyNotice
+          orderStatus={order.status}
+          deliveredAt={order.deliveredAt}
+          confirmedAt={(order as any).confirmedAt}
+        />
+      )}
 
       {/* Seller Rating */}
       {isBuyer &&
@@ -267,6 +718,171 @@ export default function OrderDetailPage() {
             />
           </Card>
         )}
+
+      {/* Shipping Information — editable for buyer pre-fulfillment, read-only otherwise */}
+      {isBuyer && order.buyerCanUpdateShipping ? (
+        <Card title={t('shippingInformation', 'Shipping Information')} style={{ marginBottom: isMobile ? 16 : 24 }}>
+          {!order.shipping?.isStructured && (
+            <Alert
+              type="warning"
+              showIcon
+              style={{ marginBottom: 16 }}
+              message={t('shippingIncompleteWarn', 'Please confirm your shipping address before the seller begins fulfillment.')}
+            />
+          )}
+          <Form
+            form={shippingForm}
+            layout="vertical"
+            initialValues={(() => {
+              // Priority: 1) current structured snapshot 2) default address
+              // 3) first address 4) profile fallback.
+              if (order.shipping?.isStructured) {
+                return {
+                  recipientName: order.shipping.recipientName ?? '',
+                  phoneNumber: order.shipping.phoneNumber ?? '',
+                  street: order.shipping.street ?? '',
+                  ward: order.shipping.ward ?? '',
+                  district: order.shipping.district ?? '',
+                  city: order.shipping.city ?? '',
+                  postalCode: order.shipping.postalCode ?? '',
+                }
+              }
+              const def = (addresses ?? []).find((a) => a.isDefault) ?? (addresses ?? [])[0]
+              if (def) {
+                return {
+                  recipientName: def.recipientName,
+                  phoneNumber: def.phoneNumber,
+                  street: def.street,
+                  ward: def.ward,
+                  district: def.district,
+                  city: def.city,
+                  postalCode: def.postalCode ?? '',
+                }
+              }
+              const fullName =
+                currentProfile?.fullName ||
+                [currentProfile?.firstName, currentProfile?.lastName].filter(Boolean).join(' ').trim() ||
+                currentProfile?.displayName ||
+                ''
+              return {
+                recipientName: fullName,
+                phoneNumber: '',
+                street: '',
+                ward: '',
+                district: '',
+                city: '',
+                postalCode: '',
+              }
+            })()}
+          >
+            <Form.Item
+              name="recipientName"
+              label={t('recipientName', 'Recipient Name')}
+              rules={[{ required: true, whitespace: true, message: t('recipientRequired', 'Recipient name is required') }]}
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item
+              name="phoneNumber"
+              label={t('phoneNumber', 'Phone Number')}
+              rules={[{ required: true, whitespace: true, message: t('phoneRequired', 'Phone number is required') }]}
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item
+              name="street"
+              label={t('street', 'Street Address')}
+              rules={[{ required: true, whitespace: true, message: t('streetRequired', 'Street is required') }]}
+            >
+              <Input />
+            </Form.Item>
+            <Space wrap size={12} style={{ width: '100%', display: 'flex' }}>
+              <Form.Item
+                name="ward"
+                label={t('ward', 'Ward')}
+                style={{ flex: '1 1 180px', marginBottom: 16 }}
+                rules={[{ required: true, whitespace: true, message: t('wardRequired', 'Ward is required') }]}
+              >
+                <Input />
+              </Form.Item>
+              <Form.Item
+                name="district"
+                label={t('district', 'District')}
+                style={{ flex: '1 1 180px', marginBottom: 16 }}
+                rules={[{ required: true, whitespace: true, message: t('districtRequired', 'District is required') }]}
+              >
+                <Input />
+              </Form.Item>
+              <Form.Item
+                name="city"
+                label={t('city', 'City / Province')}
+                style={{ flex: '1 1 180px', marginBottom: 16 }}
+                rules={[{ required: true, whitespace: true, message: t('cityRequired', 'City is required') }]}
+              >
+                <Input />
+              </Form.Item>
+            </Space>
+            <Form.Item name="postalCode" label={t('postalCode', 'Postal Code (optional)')}>
+              <Input />
+            </Form.Item>
+            <Button
+              type="primary"
+              loading={updateShipping.isPending}
+              onClick={async () => {
+                try {
+                  const values = await shippingForm.validateFields()
+                  await updateShipping.mutateAsync({
+                    orderId: order.id,
+                    recipientName: values.recipientName.trim(),
+                    phoneNumber: values.phoneNumber.trim(),
+                    street: values.street.trim(),
+                    ward: values.ward.trim(),
+                    district: values.district.trim(),
+                    city: values.city.trim(),
+                    postalCode: values.postalCode?.trim() || undefined,
+                  })
+                  message.success(t('shippingSaved', 'Shipping information saved'))
+                } catch (err) {
+                  if ((err as { errorFields?: unknown[] })?.errorFields === undefined) {
+                    const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+                    message.error(detail ?? t('shippingSaveError', 'Failed to save shipping information'))
+                  }
+                }
+              }}
+            >
+              {t('saveShippingInformation', 'Save Shipping Information')}
+            </Button>
+          </Form>
+        </Card>
+      ) : order.shipping && order.shipping.isStructured ? (
+        <Card title={t('shippingInformation', 'Shipping Information')} style={{ marginBottom: isMobile ? 16 : 24 }}>
+          <Descriptions column={isMobile ? 1 : { xs: 1, sm: 2 }} bordered size="small">
+            <Descriptions.Item label={t('recipientName', 'Recipient Name')}>
+              {order.shipping.recipientName}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('phoneNumber', 'Phone Number')}>
+              {order.shipping.phoneNumber}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('street', 'Street Address')} span={isMobile ? 1 : 2}>
+              {order.shipping.street}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('ward', 'Ward')}>
+              {order.shipping.ward}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('district', 'District')}>
+              {order.shipping.district}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('city', 'City / Province')}>
+              {order.shipping.city}
+            </Descriptions.Item>
+            {order.shipping.postalCode && (
+              <Descriptions.Item label={t('postalCode', 'Postal Code')}>
+                {order.shipping.postalCode}
+              </Descriptions.Item>
+            )}
+          </Descriptions>
+        </Card>
+      ) : null}
 
       {/* Tracking */}
       {order.trackingNumber && (
@@ -355,7 +971,7 @@ export default function OrderDetailPage() {
               )}
             </Space>
           </>
-        ) : canRequestReturn ? (
+        ) : canRequestReturn && !hideLegacyDelivered ? (
           <Button
             type="primary"
             icon={<RollbackOutlined />}
@@ -378,7 +994,9 @@ export default function OrderDetailPage() {
           </Button>
         )}
         {isBuyer &&
+          !hideLegacyDelivered &&
           RETURN_ELIGIBLE_STATUSES.has(order.status) &&
+          order.status !== OrderStatus.Completed &&
           !(order as any).activeDispute && (
             <Button
               danger

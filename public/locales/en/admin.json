@@ -295,5 +295,88 @@
     "save": "Save",
     "create": "Create",
     "id": "ID"
+  },
+  "completedAuctions": {
+    "title": "Completed Auctions",
+    "subtitle": "All ended auctions and their order processing status",
+    "columns": {
+      "item": "Item",
+      "winner": "Winner",
+      "seller": "Seller",
+      "finalPrice": "Final Price",
+      "orderNumber": "Order No.",
+      "paymentStatus": "Payment",
+      "fulfillmentStatus": "Fulfillment"
+    },
+    "filters": {
+      "paymentStatus": "Filter by payment",
+      "fulfillmentStatus": "Filter by fulfillment",
+      "onlyOverdue": "Overdue only",
+      "search": "Search...",
+      "allStatuses": "All statuses"
+    },
+    "paymentStatus": {
+      "pending_payment": "Pending Payment",
+      "paid": "Paid",
+      "payment_overdue": "Payment Overdue"
+    },
+    "fulfillmentStatus": {
+      "awaiting_seller_ship": "Awaiting Seller Ship",
+      "warehouse_outbound_pending": "Warehouse Outbound Pending",
+      "picked_up": "Picked Up",
+      "on_delivering": "On Delivering",
+      "delivered": "Delivered",
+      "shipping_overdue": "Shipping Overdue",
+      "escalated": "Escalated"
+    },
+    "escalationReason": {
+      "seller_ship_sla_missed": "Seller missed 3-day shipping SLA"
+    },
+    "empty": "No data",
+    "detail": {
+      "title": "Completed Auction Detail",
+      "auctionInfo": "Auction Information",
+      "orderInfo": "Order Information",
+      "timeline": "Timeline",
+      "alerts": "Alerts",
+      "outboundShipment": "Outbound Shipment",
+      "directShipment": "Seller Direct Shipment",
+      "back": "Back"
+    },
+    "directShipment": {
+      "shipmentIdDisplay": "Shipment ID",
+      "internalTrackingCode": "Internal Tracking Code",
+      "buyerDeepLink": "Buyer Deep Link",
+      "carrier": "Carrier",
+      "trackingCode": "External Tracking Code",
+      "noCarrier": "Not available",
+      "status": "Status",
+      "deliveredAt": "Delivered At",
+      "buyerReceivedAt": "Buyer Received At",
+      "buyerAcceptedAt": "Buyer Accepted At",
+      "decisionWindow": "Decision Window",
+      "daysRemaining": "{{count}} day(s) remaining",
+      "windowOverdue": "Decision window overdue",
+      "sellerDeclaredShippedAt": "Seller Declared Shipped At",
+      "sellerPackagePhotos": "Seller Package Photos",
+      "sellerHandoverProofs": "Seller Handover Proof",
+      "buyerDeliveryPhotos": "Buyer Delivery Photos",
+      "buyerPackageCondition": "Package Condition",
+      "buyerConditionNotes": "Condition Notes",
+      "qrTokenVersion": "QR Token Version",
+      "qrTokenIssuedAt": "QR Token Issued At",
+      "qrTokenRevokedAt": "QR Token Revoked At",
+      "manualReviewRequired": "This shipment has been flagged for manual review",
+      "statusValues": {
+        "draft": "Draft",
+        "carrier_booked": "Carrier Booked",
+        "picked_up": "Picked Up",
+        "on_delivering": "On Delivering",
+        "delivered": "Delivered",
+        "accepted": "Accepted",
+        "disputed": "Disputed",
+        "completed": "Completed"
+      }
+    }
   }
 }

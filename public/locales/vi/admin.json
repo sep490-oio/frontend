@@ -295,5 +295,78 @@
     "save": "Lưu",
     "create": "Tạo mới",
     "id": "ID"
+  },
+  "completedAuctions": {
+    "title": "Đấu giá đã hoàn thành",
+    "subtitle": "Danh sách tất cả phiên đấu giá đã kết thúc và trạng thái xử lý đơn hàng",
+    "columns": {
+      "item": "Sản phẩm",
+      "winner": "Người thắng",
+      "seller": "Người bán",
+      "finalPrice": "Giá chốt",
+      "orderNumber": "Mã đơn",
+      "paymentStatus": "Thanh toán",
+      "fulfillmentStatus": "Giao hàng"
+    },
+    "filters": {
+      "paymentStatus": "Lọc thanh toán",
+      "fulfillmentStatus": "Lọc giao hàng",
+      "onlyOverdue": "Chỉ quá hạn",
+      "search": "Tìm kiếm...",
+      "allStatuses": "Tất cả trạng thái"
+    },
+    "paymentStatus": {
+      "pending_payment": "Chờ thanh toán",
+      "paid": "Đã thanh toán",
+      "payment_overdue": "Quá hạn thanh toán"
+    },
+    "fulfillmentStatus": {
+      "awaiting_seller_ship": "Chờ người bán giao",
+      "warehouse_outbound_pending": "Chờ kho gửi",
+      "picked_up": "Đã lấy hàng",
+      "on_delivering": "Đang giao",
+      "delivered": "Đã giao",
+      "shipping_overdue": "Quá hạn giao",
+      "escalated": "Đã chuyển xử lý"
+    },
+    "escalationReason": {
+      "seller_ship_sla_missed": "Người bán quá hạn giao 3 ngày"
+    },
+    "empty": "Không có dữ liệu",
+    "detail": {
+      "title": "Chi tiết đấu giá hoàn thành",
+      "auctionInfo": "Thông tin đấu giá",
+      "orderInfo": "Thông tin đơn hàng",
+      "timeline": "Dòng thời gian",
+      "alerts": "Cảnh báo",
+      "outboundShipment": "Vận đơn kho",
+      "directShipment": "Vận đơn người bán",
+      "back": "Quay lại"
+    },
+    "directShipment": {
+      "shipmentIdDisplay": "Mã vận đơn",
+      "internalTrackingCode": "Mã theo dõi nội bộ",
+      "buyerDeepLink": "Liên kết người mua",
+      "carrier": "Đơn vị vận chuyển",
+      "trackingCode": "Mã vận đơn ngoài",
+      "noCarrier": "Chưa có",
+      "status": "Trạng thái",
+      "deliveredAt": "Ngày giao hàng",
+      "buyerReceivedAt": "Người mua đã nhận",
+      "buyerAcceptedAt": "Người mua đã xác nhận",
+      "decisionWindow": "Cửa sổ quyết định",
+      "daysRemaining": "{{count}} ngày còn lại",
+      "windowOverdue": "Quá hạn quyết định",
+      "statusValues": {
+        "draft": "Nháp",
+        "carrier_booked": "Đã đặt vận chuyển",
+        "picked_up": "Đã lấy hàng",
+        "on_delivering": "Đang giao",
+        "delivered": "Đã giao",
+        "accepted": "Đã xác nhận",
+        "disputed": "Đang tranh chấp",
+        "completed": "Hoàn thành"
+      }
+    }
   }
 }

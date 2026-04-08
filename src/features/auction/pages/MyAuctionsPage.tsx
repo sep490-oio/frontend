@@ -8,7 +8,6 @@ import {
   StopOutlined,
   ClockCircleOutlined,
   ReloadOutlined,
-  RocketOutlined,
   UserSwitchOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
@@ -18,7 +17,6 @@ import dayjs from 'dayjs'
 import {
   useMyAuctions,
   useSubmitAuction,
-  usePublishAuction,
   useCancelAuction,
   useSetAuctionTiming,
   useRelistAuction,
@@ -119,7 +117,6 @@ export default function MyAuctionsPage() {
 
   const { data, isLoading } = useMyAuctions(params, { refetchInterval: 30000 })
   const submitAuction = useSubmitAuction()
-  const publishAuction = usePublishAuction()
   const cancelAuction = useCancelAuction()
   const setAuctionTiming = useSetAuctionTiming()
   const relistAuction = useRelistAuction()
@@ -221,13 +218,7 @@ export default function MyAuctionsPage() {
     }
   }
 
-  const handlePublish = (id: string) => {
-    publishAuction.mutate(id, {
-      onSuccess: () => msgApi.success(t('publishSuccess', 'Auction published')),
-    })
-  }
-
-  // Relist modal state
+// Relist modal state
   const [relistModalOpen, setRelistModalOpen] = useState(false)
   const [relistAuctionId, setRelistAuctionId] = useState<string | null>(null)
   const [relistForm, setRelistForm] = useState<{
@@ -340,16 +331,15 @@ export default function MyAuctionsPage() {
           </>
         )}
 
-        {/* Scheduled: Publish, Cancel */}
+        {/* Scheduled: View Detail, Cancel */}
         {s === AuctionStatus.Scheduled && (
           <>
-            <Tooltip title={t('publish', 'Publish')}>
+            <Tooltip title={t('viewDetail', 'View Detail')}>
               <Button
                 type="text"
                 size="small"
-                icon={<RocketOutlined />}
-                loading={publishAuction.isPending}
-                onClick={() => handlePublish(record.id)}
+                icon={<EyeOutlined />}
+                onClick={() => navigate(`/auctions/${record.id}`)}
               />
             </Tooltip>
             <Tooltip title={tc('action.cancel', 'Cancel')}>

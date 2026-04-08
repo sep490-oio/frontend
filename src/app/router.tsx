@@ -118,11 +118,21 @@ const MyBidsPage = () => lazyPage(() => import('@/features/auction/pages/MyBidsP
 
 // Order pages
 const MyOrdersPage = () => lazyPage(() => import('@/features/order/pages/MyOrdersPage'))
+const SellerOrdersPage = () => lazyPage(() => import('@/features/order/pages/SellerOrdersPage'))
+const SellerOutboundShipmentDetailPage = () => lazyPage(() => import('@/features/order/pages/SellerOutboundShipmentDetailPage'))
+const SellerOutboundShipmentsListPage = () => lazyPage(() => import('@/features/order/pages/SellerOutboundShipmentsListPage'))
+const SellerDirectShipmentDetailPage = () => lazyPage(() => import('@/features/order/pages/SellerDirectShipmentDetailPage'))
+const SellerDirectShipmentsListPage = () => lazyPage(() => import('@/features/order/pages/SellerDirectShipmentsListPage'))
 const OrderDetailPage = () => lazyPage(() => import('@/features/order/pages/OrderDetailPage'))
+const MyDirectShipmentDetailPage = () => lazyPage(() => import('@/features/order/pages/MyDirectShipmentDetailPage'))
+const MyDirectShipmentsListPage = () => lazyPage(() => import('@/features/order/pages/MyDirectShipmentsListPage'))
+const BuyerShipmentScanPage = () => lazyPage(() => import('@/features/order/pages/BuyerShipmentScanPage'))
+const BuyerShipmentReceivePage = () => lazyPage(() => import('@/features/order/pages/BuyerShipmentReceivePage'))
 const OrderReturnPage = () => lazyPage(() => import('@/features/order/pages/OrderReturnPage'))
 
 // Payment pages
-const WalletPage = () => lazyPage(() => import('@/features/payment/pages/WalletPage'))
+const BuyerWalletPage = () => lazyPage(() => import('@/features/payment/pages/BuyerWalletPage'))
+const SellerWalletPage = () => lazyPage(() => import('@/features/payment/pages/SellerWalletPage'))
 const PaymentMethodsPage = () => lazyPage(() => import('@/features/payment/pages/PaymentMethodsPage'))
 const CheckoutPage = () => lazyPage(() => import('@/features/payment/pages/CheckoutPage'))
 const VnPayReturnPage = () => lazyPage(() => import('@/features/payment/pages/VnPayReturnPage'))
@@ -146,7 +156,7 @@ const VerificationPage = () => lazyPage(() => import('@/features/seller/pages/Ve
 const InboundShipmentsPage = () => lazyPage(() => import('@/features/warehouse/pages/InboundShipmentsPage'))
 const BookInboundPage = () => lazyPage(() => import('@/features/warehouse/pages/BookInboundPage'))
 const InboundDetailPage = () => lazyPage(() => import('@/features/warehouse/pages/InboundDetailPage'))
-const OutboundShipmentsPage = () => lazyPage(() => import('@/features/warehouse/pages/OutboundShipmentsPage'))
+
 const WarehouseItemsPage = () => lazyPage(() => import('@/features/warehouse/pages/WarehouseItemsPage'))
 
 // Admin pages
@@ -164,6 +174,8 @@ const AdminModerationPage = () => lazyPage(() => import('@/features/admin/pages/
 const AdminPaymentsPage = () => lazyPage(() => import('@/features/admin/pages/AdminPaymentsPage'))
 const AdminTermsPage = () => lazyPage(() => import('@/features/admin/pages/AdminTermsPage'))
 const AdminRolesPage = () => lazyPage(() => import('@/features/admin/pages/AdminRolesPage'))
+const AdminCompletedAuctionsPage = () => lazyPage(() => import('@/features/admin/pages/AdminCompletedAuctionsPage'))
+const AdminCompletedAuctionDetailPage = () => lazyPage(() => import('@/features/admin/pages/AdminCompletedAuctionDetailPage'))
 
 // Inspector pages
 const InspectorDashboardPage = () => lazyPage(() => import('@/features/inspector/pages/InspectorDashboardPage'))
@@ -178,6 +190,8 @@ const ReceivingPage = () => lazyPage(() => import('@/features/warehouse-staff/pa
 const ScanPage = () => lazyPage(() => import('@/features/warehouse-staff/pages/ScanPage'))
 const StaffShipmentDetailPage = () => lazyPage(() => import('@/features/warehouse-staff/pages/StaffShipmentDetailPage'))
 const LocationsPage = () => lazyPage(() => import('@/features/warehouse-staff/pages/LocationsPage'))
+const OutboundQueuePage = () => lazyPage(() => import('@/features/warehouse-staff/pages/OutboundQueuePage'))
+const OutboundDetailPage = () => lazyPage(() => import('@/features/warehouse-staff/pages/OutboundDetailPage'))
 
 export const router = createBrowserRouter([
   // Auth routes (guest only)
@@ -250,8 +264,12 @@ export const router = createBrowserRouter([
           { path: '/me/orders', element: <MyOrdersPage /> },
           { path: '/me/orders/:id', element: <OrderDetailPage /> },
           { path: '/me/orders/:id/return', element: <OrderReturnPage /> },
+          { path: '/me/shipments', element: <MyDirectShipmentsListPage /> },
+          { path: '/me/shipments/scan', element: <BuyerShipmentScanPage /> },
+          { path: '/me/shipments/:shipmentId/receive', element: <BuyerShipmentReceivePage /> },
+          { path: '/me/shipments/:shipmentId', element: <MyDirectShipmentDetailPage /> },
           // Payment
-          { path: '/me/wallet', element: <WalletPage /> },
+          { path: '/me/wallet', element: <BuyerWalletPage /> },
           { path: '/me/wallet/withdraw', element: <WithdrawPage /> },
           { path: '/me/payment-methods', element: <PaymentMethodsPage /> },
           { path: '/checkout/:orderId', element: <CheckoutPage /> },
@@ -282,16 +300,19 @@ export const router = createBrowserRouter([
           { path: '/seller/auctions/create', element: <CreateAuctionPage /> },
           { path: '/seller/auctions/:id/edit', element: <CreateAuctionPage /> },
           // Business
-          { path: '/seller/orders', element: <MyOrdersPage /> },
+          { path: '/seller/orders', element: <SellerOrdersPage /> },
           { path: '/seller/orders/:id', element: <OrderDetailPage /> },
           { path: '/seller/orders/:id/return', element: <OrderReturnPage /> },
-          { path: '/seller/wallet', element: <WalletPage /> },
+          { path: '/seller/wallet', element: <SellerWalletPage /> },
           { path: '/seller/wallet/withdraw', element: <WithdrawPage /> },
           // Warehouse
           { path: '/seller/warehouse/inbound', element: <InboundShipmentsPage /> },
           { path: '/seller/warehouse/inbound/book', element: <BookInboundPage /> },
           { path: '/seller/warehouse/inbound/:id', element: <InboundDetailPage /> },
-          { path: '/seller/warehouse/outbound', element: <OutboundShipmentsPage /> },
+          { path: '/seller/warehouse/outbound', element: <SellerOutboundShipmentsListPage /> },
+          { path: '/seller/warehouse/outbound/:id', element: <SellerOutboundShipmentDetailPage /> },
+          { path: '/seller/shipments', element: <SellerDirectShipmentsListPage /> },
+          { path: '/seller/shipments/:shipmentId', element: <SellerDirectShipmentDetailPage /> },
           { path: '/seller/warehouse/items', element: <WarehouseItemsPage /> },
           // Settings
           { path: '/seller/profile', element: <SellerProfilePage /> },
@@ -316,6 +337,8 @@ export const router = createBrowserRouter([
           { path: '/admin/sellers', element: <AdminSellerProfilesPage /> },
           { path: '/admin/items/review', element: <AdminReviewQueuePage /> },
           { path: '/admin/items/:id', element: <AdminItemDetailPage /> },
+          { path: '/admin/auctions/completed', element: <AdminCompletedAuctionsPage /> },
+          { path: '/admin/auctions/completed/:auctionId', element: <AdminCompletedAuctionDetailPage /> },
           { path: '/admin/auctions/:id', element: <AdminAuctionControlPage /> },
           { path: '/admin/moderation', element: <AdminModerationPage /> },
           { path: '/admin/reports', element: <Navigate to="/admin/moderation" replace /> },
@@ -358,6 +381,8 @@ export const router = createBrowserRouter([
         { path: '/warehouse-staff/scan', element: <ScanPage /> },
         { path: '/warehouse-staff/shipments/:id', element: <StaffShipmentDetailPage /> },
         { path: '/warehouse-staff/locations', element: <LocationsPage /> },
+        { path: '/warehouse-staff/outbound', element: <OutboundQueuePage /> },
+        { path: '/warehouse-staff/outbound/:orderId', element: <OutboundDetailPage /> },
       ],
     }],
   },

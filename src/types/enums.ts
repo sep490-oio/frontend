@@ -107,6 +107,9 @@ export const OrderStatus = {
   PendingPayment: 'pending_payment',
   Paid: 'paid',
   Processing: 'processing',
+  PickedUp: 'picked_up',
+  OnDelivering: 'on_delivering',
+  /** Legacy. Read-only alias of OnDelivering. Do not set on new orders. */
   Shipped: 'shipped',
   Delivered: 'delivered',
   Completed: 'completed',

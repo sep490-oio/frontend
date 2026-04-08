@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import {
   Card,
@@ -11,6 +11,8 @@ import {
   App,
   Divider,
   Flex,
+  Form,
+  Input,
   Popconfirm,
   Result,
   Typography,
@@ -27,8 +29,11 @@ import {
 import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useTermsGate } from '@/features/user/hooks/useTermsGate'
-import { useOrderById } from '@/features/order/api'
+import { useOrderById, useUpdateOrderShipping } from '@/features/order/api'
+import { OrderItemSummary } from '@/features/order/components/OrderItemSummary'
 import { usePaymentMethods, useCheckout, useCreateVnPayUrl, useWallet } from '@/features/payment/api'
+import { useAddresses, useCurrentUser, useCurrentUserProfile } from '@/features/user/api'
+import type { UpdateOrderShippingRequest } from '@/types'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { CountdownTimer } from '@/components/ui/CountdownTimer'
 import { PaymentMethodType } from '@/types/enums'
@@ -62,8 +67,78 @@ export default function CheckoutPage() {
   const { data: order, isLoading: orderLoading } = useOrderById(orderId)
   const { data: methods, isLoading: methodsLoading } = usePaymentMethods()
   const { data: wallet, isLoading: walletLoading } = useWallet()
+  const { data: addresses } = useAddresses()
+  const { data: currentUser } = useCurrentUser()
+  const { data: currentProfile } = useCurrentUserProfile()
   const checkout = useCheckout()
   const createVnPayUrl = useCreateVnPayUrl()
+  const updateShipping = useUpdateOrderShipping()
+
+  // ── Shipping form state ─────────────────────────────────────────────
+  const [shippingForm] = Form.useForm<UpdateOrderShippingRequest>()
+  // Tracks whether the currently-entered shipping has been persisted for THIS
+  // order. Paying is gated on `shippingSaved === true` so the buyer can't skip
+  // the form. Dirty edits after a save flip this back to false.
+  const [shippingSaved, setShippingSaved] = useState(false)
+
+  // Autofill cascade (spec-pinned order):
+  //   1. order.shipping if it is a real structured snapshot
+  //   2. default address from /me/addresses
+  //   3. profile fullName + user phoneNumber (street/ward/district/city left empty)
+  const autofillValues = useMemo<UpdateOrderShippingRequest | null>(() => {
+    if (!order) return null
+
+    if (order.shipping?.isStructured) {
+      return {
+        recipientName: order.shipping.recipientName ?? '',
+        phoneNumber: order.shipping.phoneNumber ?? '',
+        street: order.shipping.street ?? '',
+        ward: order.shipping.ward ?? '',
+        district: order.shipping.district ?? '',
+        city: order.shipping.city ?? '',
+        postalCode: order.shipping.postalCode ?? '',
+      }
+    }
+
+    const defaultAddress = (addresses ?? []).find((a) => a.isDefault) ?? (addresses ?? [])[0]
+    if (defaultAddress) {
+      return {
+        recipientName: defaultAddress.recipientName,
+        phoneNumber: defaultAddress.phoneNumber,
+        street: defaultAddress.street,
+        ward: defaultAddress.ward,
+        district: defaultAddress.district,
+        city: defaultAddress.city,
+        postalCode: defaultAddress.postalCode ?? '',
+      }
+    }
+
+    // Fallback: profile name + user phone, empty address lines.
+    const fullName =
+      currentProfile?.fullName?.trim() ||
+      [currentProfile?.firstName, currentProfile?.lastName].filter(Boolean).join(' ').trim() ||
+      currentProfile?.displayName ||
+      currentUser?.userName ||
+      ''
+
+    return {
+      recipientName: fullName,
+      phoneNumber: currentUser?.phoneNumber ?? '',
+      street: '',
+      ward: '',
+      district: '',
+      city: '',
+      postalCode: '',
+    }
+  }, [order, addresses, currentProfile, currentUser])
+
+  // Prefill the form once the autofill values become available, and mark
+  // the form as "already saved" when the order carries a real snapshot.
+  useEffect(() => {
+    if (!autofillValues) return
+    shippingForm.setFieldsValue(autofillValues)
+    setShippingSaved(order?.shipping?.isStructured === true)
+  }, [autofillValues, order?.shipping?.isStructured, shippingForm])
 
   const checkoutMethods = (methods ?? []).filter((m: any) => m.type === 'vnpay')
   const selectedMethod = methods?.find((m: PaymentMethodDto) => m.id === selectedMethodId)
@@ -75,9 +150,44 @@ export default function CheckoutPage() {
   const walletPortion = Math.min(walletBalance, orderAmount)
   const vnpayPortion = orderAmount - walletPortion
 
-  const handlePay = () => {
+  const saveShippingIfNeeded = async (): Promise<boolean> => {
+    if (!order) return false
+    try {
+      const values = await shippingForm.validateFields()
+      // Always persist on each pay attempt so edits made after a prior save
+      // reach the server. `onSuccess` of the mutation refreshes the cached
+      // order with the server-authoritative snapshot.
+      await updateShipping.mutateAsync({
+        orderId: order.id,
+        recipientName: values.recipientName.trim(),
+        phoneNumber: values.phoneNumber.trim(),
+        street: values.street.trim(),
+        ward: values.ward.trim(),
+        district: values.district.trim(),
+        city: values.city.trim(),
+        postalCode: values.postalCode?.trim() || undefined,
+      })
+      setShippingSaved(true)
+      return true
+    } catch (err) {
+      // Form validation errors surface inline; mutation errors surface via toast.
+      const apiDetail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      if (apiDetail) {
+        message.error(apiDetail)
+      } else if ((err as { errorFields?: unknown[] })?.errorFields === undefined) {
+        message.error(t('shippingSaveError', 'Failed to save shipping information'))
+      }
+      return false
+    }
+  }
+
+  const handlePay = async () => {
     if (bidderTerms.hasPending) { bidderTerms.redirect(); return }
     if (!order || order.status !== 'pending_payment') return
+
+    // Shipping must be validated + saved before any payment flow runs.
+    const ok = await saveShippingIfNeeded()
+    if (!ok) return
 
     // Wallet payment
     if (isWalletSelected) {
@@ -117,7 +227,10 @@ export default function CheckoutPage() {
           paymentMethodId: isNewVnPay ? undefined : selectedMethodId || undefined,
           saveCard: isNewVnPay ? saveCard : undefined,
           cardType: isNewVnPay && saveCard ? cardType : undefined,
-          clientReturnPath: window.location.pathname,
+          // On successful VNPay return, land on the order detail page (not
+          // back on checkout). Single canonical destination for buyer
+          // post-payment, same for winner and buy-now flows.
+          clientReturnPath: `/me/orders/${order.id}`,
         },
         {
           onSuccess: (data) => {
@@ -230,6 +343,13 @@ export default function CheckoutPage() {
         />
       )}
 
+      {/* Product summary — from OrderDto.item (single source of truth) */}
+      {order.item && (
+        <Card style={{ marginBottom: 24 }}>
+          <OrderItemSummary item={order.item} variant="card" linkToAuction />
+        </Card>
+      )}
+
       {/* Order summary */}
       <Card style={{ marginBottom: 24 }}>
         <Descriptions column={{ xs: 1, sm: 2 }} size="small">
@@ -248,6 +368,87 @@ export default function CheckoutPage() {
             </span>
           </Descriptions.Item>
         </Descriptions>
+      </Card>
+
+      {/* Shipping Information — must be saved before payment runs */}
+      <Card
+        title={
+          <span style={{ fontFamily: SERIF_FONT, fontWeight: 400, fontSize: 18 }}>
+            {t('shippingInformation', 'Shipping Information')}
+          </span>
+        }
+        style={{ marginBottom: 24 }}
+      >
+        {order.shipping && !order.shipping.isStructured && (
+          <Alert
+            type="warning"
+            showIcon
+            style={{ marginBottom: 16 }}
+            message={t('shippingPlaceholderWarning', 'Please complete your delivery address before paying.')}
+          />
+        )}
+        <Form
+          form={shippingForm}
+          layout="vertical"
+          onValuesChange={() => setShippingSaved(false)}
+          initialValues={autofillValues ?? undefined}
+        >
+          <Form.Item
+            name="recipientName"
+            label={t('recipientName', 'Recipient Name')}
+            rules={[{ required: true, whitespace: true, message: t('recipientRequired', 'Recipient name is required') }]}
+          >
+            <Input placeholder={t('recipientNamePlaceholder', 'Full name')} />
+          </Form.Item>
+          <Form.Item
+            name="phoneNumber"
+            label={t('phoneNumber', 'Phone Number')}
+            rules={[{ required: true, whitespace: true, message: t('phoneRequired', 'Phone number is required') }]}
+          >
+            <Input placeholder={t('phoneNumberPlaceholder', '09xx xxx xxx')} />
+          </Form.Item>
+          <Form.Item
+            name="street"
+            label={t('street', 'Street Address')}
+            rules={[{ required: true, whitespace: true, message: t('streetRequired', 'Street is required') }]}
+          >
+            <Input placeholder={t('streetPlaceholder', 'House number, street name')} />
+          </Form.Item>
+          <Flex gap={12} wrap="wrap">
+            <Form.Item
+              name="ward"
+              label={t('ward', 'Ward')}
+              style={{ flex: '1 1 180px' }}
+              rules={[{ required: true, whitespace: true, message: t('wardRequired', 'Ward is required') }]}
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item
+              name="district"
+              label={t('district', 'District')}
+              style={{ flex: '1 1 180px' }}
+              rules={[{ required: true, whitespace: true, message: t('districtRequired', 'District is required') }]}
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item
+              name="city"
+              label={t('city', 'City / Province')}
+              style={{ flex: '1 1 180px' }}
+              rules={[{ required: true, whitespace: true, message: t('cityRequired', 'City is required') }]}
+            >
+              <Input />
+            </Form.Item>
+          </Flex>
+          <Form.Item name="postalCode" label={t('postalCode', 'Postal Code (optional)')}>
+            <Input />
+          </Form.Item>
+          {shippingSaved && (
+            <Typography.Text type="success" style={{ fontSize: 12 }}>
+              <CheckCircleOutlined /> {t('shippingSaved', 'Shipping information saved')}
+            </Typography.Text>
+          )}
+        </Form>
       </Card>
 
       {/* Payment method selection */}

@@ -61,6 +61,12 @@ export interface CurrentUserBidStateDto {
   autoBidStatus?: string
 }
 
+export interface CurrentBuyerOrderDto {
+  orderId: string
+  orderStatus: string
+  canPayNow: boolean
+}
+
 export interface AuctionDetailDto {
   auction: AuctionDto
   item: AuctionItemDto
@@ -69,6 +75,7 @@ export interface AuctionDetailDto {
   isWatched?: boolean
   currentUserParticipant?: ParticipantInfoDto
   currentUserBidState?: CurrentUserBidStateDto
+  currentBuyerOrder?: CurrentBuyerOrderDto
 }
 
 export interface AuctionItemDto {
@@ -327,9 +334,9 @@ export interface ItemQuestionNotification {
   createdAt: string
 }
 
-export interface BuyNowCheckoutDto {
+export interface BuyNowReservationDto {
   reservationId: string
-  paymentUrl: string
+  orderId: string
   expiresAt: string
   buyNowPrice: MoneyDto
   depositAppliedAmount: MoneyDto

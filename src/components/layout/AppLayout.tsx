@@ -60,6 +60,7 @@ export function AppLayout() {
     { key: 'bids', icon: <HistoryOutlined />, label: t('common:menu.bids', 'My Bids') },
     { key: 'watchlist', icon: <HeartOutlined />, label: t('common:menu.watchlist', 'Watchlist') },
     { key: 'orders', icon: <ShoppingOutlined />, label: t('common:menu.myOrders', 'Orders') },
+    { key: 'shipments', icon: <ShoppingOutlined />, label: t('common:menu.myShipments', 'My Shipments') },
     { key: 'wallet', icon: <WalletOutlined />, label: t('common:menu.wallet', 'Wallet') },
     { key: 'disputes', icon: <CommentOutlined />, label: t('common:menu.disputes', 'Disputes') },
     { type: 'divider' as const },
@@ -76,6 +77,7 @@ export function AppLayout() {
       case 'bids': navigate('/me/bids'); break
       case 'watchlist': navigate('/me/watchlist'); break
       case 'orders': navigate('/me/orders'); break
+      case 'shipments': navigate('/me/shipments'); break
       case 'wallet': navigate('/me/wallet'); break
       case 'disputes': navigate('/me/disputes'); break
       case 'security': navigate('/me/security'); break

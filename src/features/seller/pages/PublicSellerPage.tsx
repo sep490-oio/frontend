@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Spin, Empty } from 'antd'
+import { Spin, Empty, Tag } from 'antd'
 import { useParams, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
+import dayjs from 'dayjs'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useSellerById, useSellerItems, useSellerReviews } from '@/features/seller/api'
 import { Rate } from 'antd'
@@ -395,7 +396,7 @@ export default function PublicSellerPage() {
                     outline: 'none',
                   }}
                 >
-                  {/* Image placeholder area */}
+                  {/* Image area */}
                   <div
                     style={{
                       aspectRatio: '4 / 3',
@@ -406,9 +407,18 @@ export default function PublicSellerPage() {
                       color: 'var(--color-text-tertiary)',
                       fontSize: 13,
                       fontFamily: SANS_FONT,
+                      overflow: 'hidden',
                     }}
                   >
-                    {item.title.charAt(0).toUpperCase()}
+                    {item.images?.[0]?.url ? (
+                      <img
+                        src={item.images[0].url}
+                        alt={item.title}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    ) : (
+                      item.title.charAt(0).toUpperCase()
+                    )}
                   </div>
 
                   {/* Info */}
@@ -419,7 +429,7 @@ export default function PublicSellerPage() {
                         fontSize: 14,
                         fontWeight: 600,
                         color: 'var(--color-text-primary)',
-                        margin: '0 0 8px',
+                        margin: '0 0 4px',
                         lineHeight: 1.4,
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
@@ -428,6 +438,17 @@ export default function PublicSellerPage() {
                     >
                       {item.title}
                     </h4>
+                    {item.auction && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
+                        <Tag color="blue" style={{ margin: 0, fontSize: 11 }}>{item.auction.auctionStatus}</Tag>
+                        {item.auction.startTime && (
+                          <span style={{ fontFamily: SANS_FONT, fontSize: 11, color: 'var(--color-text-tertiary)' }}>
+                            {dayjs(item.auction.startTime).format('DD/MM/YYYY')}
+                            {item.auction.endTime ? ` → ${dayjs(item.auction.endTime).format('DD/MM/YYYY')}` : ''}
+                          </span>
+                        )}
+                      </div>
+                    )}
                     <div
                       style={{
                         fontFamily: MONO_FONT,
@@ -437,7 +458,9 @@ export default function PublicSellerPage() {
                         marginBottom: 10,
                       }}
                     >
-                      {formatCurrency(item.price)}
+                      {item.auction
+                        ? formatCurrency(item.auction.currentPrice, item.auction.currency)
+                        : t('noAuctionPrice', 'Chưa có giá đấu')}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <StatusBadge status={item.status} size="small" />

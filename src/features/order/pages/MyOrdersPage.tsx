@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { Button, Tabs, Tag, Tooltip, Card, List, Flex } from 'antd'
-import { EyeOutlined, ClockCircleOutlined } from '@ant-design/icons'
+import { EyeOutlined, ClockCircleOutlined, DollarOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useTranslation } from 'react-i18next'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { useMyOrders } from '@/features/order/api'
+import { OrderItemSummary } from '@/features/order/components/OrderItemSummary'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { PriceDisplay } from '@/components/ui/PriceDisplay'
 import { OrderStatus } from '@/types/enums'
@@ -95,9 +96,20 @@ export default function MyOrdersPage() {
 
   const columns: ColumnsType<OrderDto> = [
     {
+      title: t('product', 'Product'),
+      key: 'product',
+      render: (_: unknown, record: OrderDto) =>
+        record.item ? (
+          <OrderItemSummary item={record.item} variant="row" />
+        ) : (
+          <span style={{ color: 'var(--color-text-tertiary)', fontSize: 13 }}>—</span>
+        ),
+    },
+    {
       title: t('orderNumber', 'Order Number'),
       dataIndex: 'orderNumber',
       key: 'orderNumber',
+      width: 160,
       render: (orderNumber: string, record) => (
         <Button
           type="link"
@@ -165,18 +177,28 @@ export default function MyOrdersPage() {
     {
       title: tc('action.view', 'Actions'),
       key: 'actions',
-      width: 120,
-      render: (_: unknown, record: OrderDto) => (
-        <Button
-          type="default"
-          size="small"
-          icon={<EyeOutlined />}
-          onClick={() => navigate(`${prefix}/orders/${record.id}`)}
-          style={{ transition: 'color 200ms ease' }}
-        >
-          {t('viewDetail', 'View Detail')}
-        </Button>
-      ),
+      width: 140,
+      render: (_: unknown, record: OrderDto) =>
+        record.status === OrderStatus.PendingPayment ? (
+          <Button
+            type="primary"
+            size="small"
+            icon={<DollarOutlined />}
+            onClick={() => navigate(`/checkout/${record.id}`)}
+          >
+            {t('payNow', 'Pay Now')}
+          </Button>
+        ) : (
+          <Button
+            type="default"
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => navigate(`/me/orders/${record.id}`)}
+            style={{ transition: 'color 200ms ease' }}
+          >
+            {t('viewDetail', 'View Detail')}
+          </Button>
+        ),
     },
   ]
 
@@ -256,6 +278,7 @@ export default function MyOrdersPage() {
                 styles={{ body: { padding: '12px 16px' } }}
               >
                 <Flex vertical gap={8}>
+                  {record.item && <OrderItemSummary item={record.item} variant="row" />}
                   <Flex justify="space-between" align="center">
                     <Button
                       type="link"
@@ -296,14 +319,25 @@ export default function MyOrdersPage() {
                     <span style={{ color: 'var(--color-text-secondary)', fontSize: 12 }}>
                       {formatDateTime(record.createdAt)}
                     </span>
-                    <Button
-                      type="default"
-                      size="small"
-                      icon={<EyeOutlined />}
-                      onClick={() => navigate(`${prefix}/orders/${record.id}`)}
-                    >
-                      {t('viewDetail', 'View Detail')}
-                    </Button>
+                    {record.status === OrderStatus.PendingPayment ? (
+                      <Button
+                        type="primary"
+                        size="small"
+                        icon={<DollarOutlined />}
+                        onClick={() => navigate(`/checkout/${record.id}`)}
+                      >
+                        {t('payNow', 'Pay Now')}
+                      </Button>
+                    ) : (
+                      <Button
+                        type="default"
+                        size="small"
+                        icon={<EyeOutlined />}
+                        onClick={() => navigate(`/me/orders/${record.id}`)}
+                      >
+                        {t('viewDetail', 'View Detail')}
+                      </Button>
+                    )}
                   </Flex>
                 </Flex>
               </Card>

@@ -44,11 +44,16 @@ export default function BrowseAuctionsPage() {
 
   const initialCategoryId = searchParams.get('categoryId') ?? ''
   const initialSearch = searchParams.get('search') ?? ''
+  // Parse `status` from URL so /auctions?status=active still filters to live auctions,
+  // but the default (no query param) is ALL statuses. Only accept known enum values.
+  const rawStatus = searchParams.get('status')
+  const validStatuses = Object.values(AuctionStatus) as string[]
+  const initialStatus = rawStatus && validStatuses.includes(rawStatus) ? rawStatus : undefined
 
   const [filters, setFilters] = useState<AuctionFilterParams>({
     pageNumber: 1,
     pageSize: 12,
-    status: AuctionStatus.Active,
+    status: initialStatus as AuctionStatus | undefined,
     categoryId: initialCategoryId || undefined,
     search: initialSearch || undefined,
   })

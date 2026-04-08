@@ -95,3 +95,19 @@ export interface TrackingEventDto {
   location?: string
   notes?: string
 }
+
+// ── Warehouse Staff Outbound Queue ──────────────────────────────────
+
+export interface WarehouseStaffOutboundQueueItemDto {
+  orderId: string
+  orderNumber: string
+  orderStatus: string
+  orderPaidAt?: string | null
+  auctionId: string
+  warehouseItemId: string
+  itemTitle: string
+  itemPrimaryImageUrl?: string | null
+  buyerRecipientName?: string | null
+  buyerShippingAddress?: string | null
+  sellerDisplayName?: string | null
+}

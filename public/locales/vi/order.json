@@ -43,12 +43,22 @@
     "pending_payment": "Chờ thanh toán",
     "paid": "Đã thanh toán",
     "processing": "Đang xử lý",
+    "picked_up": "Đã lấy hàng",
+    "on_delivering": "Đang giao",
     "shipped": "Đang giao",
     "delivered": "Đã giao",
     "completed": "Hoàn thành",
     "cancelled": "Đã hủy",
     "refunded": "Đã hoàn tiền",
     "disputed": "Đang tranh chấp"
+  },
+  "sellerActions": {
+    "confirmOrder": "Xác nhận đơn",
+    "confirmPickedUp": "Xác nhận đã lấy hàng",
+    "confirmOnDelivering": "Xác nhận đang giao",
+    "markDelivered": "Đánh dấu đã giao",
+    "viewOutbound": "Xem vận đơn outbound",
+    "warehouseReadOnly": "Đơn này do kho sàn xử lý — bộ phận kho sẽ thao tác vận chuyển."
   },
   "returnReasons": {
     "defective": "Sản phẩm lỗi",
@@ -57,5 +67,84 @@
     "damaged_in_shipping": "Hư hỏng trong vận chuyển",
     "changed_mind": "Đổi ý",
     "other": "Khác"
+  },
+  "sla": {
+    "shipBy": "Hạn giao",
+    "overdue": "Quá hạn",
+    "remainingDays": "{{count}} ngày còn lại"
+  },
+  "directShipment": {
+    "createShipment": "Tạo vận đơn",
+    "carrierInfo": "Thông tin vận chuyển",
+    "carrier": "Đơn vị vận chuyển",
+    "trackingNumber": "Mã vận đơn",
+    "saveCarrier": "Lưu thông tin vận chuyển",
+    "markPickedUp": "Xác nhận đã lấy hàng",
+    "markOnDelivering": "Xác nhận đang giao",
+    "markDelivered": "Đánh dấu đã giao",
+    "acknowledgeReceived": "Đã nhận kiện",
+    "confirmAndAccept": "Đã kiểm tra và chấp nhận hàng",
+    "openDispute": "Có vấn đề / mở dispute",
+    "qrCode": "Mã QR",
+    "internalTracking": "Mã theo dõi nội bộ",
+    "externalCarrier": "Đơn vị vận chuyển ngoài",
+    "externalTracking": "Mã vận đơn ngoài",
+    "shipmentDetail": "Chi tiết vận đơn",
+    "deliveredAt": "Ngày giao hàng",
+    "buyerReceivedAt": "Người mua nhận hàng lúc",
+    "buyerAcceptedAt": "Người mua chấp nhận lúc",
+    "decisionWindowCountdown": "Thời gian quyết định còn lại",
+    "status": {
+      "draft": "Nháp",
+      "carrier_booked": "Đã đặt vận chuyển",
+      "picked_up": "Đã lấy hàng",
+      "on_delivering": "Đang giao",
+      "delivered": "Đã giao",
+      "accepted": "Đã chấp nhận",
+      "disputed": "Đang tranh chấp",
+      "completed": "Hoàn thành"
+    },
+    "dispatch": {
+      "carrier": "Tên đơn vị vận chuyển",
+      "trackingNumber": "Mã vận đơn",
+      "shippedAt": "Ngày gửi hàng",
+      "packagePhotos": "Ảnh kiện hàng",
+      "handoverProofs": "Ảnh bàn giao hàng",
+      "saveDispatch": "Lưu thông tin giao hàng",
+      "dispatchIncomplete": "Vui lòng điền đầy đủ thông tin giao hàng."
+    },
+    "receive": {
+      "title": "Xác nhận nhận hàng",
+      "subtitle": "Gửi bằng chứng giao hàng và tình trạng kiện hàng.",
+      "packageCondition": "Tình trạng kiện hàng",
+      "conditionNotes": "Ghi chú tình trạng",
+      "submit": "Gửi bằng chứng nhận hàng",
+      "photos": "Ảnh nhận hàng",
+      "chooseCondition": "Chọn tình trạng kiện hàng"
+    },
+    "conditions": {
+      "sealed_intact": "Nguyên đai nguyên kiện",
+      "outer_damage": "Bề ngoài bị hư hỏng",
+      "wet_or_torn": "Bị ướt hoặc rách",
+      "tamper_suspected": "Nghi ngờ bị can thiệp",
+      "wrong_parcel": "Sai kiện hàng",
+      "other": "Khác"
+    },
+    "scan": {
+      "scanParcelQr": "Quét mã QR kiện hàng",
+      "scanInstructions": "Hướng camera vào mã QR trên kiện hàng để xác minh.",
+      "manualEntry": "Nhập mã thủ công",
+      "validate": "Xác minh",
+      "tokenInvalid": "Mã QR không hợp lệ hoặc đã hết hạn."
+    },
+    "labels": {
+      "printLabel": "In nhãn",
+      "downloadLabel": "Tải nhãn",
+      "scanParcel": "Quét kiện hàng"
+    },
+    "manualReview": {
+      "flagged": "Vận đơn này đã được gắn cờ để kiểm tra thủ công.",
+      "reasonLabel": "Lý do kiểm tra"
+    }
   }
 }

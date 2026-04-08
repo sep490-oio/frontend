@@ -90,5 +90,21 @@
     "shipped": "Shipped",
     "delivered": "Delivered",
     "cancelled": "Cancelled"
+  },
+  "staffOutboundQueue": {
+    "title": "Outbound Queue",
+    "subtitle": "Orders ready to be packed and shipped from warehouse",
+    "empty": "No orders pending shipment",
+    "columns": {
+      "item": "Item",
+      "buyer": "Buyer",
+      "seller": "Seller",
+      "orderNumber": "Order No.",
+      "status": "Status",
+      "paidAt": "Paid At"
+    },
+    "bookOutbound": "Book Outbound",
+    "viewOutbound": "View Outbound",
+    "back": "Back"
   }
 }

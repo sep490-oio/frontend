@@ -3,7 +3,6 @@ import { Card, Steps, Button, Popconfirm, Typography, Alert, Descriptions } from
 import {
   DollarOutlined,
   SafetyOutlined,
-  CarOutlined,
   InboxOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
@@ -19,13 +18,14 @@ import dayjs from 'dayjs'
 export interface EscrowTimelineProps {
   order: {
     totalAmount?: number
-    depositAppliedAmount?: number
-    amountPaid?: number
+    depositAppliedAmount?: number | null
+    amountPaid?: number | null
+    walletAppliedAmount?: number | null
+    gatewayPaidAmount?: number | null
     platformFee?: number
     currency?: string
     escrowStatus?: string
     paidAt?: string
-    shippedAt?: string
     deliveredAt?: string
     completedAt?: string
     createdAt?: string
@@ -35,6 +35,9 @@ export interface EscrowTimelineProps {
   isSeller?: boolean
   onAcceptRelease?: () => void
   onDispute?: () => void
+  /** Hide the buyer Accept & Release / Raise Dispute CTAs when the page
+   *  surfaces its own delivered-state actions (e.g. direct shipment panel). */
+  hideBuyerDecisionActions?: boolean
 }
 
 function getTimelineStepStatus(date?: string): 'finish' | 'wait' {
@@ -58,7 +61,7 @@ function getRemainingHours(endDate: string): number {
   return Math.max(0, Math.ceil(diff))
 }
 
-export function EscrowTimeline({ order, isSeller, onAcceptRelease, onDispute }: EscrowTimelineProps) {
+export function EscrowTimeline({ order, isSeller, onAcceptRelease, onDispute, hideBuyerDecisionActions }: EscrowTimelineProps) {
   const { t } = useTranslation('order')
   const currency = order.currency ?? 'VND'
 
@@ -105,12 +108,6 @@ export function EscrowTimeline({ order, isSeller, onAcceptRelease, onDispute }: 
       description: order.paidAt ? formatDateTime(order.paidAt) : t('escrow.pending', 'Pending'),
       status: getTimelineStepStatus(order.paidAt),
       icon: <SafetyOutlined />,
-    },
-    {
-      title: t('escrow.shipped', 'Shipped'),
-      description: order.shippedAt ? formatDateTime(order.shippedAt) : t('escrow.pending', 'Pending'),
-      status: getTimelineStepStatus(order.shippedAt),
-      icon: <CarOutlined />,
     },
     {
       title: t('escrow.delivered', 'Delivered'),
@@ -160,8 +157,29 @@ export function EscrowTimeline({ order, isSeller, onAcceptRelease, onDispute }: 
         )}
         <Descriptions.Item label={t('escrow.amountPaid', 'Amount Paid')}>
           <Typography.Text strong style={{ color: 'var(--color-success)' }}>
-            {order.amountPaid != null ? formatCurrency(order.amountPaid, currency) : '—'}
+            {order.paidAt
+              ? formatCurrency(
+                  order.amountPaid != null
+                    ? order.amountPaid
+                    : (order.totalAmount ?? 0) - (order.depositAppliedAmount ?? 0),
+                  currency,
+                )
+              : '—'}
           </Typography.Text>
+          {order.paidAt && order.walletAppliedAmount != null && (
+            <div>
+              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                {t('escrow.walletApplied', 'Wallet')}: {formatCurrency(order.walletAppliedAmount, currency)}
+              </Typography.Text>
+            </div>
+          )}
+          {order.paidAt && order.gatewayPaidAmount != null && (
+            <div>
+              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                {t('escrow.gatewayPaid', 'Gateway')}: {formatCurrency(order.gatewayPaidAmount, currency)}
+              </Typography.Text>
+            </div>
+          )}
         </Descriptions.Item>
         {order.platformFee != null && (
           <Descriptions.Item label={t('escrow.platformFee', 'Platform Fee')}>
@@ -213,7 +231,7 @@ export function EscrowTimeline({ order, isSeller, onAcceptRelease, onDispute }: 
       />
 
       {/* Decision window section - buyer actions */}
-      {!isSeller && decisionWindowActive && order.decisionWindowEndsAt && (
+      {!isSeller && !hideBuyerDecisionActions && decisionWindowActive && order.decisionWindowEndsAt && (
         <div style={{ marginTop: 24 }}>
           <Alert
             type="warning"

@@ -1,5 +1,7 @@
 import { useState } from 'react'
-import { Typography, Space, Tabs } from 'antd'
+import { Typography, Space, Tabs, Button } from 'antd'
+import { EyeOutlined } from '@ant-design/icons'
+import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { useOutboundShipments } from '@/features/warehouse/api'
@@ -21,6 +23,7 @@ const STATUS_TABS = [
 export default function OutboundShipmentsPage() {
   const { t } = useTranslation('warehouse')
   const { t: tc } = useTranslation('common')
+  const navigate = useNavigate()
 
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [page, setPage] = useState(1)
@@ -35,6 +38,27 @@ export default function OutboundShipmentsPage() {
   const { data, isLoading } = useOutboundShipments(params)
 
   const columns: ColumnsType<OutboundShipmentDto> = [
+    {
+      title: t('shipmentId', 'Shipment ID'),
+      dataIndex: 'id',
+      key: 'id',
+      ellipsis: true,
+      width: 160,
+      render: (id: string) => (
+        <Button
+          type="link"
+          style={{
+            padding: 0,
+            fontFamily: 'var(--font-mono)',
+            fontSize: 12,
+            letterSpacing: '-0.01em',
+          }}
+          onClick={() => navigate(`/seller/warehouse/outbound/${id}`)}
+        >
+          {id.slice(0, 8)}…
+        </Button>
+      ),
+    },
     {
       title: t('orderId', 'Order'),
       dataIndex: 'orderId',
@@ -81,6 +105,21 @@ export default function OutboundShipmentsPage() {
       key: 'deliveredAt',
       width: 150,
       render: (date: string) => (date ? formatDateTime(date) : '-'),
+    },
+    {
+      title: tc('action.view', 'Actions'),
+      key: 'actions',
+      width: 100,
+      render: (_: unknown, record: OutboundShipmentDto) => (
+        <Button
+          type="default"
+          size="small"
+          icon={<EyeOutlined />}
+          onClick={() => navigate(`/seller/warehouse/outbound/${record.id}`)}
+        >
+          {tc('action.view', 'View')}
+        </Button>
+      ),
     },
   ]
 
