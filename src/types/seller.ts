@@ -81,10 +81,33 @@ export interface VerificationSummaryDto {
   createdAt: string
 }
 
+export interface ItemImage {
+  id?: string
+  url: string
+  order?: number
+}
+
+export interface PublicSellerItemAuctionDto {
+  auctionId: string
+  auctionStatus: string
+  auctionType: string
+  currentPrice: number
+  currency: string
+  startTime?: string
+  endTime?: string
+}
+
 export interface PublicSellerItemDto {
   id: string
+  sellerId: string
+  categoryId?: string
   title: string
-  price: number
+  description?: string
+  condition: string
   status: string
+  quantity: number
+  images: ItemImage[]
   createdAt: string
+  auction?: PublicSellerItemAuctionDto
+  hasLiveAuction: boolean
 }

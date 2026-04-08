@@ -14,20 +14,20 @@ export function WarrantyNotice({ orderStatus, deliveredAt, confirmedAt }: Warran
   // Only show for shipped/delivered/completed orders
   if (!['shipped', 'delivered', 'completed'].includes(orderStatus)) return null
 
-  // If delivery confirmed → warranty active
-  if (confirmedAt) {
+  // Order completed (post-accept) → warranty active, no CTA.
+  if (orderStatus === 'completed' || confirmedAt) {
     return (
       <Alert
         type="success"
         showIcon
-        message={t('warrantyActive', 'Warranty Active')}
-        description={t('warrantyActiveDesc', 'Your warranty is active. Coverage period starts from your delivery confirmation date.')}
+        message={t('warrantyActive', 'Bảo hành đang hoạt động')}
+        description={t('warrantyActiveDesc', 'After-sales support available for this order.')}
         style={{ marginBottom: 16 }}
       />
     )
   }
 
-  // If delivered but not confirmed, check 7-day deadline
+  // If delivered but not yet accepted, check 7-day deadline (read-only info).
   if (deliveredAt) {
     const deadline = dayjs(deliveredAt).add(7, 'day')
     const isExpired = dayjs().isAfter(deadline)
@@ -49,20 +49,20 @@ export function WarrantyNotice({ orderStatus, deliveredAt, confirmedAt }: Warran
       <Alert
         type="info"
         showIcon
-        message={t('warrantyPending', 'Confirm Delivery for Warranty')}
-        description={t('warrantyPendingDesc', 'Confirm delivery to activate your warranty. You have {{days}} day(s) remaining.', { days: daysLeft })}
+        message={t('warrantyInfo', 'Warranty Policy')}
+        description={t('warrantyPendingDescPassive', 'Warranty activates once delivery is accepted. {{days}} day(s) remaining.', { days: daysLeft })}
         style={{ marginBottom: 16 }}
       />
     )
   }
 
-  // Shipped but not delivered yet — informational notice
+  // Shipped but not delivered yet — informational notice (read-only).
   return (
     <Alert
       type="info"
       showIcon
       message={t('warrantyInfo', 'Warranty Policy')}
-      description={t('warrantyInfoDesc', 'Once your order is delivered, confirm receipt within 7 days to activate warranty protection.')}
+      description={t('warrantyInfoDesc', 'Warranty activates after delivery is accepted by the buyer.')}
       style={{ marginBottom: 16 }}
     />
   )

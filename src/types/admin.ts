@@ -1,4 +1,6 @@
 import type { AlertSeverity, AlertStatus } from './enums'
+import type { OrderDto } from './order'
+import type { OutboundShipmentDto } from './warehouse'
 
 export interface RoleDto {
   name: string
@@ -100,4 +102,43 @@ export interface TermsAcceptanceDto {
   userId: string
   acceptedAt: string
   version: string
+}
+
+// ── Admin Completed Auctions ─────────────────────────────────────────
+
+export type AdminAuctionPaymentStatus = 'pending_payment' | 'paid' | 'payment_overdue'
+export type AdminAuctionFulfillmentFlow = 'seller_self_ship' | 'warehouse_managed'
+export type AdminAuctionFulfillmentStatus =
+  | 'awaiting_seller_ship'
+  | 'warehouse_outbound_pending'
+  | 'picked_up'
+  | 'on_delivering'
+  | 'delivered'
+  | 'shipping_overdue'
+  | 'escalated'
+
+export interface AdminCompletedAuctionListItemDto {
+  auctionId: string
+  itemTitle: string
+  itemPrimaryImageUrl?: string | null
+  winnerDisplayName?: string | null
+  sellerDisplayName?: string | null
+  finalPrice: number
+  orderId?: string | null
+  orderNumber?: string | null
+  orderStatus?: string | null
+  paymentStatus?: AdminAuctionPaymentStatus | null
+  fulfillmentFlow?: AdminAuctionFulfillmentFlow | null
+  fulfillmentStatus?: AdminAuctionFulfillmentStatus | null
+  shipByAt?: string | null
+  isShippingOverdue?: boolean
+  escalatedAt?: string | null
+  escalationReason?: string | null
+}
+
+export interface AdminCompletedAuctionDetailDto {
+  summary: AdminCompletedAuctionListItemDto
+  order: OrderDto
+  outboundShipment?: OutboundShipmentDto | null
+  monitoringAlerts: MonitoringAlertDto[]
 }

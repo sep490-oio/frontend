@@ -10,7 +10,7 @@ import type {
   AutoBidDto,
   SealedBidDto,
   WinnerOfferDto,
-  BuyNowCheckoutDto,
+  BuyNowReservationDto,
   AuctionFilterParams,
   PagedList,
   PaginationParams,
@@ -30,14 +30,29 @@ export function useAuctions(params?: AuctionFilterParams, options?: { refetchInt
   })
 }
 
-export function useAuctionDetail(id: string) {
+/**
+ * Fetches auction detail. The cache key is scoped by auth context so that
+ * the anonymous response (no currentUserBidState) cannot shadow the
+ * authenticated response for the same auction.
+ *
+ * When a caller passes a `userScope` (typically the current user's id, or
+ * `null`/`undefined` for anonymous), the key becomes
+ * `['auctions','detail', id, userScope ?? 'anon']`. Changing auth state
+ * naturally changes the queryKey and triggers a refetch.
+ */
+export function useAuctionDetail(
+  id: string,
+  userScope?: string | null,
+  options?: { refetchInterval?: number | false },
+) {
   return useQuery({
-    queryKey: queryKeys.auctions.detail(id),
+    queryKey: queryKeys.auctions.detailFor(id, userScope),
     queryFn: async () => {
       const res = await apiClient.get<AuctionDetailDto>(`/auctions/${id}`)
       return res.data
     },
     enabled: !!id,
+    refetchInterval: options?.refetchInterval,
   })
 }
 
@@ -102,6 +117,12 @@ export interface MyBidDto {
   wonAt?: string
   lastBidAt: string
   bidCountForUser: number
+  /** Present when the winning bid has a matching order (won flow). */
+  orderId?: string | null
+  /** Order status string (e.g. "pending_payment", "paid", "completed"). */
+  orderStatus?: string | null
+  /** True only when the order is in pending_payment — FE routes to /checkout. */
+  canPayNow?: boolean
 }
 
 export function useMyBids(params?: PaginationParams & { status?: string; sortBy?: string }) {
@@ -278,17 +299,6 @@ export function useSubmitAuction() {
   return useMutation({
     mutationFn: async (auctionId: string) => {
       await apiClient.post(`/auctions/${auctionId}/submit`)
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: queryKeys.auctions.all }) },
-  })
-}
-
-// Publish approved auction
-export function usePublishAuction() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async (auctionId: string) => {
-      await apiClient.post(`/auctions/${auctionId}/publish`)
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: queryKeys.auctions.all }) },
   })
@@ -482,7 +492,7 @@ export function useBuyNow() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (auctionId: string) => {
-      const res = await idempotentPost<BuyNowCheckoutDto>(`/auctions/${auctionId}/buy-now`)
+      const res = await idempotentPost<BuyNowReservationDto>(`/auctions/${auctionId}/buy-now`)
       return res.data
     },
     onSuccess: () => {

@@ -81,6 +81,7 @@ export function SellerLayout() {
       label: t('menu.groupBusiness', 'Kinh doanh'),
       children: [
         { key: '/seller/orders', icon: <OrderedListOutlined />, label: t('menu.orders', 'Orders') },
+        { key: '/seller/shipments', icon: <ExportOutlined />, label: t('menu.directShipments', 'Direct Shipments') },
         { key: '/seller/wallet', icon: <WalletOutlined />, label: t('menu.wallet', 'Wallet') },
       ],
     },

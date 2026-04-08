@@ -16,14 +16,35 @@ export interface WalletSummaryDto {
   updatedAt: string
 }
 
+export type WalletTransactionReferenceType =
+  | 'order'
+  | 'deposit'
+  | 'withdrawal'
+  | 'escrow'
+  | 'transaction'
+  | null
+
 export interface WalletTransactionDto {
   id: string
   type: WalletTransactionType
   amount: number
   currency: string
   status: TransactionStatus
-  reason?: string
+  balanceBefore: number
+  balanceAfter: number
+  description?: string
+  referenceType?: WalletTransactionReferenceType
+  referenceId?: string | null
   createdAt: string
+}
+
+export interface SellerWalletOverviewDto {
+  availableBalance: number
+  pendingWithdrawalAmount: number
+  escrowHoldingAmount: number
+  releasedToWalletAmount: number
+  currency: string
+  updatedAt: string
 }
 
 export interface PaymentMethodDto {

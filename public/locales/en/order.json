@@ -43,12 +43,22 @@
     "pending_payment": "Pending Payment",
     "paid": "Paid",
     "processing": "Processing",
-    "shipped": "Shipped",
+    "picked_up": "Picked Up",
+    "on_delivering": "On Delivering",
+    "shipped": "On Delivering",
     "delivered": "Delivered",
     "completed": "Completed",
     "cancelled": "Cancelled",
     "refunded": "Refunded",
     "disputed": "Disputed"
+  },
+  "sellerActions": {
+    "confirmOrder": "Confirm Order",
+    "confirmPickedUp": "Confirm Picked Up",
+    "confirmOnDelivering": "Confirm On Delivering",
+    "markDelivered": "Mark Delivered",
+    "viewOutbound": "View Outbound Shipment",
+    "warehouseReadOnly": "This order is warehouse-managed — fulfillment is handled by warehouse staff."
   },
   "returnReasons": {
     "defective": "Defective Product",
@@ -57,5 +67,84 @@
     "damaged_in_shipping": "Damaged In Shipping",
     "changed_mind": "Changed Mind",
     "other": "Other"
+  },
+  "sla": {
+    "shipBy": "Ship By",
+    "overdue": "Overdue",
+    "remainingDays": "{{count}} days left"
+  },
+  "directShipment": {
+    "createShipment": "Create Shipment",
+    "carrierInfo": "Carrier Information",
+    "carrier": "Carrier",
+    "trackingNumber": "Tracking Number",
+    "saveCarrier": "Save Carrier Info",
+    "markPickedUp": "Mark Picked Up",
+    "markOnDelivering": "Mark On Delivering",
+    "markDelivered": "Mark Delivered",
+    "acknowledgeReceived": "Package Received",
+    "confirmAndAccept": "Inspected and Accept Item",
+    "openDispute": "Issue / Open Dispute",
+    "qrCode": "QR Code",
+    "internalTracking": "Internal Tracking Code",
+    "externalCarrier": "External Carrier",
+    "externalTracking": "External Tracking Number",
+    "shipmentDetail": "Shipment Detail",
+    "deliveredAt": "Delivered At",
+    "buyerReceivedAt": "Buyer Received At",
+    "buyerAcceptedAt": "Buyer Accepted At",
+    "decisionWindowCountdown": "Decision Window Countdown",
+    "status": {
+      "draft": "Draft",
+      "carrier_booked": "Carrier Booked",
+      "picked_up": "Picked Up",
+      "on_delivering": "On Delivering",
+      "delivered": "Delivered",
+      "accepted": "Accepted",
+      "disputed": "Disputed",
+      "completed": "Completed"
+    },
+    "dispatch": {
+      "carrier": "Carrier Name",
+      "trackingNumber": "Tracking Number",
+      "shippedAt": "Shipped At",
+      "packagePhotos": "Package Photos",
+      "handoverProofs": "Handover Proof Photos",
+      "saveDispatch": "Save Dispatch Details",
+      "dispatchIncomplete": "Please fill in all required dispatch details."
+    },
+    "receive": {
+      "title": "Confirm Delivery",
+      "subtitle": "Submit proof of delivery and package condition.",
+      "packageCondition": "Package Condition",
+      "conditionNotes": "Condition Notes",
+      "submit": "Submit Proof of Delivery",
+      "photos": "Delivery Photos",
+      "chooseCondition": "Choose package condition"
+    },
+    "conditions": {
+      "sealed_intact": "Sealed & Intact",
+      "outer_damage": "Outer Damage",
+      "wet_or_torn": "Wet or Torn",
+      "tamper_suspected": "Tamper Suspected",
+      "wrong_parcel": "Wrong Parcel",
+      "other": "Other"
+    },
+    "scan": {
+      "scanParcelQr": "Scan Parcel QR",
+      "scanInstructions": "Point your camera at the QR code on the parcel to verify it.",
+      "manualEntry": "Enter token manually",
+      "validate": "Validate",
+      "tokenInvalid": "The QR token is invalid or has expired."
+    },
+    "labels": {
+      "printLabel": "Print Label",
+      "downloadLabel": "Download Label",
+      "scanParcel": "Scan Parcel"
+    },
+    "manualReview": {
+      "flagged": "This shipment has been flagged for manual review.",
+      "reasonLabel": "Review Reason"
+    }
   }
 }

@@ -30,7 +30,7 @@ interface AutoBidStateChangedData {
  *
  * UserHub auto-joins user:{userId} group on connect — no manual join needed.
  */
-export function useUserHub(auctionId?: string) {
+export function useUserHub(auctionId?: string, currentUserId?: string | null) {
   const qc = useQueryClient()
   const connectionRef = useRef<ReturnType<typeof getUserHub> | null>(null)
 
@@ -79,8 +79,8 @@ export function useUserHub(auctionId?: string) {
     const auctionPositionChangedHandler = (data: AuctionPositionChangedNotification) => {
       if (data.auctionId !== auctionId) return
 
-      // Patch currentUserBidState in auction detail cache
-      qc.setQueryData(queryKeys.auctions.detail(data.auctionId), (current: AuctionDetailDto | undefined) => {
+      // Patch currentUserBidState in auction detail cache (auth-scoped key).
+      qc.setQueryData(queryKeys.auctions.detailFor(data.auctionId, currentUserId), (current: AuctionDetailDto | undefined) => {
         if (!current) return current
 
         return {

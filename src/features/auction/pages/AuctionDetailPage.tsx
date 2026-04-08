@@ -20,12 +20,11 @@ import {
 } from 'antd'
 import dayjs from 'dayjs'
 import { ArrowLeftOutlined, FlagOutlined } from '@ant-design/icons'
-import { useParams, useNavigate, useSearchParams } from 'react-router'
+import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useTermsGate } from '@/features/user/hooks/useTermsGate'
 import {
   useAuctionDetail,
-  useAuctionBids,
   usePlaceBid,
   useWatchAuction,
   useUnwatchAuction,
@@ -40,7 +39,6 @@ import {
   useOfferRunnerUp,
   useRelistAuction,
   useSubmitAuction,
-  usePublishAuction,
   useCancelAuction,
   useSetAuctionTiming,
 } from '@/features/auction/api'
@@ -102,13 +100,41 @@ export default function AuctionDetailPage() {
   const navigate = useNavigate()
   const { message, modal } = App.useApp()
   const { id } = useParams<{ id: string }>()
+  const location = useLocation()
+  // Navigation fallback: when the user navigates from /me/bids to an ended auction,
+  // the source card passes `knownPosition` via router state so the outcome block
+  // can render the correct Won/Lost card immediately — before the detail refetch
+  // resolves and provides the authoritative `currentUserBidState` from the server.
+  const navState = (location.state as {
+    knownPosition?: 'leading' | 'outbid' | 'won' | 'lost' | 'none'
+    returnTo?: string
+    returnLabel?: string
+  } | null) ?? null
+  const knownPositionFromNav = navState?.knownPosition ?? null
+  // Navigation source memory: when coming from /me/bids etc., the calling page
+  // passes `returnTo` + `returnLabel` so Back/breadcrumb return to the right origin.
+  const returnTo = navState?.returnTo ?? '/auctions'
+  const returnLabel = navState?.returnLabel ?? 'Auctions'
   const { isMobile, isTablet, isDesktop } = useBreakpoint()
   const bidderTerms = useTermsGate('bidder')
   const { isAuthenticated } = useAuth()
   const { data: currentUser } = useCurrentUser()
 
-  const { data, isLoading } = useAuctionDetail(id ?? '')
-  const { data: bidsData } = useAuctionBids(id ?? '')
+  // Cache key is scoped by auth context (anon vs. userId). When the user logs in
+  // or `useCurrentUser` resolves, `userScope` changes and React Query refetches
+  // so `currentUserBidState` is always based on the real identity — never on
+  // a stale anonymous response.
+  const detailUserScope = isAuthenticated ? (currentUser?.id ?? null) : null
+  // Short-term polling enabled when user is the winner but currentBuyerOrder
+  // hasn't materialized yet (race between PlaceBid sweep-to-buy-now and the
+  // AuctionSoldEvent handler creating the Order). Capped at ~12s.
+  const [orderPollAttempts, setOrderPollAttempts] = useState(0)
+  const [pollingForOrder, setPollingForOrder] = useState(false)
+  const { data, isLoading, refetch } = useAuctionDetail(
+    id ?? '',
+    detailUserScope,
+    { refetchInterval: pollingForOrder ? 2000 : false },
+  )
   // Only fetch authenticated-user data when logged in (this is a public page)
   const { data: myAutoBid } = useMyAutoBid(isAuthenticated ? (id ?? '') : '')
 
@@ -121,7 +147,15 @@ export default function AuctionDetailPage() {
   }, [categories, data?.item?.categoryId])
 
   const hub = useAuctionHub(id ?? '', data?.item?.id, currentUser?.id)
-  useUserHub(id ?? '')
+  useUserHub(id ?? '', currentUser?.id ?? null)
+
+  // Winner Pay Now CTA — prefer server-authoritative CurrentBuyerOrder from
+  // AuctionDetailDto. It is populated when the current user is the auction
+  // winner (or buy-now reservation holder) and reflects the real order state.
+  const winnerPayNowOrderId = useMemo(() => {
+    const cbo = data?.currentBuyerOrder
+    return cbo?.canPayNow && cbo.orderId ? cbo.orderId : null
+  }, [data?.currentBuyerOrder])
 
   const placeBidMutation = usePlaceBid()
   const watchMutation = useWatchAuction()
@@ -137,7 +171,6 @@ export default function AuctionDetailPage() {
   const offerRunnerUp = useOfferRunnerUp()
   const relistAuction = useRelistAuction()
   const submitAuctionMutation = useSubmitAuction()
-  const publishAuctionMutation = usePublishAuction()
   const cancelAuctionMutation = useCancelAuction()
   const setAuctionTimingMutation = useSetAuctionTiming()
   const [shippingForm] = Form.useForm<ShippingDetailsFormValues>()
@@ -218,12 +251,63 @@ export default function AuctionDetailPage() {
     if (data?.isWatched != null) setIsWatching(data.isWatched)
   }, [data?.isWatched])
 
+  // Winner-order polling: when current user is the winner but the Order has
+  // not yet been provisioned (transient race window), poll the auction detail
+  // every 2s up to 6 attempts (~12s) and invalidate related caches.
+  const isWinnerWithoutOrder = useMemo(() => {
+    if (!data?.auction || !currentUser?.id) return false
+    const status = data.auction.status
+    const isTerminalSold = status === AuctionStatus.Sold || status === AuctionStatus.Ended
+    const isWinner =
+      data.auction.currentWinnerId === currentUser.id ||
+      data.currentUserBidState?.position === 'won'
+    return isTerminalSold && isWinner && !data.currentBuyerOrder
+  }, [data?.auction, data?.currentBuyerOrder, currentUser?.id])
+
+  useEffect(() => {
+    if (isWinnerWithoutOrder && !pollingForOrder && orderPollAttempts === 0) {
+      setPollingForOrder(true)
+      // Invalidate adjacent caches so the order list picks up the new order.
+      queryClient.invalidateQueries({ queryKey: queryKeys.auctions.detail(id!) })
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
+    }
+  }, [isWinnerWithoutOrder, pollingForOrder, orderPollAttempts, id])
+
+  useEffect(() => {
+    if (!pollingForOrder) return
+    if (data?.currentBuyerOrder) {
+      setPollingForOrder(false)
+      setOrderPollAttempts(0)
+      return
+    }
+    setOrderPollAttempts((prev) => {
+      const next = prev + 1
+      if (next >= 6) {
+        setPollingForOrder(false)
+      }
+      return next
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data])
+
   // ── Derived auction state ──────────────────────────────────────────
   const auction = data?.auction
   const item = data?.item
-  const recentBids = bidsData?.items ?? data?.recentBids ?? []
+  // Use data.recentBids as the canonical source (realtime-patched by useAuctionHub).
+  // The public /auctions/{id} endpoint already embeds recentBids, and the protected
+  // /auctions/{id}/bids endpoint is not needed on this page.
+  const recentBids = data?.recentBids ?? []
   const isActive = auction?.status === AuctionStatus.Active
   const isScheduled = auction?.status === AuctionStatus.Scheduled
+  // Terminal states: auction detail becomes a public read-only results page.
+  // All interactive panels (BidForm, EligibilityPanel, Buy Now, mobile sticky bar)
+  // must be hidden. Product info + bid history remain visible from the embedded DTO.
+  const isTerminal =
+    auction?.status === AuctionStatus.Ended ||
+    auction?.status === AuctionStatus.Sold ||
+    auction?.status === AuctionStatus.Failed ||
+    auction?.status === AuctionStatus.Cancelled ||
+    auction?.status === AuctionStatus.Terminated
   const currentPrice = auction?.currentPrice?.amount ?? 0
   const currency = auction?.currency ?? DEFAULT_CURRENCY
   const minBid = auction?.minimumBidAmount?.amount ?? (currentPrice + (auction?.bidIncrement?.amount ?? 0))
@@ -410,7 +494,7 @@ export default function AuctionDetailPage() {
 
       // Optimistic update — will be corrected by SignalR broadcast
       queryClient.setQueryData(
-        queryKeys.auctions.detail(id),
+        queryKeys.auctions.detailFor(id, detailUserScope),
         (old: import('@/types').AuctionDetailDto | undefined) => old ? {
           ...old,
           auction: {
@@ -469,19 +553,13 @@ export default function AuctionDetailPage() {
     if (!id) return
     try {
       const result = await buyNowMutation.mutateAsync(id)
-      // BuyNowCheckoutDto has: reservationId, paymentUrl, expiresAt, buyNowPrice, depositAppliedAmount, amountDue
-      if (result.paymentUrl) {
-        localStorage.setItem('oio_deposit_auction_id', id)
-        window.location.href = result.paymentUrl
-      } else {
-        message.success(t('buyNowSuccess', 'Buy now successful!'))
-      }
       setBuyNowConfirmOpen(false)
+      navigate(`/checkout/${result.orderId}`)
     } catch (err) {
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
       message.error(detail ?? t('buyNowError', 'Buy now failed'))
     }
-  }, [id, buyNowMutation, message, t])
+  }, [id, buyNowMutation, message, t, navigate])
 
   const handleDeposit = async () => {
     if (bidderTerms.hasPending) { bidderTerms.redirect(); return }
@@ -568,14 +646,7 @@ export default function AuctionDetailPage() {
     }
   }
 
-  const handleSellerPublish = () => {
-    if (!id) return
-    publishAuctionMutation.mutate(id, {
-      onSuccess: () => message.success(t('publishSuccess', 'Auction published')),
-    })
-  }
-
-  const handleSellerCancel = () => {
+const handleSellerCancel = () => {
     setCancelReason('')
     setCancelModalOpen(true)
   }
@@ -663,20 +734,20 @@ export default function AuctionDetailPage() {
 
   return (
     <div className="oio-fade-in" style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px 12px 100px' : isTablet ? '20px 16px 80px' : '24px 24px 80px' }}>
-      {/* Breadcrumb */}
+      {/* Breadcrumb — segment before detail reflects navigation origin (returnTo/returnLabel) */}
       <Breadcrumb
         items={[
           { title: <a onClick={() => navigate('/')}>Home</a> },
-          { title: <a onClick={() => navigate('/auctions')}>Auctions</a> },
+          { title: <a onClick={() => navigate(returnTo)}>{returnLabel}</a> },
           { title: item?.title ?? t('auctionDetail', 'Auction Detail') },
         ]}
         style={{ marginBottom: 16 }}
       />
 
-      {/* Back link */}
+      {/* Back link — returns to the origin the user came from (defaults to /auctions). */}
       <button
         type="button"
-        onClick={() => navigate('/auctions')}
+        onClick={() => navigate(returnTo)}
         style={{
           background: 'none',
           border: 'none',
@@ -690,7 +761,7 @@ export default function AuctionDetailPage() {
           marginBottom: isMobile ? 16 : 32,
         }}
       >
-        <ArrowLeftOutlined /> Back to Auctions
+        <ArrowLeftOutlined /> {t('backTo', 'Back to')} {returnLabel}
       </button>
 
       {/* Report Auction button */}
@@ -720,13 +791,12 @@ export default function AuctionDetailPage() {
             onEdit={() => navigate(`/seller/items/${item?.id}/edit`)}
             onSubmit={handleSellerSubmit}
             onSetTiming={handleSetTiming}
-            onPublish={handleSellerPublish}
+            onViewDetail={() => { /* already on detail page */ }}
             onCancel={handleSellerCancel}
             onConfigureShipping={() => { shippingForm.resetFields(); setShippingModalOpen(true) }}
             onOfferRunnerUp={() => offerRunnerUp.mutateAsync(id!).then(() => message.success(t('offerRunnerUpSuccess', 'Offer sent')))}
             onRelist={() => { setRelistForm({ qualificationStartAt: null, qualificationEndAt: null, startAt: null, endAt: null }); setRelistModalOpen(true) }}
             isSubmitLoading={submitAuctionMutation.isPending}
-            isPublishLoading={publishAuctionMutation.isPending}
             isCancelLoading={cancelAuctionMutation.isPending}
             isOfferRunnerUpLoading={offerRunnerUp.isPending}
             isRelistLoading={relistAuction.isPending}
@@ -822,6 +892,7 @@ export default function AuctionDetailPage() {
             onBidAmountChange={setBidAmount}
             isActive={isActive}
             isScheduled={isScheduled}
+            isTerminal={isTerminal}
             isSeller={isSeller}
             qualState={qualState}
             hubConnected={hub.connected}
@@ -873,12 +944,25 @@ export default function AuctionDetailPage() {
             isVnPayDepositLoading={depositMutation.isPending}
             onBuyNowClick={() => setBuyNowConfirmOpen(true)}
             isBuyNowLoading={buyNowMutation.isPending}
-            onCheckoutClick={() => navigate('/me/orders')}
+            onCheckoutClick={
+              winnerPayNowOrderId
+                ? () => navigate(`/checkout/${winnerPayNowOrderId}`)
+                : undefined
+            }
+            currentBuyerOrder={data?.currentBuyerOrder}
+            onViewOrderClick={(orderId) => navigate(`/me/orders/${orderId}`)}
+            isOrderProvisioning={pollingForOrder}
+            onReloadOrder={() => {
+              setOrderPollAttempts(0)
+              setPollingForOrder(true)
+              queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
+              refetch()
+            }}
             onCountdownEnd={() => {
               if (auction?.status === AuctionStatus.Scheduled) {
                 setPendingActivation(true)
                 // Optimistic local transition so UI is responsive immediately
-                queryClient.setQueryData(queryKeys.auctions.detail(id!), (old: import('@/types').AuctionDetailDto | undefined) =>
+                queryClient.setQueryData(queryKeys.auctions.detailFor(id!, detailUserScope), (old: import('@/types').AuctionDetailDto | undefined) =>
                   old ? { ...old, auction: { ...old.auction, status: AuctionStatus.Active } } : old,
                 )
               }
@@ -886,7 +970,15 @@ export default function AuctionDetailPage() {
             }}
             serverTimeOffset={hub.serverTimeOffset}
             currentUserId={currentUser?.id}
-            currentUserBidState={data?.currentUserBidState}
+            currentUserBidState={
+              data?.currentUserBidState ??
+              (knownPositionFromNav
+                ? {
+                    position: knownPositionFromNav,
+                    isCurrentWinner: knownPositionFromNav === 'won',
+                  }
+                : undefined)
+            }
             isMobile={isMobile}
             isDesktop={isDesktop}
           />

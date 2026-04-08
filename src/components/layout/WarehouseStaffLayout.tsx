@@ -14,6 +14,7 @@ import {
   GlobalOutlined,
   InboxOutlined,
   ScanOutlined,
+  ExportOutlined,
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
@@ -44,6 +45,7 @@ export function WarehouseStaffLayout() {
     { key: '/warehouse-staff/receiving', icon: <InboxOutlined />, label: t('menu.receiving', 'Receiving') },
     { key: '/warehouse-staff/scan', icon: <ScanOutlined />, label: t('menu.scan', 'Scan & Check-in') },
     { key: '/warehouse-staff/locations', icon: <DatabaseOutlined />, label: t('menu.locations', 'Locations') },
+    { key: '/warehouse-staff/outbound', icon: <ExportOutlined />, label: t('menu.outboundQueue', 'Outbound Queue') },
   ]
 
   const isActive = (key: string) => {

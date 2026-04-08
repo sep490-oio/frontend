@@ -3,7 +3,7 @@ import {
   EditOutlined,
   SendOutlined,
   ClockCircleOutlined,
-  RocketOutlined,
+  EyeOutlined,
   StopOutlined,
   TruckOutlined,
   UserSwitchOutlined,
@@ -21,14 +21,13 @@ interface SellerActionBarProps {
   onEdit?: () => void
   onSubmit?: () => void
   onSetTiming?: () => void
-  onPublish?: () => void
+  onViewDetail?: () => void
   onCancel?: () => void
   onConfigureShipping?: () => void
   onOfferRunnerUp?: () => void
   onRelist?: () => void
   // Loading states
   isSubmitLoading?: boolean
-  isPublishLoading?: boolean
   isCancelLoading?: boolean
   isOfferRunnerUpLoading?: boolean
   isRelistLoading?: boolean
@@ -44,7 +43,7 @@ const actionConfig: Record<SellerAction, {
   edit: { icon: <EditOutlined />, labelKey: 'editAuction', labelFallback: 'Edit', type: 'default' },
   submit: { icon: <SendOutlined />, labelKey: 'submitAuction', labelFallback: 'Submit', type: 'primary' },
   setTiming: { icon: <ClockCircleOutlined />, labelKey: 'setTiming', labelFallback: 'Set Timing', type: 'primary' },
-  publish: { icon: <RocketOutlined />, labelKey: 'publishAuction', labelFallback: 'Publish', type: 'primary' },
+  viewDetail: { icon: <EyeOutlined />, labelKey: 'viewDetail', labelFallback: 'View Detail', type: 'default' },
   cancel: { icon: <StopOutlined />, labelKey: 'cancelAuction', labelFallback: 'Cancel', danger: true },
   configureShipping: { icon: <TruckOutlined />, labelKey: 'configureShipping', labelFallback: 'Shipping', type: 'default' },
   offerRunnerUp: { icon: <UserSwitchOutlined />, labelKey: 'offerRunnerUp', labelFallback: 'Offer Runner-Up', type: 'default' },
@@ -59,13 +58,12 @@ export function SellerActionBar({
   onEdit,
   onSubmit,
   onSetTiming,
-  onPublish,
+  onViewDetail,
   onCancel,
   onConfigureShipping,
   onOfferRunnerUp,
   onRelist,
   isSubmitLoading,
-  isPublishLoading,
   isCancelLoading,
   isOfferRunnerUpLoading,
   isRelistLoading,
@@ -79,7 +77,7 @@ export function SellerActionBar({
     edit: onEdit,
     submit: onSubmit,
     setTiming: onSetTiming,
-    publish: onPublish,
+    viewDetail: onViewDetail,
     cancel: onCancel,
     configureShipping: onConfigureShipping,
     offerRunnerUp: onOfferRunnerUp,
@@ -88,7 +86,6 @@ export function SellerActionBar({
 
   const loadingMap: Partial<Record<SellerAction, boolean>> = {
     submit: isSubmitLoading,
-    publish: isPublishLoading,
     cancel: isCancelLoading,
     offerRunnerUp: isOfferRunnerUpLoading,
     relist: isRelistLoading,

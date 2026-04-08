@@ -2,7 +2,7 @@ export type SellerAction =
   | 'edit'
   | 'submit'
   | 'setTiming'
-  | 'publish'
+  | 'viewDetail'
   | 'cancel'
   | 'configureShipping'
   | 'offerRunnerUp'
@@ -17,24 +17,22 @@ interface GetSellerActionsParams {
  * Single source of truth for which seller actions are available per auction status.
  * Used by both MyAuctionsPage and AuctionDetailPage.
  */
-export function getSellerActions({ status, verifyByPlatform }: GetSellerActionsParams): SellerAction[] {
+export function getSellerActions({ status }: GetSellerActionsParams): SellerAction[] {
   const s = status?.toLowerCase()
   const actions: SellerAction[] = []
 
   switch (s) {
     case 'draft':
-    case 'pending':
-      actions.push('edit', 'submit', 'cancel')
-      if (verifyByPlatform) actions.push('configureShipping')
+      actions.push('edit', 'submit')
       break
     case 'approved':
       actions.push('setTiming', 'cancel')
       break
     case 'scheduled':
-      actions.push('publish', 'cancel')
+      actions.push('viewDetail', 'cancel')
       break
     case 'active':
-      actions.push('cancel')
+      actions.push('viewDetail', 'cancel')
       break
     case 'sold':
       actions.push('offerRunnerUp')

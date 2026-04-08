@@ -116,6 +116,7 @@ function upsertBidPage(
 function applyAuctionRealtimePatch(
   qc: Pick<QueryClient, 'setQueryData' | 'getQueryData'>,
   data: AuctionStateChangedNotification,
+  userScope: string | null | undefined,
 ) {
   const currency = data.currency || DEFAULT_CURRENCY
   const bid: BidDto | null = data.lastBid
@@ -131,7 +132,7 @@ function applyAuctionRealtimePatch(
       }
     : null
 
-  qc.setQueryData(queryKeys.auctions.detail(data.auctionId), (current: AuctionDetailDto | undefined) => {
+  qc.setQueryData(queryKeys.auctions.detailFor(data.auctionId, userScope), (current: AuctionDetailDto | undefined) => {
     if (!current) return current
 
     return {
@@ -271,7 +272,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         return
       }
 
-      const detail = qc.getQueryData<AuctionDetailDto>(queryKeys.auctions.detail(data.auctionId))
+      const detail = qc.getQueryData<AuctionDetailDto>(queryKeys.auctions.detailFor(data.auctionId, currentUserId))
       const eventCurrency = detail?.auction.currency || DEFAULT_CURRENCY
 
       setState((prev) => ({
@@ -294,7 +295,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
 
     const outbidHandler = (data: OutbidNotification) => {
       const detail = auctionId
-        ? qc.getQueryData<AuctionDetailDto>(queryKeys.auctions.detail(auctionId))
+        ? qc.getQueryData<AuctionDetailDto>(queryKeys.auctions.detailFor(auctionId, currentUserId))
         : undefined
       const eventCurrency = detail?.auction.currency || DEFAULT_CURRENCY
 
@@ -332,7 +333,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         return
       }
 
-      const detail = qc.getQueryData<AuctionDetailDto>(queryKeys.auctions.detail(data.auctionId))
+      const detail = qc.getQueryData<AuctionDetailDto>(queryKeys.auctions.detailFor(data.auctionId, currentUserId))
       const eventCurrency = detail?.auction.currency || DEFAULT_CURRENCY
 
       setState((prev) => ({
@@ -417,7 +418,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         return
       }
 
-      const detail = qc.getQueryData<AuctionDetailDto>(queryKeys.auctions.detail(data.auctionId))
+      const detail = qc.getQueryData<AuctionDetailDto>(queryKeys.auctions.detailFor(data.auctionId, currentUserId))
       const eventCurrency = detail?.auction.currency || DEFAULT_CURRENCY
 
       setState((prev) => ({
@@ -471,7 +472,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         latestStateVersionRef.current = versionMs
       }
 
-      applyAuctionRealtimePatch(qc, data)
+      applyAuctionRealtimePatch(qc, data, currentUserId)
 
       setState((prev) => ({
         ...prev,

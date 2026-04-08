@@ -3,10 +3,11 @@ import {
   DollarOutlined,
   CheckCircleOutlined,
   SettingOutlined,
-  CarOutlined,
   InboxOutlined,
   TrophyOutlined,
   CloseCircleOutlined,
+  AppstoreAddOutlined,
+  RocketOutlined,
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { OrderStatus } from '@/types/enums'
@@ -16,7 +17,8 @@ const STEP_SEQUENCE = [
   OrderStatus.PendingPayment,
   OrderStatus.Paid,
   OrderStatus.Processing,
-  OrderStatus.Shipped,
+  OrderStatus.PickedUp,
+  OrderStatus.OnDelivering,
   OrderStatus.Delivered,
   OrderStatus.Completed,
 ] as const
@@ -25,9 +27,17 @@ const STEP_ICONS: Record<string, React.ReactNode> = {
   [OrderStatus.PendingPayment]: <DollarOutlined />,
   [OrderStatus.Paid]: <CheckCircleOutlined />,
   [OrderStatus.Processing]: <SettingOutlined />,
-  [OrderStatus.Shipped]: <CarOutlined />,
+  [OrderStatus.PickedUp]: <AppstoreAddOutlined />,
+  [OrderStatus.OnDelivering]: <RocketOutlined />,
   [OrderStatus.Delivered]: <InboxOutlined />,
   [OrderStatus.Completed]: <TrophyOutlined />,
+}
+
+// Legacy `shipped` rows predate the picked_up / on_delivering split. Display
+// them at the OnDelivering step (closest semantic match) instead of a dead
+// position off the sequence.
+const LEGACY_STATUS_ALIAS: Record<string, (typeof STEP_SEQUENCE)[number]> = {
+  [OrderStatus.Shipped]: OrderStatus.OnDelivering,
 }
 
 const TERMINAL_STATUSES = new Set<string>([
@@ -58,7 +68,8 @@ export function OrderStatusStepper({ status }: OrderStatusStepperProps) {
     )
   }
 
-  const currentIndex = STEP_SEQUENCE.indexOf(status as (typeof STEP_SEQUENCE)[number])
+  const effectiveStatus = LEGACY_STATUS_ALIAS[status] ?? status
+  const currentIndex = STEP_SEQUENCE.indexOf(effectiveStatus as (typeof STEP_SEQUENCE)[number])
   // If status is unknown (not in sequence), don't highlight any step
   const activeStep = currentIndex >= 0 ? currentIndex : -1
 

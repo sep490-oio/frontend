@@ -1,5 +1,6 @@
 import apiClient, { extractArray } from '@/lib/axios'
 import { queryKeys } from '@/lib/queryClient'
+import { invalidateAndRefetchActive } from '@/lib/mutationFreshness'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type {
   UserListItemDto,
@@ -21,6 +22,10 @@ import type {
   WalletSummaryDto,
   EscrowDto,
   TermsDocumentDto,
+  AdminCompletedAuctionListItemDto,
+  AdminCompletedAuctionDetailDto,
+  AdminAuctionPaymentStatus,
+  AdminAuctionFulfillmentStatus,
   PagedList,
   PaginationParams,
 } from '@/types'
@@ -55,8 +60,8 @@ export function useAdminCreateUser() {
       const res = await apiClient.post<UserDto>('/admin/users', data)
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.users() })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.usersRoot()])
     },
   })
 }
@@ -67,8 +72,8 @@ export function useAdminDeleteUser() {
     mutationFn: async (id: string) => {
       await apiClient.delete(`/admin/users/${id}`)
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.users() })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.usersRoot()])
     },
   })
 }
@@ -80,8 +85,8 @@ export function useChangeUserStatus() {
       const res = await apiClient.patch(`/admin/users/${id}/status`, { status })
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.users() })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.usersRoot()])
     },
   })
 }
@@ -93,8 +98,8 @@ export function useUnlockUser() {
       const res = await apiClient.patch(`/admin/users/${id}/unlock`)
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.users() })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.usersRoot()])
     },
   })
 }
@@ -106,9 +111,9 @@ export function useAssignRole() {
       const res = await apiClient.post(`/admin/users/${userId}/roles/${role}`)
       return res.data
     },
-    onSuccess: (_data, variables) => {
+    onSuccess: async (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.admin.userDetail(variables.userId) })
-      qc.invalidateQueries({ queryKey: queryKeys.admin.users() })
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.usersRoot()])
     },
   })
 }
@@ -119,9 +124,9 @@ export function useRevokeRole() {
     mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
       await apiClient.delete(`/admin/users/${userId}/roles/${role}`)
     },
-    onSuccess: (_data, variables) => {
+    onSuccess: async (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.admin.userDetail(variables.userId) })
-      qc.invalidateQueries({ queryKey: queryKeys.admin.users() })
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.usersRoot()])
     },
   })
 }
@@ -155,8 +160,8 @@ export function useTogglePermission() {
       const res = await apiClient.put(`/admin/roles/${role}/permissions/${permission}`, { isActive })
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.roles() })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.roles()])
     },
   })
 }
@@ -175,7 +180,7 @@ export function usePendingVerifications(params?: PaginationParams & { status?: s
 
 export function useAdminVerificationDetail(id: string) {
   return useQuery({
-    queryKey: [...queryKeys.admin.verifications(), 'detail', id],
+    queryKey: [...queryKeys.admin.verificationsRoot(), 'detail', id],
     queryFn: async () => {
       const res = await apiClient.get<VerificationDto>(`/admin/verifications/${id}`)
       return res.data
@@ -191,8 +196,8 @@ export function useApproveVerification() {
       const res = await apiClient.post(`/admin/verifications/${id}/approve`)
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.verifications() })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.verificationsRoot()])
     },
   })
 }
@@ -204,8 +209,8 @@ export function useRejectVerification() {
       const res = await apiClient.post(`/admin/verifications/${id}/reject`, { reason })
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.verifications() })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.verificationsRoot()])
     },
   })
 }
@@ -229,8 +234,8 @@ export function useVerifySellerProfile() {
       const res = await apiClient.post(`/admin/seller-profiles/${id}/verify`)
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.sellerProfiles() })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.sellerProfilesRoot()])
     },
   })
 }
@@ -243,8 +248,8 @@ export function useRejectSellerProfile() {
       const res = await apiClient.post(`/admin/seller-profiles/${id}/reject`, { reason })
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.sellerProfiles() })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.sellerProfilesRoot()])
     },
   })
 }
@@ -263,7 +268,7 @@ export function useReviewQueue(params?: PaginationParams & { status?: string }) 
 
 export function useAdminItemDetail(id: string) {
   return useQuery({
-    queryKey: [...queryKeys.admin.reviewQueue(), 'detail', id],
+    queryKey: [...queryKeys.admin.reviewQueueRoot(), 'detail', id],
     queryFn: async () => {
       const res = await apiClient.get<ItemDto & { reviews?: ItemReviewDto[] }>(`/admin/items/${id}`)
       return res.data
@@ -272,15 +277,59 @@ export function useAdminItemDetail(id: string) {
   })
 }
 
+/**
+ * Optimistically patches every cached review-queue list page so the row for
+ * `itemId` is either removed (approve/reject) or updated (assign reviewer),
+ * then returns. The caller then awaits invalidate + active refetch to
+ * reconcile with the server.
+ */
+function patchReviewQueueCache(
+  qc: ReturnType<typeof useQueryClient>,
+  itemId: string,
+  mutator: (item: ReviewQueueItemDto) => ReviewQueueItemDto | null,
+) {
+  const queries = qc.getQueriesData<PagedList<ReviewQueueItemDto>>({
+    queryKey: queryKeys.admin.reviewQueueRoot(),
+  })
+  for (const [key, data] of queries) {
+    if (!data || !Array.isArray(data.items)) continue
+    const nextItems: ReviewQueueItemDto[] = []
+    for (const item of data.items) {
+      if (item.id !== itemId) {
+        nextItems.push(item)
+        continue
+      }
+      const next = mutator(item)
+      if (next) nextItems.push(next)
+    }
+    if (nextItems.length !== data.items.length || nextItems.some((it, i) => it !== data.items[i])) {
+      const removed = data.items.length - nextItems.length
+      const currentTotal = data.metadata?.totalCount ?? data.items.length
+      qc.setQueryData<PagedList<ReviewQueueItemDto>>(key, {
+        ...data,
+        items: nextItems,
+        metadata: {
+          ...data.metadata,
+          totalCount: Math.max(0, currentTotal - removed),
+        },
+      })
+    }
+  }
+}
+
 export function useApproveItem() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (id: string) => {
       await apiClient.post(`/admin/items/${id}/approve`)
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.reviewQueue() })
-      qc.invalidateQueries({ queryKey: queryKeys.items.all })
+    onSuccess: async (_data, id) => {
+      // Row leaves the pending-review queue — drop it immediately for zero flicker.
+      patchReviewQueueCache(qc, id, () => null)
+      await invalidateAndRefetchActive(qc, [
+        queryKeys.admin.reviewQueueRoot(),
+        queryKeys.items.all,
+      ])
     },
   })
 }
@@ -291,9 +340,12 @@ export function useRejectItem() {
     mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
       await apiClient.post(`/admin/items/${id}/reject`, { reason })
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.reviewQueue() })
-      qc.invalidateQueries({ queryKey: queryKeys.items.all })
+    onSuccess: async (_data, variables) => {
+      patchReviewQueueCache(qc, variables.id, () => null)
+      await invalidateAndRefetchActive(qc, [
+        queryKeys.admin.reviewQueueRoot(),
+        queryKeys.items.all,
+      ])
     },
   })
 }
@@ -305,8 +357,13 @@ export function useAssignReviewer() {
       const res = await apiClient.post(`/admin/items/${itemId}/assign`, { adminId })
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.reviewQueue() })
+    onSuccess: async (_data, variables) => {
+      // Patch reviewer in place on the cached row while the awaited refetch lands.
+      patchReviewQueueCache(qc, variables.itemId, (item) => ({
+        ...item,
+        assignedReviewerId: variables.adminId,
+      } as ReviewQueueItemDto))
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.reviewQueueRoot()])
     },
   })
 }
@@ -320,8 +377,8 @@ export function useSetCuration() {
       const res = await apiClient.put(`/admin/auctions/${auctionId}/curation`, { isFeatured, priority })
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.auctions.all })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.auctions.all])
     },
   })
 }
@@ -333,8 +390,8 @@ export function useTriggerEmergency() {
       const res = await apiClient.post<AuctionEmergencyDto>(`/admin/auctions/${auctionId}/emergencies`, { reason, triggerSource, payload })
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.auctions.all })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.auctions.all])
     },
   })
 }
@@ -346,8 +403,8 @@ export function useResolveEmergency() {
       const res = await apiClient.post(`/admin/auctions/${auctionId}/emergencies/${emergencyId}/resolve`, { status, payload })
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.auctions.all })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.auctions.all])
     },
   })
 }
@@ -359,9 +416,11 @@ export function useCancelBid() {
       const res = await apiClient.post(`/admin/auctions/${auctionId}/bids/${bidId}/cancel`, { reason })
       return res.data
     },
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.auctions.bids(variables.auctionId) })
-      qc.invalidateQueries({ queryKey: queryKeys.auctions.detail(variables.auctionId) })
+    onSuccess: async (_data, variables) => {
+      await invalidateAndRefetchActive(qc, [
+        queryKeys.auctions.bids(variables.auctionId),
+        queryKeys.auctions.detail(variables.auctionId),
+      ])
     },
   })
 }
@@ -385,8 +444,8 @@ export function useAssignReport() {
       const res = await apiClient.post(`/admin/reports/${id}/assign`, { assignedToUserId })
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.reports() })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.reportsRoot()])
     },
   })
 }
@@ -398,8 +457,8 @@ export function useResolveReport() {
       const res = await apiClient.post(`/admin/reports/${id}/resolve`, { dismissed, resolutionNotes, enforcementAction })
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.reports() })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.reportsRoot()])
     },
   })
 }
@@ -413,9 +472,11 @@ export function useEscalateReportToDispute() {
       const res = await apiClient.post(`/admin/reports/${reportId}/escalate-to-dispute`, { title, disputeType, priority })
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.reports() })
-      qc.invalidateQueries({ queryKey: queryKeys.admin.disputes() })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [
+        queryKeys.admin.reportsRoot(),
+        queryKeys.admin.disputesRoot(),
+      ])
     },
   })
 }
@@ -439,8 +500,8 @@ export function useAcknowledgeAlert() {
       const res = await apiClient.post(`/admin/monitoring-alerts/${id}/acknowledge`, { notes })
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.alerts() })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.alertsRoot()])
     },
   })
 }
@@ -452,8 +513,8 @@ export function useResolveAlert() {
       const res = await apiClient.post(`/admin/monitoring-alerts/${id}/resolve`, { notes, ignored })
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.alerts() })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.alertsRoot()])
     },
   })
 }
@@ -465,8 +526,8 @@ export function useFlagUser() {
       const res = await apiClient.post<UserRiskFlagDto>(`/admin/users/${userId}/risk-flags`, { severity, reason, flagType })
       return res.data
     },
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.userDetail(variables.userId) })
+    onSuccess: async (_data, variables) => {
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.userDetail(variables.userId)])
     },
   })
 }
@@ -478,8 +539,8 @@ export function useFlagAuction() {
       const res = await apiClient.post(`/admin/auctions/${auctionId}/alerts`, { alertType, payload, severity })
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.alerts() })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.alertsRoot()])
     },
   })
 }
@@ -513,9 +574,11 @@ export function useAdminResolveDispute() {
       const res = await apiClient.post(`/admin/disputes/${id}/resolve`, { resolutionType, amount, notes })
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.disputes() })
-      qc.invalidateQueries({ queryKey: queryKeys.disputes.all })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [
+        queryKeys.admin.disputesRoot(),
+        queryKeys.disputes.all,
+      ])
     },
   })
 }
@@ -534,7 +597,7 @@ export function useAdminWithdrawals(params?: PaginationParams & { status?: strin
 
 export function useAdminWithdrawalDetail(id: string) {
   return useQuery({
-    queryKey: [...queryKeys.admin.withdrawals(), 'detail', id],
+    queryKey: [...queryKeys.admin.withdrawalsRoot(), 'detail', id],
     queryFn: async () => {
       const res = await apiClient.get<WithdrawalRequestDto>(`/admin/payments/withdrawals/${id}`)
       return res.data
@@ -550,9 +613,11 @@ export function useApproveWithdrawal() {
       const res = await apiClient.post(`/admin/payments/withdrawals/${id}/approve`)
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.withdrawals() })
-      qc.invalidateQueries({ queryKey: queryKeys.admin.paymentSummary() })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [
+        queryKeys.admin.withdrawalsRoot(),
+        queryKeys.admin.paymentSummary(),
+      ])
     },
   })
 }
@@ -564,8 +629,8 @@ export function useRejectWithdrawal() {
       const res = await apiClient.post(`/admin/payments/withdrawals/${id}/reject`, { reason })
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.withdrawals() })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.withdrawalsRoot()])
     },
   })
 }
@@ -576,9 +641,11 @@ export function useCompleteWithdrawal() {
     mutationFn: async (id: string) => {
       await apiClient.post(`/admin/payments/withdrawals/${id}/complete`)
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.withdrawals() })
-      qc.invalidateQueries({ queryKey: queryKeys.admin.paymentSummary() })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [
+        queryKeys.admin.withdrawalsRoot(),
+        queryKeys.admin.paymentSummary(),
+      ])
     },
   })
 }
@@ -595,7 +662,7 @@ export function useAdminTransactions(params?: PaginationParams & { status?: stri
 
 export function useAdminTransactionById(id: string) {
   return useQuery({
-    queryKey: [...queryKeys.admin.transactions(), 'detail', id],
+    queryKey: [...queryKeys.admin.transactionsRoot(), 'detail', id],
     queryFn: async () => {
       const res = await apiClient.get<PaymentTransactionDto>(`/admin/payments/transactions/${id}`)
       return res.data
@@ -616,7 +683,7 @@ export function useAdminEscrows(params?: PaginationParams & { status?: string })
 
 export function useAdminEscrowById(id: string) {
   return useQuery({
-    queryKey: [...queryKeys.admin.escrows(), 'detail', id],
+    queryKey: [...queryKeys.admin.escrowsRoot(), 'detail', id],
     queryFn: async () => {
       const res = await apiClient.get<EscrowDto>(`/admin/payments/escrows/${id}`)
       return res.data
@@ -664,8 +731,8 @@ export function useCreateTerms() {
       const res = await apiClient.post<TermsDocumentDto>('/admin/terms', data)
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.terms() })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.termsRoot()])
     },
   })
 }
@@ -677,8 +744,8 @@ export function useActivateTerms() {
       const res = await apiClient.put(`/admin/terms/${id}/activate`)
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.terms() })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.termsRoot()])
     },
   })
 }
@@ -692,8 +759,8 @@ export function useCreateCategory() {
       const res = await apiClient.post('/categories', data)
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.categories.all })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.categories.all])
     },
   })
 }
@@ -705,8 +772,8 @@ export function useUpdateCategory() {
       const res = await apiClient.put(`/categories/${id}`, data)
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.categories.all })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.categories.all])
     },
   })
 }
@@ -731,8 +798,8 @@ export function useGrantPermission() {
     mutationFn: async ({ userId, permission }: { userId: string; permission: string }) => {
       await apiClient.post(`/admin/users/${userId}/permissions/${permission}`)
     },
-    onSuccess: (_, { userId }) => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.userDetail(userId) })
+    onSuccess: async (_, { userId }) => {
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.userDetail(userId)])
     },
   })
 }
@@ -744,8 +811,8 @@ export function useDenyPermission() {
     mutationFn: async ({ userId, permission }: { userId: string; permission: string }) => {
       await apiClient.put(`/admin/users/${userId}/permissions/${permission}`, { action: 'deny' })
     },
-    onSuccess: (_, { userId }) => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.userDetail(userId) })
+    onSuccess: async (_, { userId }) => {
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.userDetail(userId)])
     },
   })
 }
@@ -757,8 +824,8 @@ export function useRevokePermission() {
     mutationFn: async ({ userId, permission }: { userId: string; permission: string }) => {
       await apiClient.delete(`/admin/users/${userId}/permissions/${permission}`)
     },
-    onSuccess: (_, { userId }) => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.userDetail(userId) })
+    onSuccess: async (_, { userId }) => {
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.userDetail(userId)])
     },
   })
 }
@@ -770,8 +837,8 @@ export function useEscalateReport() {
     mutationFn: async (reportId: string) => {
       await apiClient.post(`/admin/reports/${reportId}/escalate-emergency`)
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.reports() })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.reportsRoot()])
     },
   })
 }
@@ -783,8 +850,8 @@ export function useRevealSealedBid() {
     mutationFn: async ({ auctionId, sealedBidId }: { auctionId: string; sealedBidId: string }) => {
       await apiClient.post(`/admin/auctions/${auctionId}/sealed-bids/${sealedBidId}/reveal`)
     },
-    onSuccess: (_, { auctionId }) => {
-      qc.invalidateQueries({ queryKey: queryKeys.auctions.detail(auctionId) })
+    onSuccess: async (_, { auctionId }) => {
+      await invalidateAndRefetchActive(qc, [queryKeys.auctions.detail(auctionId)])
     },
   })
 }
@@ -801,6 +868,41 @@ export function useItemReviewHistory(itemId: string) {
   })
 }
 
+// ── Completed Auctions ───────────────────────────────────────────────
+
+export interface AdminCompletedAuctionsParams extends PaginationParams {
+  paymentStatus?: AdminAuctionPaymentStatus
+  fulfillmentStatus?: AdminAuctionFulfillmentStatus
+  onlyOverdue?: boolean
+  search?: string
+}
+
+export function useAdminCompletedAuctions(params?: AdminCompletedAuctionsParams) {
+  return useQuery({
+    queryKey: queryKeys.admin.completedAuctions(params),
+    queryFn: async () => {
+      const res = await apiClient.get<PagedList<AdminCompletedAuctionListItemDto>>(
+        '/admin/auctions/completed',
+        { params },
+      )
+      return res.data
+    },
+  })
+}
+
+export function useAdminCompletedAuctionDetail(auctionId: string) {
+  return useQuery({
+    queryKey: queryKeys.admin.completedAuctionDetail(auctionId),
+    queryFn: async () => {
+      const res = await apiClient.get<AdminCompletedAuctionDetailDto>(
+        `/admin/auctions/completed/${auctionId}`,
+      )
+      return res.data
+    },
+    enabled: !!auctionId,
+  })
+}
+
 // Admin VnPay refund
 export function useRefundVnPay() {
   const qc = useQueryClient()
@@ -814,8 +916,8 @@ export function useRefundVnPay() {
       const res = await apiClient.post('/payments/vnpay/refund', data)
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.transactions() })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.transactionsRoot()])
     },
   })
 }

@@ -1,7 +1,7 @@
 import { Row, Col, Card, Statistic, Button, Typography } from 'antd'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { useInboundShipments } from '@/features/warehouse/api'
+import { useInboundShipments, useWarehouseStaffOutboundQueue } from '@/features/warehouse/api'
 
 export default function WarehouseStaffDashboardPage() {
   const { t } = useTranslation('warehouse')
@@ -11,6 +11,7 @@ export default function WarehouseStaffDashboardPage() {
   const { data: inTransit } = useInboundShipments({ status: 'in_transit', pageSize: 1 })
   const { data: arrived } = useInboundShipments({ status: 'arrived', pageSize: 1 })
   const { data: completed } = useInboundShipments({ status: 'completed', pageSize: 1 })
+  const { data: outboundQueue } = useWarehouseStaffOutboundQueue({ pageSize: 1 })
 
   return (
     <div>
@@ -48,6 +49,18 @@ export default function WarehouseStaffDashboardPage() {
             <Statistic
               title={t('dashboard.completed', 'Completed')}
               value={completed?.metadata?.totalCount ?? 0}
+            />
+          </Card>
+        </Col>
+        <Col xs={12} md={6}>
+          <Card
+            hoverable
+            onClick={() => navigate('/warehouse-staff/outbound')}
+            style={{ cursor: 'pointer' }}
+          >
+            <Statistic
+              title={t('dashboard.awaitingOutbound', 'Orders Awaiting Outbound')}
+              value={outboundQueue?.metadata?.totalCount ?? 0}
             />
           </Card>
         </Col>

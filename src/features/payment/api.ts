@@ -1,7 +1,9 @@
 import apiClient, { extractArray } from '@/lib/axios'
 import { queryKeys } from '@/lib/queryClient'
+import { invalidateAndRefetchActive } from '@/lib/mutationFreshness'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type {
+  SellerWalletOverviewDto,
   WalletSummaryDto,
   WalletTransactionDto,
   PaymentMethodDto,
@@ -20,6 +22,17 @@ export function useWallet(options?: { refetchInterval?: number; enabled?: boolea
     queryKey: queryKeys.wallet.summary(),
     queryFn: async () => {
       const res = await apiClient.get<WalletSummaryDto>('/me/wallet')
+      return res.data
+    },
+    ...options,
+  })
+}
+
+export function useSellerWalletOverview(options?: { refetchInterval?: number; enabled?: boolean }) {
+  return useQuery({
+    queryKey: queryKeys.wallet.sellerOverview(),
+    queryFn: async () => {
+      const res = await apiClient.get<SellerWalletOverviewDto>('/seller/wallet/overview')
       return res.data
     },
     ...options,
@@ -67,8 +80,8 @@ export function useAddPaymentMethod() {
       const res = await apiClient.post<PaymentMethodDto>('/payments/methods', data)
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.paymentMethods.all })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.paymentMethods.all])
     },
   })
 }
@@ -79,8 +92,8 @@ export function useDeletePaymentMethod() {
     mutationFn: async (id: string) => {
       await apiClient.delete(`/payments/methods/${id}`)
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.paymentMethods.all })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.paymentMethods.all])
     },
   })
 }
@@ -91,8 +104,8 @@ export function useSetDefaultPaymentMethod() {
     mutationFn: async (id: string) => {
       await apiClient.post(`/payments/methods/${id}/default`)
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.paymentMethods.all })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.paymentMethods.all])
     },
   })
 }
@@ -104,8 +117,8 @@ export function useLinkCardVnPay() {
       const res = await apiClient.post<{ redirectUrl: string }>('/payments/methods/link-card', data)
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.paymentMethods.all })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.paymentMethods.all])
     },
   })
 }
@@ -119,10 +132,12 @@ export function useCheckout() {
       const res = await apiClient.post<{ success: boolean; transactionId?: string; paymentUrl?: string }>('/payments/checkout', data)
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.orders.all })
-      qc.invalidateQueries({ queryKey: queryKeys.wallet.all })
-      qc.invalidateQueries({ queryKey: queryKeys.auctions.all })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [
+        queryKeys.orders.all,
+        queryKeys.wallet.all,
+        queryKeys.auctions.all,
+      ])
     },
   })
 }
@@ -155,8 +170,8 @@ export function useCreateWithdrawal() {
       const res = await apiClient.post<WithdrawalRequestDto>('/me/wallet/withdrawals', data)
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.wallet.all })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.wallet.all])
     },
   })
 }
@@ -167,8 +182,8 @@ export function useCancelWithdrawal() {
     mutationFn: async (id: string) => {
       await apiClient.post(`/me/wallet/withdrawals/${id}/cancel`)
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.wallet.all })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.wallet.all])
     },
   })
 }
@@ -189,9 +204,11 @@ export function useCreateDepositPayment() {
       })
       return res.data
     },
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.wallet.all })
-      qc.invalidateQueries({ queryKey: queryKeys.auctions.detail(variables.auctionId) })
+    onSuccess: async (_data, variables) => {
+      await invalidateAndRefetchActive(qc, [
+        queryKeys.wallet.all,
+        queryKeys.auctions.detail(variables.auctionId),
+      ])
     },
   })
 }
@@ -207,10 +224,12 @@ export function useDepositFromWallet() {
         currency: data.currency,
       })
     },
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.wallet.all })
-      qc.invalidateQueries({ queryKey: queryKeys.auctions.all })
-      qc.invalidateQueries({ queryKey: queryKeys.auctions.detail(variables.auctionId) })
+    onSuccess: async (_data, variables) => {
+      await invalidateAndRefetchActive(qc, [
+        queryKeys.wallet.all,
+        queryKeys.auctions.all,
+        queryKeys.auctions.detail(variables.auctionId),
+      ])
     },
   })
 }
@@ -231,8 +250,8 @@ export function useWalletTopup() {
       })
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.wallet.all })
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.wallet.all])
     },
   })
 }
