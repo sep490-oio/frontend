@@ -14,7 +14,6 @@ import {
   Divider,
   Modal,
   Input,
-  Select,
   Form,
 } from 'antd'
 import dayjs from 'dayjs'
@@ -28,7 +27,10 @@ import {
   useConfirmReturnReceived,
   useCreateSellerReview,
 } from '@/features/order/api'
-import { useCreateReport } from '@/features/dispute/api'
+import { CreateDisputeModal } from '@/features/order/components/CreateDisputeModal'
+import { ActiveDisputeBanner } from '@/components/dispute/ActiveDisputeBanner'
+// useAcknowledgeReceivedOutboundShipment removed — actions moved to shipment page
+// Tooltip removed — no longer used after shipment panel cleanup
 import {
   useConfirmSellerOrder,
   useUpdateOrderShipping,
@@ -50,10 +52,11 @@ import { StatusBadge } from '@/components/ui/StatusBadge'
 import { PriceDisplay } from '@/components/ui/PriceDisplay'
 import { CountdownTimer } from '@/components/ui/CountdownTimer'
 import { EscrowTimeline } from '@/features/order/components/EscrowTimeline'
+import { OrderActionRow } from '@/features/order/components/OrderActionRow'
 import { WarrantyNotice } from '@/features/order/components/WarrantyNotice'
 import { OrderStatus, OrderReturnStatus } from '@/types/enums'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
-import { formatDateTime } from '@/utils/format'
+import { formatDateTime, formatCurrency } from '@/utils/format'
 
 const RETURN_ELIGIBLE_STATUSES = new Set<string>([
   OrderStatus.Delivered,
@@ -109,9 +112,6 @@ export default function OrderDetailPage() {
 
   // Dispute modal state
   const [disputeModalOpen, setDisputeModalOpen] = useState(false)
-  const [disputeReason, setDisputeReason] = useState('')
-  const [disputeDescription, setDisputeDescription] = useState('')
-  const createReport = useCreateReport()
   const confirmSellerOrder = useConfirmSellerOrder()
   const markPickedUp = useMarkOrderPickedUp()
   const markOnDelivering = useMarkOrderOnDelivering()
@@ -163,14 +163,17 @@ export default function OrderDetailPage() {
   const canRequestReturn =
     RETURN_ELIGIBLE_STATUSES.has(order.status) && !order.return
 
-  // When a direct shipment is attached, the buyer delivered-state actions
-  // live inside the direct shipment panel. Hide the generic legacy CTAs
-  // (Accept & Release Funds, Raise Dispute, Request Return, Confirm Delivery
-  // for Warranty) while the order is still in the decision/delivery phase.
-  // They come back once the order is completed so warranty/return flows
-  // still work post-acceptance.
+  // When a direct shipment OR warehouse outbound shipment is attached,
+  // the buyer delivered-state actions live on their respective shipment
+  // pages (direct-shipment panel or QR-gated outbound receive page).
+  // Hide the generic legacy CTAs (Accept & Release Funds, Raise Dispute,
+  // Request Return, Confirm Delivery for Warranty) while the order is
+  // still in the decision/delivery phase. They come back once the order
+  // is completed so warranty/return flows still work post-acceptance.
   const hideLegacyDelivered =
-    isBuyer && !!order.directShipment && order.status !== OrderStatus.Completed
+    isBuyer &&
+    (!!order.directShipment || !!(order as any).warehouseOutboundShipment) &&
+    order.status !== OrderStatus.Completed
 
   // Decision window open helper — buyer can still accept / dispute.
   const decisionWindowEndsAtStr = (order as any).decisionWindowEndsAt as string | undefined
@@ -190,8 +193,6 @@ export default function OrderDetailPage() {
     }
   }
   const handleOpenDispute = () => {
-    setDisputeReason('')
-    setDisputeDescription('')
     setDisputeModalOpen(true)
   }
 
@@ -206,6 +207,19 @@ export default function OrderDetailPage() {
       <Typography.Title level={isMobile ? 3 : 2} style={{ marginBottom: isMobile ? 16 : 24 }}>
         {t('orderDetail', 'Order Detail')} #{order.orderNumber}
       </Typography.Title>
+
+      {/* Active dispute banner */}
+      <ActiveDisputeBanner
+        show={
+          !!(order as any).activeDispute ||
+          !!(order.warehouseOutboundShipment?.hasActiveDispute) ||
+          order.directShipment?.status === 'disputed'
+        }
+        disputeId={(order as any).activeDispute?.id ?? (order as any).activeDisputeId}
+        disputeNumber={(order as any).activeDispute?.disputeNumber}
+        disputeStatus={(order as any).activeDispute?.status}
+        context={t('order', 'order')}
+      />
 
       {/* Escrow decision window banner — suppressed when the direct-shipment
           panel owns the delivered-state CTAs, and for sellers (seller view
@@ -252,6 +266,108 @@ export default function OrderDetailPage() {
         onAcceptRelease={isBuyer ? handleAcceptRelease : undefined}
         onDispute={isBuyer && order.status !== OrderStatus.Completed ? handleOpenDispute : undefined}
       />
+
+      {/* Buyer-facing warehouse outbound shipment panel — compact summary.
+          All actions now live on /me/outbound-shipments/:shipmentId. */}
+      {isBuyer && !!order.warehouseOutboundShipment && (() => {
+        const ws = order.warehouseOutboundShipment!
+        return (
+          <Card
+            title={t('warehouseOutbound.title', 'Shipment Detail')}
+            style={{ marginBottom: isMobile ? 16 : 24 }}
+          >
+            <Descriptions column={isMobile ? 1 : { xs: 1, sm: 2 }} bordered size="small">
+              <Descriptions.Item label={t('warehouseOutbound.shipmentId', 'Shipment')}>
+                <Typography.Text strong copyable={{ text: ws.shipmentId }}>
+                  {ws.shipmentId.slice(0, 8)}…
+                </Typography.Text>
+              </Descriptions.Item>
+              <Descriptions.Item label={t('statusLabel', 'Status')}>
+                <StatusBadge status={ws.status} />
+              </Descriptions.Item>
+              {ws.clientOrderCode && (
+                <Descriptions.Item label={t('warehouseOutbound.internalTracking', 'Internal tracking')}>
+                  <Typography.Text copyable style={{ fontFamily: 'monospace' }}>
+                    {ws.clientOrderCode}
+                  </Typography.Text>
+                </Descriptions.Item>
+              )}
+              {ws.carrierTrackingNumber && (
+                <Descriptions.Item label={t('warehouseOutbound.carrierTracking', 'Carrier tracking')}>
+                  {ws.carrierTrackingNumber}
+                </Descriptions.Item>
+              )}
+              {ws.externalCarrierName && (
+                <Descriptions.Item label={t('warehouseOutbound.carrier', 'Carrier')}>
+                  {ws.externalCarrierName}
+                </Descriptions.Item>
+              )}
+              <Descriptions.Item label={t('warehouseOutbound.provider', 'Provider')}>
+                {ws.providerCode}
+              </Descriptions.Item>
+              {ws.dispatchedAt && (
+                <Descriptions.Item label={t('warehouseOutbound.dispatchedAt', 'Dispatched')}>
+                  {formatDateTime(ws.dispatchedAt)}
+                </Descriptions.Item>
+              )}
+              {ws.deliveredAt && (
+                <Descriptions.Item label={t('warehouseOutbound.deliveredAt', 'Delivered')}>
+                  {formatDateTime(ws.deliveredAt)}
+                </Descriptions.Item>
+              )}
+              {ws.buyerReceivedPackageAt && (
+                <Descriptions.Item label={t('warehouseOutbound.buyerReceivedAt', 'Received At')}>
+                  {formatDateTime(ws.buyerReceivedPackageAt)}
+                </Descriptions.Item>
+              )}
+              {ws.buyerAcceptedAt && (
+                <Descriptions.Item label={t('warehouseOutbound.buyerAcceptedAt', 'Accepted At')}>
+                  {formatDateTime(ws.buyerAcceptedAt)}
+                </Descriptions.Item>
+              )}
+            </Descriptions>
+            {ws.hasActiveDispute && (
+              <Alert
+                type="info"
+                showIcon
+                style={{ marginTop: 12 }}
+                message={t(
+                  'warehouseOutbound.activeDispute',
+                  'A dispute is already open for this order',
+                )}
+              />
+            )}
+            {!ws.hasBuyerReceiptProof && (
+              <>
+                <div style={{ marginTop: 12 }}>
+                  <Typography.Text type="secondary">
+                    {t('warehouseOutbound.scanQrGuidance', 'When the parcel arrives, scan the QR on the label to confirm receipt.')}
+                  </Typography.Text>
+                </div>
+                <div style={{ marginTop: 8 }}>
+                  <Button type="link" style={{ paddingLeft: 0 }} onClick={() => navigate(`/me/outbound-shipments/${ws.shipmentId}`)}>
+                    {t('warehouseOutbound.viewShipmentTracking', 'View shipment tracking')}
+                  </Button>
+                </div>
+              </>
+            )}
+            {ws.hasBuyerReceiptProof && (
+              <OrderActionRow style={{ marginTop: 16 }}>
+                {ws.canAccept && (
+                  <Button type="primary" size="middle" onClick={handleAcceptRelease} loading={confirmOrderReceipt.isPending}>
+                    {t('warehouseOutbound.acceptItem', 'Inspected and Accept Item')}
+                  </Button>
+                )}
+                {ws.canOpenDispute && !ws.hasActiveDispute && (
+                  <Button danger size="middle" onClick={handleOpenDispute}>
+                    {t('warehouseOutbound.reportIssue', 'Report Issue / Open Dispute')}
+                  </Button>
+                )}
+              </OrderActionRow>
+            )}
+          </Card>
+        )
+      })()}
 
       {/* Buyer-facing direct shipment panel — only when the seller uses the
           self-ship flow and a shipment record exists. Mirrors the seller
@@ -324,42 +440,46 @@ export default function OrderDetailPage() {
                   description={ds.manualReviewReason ?? undefined}
                 />
               )}
-              <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <Button icon={<QrcodeOutlined />} onClick={() => navigate('/me/shipments/scan')}>
-                  {t('directShipment.scanParcelQr', 'Scan Parcel QR')}
-                </Button>
-                <Button onClick={() => navigate(`/me/shipments/${ds.id}`)}>
-                  {t('directShipment.viewShipment', 'View Shipment')}
-                </Button>
-                {canShowActions && !ds.buyerReceivedPackageAt && (ds.buyerDeliveryPhotos?.length ?? 0) === 0 && (
-                  <Button
-                    type="primary"
-                    onClick={() => navigate(`/me/shipments/${ds.id}/receive`)}
-                  >
-                    {t('directShipment.acknowledgeReceived', 'Đã nhận kiện')}
+              <div style={{ marginTop: 12 }}>
+                <OrderActionRow>
+                  <Button size="small" icon={<QrcodeOutlined />} onClick={() => navigate('/me/shipments/scan')}>
+                    {t('directShipment.scanParcelQr', 'Scan Parcel QR')}
                   </Button>
-                )}
+                  <Button size="small" onClick={() => navigate(`/me/shipments/${ds.id}`)}>
+                    {t('directShipment.viewShipment', 'View Shipment')}
+                  </Button>
+                </OrderActionRow>
                 {canShowActions && (
-                  <Popconfirm
-                    title={t(
-                      'directShipment.confirmAndAcceptConfirm',
-                      'Xác nhận đã kiểm tra và chấp nhận hàng? Tiền sẽ được giải ngân cho người bán.',
+                  <OrderActionRow style={{ marginTop: 8 }}>
+                    {!ds.buyerReceivedPackageAt && (ds.buyerDeliveryPhotos?.length ?? 0) === 0 && (
+                      <Button
+                        type="primary"
+                        size="middle"
+                        onClick={() => navigate(`/me/shipments/${ds.id}/receive`)}
+                      >
+                        {t('directShipment.acknowledgeReceived', 'Đã nhận kiện')}
+                      </Button>
                     )}
-                    onConfirm={handleAcceptRelease}
-                  >
-                    <Button type="primary" loading={confirmOrderReceipt.isPending}>
-                      {t('directShipment.confirmAndAccept', 'Đã kiểm tra và chấp nhận hàng')}
+                    <Popconfirm
+                      title={t(
+                        'directShipment.confirmAndAcceptConfirm',
+                        'Xác nhận đã kiểm tra và chấp nhận hàng? Tiền sẽ được giải ngân cho người bán.',
+                      )}
+                      onConfirm={handleAcceptRelease}
+                    >
+                      <Button type="primary" size="middle" loading={confirmOrderReceipt.isPending}>
+                        {t('directShipment.confirmAndAccept', 'Đã kiểm tra và chấp nhận hàng')}
+                      </Button>
+                    </Popconfirm>
+                    <Button
+                      danger
+                      size="middle"
+                      icon={<WarningOutlined />}
+                      onClick={handleOpenDispute}
+                    >
+                      {t('directShipment.openDispute', 'Có vấn đề / mở dispute')}
                     </Button>
-                  </Popconfirm>
-                )}
-                {canShowActions && (
-                  <Button
-                    danger
-                    icon={<WarningOutlined />}
-                    onClick={handleOpenDispute}
-                  >
-                    {t('directShipment.openDispute', 'Có vấn đề / mở dispute')}
-                  </Button>
+                  </OrderActionRow>
                 )}
               </div>
             </Card>
@@ -370,13 +490,13 @@ export default function OrderDetailPage() {
           record. Buyer still needs a one-click path to accept / dispute and
           reach the shipments hub. Mirrors the direct-shipment panel CTAs
           without the "Đã nhận kiện" acknowledge button (no shipment entity). */}
-      {isBuyer && !order.directShipment && order.status === OrderStatus.Delivered && decisionWindowOpen && !(order as any).activeDispute && (
+      {isBuyer && !order.directShipment && !(order as any).warehouseOutboundShipment && order.status === OrderStatus.Delivered && decisionWindowOpen && !(order as any).activeDispute && (
         <Card
           title={t('directShipment.shipmentDetail', 'Shipment Detail')}
           style={{ marginBottom: isMobile ? 16 : 24 }}
         >
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <Button icon={<QrcodeOutlined />} onClick={() => navigate('/me/shipments/scan')}>
+          <OrderActionRow>
+            <Button size="small" icon={<QrcodeOutlined />} onClick={() => navigate('/me/shipments/scan')}>
               {t('directShipment.scanParcelQr', 'Scan Parcel QR')}
             </Button>
             <Popconfirm
@@ -386,14 +506,14 @@ export default function OrderDetailPage() {
               )}
               onConfirm={handleAcceptRelease}
             >
-              <Button type="primary" loading={confirmOrderReceipt.isPending}>
+              <Button type="primary" size="middle" loading={confirmOrderReceipt.isPending}>
                 {t('directShipment.confirmAndAccept', 'Đã kiểm tra và chấp nhận hàng')}
               </Button>
             </Popconfirm>
-            <Button danger icon={<WarningOutlined />} onClick={handleOpenDispute}>
+            <Button danger size="middle" icon={<WarningOutlined />} onClick={handleOpenDispute}>
               {t('directShipment.openDispute', 'Có vấn đề / mở dispute')}
             </Button>
-          </div>
+          </OrderActionRow>
         </Card>
       )}
 
@@ -621,6 +741,23 @@ export default function OrderDetailPage() {
           <Descriptions.Item label={t('totalAmount', 'Total Amount')}>
             <PriceDisplay amount={order.totalAmount} currency={order.currency} size="small" />
           </Descriptions.Item>
+          {order.depositAppliedAmount != null && order.depositAppliedAmount > 0 && (
+            <>
+              <Descriptions.Item label={t('depositApplied', 'Deposit applied')}>
+                <Typography.Text type="success">
+                  −{formatCurrency(order.depositAppliedAmount, order.currency)}
+                </Typography.Text>
+              </Descriptions.Item>
+              <Descriptions.Item label={t('amountDue', 'Amount due')}>
+                <Typography.Text strong>
+                  {formatCurrency(
+                    Math.max(0, (order.totalAmount ?? 0) - (order.depositAppliedAmount ?? 0)),
+                    order.currency,
+                  )}
+                </Typography.Text>
+              </Descriptions.Item>
+            </>
+          )}
           <Descriptions.Item label={t('currency', 'Currency')}>
             {order.currency}
           </Descriptions.Item>
@@ -973,7 +1110,8 @@ export default function OrderDetailPage() {
           </>
         ) : canRequestReturn && !hideLegacyDelivered ? (
           <Button
-            type="primary"
+            type="default"
+            size="middle"
             icon={<RollbackOutlined />}
             onClick={() => navigate(`${prefix}/orders/${order.id}/return`)}
           >
@@ -987,9 +1125,9 @@ export default function OrderDetailPage() {
       </Card>
 
       {/* Action buttons */}
-      <Space>
+      <OrderActionRow>
         {order.status === OrderStatus.PendingPayment && (
-          <Button type="primary" onClick={() => navigate(`/checkout/${order.id}`)}>
+          <Button type="primary" size="middle" onClick={() => navigate(`/checkout/${order.id}`)}>
             {t('payNow', 'Pay Now')}
           </Button>
         )}
@@ -1000,12 +1138,9 @@ export default function OrderDetailPage() {
           !(order as any).activeDispute && (
             <Button
               danger
+              size="middle"
               icon={<WarningOutlined />}
-              onClick={() => {
-                setDisputeReason('')
-                setDisputeDescription('')
-                setDisputeModalOpen(true)
-              }}
+              onClick={() => setDisputeModalOpen(true)}
             >
               {t('openDispute', 'Report Issue / Open Dispute')}
             </Button>
@@ -1015,17 +1150,14 @@ export default function OrderDetailPage() {
           !(order as any).activeDispute && (
             <Button
               danger
+              size="middle"
               icon={<WarningOutlined />}
-              onClick={() => {
-                setDisputeReason('')
-                setDisputeDescription('')
-                setDisputeModalOpen(true)
-              }}
+              onClick={() => setDisputeModalOpen(true)}
             >
               {t('sellerReportIssue', 'Report Buyer Issue')}
             </Button>
           )}
-      </Space>
+      </OrderActionRow>
 
       {/* Reject Return Modal */}
       <Modal
@@ -1097,79 +1229,13 @@ export default function OrderDetailPage() {
       </Modal>
 
       {/* Open Dispute Modal */}
-      <Modal
-        title={t('openDispute', 'Report Issue / Open Dispute')}
+      <CreateDisputeModal
+        targetType="order"
+        targetId={order.id}
+        orderId={order.id}
         open={disputeModalOpen}
-        onCancel={() => setDisputeModalOpen(false)}
-        onOk={async () => {
-          if (!disputeReason || disputeDescription.trim().length < 20) return
-          try {
-            await createReport.mutateAsync({
-              entityType: 'order',
-              entityId: order.id,
-              reasonCode: disputeReason,
-              description: disputeDescription.trim(),
-            })
-            message.success(t('disputeCreated', 'Dispute created successfully'))
-            setDisputeModalOpen(false)
-            navigate(`${prefix}/disputes`)
-          } catch {
-            message.error(t('disputeError', 'Failed to create dispute'))
-          }
-        }}
-        okText={tc('action.confirm', 'Confirm')}
-        okButtonProps={{
-          danger: true,
-          loading: createReport.isPending,
-          disabled: !disputeReason || disputeDescription.trim().length < 20,
-        }}
-        centered
-      >
-        <Form layout="vertical">
-          <Form.Item label={t('disputeReason', 'Reason')} required>
-            <Select
-              value={disputeReason || undefined}
-              onChange={(val) => setDisputeReason(val)}
-              placeholder={t('selectDisputeReason', 'Select a reason')}
-              options={isSeller ? [
-                { value: 'buyer_non_payment', label: t('disputeReason.buyerNonPayment', 'Buyer non-payment') },
-                { value: 'buyer_fraud', label: t('disputeReason.buyerFraud', 'Buyer fraud') },
-                { value: 'communication_issue', label: t('disputeReason.communicationIssue', 'Communication issue') },
-                { value: 'other', label: t('disputeReason.other', 'Other') },
-              ] : [
-                { value: 'item_not_as_described', label: t('disputeReason.notAsDescribed', 'Item not as described') },
-                { value: 'item_damaged', label: t('disputeReason.damaged', 'Item damaged') },
-                { value: 'item_not_received', label: t('disputeReason.notReceived', 'Item not received') },
-                { value: 'wrong_item', label: t('disputeReason.wrongItem', 'Wrong item') },
-                { value: 'other', label: t('disputeReason.other', 'Other') },
-              ]}
-            />
-          </Form.Item>
-          <Form.Item
-            label={t('disputeDescription', 'Description')}
-            required
-            help={
-              disputeDescription.trim().length > 0 && disputeDescription.trim().length < 20
-                ? t('disputeDescriptionMinLength', 'Please enter at least 20 characters')
-                : undefined
-            }
-            validateStatus={
-              disputeDescription.trim().length > 0 && disputeDescription.trim().length < 20
-                ? 'error'
-                : undefined
-            }
-          >
-            <Input.TextArea
-              rows={4}
-              value={disputeDescription}
-              onChange={(e) => setDisputeDescription(e.target.value)}
-              placeholder={t('disputeDescriptionPlaceholder', 'Describe the issue in detail (min. 20 characters)...')}
-              showCount
-              maxLength={1000}
-            />
-          </Form.Item>
-        </Form>
-      </Modal>
+        onClose={() => setDisputeModalOpen(false)}
+      />
     </div>
   )
 }

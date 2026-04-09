@@ -14,13 +14,14 @@ import type { ColumnsType, TablePaginationConfig } from 'antd/es/table'
 import dayjs from 'dayjs'
 
 const STATUS_COLOR_MAP: Record<string, string> = {
-  [DisputeStatus.Draft]: 'default',
   [DisputeStatus.Open]: 'blue',
+  [DisputeStatus.AwaitingRespondent]: 'gold',
+  [DisputeStatus.AwaitingEvidence]: 'gold',
   [DisputeStatus.UnderReview]: 'orange',
-  [DisputeStatus.AwaitingResponse]: 'gold',
-  [DisputeStatus.Escalated]: 'red',
+  [DisputeStatus.AwaitingInternalReview]: 'orange',
+  [DisputeStatus.AwaitingResolutionApproval]: 'purple',
   [DisputeStatus.Resolved]: 'green',
-  [DisputeStatus.Closed]: 'default',
+  [DisputeStatus.Rejected]: 'red',
   [DisputeStatus.Cancelled]: 'default',
 }
 
@@ -33,13 +34,14 @@ const PRIORITY_COLOR_MAP: Record<string, string> = {
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All' },
-  { value: DisputeStatus.Draft, label: 'Draft' },
   { value: DisputeStatus.Open, label: 'Open' },
+  { value: DisputeStatus.AwaitingRespondent, label: 'Awaiting Respondent' },
+  { value: DisputeStatus.AwaitingEvidence, label: 'Awaiting Evidence' },
   { value: DisputeStatus.UnderReview, label: 'Under Review' },
-  { value: DisputeStatus.AwaitingResponse, label: 'Awaiting Response' },
-  { value: DisputeStatus.Escalated, label: 'Escalated' },
+  { value: DisputeStatus.AwaitingInternalReview, label: 'Awaiting Internal Review' },
+  { value: DisputeStatus.AwaitingResolutionApproval, label: 'Awaiting Resolution Approval' },
   { value: DisputeStatus.Resolved, label: 'Resolved' },
-  { value: DisputeStatus.Closed, label: 'Closed' },
+  { value: DisputeStatus.Rejected, label: 'Rejected' },
   { value: DisputeStatus.Cancelled, label: 'Cancelled' },
 ]
 

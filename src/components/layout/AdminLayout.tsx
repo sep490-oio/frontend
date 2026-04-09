@@ -21,6 +21,7 @@ import {
   MenuOutlined,
   UserOutlined,
   GlobalOutlined,
+  ExceptionOutlined,
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
@@ -53,6 +54,7 @@ export function AdminLayout() {
     { key: '/admin/sellers', icon: <ShopOutlined />, label: t('menu.sellers', 'Sellers') },
     { key: '/admin/items/review', icon: <AuditOutlined />, label: t('menu.itemReview', 'Item Review') },
     { key: '/admin/moderation', icon: <AlertOutlined />, label: t('menu.moderation', 'Moderation') },
+    { key: '/admin/disputes', icon: <ExceptionOutlined />, label: t('menu.disputes', 'Disputes') },
     { key: '/admin/auctions/completed', icon: <TrophyOutlined />, label: t('menu.completedAuctions', 'Completed Auctions') },
     { key: '/admin/monitoring', icon: <MonitorOutlined />, label: t('menu.monitoring', 'Monitoring') },
     { key: '/admin/payments', icon: <DollarOutlined />, label: t('menu.payments', 'Payments') },

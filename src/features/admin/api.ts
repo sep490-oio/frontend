@@ -557,31 +557,6 @@ export function useAdminDisputes(params?: PaginationParams & { status?: string }
   })
 }
 
-export function useAdminResolveDispute() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async ({
-      id,
-      resolutionType,
-      amount,
-      notes,
-    }: {
-      id: string
-      resolutionType: string
-      amount?: number
-      notes?: string
-    }) => {
-      const res = await apiClient.post(`/admin/disputes/${id}/resolve`, { resolutionType, amount, notes })
-      return res.data
-    },
-    onSuccess: async () => {
-      await invalidateAndRefetchActive(qc, [
-        queryKeys.admin.disputesRoot(),
-        queryKeys.disputes.all,
-      ])
-    },
-  })
-}
 
 // ── Payments ─────────────────────────────────────────────────────────
 

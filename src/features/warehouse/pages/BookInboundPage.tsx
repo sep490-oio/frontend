@@ -1,11 +1,14 @@
 import { Typography, Form, Input, Select, InputNumber, Button, Card, Space, App, Divider, Alert } from 'antd'
-import { ArrowLeftOutlined } from '@ant-design/icons'
+import { ArrowLeftOutlined, PictureOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
 import { useTranslation } from 'react-i18next'
 import { useBookInbound } from '@/features/warehouse/api'
 import { useMyItems } from '@/features/item/api'
+import { useAddresses, useCurrentUser, useCurrentUserProfile } from '@/features/user/api'
+import { useMySellerProfile } from '@/features/seller/api'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { useEffect, useMemo, useRef } from 'react'
 
 const SHIPMENT_MODE_OPTIONS = [
   { label: 'Platform Managed (GHN)', value: 'platform_managed' },
@@ -28,16 +31,119 @@ export default function BookInboundPage() {
   const [form] = Form.useForm()
 
   const bookInbound = useBookInbound()
-  const { data: itemsData, isLoading: itemsLoading } = useMyItems({ pageNumber: 1, pageSize: 100 })
+
+  // Sender autofill sources — mirror the precedence used on CheckoutPage:
+  //   1. seller's default address (or first address)
+  //   2. seller profile store name / current profile name
+  //   3. current user phone
+  const { data: addresses } = useAddresses()
+  const { data: currentUser } = useCurrentUser()
+  const { data: currentProfile } = useCurrentUserProfile()
+  const { data: mySellerProfile } = useMySellerProfile()
+  // Only show items that are actually waiting to be shipped in for platform
+  // verification. The picker uses three server-side conditions ANDed together:
+  //   - status === 'pending_verify'
+  //   - RequiresPlatformInspection === true (canonical Item flag, not Auction)
+  //   - hasActiveInbound === false (item not currently in transit; cancelled/failed
+  //     prior shipments do not block re-attempts)
+  // The backend BookInboundShipmentCommandHandler enforces the same rules as a
+  // last-line guard.
+  const { data: itemsData, isLoading: itemsLoading } = useMyItems({
+    pageNumber: 1,
+    pageSize: 100,
+    status: 'pending_verify',
+    requiresPlatformInspection: true,
+    hasActiveInbound: false,
+  })
 
   const allItems = itemsData?.items ?? []
   const itemOptions = allItems.map((item) => ({
     label: item.title,
     value: item.id,
   }))
+  const hasEligibleItems = allItems.length > 0
 
   const shipmentMode = Form.useWatch('shipmentMode', form)
   const isExternal = shipmentMode === 'external_carrier'
+
+  // Selected item preview — reflects current Select value in selection order.
+  const selectedItemIds: string[] = Form.useWatch('itemIds', form) ?? []
+  const selectedItems = selectedItemIds
+    .map((sid) => allItems.find((i) => i.id === sid))
+    .filter((x): x is NonNullable<typeof x> => !!x)
+
+  const getPrimaryImageUrl = (item: (typeof allItems)[number]): string | undefined => {
+    const images = item.images ?? []
+    const primary = images.find((img) => img.isPrimary) ?? images[0]
+    return primary?.thumbnailUrl ?? primary?.url
+  }
+
+  // Build the sender autofill payload. Default address wins; otherwise fall
+  // back to profile/user identity with empty address fields.
+  const autofillSenderValues = useMemo(() => {
+    const list = addresses ?? []
+    const defaultAddress = list.find((a) => a.isDefault) ?? list[0]
+
+    if (defaultAddress) {
+      return {
+        senderName: defaultAddress.recipientName ?? '',
+        senderPhone: defaultAddress.phoneNumber ?? '',
+        senderAddress: defaultAddress.street ?? '',
+        senderWard: defaultAddress.ward ?? '',
+        senderDistrict: defaultAddress.district ?? '',
+        senderProvince: defaultAddress.city ?? '',
+        _fromDefaultAddress: true as const,
+      }
+    }
+
+    const fallbackName =
+      mySellerProfile?.storeName?.trim() ||
+      currentProfile?.fullName?.trim() ||
+      [currentProfile?.firstName, currentProfile?.lastName].filter(Boolean).join(' ').trim() ||
+      currentProfile?.displayName ||
+      currentUser?.userName ||
+      ''
+
+    if (!fallbackName && !currentUser?.phoneNumber) {
+      return null
+    }
+
+    return {
+      senderName: fallbackName,
+      senderPhone: currentUser?.phoneNumber ?? '',
+      senderAddress: '',
+      senderWard: '',
+      senderDistrict: '',
+      senderProvince: '',
+      _fromDefaultAddress: false as const,
+    }
+  }, [addresses, currentUser, currentProfile, mySellerProfile])
+
+  // Only auto-fill on first mount when the user has not touched sender fields
+  // yet. Avoid clobbering manual edits; avoid re-running when items/mode change.
+  const senderAutofilledRef = useRef(false)
+  useEffect(() => {
+    if (senderAutofilledRef.current) return
+    if (!autofillSenderValues) return
+    const current = form.getFieldsValue([
+      'senderName',
+      'senderPhone',
+      'senderAddress',
+      'senderWard',
+      'senderDistrict',
+      'senderProvince',
+    ]) as Record<string, string | undefined>
+    const hasAnyValue = Object.values(current).some((v) => v && v.trim().length > 0)
+    if (hasAnyValue) {
+      senderAutofilledRef.current = true
+      return
+    }
+    const { _fromDefaultAddress: _omit, ...values } = autofillSenderValues
+    form.setFieldsValue(values)
+    senderAutofilledRef.current = true
+  }, [autofillSenderValues, form])
+
+  const senderPrefilledFromDefault = autofillSenderValues?._fromDefaultAddress === true
 
   const onFinish = async (values: {
     itemIds: string[]
@@ -59,12 +165,14 @@ export default function BookInboundPage() {
   }) => {
     const isExt = values.shipmentMode === 'external_carrier'
 
+    // Per-item weightGrams is intentionally omitted — the backend treats the
+    // top-level weight as the single source of truth for the whole parcel and
+    // distributes weight internally when carrier metadata needs per-item values.
     const items = values.itemIds.map((itemId) => {
       const item = allItems.find((i) => i.id === itemId)
       return {
         itemId,
         itemPrice: (item as any)?.price ?? 0,
-        weightGrams: values.weight,
       }
     })
 
@@ -90,9 +198,9 @@ export default function BookInboundPage() {
         notes: values.notes,
         ghnHandlingNote: isExt ? undefined : values.ghnHandlingNote,
       })
-      message.success(t('bookSuccess', 'Inbound shipment booked successfully'))
+      message.success(t('bookSuccess', 'Inbound package booked successfully'))
       const firstResult = results[0]
-      navigate(`${prefix}/warehouse/inbound/${firstResult.id}`)
+      navigate(`${prefix}/warehouse/inbound/packages/${encodeURIComponent(firstResult.clientOrderCode)}`)
     } catch {
       message.error(t('bookError', 'Failed to book inbound shipment'))
     }
@@ -115,7 +223,22 @@ export default function BookInboundPage() {
           onFinish={onFinish}
           initialValues={{ weight: 1, length: 10, width: 10, height: 10, shipmentMode: 'platform_managed' }}
         >
-          {/* Item Selection — multi-select */}
+          {/* Item Selection — multi-select. Only items currently awaiting
+              platform verification are listed: status = pending_verify AND
+              Item.RequiresPlatformInspection = true AND no active inbound
+              shipment (cancelled/failed prior attempts don't block). */}
+          {!itemsLoading && !hasEligibleItems && (
+            <Alert
+              type="info"
+              showIcon
+              style={{ marginBottom: 16 }}
+              message={t('noEligibleInboundItemsTitle', 'No items are waiting for platform inspection')}
+              description={t(
+                'noEligibleInboundItemsDesc',
+                'Only items in status "pending_verify" that were submitted for platform verification and do not already have an active inbound shipment can be shipped in. Submit an item for platform verification first.',
+              )}
+            />
+          )}
           <Form.Item
             name="itemIds"
             label={t('selectItems', 'Select Items')}
@@ -126,10 +249,97 @@ export default function BookInboundPage() {
               options={itemOptions}
               loading={itemsLoading}
               showSearch
+              disabled={!hasEligibleItems}
               optionFilterProp="label"
-              placeholder={t('selectItemsPlaceholder', 'Search and select items to ship')}
+              placeholder={
+                hasEligibleItems
+                  ? t('selectItemsPlaceholder', 'Search and select items to ship')
+                  : t('noEligibleInboundItemsPlaceholder', 'No eligible items to ship')
+              }
             />
           </Form.Item>
+
+          {/* Selected items preview — compact cards for each chosen item */}
+          {selectedItems.length > 0 && (
+            <div style={{ marginBottom: 24 }}>
+              <Typography.Text
+                style={{
+                  display: 'block',
+                  marginBottom: 8,
+                  fontSize: 12,
+                  color: 'var(--color-text-secondary)',
+                  fontWeight: 500,
+                }}
+              >
+                {t('selectedItems', 'Selected Items')} ({selectedItems.length})
+              </Typography.Text>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))',
+                  gap: 8,
+                }}
+              >
+                {selectedItems.map((item) => {
+                  const imgUrl = getPrimaryImageUrl(item)
+                  return (
+                    <div
+                      key={item.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                        padding: 8,
+                        borderRadius: 8,
+                        border: '1px solid var(--color-border-light, #eee)',
+                        background: 'var(--color-bg-secondary, #fafafa)',
+                      }}
+                    >
+                      {imgUrl ? (
+                        <img
+                          src={imgUrl}
+                          alt={item.title}
+                          style={{
+                            width: 64,
+                            height: 64,
+                            borderRadius: 6,
+                            objectFit: 'cover',
+                            flexShrink: 0,
+                            background: '#f0f0f0',
+                          }}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            width: 64,
+                            height: 64,
+                            borderRadius: 6,
+                            flexShrink: 0,
+                            background: '#f0f0f0',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'var(--color-text-tertiary, #bbb)',
+                            fontSize: 22,
+                          }}
+                        >
+                          <PictureOutlined />
+                        </div>
+                      )}
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <Typography.Text
+                          ellipsis={{ tooltip: item.title }}
+                          style={{ display: 'block', fontWeight: 500, fontSize: 13 }}
+                        >
+                          {item.title}
+                        </Typography.Text>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Shipment Mode */}
           <Form.Item
@@ -169,6 +379,19 @@ export default function BookInboundPage() {
           )}
 
           <Divider>{t('senderInfo', 'Sender Information')}</Divider>
+
+          {senderPrefilledFromDefault && (
+            <Typography.Text
+              style={{
+                display: 'block',
+                marginBottom: 12,
+                fontSize: 12,
+                color: 'var(--color-text-secondary)',
+              }}
+            >
+              {t('senderPrefilledHint', 'Pre-filled from your default address. You can edit any field before submitting.')}
+            </Typography.Text>
+          )}
 
           <Form.Item
             name="senderName"
@@ -212,8 +435,23 @@ export default function BookInboundPage() {
           }}>
             <Form.Item
               name="weight"
-              label={t('weight', 'Weight (g)')}
-              rules={[{ required: true, message: t('weightRequired', 'Required') }]}
+              label={t('totalPackageWeight', 'Total package weight (g)')}
+              help={t('totalPackageWeightHelp', 'Applies to the whole parcel for all selected items')}
+              rules={[
+                { required: true, message: t('weightRequired', 'Required') },
+                {
+                  validator: async (_, value) => {
+                    if (value == null) return
+                    if (value <= 0) throw new Error(t('weightMustBePositive', 'Weight must be greater than 0'))
+                    const count = (form.getFieldValue('itemIds') as string[] | undefined)?.length ?? 0
+                    if (count > 0 && value < count) {
+                      throw new Error(
+                        t('weightMinPerItem', 'Total weight must be at least {{count}}g (1g per selected item).', { count }),
+                      )
+                    }
+                  },
+                },
+              ]}
             >
               <InputNumber min={1} max={50000} style={{ width: '100%' }} />
             </Form.Item>

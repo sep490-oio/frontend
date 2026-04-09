@@ -1,5 +1,34 @@
 import DOMPurify, { type Config } from 'dompurify'
 
+/**
+ * Extract plain-text excerpt from an HTML string for use in compact previews.
+ * Use only for compact previews; full descriptions must go through `SafeHtmlRenderer`.
+ */
+export function htmlToPlainTextExcerpt(
+  html: string | null | undefined,
+  maxLength = 160,
+): string {
+  if (!html) return ''
+  let text: string
+  if (typeof window === 'undefined') {
+    // SSR / non-browser fallback: strip tags with regex
+    text = html.replace(/<[^>]*>/g, ' ')
+  } else {
+    const doc = new DOMParser().parseFromString(html, 'text/html')
+    text = doc.body.textContent ?? ''
+  }
+  text = text.replace(/\s+/g, ' ').trim()
+  if (text.length > maxLength) {
+    return text.slice(0, maxLength) + '\u2026'
+  }
+  return text
+}
+
+/**
+ * Canonical renderer for HTML description fields.
+ * Never `{item.description}` directly in JSX — use this for full content or
+ * `htmlToPlainTextExcerpt` for previews.
+ */
 interface SafeHtmlRendererProps {
   html: string
   className?: string

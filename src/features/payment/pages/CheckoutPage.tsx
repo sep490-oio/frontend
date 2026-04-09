@@ -29,6 +29,7 @@ import {
 import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useTermsGate } from '@/features/user/hooks/useTermsGate'
+import { TermsAcceptanceModal } from '@/components/terms/TermsAcceptanceModal'
 import { useOrderById, useUpdateOrderShipping } from '@/features/order/api'
 import { OrderItemSummary } from '@/features/order/components/OrderItemSummary'
 import { usePaymentMethods, useCheckout, useCreateVnPayUrl, useWallet } from '@/features/payment/api'
@@ -144,7 +145,12 @@ export default function CheckoutPage() {
   const selectedMethod = methods?.find((m: PaymentMethodDto) => m.id === selectedMethodId)
   const isWalletSelected = selectedMethodId === WALLET_METHOD_ID
 
-  const orderAmount = order?.totalAmount ?? 0
+  const grossAmount = order?.totalAmount ?? 0
+  const depositApplied = order?.depositAppliedAmount ?? 0
+  // Amount due after subtracting any buy-now reservation deposit held on the
+  // order. BE is authoritative — checkout.mutate doesn't resend the amount; we
+  // only use this for display + wallet-portion math.
+  const orderAmount = Math.max(0, grossAmount - depositApplied)
   const walletBalance = wallet?.availableBalance ?? 0
   const walletCoversAll = walletBalance >= orderAmount
   const walletPortion = Math.min(walletBalance, orderAmount)
@@ -182,7 +188,7 @@ export default function CheckoutPage() {
   }
 
   const handlePay = async () => {
-    if (bidderTerms.hasPending) { bidderTerms.redirect(); return }
+    if (bidderTerms.hasPending) { bidderTerms.openModal(); return }
     if (!order || order.status !== 'pending_payment') return
 
     // Shipping must be validated + saved before any payment flow runs.
@@ -368,6 +374,36 @@ export default function CheckoutPage() {
             </span>
           </Descriptions.Item>
         </Descriptions>
+        {depositApplied > 0 && (
+          <div style={{ marginTop: 16, borderTop: '1px solid var(--color-border-light)', paddingTop: 12 }}>
+            <Space direction="vertical" style={{ width: '100%' }} size={6}>
+              <Flex justify="space-between">
+                <Typography.Text type="secondary">
+                  {t('grossPrice', 'Buy-now price')}
+                </Typography.Text>
+                <Typography.Text style={{ fontFamily: MONO_FONT }}>
+                  {formatCurrency(grossAmount, order.currency)}
+                </Typography.Text>
+              </Flex>
+              <Flex justify="space-between">
+                <Typography.Text type="secondary">
+                  {t('depositApplied', 'Deposit applied')}
+                </Typography.Text>
+                <Typography.Text type="success" style={{ fontFamily: MONO_FONT }}>
+                  −{formatCurrency(depositApplied, order.currency)}
+                </Typography.Text>
+              </Flex>
+              <Flex justify="space-between">
+                <Typography.Text strong>
+                  {t('amountDue', 'Amount due')}
+                </Typography.Text>
+                <Typography.Text strong style={{ fontFamily: MONO_FONT, color: 'var(--color-accent)' }}>
+                  {formatCurrency(orderAmount, order.currency)}
+                </Typography.Text>
+              </Flex>
+            </Space>
+          </div>
+        )}
       </Card>
 
       {/* Shipping Information — must be saved before payment runs */}
@@ -646,6 +682,15 @@ export default function CheckoutPage() {
           </Popconfirm>
         </Flex>
       </Card>
+
+      <TermsAcceptanceModal
+        open={bidderTerms.modalOpen}
+        onClose={bidderTerms.closeModal}
+        termType="bidder"
+        onAccepted={() => {
+          message.success(tc('termsAcceptedToast', 'Terms accepted. You can continue your checkout now.'))
+        }}
+      />
     </div>
   )
 }

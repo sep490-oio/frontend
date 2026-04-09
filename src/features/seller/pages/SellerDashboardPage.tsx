@@ -79,7 +79,17 @@ export default function SellerDashboardPage() {
 
   /* ── Derived data ────────────────────────────────────────────────── */
 
-  const itemStatuses = ['draft', 'pending', 'submitted', 'approved', 'active', 'in_auction', 'sold', 'rejected']
+  const itemStatuses = [
+    'draft',
+    'pending_verify',
+    'pending_review',
+    'pending_condition_confirmation',
+    'approved',
+    'active',
+    'in_auction',
+    'sold',
+    'rejected',
+  ]
   const auctionStatuses = ['draft', 'pending', 'scheduled', 'active', 'ended', 'sold', 'cancelled']
 
   const itemCounts = useMemo(
@@ -96,8 +106,9 @@ export default function SellerDashboardPage() {
   const activeAuctions = auctionCounts['active']
   const soldAuctions = auctionCounts['sold'] ?? 0
   const pendingReview =
-    (itemCounts['pending'] ?? 0) +
-    (itemCounts['submitted'] ?? 0)
+    (itemCounts['pending_verify'] ?? 0) +
+    (itemCounts['pending_review'] ?? 0) +
+    (itemCounts['pending_condition_confirmation'] ?? 0)
 
   const recentAuctions = useMemo(
     () => (auctionsData?.items ?? []).slice(0, 5),
@@ -106,7 +117,10 @@ export default function SellerDashboardPage() {
 
   // Pending actions
   const draftAuctions = auctionCounts['draft'] ?? 0
-  const pendingItems = (itemCounts['pending'] ?? 0) + (itemCounts['submitted'] ?? 0)
+  const pendingItems =
+    (itemCounts['pending_verify'] ?? 0) +
+    (itemCounts['pending_review'] ?? 0) +
+    (itemCounts['pending_condition_confirmation'] ?? 0)
   const hasPendingActions = draftAuctions > 0 || pendingItems > 0
 
   /* ── Loading / empty ─────────────────────────────────────────────── */
@@ -377,7 +391,7 @@ export default function SellerDashboardPage() {
                 </span>
                 <Button
                   type="link"
-                  onClick={() => navigate('/seller/items?status=pending')}
+                  onClick={() => navigate('/seller/items?status=pending_review')}
                   style={{ color: 'var(--color-accent)', padding: 0 }}
                 >
                   {t('viewAll', 'Xem tat ca')}

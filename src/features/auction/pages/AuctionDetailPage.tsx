@@ -12,7 +12,6 @@ import {
   App,
   Form,
   Breadcrumb,
-  Select,
   Input,
   Popconfirm,
   DatePicker,
@@ -23,6 +22,7 @@ import { ArrowLeftOutlined, FlagOutlined } from '@ant-design/icons'
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useTermsGate } from '@/features/user/hooks/useTermsGate'
+import { TermsAcceptanceModal } from '@/components/terms/TermsAcceptanceModal'
 import {
   useAuctionDetail,
   usePlaceBid,
@@ -59,9 +59,10 @@ import { DEFAULT_CURRENCY } from '@/utils/constants'
 import { NotificationAggregator } from '@/features/auction/utils/NotificationAggregator'
 import { AuctionDetailTabs } from '@/features/auction/components/AuctionDetailTabs'
 import { AuctionSidebar } from '@/features/auction/components/AuctionSidebar'
+import { AuctionDepositModal } from '@/features/auction/components/AuctionDepositModal'
 import { PriceHistoryChart } from '@/features/auction/components/PriceHistoryChart'
 import { SellerActionBar } from '@/features/auction/components/SellerActionBar'
-import { useCreateReport } from '@/features/dispute/api'
+import { CreateDisputeModal } from '@/features/order/components/CreateDisputeModal'
 
 // ── Qualification state helper ──────────────────────────────────────
 
@@ -181,6 +182,7 @@ export default function AuctionDetailPage() {
   const [autoBidMax, setAutoBidMax] = useState<number | null>(null)
   const [autoBidIncrement, setAutoBidIncrement] = useState<number | null>(null)
   const [buyNowConfirmOpen, setBuyNowConfirmOpen] = useState(false)
+  const [depositModalOpen, setDepositModalOpen] = useState(false)
   const [shippingModalOpen, setShippingModalOpen] = useState(false)
   const [relistModalOpen, setRelistModalOpen] = useState(false)
   const [relistForm, setRelistForm] = useState<{
@@ -190,12 +192,16 @@ export default function AuctionDetailPage() {
     endAt: dayjs.Dayjs | null
   }>({ qualificationStartAt: null, qualificationEndAt: null, startAt: null, endAt: null })
   const [reportModalOpen, setReportModalOpen] = useState(false)
-  const [reportReason, setReportReason] = useState('')
-  const [reportDescription, setReportDescription] = useState('')
   const [cancelModalOpen, setCancelModalOpen] = useState(false)
   const [chartModalOpen, setChartModalOpen] = useState(false)
   const [cancelReason, setCancelReason] = useState('')
   const [timingModalOpen, setTimingModalOpen] = useState(false)
+  const [buyNowCapModal, setBuyNowCapModal] = useState<{
+    open: boolean
+    rawBid: number
+    payableAmount: number
+    orderId?: string
+  }>({ open: false, rawBid: 0, payableAmount: 0 })
   const [timingForm, setTimingForm] = useState({
     startTime: null as dayjs.Dayjs | null,
     endTime: null as dayjs.Dayjs | null,
@@ -206,7 +212,7 @@ export default function AuctionDetailPage() {
   })
   const [submitPendingTiming, setSubmitPendingTiming] = useState(false)
   const [pendingActivation, setPendingActivation] = useState(false)
-  const createReport = useCreateReport()
+  // Report/dispute modal uses CreateDisputeModal — no inline hook needed
 
   // Qualification status — check localStorage + URL param after VnPay return
   const [searchParams] = useSearchParams()
@@ -474,23 +480,32 @@ export default function AuctionDetailPage() {
   // ── Handlers ────────────────────────────────────────────────────
 
   const handlePlaceBid = async () => {
-    if (bidderTerms.hasPending) { bidderTerms.redirect(); return }
+    if (bidderTerms.hasPending) { bidderTerms.openModal(); return }
     if (isSeller) return
     if (!id || !bidAmount) return
+    const rawBid = bidAmount
     try {
-      let result: { autoBidsCascaded?: number; finalPrice?: number; wasImmediatelyOutbid?: boolean } = {}
+      let result: Partial<import('@/types').PlaceBidResultDto> = {}
 
       if (hub.connected) {
         // Prefer SignalR for lower latency
         const idempotencyKey = crypto.randomUUID()
-        const hubResult = await hub.placeBid(bidAmount, currency, idempotencyKey)
+        const hubResult = await hub.placeBid(rawBid, currency, idempotencyKey)
         if (!hubResult.success) {
           throw new Error(hubResult.error ?? t('bidError', 'Failed to place bid'))
         }
+        result = hubResult.data ?? {}
       } else {
         // Fallback to REST when SignalR disconnected
-        result = await placeBidMutation.mutateAsync({ auctionId: id, amount: bidAmount, currency })
+        result = await placeBidMutation.mutateAsync({ auctionId: id, amount: rawBid, currency })
       }
+
+      const triggeredBuyNowCap = result.triggeredBuyNowCap === true
+      // When capped, the canonical settled price is finalPrice (= buyNowPrice),
+      // NOT the raw bid the buyer typed.
+      const effectiveAmount = triggeredBuyNowCap && typeof result.finalPrice === 'number'
+        ? result.finalPrice
+        : rawBid
 
       // Optimistic update — will be corrected by SignalR broadcast
       queryClient.setQueryData(
@@ -499,15 +514,29 @@ export default function AuctionDetailPage() {
           ...old,
           auction: {
             ...old.auction,
-            currentPrice: { ...old.auction.currentPrice, amount: bidAmount },
+            currentPrice: { ...old.auction.currentPrice, amount: effectiveAmount },
             bidCount: (old.auction.bidCount ?? 0) + 1,
           },
         } : old,
       )
-      let successMsg = `${t('bidPlaced', 'Bid placed')}: ${formatCurrency(bidAmount, currency)}`
+
+      if (triggeredBuyNowCap) {
+        // Capped sale: show dedicated modal explaining the buy-now ceiling and
+        // the payable amount. Let it own the UX instead of a toast.
+        setBuyNowCapModal({
+          open: true,
+          rawBid,
+          payableAmount: effectiveAmount,
+          orderId: result.orderId,
+        })
+        setBidAmount(null)
+        return
+      }
+
+      let successMsg = `${t('bidPlaced', 'Bid placed')}: ${formatCurrency(effectiveAmount, currency)}`
 
       if (result.autoBidsCascaded && result.autoBidsCascaded > 0) {
-        successMsg += `. ${t('autoBidsCascaded', 'Your bid triggered {{count}} auto-bids. Current price: {{price}} VND.', { count: result.autoBidsCascaded, price: formatCurrency(result.finalPrice ?? bidAmount, currency) })}`
+        successMsg += `. ${t('autoBidsCascaded', 'Your bid triggered {{count}} auto-bids. Current price: {{price}} VND.', { count: result.autoBidsCascaded, price: formatCurrency(result.finalPrice ?? effectiveAmount, currency) })}`
       }
 
       if (result.wasImmediatelyOutbid) {
@@ -562,7 +591,7 @@ export default function AuctionDetailPage() {
   }, [id, buyNowMutation, message, t, navigate])
 
   const handleDeposit = async () => {
-    if (bidderTerms.hasPending) { bidderTerms.redirect(); return }
+    if (bidderTerms.hasPending) { bidderTerms.openModal(); return }
     if (!id || !auction) return
     try {
       const depositAmount = auction.startingPrice?.amount ?? 0
@@ -584,7 +613,7 @@ export default function AuctionDetailPage() {
   }
 
   const handleWalletDeposit = async () => {
-    if (bidderTerms.hasPending) { bidderTerms.redirect(); return }
+    if (bidderTerms.hasPending) { bidderTerms.openModal(); return }
     if (!id || !auction) return
     const depositAmount = auction.startingPrice?.amount ?? 0
 
@@ -631,6 +660,8 @@ export default function AuctionDetailPage() {
     }
   }
   void _handleWalletDepositDirect
+  void handleDeposit
+  void handleWalletDeposit
 
   // ── Seller action handlers ──
   const handleSellerSubmit = () => {
@@ -771,11 +802,7 @@ const handleSellerCancel = () => {
           icon={<FlagOutlined />}
           danger
           style={{ marginBottom: isMobile ? 16 : 32, marginLeft: 12 }}
-          onClick={() => {
-            setReportReason('')
-            setReportDescription('')
-            setReportModalOpen(true)
-          }}
+          onClick={() => setReportModalOpen(true)}
         >
           {td('reportAuction', 'Report')}
         </Button>
@@ -938,10 +965,11 @@ const handleSellerCancel = () => {
             qualificationStatus={data?.currentUserParticipant?.qualificationStatus ?? (qualState === 'qualified' ? 'qualified' : undefined)}
             depositStatus={data?.currentUserParticipant?.depositStatus}
             depositAmount={data?.currentUserParticipant?.depositAmount ?? auction.startingPrice?.amount}
-            onDepositWallet={handleWalletDeposit}
-            onDepositVnPay={handleDeposit}
-            isWalletDepositLoading={walletDepositMutation.isPending}
-            isVnPayDepositLoading={depositMutation.isPending}
+            onDeposit={() => {
+              if (bidderTerms.hasPending) { bidderTerms.openModal(); return }
+              setDepositModalOpen(true)
+            }}
+            depositLoading={walletDepositMutation.isPending || depositMutation.isPending}
             onBuyNowClick={() => setBuyNowConfirmOpen(true)}
             isBuyNowLoading={buyNowMutation.isPending}
             onCheckoutClick={
@@ -981,6 +1009,8 @@ const handleSellerCancel = () => {
             }
             isMobile={isMobile}
             isDesktop={isDesktop}
+            auctionId={id}
+            sealedBidInfo={data?.sealedBidInfo}
           />
         </Col>
       </Row>
@@ -1051,6 +1081,46 @@ const handleSellerCancel = () => {
           </Typography.Text>
         </div>
       )}
+
+      {/* Buy-Now Cap Modal — shown when a bid crossed the buy-now ceiling and was capped to buyNowPrice */}
+      <Modal
+        title={t('buyNowCapTitle', 'Bid exceeded Buy Now price')}
+        open={buyNowCapModal.open}
+        onCancel={() => setBuyNowCapModal((prev) => ({ ...prev, open: false }))}
+        onOk={() => {
+          const { orderId } = buyNowCapModal
+          setBuyNowCapModal((prev) => ({ ...prev, open: false }))
+          if (orderId) {
+            navigate(`/checkout/${orderId}`)
+          }
+        }}
+        okText={
+          buyNowCapModal.orderId
+            ? t('buyNowCapGoToCheckout', 'Go to Checkout')
+            : t('close', 'Close')
+        }
+        cancelButtonProps={{ style: { display: buyNowCapModal.orderId ? undefined : 'none' } }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <Alert
+            type="info"
+            showIcon
+            message={t(
+              'buyNowCapExplain',
+              'Your bid of {{raw}} met or exceeded the Buy Now price. The auction has been settled at the Buy Now price, and you only need to pay {{payable}}.',
+              {
+                raw: formatCurrency(buyNowCapModal.rawBid, currency),
+                payable: formatCurrency(buyNowCapModal.payableAmount, currency),
+              },
+            )}
+          />
+          <Typography.Text style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
+            {buyNowCapModal.orderId
+              ? t('buyNowCapOrderReady', 'Your order is ready. Proceed to checkout to complete payment.')
+              : t('buyNowCapOrderPending', 'Your order is being prepared. You can close this dialog — the checkout option will appear automatically once it is ready.')}
+          </Typography.Text>
+        </div>
+      </Modal>
 
       {/* Auto-Bid Modal */}
       <Modal
@@ -1165,6 +1235,17 @@ const handleSellerCancel = () => {
         </Typography.Paragraph>
       </Modal>
 
+      {/* Auction Deposit Modal */}
+      {id && auction && (
+        <AuctionDepositModal
+          open={depositModalOpen}
+          onClose={() => setDepositModalOpen(false)}
+          auctionId={id}
+          requiredDepositAmount={auction.startingPrice?.amount ?? 0}
+          currency={currency}
+        />
+      )}
+
       {/* Relist Auction Modal */}
       <Modal
         title={t('relistAuction', 'Relist Auction')}
@@ -1249,72 +1330,13 @@ const handleSellerCancel = () => {
       </Modal>
 
       {/* Report Auction Modal */}
-      <Modal
-        title={td('reportAuction', 'Report Auction')}
+      <CreateDisputeModal
+        targetType="auction"
+        targetId={id!}
+        auctionId={id!}
         open={reportModalOpen}
-        onCancel={() => setReportModalOpen(false)}
-        onOk={async () => {
-          if (!reportReason || reportDescription.trim().length < 20) return
-          try {
-            await createReport.mutateAsync({
-              entityType: 'auction',
-              entityId: id!,
-              reasonCode: reportReason,
-              description: reportDescription.trim(),
-            })
-            message.success(td('reportSuccess', 'Report submitted successfully'))
-            setReportModalOpen(false)
-          } catch {
-            message.error(td('reportError', 'Failed to submit report'))
-          }
-        }}
-        okButtonProps={{
-          danger: true,
-          loading: createReport.isPending,
-          disabled: !reportReason || reportDescription.trim().length < 20,
-        }}
-        centered
-      >
-        <Form layout="vertical">
-          <Form.Item label={td('reportReasonLabel', 'Reason')} required>
-            <Select
-              value={reportReason || undefined}
-              onChange={(val: string) => setReportReason(val)}
-              placeholder={td('selectReportReason', 'Select a reason')}
-              options={[
-                { value: 'suspicious_listing', label: td('reportReason.suspiciousListing', 'Suspicious listing') },
-                { value: 'counterfeit', label: td('reportReason.counterfeit', 'Counterfeit item') },
-                { value: 'prohibited_item', label: td('reportReason.prohibitedItem', 'Prohibited item') },
-                { value: 'misleading_description', label: td('reportReason.misleadingDescription', 'Misleading description') },
-                { value: 'other', label: td('reportReason.other', 'Other') },
-              ]}
-            />
-          </Form.Item>
-          <Form.Item
-            label={td('reportDescriptionLabel', 'Description')}
-            required
-            help={
-              reportDescription.trim().length > 0 && reportDescription.trim().length < 20
-                ? td('reportDescriptionMinLength', 'Please enter at least 20 characters')
-                : undefined
-            }
-            validateStatus={
-              reportDescription.trim().length > 0 && reportDescription.trim().length < 20
-                ? 'error'
-                : undefined
-            }
-          >
-            <Input.TextArea
-              rows={4}
-              value={reportDescription}
-              onChange={(e) => setReportDescription(e.target.value)}
-              placeholder={td('reportDescriptionPlaceholder', 'Describe the issue in detail (min. 20 characters)...')}
-              showCount
-              maxLength={1000}
-            />
-          </Form.Item>
-        </Form>
-      </Modal>
+        onClose={() => setReportModalOpen(false)}
+      />
 
       {/* Cancel Auction Modal */}
       <Modal
@@ -1424,6 +1446,15 @@ const handleSellerCancel = () => {
           />
         )}
       </Modal>
+
+      <TermsAcceptanceModal
+        open={bidderTerms.modalOpen}
+        onClose={bidderTerms.closeModal}
+        termType="bidder"
+        onAccepted={() => {
+          message.success(t('termsAcceptedToast', 'Terms accepted. You can place your bid now.'))
+        }}
+      />
     </div>
   )
 }

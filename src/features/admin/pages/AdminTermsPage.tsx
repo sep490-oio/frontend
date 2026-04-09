@@ -12,9 +12,9 @@ import type { ColumnsType } from 'antd/es/table'
 import { SERIF_FONT, MONO_FONT } from '@/styles/tokens'
 
 const TERMS_TYPES = [
+  { value: 'platform', label: 'Platform Terms' },
   { value: 'bidder', label: 'Bidder Terms' },
   { value: 'seller', label: 'Seller Terms' },
-  { value: 'general', label: 'General Terms' },
   { value: 'privacy', label: 'Privacy Policy' },
 ]
 

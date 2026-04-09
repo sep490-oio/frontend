@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Button, Space, Modal, Flex, Tooltip, Input, message, DatePicker, Switch, Card, List } from 'antd'
+import { Button, Space, Modal, Flex, Tooltip, Input, message, DatePicker, Form, Card, List } from 'antd'
+// Note: DatePicker and Input are still used in the Relist modal below
 import {
   PlusOutlined,
   EditOutlined,
@@ -32,6 +33,7 @@ import { AuctionStatus } from '@/types/enums'
 import { formatDateTime } from '@/utils/format'
 import type { AuctionListItemDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
+import { AuctionTimingSection } from '@/features/auction/components/AuctionTimingSection'
 
 const STATUS_PILLS = [
   { value: 'all', label: 'All' },
@@ -67,23 +69,6 @@ const pillActive: React.CSSProperties = {
   color: '#fff',
 }
 
-interface TimingFormState {
-  startTime: dayjs.Dayjs | null
-  endTime: dayjs.Dayjs | null
-  qualificationStartAt: dayjs.Dayjs | null
-  qualificationEndAt: dayjs.Dayjs | null
-  autoExtend: boolean
-  extensionMinutes: number
-}
-
-const INITIAL_TIMING: TimingFormState = {
-  startTime: null,
-  endTime: null,
-  qualificationStartAt: null,
-  qualificationEndAt: null,
-  autoExtend: false,
-  extensionMinutes: 5,
-}
 
 export default function MyAuctionsPage() {
   const { t } = useTranslation('auction')
@@ -105,7 +90,7 @@ export default function MyAuctionsPage() {
   // Timing modal state
   const [timingModalOpen, setTimingModalOpen] = useState(false)
   const [timingAuctionId, setTimingAuctionId] = useState<string | null>(null)
-  const [timingForm, setTimingForm] = useState<TimingFormState>(INITIAL_TIMING)
+  const [modalForm] = Form.useForm()
   // When true, handleTimingConfirm will submit auction first, then set timing
   const [submitPendingTimingAuctionId, setSubmitPendingTimingAuctionId] = useState<string | null>(null)
 
@@ -148,27 +133,44 @@ export default function MyAuctionsPage() {
 
   const openTimingModal = (id: string) => {
     setTimingAuctionId(id)
-    setTimingForm(INITIAL_TIMING)
+    modalForm.resetFields()
     setTimingModalOpen(true)
   }
 
   const handleTimingConfirm = async () => {
-    if (!timingAuctionId || !timingForm.startTime || !timingForm.endTime) return
+    if (!timingAuctionId) return
+
+    try {
+      await modalForm.validateFields()
+    } catch {
+      return
+    }
+
+    const fields = modalForm.getFieldsValue([
+      'qualificationStartAt',
+      'qualificationEndAt',
+      'startTime',
+      'endTime',
+      'autoExtend',
+      'extensionMinutes',
+    ])
+
+    if (!fields.startTime || !fields.endTime) return
 
     const isSubmitFlow = submitPendingTimingAuctionId === timingAuctionId
 
     const timingPayload = {
       auctionId: timingAuctionId,
-      startTime: timingForm.startTime.toISOString(),
-      endTime: timingForm.endTime.toISOString(),
-      ...(timingForm.qualificationStartAt
-        ? { qualificationStartAt: timingForm.qualificationStartAt.toISOString() }
+      startTime: dayjs(fields.startTime).toISOString(),
+      endTime: dayjs(fields.endTime).toISOString(),
+      ...(fields.qualificationStartAt
+        ? { qualificationStartAt: dayjs(fields.qualificationStartAt).toISOString() }
         : {}),
-      ...(timingForm.qualificationEndAt
-        ? { qualificationEndAt: timingForm.qualificationEndAt.toISOString() }
+      ...(fields.qualificationEndAt
+        ? { qualificationEndAt: dayjs(fields.qualificationEndAt).toISOString() }
         : {}),
-      autoExtend: timingForm.autoExtend,
-      extensionMinutes: timingForm.extensionMinutes,
+      autoExtend: fields.autoExtend ?? false,
+      extensionMinutes: fields.extensionMinutes ?? 5,
     }
 
     if (isSubmitFlow) {
@@ -389,27 +391,16 @@ export default function MyAuctionsPage() {
           </Tooltip>
         )}
 
-        {/* Sold: View Order, Offer Runner-up */}
+        {/* Sold: View Order only — offerRunnerUp is ONLY valid in payment_defaulted (backend enforced) */}
         {s === AuctionStatus.Sold && (
-          <>
-            <Tooltip title={t('viewOrder', 'View Order')}>
-              <Button
-                type="text"
-                size="small"
-                icon={<EyeOutlined />}
-                onClick={() => navigate(`/auctions/${record.id}`)}
-              />
-            </Tooltip>
-            <Tooltip title={t('offerRunnerUp', 'Offer Runner-up')}>
-              <Button
-                type="text"
-                size="small"
-                icon={<UserSwitchOutlined />}
-                loading={offerRunnerUp.isPending}
-                onClick={() => handleOfferRunnerUp(record.id)}
-              />
-            </Tooltip>
-          </>
+          <Tooltip title={t('viewOrder', 'View Order')}>
+            <Button
+              type="text"
+              size="small"
+              icon={<EyeOutlined />}
+              onClick={() => navigate(`/auctions/${record.id}`)}
+            />
+          </Tooltip>
         )}
 
         {/* Payment Defaulted: Relist, Offer Runner-up (BE only supports relist for PaymentDefaulted) */}
@@ -694,104 +685,15 @@ export default function MyAuctionsPage() {
         okText={t('saveTiming', 'Save Timing')}
         okButtonProps={{
           loading: setAuctionTiming.isPending,
-          disabled: !timingForm.startTime || !timingForm.endTime,
           style: { background: 'var(--color-accent)', borderColor: 'var(--color-accent)' },
         }}
         centered
-        width={480}
+        width={720}
+        styles={{ body: { maxHeight: '70vh', overflowY: 'auto' } }}
       >
-        <Flex vertical gap={16} style={{ marginTop: 16 }}>
-          {/* Qualification Start */}
-          <div>
-            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13, color: 'var(--color-text-secondary)' }}>
-              {t('qualificationStart', 'Qualification Start')}
-            </label>
-            <DatePicker
-              showTime={{ format: 'HH:mm' }}
-              format="YYYY-MM-DD HH:mm"
-              disabledDate={(current) => current && current.isBefore(dayjs().startOf('day'))}
-              style={{ width: '100%' }}
-              value={timingForm.qualificationStartAt}
-              onChange={(v) => setTimingForm((prev) => ({ ...prev, qualificationStartAt: v }))}
-              placeholder={t('optional', 'Optional')}
-            />
-          </div>
-
-          {/* Qualification End */}
-          <div>
-            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13, color: 'var(--color-text-secondary)' }}>
-              {t('qualificationEnd', 'Qualification End')}
-            </label>
-            <DatePicker
-              showTime={{ format: 'HH:mm' }}
-              format="YYYY-MM-DD HH:mm"
-              disabledDate={(current) => current && current.isBefore(dayjs().startOf('day'))}
-              style={{ width: '100%' }}
-              value={timingForm.qualificationEndAt}
-              onChange={(v) => setTimingForm((prev) => ({ ...prev, qualificationEndAt: v }))}
-              placeholder={t('optional', 'Optional')}
-            />
-          </div>
-          {/* Start Time */}
-          <div>
-            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13 }}>
-              {t('startTime', 'Start Time')} 
-            </label>
-            <DatePicker
-              showTime={{ format: 'HH:mm' }}
-              format="YYYY-MM-DD HH:mm"
-              disabledDate={(current) => current && current.isBefore(dayjs().startOf('day'))}
-              style={{ width: '100%' }}
-              value={timingForm.startTime}
-              onChange={(v) => setTimingForm((prev) => ({ ...prev, startTime: v }))}
-              placeholder={t('selectStartTime', 'Select start time')}
-            />
-          </div>
-
-          {/* End Time */}
-          <div>
-            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13 }}>
-              {t('endTime', 'End Time')} 
-            </label>
-            <DatePicker
-              showTime={{ format: 'HH:mm' }}
-              format="YYYY-MM-DD HH:mm"
-              disabledDate={(current) => current && current.isBefore(dayjs().startOf('day'))}
-              style={{ width: '100%' }}
-              value={timingForm.endTime}
-              onChange={(v) => setTimingForm((prev) => ({ ...prev, endTime: v }))}
-              placeholder={t('selectEndTime', 'Select end time')}
-            />
-          </div>
-
-          {/* Auto Extend */}
-          <Flex justify="space-between" align="center">
-            <label style={{ fontWeight: 500, fontSize: 13 }}>
-              {t('autoExtend', 'Auto Extend')}
-            </label>
-            <Switch
-              checked={timingForm.autoExtend}
-              onChange={(v) => setTimingForm((prev) => ({ ...prev, autoExtend: v }))}
-            />
-          </Flex>
-
-          {/* Extension Minutes */}
-          {timingForm.autoExtend && (
-            <div>
-              <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13 }}>
-                {t('extensionMinutes', 'Extension Minutes')}
-              </label>
-              <Input
-                type="number"
-                min={1}
-                max={60}
-                value={timingForm.extensionMinutes}
-                onChange={(e) => setTimingForm((prev) => ({ ...prev, extensionMinutes: Number(e.target.value) || 5 }))}
-                style={{ width: 120 }}
-              />
-            </div>
-          )}
-        </Flex>
+        <Form form={modalForm} layout="vertical">
+          <AuctionTimingSection form={modalForm} itemApproved={true} />
+        </Form>
       </Modal>
 
       {/* Relist modal */}

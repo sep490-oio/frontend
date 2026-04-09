@@ -5,7 +5,6 @@ import {
   DashboardOutlined,
   SearchOutlined,
   AuditOutlined,
-  DatabaseOutlined,
   ArrowLeftOutlined,
   SunOutlined,
   MoonOutlined,
@@ -43,7 +42,6 @@ export function InspectorLayout() {
     { key: '/inspector', icon: <DashboardOutlined />, label: t('menu.dashboard', 'Dashboard') },
     { key: '/inspector/queue', icon: <SearchOutlined />, label: t('menu.queue', 'Inspection Queue') },
     { key: '/inspector/reviews', icon: <AuditOutlined />, label: t('menu.reviews', 'Reviews') },
-    { key: '/inspector/storage', icon: <DatabaseOutlined />, label: t('menu.storage', 'Storage') },
   ]
 
   const isActive = (key: string) => {

@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
-import { Typography, Input, Card, Button, Alert, App, Space, Segmented, Result, Flex, Tag } from 'antd'
-import { CameraOutlined, EditOutlined, CheckCircleOutlined, InboxOutlined } from '@ant-design/icons'
+import { Typography, Input, Card, Button, Alert, Space, Segmented, Flex, Tag } from 'antd'
+import { CameraOutlined, EditOutlined, InboxOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import jsQR from 'jsqr'
-import { useScanShipment, useUpdateExternalStatus } from '@/features/warehouse/api'
+import { useScanShipment } from '@/features/warehouse/api'
 import { useItemById } from '@/features/item/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { getProviderLabel } from '@/features/warehouse/utils/shipmentLabels'
@@ -44,15 +44,12 @@ function ShipmentItemRow({ shipment }: { shipment: InboundShipmentDto }) {
 
 export default function ScanPage() {
   const { t } = useTranslation('warehouse')
-  const { message } = App.useApp()
   const navigate = useNavigate()
   const [results, setResults] = useState<InboundShipmentDto[] | null>(null)
   const [notFound, setNotFound] = useState(false)
   const [mode, setMode] = useState<'camera' | 'manual'>('camera')
   const [cameraError, setCameraError] = useState<string | null>(null)
   const [scanning, setScanning] = useState(false)
-  const [arrivalConfirmed, setArrivalConfirmed] = useState(false)
-
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -60,14 +57,12 @@ export default function ScanPage() {
   const mountedRef = useRef(true)
 
   const scanMutation = useScanShipment()
-  const updateStatus = useUpdateExternalStatus()
 
   const handleSearchRef = useRef((_: string) => {})
   handleSearchRef.current = (value: string) => {
     if (!value.trim()) return
     setNotFound(false)
     setResults(null)
-    setArrivalConfirmed(false)
 
     scanMutation.mutate(
       { code: value.trim(), trackingNumber: value.trim() },
@@ -148,35 +143,13 @@ export default function ScanPage() {
 
   useEffect(() => { return () => { mountedRef.current = false; stopCamera() } }, [])
 
-  // Confirm arrival for the first shipment — BE cascades to siblings
-  const handleConfirmArrival = () => {
-    if (!results || results.length === 0) return
-    updateStatus.mutate(
-      { shipmentId: results[0].id, status: 'arrived' },
-      {
-        onSuccess: () => {
-          setArrivalConfirmed(true)
-          setResults((prev) => prev?.map((s) => ({ ...s, status: 'arrived' })) ?? prev)
-        },
-        onError: () => {
-          message.error(t('scan.arrivalError', 'Failed to confirm arrival'))
-        },
-      },
-    )
-  }
-
   const handleScanAnother = () => {
     setResults(null)
     setNotFound(false)
-    setArrivalConfirmed(false)
   }
 
   const firstResult = results?.[0]
-  const isExternal = firstResult?.providerCode === 'external'
-  const canConfirmArrival =
-    isExternal &&
-    !arrivalConfirmed &&
-    results?.some((s) => s.status === 'awaiting_pickup' || s.status === 'in_transit' || s.status === 'seller_claims_arrived')
+  const canReceive = results?.some((s) => s.status !== 'completed' && s.status !== 'cancelled' && s.status !== 'failed')
 
   return (
     <div>
@@ -236,38 +209,8 @@ export default function ScanPage() {
           action={<Button size="small" onClick={handleScanAnother}>{t('scan.tryAgain', 'Try Again')}</Button>} />
       )}
 
-      {/* Post-arrival success */}
-      {results && arrivalConfirmed && (
-        <div style={{ maxWidth: 600 }}>
-          <Result
-            icon={<CheckCircleOutlined style={{ color: 'var(--color-success)' }} />}
-            title={t('scan.arrivalConfirmedTitle', 'Arrival Confirmed')}
-            subTitle={
-              <>
-                <Typography.Paragraph style={{ marginBottom: 4 }}>
-                  <strong>{firstResult?.clientOrderCode}</strong>
-                  {' — '}{results.length} {results.length === 1 ? 'item' : 'items'}
-                </Typography.Paragraph>
-                <Typography.Text type="secondary">
-                  {t('scan.nextStepMessage', 'Inspector has been notified. All items will appear in the inspection queue shortly.')}
-                </Typography.Text>
-              </>
-            }
-            extra={[
-              <Button key="scan" type="primary" onClick={handleScanAnother}
-                style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}>
-                {t('scan.scanNext', 'Scan Next Shipment')}
-              </Button>,
-              <Button key="detail" onClick={() => navigate(`/warehouse-staff/shipments/${firstResult?.id}`)}>
-                {t('scan.viewDetail', 'View Detail')}
-              </Button>,
-            ]}
-          />
-        </div>
-      )}
-
       {/* Scan result — batch card */}
-      {results && !arrivalConfirmed && (
+      {results && (
         <Card style={{ maxWidth: 600 }}>
           {/* Batch header */}
           <Flex justify="space-between" align="center" style={{ marginBottom: 12 }}>
@@ -294,13 +237,13 @@ export default function ScanPage() {
 
           {/* Actions */}
           <Space wrap>
-            {canConfirmArrival && (
-              <Button type="primary" loading={updateStatus.isPending} onClick={handleConfirmArrival}
+            {canReceive && firstResult && (
+              <Button type="primary" onClick={() => navigate(`/warehouse-staff/receiving/packages/${encodeURIComponent(firstResult.clientOrderCode)}`)}
                 style={{ background: 'var(--color-success)', borderColor: 'var(--color-success)' }}>
-                {t('scan.confirmArrival', 'Confirm Arrival')} ({results.length} {results.length === 1 ? 'item' : 'items'})
+                {t('scan.receiveItem', 'Receive & Store')}
               </Button>
             )}
-            <Button onClick={() => navigate(`/warehouse-staff/shipments/${firstResult?.id}`)}>
+            <Button onClick={() => firstResult && navigate(`/warehouse-staff/receiving/packages/${encodeURIComponent(firstResult.clientOrderCode)}`)}>
               {t('scan.viewDetail', 'View Detail')}
             </Button>
             <Button onClick={handleScanAnother}>

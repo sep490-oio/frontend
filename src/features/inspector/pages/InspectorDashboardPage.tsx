@@ -6,9 +6,10 @@ import {
   DatabaseOutlined,
   ClockCircleOutlined,
   EyeOutlined,
+  AuditOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
-import { useInspectionQueue, useStorageLocations } from '@/features/inspector/api'
+import { useInspectionQueue } from '@/features/inspector/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
@@ -24,17 +25,17 @@ export default function InspectorDashboardPage() {
   const { data: queueData, isLoading: queueLoading } = useInspectionQueue({
     pageNumber: 1,
     pageSize: 5,
+    status: 'awaiting_inspection',
   })
-  const { data: completedData, isLoading: completedLoading } = useInspectionQueue({
+  const { data: reviewData, isLoading: reviewLoading } = useInspectionQueue({
     pageNumber: 1,
     pageSize: 100,
     status: 'awaiting_review',
   })
   const queue = queueData?.items ?? []
-  const completedToday = completedData?.items ?? []
-  const { data: locations, isLoading: locationsLoading } = useStorageLocations()
+  const completedToday = reviewData?.items ?? []
 
-  const isLoading = queueLoading || completedLoading || locationsLoading
+  const isLoading = queueLoading || reviewLoading
 
   if (isLoading) {
     return (
@@ -44,32 +45,30 @@ export default function InspectorDashboardPage() {
     )
   }
 
-  const occupiedCount = locations?.filter((l) => l.isOccupied).length ?? 0
-  const totalLocations = locations?.length ?? 0
-  const pendingCount = queue?.length ?? 0
-  const completedCount = completedToday?.length ?? 0
+  const pendingCount = queueData?.metadata?.totalCount ?? queue.length
+  const reviewCount = reviewData?.metadata?.totalCount ?? completedToday.length
 
   const statCards = [
     {
       icon: <SearchOutlined style={{ fontSize: 24, color: 'var(--color-accent)' }} />,
       value: pendingCount,
       label: 'Chờ kiểm định',
-      trend: '+12% so với hôm qua',
-      trendColor: 'var(--color-danger)',
+      trend: '',
+      trendColor: 'var(--color-text-secondary)',
+    },
+    {
+      icon: <AuditOutlined style={{ fontSize: 24, color: 'var(--color-accent)' }} />,
+      value: reviewCount,
+      label: 'Chờ phúc thẩm',
+      trend: '',
+      trendColor: 'var(--color-text-secondary)',
     },
     {
       icon: <CheckCircleOutlined style={{ fontSize: 24, color: 'var(--color-success)' }} />,
-      value: completedCount,
+      value: '—',
       label: 'Hoàn thành hôm nay',
-      trend: 'Duy trì ổn định',
-      trendColor: 'var(--color-success)',
-    },
-    {
-      icon: <ClockCircleOutlined style={{ fontSize: 24, color: 'var(--color-accent)' }} />,
-      value: totalLocations > 0 ? `${Math.round((occupiedCount / totalLocations) * 100)}%` : '0%',
-      label: 'Sức chứa kho',
-      trend: `-30s nhanh hơn TB`,
-      trendColor: 'var(--color-success)',
+      trend: 'Coming soon',
+      trendColor: 'var(--color-text-secondary)',
     },
   ]
 
@@ -143,10 +142,10 @@ export default function InspectorDashboardPage() {
             View Queue
           </Button>
           <Button
-            icon={<DatabaseOutlined />}
-            onClick={() => navigate('/inspector/storage')}
+            icon={<AuditOutlined />}
+            onClick={() => navigate('/inspector/reviews')}
           >
-            Manage Storage
+            Reviews
           </Button>
         </Space>
       </Card>

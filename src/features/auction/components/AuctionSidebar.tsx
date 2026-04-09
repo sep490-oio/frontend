@@ -2,12 +2,13 @@ import { Typography, Button, Flex, Card, Spin } from 'antd'
 import { ThunderboltOutlined, CheckCircleOutlined, InfoCircleOutlined, ReloadOutlined, LoadingOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
-import type { PriceHistoryPoint } from '@/types'
+import type { PriceHistoryPoint, SealedBidInfoDto } from '@/types'
 
 import { AuctionPriceHeader } from '@/features/auction/components/AuctionPriceHeader'
 import BidForm from '@/features/auction/components/BidForm'
 import { BidderPositionBlock } from '@/features/auction/components/BidderPositionBlock'
 import { EligibilityPanel } from '@/features/auction/components/EligibilityPanel'
+import { SealedBidPanel } from '@/features/auction/components/SealedBidPanel'
 import { formatCurrency, formatDateTime } from '@/utils/format'
 
 // ── T011: State-specific CTA helper ─────────────────────────────────
@@ -217,10 +218,8 @@ export interface AuctionSidebarProps {
   qualificationStatus?: string
   depositStatus?: string
   depositAmount?: number
-  onDepositWallet: () => void
-  onDepositVnPay: () => void
-  isWalletDepositLoading: boolean
-  isVnPayDepositLoading: boolean
+  onDeposit: () => void
+  depositLoading: boolean
 
   // Buy now
   onBuyNowClick: () => void
@@ -258,6 +257,10 @@ export interface AuctionSidebarProps {
 
   isMobile: boolean
   isDesktop: boolean
+
+  // Sealed bid
+  auctionId?: string
+  sealedBidInfo?: SealedBidInfoDto | null
 }
 
 // ── Component ────────────────────────────────────────────────────────
@@ -304,10 +307,8 @@ export function AuctionSidebar({
   qualificationStatus,
   depositStatus,
   depositAmount,
-  onDepositWallet,
-  onDepositVnPay,
-  isWalletDepositLoading,
-  isVnPayDepositLoading,
+  onDeposit,
+  depositLoading,
   onBuyNowClick,
   isBuyNowLoading,
   onCheckoutClick,
@@ -321,6 +322,8 @@ export function AuctionSidebar({
   currentUserBidState,
   isMobile: _isMobile,
   isDesktop,
+  auctionId,
+  sealedBidInfo,
 }: AuctionSidebarProps) {
   const { t } = useTranslation('auction')
 
@@ -524,39 +527,56 @@ export function AuctionSidebar({
           )
         })()}
 
-        {/* 2. Bid Form — immediately after price, ALWAYS VISIBLE at top when qualified & active */}
-        {isActive && qualState === 'qualified' && isDesktop && (
-          <>
-            {currentUserBidState && currentUserBidState.position !== 'none' && (
-              <BidderPositionBlock
-                position={currentUserBidState.position}
-                currency={currency}
-              />
-            )}
-            <BidForm
-              currentPrice={currentPrice}
+        {/* 2. Bid Form / Sealed Bid Panel */}
+        {auction.auctionType === 'sealed' ? (
+          /* Sealed auction: show SealedBidPanel instead of regular BidForm */
+          (isActive || isTerminal) && isDesktop && auctionId ? (
+            <SealedBidPanel
+              auctionId={auctionId}
+              currency={currency}
               minBid={minBid}
               bidIncrement={bidIncrement}
-              currency={currency}
-              walletBalance={walletBalance}
-              bidAmount={bidAmount}
-              onBidAmountChange={onBidAmountChange}
-              onPlaceBid={onPlaceBid}
-              isPlacingBid={isPlacingBid}
-              insufficientBalance={insufficientBalance}
-              myAutoBid={myAutoBid}
-              onAutoBidClick={onAutoBidClick}
-              onPauseAutoBid={onPauseAutoBid}
-              onResumeAutoBid={onResumeAutoBid}
-              onModifyAutoBid={onModifyAutoBid}
-              onCancelAutoBid={onCancelAutoBid}
-              isPauseLoading={isPauseLoading}
-              isResumeLoading={isResumeLoading}
-              isCancelLoading={isCancelLoading}
-              priceHistory={priceHistory}
-              onExpandChart={onExpandChart}
+              isActive={isActive}
+              isTerminal={isTerminal}
+              sealedBidInfo={sealedBidInfo}
+              isSeller={isSeller}
             />
-          </>
+          ) : null
+        ) : (
+          /* Regular auction: show BidForm when qualified & active */
+          isActive && qualState === 'qualified' && isDesktop && (
+            <>
+              {currentUserBidState && currentUserBidState.position !== 'none' && (
+                <BidderPositionBlock
+                  position={currentUserBidState.position}
+                  currency={currency}
+                />
+              )}
+              <BidForm
+                currentPrice={currentPrice}
+                minBid={minBid}
+                bidIncrement={bidIncrement}
+                currency={currency}
+                walletBalance={walletBalance}
+                bidAmount={bidAmount}
+                onBidAmountChange={onBidAmountChange}
+                onPlaceBid={onPlaceBid}
+                isPlacingBid={isPlacingBid}
+                insufficientBalance={insufficientBalance}
+                myAutoBid={myAutoBid}
+                onAutoBidClick={onAutoBidClick}
+                onPauseAutoBid={onPauseAutoBid}
+                onResumeAutoBid={onResumeAutoBid}
+                onModifyAutoBid={onModifyAutoBid}
+                onCancelAutoBid={onCancelAutoBid}
+                isPauseLoading={isPauseLoading}
+                isResumeLoading={isResumeLoading}
+                isCancelLoading={isCancelLoading}
+                priceHistory={priceHistory}
+                onExpandChart={onExpandChart}
+              />
+            </>
+          )
         )}
 
         {/* 3. Eligibility Panel — hidden in terminal state (public read-only results view) */}
@@ -571,10 +591,8 @@ export function AuctionSidebar({
               qualificationStartAt={auction.qualificationStartAt}
               qualificationEndAt={auction.qualificationEndAt}
               isSeller={isSeller}
-              onDepositWallet={onDepositWallet}
-              onDepositVnPay={onDepositVnPay}
-              isWalletDepositLoading={isWalletDepositLoading}
-              isVnPayDepositLoading={isVnPayDepositLoading}
+              onDeposit={onDeposit}
+              depositLoading={depositLoading}
             />
           )}
 

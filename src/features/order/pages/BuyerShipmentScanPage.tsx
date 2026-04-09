@@ -20,6 +20,7 @@ export default function BuyerShipmentScanPage() {
   const [cameraError, setCameraError] = useState<string | null>(null)
   const [scanning, setScanning] = useState(false)
   const [manualValue, setManualValue] = useState('')
+  const [validatingLegacy, setValidatingLegacy] = useState(false)
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -43,16 +44,66 @@ export default function BuyerShipmentScanPage() {
     setScanning(false)
   }
 
+  // Pattern: /me/shipments/:shipmentId/receive
+  const directShipmentReceiveRe = /^\/me\/shipments\/([^/]+)\/receive$/
+  // Pattern: /orders/:orderId/outbound-shipment/receive
+  const outboundReceiveRe = /^\/orders\/([^/]+)\/outbound-shipment\/receive$/
+
   const handleTokenRef = useRef((_: string) => {})
   handleTokenRef.current = (rawPayload: string) => {
-    let token: string | null = null
+    let parsedUrl: URL | null = null
     try {
-      const url = new URL(rawPayload)
-      token = url.searchParams.get('token')
+      parsedUrl = new URL(rawPayload)
     } catch {
-      // Not a URL — treat entire payload as token if non-empty
-      token = rawPayload.trim() || null
+      // Not a URL — legacy-token path: treat entire payload as token
     }
+
+    if (parsedUrl) {
+      const path = parsedUrl.pathname
+      const token = parsedUrl.searchParams.get('token')
+
+      if (directShipmentReceiveRe.test(path)) {
+        // Direct-shipment QR: route internally preserving token
+        navigate(token ? `${path}?token=${encodeURIComponent(token)}` : path)
+        return
+      }
+
+      if (outboundReceiveRe.test(path)) {
+        // Warehouse-outbound QR: route internally preserving token
+        navigate(token ? `${path}?token=${encodeURIComponent(token)}` : path)
+        return
+      }
+
+      // Legacy self-ship QR: /me/shipments/scan?token=...
+      // These pre-printed labels lack the shipment id in the path. Validate the
+      // token server-side to resolve the shipment, then redirect to canonical route.
+      if (path === '/me/shipments/scan' && token) {
+        setValidatingLegacy(true)
+        validateScan.mutate(
+          { token },
+          {
+            onSuccess: (data) => {
+              setValidatingLegacy(false)
+              navigate(`/me/shipments/${data.shipmentId}/receive?token=${encodeURIComponent(token)}`)
+            },
+            onError: (e) => {
+              setValidatingLegacy(false)
+              message.error(
+                (e as Error)?.message ?? t('directShipment.scan.invalidQr', 'Invalid QR code'),
+              )
+            },
+          },
+        )
+        return
+      }
+
+      // URL but unrecognised pattern
+      message.error(t('directShipment.scan.unrecognizedQr', 'Unrecognized shipment QR'))
+      return
+    }
+
+    // Legacy-token fallback: non-URL payload
+    const token = rawPayload.trim() || null
     if (!token) {
       message.error(t('directShipment.scan.invalidQr', 'Invalid QR code'))
       return
@@ -215,7 +266,7 @@ export default function BuyerShipmentScanPage() {
           />
         )}
 
-        {validateScan.isPending && (
+        {(validateScan.isPending || validatingLegacy) && (
           <Alert type="info" showIcon message={t('directShipment.scan.validating', 'Validating QR code...')} />
         )}
       </Space>

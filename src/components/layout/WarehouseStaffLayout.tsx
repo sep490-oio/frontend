@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Outlet, useNavigate, useLocation, Link } from 'react-router'
 import { Layout, Avatar, Tooltip, Drawer } from 'antd'
 import {
+  AppstoreOutlined,
   DashboardOutlined,
   DatabaseOutlined,
   ArrowLeftOutlined,
@@ -44,8 +45,9 @@ export function WarehouseStaffLayout() {
     { key: '/warehouse-staff', icon: <DashboardOutlined />, label: t('menu.dashboard', 'Dashboard') },
     { key: '/warehouse-staff/receiving', icon: <InboxOutlined />, label: t('menu.receiving', 'Receiving') },
     { key: '/warehouse-staff/scan', icon: <ScanOutlined />, label: t('menu.scan', 'Scan & Check-in') },
+    { key: '/warehouse-staff/items', icon: <AppstoreOutlined />, label: t('menu.storedItems', 'Stored Items') },
     { key: '/warehouse-staff/locations', icon: <DatabaseOutlined />, label: t('menu.locations', 'Locations') },
-    { key: '/warehouse-staff/outbound', icon: <ExportOutlined />, label: t('menu.outboundQueue', 'Outbound Queue') },
+    { key: '/warehouse-staff/outbound', icon: <ExportOutlined />, label: t('menu.outboundOrders', 'Outbound Orders') },
   ]
 
   const isActive = (key: string) => {

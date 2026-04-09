@@ -98,7 +98,39 @@ export interface SellerDirectShipmentListItem {
   recipient?: ShipmentListItemRecipient | null
 }
 
-/** Buyer-scoped row returned by GET /api/me/shipments. */
+/**
+ * Buyer-safe row in the unified shipment feed (`GET /api/me/shipments`).
+ * Discriminated by `shipmentKind`:
+ *   - `seller_direct`     — row is a SellerDirectShipment.
+ *   - `warehouse_outbound` — row is a warehouse-booked OutboundShipment.
+ * Action flags are precomputed BE-side so the list UI can gate CTAs without
+ * fetching per-row detail.
+ */
+export type BuyerShipmentKind = 'seller_direct' | 'warehouse_outbound'
+
+export interface BuyerShipmentListItemDto {
+  shipmentKind: BuyerShipmentKind
+  shipmentId: string
+  orderId: string
+  orderNumber: string
+  status: string
+  itemTitle?: string | null
+  itemImageUrl?: string | null
+  carrierName?: string | null
+  carrierTrackingNumber?: string | null
+  internalTrackingCode?: string | null
+  decisionWindowEndsAt?: string | null
+  canAcknowledgeReceived: boolean
+  canAccept: boolean
+  canDispute: boolean
+  hasActiveDispute: boolean
+  createdAt: string
+  updatedAt: string
+  qrAvailable: boolean
+  canSubmitProof: boolean
+}
+
+/** Buyer-scoped row returned by the legacy GET /api/me/direct-shipments feed. */
 export interface MyDirectShipmentListItem {
   shipmentId: string
   shipmentIdDisplay: string
@@ -165,6 +197,32 @@ export interface OrderDto {
   buyerCanUpdateShipping?: boolean
   /** Direct shipment created by the seller for self-ship orders. */
   directShipment?: SellerDirectShipmentDto | null
+  /** Warehouse outbound shipment snapshot — buyer-viewer only, null otherwise. */
+  warehouseOutboundShipment?: OrderWarehouseOutboundShipmentDto | null
+}
+
+export interface OrderWarehouseOutboundShipmentDto {
+  shipmentId: string
+  status: string
+  shipmentMode: string
+  providerCode: string
+  externalCarrierName?: string | null
+  carrierTrackingNumber?: string | null
+  clientOrderCode?: string | null
+  qrPayload?: string | null
+  qrAvailable: boolean
+  dispatchedAt?: string | null
+  deliveredAt?: string | null
+  buyerReceivedPackageAt?: string | null
+  buyerAcceptedAt?: string | null
+  canAcknowledgeReceived: boolean
+  canAccept: boolean
+  canOpenDispute: boolean
+  hasActiveDispute: boolean
+  decisionWindowEndsAt?: string | null
+  canSubmitProof: boolean
+  hasBuyerReceiptProof: boolean
+  canSubmitReceiptProof: boolean
 }
 
 /**

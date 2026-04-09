@@ -32,10 +32,11 @@ import type { CapturedPhoto } from '@/components/ui/MultiCaptureUploader'
 import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { AuctionTimingSection } from '@/features/auction/components/AuctionTimingSection'
-import { AuctionType, ItemCondition } from '@/types/enums'
+import { AuctionType, ItemCondition, ItemStatus } from '@/types/enums'
 import { DEFAULT_CURRENCY } from '@/utils/constants'
 import type { CreateAuctionRequest } from '@/features/auction/api'
 import { SERIF_FONT } from '@/styles/tokens'
+import { htmlToPlainTextExcerpt } from '@/components/ui/SafeHtmlRenderer'
 
 interface FormValues {
   title: string
@@ -578,6 +579,11 @@ export default function CreateAuctionPage() {
                 {existingItemForPreview.quantity > 1 && (
                   <Tag>{t('quantityLabel', 'Qty')}: {existingItemForPreview.quantity}</Tag>
                 )}
+                {(existingItemForPreview as any).requiresPlatformInspection === true && (
+                  <Tag icon={<SafetyCertificateOutlined />} color="blue">
+                    {t('verifiedByPlatform', 'Verified by platform')}
+                  </Tag>
+                )}
               </div>
               {existingItemForPreview.description && (
                 <Typography.Paragraph
@@ -585,7 +591,7 @@ export default function CreateAuctionPage() {
                   ellipsis={{ rows: 2 }}
                   style={{ margin: '8px 0 0', fontSize: 13 }}
                 >
-                  {existingItemForPreview.description}
+                  {htmlToPlainTextExcerpt(existingItemForPreview.description)}
                 </Typography.Paragraph>
               )}
             </div>
@@ -760,45 +766,58 @@ export default function CreateAuctionPage() {
             <Input />
           </Form.Item>
 
-          {/* ── Timing Section (collapsible) ── */}
-          <AuctionTimingSection form={form} />
+          {/* ── Timing Section ── */}
+          <AuctionTimingSection
+            form={form}
+            itemApproved={
+              isEditMode
+                ? true
+                : isFromItem
+                  ? existingItem?.status === ItemStatus.Approved ||
+                    existingItem?.status === ItemStatus.Active ||
+                    existingItem?.status === ItemStatus.InAuction
+                  : true
+            }
+          />
 
-          {/* ── Verification Toggle ── */}
-          <div
-            style={{
-              borderTop: '1px solid var(--color-border-light)',
-              margin: '24px 0 20px',
-              paddingTop: 24,
-            }}
-          >
+          {/* ── Verification Toggle (hidden when creating from an existing item) ── */}
+          {!isFromItem && (
             <div
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '16px 20px',
-                borderRadius: 12,
-                background: 'var(--color-accent-light)',
-                border: '1px solid var(--color-border-light)',
+                borderTop: '1px solid var(--color-border-light)',
+                margin: '24px 0 20px',
+                paddingTop: 24,
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1 }}>
-                <SafetyCertificateOutlined style={{ fontSize: 20, color: 'var(--color-accent)' }} />
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-text-primary)' }}>
-                    Xác thực bởi Nền tảng
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 2 }}>
-                    Yêu cầu chuyên gia oio.vn kiểm định vật phẩm trước khi đấu giá.
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '16px 20px',
+                  borderRadius: 12,
+                  background: 'var(--color-accent-light)',
+                  border: '1px solid var(--color-border-light)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1 }}>
+                  <SafetyCertificateOutlined style={{ fontSize: 20, color: 'var(--color-accent)' }} />
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-text-primary)' }}>
+                      Xác thực bởi Nền tảng
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 2 }}>
+                      Yêu cầu chuyên gia oio.vn kiểm định vật phẩm trước khi đấu giá.
+                    </div>
                   </div>
                 </div>
+                <Switch
+                  checked={requireVerification}
+                  onChange={setRequireVerification}
+                />
               </div>
-              <Switch
-                checked={requireVerification}
-                onChange={setRequireVerification}
-              />
             </div>
-          </div>
+          )}
 
           {/* ── Submit Buttons ── */}
           <Form.Item style={{ marginTop: 24, marginBottom: 0 }}>

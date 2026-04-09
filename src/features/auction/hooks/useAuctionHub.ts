@@ -23,6 +23,7 @@ import type {
   ItemQuestionNotification,
   OutbidNotification,
   PagedList,
+  PlaceBidResultDto,
   PriceHistoryPoint,
 } from '@/types'
 
@@ -568,7 +569,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         throw new Error('SignalR not connected')
       }
 
-      return connection.invoke<HubCommandResult<unknown>>('PlaceBid', auctionId, amount, currency, idempotencyKey)
+      return connection.invoke<HubCommandResult<PlaceBidResultDto>>('PlaceBid', auctionId, amount, currency, idempotencyKey)
     },
     [auctionId],
   )

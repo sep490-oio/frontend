@@ -13,6 +13,7 @@ interface VnPayCallbackResponse {
   responseCode: string
   message: string
   clientReturnPath?: string
+  purpose?: string
 }
 
 export default function VnPayReturnPage() {
@@ -97,6 +98,18 @@ export default function VnPayReturnPage() {
   }
 
   const isSuccess = result?.isSuccess ?? false
+  const purpose = result?.purpose
+  const isTopUp = purpose === 'wallet_top_up'
+  const isAuctionDeposit = purpose === 'auction_deposit' || purpose === 'auction_buy_now'
+  const isOrderPayment = purpose === 'order_payment'
+  const isLinkCard = purpose === 'link_card' || txnRef.startsWith('LINK-')
+
+  // Derive auction id from clientReturnPath when present (e.g. /auctions/<id>?deposited=true)
+  const auctionIdFromPath = (() => {
+    const p = result?.clientReturnPath ?? ''
+    const m = p.match(/\/auctions\/([^/?#]+)/)
+    return m?.[1] ?? depositAuctionId ?? null
+  })()
 
   return (
     <div
@@ -157,13 +170,25 @@ export default function VnPayReturnPage() {
           }}
         >
           {isSuccess
-            ? (txnRef.startsWith('LINK-') ? t('payment:vnpayReturn.cardLinkedSuccess', 'Card linked successfully!') : t('payment:vnpayReturn.paymentSuccess', 'Payment successful!'))
-            : (txnRef.startsWith('LINK-') ? t('payment:vnpayReturn.cardLinkedFailed', 'Card linking failed') : t('payment:vnpayReturn.paymentFailed', 'Payment failed'))}
+            ? (isLinkCard
+                ? t('payment:vnpayReturn.cardLinkedSuccess', 'Card linked successfully!')
+                : isTopUp
+                  ? t('payment:vnpayReturn.topUpSuccess', 'Top-up successful')
+                  : t('payment:vnpayReturn.paymentSuccess', 'Payment successful!'))
+            : (isLinkCard
+                ? t('payment:vnpayReturn.cardLinkedFailed', 'Card linking failed')
+                : isTopUp
+                  ? t('payment:vnpayReturn.topUpFailed', 'Top-up failed')
+                  : t('payment:vnpayReturn.paymentFailed', 'Payment failed'))}
         </h1>
 
         <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, margin: '0 0 32px' }}>
           {isSuccess
-            ? (txnRef.startsWith('LINK-') ? t('payment:vnpayReturn.cardLinkedDesc', 'Your card has been linked successfully.') : t('payment:vnpayReturn.paymentSuccessDesc', 'Your transaction has been processed successfully.'))
+            ? (isLinkCard
+                ? t('payment:vnpayReturn.cardLinkedDesc', 'Your card has been linked successfully.')
+                : isTopUp
+                  ? t('payment:vnpayReturn.topUpSuccessDesc', 'Funds have been added to your wallet.')
+                  : t('payment:vnpayReturn.paymentSuccessDesc', 'Your transaction has been processed successfully.'))
             : error || result?.message || t('payment:vnpayReturn.paymentFailedDesc', 'Transaction could not be completed. Please try again.')}
         </p>
 
@@ -231,76 +256,63 @@ export default function VnPayReturnPage() {
 
         {/* Actions */}
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', flexDirection: isMobile ? 'column' : 'row' }}>
-          {isSuccess && result?.clientReturnPath && (
-            <Button
-              type="primary"
-              size="large"
-              onClick={() => {
-                localStorage.removeItem('oio_deposit_auction_id')
-                navigate(result.clientReturnPath!)
-              }}
-              style={{
-                height: 48,
-                padding: '0 32px',
-                fontWeight: 500,
-                background: 'var(--color-accent)',
-                borderColor: 'var(--color-accent)',
-              }}
-            >
-              {t('payment:vnpayReturn.continue', 'Continue')}
-            </Button>
-          )}
-          {isSuccess && !result?.clientReturnPath && depositAuctionId && (
-            <Button
-              type="primary"
-              size="large"
-              onClick={() => {
-                localStorage.removeItem('oio_deposit_auction_id')
-                navigate(`/auctions/${depositAuctionId}?deposited=true`)
-              }}
-              style={{
-                height: 48,
-                padding: '0 32px',
-                fontWeight: 500,
-                background: 'var(--color-accent)',
-                borderColor: 'var(--color-accent)',
-              }}
-            >
-              {t('payment:vnpayReturn.backToAuction', 'Back to Auction')}
-            </Button>
-          )}
-          {isSuccess && !result?.clientReturnPath && !depositAuctionId && txnRef.startsWith('LINK-') && (
-            <Button
-              type="primary"
-              size="large"
-              onClick={() => navigate('/me/payment-methods')}
-              style={{
-                height: 48,
-                padding: '0 32px',
-                fontWeight: 500,
-                background: 'var(--color-accent)',
-                borderColor: 'var(--color-accent)',
-              }}
-            >
-              {t('payment:vnpayReturn.viewPaymentMethods', 'View Payment Methods')}
-            </Button>
-          )}
-          {isSuccess && !result?.clientReturnPath && !depositAuctionId && !txnRef.startsWith('LINK-') && (
-            <Button
-              type="primary"
-              size="large"
-              onClick={() => navigate('/me/orders')}
-              style={{
-                height: 48,
-                padding: '0 32px',
-                fontWeight: 500,
-                background: 'var(--color-accent)',
-                borderColor: 'var(--color-accent)',
-              }}
-            >
-              {t('payment:vnpayReturn.viewOrders', 'View Orders')}
-            </Button>
-          )}
+          {isSuccess && (() => {
+            const primaryBtnStyle = {
+              height: 48,
+              padding: '0 32px',
+              fontWeight: 500,
+              background: 'var(--color-accent)',
+              borderColor: 'var(--color-accent)',
+            }
+            const go = (path: string) => {
+              localStorage.removeItem('oio_deposit_auction_id')
+              navigate(path)
+            }
+
+            if (isTopUp) {
+              return (
+                <Button type="primary" size="large" onClick={() => go('/me/wallet')} style={primaryBtnStyle}>
+                  {t('payment:vnpayReturn.viewWallet', 'View Wallet')}
+                </Button>
+              )
+            }
+            if (isAuctionDeposit) {
+              const target = auctionIdFromPath
+                ? `/auctions/${auctionIdFromPath}?deposited=true`
+                : '/me/wallet'
+              return (
+                <Button type="primary" size="large" onClick={() => go(target)} style={primaryBtnStyle}>
+                  {t('payment:vnpayReturn.backToAuction', 'Back to Auction')}
+                </Button>
+              )
+            }
+            if (isLinkCard) {
+              return (
+                <Button type="primary" size="large" onClick={() => go('/me/payment-methods')} style={primaryBtnStyle}>
+                  {t('payment:vnpayReturn.backToPaymentMethods', 'Back to payment methods')}
+                </Button>
+              )
+            }
+            if (isOrderPayment) {
+              const target = result?.clientReturnPath ?? '/me/orders'
+              return (
+                <Button type="primary" size="large" onClick={() => go(target)} style={primaryBtnStyle}>
+                  {result?.clientReturnPath
+                    ? t('payment:vnpayReturn.backToOrder', 'Back to Order')
+                    : t('payment:vnpayReturn.viewOrders', 'View Orders')}
+                </Button>
+              )
+            }
+            // Unknown purpose — fallback to clientReturnPath if any, else home-only (no View Orders for top-ups)
+            if (result?.clientReturnPath) {
+              return (
+                <Button type="primary" size="large" onClick={() => go(result.clientReturnPath!)} style={primaryBtnStyle}>
+                  {t('payment:vnpayReturn.continue', 'Continue')}
+                </Button>
+              )
+            }
+            return null
+          })()}
           {!isSuccess && (
             <Button
               type="primary"

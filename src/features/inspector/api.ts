@@ -1,7 +1,21 @@
-import apiClient, { extractArray } from '@/lib/axios'
+import apiClient from '@/lib/axios'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/queryClient'
 import type { PagedList } from '@/types'
+
+/**
+ * @deprecated Storage-location ownership moved to warehouse-staff. Import from
+ * `@/features/warehouse/api` instead. Re-exported here for back-compat only.
+ */
+export {
+  useStorageLocations,
+  useCreateStorageLocation,
+  useUpdateStorageLocation,
+  useDeleteStorageLocation,
+  useStoreWarehouseItem,
+} from '@/features/warehouse/api'
+/** @deprecated Import from `@/features/warehouse/api`. */
+export type { StorageLocationDto, StorageLocationsParams } from '@/features/warehouse/api'
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -19,6 +33,8 @@ export interface InspectionQueueItem {
   declaredCondition: string
   conditionOnArrival?: string
   inspectedAt?: string
+  storageLocationLabel?: string
+  itemImageUrl?: string
 }
 
 export interface WarehouseInspectionDto {
@@ -44,17 +60,6 @@ export interface InspectionEvidenceDto {
   id: string
   url: string
   type: string
-}
-
-export interface StorageLocationDto {
-  id: string
-  zone: string
-  aisle: string
-  shelf: string
-  bin: string
-  label: string
-  isOccupied: boolean
-  createdAt: string
 }
 
 // ── Inspection Queue ─────────────────────────────────────────────────
@@ -119,82 +124,3 @@ export function useReviewInspection() {
   })
 }
 
-// ── Storage Locations ────────────────────────────────────────────────
-
-export function useStorageLocations() {
-  return useQuery({
-    queryKey: queryKeys.warehouse.locations(),
-    queryFn: async () => {
-      const res = await apiClient.get('/warehouse/storage-locations')
-      return extractArray<StorageLocationDto>(res.data)
-    },
-  })
-}
-
-export function useCreateStorageLocation() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async (data: {
-      zone: string
-      aisle: string
-      shelf: string
-      bin: string
-    }) => {
-      const res = await apiClient.post<StorageLocationDto>('/warehouse/storage-locations', data)
-      return res.data
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.warehouse.locations() })
-    },
-  })
-}
-
-export function useUpdateStorageLocation() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async ({ id, ...data }: {
-      id: string
-      zone: string
-      aisle: string
-      shelf: string
-      bin: string
-    }) => {
-      const res = await apiClient.put<StorageLocationDto>(`/warehouse/storage-locations/${id}`, data)
-      return res.data
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.warehouse.locations() })
-    },
-  })
-}
-
-export function useDeleteStorageLocation() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async (id: string) => {
-      await apiClient.delete(`/warehouse/storage-locations/${id}`)
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.warehouse.locations() })
-    },
-  })
-}
-
-// ── Store Warehouse Item ─────────────────────────────────────────────
-
-export function useStoreWarehouseItem() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async (data: { warehouseItemId: string; storageLocationId: string }) => {
-      const { warehouseItemId, ...body } = data
-      const res = await apiClient.post(
-        `/warehouse/warehouse-items/${warehouseItemId}/store`,
-        body,
-      )
-      return res.data
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.warehouse.all })
-    },
-  })
-}

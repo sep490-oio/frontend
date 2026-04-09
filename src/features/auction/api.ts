@@ -1,4 +1,5 @@
 import apiClient, { idempotentPost } from '@/lib/axios'
+import { getOrCreateViewerId } from '@/utils/viewerId'
 import { queryKeys, queryClient as _queryClient } from '@/lib/queryClient'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type {
@@ -240,7 +241,9 @@ export function useUpdateWatcherPreferences() {
 export function useRecordAuctionView() {
   return useMutation({
     mutationFn: async (auctionId: string) => {
-      await apiClient.post(`/auctions/${auctionId}/view`)
+      await apiClient.post(`/auctions/${auctionId}/view`, null, {
+        headers: { 'X-Viewer-Id': getOrCreateViewerId() },
+      })
     },
   })
 }

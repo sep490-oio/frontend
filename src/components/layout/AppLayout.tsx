@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Outlet, useNavigate, useLocation, Link } from 'react-router'
 import { Layout, Avatar, Dropdown, Button, Space, Drawer, Input } from 'antd'
 import { UserOutlined, LogoutOutlined, SettingOutlined, HistoryOutlined, SunOutlined, MoonOutlined, HeartOutlined, WalletOutlined, ShoppingOutlined, CommentOutlined, SafetyCertificateOutlined, MenuOutlined, CloseOutlined, SearchOutlined } from '@ant-design/icons'
@@ -9,8 +9,8 @@ import { useTheme } from '@/hooks/useTheme'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useAppSelector } from '@/app/store'
 import { NotificationDropdown } from '@/features/notification/components/NotificationDropdown'
-import { TermsAcceptanceBanner } from '@/features/user/components/TermsAcceptanceBanner'
-import { usePendingTerms, useCurrentUser } from '@/features/user/api'
+import { TermsAcceptanceModal } from '@/components/terms/TermsAcceptanceModal'
+import { useActiveTermsByType, useAcceptedTerms, useCurrentUser } from '@/features/user/api'
 import { SERIF_FONT, SANS_FONT } from '@/styles/tokens'
 
 function getRolesFromToken(token: string | null): string[] {
@@ -46,13 +46,33 @@ export function AppLayout() {
     }
   }, [debouncedSearch, navigate])
 
-  // Platform terms redirect — enforce before any app usage
-  const { data: platformTerms } = usePendingTerms('platform', { enabled: isAuthenticated })
+  // Platform terms — preview-first modal (no route redirect). The user can
+  // dismiss the modal and keep browsing; gated actions still require acceptance
+  // via their own local <TermsAcceptanceModal> instances.
+  //
+  // Source of truth: useActiveTermsByType('platform') confirms a publishable
+  // document exists, and useAcceptedTerms checks the user hasn't already
+  // accepted it. This avoids the stale-cache desync where usePendingTerms
+  // reported hasPending=true but the modal's own fetch found no document.
+  const { data: activePlatformTerm } = useActiveTermsByType('platform')
+  const { data: acceptedTermsList } = useAcceptedTerms({ enabled: isAuthenticated })
+  const [platformTermsModalOpen, setPlatformTermsModalOpen] = useState(false)
+  const [platformTermsAutoShown, setPlatformTermsAutoShown] = useState(false)
+
+  const platformTermNeedsAcceptance = useMemo(() => {
+    if (!activePlatformTerm || !acceptedTermsList) return false
+    const acceptedDocIds = new Set(
+      acceptedTermsList.map((a) => a.document?.id).filter(Boolean),
+    )
+    return !acceptedDocIds.has(activePlatformTerm.id)
+  }, [activePlatformTerm, acceptedTermsList])
+
   useEffect(() => {
-    if (isAuthenticated && platformTerms?.hasPending && !location.pathname.startsWith('/me/terms')) {
-      navigate(`/me/terms?type=platform&returnTo=${encodeURIComponent(location.pathname)}`)
+    if (isAuthenticated && platformTermNeedsAcceptance && !platformTermsAutoShown) {
+      setPlatformTermsModalOpen(true)
+      setPlatformTermsAutoShown(true)
     }
-  }, [isAuthenticated, platformTerms?.hasPending, location.pathname, navigate])
+  }, [isAuthenticated, platformTermNeedsAcceptance, platformTermsAutoShown])
 
   const userMenuItems = [
     { key: 'dashboard', icon: <UserOutlined />, label: t('common:menu.home', 'Dashboard') },
@@ -433,11 +453,13 @@ export function AppLayout() {
         </nav>
       </Drawer>
 
-      {/* ─── Terms Acceptance Banner ─── */}
+      {/* ─── Platform Terms Modal ─── */}
       {isAuthenticated && (
-        <div style={{ marginTop: 64 }}>
-          <TermsAcceptanceBanner />
-        </div>
+        <TermsAcceptanceModal
+          open={platformTermsModalOpen}
+          onClose={() => setPlatformTermsModalOpen(false)}
+          termType="platform"
+        />
       )}
 
       {/* ─── Content ─── */}

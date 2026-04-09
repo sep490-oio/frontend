@@ -14,7 +14,17 @@ import type {
 
 // ── Items ────────────────────────────────────────────────────────────
 
-export function useMyItems(params?: PaginationParams & { status?: string }) {
+export function useMyItems(
+  params?: PaginationParams & {
+    status?: string
+    requiresPlatformInspection?: boolean
+    /**
+     * When false, returns only items with no active inbound shipment
+     * (active = status not in [cancelled, failed]). Used by the inbound-book picker.
+     */
+    hasActiveInbound?: boolean
+  },
+) {
   return useQuery({
     queryKey: queryKeys.items.my(params),
     queryFn: async () => {

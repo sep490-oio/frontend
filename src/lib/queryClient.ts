@@ -122,6 +122,8 @@ export const queryKeys = {
     list: (params?: unknown) => [...queryKeys.disputes.all, 'list', params] as const,
     detail: (id: string) => [...queryKeys.disputes.all, 'detail', id] as const,
     messages: (disputeId: string, params?: unknown) => [...queryKeys.disputes.all, 'messages', disputeId, params] as const,
+    myList: (params?: unknown) => [...queryKeys.disputes.all, 'my', params] as const,
+    myDetail: (id: string) => [...queryKeys.disputes.all, 'my', 'detail', id] as const,
   },
   reports: {
     all: ['reports'] as const,
@@ -146,6 +148,8 @@ export const queryKeys = {
     reportsRoot: () => ['admin', 'reports'] as const,
     alertsRoot: () => ['admin', 'alerts'] as const,
     disputesRoot: () => ['admin', 'disputes'] as const,
+    disputeDetail: (id: string) => ['admin', 'disputes', 'detail', id] as const,
+    disputeAssignees: (id: string) => ['admin', 'disputes', 'assignees', id] as const,
     withdrawalsRoot: () => ['admin', 'withdrawals'] as const,
     transactionsRoot: () => ['admin', 'transactions'] as const,
     escrowsRoot: () => ['admin', 'escrows'] as const,

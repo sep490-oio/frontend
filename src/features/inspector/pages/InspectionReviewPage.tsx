@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Typography, Card, Button, Modal, Input, Select, Space, message } from 'antd'
+import { Typography, Card, Button, Modal, Input, Select, Space, message, Alert } from 'antd'
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { useInspectionQueue, useReviewInspection } from '@/features/inspector/api'
@@ -114,6 +114,14 @@ export default function InspectionReviewPage() {
       >
         Inspection Reviews
       </Typography.Title>
+
+      <Alert
+        type="info"
+        showIcon
+        style={{ marginBottom: 16 }}
+        message="Fallback review queue"
+        description="Most inspections are approved or rejected inline from the inspection detail page. This queue is a fallback for historical items awaiting review or inspections where the inline review step did not complete."
+      />
 
       <Card>
         <ResponsiveTable<InspectionQueueItem>

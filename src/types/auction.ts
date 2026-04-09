@@ -67,6 +67,12 @@ export interface CurrentBuyerOrderDto {
   canPayNow: boolean
 }
 
+export interface SealedBidInfoDto {
+  sealedBidCount: number
+  currentUserHasSubmittedSealedBid: boolean
+  currentUserSealedBidStatus?: string | null
+}
+
 export interface AuctionDetailDto {
   auction: AuctionDto
   item: AuctionItemDto
@@ -76,6 +82,7 @@ export interface AuctionDetailDto {
   currentUserParticipant?: ParticipantInfoDto
   currentUserBidState?: CurrentUserBidStateDto
   currentBuyerOrder?: CurrentBuyerOrderDto
+  sealedBidInfo?: SealedBidInfoDto | null
 }
 
 export interface AuctionItemDto {
@@ -134,6 +141,17 @@ export interface PlaceBidResultDto {
   autoBidsCascaded: number
   finalPrice: number
   wasImmediatelyOutbid: boolean
+  /**
+   * True when the submitted bid met or exceeded the buy-now ceiling and the
+   * auction was settled at the capped buyNowPrice instead of the raw bid.
+   */
+  triggeredBuyNowCap?: boolean
+  /**
+   * Populated when eager winner-order provisioning succeeds after a capped
+   * buy-now-by-bid. Absent when provisioning is deferred to the background
+   * AuctionSoldEvent handler; FE must then fall back to winner-order polling.
+   */
+  orderId?: string
 }
 
 export interface AutoBidDto {
