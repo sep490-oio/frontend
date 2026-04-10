@@ -33,6 +33,22 @@ const SIDEBAR_WIDTH = 240
 const SIDEBAR_COLLAPSED = 72
 const HEADER_HEIGHT = 64
 
+const iconBtnStyle = (): React.CSSProperties => ({
+  background: 'none',
+  border: 'none',
+  cursor: 'pointer',
+  padding: 8,
+  minWidth: 44,
+  minHeight: 44,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  color: 'var(--color-text-secondary)',
+  fontSize: 16,
+  borderRadius: 6,
+  transition: 'color 150ms ease',
+})
+
 interface MenuItem {
   key: string
   icon: React.ReactNode
@@ -50,14 +66,16 @@ type MenuEntry = MenuItem | MenuGroup
 export function SellerLayout() {
   const [collapsed, setCollapsed] = useState(false)
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
-  const { isMobile } = useBreakpoint()
+  const { isMobile, isTablet } = useBreakpoint()
   const { t, i18n } = useTranslation('seller')
   const navigate = useNavigate()
   const location = useLocation()
   const { user } = useAuth()
   const { isDark, toggle: toggleTheme } = useTheme()
 
-  const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED : SIDEBAR_WIDTH
+  // On tablet: force icon-only sidebar
+  const effectiveCollapsed = isTablet ? true : collapsed
+  const sidebarWidth = effectiveCollapsed ? SIDEBAR_COLLAPSED : SIDEBAR_WIDTH
 
   const menuEntries: MenuEntry[] = [
     { key: '/seller', icon: <DashboardOutlined />, label: t('menu.dashboard', 'Dashboard') },
@@ -117,18 +135,22 @@ export function SellerLayout() {
   const displayName = user?.profile?.displayName || user?.profile?.firstName || user?.userName || 'Seller'
   const avatarUrl = user?.profile?.avatarUrl
 
-  const renderMenuItem = (item: MenuItem) => {
+  const renderMenuItem = (item: MenuItem, inDrawer = false) => {
     const active = isActive(item.key)
+    const isIconOnly = !inDrawer && effectiveCollapsed
     const menuItem = (
       <div
         key={item.key}
-        onClick={() => navigate(item.key)}
+        onClick={() => { navigate(item.key); if (inDrawer) setMobileDrawerOpen(false) }}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === 'Enter' && navigate(item.key)}
         style={{
           height: 44,
           display: 'flex',
           alignItems: 'center',
-          padding: collapsed ? '0 0 0 0' : '0 16px',
-          justifyContent: collapsed ? 'center' : 'flex-start',
+          padding: isIconOnly ? '0' : '0 16px',
+          justifyContent: isIconOnly ? 'center' : 'flex-start',
           margin: '2px 8px',
           borderRadius: 8,
           cursor: 'pointer',
@@ -140,27 +162,20 @@ export function SellerLayout() {
           borderLeft: active ? '3px solid var(--color-accent)' : '3px solid transparent',
           transition: 'all 150ms ease',
           whiteSpace: 'nowrap',
-          gap: collapsed ? 0 : 12,
+          gap: isIconOnly ? 0 : 12,
           position: 'relative',
         }}
-        onMouseEnter={(e) => {
-          if (!active) {
-            e.currentTarget.style.background = 'var(--color-accent-light)'
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!active) {
-            e.currentTarget.style.background = 'transparent'
-          }
-        }}
+        onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = 'var(--color-accent-light)' }}
+        onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent' }}
       >
         <span style={{ fontSize: 16, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
           {item.icon}
         </span>
-        {!collapsed && <span>{item.label}</span>}
+        {!isIconOnly && <span>{item.label}</span>}
       </div>
     )
-    if (collapsed) {
+
+    if (isIconOnly) {
       return (
         <Tooltip key={item.key} title={item.label} placement="right">
           {menuItem}
@@ -170,9 +185,47 @@ export function SellerLayout() {
     return menuItem
   }
 
+  const renderEntries = (inDrawer = false) =>
+    menuEntries.map((entry, idx) => {
+      if ('type' in entry && entry.type === 'group') {
+        const isIconOnly = !inDrawer && effectiveCollapsed
+        return (
+          <div key={`group-${idx}`}>
+            {!isIconOnly ? (
+              <div
+                style={{
+                  padding: '16px 20px 4px',
+                  fontFamily: SANS_FONT,
+                  fontSize: 10,
+                  fontWeight: 600,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  color: 'var(--color-text-secondary)',
+                  opacity: 0.6,
+                }}
+              >
+                {entry.label}
+              </div>
+            ) : (
+              <div
+                style={{
+                  height: 1,
+                  background: 'var(--color-border)',
+                  margin: '8px 12px',
+                  opacity: 0.5,
+                }}
+              />
+            )}
+            {entry.children.map((item) => renderMenuItem(item, inDrawer))}
+          </div>
+        )
+      }
+      return renderMenuItem(entry as MenuItem, inDrawer)
+    })
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-bg-primary)' }}>
-      {/* Sidebar (hidden on mobile) */}
+      {/* ── Sidebar ── */}
       <aside
         style={{
           position: 'fixed',
@@ -189,14 +242,13 @@ export function SellerLayout() {
           overflow: 'hidden',
         }}
       >
-        {/* Logo area */}
         <div
           style={{
             height: HEADER_HEIGHT,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: collapsed ? 'center' : 'flex-start',
-            padding: collapsed ? '0' : '0 20px',
+            justifyContent: effectiveCollapsed ? 'center' : 'flex-start',
+            padding: effectiveCollapsed ? '0' : '0 20px',
             borderBottom: '1px solid var(--color-border)',
             flexShrink: 0,
           }}
@@ -205,7 +257,7 @@ export function SellerLayout() {
             to="/seller"
             style={{
               fontFamily: SERIF_FONT,
-              fontSize: collapsed ? 18 : 22,
+              fontSize: effectiveCollapsed ? 18 : 22,
               letterSpacing: '0.1em',
               color: 'var(--color-text-primary)',
               textDecoration: 'none',
@@ -216,7 +268,7 @@ export function SellerLayout() {
             }}
           >
             OIO
-            {!collapsed && (
+            {!effectiveCollapsed && (
               <span
                 style={{
                   fontFamily: SANS_FONT,
@@ -234,47 +286,13 @@ export function SellerLayout() {
           </Link>
         </div>
 
-        {/* Menu */}
-        <nav style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '8px 0' }}>
-          {menuEntries.map((entry, idx) => {
-            if ('type' in entry && entry.type === 'group') {
-              return (
-                <div key={`group-${idx}`}>
-                  {!collapsed && (
-                    <div
-                      style={{
-                        padding: '16px 20px 4px',
-                        fontFamily: SANS_FONT,
-                        fontSize: 10,
-                        fontWeight: 600,
-                        letterSpacing: '0.1em',
-                        textTransform: 'uppercase',
-                        color: 'var(--color-text-secondary)',
-                        opacity: 0.6,
-                      }}
-                    >
-                      {entry.label}
-                    </div>
-                  )}
-                  {collapsed && (
-                    <div
-                      style={{
-                        height: 1,
-                        background: 'var(--color-border)',
-                        margin: '8px 12px',
-                        opacity: 0.5,
-                      }}
-                    />
-                  )}
-                  {entry.children.map(renderMenuItem)}
-                </div>
-              )
-            }
-            return renderMenuItem(entry as MenuItem)
-          })}
+        <nav
+          style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '8px 0' }}
+          aria-label="Seller navigation"
+        >
+          {renderEntries()}
         </nav>
 
-        {/* Sidebar footer */}
         <div
           style={{
             padding: '12px 16px',
@@ -282,92 +300,47 @@ export function SellerLayout() {
             flexShrink: 0,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: collapsed ? 'center' : 'flex-start',
+            justifyContent: effectiveCollapsed ? 'center' : 'flex-start',
           }}
         >
-          <span
-            style={{
-              fontFamily: SANS_FONT,
-              fontSize: 11,
-              color: 'var(--color-text-secondary)',
-              opacity: 0.6,
-            }}
-          >
-            {collapsed ? 'v1' : 'v1.0'}
+          <span style={{ fontFamily: SANS_FONT, fontSize: 11, color: 'var(--color-text-secondary)', opacity: 0.6 }}>
+            {effectiveCollapsed ? 'v1' : 'v1.0'}
           </span>
         </div>
       </aside>
 
-      {/* Mobile Drawer */}
+      {/* ── Mobile Drawer ── */}
       <Drawer
         title={
           <span style={{ fontFamily: SERIF_FONT, fontSize: 20, letterSpacing: '0.1em' }}>
-            OIO <span style={{ fontFamily: SANS_FONT, fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-accent)', marginLeft: 8 }}>Seller</span>
+            OIO{' '}
+            <span
+              style={{
+                fontFamily: SANS_FONT,
+                fontSize: 10,
+                fontWeight: 600,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                color: 'var(--color-accent)',
+                marginLeft: 8,
+              }}
+            >
+              Seller
+            </span>
           </span>
         }
         placement="left"
         onClose={() => setMobileDrawerOpen(false)}
         open={mobileDrawerOpen}
-        width={280}
+        width={Math.min(280, window.innerWidth * 0.85)}
         styles={{ body: { padding: 0 } }}
       >
-        <nav style={{ padding: '8px 0' }}>
-          {menuEntries.map((entry, idx) => {
-            if ('type' in entry && entry.type === 'group') {
-              return (
-                <div key={`group-${idx}`}>
-                  <div style={{ padding: '16px 20px 4px', fontFamily: SANS_FONT, fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', opacity: 0.6 }}>
-                    {entry.label}
-                  </div>
-                  {entry.children.map((item) => {
-                    const active = isActive(item.key)
-                    return (
-                      <div
-                        key={item.key}
-                        onClick={() => { navigate(item.key); setMobileDrawerOpen(false) }}
-                        style={{
-                          height: 44, display: 'flex', alignItems: 'center', padding: '0 16px',
-                          margin: '2px 8px', borderRadius: 8, cursor: 'pointer', fontFamily: SANS_FONT,
-                          fontSize: 13, fontWeight: active ? 500 : 400,
-                          color: active ? 'var(--color-accent)' : 'var(--color-text-secondary)',
-                          background: active ? 'var(--color-accent-light)' : 'transparent',
-                          borderLeft: active ? '3px solid var(--color-accent)' : '3px solid transparent',
-                          gap: 12,
-                        }}
-                      >
-                        <span style={{ fontSize: 16, display: 'flex', alignItems: 'center', flexShrink: 0 }}>{item.icon}</span>
-                        <span>{item.label}</span>
-                      </div>
-                    )
-                  })}
-                </div>
-              )
-            }
-            const item = entry as MenuItem
-            const active = isActive(item.key)
-            return (
-              <div
-                key={item.key}
-                onClick={() => { navigate(item.key); setMobileDrawerOpen(false) }}
-                style={{
-                  height: 44, display: 'flex', alignItems: 'center', padding: '0 16px',
-                  margin: '2px 8px', borderRadius: 8, cursor: 'pointer', fontFamily: SANS_FONT,
-                  fontSize: 13, fontWeight: active ? 500 : 400,
-                  color: active ? 'var(--color-accent)' : 'var(--color-text-secondary)',
-                  background: active ? 'var(--color-accent-light)' : 'transparent',
-                  borderLeft: active ? '3px solid var(--color-accent)' : '3px solid transparent',
-                  gap: 12,
-                }}
-              >
-                <span style={{ fontSize: 16, display: 'flex', alignItems: 'center', flexShrink: 0 }}>{item.icon}</span>
-                <span>{item.label}</span>
-              </div>
-            )
-          })}
+        <nav style={{ padding: '8px 0' }} aria-label="Seller navigation (mobile)">
+          {renderEntries(true)}
         </nav>
       </Drawer>
 
-      {/* Header */}
+      {/* ── Header ── */}
       <header
         style={{
           position: 'fixed',
@@ -380,62 +353,40 @@ export function SellerLayout() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0 24px',
+          padding: isMobile ? '0 12px' : '0 24px',
           transition: 'left 200ms ease',
           zIndex: 99,
+          gap: 8,
         }}
       >
-        {/* Left side: collapse toggle (desktop) / hamburger (mobile) + breadcrumb */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 16, minWidth: 0 }}>
           {isMobile ? (
-            <button
-              onClick={() => setMobileDrawerOpen(true)}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 4,
-                display: 'flex',
-                alignItems: 'center',
-                color: 'var(--color-text-secondary)',
-                fontSize: 18,
-              }}
-              aria-label="Open menu"
-            >
+            <button onClick={() => setMobileDrawerOpen(true)} style={{ ...iconBtnStyle(), padding: 4 }} aria-label="Open menu">
               <MenuOutlined />
             </button>
           ) : (
-            <button
-              onClick={() => setCollapsed(!collapsed)}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 4,
-                display: 'flex',
-                alignItems: 'center',
-                color: 'var(--color-text-secondary)',
-                fontSize: 18,
-              }}
-              aria-label="Toggle sidebar"
-            >
-              {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            </button>
+            !isTablet && (
+              <button onClick={() => setCollapsed(!collapsed)} style={{ ...iconBtnStyle(), padding: 4 }} aria-label="Toggle sidebar">
+                {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              </button>
+            )
           )}
           <span
             style={{
               fontFamily: SANS_FONT,
-              fontSize: 14,
+              fontSize: isMobile ? 13 : 14,
               fontWeight: 500,
               color: 'var(--color-text-primary)',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
             }}
           >
-            OIO Seller
+            {isMobile ? 'Seller' : 'OIO Seller'}
           </span>
         </div>
 
-        {/* Right side: back link, theme, lang, user */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 2 : 8, flexShrink: 0 }}>
           <button
             onClick={() => navigate('/')}
             style={{
@@ -443,7 +394,8 @@ export function SellerLayout() {
               border: '1px solid var(--color-border)',
               borderRadius: 6,
               cursor: 'pointer',
-              padding: '6px 12px',
+              padding: isMobile ? '6px 10px' : '6px 12px',
+              minHeight: 36,
               display: 'flex',
               alignItems: 'center',
               gap: 6,
@@ -451,6 +403,7 @@ export function SellerLayout() {
               fontSize: 12,
               color: 'var(--color-text-secondary)',
               transition: 'all 150ms ease',
+              whiteSpace: 'nowrap',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.borderColor = 'var(--color-accent)'
@@ -462,24 +415,13 @@ export function SellerLayout() {
             }}
           >
             <ArrowLeftOutlined style={{ fontSize: 11 }} />
-            Back to Platform
+            {!isMobile && 'Back to Platform'}
           </button>
 
           <Tooltip title={isDark ? 'Light mode' : 'Dark mode'}>
             <button
               onClick={toggleTheme}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 8,
-                display: 'flex',
-                alignItems: 'center',
-                color: 'var(--color-text-secondary)',
-                fontSize: 16,
-                borderRadius: 6,
-                transition: 'color 150ms ease',
-              }}
+              style={iconBtnStyle()}
               onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-accent)' }}
               onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-secondary)' }}
             >
@@ -490,47 +432,18 @@ export function SellerLayout() {
           <Tooltip title="Switch language">
             <button
               onClick={toggleLanguage}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 8,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 4,
-                color: 'var(--color-text-secondary)',
-                fontSize: 12,
-                fontFamily: SANS_FONT,
-                fontWeight: 500,
-                borderRadius: 6,
-                transition: 'color 150ms ease',
-              }}
+              style={{ ...iconBtnStyle(), gap: 4, fontSize: 12, fontFamily: SANS_FONT, fontWeight: 500 }}
               onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-accent)' }}
               onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-secondary)' }}
             >
               <GlobalOutlined style={{ fontSize: 14 }} />
-              {i18n.language === 'en' ? 'EN' : 'UK'}
+              {!isMobile && (i18n.language === 'en' ? 'EN' : 'UK')}
             </button>
           </Tooltip>
 
-          <div
-            style={{
-              width: 1,
-              height: 24,
-              background: 'var(--color-border)',
-              margin: '0 4px',
-            }}
-          />
+          <div style={{ width: 1, height: 24, background: 'var(--color-border)', margin: '0 4px', flexShrink: 0 }} />
 
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '4px 8px',
-              borderRadius: 8,
-            }}
-          >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 4px', borderRadius: 8 }}>
             <Avatar
               size={32}
               src={avatarUrl}
@@ -538,9 +451,10 @@ export function SellerLayout() {
               style={{
                 backgroundColor: avatarUrl ? undefined : 'var(--color-accent-light)',
                 color: avatarUrl ? undefined : 'var(--color-accent)',
+                flexShrink: 0,
               }}
             />
-            {!collapsed && (
+            {!isMobile && !isTablet && (
               <span
                 style={{
                   fontFamily: SANS_FONT,
@@ -560,7 +474,7 @@ export function SellerLayout() {
         </div>
       </header>
 
-      {/* Content area */}
+      {/* ── Content area ── */}
       <main
         style={{
           marginLeft: isMobile ? 0 : sidebarWidth,
@@ -570,7 +484,7 @@ export function SellerLayout() {
           background: 'var(--color-bg-primary)',
         }}
       >
-        <Content style={{ padding: isMobile ? 16 : 32 }}>
+        <Content style={{ padding: isMobile ? 12 : isTablet ? 20 : 32 }}>
           <Outlet />
         </Content>
       </main>
