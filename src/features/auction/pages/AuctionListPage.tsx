@@ -29,7 +29,6 @@ export default function AuctionListPage() {
   const featured = featuredData?.items ?? []
   const heroItem = featured[0]
 
-  const isNarrow = isMobile || isTablet
   const sectionPadding = isMobile ? '32px 16px' : isTablet ? '48px 20px' : '64px 24px'
 
   return (

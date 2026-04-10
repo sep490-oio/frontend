@@ -41,7 +41,7 @@ export default function WatchlistPage() {
   const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
   const { message } = App.useApp()
-  const { isMobile, isTablet } = useBreakpoint()
+  const { isMobile } = useBreakpoint()
 
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(12)
@@ -65,7 +65,6 @@ export default function WatchlistPage() {
   }
 
   const sortedItems = data?.items ? sortItems(data.items, sortKey) : []
-  const isNarrow = isMobile || isTablet
 
   return (
     <div style={{ padding: isMobile ? '0 0 64px' : 0 }}>

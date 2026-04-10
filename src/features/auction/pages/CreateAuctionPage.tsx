@@ -95,7 +95,7 @@ export default function CreateAuctionPage() {
   const navigate = useNavigate()
   const prefix = useRoutePrefix()
   const { message } = App.useApp()
-  const { isMobile, isTablet } = useBreakpoint()
+  const { isMobile } = useBreakpoint()
 
   const [searchParams] = useSearchParams()
   const itemId = searchParams.get('itemId')
