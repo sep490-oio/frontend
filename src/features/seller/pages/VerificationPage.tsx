@@ -3,7 +3,6 @@ import {
   Typography,
   Card,
   Button,
-  Space,
   Spin,
   List,
   App,
@@ -11,8 +10,6 @@ import {
   Descriptions,
   Alert,
   Timeline,
-  Row,
-  Col,
 } from 'antd'
 import { ArrowLeftOutlined, FileOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
