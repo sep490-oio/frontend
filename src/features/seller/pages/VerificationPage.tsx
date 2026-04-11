@@ -11,6 +11,8 @@ import {
   Descriptions,
   Alert,
   Timeline,
+  Row,
+  Col,
 } from 'antd'
 import { ArrowLeftOutlined, FileOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
@@ -92,16 +94,21 @@ export default function VerificationPage() {
   }
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: isMobile ? '0 12px' : undefined }}>
-      <Space style={{ marginBottom: 16 }}>
-        <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate('/seller')}>
+    <div style={{ maxWidth: 800, margin: '0 auto', padding: isMobile ? '0 12px 48px' : '0 0 48px' }}>
+      {/* ── Header ──────────────────────────────────────────────────── */}
+      <div style={{ marginBottom: isMobile ? 16 : 24 }}>
+        <Button
+          type="text"
+          icon={<ArrowLeftOutlined />}
+          onClick={() => navigate('/seller')}
+          style={{ marginBottom: 12, minHeight: 44, paddingLeft: 0 }}
+        >
           {tc('action.back', 'Back')}
         </Button>
-      </Space>
-
-      <Typography.Title level={2} style={{ marginBottom: 24 }}>
-        {t('verification', 'Identity Verification')}
-      </Typography.Title>
+        <Typography.Title level={isMobile ? 3 : 2} style={{ margin: 0 }}>
+          {t('verification', 'Identity Verification')}
+        </Typography.Title>
+      </div>
 
       <TermsAcceptanceGate
         termType="platform"
@@ -144,7 +151,11 @@ export default function VerificationPage() {
                 type="error"
                 showIcon
                 message={t('detailLoadError', 'Failed to load verification details')}
-                action={<Button size="small" onClick={() => refetchDetail()}>{tc('action.retry', 'Retry')}</Button>}
+                action={
+                  <Button size="small" onClick={() => refetchDetail()} style={{ minHeight: 32 }}>
+                    {tc('action.retry', 'Retry')}
+                  </Button>
+                }
                 style={{ marginTop: 16 }}
               />
             )}
@@ -152,7 +163,11 @@ export default function VerificationPage() {
             {/* Document management for pending verifications */}
             {activeVerification && activeVerification.status === IdentityVerificationStatus.Pending && (
               <>
-                <Card title={t('documents', 'Upload Documents')} style={{ marginTop: 16 }}>
+                <Card
+                  title={t('documents', 'Upload Documents')}
+                  style={{ marginTop: 16 }}
+                  styles={{ body: { padding: isMobile ? '12px 16px' : '20px 24px' } }}
+                >
                   <VerificationDocumentSlots
                     verificationType={activeVerification.verificationType}
                     documents={activeVerification.documents ?? []}
@@ -196,34 +211,53 @@ export default function VerificationPage() {
 
             {/* Read-only detail card for non-pending verifications */}
             {activeVerification && activeVerification.status !== IdentityVerificationStatus.Pending && currentStatus !== 'none' && (
-              <Card style={{ marginTop: 16 }}>
+              <Card style={{ marginTop: 16 }} styles={{ body: { padding: isMobile ? '16px' : '20px 24px' } }}>
                 {activeVerification.document && (
                   <>
-                    <Typography.Title level={5}>{t('documentInfo', 'Document Information')}</Typography.Title>
-                    <Descriptions column={{ xs: 1, sm: 2 }} size="small">
-                      <Descriptions.Item label={t('idType', 'ID Type')}>
-                        {activeVerification.document.idType}
-                      </Descriptions.Item>
-                      <Descriptions.Item label={t('idNumber', 'ID Number')}>
-                        {activeVerification.document.idNumber}
-                      </Descriptions.Item>
-                    </Descriptions>
-                    <Divider />
+                    <Typography.Title level={5} style={{ fontSize: isMobile ? 14 : 16 }}>
+                      {t('documentInfo', 'Document Information')}
+                    </Typography.Title>
+                    {isMobile ? (
+                      // Mobile: stacked rows
+                      <div>
+                        {[
+                          { label: t('idType', 'ID Type'), value: activeVerification.document.idType },
+                          { label: t('idNumber', 'ID Number'), value: activeVerification.document.idNumber },
+                        ].map((item) => (
+                          <div key={item.label} style={{ marginBottom: 12 }}>
+                            <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 2 }}>{item.label}</div>
+                            <div style={{ fontSize: 14 }}>{item.value}</div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <Descriptions column={{ xs: 1, sm: 2 }} size="small">
+                        <Descriptions.Item label={t('idType', 'ID Type')}>
+                          {activeVerification.document.idType}
+                        </Descriptions.Item>
+                        <Descriptions.Item label={t('idNumber', 'ID Number')}>
+                          {activeVerification.document.idNumber}
+                        </Descriptions.Item>
+                      </Descriptions>
+                    )}
+                    <Divider style={{ margin: isMobile ? '12px 0' : '16px 0' }} />
                   </>
                 )}
 
                 {activeVerification.documents && activeVerification.documents.length > 0 && (
                   <>
-                    <Typography.Title level={5}>{t('documents', 'Documents')}</Typography.Title>
+                    <Typography.Title level={5} style={{ fontSize: isMobile ? 14 : 16 }}>
+                      {t('documents', 'Documents')}
+                    </Typography.Title>
                     <List
                       size="small"
                       dataSource={activeVerification.documents}
                       renderItem={(doc) => (
-                        <List.Item>
+                        <List.Item style={{ padding: isMobile ? '10px 0' : undefined }}>
                           <List.Item.Meta
-                            avatar={<FileOutlined style={{ fontSize: 18 }} />}
+                            avatar={<FileOutlined style={{ fontSize: isMobile ? 16 : 18 }} />}
                             title={
-                              <a href={doc.secureUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13 }}>
+                              <a href={doc.secureUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: isMobile ? 12 : 13 }}>
                                 {doc.documentType}
                               </a>
                             }
@@ -232,11 +266,13 @@ export default function VerificationPage() {
                         </List.Item>
                       )}
                     />
-                    <Divider />
+                    <Divider style={{ margin: isMobile ? '12px 0' : '16px 0' }} />
                   </>
                 )}
 
-                <Typography.Title level={5}>{t('timeline', 'Timeline')}</Typography.Title>
+                <Typography.Title level={5} style={{ fontSize: isMobile ? 14 : 16 }}>
+                  {t('timeline', 'Timeline')}
+                </Typography.Title>
                 <Timeline
                   items={[
                     { color: 'green', children: `${t('created', 'Created')} — ${formatDateTime(activeVerification.createdAt)}` },

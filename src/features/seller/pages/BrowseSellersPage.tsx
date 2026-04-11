@@ -35,7 +35,7 @@ function useBrowseSellers(params?: PaginationParams & { search?: string }) {
 
 export default function BrowseSellersPage() {
   const { t } = useTranslation('common')
-  const { isMobile } = useBreakpoint()
+  const { isMobile, isTablet } = useBreakpoint()
   const navigate = useNavigate()
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(12)
@@ -43,70 +43,124 @@ export default function BrowseSellersPage() {
 
   const { data, isLoading } = useBrowseSellers({ pageNumber: page, pageSize, ...(search ? { search } : {}) })
   const sellers = data?.items ?? []
+  const totalCount = data?.metadata?.totalCount ?? 0
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px 12px 48px' : '32px 24px 80px' }}>
-      <h1 style={{ fontFamily: SERIF, fontWeight: 400, fontSize: isMobile ? 24 : 32, color: 'var(--color-text-primary)', marginBottom: 8 }}>
-        Người bán
-      </h1>
-      <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, marginBottom: isMobile ? 20 : 32 }}>
-        Khám phá các nhà bán hàng uy tín trên nền tảng
-      </p>
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px 12px 48px' : isTablet ? '24px 16px 64px' : '32px 24px 80px' }}>
+      {/* ── Page Header ──────────────────────────────────────────────── */}
+      <div style={{ marginBottom: isMobile ? 16 : 24 }}>
+        <h1 style={{
+          fontFamily: SERIF,
+          fontWeight: 400,
+          fontSize: isMobile ? 22 : isTablet ? 28 : 32,
+          color: 'var(--color-text-primary)',
+          marginBottom: 6,
+          marginTop: 0,
+        }}>
+          Người bán
+        </h1>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: isMobile ? 13 : 14, margin: 0 }}>
+          Khám phá các nhà bán hàng uy tín trên nền tảng
+        </p>
+      </div>
 
-      <Flex style={{ marginBottom: isMobile ? 20 : 32 }}>
+      {/* ── Search Bar ───────────────────────────────────────────────── */}
+      <div style={{ marginBottom: isMobile ? 16 : 28 }}>
         <Input
           prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
           placeholder="Tìm kiếm người bán..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onPressEnter={() => setPage(1)}
-          style={{ maxWidth: isMobile ? '100%' : 360, width: '100%', borderRadius: 100, height: 40, borderColor: 'var(--color-border)' }}
+          style={{
+            maxWidth: isMobile ? '100%' : 360,
+            width: '100%',
+            borderRadius: 100,
+            height: 44,
+            borderColor: 'var(--color-border)',
+          }}
         />
-      </Flex>
+      </div>
 
+      {/* ── Content ──────────────────────────────────────────────────── */}
       {isLoading ? (
-        <div style={{ textAlign: 'center', padding: isMobile ? 40 : 80 }}><Spin size="large" /></div>
+        <div style={{ textAlign: 'center', padding: isMobile ? 40 : 80 }}>
+          <Spin size="large" />
+        </div>
       ) : sellers.length === 0 ? (
         <Empty description="Không tìm thấy người bán" />
       ) : (
         <>
-          <Row gutter={[isMobile ? 12 : 20, isMobile ? 12 : 20]}>
+          <Row gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]}>
             {sellers.map((seller) => (
               <Col key={seller.id} xs={24} sm={12} lg={8}>
                 <Card
                   hoverable
                   onClick={() => navigate(`/sellers/${seller.id}`)}
-                  style={{ borderRadius: 12, border: '1px solid var(--color-border-light)' }}
-                  styles={{ body: { padding: isMobile ? 16 : 24 } }}
+                  style={{
+                    borderRadius: 12,
+                    border: '1px solid var(--color-border-light)',
+                    height: '100%',
+                  }}
+                  styles={{ body: { padding: isMobile ? 14 : 20 } }}
                 >
-                  <Flex align="center" gap={isMobile ? 12 : 16}>
+                  <Flex align="center" gap={isMobile ? 12 : 14}>
+                    {/* Avatar circle */}
                     <div style={{
-                      width: isMobile ? 44 : 56, height: isMobile ? 44 : 56, borderRadius: '50%',
+                      width: isMobile ? 44 : 52,
+                      height: isMobile ? 44 : 52,
+                      borderRadius: '50%',
                       background: 'var(--color-accent-light)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: isMobile ? 16 : 20, fontWeight: 600, color: 'var(--color-accent)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: isMobile ? 16 : 18,
+                      fontWeight: 600,
+                      color: 'var(--color-accent)',
                       flexShrink: 0,
                     }}>
                       {seller.storeName?.[0]?.toUpperCase() ?? <ShopOutlined />}
                     </div>
+
+                    {/* Store info */}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <Flex align="center" gap={6}>
-                        <div style={{ fontWeight: 600, fontSize: isMobile ? 14 : 15, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <Flex align="center" gap={5} style={{ marginBottom: 2 }}>
+                        <div style={{
+                          fontWeight: 600,
+                          fontSize: isMobile ? 13 : 14,
+                          color: 'var(--color-text-primary)',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}>
                           {seller.storeName}
                         </div>
                         {seller.status === 'approved' && (
-                          <SafetyCertificateOutlined style={{ color: 'var(--color-success)', fontSize: 14 }} />
+                          <SafetyCertificateOutlined style={{ color: 'var(--color-success)', fontSize: 13, flexShrink: 0 }} />
                         )}
                       </Flex>
-                      <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <div style={{
+                        fontSize: 12,
+                        color: 'var(--color-text-secondary)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        lineHeight: 1.4,
+                      }}>
                         {seller.storeDescription || '—'}
                       </div>
                     </div>
                   </Flex>
-                  <Flex gap={16} style={{ marginTop: isMobile ? 12 : 16, paddingTop: 12, borderTop: '1px solid var(--color-border-light)' }}>
+
+                  {/* Stats row */}
+                  <Flex gap={14} style={{ marginTop: isMobile ? 10 : 14, paddingTop: 10, borderTop: '1px solid var(--color-border-light)' }}>
                     <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
                       <StarOutlined style={{ marginRight: 4 }} />
-                      Trust: <span style={{ fontFamily: MONO, fontWeight: 500, color: 'var(--color-accent)' }}>{seller.trustScore?.toFixed(0) ?? '—'}</span>/100
+                      Trust:{' '}
+                      <span style={{ fontFamily: MONO, fontWeight: 500, color: 'var(--color-accent)' }}>
+                        {seller.trustScore?.toFixed(0) ?? '—'}
+                      </span>
+                      /100
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
                       {seller.totalSalesCount ?? 0} sales
@@ -116,12 +170,14 @@ export default function BrowseSellersPage() {
               </Col>
             ))}
           </Row>
-          {(data?.metadata?.totalCount ?? 0) > pageSize && (
+
+          {/* ── Pagination ─────────────────────────────────────────── */}
+          {totalCount > pageSize && (
             <Flex justify="center" style={{ marginTop: isMobile ? 24 : 40 }}>
               <Pagination
                 current={data?.metadata?.currentPage ?? page}
                 pageSize={data?.metadata?.pageSize ?? pageSize}
-                total={data?.metadata?.totalCount ?? 0}
+                total={totalCount}
                 showSizeChanger={!isMobile}
                 showTotal={isMobile ? undefined : (total) => t('pagination.total', { total })}
                 onChange={(p, ps) => { setPage(p); setPageSize(ps) }}

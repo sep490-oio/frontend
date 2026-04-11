@@ -1,9 +1,10 @@
-import { useState, useCallback } from 'react'
+import React, { useState, useCallback } from 'react'
 import {
   Collapse,
   DatePicker,
   Form,
   InputNumber,
+  Modal,
   Switch,
   Typography,
   Flex,
@@ -12,6 +13,7 @@ import {
   Button,
   Card,
   Alert,
+  Grid,
 } from 'antd'
 import type { FormInstance } from 'antd'
 import { ClockCircleOutlined } from '@ant-design/icons'
@@ -23,6 +25,7 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
 const { Text } = Typography
+const { useBreakpoint } = Grid
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -58,9 +61,8 @@ interface TimingState {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const DATE_FORMAT = 'YYYY-MM-DD HH:mm'
-const TIME_FORMAT = 'HH:mm'
-const DISPLAY_FORMAT = 'MMM D, YYYY [at] h:mm A'
+
+const DISPLAY_FORMAT = 'DD/MM/YYYY HH:mm'
 
 const MIN_QUAL_START_OFFSET_MINUTES = 5
 const MIN_QUALIFICATION_DURATION_MINUTES = 5
@@ -182,6 +184,12 @@ function disabledDate(current: Dayjs): boolean {
   return current && current.isBefore(dayjs().startOf('day'))
 }
 
+// Mount the picker popup inside the nearest scroll container so it never
+// overflows the viewport on mobile.
+function getPopupContainer(trigger: HTMLElement): HTMLElement {
+  return trigger.closest('.ant-form-item') as HTMLElement ?? document.body
+}
+
 // ─── Preset button renderer ───────────────────────────────────────────────────
 
 interface PresetButtonsProps<T extends string> {
@@ -191,24 +199,38 @@ interface PresetButtonsProps<T extends string> {
   customLabel?: string
 }
 
-function PresetButtons<T extends string>({ options, value, onChange, customLabel }: PresetButtonsProps<T>) {
+function PresetButtons<T extends string>({
+  options,
+  value,
+  onChange,
+  customLabel,
+}: PresetButtonsProps<T>) {
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+    <div
+      style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 6,
+        width: '100%',
+      }}
+    >
       {options.map((opt) => (
         <button
           key={opt.value}
           type="button"
           onClick={() => onChange(opt.value)}
           style={{
-            padding: '6px 16px',
+            padding: '8px 14px',
             borderRadius: 20,
             border: `1.5px solid ${value === opt.value ? 'var(--color-accent)' : 'var(--color-border)'}`,
             background: value === opt.value ? 'var(--color-accent)' : 'var(--color-bg-card)',
             color: value === opt.value ? '#fff' : 'var(--color-text-secondary)',
             fontWeight: 500,
-            fontSize: 13,
+            fontSize: 12,
             cursor: 'pointer',
             transition: 'all 0.2s',
+            minHeight: 40,
+            whiteSpace: 'nowrap',
           }}
         >
           {opt.label === 'Custom…' && customLabel ? customLabel : opt.label}
@@ -218,10 +240,332 @@ function PresetButtons<T extends string>({ options, value, onChange, customLabel
   )
 }
 
+// ─── Custom duration inline picker ───────────────────────────────────────────
+
+function CustomDurationPicker({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: CustomDuration | null
+  onChange: (v: CustomDuration) => void
+  placeholder?: string
+}) {
+  return (
+    <Flex gap={8} style={{ marginTop: 10, width: '100%' }} align="center" wrap="wrap">
+      <InputNumber
+        min={1}
+        value={value?.value ?? 60}
+        onChange={(val) => onChange({ value: val ?? 1, unit: value?.unit ?? 'minutes' })}
+        style={{ flex: '1 1 80px', minWidth: 72 }}
+        placeholder={placeholder ?? '60'}
+        size="large"
+      />
+      <Select
+        value={value?.unit ?? 'minutes'}
+        onChange={(unit) => onChange({ value: value?.value ?? 60, unit })}
+        style={{ flex: '1 1 110px', minWidth: 110 }}
+        size="large"
+        options={[
+          { label: 'minutes', value: 'minutes' },
+          { label: 'hours', value: 'hours' },
+          { label: 'days', value: 'days' },
+        ]}
+      />
+    </Flex>
+  )
+}
+
+// ─── Mobile-friendly DateTime Picker ─────────────────────────────────────────
+// On mobile: opens a full-width bottom-sheet style Modal with stacked date + time inputs.
+// On desktop: falls back to the standard Ant DatePicker.
+
+interface MobileDateTimePickerProps {
+  value?: Dayjs | null
+  onChange?: (val: Dayjs | null) => void
+  onAfterChange?: () => void
+  placeholder?: string
+  disabledDate?: (d: Dayjs) => boolean
+  disabledTime?: () => { disabledHours?: () => number[]; disabledMinutes?: (h: number) => number[] }
+  style?: React.CSSProperties
+  isMobile?: boolean
+  label?: string
+}
+
+function MobileDateTimePicker({
+  value,
+  onChange,
+  onAfterChange,
+  placeholder,
+  disabledDate,
+  style,
+  isMobile,
+  label,
+}: MobileDateTimePickerProps) {
+  const [open, setOpen] = useState(false)
+  const [draftDate, setDraftDate] = useState<string>('')
+  const [draftTime, setDraftTime] = useState<string>('00:00')
+
+  const displayValue = value ? value.format('D MMM YYYY [at] HH:mm') : ''
+
+  const handleOpen = () => {
+    if (value) {
+      setDraftDate(value.format('YYYY-MM-DD'))
+      setDraftTime(value.format('HH:mm'))
+    } else {
+      const def = dayjs().add(1, 'day')
+      setDraftDate(def.format('YYYY-MM-DD'))
+      setDraftTime('09:00')
+    }
+    setOpen(true)
+  }
+
+  const handleConfirm = () => {
+    if (draftDate) {
+      const combined = dayjs(`${draftDate} ${draftTime}`)
+      onChange?.(combined)
+      onAfterChange?.()
+    }
+    setOpen(false)
+  }
+
+  const handleClear = () => {
+    onChange?.(null)
+    setOpen(false)
+  }
+
+  const today = dayjs().format('YYYY-MM-DD')
+
+  if (!isMobile) {
+    return (
+      <DatePicker
+        value={value}
+        onChange={onChange}
+        format="DD/MM/YYYY HH:mm"
+        showTime={{ format: 'HH:mm' }}
+        disabledDate={disabledDate}
+        style={{ width: '100%', ...style }}
+        placeholder={placeholder}
+        getPopupContainer={getPopupContainer}
+        popupStyle={{ maxWidth: '100vw' }}
+      />
+    )
+  }
+
+  return (
+    <>
+      {/* Trigger — styled to match Ant Input */}
+      <button
+        type="button"
+        onClick={handleOpen}
+        style={{
+          width: '100%',
+          minHeight: 40,
+          padding: '0 11px',
+          borderRadius: 6,
+          border: '1px solid var(--color-border, #d9d9d9)',
+          background: 'var(--color-bg-card, #ffffff)',
+          color: displayValue ? 'var(--color-text-primary, rgba(0,0,0,0.88))' : 'var(--color-text-tertiary, rgba(0,0,0,0.25))',
+          fontSize: 14,
+          textAlign: 'left',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 8,
+          transition: 'border-color 0.2s',
+          boxSizing: 'border-box',
+          ...style,
+        }}
+      >
+        <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {displayValue || placeholder || 'Pick a date and time'}
+        </span>
+        {/* Calendar icon — matches Ant DatePicker */}
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
+          style={{ opacity: 0.35, flexShrink: 0, color: 'var(--color-text-secondary, rgba(0,0,0,0.45))' }}>
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      </button>
+
+      <Modal
+        open={open}
+        onCancel={() => setOpen(false)}
+        footer={null}
+        title={
+          <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-text-primary, rgba(0,0,0,0.88))' }}>
+            {label || 'Select date & time'}
+          </span>
+        }
+        centered
+        styles={{
+          header: {
+            borderBottom: '1px solid var(--color-border-light, #f0f0f0)',
+            paddingBottom: 12,
+            marginBottom: 0,
+          },
+          body: { padding: '20px 0 8px' },
+        }}
+        style={{ maxWidth: 380 }}
+        width="92vw"
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+          {/* ── Date row ── */}
+          <div>
+            <Text
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                fontSize: 12,
+                fontWeight: 600,
+                color: 'var(--color-text-secondary, rgba(0,0,0,0.45))',
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+                marginBottom: 8,
+              }}
+            >
+              Date
+            </Text>
+            <input
+              type="date"
+              value={draftDate}
+              min={today}
+              onChange={(e) => setDraftDate(e.target.value)}
+              style={{
+                width: '100%',
+                height: 40,
+                padding: '0 11px',
+                fontSize: 14,
+                borderRadius: 6,
+                border: '1px solid var(--color-border, #d9d9d9)',
+                background: 'var(--color-bg-card, #ffffff)',
+                color: 'var(--color-text-primary, rgba(0,0,0,0.88))',
+                boxSizing: 'border-box',
+                outline: 'none',
+                fontFamily: 'inherit',
+                WebkitAppearance: 'none',
+                appearance: 'none',
+              }}
+            />
+          </div>
+
+          {/* ── Time row ── */}
+          <div>
+            <Text
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                fontSize: 12,
+                fontWeight: 600,
+                color: 'var(--color-text-secondary, rgba(0,0,0,0.45))',
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+                marginBottom: 8,
+              }}
+            >
+              Time
+            </Text>
+            <input
+              type="time"
+              value={draftTime}
+              onChange={(e) => setDraftTime(e.target.value)}
+              style={{
+                width: '100%',
+                height: 40,
+                padding: '0 11px',
+                fontSize: 14,
+                borderRadius: 6,
+                border: '1px solid var(--color-border, #d9d9d9)',
+                background: 'var(--color-bg-card, #ffffff)',
+                color: 'var(--color-text-primary, rgba(0,0,0,0.88))',
+                boxSizing: 'border-box',
+                outline: 'none',
+                fontFamily: 'inherit',
+                WebkitAppearance: 'none',
+                appearance: 'none',
+              }}
+            />
+          </div>
+
+          {/* ── Preview chip ── */}
+          {draftDate && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '9px 12px',
+                borderRadius: 6,
+                background: 'var(--color-bg-surface, #fafafa)',
+                border: '1px solid var(--color-border-light, #f0f0f0)',
+              }}
+            >
+              {/* Accent dot */}
+              <span style={{
+                width: 6, height: 6, borderRadius: '50%',
+                background: 'var(--color-accent, #1677ff)',
+                flexShrink: 0,
+              }} />
+              <Text style={{ fontSize: 13, color: 'var(--color-text-secondary, rgba(0,0,0,0.65))' }}>
+                {dayjs(`${draftDate} ${draftTime}`).format('ddd, D MMM YYYY [·] HH:mm')}
+              </Text>
+            </div>
+          )}
+
+          {/* ── Divider ── */}
+          <div style={{ borderTop: '1px solid var(--color-border-light, #f0f0f0)', margin: '4px 0 0' }} />
+
+          {/* ── Action buttons ── */}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Button
+              onClick={handleClear}
+              style={{
+                flex: 1,
+                height: 38,
+                borderRadius: 6,
+                fontWeight: 500,
+                fontSize: 14,
+                color: 'var(--color-text-secondary, rgba(0,0,0,0.65))',
+              }}
+            >
+              Clear
+            </Button>
+            <Button
+              type="primary"
+              onClick={handleConfirm}
+              disabled={!draftDate}
+              style={{
+                flex: 2,
+                height: 38,
+                borderRadius: 6,
+                fontWeight: 600,
+                fontSize: 14,
+                background: 'var(--color-accent, #1677ff)',
+                borderColor: 'var(--color-accent, #1677ff)',
+              }}
+            >
+              Confirm
+            </Button>
+          </div>
+
+        </div>
+      </Modal>
+    </>
+  )
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function AuctionTimingSection({ form, itemApproved = true }: AuctionTimingSectionProps) {
   const { t } = useTranslation('auction')
+  const screens = useBreakpoint()
+  const isMobile = !screens.md
 
   const [state, setState] = useState<TimingState>({
     qualificationOpenMode: 'now',
@@ -240,7 +584,7 @@ export function AuctionTimingSection({ form, itemApproved = true }: AuctionTimin
 
   const [validationErrors, setValidationErrors] = useState<string[]>([])
 
-  // Watch auction type to enforce sealed constraints (no auto-extend for sealed)
+  // Watch auction type to enforce sealed constraints
   const watchedAuctionType = Form.useWatch('auctionType', form)
   const isSealed = watchedAuctionType === 'sealed'
 
@@ -268,14 +612,21 @@ export function AuctionTimingSection({ form, itemApproved = true }: AuctionTimin
         errors.push(t('errorDurationMax', 'The auction cannot run longer than 14 days.'))
       }
       if (biddingGapMinutes < MIN_BIDDING_GAP_MINUTES) {
-        errors.push(t('errorBiddingGapMin', 'Bidding must start at least 1 minute after qualification closes.'))
+        errors.push(
+          t(
+            'errorBiddingGapMin',
+            'Bidding must start at least 1 minute after qualification closes.',
+          ),
+        )
       }
       if (
         s.qualificationOpenMode === 'later' &&
         (!s.scheduledQualificationStart ||
           s.scheduledQualificationStart.isBefore(now.add(1, 'minute')))
       ) {
-        errors.push(t('errorQualStartFuture', 'Pick a qualification opening time in the future.'))
+        errors.push(
+          t('errorQualStartFuture', 'Pick a qualification opening time in the future.'),
+        )
       }
       if (s.autoExtend && (s.extensionMinutes < 1 || s.extensionMinutes > 30)) {
         errors.push(t('errorExtensionRange', 'Extension minutes must be between 1 and 30.'))
@@ -367,7 +718,9 @@ export function AuctionTimingSection({ form, itemApproved = true }: AuctionTimin
   // ── Validation helpers for advanced mode ─────────────────────────────────
   const validateAdvancedStart = (_: unknown, value: Dayjs | null | undefined) => {
     if (value && dayjs(value).isBefore(dayjs())) {
-      return Promise.reject(new Error(t('errorStartFuture', 'Pick a start time in the future.')))
+      return Promise.reject(
+        new Error(t('errorStartFuture', 'Pick a start time in the future.')),
+      )
     }
     return Promise.resolve()
   }
@@ -376,7 +729,12 @@ export function AuctionTimingSection({ form, itemApproved = true }: AuctionTimin
     const qStart = form.getFieldValue('qualificationStartAt')
     if (value && qStart && !dayjs(value).isAfter(dayjs(qStart))) {
       return Promise.reject(
-        new Error(t('errorQualEndAfterQualStart', 'Qualification end must be after qualification start.')),
+        new Error(
+          t(
+            'errorQualEndAfterQualStart',
+            'Qualification end must be after qualification start.',
+          ),
+        ),
       )
     }
     return Promise.resolve()
@@ -402,7 +760,26 @@ export function AuctionTimingSection({ form, itemApproved = true }: AuctionTimin
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div style={{ marginBottom: 24 }}>
+    <div style={{ marginBottom: 24, maxWidth: '100%', overflow: 'hidden' }}>
+      {/* Responsive DatePicker popup fix */}
+      <style>{`
+        .ant-picker-dropdown {
+          max-width: 100vw !important;
+          left: 0 !important;
+        }
+        @media (max-width: 576px) {
+          .ant-picker-dropdown {
+            left: 8px !important;
+            right: 8px !important;
+            width: calc(100vw - 16px) !important;
+          }
+          .ant-picker-panel-container {
+            width: 100% !important;
+            max-width: calc(100vw - 16px) !important;
+            overflow-x: auto !important;
+          }
+        }
+      `}</style>
       {/* Hidden form fields that carry the actual payload */}
       <Form.Item name="qualificationStartAt" hidden>
         <DatePicker />
@@ -426,21 +803,18 @@ export function AuctionTimingSection({ form, itemApproved = true }: AuctionTimin
       <div
         style={{
           borderTop: '1px solid var(--color-border-light)',
-          paddingTop: 24,
+          paddingTop: 20,
           marginTop: 8,
         }}
       >
         {/* Section title */}
         <Flex align="center" gap={8} style={{ marginBottom: 4 }}>
-          <ClockCircleOutlined style={{ color: 'var(--color-accent)', fontSize: 18 }} />
-          <Text style={{ fontWeight: 600, fontSize: 16, color: 'var(--color-text-primary)' }}>
+          <ClockCircleOutlined style={{ color: 'var(--color-accent)', fontSize: 16, flexShrink: 0 }} />
+          <Text style={{ fontWeight: 600, fontSize: 15, color: 'var(--color-text-primary)' }}>
             {t('scheduleSectionTitle', 'Schedule')}
           </Text>
         </Flex>
-        <Text
-          type="secondary"
-          style={{ display: 'block', fontSize: 13, marginBottom: 20 }}
-        >
+        <Text type="secondary" style={{ display: 'block', fontSize: 13, marginBottom: 18 }}>
           {t('scheduleSectionSubtitle', 'Set qualification and bidding windows.')}
         </Text>
 
@@ -452,10 +826,10 @@ export function AuctionTimingSection({ form, itemApproved = true }: AuctionTimin
               <Alert
                 type="error"
                 showIcon
-                style={{ marginBottom: 16, borderRadius: 8 }}
+                style={{ marginBottom: 14, borderRadius: 8 }}
                 message={t('timingValidationError', 'Please fix the following:')}
                 description={
-                  <ul style={{ margin: 0, paddingLeft: 16 }}>
+                  <ul style={{ margin: 0, paddingLeft: 16, fontSize: 13 }}>
                     {validationErrors.map((err) => (
                       <li key={err}>{err}</li>
                     ))}
@@ -466,7 +840,11 @@ export function AuctionTimingSection({ form, itemApproved = true }: AuctionTimin
 
             {/* 1. When should qualification open? */}
             <Form.Item
-              label={<Text strong>{t('whenQualOpen', 'When should qualification open?')}</Text>}
+              label={
+                <Text strong style={{ fontSize: 13 }}>
+                  {t('whenQualOpen', 'When should qualification open?')}
+                </Text>
+              }
             >
               <Radio.Group
                 value={state.qualificationOpenMode}
@@ -478,39 +856,35 @@ export function AuctionTimingSection({ form, itemApproved = true }: AuctionTimin
                 }
                 style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
               >
-                <Radio value="now">{t('qualOpenNow', 'Open qualification now')}</Radio>
-                <Radio value="later">{t('qualOpenLater', 'Schedule qualification for later')}</Radio>
+                <Radio value="now" style={{ fontSize: 13 }}>
+                  {t('qualOpenNow', 'Open qualification now')}
+                </Radio>
+                <Radio value="later" style={{ fontSize: 13 }}>
+                  {t('qualOpenLater', 'Schedule qualification for later')}
+                </Radio>
               </Radio.Group>
 
               {state.qualificationOpenMode === 'later' && (
-                <DatePicker
-                  style={{ width: '100%', marginTop: 12 }}
-                  showTime={{ format: TIME_FORMAT }}
-                  format={DATE_FORMAT}
-                  disabledDate={disabledDate}
-                  disabledTime={() => ({
-                    disabledHours: () => [],
-                    disabledMinutes: (selectedHour) => {
-                      const now = dayjs()
-                      if (selectedHour === now.hour()) {
-                        return Array.from(
-                          { length: now.minute() + MIN_QUAL_START_OFFSET_MINUTES },
-                          (_, i) => i,
-                        )
-                      }
-                      return []
-                    },
-                  })}
-                  value={state.scheduledQualificationStart}
-                  onChange={(val) => patch({ scheduledQualificationStart: val })}
-                  placeholder={t('scheduledQualStartPlaceholder', 'Pick a date and time')}
-                />
+                <div style={{ width: '100%', marginTop: 10 }}>
+                  <MobileDateTimePicker
+                    value={state.scheduledQualificationStart}
+                    onChange={(val) => patch({ scheduledQualificationStart: val })}
+                    placeholder={t('scheduledQualStartPlaceholder', 'Pick a date and time')}
+                    disabledDate={disabledDate}
+                    isMobile={isMobile}
+                    label={t('whenQualOpen', 'When should qualification open?')}
+                  />
+                </div>
               )}
             </Form.Item>
 
             {/* 2. Qualification phase lasts */}
             <Form.Item
-              label={<Text strong>{t('qualDurationLabel', 'Qualification phase lasts')}</Text>}
+              label={
+                <Text strong style={{ fontSize: 13 }}>
+                  {t('qualDurationLabel', 'Qualification phase lasts')}
+                </Text>
+              }
             >
               <PresetButtons
                 options={QUAL_DURATION_OPTIONS}
@@ -519,45 +893,21 @@ export function AuctionTimingSection({ form, itemApproved = true }: AuctionTimin
                 customLabel={t('durationCustom', 'Custom…')}
               />
               {state.qualificationDurationPreset === 'custom' && (
-                <Flex gap={8} style={{ marginTop: 12 }} align="center">
-                  <InputNumber
-                    min={1}
-                    value={state.qualificationDurationCustom?.value ?? 60}
-                    onChange={(val) =>
-                      patch({
-                        qualificationDurationCustom: {
-                          value: val ?? 1,
-                          unit: state.qualificationDurationCustom?.unit ?? 'minutes',
-                        },
-                      })
-                    }
-                    style={{ flex: 1 }}
-                    placeholder="60"
-                  />
-                  <Select
-                    value={state.qualificationDurationCustom?.unit ?? 'minutes'}
-                    onChange={(val) =>
-                      patch({
-                        qualificationDurationCustom: {
-                          value: state.qualificationDurationCustom?.value ?? 60,
-                          unit: val,
-                        },
-                      })
-                    }
-                    style={{ width: 100 }}
-                    options={[
-                      { label: t('unitMinutes', 'minutes'), value: 'minutes' },
-                      { label: t('unitHours', 'hours'), value: 'hours' },
-                      { label: t('unitDays', 'days'), value: 'days' },
-                    ]}
-                  />
-                </Flex>
+                <CustomDurationPicker
+                  value={state.qualificationDurationCustom}
+                  onChange={(v) => patch({ qualificationDurationCustom: v })}
+                  placeholder="60"
+                />
               )}
             </Form.Item>
 
             {/* 3. Bidding starts after qualification closes */}
             <Form.Item
-              label={<Text strong>{t('biddingGapLabel', 'Bidding starts after qualification closes')}</Text>}
+              label={
+                <Text strong style={{ fontSize: 13 }}>
+                  {t('biddingGapLabel', 'Bidding starts after qualification closes')}
+                </Text>
+              }
               help={
                 <Text type="secondary" style={{ fontSize: 12 }}>
                   {t(
@@ -574,45 +924,21 @@ export function AuctionTimingSection({ form, itemApproved = true }: AuctionTimin
                 customLabel={t('durationCustom', 'Custom…')}
               />
               {state.biddingGapPreset === 'custom' && (
-                <Flex gap={8} style={{ marginTop: 12 }} align="center">
-                  <InputNumber
-                    min={1}
-                    value={state.biddingGapCustom?.value ?? 60}
-                    onChange={(val) =>
-                      patch({
-                        biddingGapCustom: {
-                          value: val ?? 1,
-                          unit: state.biddingGapCustom?.unit ?? 'minutes',
-                        },
-                      })
-                    }
-                    style={{ flex: 1 }}
-                    placeholder="60"
-                  />
-                  <Select
-                    value={state.biddingGapCustom?.unit ?? 'minutes'}
-                    onChange={(val) =>
-                      patch({
-                        biddingGapCustom: {
-                          value: state.biddingGapCustom?.value ?? 60,
-                          unit: val,
-                        },
-                      })
-                    }
-                    style={{ width: 100 }}
-                    options={[
-                      { label: t('unitMinutes', 'minutes'), value: 'minutes' },
-                      { label: t('unitHours', 'hours'), value: 'hours' },
-                      { label: t('unitDays', 'days'), value: 'days' },
-                    ]}
-                  />
-                </Flex>
+                <CustomDurationPicker
+                  value={state.biddingGapCustom}
+                  onChange={(v) => patch({ biddingGapCustom: v })}
+                  placeholder="60"
+                />
               )}
             </Form.Item>
 
             {/* 4. Auction duration */}
             <Form.Item
-              label={<Text strong>{t('auctionDurationLabel', 'Auction duration')}</Text>}
+              label={
+                <Text strong style={{ fontSize: 13 }}>
+                  {t('auctionDurationLabel', 'Auction duration')}
+                </Text>
+              }
             >
               <PresetButtons
                 options={AUCTION_DURATION_OPTIONS}
@@ -621,58 +947,43 @@ export function AuctionTimingSection({ form, itemApproved = true }: AuctionTimin
                 customLabel={t('durationCustom', 'Custom…')}
               />
               {state.auctionDurationPreset === 'custom' && (
-                <Flex gap={8} style={{ marginTop: 12 }} align="center">
-                  <InputNumber
-                    min={1}
-                    value={state.auctionDurationCustom?.value ?? 1440}
-                    onChange={(val) =>
-                      patch({
-                        auctionDurationCustom: {
-                          value: val ?? 1,
-                          unit: state.auctionDurationCustom?.unit ?? 'minutes',
-                        },
-                      })
-                    }
-                    style={{ flex: 1 }}
-                    placeholder="1440"
-                  />
-                  <Select
-                    value={state.auctionDurationCustom?.unit ?? 'minutes'}
-                    onChange={(val) =>
-                      patch({
-                        auctionDurationCustom: {
-                          value: state.auctionDurationCustom?.value ?? 1440,
-                          unit: val,
-                        },
-                      })
-                    }
-                    style={{ width: 100 }}
-                    options={[
-                      { label: t('unitMinutes', 'minutes'), value: 'minutes' },
-                      { label: t('unitHours', 'hours'), value: 'hours' },
-                      { label: t('unitDays', 'days'), value: 'days' },
-                    ]}
-                  />
-                </Flex>
+                <CustomDurationPicker
+                  value={state.auctionDurationCustom}
+                  onChange={(v) => patch({ auctionDurationCustom: v })}
+                  placeholder="1440"
+                />
               )}
             </Form.Item>
 
             {/* 5. Auto-extend */}
-            <Form.Item label={<Text strong>{t('autoExtendTitle', 'Auto-extend')}</Text>}>
-              <Flex align="center" gap={10} style={{ marginBottom: state.autoExtend ? 8 : 0 }}>
+            <Form.Item
+              label={
+                <Text strong style={{ fontSize: 13 }}>
+                  {t('autoExtendTitle', 'Auto-extend')}
+                </Text>
+              }
+            >
+              <Flex align="flex-start" gap={10} wrap="wrap">
                 <Switch
                   checked={isSealed ? false : state.autoExtend}
                   onChange={(val) => patch({ autoExtend: val })}
                   disabled={isSealed}
+                  style={{ marginTop: 2, flexShrink: 0 }}
                 />
-                <Text style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
+                <Text style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
                   {isSealed
-                    ? t('autoExtendSealedDisabled', 'Auto-extend is not available for sealed auctions.')
-                    : t('autoExtendDesc', "If someone bids near the end, the auction gets a few extra minutes.")}
+                    ? t(
+                        'autoExtendSealedDisabled',
+                        'Auto-extend is not available for sealed auctions.',
+                      )
+                    : t(
+                        'autoExtendDesc',
+                        "If someone bids near the end, the auction gets a few extra minutes.",
+                      )}
                 </Text>
               </Flex>
               {state.autoExtend && (
-                <Flex align="center" gap={8} style={{ marginTop: 8 }}>
+                <Flex align="center" gap={8} style={{ marginTop: 10 }} wrap="wrap">
                   <Text
                     style={{
                       fontSize: 13,
@@ -700,7 +1011,7 @@ export function AuctionTimingSection({ form, itemApproved = true }: AuctionTimin
           <Alert
             type="info"
             showIcon
-            style={{ marginBottom: 16, borderRadius: 8 }}
+            style={{ marginBottom: 14, borderRadius: 8 }}
             message={t('advancedTimingActive', 'Advanced timing in use.')}
             description={t(
               'advancedTimingActiveDesc',
@@ -726,14 +1037,14 @@ export function AuctionTimingSection({ form, itemApproved = true }: AuctionTimin
                 borderRadius: 8,
                 background: 'var(--color-bg-surface)',
                 border: '1px solid var(--color-border-light)',
-                marginBottom: 16,
+                marginBottom: 14,
               }}
             >
               <Text
                 strong
                 style={{
                   display: 'block',
-                  fontSize: 13,
+                  fontSize: 12,
                   marginBottom: 8,
                   color: 'var(--color-text-primary)',
                 }}
@@ -744,36 +1055,50 @@ export function AuctionTimingSection({ form, itemApproved = true }: AuctionTimin
                 <Text
                   style={{
                     display: 'block',
-                    fontSize: 13,
+                    fontSize: 12,
                     color: 'var(--color-text-secondary)',
                     marginBottom: 8,
                     fontStyle: 'italic',
+                    lineHeight: 1.5,
                   }}
                 >
                   {formatNaturalSummary(state, derived.qualificationStartAt)}
                 </Text>
               )}
-              <Flex vertical gap={4}>
-                <Text style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-                  <strong>{t('qualOpens', 'Qualification opens')}:</strong>{' '}
-                  {derived.qualificationStartAt.format(DISPLAY_FORMAT)}
-                </Text>
-                <Text style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-                  <strong>{t('qualCloses', 'Qualification closes')}:</strong>{' '}
-                  {derived.qualificationEndAt.format(DISPLAY_FORMAT)}
-                </Text>
-                <Text style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-                  <strong>{t('biddingStarts', 'Bidding starts')}:</strong>{' '}
-                  {derived.startTime.format(DISPLAY_FORMAT)}
-                </Text>
-                <Text style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-                  <strong>{t('auctionEnds', 'Auction ends')}:</strong>{' '}
-                  {derived.endTime.format(DISPLAY_FORMAT)}
-                </Text>
-                <Text style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-                  <strong>{t('autoExtendTitle', 'Auto-extend')}:</strong>{' '}
-                  {state.autoExtend ? `on (${state.extensionMinutes} min)` : 'off'}
-                </Text>
+              <Flex vertical gap={3}>
+                {[
+                  {
+                    label: t('qualOpens', 'Qualification opens'),
+                    value: derived.qualificationStartAt.format(DISPLAY_FORMAT),
+                  },
+                  {
+                    label: t('qualCloses', 'Qualification closes'),
+                    value: derived.qualificationEndAt.format(DISPLAY_FORMAT),
+                  },
+                  {
+                    label: t('biddingStarts', 'Bidding starts'),
+                    value: derived.startTime.format(DISPLAY_FORMAT),
+                  },
+                  {
+                    label: t('auctionEnds', 'Auction ends'),
+                    value: derived.endTime.format(DISPLAY_FORMAT),
+                  },
+                  {
+                    label: t('autoExtendTitle', 'Auto-extend'),
+                    value: state.autoExtend ? `on (${state.extensionMinutes} min)` : 'off',
+                  },
+                ].map(({ label, value }) => (
+                  <Text
+                    key={label}
+                    style={{
+                      fontSize: 12,
+                      color: 'var(--color-text-secondary)',
+                      wordBreak: 'break-word',
+                    }}
+                  >
+                    <strong>{label}:</strong> {value}
+                  </Text>
+                ))}
               </Flex>
             </Card>
           )}
@@ -799,64 +1124,41 @@ export function AuctionTimingSection({ form, itemApproved = true }: AuctionTimin
               ),
               children: (
                 <div>
-                  <Form.Item
-                    name="qualificationStartAt"
-                    label={t('timing.qualificationStart', 'Qualification Start')}
-                    rules={[{ validator: validateAdvancedStart }]}
-                  >
-                    <DatePicker
-                      format={DATE_FORMAT}
-                      showTime={{ format: TIME_FORMAT }}
-                      disabledDate={disabledDate}
-                      style={{ width: '100%' }}
-                      onChange={handleAdvancedFieldChange}
-                    />
-                  </Form.Item>
-
-                  <Form.Item
-                    name="qualificationEndAt"
-                    label={t('timing.qualificationEnd', 'Qualification End')}
-                    rules={[{ validator: validateAdvancedQualEnd }]}
-                  >
-                    <DatePicker
-                      format={DATE_FORMAT}
-                      showTime={{ format: TIME_FORMAT }}
-                      disabledDate={disabledDate}
-                      style={{ width: '100%' }}
-                      onChange={handleAdvancedFieldChange}
-                    />
-                  </Form.Item>
-
-                  <Form.Item
-                    name="startTime"
-                    label={t('timing.auctionStart', 'Auction Start')}
-                    rules={[{ validator: validateAdvancedStart }]}
-                  >
-                    <DatePicker
-                      format={DATE_FORMAT}
-                      showTime={{ format: TIME_FORMAT }}
-                      disabledDate={disabledDate}
-                      style={{ width: '100%' }}
-                      onChange={handleAdvancedFieldChange}
-                    />
-                  </Form.Item>
-
-                  <Form.Item
-                    name="endTime"
-                    label={t('timing.auctionEnd', 'Auction End')}
-                    rules={[{ validator: validateAdvancedAuctionEnd }]}
-                  >
-                    <DatePicker
-                      format={DATE_FORMAT}
-                      showTime={{ format: TIME_FORMAT }}
-                      disabledDate={disabledDate}
-                      style={{ width: '100%' }}
-                      onChange={handleAdvancedFieldChange}
-                    />
-                  </Form.Item>
+                  {/* Advanced DatePickers */}
+                  {[
+                    {
+                      name: 'qualificationStartAt',
+                      label: t('timing.qualificationStart', 'Qualification Start'),
+                      rules: [{ validator: validateAdvancedStart }],
+                    },
+                    {
+                      name: 'qualificationEndAt',
+                      label: t('timing.qualificationEnd', 'Qualification End'),
+                      rules: [{ validator: validateAdvancedQualEnd }],
+                    },
+                    {
+                      name: 'startTime',
+                      label: t('timing.auctionStart', 'Auction Start'),
+                      rules: [{ validator: validateAdvancedStart }],
+                    },
+                    {
+                      name: 'endTime',
+                      label: t('timing.auctionEnd', 'Auction End'),
+                      rules: [{ validator: validateAdvancedAuctionEnd }],
+                    },
+                  ].map(({ name, label, rules }) => (
+                    <Form.Item key={name} name={name} label={label} rules={rules}>
+                      <MobileDateTimePicker
+                        disabledDate={disabledDate}
+                        isMobile={isMobile}
+                        label={label}
+                        onAfterChange={handleAdvancedFieldChange}
+                      />
+                    </Form.Item>
+                  ))}
 
                   <Form.Item label={t('extensionMinutesLabel', 'Extend by (minutes)')}>
-                    <Flex align="center" gap={10}>
+                    <Flex align="center" gap={10} wrap="wrap">
                       <Switch
                         checked={isSealed ? false : state.autoExtend}
                         disabled={isSealed}

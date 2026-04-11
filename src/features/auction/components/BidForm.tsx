@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { Typography, Button, InputNumber, Popconfirm } from 'antd'
+import { Typography, Button, InputNumber, Popconfirm, Grid } from 'antd'
 import { RobotOutlined } from '@ant-design/icons'
 import type { InputNumberRef } from '@rc-component/input-number'
 import { useTranslation } from 'react-i18next'
@@ -9,6 +9,8 @@ import { PriceHistoryChart } from '@/features/auction/components/PriceHistoryCha
 import type { PriceHistoryPoint } from '@/types'
 import { formatCurrency } from '@/utils/format'
 import { MONO_FONT } from '@/styles/tokens'
+
+const { useBreakpoint } = Grid
 
 interface BidFormProps {
   currentPrice: number
@@ -71,27 +73,38 @@ export default function BidForm({
   const { t } = useTranslation()
   const navigate = useNavigate()
   const inputRef = useRef<InputNumberRef | null>(null)
+  const screens = useBreakpoint()
+  const isMobile = !screens.md
+
+  const isBidInvalid = bidAmount != null && bidAmount < minBid
+  const isBidReady = !!bidAmount && bidAmount >= minBid && !isPlacingBid && !disabled
 
   return (
-    <div style={{ marginTop: 20 }}>
+    <div style={{ marginTop: 16, width: '100%' }}>
       {/* 1. Insufficient balance warning */}
       {insufficientBalance && (
         <div
           style={{
             marginBottom: 12,
-            padding: '12px 16px',
+            padding: '10px 14px',
             borderRadius: 8,
             background: 'rgba(196, 147, 61, 0.06)',
             border: '1px solid rgba(196, 147, 61, 0.15)',
           }}
         >
-          <Typography.Text style={{ color: 'var(--color-accent)', fontWeight: 500, fontSize: 13 }}>
-            {t('insufficientBalance', 'Ban can nap them tien vao vi de dat gia')}{' '}
+          <Typography.Text
+            style={{ color: 'var(--color-accent)', fontWeight: 500, fontSize: 13 }}
+          >
+            {t('insufficientBalance', 'Bạn cần nạp thêm tiền vào ví để đặt giá')}{' '}
             <a
               onClick={() => navigate('/me/wallet')}
-              style={{ color: 'var(--color-accent)', textDecoration: 'underline', cursor: 'pointer' }}
+              style={{
+                color: 'var(--color-accent)',
+                textDecoration: 'underline',
+                cursor: 'pointer',
+              }}
             >
-              {t('goToWallet', 'Di den vi')}
+              {t('goToWallet', 'Đi đến ví')}
             </a>
           </Typography.Text>
         </div>
@@ -99,13 +112,26 @@ export default function BidForm({
 
       {/* 2. Price History Chart (mini) */}
       {priceHistory && priceHistory.length > 0 && (
-        <div style={{ marginBottom: 12, borderRadius: 8, border: '1px solid var(--color-border-light)', padding: '8px 4px', position: 'relative' }}>
-          <PriceHistoryChart priceHistory={priceHistory} currency={currency} mode="inline" onExpand={onExpandChart} />
+        <div
+          style={{
+            marginBottom: 12,
+            borderRadius: 8,
+            border: '1px solid var(--color-border-light)',
+            padding: '8px 4px',
+            position: 'relative',
+          }}
+        >
+          <PriceHistoryChart
+            priceHistory={priceHistory}
+            currency={currency}
+            mode="inline"
+            onExpand={onExpandChart}
+          />
         </div>
       )}
 
       {/* 3. Quick bid increment buttons */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
         {[bidIncrement, bidIncrement * 2, bidIncrement * 5].map((inc) => (
           <button
             key={inc}
@@ -114,16 +140,18 @@ export default function BidForm({
             disabled={disabled}
             style={{
               flex: 1,
-              padding: '8px 0',
-              borderRadius: 4,
+              minHeight: 44,
+              padding: '8px 4px',
+              borderRadius: 6,
               border: '1px solid var(--color-border)',
               background: 'var(--color-bg-surface)',
               color: 'var(--color-text-primary)',
               fontFamily: MONO_FONT,
-              fontSize: 12,
+              fontSize: isMobile ? 11 : 12,
               fontWeight: 500,
               cursor: disabled ? 'not-allowed' : 'pointer',
               transition: 'all 150ms ease',
+              whiteSpace: 'nowrap',
             }}
           >
             +{formatCurrency(inc, currency)}
@@ -134,18 +162,20 @@ export default function BidForm({
       {/* 4. Bid amount input */}
       <label
         htmlFor="bid-amount-input"
-        style={{ fontSize: 12, fontWeight: 500, color: 'var(--color-text-secondary)', display: 'block', marginBottom: 4 }}
+        style={{
+          fontSize: 12,
+          fontWeight: 500,
+          color: 'var(--color-text-secondary)',
+          display: 'block',
+          marginBottom: 4,
+        }}
       >
-        {t('yourBidAmount', 'Your bid amount')}
+        {t('yourBidAmount', 'Số tiền đặt giá')}
       </label>
       <InputNumber
         id="bid-amount-input"
         ref={inputRef}
-        style={{
-          width: '100%',
-          height: 52,
-          borderRadius: 8,
-        }}
+        style={{ width: '100%', height: 52, borderRadius: 8 }}
         size="large"
         min={minBid}
         step={bidIncrement}
@@ -153,56 +183,77 @@ export default function BidForm({
         onChange={(v) => onBidAmountChange(v)}
         addonAfter={currency}
         placeholder={formatCurrency(minBid, currency)}
-        status={bidAmount != null && bidAmount < minBid ? 'error' : undefined}
+        status={isBidInvalid ? 'error' : undefined}
         disabled={disabled}
       />
-      {bidAmount != null && bidAmount < minBid ? (
+
+      {isBidInvalid ? (
         <Typography.Text
-          style={{ fontSize: 12, color: 'var(--color-danger)', display: 'block', marginTop: 4 }}
+          style={{
+            fontSize: 12,
+            color: 'var(--color-danger)',
+            display: 'block',
+            marginTop: 4,
+          }}
         >
-          {t('belowMinimum', 'Bid must be at least')} {formatCurrency(minBid, currency)}
+          {t('belowMinimum', 'Bid phải ít nhất')} {formatCurrency(minBid, currency)}
         </Typography.Text>
       ) : (
         <Typography.Text
-          style={{ fontSize: 12, color: 'var(--color-text-secondary)', display: 'block', marginTop: 4 }}
+          style={{
+            fontSize: 12,
+            color: 'var(--color-text-secondary)',
+            display: 'block',
+            marginTop: 4,
+          }}
         >
-          {t('minimumBid', 'Minimum bid')}: {formatCurrency(minBid, currency)} ({t('currentPricePlusIncrement', 'current + increment')})
+          {t('minimumBid', 'Giá tối thiểu')}: {formatCurrency(minBid, currency)} (
+          {t('currentPricePlusIncrement', 'hiện tại + bước giá')})
         </Typography.Text>
       )}
 
       {/* 5. Place Bid with confirmation */}
       <Popconfirm
-        title={t('confirmBidTitle', 'Confirm your bid')}
+        title={t('confirmBidTitle', 'Xác nhận đặt giá')}
         description={
           <div style={{ fontSize: 13, lineHeight: 1.8 }}>
-            <div>{t('bidAmount', 'Bid amount')}: <strong>{formatCurrency(bidAmount ?? 0, currency)}</strong></div>
-            <div>{t('currentPrice', 'Current price')}: {formatCurrency(currentPrice, currency)}</div>
-            <div>{t('minimumNextBid', 'Min next bid')}: {formatCurrency(minBid, currency)}</div>
-            <div>{t('walletBalance', 'Wallet')}: {formatCurrency(walletBalance, currency)}</div>
+            <div>
+              {t('bidAmount', 'Số tiền')}:{' '}
+              <strong>{formatCurrency(bidAmount ?? 0, currency)}</strong>
+            </div>
+            <div>
+              {t('currentPrice', 'Giá hiện tại')}: {formatCurrency(currentPrice, currency)}
+            </div>
+            <div>
+              {t('minimumNextBid', 'Giá tối thiểu')}: {formatCurrency(minBid, currency)}
+            </div>
+            <div>
+              {t('walletBalance', 'Ví')}: {formatCurrency(walletBalance, currency)}
+            </div>
           </div>
         }
         onConfirm={onPlaceBid}
-        okText={t('confirmBid', 'Confirm Bid')}
-        cancelText={t('cancel', 'Cancel')}
+        okText={t('confirmBid', 'Xác nhận')}
+        cancelText={t('cancel', 'Hủy')}
         okButtonProps={{ loading: isPlacingBid, disabled: isPlacingBid }}
-        disabled={!bidAmount || bidAmount < minBid || isPlacingBid || disabled}
+        disabled={!isBidReady}
       >
         <Button
           type="primary"
           block
           loading={isPlacingBid}
-          disabled={!bidAmount || bidAmount < minBid || disabled}
+          disabled={!bidAmount || isBidInvalid || disabled}
           style={{
             height: 52,
             borderRadius: 8,
-            fontWeight: 500,
+            fontWeight: 600,
             fontSize: 15,
             marginTop: 12,
             background: 'var(--color-accent)',
             borderColor: 'var(--color-accent)',
           }}
         >
-          {t('placeBid', 'Place Bid')}
+          {t('placeBid', 'Đặt Giá')}
         </Button>
       </Popconfirm>
 
@@ -220,12 +271,12 @@ export default function BidForm({
           borderColor: 'var(--color-border)',
         }}
       >
-        {t('autoBid', 'Auto-Bid')}
+        {t('autoBid', 'Đặt Giá Tự Động')}
       </Button>
 
       {/* 7. Auto-Bid Dashboard */}
       {myAutoBid && (
-        <div style={{ marginTop: 8 }}>
+        <div style={{ marginTop: 12 }}>
           <AutoBidDashboard
             autoBid={myAutoBid}
             currency={currency}

@@ -11,6 +11,7 @@ import {
   Divider,
   Alert,
   App,
+  Grid,
 } from 'antd'
 import { CreditCardOutlined, WalletOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
@@ -26,6 +27,8 @@ import type { PaymentMethodDto } from '@/types'
 import { PaymentMethodType } from '@/types/enums'
 import { MONO_FONT, SERIF_FONT } from '@/styles/tokens'
 import { queryClient, queryKeys } from '@/lib/queryClient'
+
+const { useBreakpoint } = Grid
 
 // ── Provider shape — extend here to add MoMo etc. ──────────────────────────
 type DepositProvider = { kind: 'vnpay'; savedCards: PaymentMethodDto[] }
@@ -53,6 +56,8 @@ export function AuctionDepositModal({
   const { t: tp } = useTranslation('payment')
   const { t: tc } = useTranslation('common')
   const { message } = App.useApp()
+  const screens = useBreakpoint()
+  const isMobile = !screens.sm
 
   const [source, setSource] = useState<PaymentSource>('wallet')
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
@@ -72,10 +77,7 @@ export function AuctionDepositModal({
   const insufficientWallet = walletBalance < requiredDepositAmount
   const isNewCard = selectedCardId === NEW_CARD_VALUE
 
-  const canSubmit =
-    source === 'wallet'
-      ? !insufficientWallet
-      : !!selectedCardId
+  const canSubmit = source === 'wallet' ? !insufficientWallet : !!selectedCardId
 
   const handleClose = () => {
     setSource('wallet')
@@ -93,13 +95,14 @@ export function AuctionDepositModal({
           amount: requiredDepositAmount,
           currency,
         })
-        message.success(t('depositSuccess', 'Deposit successful — you are now qualified to bid!'))
+        message.success(t('depositSuccess', 'Đặt cọc thành công — bạn đã đủ điều kiện đặt giá!'))
         queryClient.invalidateQueries({ queryKey: queryKeys.auctions.detail(auctionId) })
         queryClient.invalidateQueries({ queryKey: queryKeys.wallet.all })
         handleClose()
       } catch (err) {
-        const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-        message.error(detail ?? t('depositError', 'Deposit failed'))
+        const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data
+          ?.detail
+        message.error(detail ?? t('depositError', 'Đặt cọc thất bại'))
       }
       return
     }
@@ -111,7 +114,7 @@ export function AuctionDepositModal({
         amount: requiredDepositAmount,
         currency,
         purpose: 'auction_deposit',
-        description: t('depositOrderInfo', 'Auction deposit'),
+        description: t('depositOrderInfo', 'Tiền cọc đấu giá'),
         auctionId,
         clientReturnPath: `/auctions/${auctionId}?deposited=true`,
         ...(isNewCard
@@ -124,7 +127,7 @@ export function AuctionDepositModal({
       localStorage.setItem('oio_deposit_auction_id', auctionId)
       window.location.href = result.paymentUrl
     } catch {
-      message.error(t('depositError', 'Deposit failed'))
+      message.error(t('depositError', 'Đặt cọc thất bại'))
     }
   }
 
@@ -147,14 +150,27 @@ export function AuctionDepositModal({
                   borderBottom: '1px solid var(--color-border-light)',
                 }}
               >
-                <Flex align="center" gap={12}>
-                  <CreditCardOutlined style={{ fontSize: 18, color: 'var(--color-accent)' }} />
-                  <div>
-                    <span style={{ fontWeight: 500, fontFamily: MONO_FONT }}>
+                <Flex align="center" gap={10} wrap="wrap">
+                  <CreditCardOutlined style={{ fontSize: 16, color: 'var(--color-accent)', flexShrink: 0 }} />
+                  <div style={{ minWidth: 0 }}>
+                    <span
+                      style={{
+                        fontWeight: 500,
+                        fontFamily: MONO_FONT,
+                        fontSize: 13,
+                        display: 'block',
+                      }}
+                    >
                       {card.maskedCardNumber ?? `•••• ${card.lastFour ?? ''}`}
                     </span>
                     {card.bankCode && (
-                      <span style={{ color: 'var(--color-text-secondary)', marginLeft: 8, fontSize: 13 }}>
+                      <span
+                        style={{
+                          color: 'var(--color-text-secondary)',
+                          fontSize: 12,
+                          display: 'block',
+                        }}
+                      >
                         {card.bankCode}
                       </span>
                     )}
@@ -164,10 +180,10 @@ export function AuctionDepositModal({
               </Radio>
             ))}
             <Radio value={NEW_CARD_VALUE} style={{ width: '100%', padding: '12px 0' }}>
-              <Flex align="center" gap={12}>
-                <CreditCardOutlined />
-                <span style={{ fontWeight: 500 }}>
-                  {tp('newVnPayCard', 'Pay with new VNPay card')}
+              <Flex align="center" gap={10}>
+                <CreditCardOutlined style={{ flexShrink: 0 }} />
+                <span style={{ fontWeight: 500, fontSize: 13 }}>
+                  {tp('newVnPayCard', 'Thanh toán bằng thẻ VNPay mới')}
                 </span>
               </Flex>
             </Radio>
@@ -183,32 +199,45 @@ export function AuctionDepositModal({
       open={open}
       onCancel={handleClose}
       title={
-        <span style={{ fontFamily: SERIF_FONT, fontWeight: 400, fontSize: 18 }}>
-          {t('depositToJoin', 'Deposit to Participate')}
+        <span style={{ fontFamily: SERIF_FONT, fontWeight: 400, fontSize: isMobile ? 16 : 18 }}>
+          {t('depositToJoin', 'Đặt Cọc Để Tham Gia')}
         </span>
       }
-      width={640}
+      width={isMobile ? '100%' : 560}
+      style={isMobile ? { top: 0, margin: 0, maxWidth: '100vw', paddingBottom: 0 } : undefined}
+      styles={isMobile ? { body: { maxHeight: '80vh', overflowY: 'auto' } } : undefined}
       footer={null}
     >
-      <Space direction="vertical" style={{ width: '100%' }} size={20}>
+      <Space direction="vertical" style={{ width: '100%' }} size={16}>
         {/* Amount (read-only) */}
         <div>
-          <Typography.Text strong style={{ display: 'block', marginBottom: 6, fontSize: 14 }}>
-            {t('depositAmountLabel', 'Required')}
+          <Typography.Text
+            strong
+            style={{ display: 'block', marginBottom: 4, fontSize: 13, color: 'var(--color-text-secondary)' }}
+          >
+            {t('depositAmountLabel', 'Số tiền cọc yêu cầu')}
           </Typography.Text>
           <Typography.Text
-            style={{ fontFamily: MONO_FONT, fontSize: 22, color: 'var(--color-accent)' }}
+            style={{
+              fontFamily: MONO_FONT,
+              fontSize: isMobile ? 20 : 24,
+              color: 'var(--color-accent)',
+              fontWeight: 600,
+            }}
           >
             {formatCurrency(requiredDepositAmount, currency)}
           </Typography.Text>
         </div>
 
-        <Divider style={{ margin: 0 }} />
+        <Divider style={{ margin: '4px 0' }} />
 
         {/* Payment Source */}
         <div>
-          <Typography.Text strong style={{ display: 'block', marginBottom: 10, fontSize: 14 }}>
-            {tp('paymentSource', 'Payment Source')}
+          <Typography.Text
+            strong
+            style={{ display: 'block', marginBottom: 10, fontSize: 13 }}
+          >
+            {tp('paymentSource', 'Phương thức thanh toán')}
           </Typography.Text>
           <Radio.Group
             value={source}
@@ -217,12 +246,12 @@ export function AuctionDepositModal({
           >
             <Space direction="vertical" style={{ width: '100%' }} size={8}>
               <Radio value="wallet" disabled={insufficientWallet}>
-                <Flex align="center" gap={8}>
-                  <WalletOutlined style={{ color: 'var(--color-accent)' }} />
-                  <span style={{ fontWeight: 500 }}>
-                    {tp('walletPayment', 'Wallet balance')}
+                <Flex align="center" gap={8} wrap="wrap">
+                  <WalletOutlined style={{ color: 'var(--color-accent)', flexShrink: 0 }} />
+                  <span style={{ fontWeight: 500, fontSize: 13 }}>
+                    {tp('walletPayment', 'Số dư ví')}
                   </span>
-                  <span style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
+                  <span style={{ color: 'var(--color-text-secondary)', fontSize: 12 }}>
                     ({formatCurrency(walletBalance, currency)})
                   </span>
                 </Flex>
@@ -232,13 +261,13 @@ export function AuctionDepositModal({
                   type="warning"
                   showIcon
                   style={{ marginLeft: 24 }}
-                  message={t('insufficientWallet', 'Insufficient balance — top up first')}
+                  message={t('insufficientWallet', 'Số dư không đủ — vui lòng nạp thêm')}
                 />
               )}
               <Radio value="vnpay">
                 <Flex align="center" gap={8}>
-                  <CreditCardOutlined style={{ color: 'var(--color-accent)' }} />
-                  <span style={{ fontWeight: 500 }}>VNPay</span>
+                  <CreditCardOutlined style={{ color: 'var(--color-accent)', flexShrink: 0 }} />
+                  <span style={{ fontWeight: 500, fontSize: 13 }}>VNPay</span>
                 </Flex>
               </Radio>
             </Space>
@@ -247,19 +276,21 @@ export function AuctionDepositModal({
 
         {source === 'vnpay' && (
           <>
-            <Divider style={{ margin: 0 }} />
+            <Divider style={{ margin: '4px 0' }} />
             <div>
-              <Typography.Text strong style={{ display: 'block', marginBottom: 10, fontSize: 14 }}>
-                {tp('paymentSource', 'Payment Source')}
+              <Typography.Text
+                strong
+                style={{ display: 'block', marginBottom: 10, fontSize: 13 }}
+              >
+                {tp('selectCard', 'Chọn thẻ')}
               </Typography.Text>
               {renderCardSource()}
               {isNewCard && (
                 <div style={{ marginTop: 12, paddingLeft: 4 }}>
-                  <Checkbox
-                    checked={saveCard}
-                    onChange={(e) => setSaveCard(e.target.checked)}
-                  >
-                    {tp('saveCardForTopUp', 'Save this card for future payments')}
+                  <Checkbox checked={saveCard} onChange={(e) => setSaveCard(e.target.checked)}>
+                    <span style={{ fontSize: 13 }}>
+                      {tp('saveCardForTopUp', 'Lưu thẻ này cho lần sau')}
+                    </span>
                   </Checkbox>
                   {saveCard && (
                     <Select
@@ -267,8 +298,11 @@ export function AuctionDepositModal({
                       onChange={setCardType}
                       style={{ width: '100%', marginTop: 8 }}
                       options={[
-                        { value: '01', label: tp('domesticCard', 'ATM / Domestic Card') },
-                        { value: '02', label: tp('internationalCard', 'International Card (Visa/Master)') },
+                        { value: '01', label: tp('domesticCard', 'ATM / Thẻ nội địa') },
+                        {
+                          value: '02',
+                          label: tp('internationalCard', 'Thẻ quốc tế (Visa/Master)'),
+                        },
                       ]}
                     />
                   )}
@@ -278,22 +312,26 @@ export function AuctionDepositModal({
           </>
         )}
 
-        <Divider style={{ margin: 0 }} />
+        <Divider style={{ margin: '4px 0' }} />
 
-        <Flex gap={12} justify="flex-end">
-          <Button onClick={handleClose}>{tc('action.cancel', 'Cancel')}</Button>
+        <Flex gap={10} justify="flex-end">
+          <Button onClick={handleClose} style={{ minHeight: 40 }}>
+            {tc('action.cancel', 'Hủy')}
+          </Button>
           <Button
             type="primary"
             disabled={!canSubmit}
             loading={walletDeposit.isPending || createVnPayUrl.isPending}
             onClick={handleSubmit}
-            style={
-              canSubmit
+            style={{
+              minHeight: 40,
+              minWidth: 100,
+              ...(canSubmit
                 ? { background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }
-                : {}
-            }
+                : {}),
+            }}
           >
-            {t('deposit', 'Deposit')}
+            {t('deposit', 'Đặt cọc')}
           </Button>
         </Flex>
       </Space>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Typography, Form, Input, Button, Card, Space, App, Spin } from 'antd'
+import { Typography, Form, Input, Button, Card, Space, App, Spin, Row, Col } from 'antd'
 import { RichTextEditor } from '@/components/ui/RichTextEditor'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
@@ -48,14 +48,21 @@ export default function CreateSellerProfilePage() {
   }
 
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto', padding: isMobile ? '0 12px' : undefined }}>
-      <Space style={{ marginBottom: 16 }}>
-        <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)}>
+    <div style={{ maxWidth: 720, margin: '0 auto', padding: isMobile ? '0 12px 48px' : '0 0 48px' }}>
+      {/* ── Header ──────────────────────────────────────────────────── */}
+      <div style={{ marginBottom: isMobile ? 16 : 24 }}>
+        <Button
+          type="text"
+          icon={<ArrowLeftOutlined />}
+          onClick={() => navigate(-1)}
+          style={{ marginBottom: 12, minHeight: 44, paddingLeft: 0 }}
+        >
           {tc('action.back', 'Back')}
         </Button>
-      </Space>
-
-      <Typography.Title level={2}>{t('createProfile', 'Create Seller Profile')}</Typography.Title>
+        <Typography.Title level={isMobile ? 3 : 2} style={{ margin: 0 }}>
+          {t('createProfile', 'Create Seller Profile')}
+        </Typography.Title>
+      </div>
 
       <TermsAcceptanceGate
         termType="seller"
@@ -64,47 +71,80 @@ export default function CreateSellerProfilePage() {
         onPendingChange={setHasPendingTerms}
         redirect
       >
-      <Card>
-        <Form<CreateSellerProfileRequest>
-          form={form}
-          layout="vertical"
-          onFinish={onFinish}
-        >
-          <Form.Item
-            name="storeName"
-            label={t('storeName', 'Store Name')}
-            rules={[{ required: true, message: t('storeNameRequired', 'Please enter your store name') }]}
+        <Card styles={{ body: { padding: isMobile ? '16px' : '24px 28px' } }}>
+          <Form<CreateSellerProfileRequest>
+            form={form}
+            layout="vertical"
+            onFinish={onFinish}
           >
-            <Input
-              maxLength={100}
-              showCount
-              placeholder={t('storeNamePlaceholder', 'Enter your store name')}
-            />
-          </Form.Item>
+            <Form.Item
+              name="storeName"
+              label={t('storeName', 'Store Name')}
+              rules={[{ required: true, message: t('storeNameRequired', 'Please enter your store name') }]}
+            >
+              <Input
+                maxLength={100}
+                showCount
+                placeholder={t('storeNamePlaceholder', 'Enter your store name')}
+                style={{ height: 44 }}
+              />
+            </Form.Item>
 
-          <Form.Item
-            name="storeDescription"
-            label={t('storeDescription', 'Store Description')}
-            rules={[{ required: true, message: t('storeDescriptionRequired', 'Please describe your store') }]}
-          >
-            <RichTextEditor
-              placeholder={t('descriptionPlaceholder', 'Describe your store and what you sell')}
-              maxLength={2000}
-            />
-          </Form.Item>
+            <Form.Item
+              name="storeDescription"
+              label={t('storeDescription', 'Store Description')}
+              rules={[{ required: true, message: t('storeDescriptionRequired', 'Please describe your store') }]}
+            >
+              <RichTextEditor
+                placeholder={t('descriptionPlaceholder', 'Describe your store and what you sell')}
+                maxLength={2000}
+              />
+            </Form.Item>
 
-          <Form.Item>
-            <Space>
-              <Button type="primary" htmlType="submit" loading={createProfile.isPending} disabled={hasPendingTerms}>
-                {tc('action.create', 'Create')}
-              </Button>
-              <Button onClick={() => navigate(-1)}>
-                {tc('action.cancel', 'Cancel')}
-              </Button>
-            </Space>
-          </Form.Item>
-        </Form>
-      </Card>
+            <Form.Item style={{ marginBottom: 0, marginTop: isMobile ? 8 : 16 }}>
+              {isMobile ? (
+                <Row gutter={8}>
+                  <Col span={12}>
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      loading={createProfile.isPending}
+                      disabled={hasPendingTerms}
+                      block
+                      style={{ minHeight: 48, fontWeight: 500 }}
+                    >
+                      {tc('action.create', 'Create')}
+                    </Button>
+                  </Col>
+                  <Col span={12}>
+                    <Button
+                      onClick={() => navigate(-1)}
+                      block
+                      style={{ minHeight: 48 }}
+                    >
+                      {tc('action.cancel', 'Cancel')}
+                    </Button>
+                  </Col>
+                </Row>
+              ) : (
+                <Space>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={createProfile.isPending}
+                    disabled={hasPendingTerms}
+                    style={{ minHeight: 44, fontWeight: 500 }}
+                  >
+                    {tc('action.create', 'Create')}
+                  </Button>
+                  <Button onClick={() => navigate(-1)} style={{ minHeight: 44 }}>
+                    {tc('action.cancel', 'Cancel')}
+                  </Button>
+                </Space>
+              )}
+            </Form.Item>
+          </Form>
+        </Card>
       </TermsAcceptanceGate>
     </div>
   )

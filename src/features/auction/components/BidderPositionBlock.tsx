@@ -55,25 +55,34 @@ export function BidderPositionBlock({ position }: BidderPositionBlockProps) {
   const Icon = config.icon
 
   const labels: Record<string, string> = {
-    leading: t('positionLeading', 'You are leading'),
-    outbid: t('positionOutbid', 'You have been outbid'),
-    won: t('positionWon', 'You won this auction'),
-    lost: t('positionLost', 'You did not win'),
+    leading: t('positionLeading', 'Bạn đang dẫn đầu'),
+    outbid: t('positionOutbid', 'Bạn đã bị vượt giá'),
+    won: t('positionWon', 'Bạn đã thắng đấu giá'),
+    lost: t('positionLost', 'Bạn không giành được'),
   }
 
   return (
     <div
       style={{
-        padding: '12px 16px',
+        padding: '10px 14px',
         borderRadius: 8,
         background: config.bgColor,
         border: `1px solid ${config.borderColor}`,
-        marginBottom: 12,
+        marginBottom: 10,
+        width: '100%',
+        boxSizing: 'border-box',
       }}
     >
-      <Flex align="center" gap={10}>
-        <Icon style={{ fontSize: 18, color: config.color }} />
-        <Typography.Text style={{ fontWeight: 600, fontSize: 14, color: config.color }}>
+      <Flex align="center" gap={8}>
+        <Icon style={{ fontSize: 16, color: config.color, flexShrink: 0 }} />
+        <Typography.Text
+          style={{
+            fontWeight: 600,
+            fontSize: 13,
+            color: config.color,
+            lineHeight: 1.4,
+          }}
+        >
           {labels[position]}
         </Typography.Text>
       </Flex>

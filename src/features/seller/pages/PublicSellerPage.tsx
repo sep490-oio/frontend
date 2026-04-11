@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Spin, Empty, Tag } from 'antd'
+import { Spin, Empty, Tag, Pagination } from 'antd'
 import { useParams, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import dayjs from 'dayjs'
@@ -20,7 +20,7 @@ export default function PublicSellerPage() {
   const { id } = useParams<{ id: string }>()
   const isVi = i18n.language === 'vi'
 
-  const { isMobile } = useBreakpoint()
+  const { isMobile, isTablet } = useBreakpoint()
 
   const headingFont = isVi ? SANS_FONT : SERIF_FONT
   const headingWeight = isVi ? 600 : 400
@@ -61,13 +61,16 @@ export default function PublicSellerPage() {
   const trustScore = seller.trustScore ?? 0
   const isTopRated = trustScore > 90
 
+  // Responsive grid columns
+  const itemGridCols = isMobile ? '1fr 1fr' : isTablet ? 'repeat(3, 1fr)' : 'repeat(auto-fill, minmax(260px, 1fr))'
+
   return (
     <div className="oio-fade-in" style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 12px 48px' : '0 24px 80px' }}>
       {/* ---- Seller Header ---- */}
       <section
         style={{
-          padding: isMobile ? '24px 16px' : '48px 48px',
-          marginBottom: isMobile ? 24 : 48,
+          padding: isMobile ? '20px 16px' : '48px 48px',
+          marginBottom: isMobile ? 20 : 48,
           background: 'var(--color-bg-surface)',
           borderRadius: 12,
           border: '1px solid var(--color-border-light)',
@@ -88,13 +91,13 @@ export default function PublicSellerPage() {
           }}
         />
 
-        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 16 : 28, alignItems: isMobile ? 'flex-start' : 'center' }}>
-          {/* Avatar - 64px circle */}
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 14 : 28, alignItems: isMobile ? 'flex-start' : 'center' }}>
+          {/* Avatar */}
           <div style={{ position: 'relative', flexShrink: 0 }}>
             <div
               style={{
-                width: 64,
-                height: 64,
+                width: isMobile ? 56 : 64,
+                height: isMobile ? 56 : 64,
                 borderRadius: '50%',
                 background: 'var(--color-accent-light)',
                 display: 'flex',
@@ -111,13 +114,7 @@ export default function PublicSellerPage() {
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               ) : (
-                <span
-                  style={{
-                    fontFamily: SERIF_FONT,
-                    fontSize: 26,
-                    color: 'var(--color-accent)',
-                  }}
-                >
+                <span style={{ fontFamily: SERIF_FONT, fontSize: isMobile ? 22 : 26, color: 'var(--color-accent)' }}>
                   {seller.storeName.charAt(0).toUpperCase()}
                 </span>
               )}
@@ -148,16 +145,17 @@ export default function PublicSellerPage() {
           </div>
 
           {/* Info */}
-          <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
               <h1
                 style={{
                   fontFamily: headingFont,
-                  fontSize: 26,
+                  fontSize: isMobile ? 20 : 26,
                   fontWeight: headingWeight,
                   color: 'var(--color-text-primary)',
                   margin: 0,
                   lineHeight: 1.2,
+                  wordBreak: 'break-word',
                 }}
               >
                 {seller.storeName}
@@ -178,6 +176,7 @@ export default function PublicSellerPage() {
                     fontWeight: 600,
                     borderRadius: 100,
                     letterSpacing: '0.02em',
+                    whiteSpace: 'nowrap',
                   }}
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
@@ -202,6 +201,7 @@ export default function PublicSellerPage() {
                     letterSpacing: '0.04em',
                     textTransform: 'uppercase',
                     border: '1px solid rgba(202, 138, 4, 0.2)',
+                    whiteSpace: 'nowrap',
                   }}
                 >
                   TOP RATED
@@ -210,7 +210,7 @@ export default function PublicSellerPage() {
             </div>
 
             {/* Trust score + member since row */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 16, marginBottom: 8, flexWrap: 'wrap' }}>
               {trustScore > 0 && (
                 <span
                   style={{
@@ -223,14 +223,8 @@ export default function PublicSellerPage() {
                   Trust: {trustScore}/100
                 </span>
               )}
-              <span
-                style={{
-                  fontFamily: SANS_FONT,
-                  fontSize: 13,
-                  color: 'var(--color-text-tertiary)',
-                }}
-              >
-                {t('memberSince', 'Th\u00e0nh vi\u00ean t\u1eeb')} {formatDateTime(seller.createdAt)}
+              <span style={{ fontFamily: SANS_FONT, fontSize: 13, color: 'var(--color-text-tertiary)' }}>
+                {t('memberSince', 'Thành viên từ')} {formatDateTime(seller.createdAt)}
               </span>
             </div>
 
@@ -248,31 +242,31 @@ export default function PublicSellerPage() {
         className="oio-stagger"
         style={{
           display: 'grid',
-          gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-          gap: isMobile ? 12 : 24,
-          marginBottom: isMobile ? 32 : 64,
+          gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(3, 1fr)',
+          gap: isMobile ? 10 : 24,
+          marginBottom: isMobile ? 28 : 64,
         }}
       >
         {[
           {
             value: formatNumber(totalItems),
-            label: t('totalItems', 'S\u1ea3n ph\u1ea9m'),
+            label: t('totalItems', 'Sản phẩm'),
           },
           {
-            value: seller.rating > 0 ? seller.rating.toFixed(1) : '\u2014',
-            label: t('rating', '\u0110\u00e1nh gi\u00e1'),
-            sublabel: seller.reviewCount > 0 ? `(${formatNumber(seller.reviewCount)} ${t('reviews', '\u0111\u00e1nh gi\u00e1')})` : undefined,
+            value: seller.rating > 0 ? seller.rating.toFixed(1) : '—',
+            label: t('rating', 'Đánh giá'),
+            sublabel: seller.reviewCount > 0 ? `(${formatNumber(seller.reviewCount)} ${t('reviews', 'đánh giá')})` : undefined,
           },
           {
             value: seller.status,
-            label: t('trustStatus', 'Tr\u1ea1ng th\u00e1i'),
+            label: t('trustStatus', 'Trạng thái'),
             isBadge: true,
           },
         ].map((stat) => (
           <div
             key={stat.label}
             style={{
-              padding: '28px 24px',
+              padding: isMobile ? '16px 12px' : '28px 24px',
               background: 'var(--color-bg-card)',
               border: '1px solid var(--color-border-light)',
               borderRadius: 12,
@@ -280,14 +274,14 @@ export default function PublicSellerPage() {
             }}
           >
             {stat.isBadge ? (
-              <div style={{ marginBottom: 8 }}>
+              <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'center' }}>
                 <StatusBadge status={stat.value as string} />
               </div>
             ) : (
               <div
                 style={{
                   fontFamily: MONO_FONT,
-                  fontSize: 28,
+                  fontSize: isMobile ? 20 : 28,
                   fontWeight: 500,
                   color: 'var(--color-text-primary)',
                   marginBottom: 4,
@@ -296,24 +290,11 @@ export default function PublicSellerPage() {
                 {stat.value}
               </div>
             )}
-            <div
-              style={{
-                fontFamily: SANS_FONT,
-                fontSize: 13,
-                color: 'var(--color-text-secondary)',
-              }}
-            >
+            <div style={{ fontFamily: SANS_FONT, fontSize: isMobile ? 11 : 13, color: 'var(--color-text-secondary)' }}>
               {stat.label}
             </div>
             {stat.sublabel && (
-              <div
-                style={{
-                  fontFamily: SANS_FONT,
-                  fontSize: 12,
-                  color: 'var(--color-text-tertiary)',
-                  marginTop: 2,
-                }}
-              >
+              <div style={{ fontFamily: SANS_FONT, fontSize: isMobile ? 10 : 12, color: 'var(--color-text-tertiary)', marginTop: 2 }}>
                 {stat.sublabel}
               </div>
             )}
@@ -326,26 +307,20 @@ export default function PublicSellerPage() {
 
       {/* ---- Items Grid ---- */}
       <section>
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: isMobile ? 16 : 32 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: isMobile ? 14 : 32, gap: 8 }}>
           <h2
             style={{
               fontFamily: headingFont,
-              fontSize: isVi ? 22 : 26,
+              fontSize: isMobile ? 18 : isVi ? 22 : 26,
               fontWeight: headingWeight,
               color: 'var(--color-text-primary)',
               margin: 0,
             }}
           >
-            {t('sellerItems', 'S\u1ea3n ph\u1ea9m')}
+            {t('sellerItems', 'Sản phẩm')}
           </h2>
-          <span
-            style={{
-              fontFamily: SANS_FONT,
-              fontSize: 13,
-              color: 'var(--color-text-tertiary)',
-            }}
-          >
-            {formatNumber(totalItems)} {t('items', 's\u1ea3n ph\u1ea9m')}
+          <span style={{ fontFamily: SANS_FONT, fontSize: 13, color: 'var(--color-text-tertiary)', whiteSpace: 'nowrap' }}>
+            {formatNumber(totalItems)} {t('items', 'sản phẩm')}
           </span>
         </div>
 
@@ -365,7 +340,7 @@ export default function PublicSellerPage() {
               borderRadius: 12,
             }}
           >
-            {t('noItems', 'Ch\u01b0a c\u00f3 s\u1ea3n ph\u1ea9m n\u00e0o')}
+            {t('noItems', 'Chưa có sản phẩm nào')}
           </div>
         ) : (
           <>
@@ -373,8 +348,8 @@ export default function PublicSellerPage() {
               className="oio-stagger"
               style={{
                 display: 'grid',
-                gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(260px, 1fr))',
-                gap: isMobile ? 12 : 20,
+                gridTemplateColumns: itemGridCols,
+                gap: isMobile ? 10 : 20,
               }}
             >
               {items.map((item: PublicSellerItemDto) => (
@@ -422,11 +397,11 @@ export default function PublicSellerPage() {
                   </div>
 
                   {/* Info */}
-                  <div style={{ padding: '14px 16px 16px' }}>
+                  <div style={{ padding: isMobile ? '10px 12px 12px' : '14px 16px 16px' }}>
                     <h4
                       style={{
                         fontFamily: SANS_FONT,
-                        fontSize: 14,
+                        fontSize: isMobile ? 13 : 14,
                         fontWeight: 600,
                         color: 'var(--color-text-primary)',
                         margin: '0 0 4px',
@@ -439,9 +414,9 @@ export default function PublicSellerPage() {
                       {item.title}
                     </h4>
                     {item.auction && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
-                        <Tag color="blue" style={{ margin: 0, fontSize: 11 }}>{item.auction.auctionStatus}</Tag>
-                        {item.auction.startTime && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4, flexWrap: 'wrap' }}>
+                        <Tag color="blue" style={{ margin: 0, fontSize: 10 }}>{item.auction.auctionStatus}</Tag>
+                        {item.auction.startTime && !isMobile && (
                           <span style={{ fontFamily: SANS_FONT, fontSize: 11, color: 'var(--color-text-tertiary)' }}>
                             {dayjs(item.auction.startTime).format('DD/MM/YYYY')}
                             {item.auction.endTime ? ` → ${dayjs(item.auction.endTime).format('DD/MM/YYYY')}` : ''}
@@ -452,10 +427,10 @@ export default function PublicSellerPage() {
                     <div
                       style={{
                         fontFamily: MONO_FONT,
-                        fontSize: 16,
+                        fontSize: isMobile ? 14 : 16,
                         fontWeight: 500,
                         color: 'var(--color-accent)',
-                        marginBottom: 10,
+                        marginBottom: isMobile ? 6 : 10,
                       }}
                     >
                       {item.auction
@@ -464,15 +439,11 @@ export default function PublicSellerPage() {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <StatusBadge status={item.status} size="small" />
-                      <span
-                        style={{
-                          fontFamily: SANS_FONT,
-                          fontSize: 11,
-                          color: 'var(--color-text-tertiary)',
-                        }}
-                      >
-                        {formatDateTime(item.createdAt)}
-                      </span>
+                      {!isMobile && (
+                        <span style={{ fontFamily: SANS_FONT, fontSize: 11, color: 'var(--color-text-tertiary)' }}>
+                          {formatDateTime(item.createdAt)}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -481,27 +452,15 @@ export default function PublicSellerPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 40 }}>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => setPage(p)}
-                    style={{
-                      width: 36,
-                      height: 36,
-                      border: p === page ? '1px solid var(--color-accent)' : '1px solid var(--color-border-light)',
-                      borderRadius: 8,
-                      background: p === page ? 'var(--color-accent)' : 'var(--color-bg-card)',
-                      color: p === page ? '#fff' : 'var(--color-text-secondary)',
-                      fontFamily: SANS_FONT,
-                      fontSize: 13,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {p}
-                  </button>
-                ))}
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: isMobile ? 24 : 40 }}>
+                <Pagination
+                  current={page}
+                  total={totalItems}
+                  pageSize={pageSize}
+                  onChange={setPage}
+                  showSizeChanger={false}
+                  size={isMobile ? 'small' : undefined}
+                />
               </div>
             )}
           </>
@@ -513,11 +472,11 @@ export default function PublicSellerPage() {
 
       {/* ---- Reviews Section ---- */}
       <section>
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: isMobile ? 16 : 32 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: isMobile ? 14 : 32, gap: 8 }}>
           <h2
             style={{
               fontFamily: headingFont,
-              fontSize: isVi ? 22 : 26,
+              fontSize: isMobile ? 18 : isVi ? 22 : 26,
               fontWeight: headingWeight,
               color: 'var(--color-text-primary)',
               margin: 0,
@@ -526,13 +485,7 @@ export default function PublicSellerPage() {
             {t('reviews', 'Reviews')}
           </h2>
           {seller.reviewCount > 0 && (
-            <span
-              style={{
-                fontFamily: SANS_FONT,
-                fontSize: 13,
-                color: 'var(--color-text-tertiary)',
-              }}
-            >
+            <span style={{ fontFamily: SANS_FONT, fontSize: 13, color: 'var(--color-text-tertiary)', whiteSpace: 'nowrap' }}>
               {formatNumber(seller.reviewCount)} {t('reviews', 'reviews')}
             </span>
           )}
@@ -544,9 +497,9 @@ export default function PublicSellerPage() {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 16,
-              marginBottom: isMobile ? 20 : 32,
-              padding: '20px 24px',
+              gap: isMobile ? 12 : 16,
+              marginBottom: isMobile ? 16 : 32,
+              padding: isMobile ? '16px' : '20px 24px',
               background: 'var(--color-bg-card)',
               border: '1px solid var(--color-border-light)',
               borderRadius: 12,
@@ -556,7 +509,7 @@ export default function PublicSellerPage() {
             <div
               style={{
                 fontFamily: MONO_FONT,
-                fontSize: 36,
+                fontSize: isMobile ? 28 : 36,
                 fontWeight: 500,
                 color: 'var(--color-text-primary)',
               }}
@@ -564,15 +517,8 @@ export default function PublicSellerPage() {
               {seller.rating.toFixed(1)}
             </div>
             <div>
-              <Rate disabled allowHalf value={seller.rating} style={{ fontSize: 18 }} />
-              <div
-                style={{
-                  fontFamily: SANS_FONT,
-                  fontSize: 13,
-                  color: 'var(--color-text-tertiary)',
-                  marginTop: 4,
-                }}
-              >
+              <Rate disabled allowHalf value={seller.rating} style={{ fontSize: isMobile ? 14 : 18 }} />
+              <div style={{ fontFamily: SANS_FONT, fontSize: 13, color: 'var(--color-text-tertiary)', marginTop: 4 }}>
                 {t('basedOn', 'Based on')} {formatNumber(seller.reviewCount)} {t('reviews', 'reviews')}
               </div>
             </div>
@@ -599,38 +545,25 @@ export default function PublicSellerPage() {
           </div>
         ) : (
           <>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 12 : 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 10 : 16 }}>
               {reviewsData.items.map((review: { id: string; reviewerName?: string; overallRating: number; comment?: string; createdAt: string }) => (
                 <div
                   key={review.id}
                   style={{
-                    padding: isMobile ? '16px' : '20px 24px',
+                    padding: isMobile ? '14px' : '20px 24px',
                     background: 'var(--color-bg-card)',
                     border: '1px solid var(--color-border-light)',
                     borderRadius: 12,
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <span
-                        style={{
-                          fontFamily: SANS_FONT,
-                          fontSize: 14,
-                          fontWeight: 600,
-                          color: 'var(--color-text-primary)',
-                        }}
-                      >
+                  <div style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                      <span style={{ fontFamily: SANS_FONT, fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>
                         {review.reviewerName || t('anonymousReviewer', 'Anonymous')}
                       </span>
-                      <Rate disabled value={review.overallRating} style={{ fontSize: 14 }} />
+                      <Rate disabled value={review.overallRating} style={{ fontSize: isMobile ? 12 : 14 }} />
                     </div>
-                    <span
-                      style={{
-                        fontFamily: SANS_FONT,
-                        fontSize: 12,
-                        color: 'var(--color-text-tertiary)',
-                      }}
-                    >
+                    <span style={{ fontFamily: SANS_FONT, fontSize: 12, color: 'var(--color-text-tertiary)', whiteSpace: 'nowrap' }}>
                       {formatDateTime(review.createdAt)}
                     </span>
                   </div>
@@ -638,7 +571,7 @@ export default function PublicSellerPage() {
                     <p
                       style={{
                         fontFamily: SANS_FONT,
-                        fontSize: 14,
+                        fontSize: isMobile ? 13 : 14,
                         lineHeight: 1.7,
                         color: 'var(--color-text-secondary)',
                         margin: 0,
@@ -653,27 +586,15 @@ export default function PublicSellerPage() {
 
             {/* Review Pagination */}
             {(reviewsData.metadata?.totalPages ?? 1) > 1 && (
-              <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 40 }}>
-                {Array.from({ length: reviewsData.metadata?.totalPages ?? 1 }, (_, i) => i + 1).map((p) => (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => setReviewPage(p)}
-                    style={{
-                      width: 36,
-                      height: 36,
-                      border: p === reviewPage ? '1px solid var(--color-accent)' : '1px solid var(--color-border-light)',
-                      borderRadius: 8,
-                      background: p === reviewPage ? 'var(--color-accent)' : 'var(--color-bg-card)',
-                      color: p === reviewPage ? '#fff' : 'var(--color-text-secondary)',
-                      fontFamily: SANS_FONT,
-                      fontSize: 13,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {p}
-                  </button>
-                ))}
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: isMobile ? 24 : 40 }}>
+                <Pagination
+                  current={reviewPage}
+                  total={(reviewsData.metadata?.totalPages ?? 1) * reviewPageSize}
+                  pageSize={reviewPageSize}
+                  onChange={setReviewPage}
+                  showSizeChanger={false}
+                  size={isMobile ? 'small' : undefined}
+                />
               </div>
             )}
           </>
