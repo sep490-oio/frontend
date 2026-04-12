@@ -202,7 +202,7 @@ export function TopUpWalletModal({ open, onClose, currency = 'VND' }: Props) {
             value={amount}
             onChange={(v) => setAmount(v)}
             addonAfter={currency}
-            placeholder="100,000"
+            placeholder={t('topupAmountPlaceholder', '100,000')}
             formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
             parser={(v) => Number((v ?? '').replace(/,/g, ''))}
           />

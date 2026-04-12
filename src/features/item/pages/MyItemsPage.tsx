@@ -27,17 +27,17 @@ import { formatDateTime } from '@/utils/format'
 import type { ItemDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
 
-const STATUS_PILLS = [
-  { value: 'all', label: 'All' },
-  { value: ItemStatus.Draft, label: 'Draft' },
-  { value: ItemStatus.PendingVerify, label: 'Awaiting Shipment' },
-  { value: ItemStatus.PendingReview, label: 'Pending Review' },
-  { value: ItemStatus.PendingConditionConfirmation, label: 'Confirm Condition' },
-  { value: ItemStatus.Approved, label: 'Approved' },
-  { value: ItemStatus.Active, label: 'Active' },
-  { value: ItemStatus.InAuction, label: 'In Auction' },
-  { value: ItemStatus.Sold, label: 'Sold' },
-  { value: ItemStatus.Rejected, label: 'Rejected' },
+const STATUS_PILL_VALUES = [
+  'all',
+  ItemStatus.Draft,
+  ItemStatus.PendingVerify,
+  ItemStatus.PendingReview,
+  ItemStatus.PendingConditionConfirmation,
+  ItemStatus.Approved,
+  ItemStatus.Active,
+  ItemStatus.InAuction,
+  ItemStatus.Sold,
+  ItemStatus.Rejected,
 ] as const
 
 const pillBase: React.CSSProperties = {
@@ -408,14 +408,14 @@ export default function MyItemsPage() {
 
       {/* Status pills */}
       <Flex gap={8} wrap="wrap" style={{ marginBottom: 24 }}>
-        {STATUS_PILLS.map((pill) => (
+        {STATUS_PILL_VALUES.map((value) => (
           <button
-            key={pill.value}
+            key={value}
             type="button"
-            style={statusFilter === pill.value ? pillActive : pillBase}
-            onClick={() => setStatusFilter(pill.value)}
+            style={statusFilter === value ? pillActive : pillBase}
+            onClick={() => setStatusFilter(value)}
           >
-            {pill.label}
+            {t(`statusPill.${value}`)}
           </button>
         ))}
       </Flex>

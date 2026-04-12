@@ -12,30 +12,30 @@ interface VerificationWizardProps {
   onCancel: () => void
 }
 
-const TYPE_OPTIONS = [
-  {
-    value: VerificationType.GovernmentId,
-    icon: <IdcardOutlined style={{ fontSize: 28 }} />,
-    title: 'Government ID',
-    description: 'National ID card or CCCD — front, back, and selfie photo',
-  },
-  {
-    value: VerificationType.Passport,
-    icon: <FileProtectOutlined style={{ fontSize: 28 }} />,
-    title: 'Passport',
-    description: 'Passport information page and selfie photo',
-  },
-  {
-    value: VerificationType.BusinessOwner,
-    icon: <ShopOutlined style={{ fontSize: 28 }} />,
-    title: 'Business Owner',
-    description: 'Business license and government ID front',
-  },
-]
-
 export function VerificationWizard({ onComplete, onCancel }: VerificationWizardProps) {
   const { t } = useTranslation('seller')
   const { t: tc } = useTranslation('common')
+
+  const TYPE_OPTIONS = [
+    {
+      value: VerificationType.GovernmentId,
+      icon: <IdcardOutlined style={{ fontSize: 28 }} />,
+      title: t('verification.typeGovernmentId.title'),
+      description: t('verification.typeGovernmentId.description'),
+    },
+    {
+      value: VerificationType.Passport,
+      icon: <FileProtectOutlined style={{ fontSize: 28 }} />,
+      title: t('verification.typePassport.title'),
+      description: t('verification.typePassport.description'),
+    },
+    {
+      value: VerificationType.BusinessOwner,
+      icon: <ShopOutlined style={{ fontSize: 28 }} />,
+      title: t('verification.typeBusinessOwner.title'),
+      description: t('verification.typeBusinessOwner.description'),
+    },
+  ]
   const { message } = App.useApp()
 
   const [currentStep, setCurrentStep] = useState(0)

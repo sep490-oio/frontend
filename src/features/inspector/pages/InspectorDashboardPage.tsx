@@ -9,18 +9,26 @@ import {
   AuditOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
+import { useTranslation } from 'react-i18next'
 import { useInspectionQueue } from '@/features/inspector/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { SERIF_FONT } from '@/styles/tokens'
 
-const CATEGORY_PILLS = ['Tất cả', 'Đồng hồ', 'Thời trang', 'Nghệ thuật']
-
 export default function InspectorDashboardPage() {
   const navigate = useNavigate()
+  const { t } = useTranslation('inspector')
   const { isMobile } = useBreakpoint()
-  const [activePill, setActivePill] = useState('Tất cả')
+
+  const CATEGORY_PILLS = [
+    t('dashboard.categoryAll'),
+    t('dashboard.categoryWatches'),
+    t('dashboard.categoryFashion'),
+    t('dashboard.categoryArt'),
+  ]
+
+  const [activePill, setActivePill] = useState(t('dashboard.categoryAll'))
 
   const { data: queueData, isLoading: queueLoading } = useInspectionQueue({
     pageNumber: 1,
@@ -52,22 +60,22 @@ export default function InspectorDashboardPage() {
     {
       icon: <SearchOutlined style={{ fontSize: 24, color: 'var(--color-accent)' }} />,
       value: pendingCount,
-      label: 'Chờ kiểm định',
+      label: t('dashboard.awaitingInspection'),
       trend: '',
       trendColor: 'var(--color-text-secondary)',
     },
     {
       icon: <AuditOutlined style={{ fontSize: 24, color: 'var(--color-accent)' }} />,
       value: reviewCount,
-      label: 'Chờ phúc thẩm',
+      label: t('dashboard.awaitingReview'),
       trend: '',
       trendColor: 'var(--color-text-secondary)',
     },
     {
       icon: <CheckCircleOutlined style={{ fontSize: 24, color: 'var(--color-success)' }} />,
       value: '—',
-      label: 'Hoàn thành hôm nay',
-      trend: 'Coming soon',
+      label: t('dashboard.completedToday'),
+      trend: t('dashboard.comingSoon'),
       trendColor: 'var(--color-text-secondary)',
     },
   ]
@@ -78,7 +86,7 @@ export default function InspectorDashboardPage() {
         level={2}
         style={{ marginBottom: isMobile ? 16 : 24, fontFamily: SERIF_FONT, color: 'var(--color-text-primary)', fontSize: isMobile ? 22 : undefined }}
       >
-        Inspector Dashboard
+        {t('dashboard.title')}
       </Typography.Title>
 
       {/* ── Large Stat Cards ── */}
@@ -129,7 +137,7 @@ export default function InspectorDashboardPage() {
 
       {/* ── Quick Actions ── */}
       <Card
-        title="Quick Actions"
+        title={t('dashboard.quickActions')}
         style={{ marginBottom: 24, borderRadius: 12, border: '1px solid var(--color-border)' }}
       >
         <Space wrap>
@@ -139,13 +147,13 @@ export default function InspectorDashboardPage() {
             onClick={() => navigate('/inspector/queue')}
             style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
           >
-            View Queue
+            {t('dashboard.viewQueue')}
           </Button>
           <Button
             icon={<AuditOutlined />}
             onClick={() => navigate('/inspector/reviews')}
           >
-            Reviews
+            {t('dashboard.reviews')}
           </Button>
         </Space>
       </Card>
@@ -184,10 +192,10 @@ export default function InspectorDashboardPage() {
           }}
         >
           <Typography.Title level={4} style={{ margin: 0, fontFamily: SERIF_FONT }}>
-            Hàng đợi kiểm định
+            {t('dashboard.inspectionQueue')}
           </Typography.Title>
           <Button type="link" onClick={() => navigate('/inspector/queue')} style={{ color: 'var(--color-accent)' }}>
-            Xem tất cả
+            {t('dashboard.viewAll')}
           </Button>
         </div>
 
@@ -242,7 +250,7 @@ export default function InspectorDashboardPage() {
                         borderRadius: 10,
                       }}
                     >
-                      Vật phẩm
+                      {t('dashboard.itemBadge')}
                     </span>
                   </div>
 
@@ -290,7 +298,7 @@ export default function InspectorDashboardPage() {
                           fontSize: 12,
                         }}
                       >
-                        Inspect
+                        {t('dashboard.inspect')}
                       </Button>
                     </div>
                   </div>
@@ -299,17 +307,17 @@ export default function InspectorDashboardPage() {
             ))}
           </Row>
         ) : (
-          <Alert message="No pending inspections" type="info" showIcon />
+          <Alert message={t('dashboard.noPendingInspections')} type="info" showIcon />
         )}
       </div>
 
       {/* ── History table (kept as-is) ── */}
       <Card
-        title="Lịch sử kiểm định"
+        title={t('dashboard.inspectionHistory')}
         style={{ borderRadius: 12, border: '1px solid var(--color-border)' }}
         extra={
           <Button type="link" onClick={() => navigate('/inspector/queue')} style={{ color: 'var(--color-accent)' }}>
-            View All
+            {t('dashboard.viewAll')}
           </Button>
         }
       >
@@ -318,10 +326,10 @@ export default function InspectorDashboardPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
-                  <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600 }}>Vật phẩm</th>
-                  <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600 }}>Người bán</th>
-                  <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600 }}>Trạng thái</th>
-                  <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600 }}>Thời gian</th>
+                  <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600 }}>{t('dashboard.columnItem')}</th>
+                  <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600 }}>{t('dashboard.columnSeller')}</th>
+                  <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600 }}>{t('dashboard.columnStatus')}</th>
+                  <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600 }}>{t('dashboard.columnTime')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -337,7 +345,7 @@ export default function InspectorDashboardPage() {
             </table>
           </div>
         ) : (
-          <Alert message="Chưa có lịch sử kiểm định hôm nay" type="info" showIcon />
+          <Alert message={t('dashboard.noHistoryToday')} type="info" showIcon />
         )}
       </Card>
     </div>

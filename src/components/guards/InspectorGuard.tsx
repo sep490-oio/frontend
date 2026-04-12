@@ -1,5 +1,6 @@
 import { Navigate, Outlet } from 'react-router'
 import { Spin, Flex, Result } from 'antd'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
 import { useCurrentUser } from '@/features/user/api'
 import { STORAGE_KEYS } from '@/utils/constants'
@@ -19,6 +20,7 @@ function parseRolesFromToken(): string[] {
 const INSPECTOR_ROLES = ['inspector', 'warehousemanager']
 
 export function InspectorGuard() {
+  const { t } = useTranslation('common')
   const { isAuthenticated } = useAuth()
   const { isLoading } = useCurrentUser()
 
@@ -44,8 +46,8 @@ export function InspectorGuard() {
       <Result
         status="403"
         title="403"
-        subTitle="Bạn không có quyền truy cập trang này."
-        extra={<a href="/">Về trang chủ</a>}
+        subTitle={t('guard.noAccess')}
+        extra={<a href="/">{t('guard.backToHome')}</a>}
       />
     )
   }

@@ -41,7 +41,7 @@ export default function CategoriesPage() {
             marginBottom: 16,
           }}
         >
-          {t('categories.label', 'OIO Categories')}
+          {t('categories.label')}
         </p>
         <h1
           style={{
@@ -54,7 +54,7 @@ export default function CategoriesPage() {
             letterSpacing: isVi ? '-0.01em' : '-0.02em',
           }}
         >
-          {t('categories.title', 'Danh m\u1ee5c')}
+          {t('categories.title')}
         </h1>
         <p
           style={{
@@ -66,7 +66,7 @@ export default function CategoriesPage() {
             margin: '0 auto',
           }}
         >
-          {t('categories.subtitle', 'Kh\u00e1m ph\u00e1 c\u00e1c danh m\u1ee5c s\u1ea3n ph\u1ea9m \u0111\u1ea5u gi\u00e1 c\u1ee7a ch\u00fang t\u00f4i')}
+          {t('categories.subtitle')}
         </p>
       </section>
 
@@ -76,7 +76,7 @@ export default function CategoriesPage() {
       {/* Grid */}
       {activeCategories.length === 0 ? (
         <Empty
-          description={t('categories.empty', 'Ch\u01b0a c\u00f3 danh m\u1ee5c n\u00e0o')}
+          description={t('categories.empty')}
           style={{ padding: '80px 0' }}
         />
       ) : (

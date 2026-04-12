@@ -15,17 +15,17 @@ import { TransactionTable } from '@/features/payment/components/TransactionTable
 import { WithdrawalSnapshot } from '@/features/payment/components/WithdrawalSnapshot'
 import { SERIF_FONT } from '@/styles/tokens'
 
-const TX_TYPE_OPTIONS = [
-  { value: '', label: 'All' },
-  { value: WalletTransactionType.Credit, label: 'Credit' },
-  { value: WalletTransactionType.Debit, label: 'Debit' },
-  { value: WalletTransactionType.Hold, label: 'Hold' },
-  { value: WalletTransactionType.Release, label: 'Release' },
-] as const
-
 export default function SellerWalletPage() {
   const { t } = useTranslation('payment')
   const { t: tc } = useTranslation('common')
+
+  const TX_TYPE_OPTIONS = [
+    { value: '', label: t('txTypeLabel.all') },
+    { value: WalletTransactionType.Credit, label: t('txTypeLabel.credit') },
+    { value: WalletTransactionType.Debit, label: t('txTypeLabel.debit') },
+    { value: WalletTransactionType.Hold, label: t('txTypeLabel.hold') },
+    { value: WalletTransactionType.Release, label: t('txTypeLabel.release') },
+  ] as const
   const navigate = useNavigate()
 
   const [page, setPage] = useState(1)

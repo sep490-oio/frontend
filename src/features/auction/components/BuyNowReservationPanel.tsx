@@ -26,35 +26,20 @@ interface BuyNowReservationPanelProps {
   cancelLoading?: boolean
 }
 
-const STATUS_CONFIG: Record<
-  string,
-  { color: string; icon: React.ReactNode; label: string }
-> = {
-  [BuyNowReservationStatus.PendingPayment]: {
-    color: 'warning',
-    icon: <ClockCircleOutlined />,
-    label: 'Pending Payment',
-  },
-  [BuyNowReservationStatus.Paid]: {
-    color: 'success',
-    icon: <CheckCircleOutlined />,
-    label: 'Paid',
-  },
-  [BuyNowReservationStatus.Expired]: {
-    color: 'default',
-    icon: <ExclamationCircleOutlined />,
-    label: 'Expired',
-  },
-  [BuyNowReservationStatus.Cancelled]: {
-    color: 'default',
-    icon: <CloseCircleOutlined />,
-    label: 'Cancelled',
-  },
-  [BuyNowReservationStatus.Failed]: {
-    color: 'error',
-    icon: <ExclamationCircleOutlined />,
-    label: 'Failed',
-  },
+const STATUS_ICON_MAP: Record<string, React.ReactNode> = {
+  [BuyNowReservationStatus.PendingPayment]: <ClockCircleOutlined />,
+  [BuyNowReservationStatus.Paid]: <CheckCircleOutlined />,
+  [BuyNowReservationStatus.Expired]: <ExclamationCircleOutlined />,
+  [BuyNowReservationStatus.Cancelled]: <CloseCircleOutlined />,
+  [BuyNowReservationStatus.Failed]: <ExclamationCircleOutlined />,
+}
+
+const STATUS_COLOR_MAP: Record<string, string> = {
+  [BuyNowReservationStatus.PendingPayment]: 'warning',
+  [BuyNowReservationStatus.Paid]: 'success',
+  [BuyNowReservationStatus.Expired]: 'default',
+  [BuyNowReservationStatus.Cancelled]: 'default',
+  [BuyNowReservationStatus.Failed]: 'error',
 }
 
 export function BuyNowReservationPanel({
@@ -70,7 +55,8 @@ export function BuyNowReservationPanel({
   const { t } = useTranslation('auction')
   const navigate = useNavigate()
 
-  const config = STATUS_CONFIG[status] ?? STATUS_CONFIG[BuyNowReservationStatus.PendingPayment]
+  const statusColor = STATUS_COLOR_MAP[status] ?? 'warning'
+  const statusIcon = STATUS_ICON_MAP[status] ?? <ClockCircleOutlined />
   const isPending = status === BuyNowReservationStatus.PendingPayment
 
   const handlePayNow = () => {
@@ -92,8 +78,8 @@ export function BuyNowReservationPanel({
           <Title level={5} style={{ margin: 0 }}>
             {t('buyNowReservation', 'Buy Now Reservation')}
           </Title>
-          <Tag icon={config.icon} color={config.color}>
-            {t(`reservationStatus.${status}`, config.label)}
+          <Tag icon={statusIcon} color={statusColor}>
+            {t(`reservationStatus.${status}`, status)}
           </Tag>
         </div>
 

@@ -15,33 +15,34 @@ import { SERIF_FONT } from '@/styles/tokens'
 
 const SERIF = SERIF_FONT
 
-const AUCTION_TYPE_OPTIONS = [
-  { value: '', label: 'Tất cả loại' },
-  { value: AuctionType.Regular, label: 'Regular' },
-  { value: AuctionType.Sealed, label: 'Sealed' },
-]
-
-const SORT_OPTIONS = [
-  { value: 'EndTime Asc', label: 'Ending soon' },
-  { value: 'CurrentPrice Asc', label: 'Price: Low → High' },
-  { value: 'CurrentPrice Desc', label: 'Price: High → Low' },
-  { value: 'BidCount Desc', label: 'Most bids' },
-  { value: 'CreatedAt Desc', label: 'Newest' },
-]
-
-const STATUS_PILLS = [
-  { value: '', label: 'Tất cả' },
-  { value: AuctionStatus.Active, label: 'Đang diễn ra' },
-  { value: AuctionStatus.Scheduled, label: 'Sắp diễn ra' },
-  { value: AuctionStatus.Ended, label: 'Đã kết thúc' },
-]
-
 export default function BrowseAuctionsPage() {
   const { t } = useTranslation('auction')
   const { t: tc } = useTranslation('common')
   const { isMobile, isTablet } = useBreakpoint()
   const [searchParams] = useSearchParams()
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false)
+
+  // Option arrays defined inside component to access t()
+  const AUCTION_TYPE_OPTIONS = [
+    { value: '', label: t('browse.allTypes') },
+    { value: AuctionType.Regular, label: t('browse.typeRegular') },
+    { value: AuctionType.Sealed, label: t('browse.typeSealed') },
+  ]
+
+  const SORT_OPTIONS = [
+    { value: 'EndTime Asc', label: t('browse.sortEndingSoon') },
+    { value: 'CurrentPrice Asc', label: t('browse.sortPriceLowHigh') },
+    { value: 'CurrentPrice Desc', label: t('browse.sortPriceHighLow') },
+    { value: 'BidCount Desc', label: t('browse.sortMostBids') },
+    { value: 'CreatedAt Desc', label: t('browse.sortNewest') },
+  ]
+
+  const STATUS_PILLS = [
+    { value: '', label: t('browse.statusAll') },
+    { value: AuctionStatus.Active, label: t('browse.statusActive') },
+    { value: AuctionStatus.Scheduled, label: t('browse.statusScheduled') },
+    { value: AuctionStatus.Ended, label: t('browse.statusEnded') },
+  ]
 
   const initialCategoryId = searchParams.get('categoryId') ?? ''
   const initialSearch = searchParams.get('search') ?? ''
@@ -69,7 +70,7 @@ export default function BrowseAuctionsPage() {
   const { data: categories } = useCategories()
 
   const categoryOptions = [
-    { value: '', label: 'Tất cả danh mục' },
+    { value: '', label: t('browse.allCategories') },
     ...(categories ?? []).map((cat) => ({ value: cat.id, label: cat.name })),
   ]
 
@@ -102,7 +103,7 @@ export default function BrowseAuctionsPage() {
       />
       <Flex gap={8} style={{ width: isNarrow ? '100%' : undefined }}>
         <InputNumber
-          placeholder="Min"
+          placeholder={t('min')}
           min={0}
           value={minPrice}
           addonAfter="₫"
@@ -113,7 +114,7 @@ export default function BrowseAuctionsPage() {
           }}
         />
         <InputNumber
-          placeholder="Max"
+          placeholder={t('max')}
           min={0}
           value={maxPrice}
           addonAfter="₫"
@@ -147,7 +148,7 @@ export default function BrowseAuctionsPage() {
             lineHeight: 1.2,
           }}
         >
-          {t('browseTitle', 'Khám phá phiên đấu giá')}
+          {t('browse.title')}
         </h1>
         <p
           style={{
@@ -157,7 +158,7 @@ export default function BrowseAuctionsPage() {
             lineHeight: 1.5,
           }}
         >
-          {t('browseSubtitle', 'Tìm kiếm và lọc các phiên đấu giá theo danh mục, trạng thái và giá')}
+          {t('browse.subtitle')}
         </p>
       </div>
 
@@ -165,7 +166,7 @@ export default function BrowseAuctionsPage() {
       <Flex gap={8} style={{ marginBottom: 12 }}>
         <Input
           prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
-          placeholder={t('searchPlaceholder', 'Search auctions...')}
+          placeholder={t('searchPlaceholder')}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           onPressEnter={() => setFilters((prev) => ({ ...prev, search: searchText || undefined, pageNumber: 1 }))}
@@ -182,7 +183,7 @@ export default function BrowseAuctionsPage() {
             onClick={() => setFilterDrawerOpen(true)}
             style={{ height: 44, minWidth: 44, borderRadius: 100, padding: '0 14px' }}
           >
-            {!isMobile && 'Filters'}
+            {!isMobile && t('browse.filters')}
           </Button>
         )}
       </Flex>
@@ -235,7 +236,7 @@ export default function BrowseAuctionsPage() {
 
       {/* Mobile/Tablet filter drawer */}
       <Drawer
-        title="Bộ lọc"
+        title={t('browse.filterDrawerTitle')}
         placement="bottom"
         height="auto"
         open={filterDrawerOpen}
@@ -260,7 +261,7 @@ export default function BrowseAuctionsPage() {
             fontWeight: 600,
           }}
         >
-          Áp dụng
+          {t('browse.applyFilters')}
         </Button>
       </Drawer>
 
@@ -274,7 +275,7 @@ export default function BrowseAuctionsPage() {
           ))}
         </Row>
       ) : !data?.items?.length ? (
-        <EmptyState title={t('noAuctions', 'Không tìm thấy phiên đấu giá')} />
+        <EmptyState title={t('noAuctions')} />
       ) : (
         <>
           <Row className="oio-stagger" gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]}>

@@ -114,7 +114,7 @@ export default function AdminPaymentsPage() {
       render: (status: string) => <StatusBadge status={status} />,
     },
     {
-      title: t('payments.bankName', 'Bank'),
+      title: t('payments.bankName'),
       dataIndex: 'bankName',
       key: 'bankName',
       width: 100,
@@ -126,7 +126,7 @@ export default function AdminPaymentsPage() {
       width: 160,
     },
     {
-      title: t('payments.accountHolder', 'Account Holder'),
+      title: t('payments.accountHolder'),
       dataIndex: 'accountHolder',
       key: 'accountHolder',
       ellipsis: true,
@@ -158,11 +158,11 @@ export default function AdminPaymentsPage() {
         if (record.status === 'approved') {
           return (
             <Popconfirm
-              title={t('payments.completeConfirm', 'Confirm bank transfer completed for this withdrawal?')}
+              title={t('payments.completeConfirm')}
               onConfirm={() => handleComplete(record.id)}
             >
               <Button type="link" size="small" loading={completeWithdrawal.isPending} style={{ color: 'var(--color-success)' }}>
-                {t('payments.complete', 'Complete')}
+                {t('payments.complete')}
               </Button>
             </Popconfirm>
           )
@@ -349,10 +349,10 @@ export default function AdminPaymentsPage() {
               onClear={() => setWStatus('')}
               options={[
                 { value: '', label: t('payments.allStatuses') },
-                { value: 'pending', label: 'Pending' },
-                { value: 'approved', label: 'Approved' },
-                { value: 'rejected', label: 'Rejected' },
-                { value: 'completed', label: 'Completed' },
+                { value: 'pending', label: tc('statusLabel.pending') },
+                { value: 'approved', label: tc('statusLabel.approved') },
+                { value: 'rejected', label: tc('statusLabel.rejected') },
+                { value: 'completed', label: tc('statusLabel.completed') },
               ]}
             />
           </Space>
@@ -389,9 +389,9 @@ export default function AdminPaymentsPage() {
               onClear={() => setTStatus('')}
               options={[
                 { value: '', label: t('payments.allStatuses') },
-                { value: 'pending', label: 'Pending' },
-                { value: 'completed', label: 'Completed' },
-                { value: 'failed', label: 'Failed' },
+                { value: 'pending', label: tc('statusLabel.pending') },
+                { value: 'completed', label: tc('statusLabel.completed') },
+                { value: 'failed', label: tc('statusLabel.failed') },
               ]}
             />
           </Space>
@@ -428,10 +428,10 @@ export default function AdminPaymentsPage() {
               onClear={() => setEStatus('')}
               options={[
                 { value: '', label: t('payments.allStatuses') },
-                { value: 'held', label: 'Held' },
-                { value: 'released', label: 'Released' },
-                { value: 'disputed', label: 'Disputed' },
-                { value: 'refunded', label: 'Refunded' },
+                { value: 'held', label: tc('statusLabel.held') },
+                { value: 'released', label: tc('statusLabel.released') },
+                { value: 'disputed', label: tc('statusLabel.disputed') },
+                { value: 'refunded', label: tc('statusLabel.refunded') },
               ]}
             />
           </Space>

@@ -76,6 +76,7 @@ function countByStatus<T extends { status: string }>(
 
 export default function SellerDashboardPage() {
   const { t } = useTranslation('seller')
+  const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
   const { isMobile } = useBreakpoint()
 
@@ -121,7 +122,7 @@ export default function SellerDashboardPage() {
     (itemCounts['pending_condition_confirmation'] ?? 0)
 
   const recentAuctions = useMemo(
-    () => (auctionsData?.items ?? []).slice(0, 5),
+    () => (auctionsData?.items ?? []).filter(Boolean).slice(0, 5),
     [auctionsData?.items],
   )
 
@@ -145,13 +146,13 @@ export default function SellerDashboardPage() {
 
   if (!profile) {
     return (
-      <Empty description={t('noProfile', 'Ban chua tao ho so nguoi ban')}>
+      <Empty description={t('noProfile')}>
         <Button
           type="primary"
           onClick={() => navigate('/seller/register')}
           style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)', minHeight: 44 }}
         >
-          {t('createProfile', 'Tao ho so nguoi ban')}
+          {t('createProfile')}
         </Button>
       </Empty>
     )
@@ -161,7 +162,7 @@ export default function SellerDashboardPage() {
 
   const auctionColumns: ColumnsType<AuctionListItemDto> = [
     {
-      title: t('auctionTitle', 'Tieu de'),
+      title: t('auctionTitle'),
       dataIndex: 'itemTitle',
       key: 'itemTitle',
       ellipsis: true,
@@ -176,7 +177,7 @@ export default function SellerDashboardPage() {
       ),
     },
     {
-      title: t('currentPrice', 'Gia hien tai'),
+      title: t('currentPrice'),
       dataIndex: 'currentPrice',
       key: 'currentPrice',
       width: 150,
@@ -195,7 +196,7 @@ export default function SellerDashboardPage() {
       },
     },
     {
-      title: t('bids', 'Luot dau'),
+      title: t('bids'),
       dataIndex: 'bidCount',
       key: 'bidCount',
       width: 80,
@@ -205,14 +206,14 @@ export default function SellerDashboardPage() {
       ),
     },
     {
-      title: t('status', 'Trang thai'),
+      title: t('status'),
       dataIndex: 'status',
       key: 'status',
       width: 130,
       render: (status: string) => <StatusBadge status={status} size="small" />,
     },
     {
-      title: t('endTime', 'Ket thuc'),
+      title: t('endTime'),
       dataIndex: 'endTime',
       key: 'endTime',
       width: 160,
@@ -252,10 +253,10 @@ export default function SellerDashboardPage() {
       {/* ── Stats Row ──────────────────────────────────────────────── */}
       <Row gutter={[isMobile ? 12 : 16, isMobile ? 12 : 16]} style={{ marginBottom: isMobile ? 20 : 32 }}>
         {[
-          { icon: <AppstoreOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />, label: t('dashboard.totalItems', 'Total Items'), value: totalItems },
-          { icon: <ThunderboltOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />, label: t('dashboard.activeAuctions', 'Active Auctions'), value: activeAuctions },
-          { icon: <ClockCircleOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />, label: t('dashboard.pendingReview', 'Pending Review'), value: pendingReview },
-          { icon: <DollarOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />, label: t('dashboard.sold', 'Sold'), value: soldAuctions },
+          { icon: <AppstoreOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />, label: t('dashboard.totalItems'), value: totalItems },
+          { icon: <ThunderboltOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />, label: t('dashboard.activeAuctions'), value: activeAuctions },
+          { icon: <ClockCircleOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />, label: t('dashboard.pendingReview'), value: pendingReview },
+          { icon: <DollarOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />, label: t('dashboard.sold'), value: soldAuctions },
         ].map((stat) => (
           <Col key={stat.label} xs={12} sm={6}>
             <Card style={statCardStyle} styles={{ body: { padding: isMobile ? '12px 14px' : '20px 24px' } }}>
@@ -275,7 +276,7 @@ export default function SellerDashboardPage() {
 
       {/* ── Item Status Overview ───────────────────────────────────── */}
       <Card
-        title={<span style={sectionTitleStyle}>{t('dashboard.itemOverview', 'Item Overview')}</span>}
+        title={<span style={sectionTitleStyle}>{t('dashboard.itemOverview')}</span>}
         style={{ marginBottom: isMobile ? 16 : 24 }}
         styles={{ body: { padding: isMobile ? '12px 16px' : '20px 24px' } }}
       >
@@ -295,7 +296,7 @@ export default function SellerDashboardPage() {
               }}
               onClick={() => navigate(`/seller/items?status=${s}`)}
             >
-              {t(`statusLabel.${s}`, s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()))}
+              {tc(`statusLabel.${s}`, s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()))}
               {': '}
               <strong style={{ marginLeft: 2 }}>{itemCounts[s] ?? 0}</strong>
             </Tag>
@@ -306,7 +307,7 @@ export default function SellerDashboardPage() {
 
       {/* ── Auction Status Overview ────────────────────────────────── */}
       <Card
-        title={<span style={sectionTitleStyle}>{t('dashboard.auctionOverview', 'Auction Overview')}</span>}
+        title={<span style={sectionTitleStyle}>{t('dashboard.auctionOverview')}</span>}
         style={{ marginBottom: isMobile ? 16 : 24 }}
         styles={{ body: { padding: isMobile ? '12px 16px' : '20px 24px' } }}
       >
@@ -318,7 +319,7 @@ export default function SellerDashboardPage() {
               style={{ cursor: 'pointer', borderRadius: 100, padding: '4px 12px', fontSize: 12, minHeight: 28, display: 'inline-flex', alignItems: 'center' }}
               onClick={() => navigate(`/seller/auctions?status=${s}`)}
             >
-              {t(`statusLabel.${s}`, s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()))}
+              {tc(`statusLabel.${s}`, s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()))}
               {': '}
               <strong style={{ marginLeft: 2 }}>{auctionCounts[s] ?? 0}</strong>
             </Tag>
@@ -328,18 +329,18 @@ export default function SellerDashboardPage() {
 
       {/* ── Quick Actions ──────────────────────────────────────────── */}
       <Card
-        title={<span style={sectionTitleStyle}>{t('dashboard.quickActions', 'Quick Actions')}</span>}
+        title={<span style={sectionTitleStyle}>{t('dashboard.quickActions')}</span>}
         style={{ marginBottom: isMobile ? 16 : 24 }}
         styles={{ body: { padding: isMobile ? '12px 16px' : '20px 24px' } }}
       >
         {isMobile ? (
           <Row gutter={[8, 8]}>
             {[
-              { icon: <PlusOutlined />, label: t('dashboard.createItem', 'Create Item'), onClick: () => navigate('/seller/items/create'), type: 'primary' as const },
-              { icon: <ShoppingOutlined />, label: t('dashboard.manageItems', 'Manage Items'), onClick: () => navigate('/seller/items') },
-              { icon: <OrderedListOutlined />, label: t('dashboard.orders', 'Orders'), onClick: () => navigate('/seller/orders') },
-              { icon: <WalletOutlined />, label: t('dashboard.wallet', 'Wallet'), onClick: () => navigate('/seller/wallet') },
-              { icon: <SendOutlined />, label: t('dashboard.ordersAwaitingShipment', 'Awaiting Shipment'), onClick: () => navigate('/seller/orders?status=paid') },
+              { icon: <PlusOutlined />, label: t('dashboard.createItem'), onClick: () => navigate('/seller/items/create'), type: 'primary' as const },
+              { icon: <ShoppingOutlined />, label: t('dashboard.manageItems'), onClick: () => navigate('/seller/items') },
+              { icon: <OrderedListOutlined />, label: t('dashboard.orders'), onClick: () => navigate('/seller/orders') },
+              { icon: <WalletOutlined />, label: t('dashboard.wallet'), onClick: () => navigate('/seller/wallet') },
+              { icon: <SendOutlined />, label: t('dashboard.ordersAwaitingShipment'), onClick: () => navigate('/seller/orders?status=paid') },
             ].map((action) => (
               <Col key={action.label} xs={12}>
                 <Button
@@ -373,19 +374,19 @@ export default function SellerDashboardPage() {
                 ...touchBtnStyle,
               }}
             >
-              {t('dashboard.createItem', 'Create Item')}
+              {t('dashboard.createItem')}
             </Button>
             <Button icon={<ShoppingOutlined />} onClick={() => navigate('/seller/items')} style={{ ...outlinedBtnStyle, ...touchBtnStyle }}>
-              {t('dashboard.manageItems', 'Manage Items')}
+              {t('dashboard.manageItems')}
             </Button>
             <Button icon={<OrderedListOutlined />} onClick={() => navigate('/seller/orders')} style={{ ...outlinedBtnStyle, ...touchBtnStyle }}>
-              {t('dashboard.orders', 'Orders')}
+              {t('dashboard.orders')}
             </Button>
             <Button icon={<WalletOutlined />} onClick={() => navigate('/seller/wallet')} style={{ ...outlinedBtnStyle, ...touchBtnStyle }}>
-              {t('dashboard.wallet', 'Wallet')}
+              {t('dashboard.wallet')}
             </Button>
             <Button icon={<SendOutlined />} onClick={() => navigate('/seller/orders?status=paid')} style={{ ...outlinedBtnStyle, ...touchBtnStyle }}>
-              {t('dashboard.ordersAwaitingShipment', 'Orders Awaiting Shipment')}
+              {t('dashboard.ordersAwaitingShipment')}
             </Button>
           </Space>
         )}
@@ -393,7 +394,7 @@ export default function SellerDashboardPage() {
 
       {/* ── Recent Auctions ────────────────────────────────────────── */}
       <Card
-        title={<span style={sectionTitleStyle}>{t('recentAuctions', 'Phien dau gia gan day')}</span>}
+        title={<span style={sectionTitleStyle}>{t('recentAuctions')}</span>}
         style={{ marginBottom: hasPendingActions ? (isMobile ? 16 : 24) : 0 }}
         styles={{ body: { padding: isMobile ? '0 8px 8px' : undefined, overflowX: 'auto' } }}
       >
@@ -404,7 +405,7 @@ export default function SellerDashboardPage() {
           dataSource={recentAuctions}
           loading={auctionsLoading}
           pagination={false}
-          locale={{ emptyText: t('noAuctions', 'Chua co phien dau gia nao') }}
+          locale={{ emptyText: t('noAuctions') }}
           scroll={{ x: 'max-content' }}
         />
       </Card>
@@ -412,7 +413,7 @@ export default function SellerDashboardPage() {
       {/* ── Pending Actions ────────────────────────────────────────── */}
       {hasPendingActions && (
         <Card
-          title={<span style={sectionTitleStyle}>{t('pendingActions', 'Can xu ly')}</span>}
+          title={<span style={sectionTitleStyle}>{t('pendingActions')}</span>}
           styles={{ body: { padding: isMobile ? '12px 16px' : '20px 24px' } }}
         >
           <Space direction="vertical" size={12} style={{ width: '100%' }}>
@@ -420,14 +421,14 @@ export default function SellerDashboardPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <span style={{ color: 'var(--color-text-secondary)', fontSize: isMobile ? 13 : 14 }}>
                   <ClockCircleOutlined style={{ marginRight: 8 }} />
-                  {t('itemsPendingReview', '{{count}} san pham dang cho duyet', { count: pendingItems })}
+                  {t('itemsPendingReview', { count: pendingItems })}
                 </span>
                 <Button
                   type="link"
                   onClick={() => navigate('/seller/items?status=pending_review')}
                   style={{ color: 'var(--color-accent)', padding: 0, minHeight: 36 }}
                 >
-                  {t('viewAll', 'Xem tat ca')}
+                  {t('viewAll')}
                 </Button>
               </div>
             )}
@@ -435,14 +436,14 @@ export default function SellerDashboardPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <span style={{ color: 'var(--color-text-secondary)', fontSize: isMobile ? 13 : 14 }}>
                   <ClockCircleOutlined style={{ marginRight: 8 }} />
-                  {t('draftAuctionsNeedSubmission', '{{count}} phien dau gia nhap can gui duyet', { count: draftAuctions })}
+                  {t('draftAuctionsNeedSubmission', { count: draftAuctions })}
                 </span>
                 <Button
                   type="link"
                   onClick={() => navigate('/seller/auctions?status=draft')}
                   style={{ color: 'var(--color-accent)', padding: 0, minHeight: 36 }}
                 >
-                  {t('viewAll', 'Xem tat ca')}
+                  {t('viewAll')}
                 </Button>
               </div>
             )}
@@ -491,7 +492,7 @@ export default function SellerDashboardPage() {
                 }}
               >
                 <CheckCircleOutlined style={{ fontSize: 12 }} />
-                {t('verified', 'Da xac minh')}
+                {t('verified')}
               </span>
             )}
             {profile.status !== SellerProfileStatus.Verified && (
@@ -522,7 +523,7 @@ export default function SellerDashboardPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                     <WalletOutlined style={{ color: 'var(--color-accent)', fontSize: 15 }} />
                     <span style={{ fontFamily: serifFont, fontSize: 13, color: 'var(--color-text-primary)' }}>
-                      {t('dashboard.walletBalance', 'Wallet Balance')}
+                      {t('dashboard.walletBalance')}
                     </span>
                   </div>
                   <div style={{ fontFamily: monoFont, fontSize: 20, fontWeight: 600, color: 'var(--color-text-primary)' }}>
@@ -530,7 +531,7 @@ export default function SellerDashboardPage() {
                   </div>
                   {wallet && wallet.pendingBalance > 0 && (
                     <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', fontFamily: monoFont, marginTop: 2 }}>
-                      {t('pendingBalance', 'Dang cho')}: {formatCurrency(wallet.pendingBalance, wallet.currency)}
+                      {t('pendingBalance')}: {formatCurrency(wallet.pendingBalance, wallet.currency)}
                     </div>
                   )}
                 </div>
@@ -542,7 +543,7 @@ export default function SellerDashboardPage() {
                     onClick={() => navigate('/seller/wallet/withdraw')}
                     style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)', fontWeight: 500, borderRadius: 6, minHeight: 36 }}
                   >
-                    {t('dashboard.withdraw', 'Withdraw')}
+                    {t('dashboard.withdraw')}
                   </Button>
                   <Button
                     size="small"
@@ -550,7 +551,7 @@ export default function SellerDashboardPage() {
                     onClick={() => navigate('/seller/wallet')}
                     style={{ borderColor: 'var(--color-accent)', color: 'var(--color-accent)', fontWeight: 500, borderRadius: 6, minHeight: 36 }}
                   >
-                    {t('dashboard.history', 'History')}
+                    {t('dashboard.history')}
                   </Button>
                 </Space>
               </div>
@@ -560,7 +561,7 @@ export default function SellerDashboardPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                   <WalletOutlined style={{ color: 'var(--color-accent)', fontSize: 18 }} />
                   <span style={{ fontFamily: serifFont, fontSize: 15, color: 'var(--color-text-primary)' }}>
-                    {t('dashboard.walletBalance', 'Wallet Balance')}
+                    {t('dashboard.walletBalance')}
                   </span>
                 </div>
                 <div style={{ fontFamily: monoFont, fontSize: 22, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 14 }}>
@@ -568,7 +569,7 @@ export default function SellerDashboardPage() {
                 </div>
                 {wallet && wallet.pendingBalance > 0 && (
                   <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 14, fontFamily: monoFont }}>
-                    {t('pendingBalance', 'Dang cho')}: {formatCurrency(wallet.pendingBalance, wallet.currency)}
+                    {t('pendingBalance')}: {formatCurrency(wallet.pendingBalance, wallet.currency)}
                   </div>
                 )}
                 <Space size={8}>
@@ -579,7 +580,7 @@ export default function SellerDashboardPage() {
                     onClick={() => navigate('/seller/wallet/withdraw')}
                     style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)', fontWeight: 500, borderRadius: 6 }}
                   >
-                    {t('dashboard.withdraw', 'Withdraw')}
+                    {t('dashboard.withdraw')}
                   </Button>
                   <Button
                     size="small"
@@ -587,7 +588,7 @@ export default function SellerDashboardPage() {
                     onClick={() => navigate('/seller/wallet')}
                     style={{ borderColor: 'var(--color-accent)', color: 'var(--color-accent)', fontWeight: 500, borderRadius: 6 }}
                   >
-                    {t('dashboard.history', 'History')}
+                    {t('dashboard.history')}
                   </Button>
                 </Space>
               </>

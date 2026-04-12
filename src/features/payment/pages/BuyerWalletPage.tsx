@@ -11,12 +11,12 @@ import { TransactionTable } from '@/features/payment/components/TransactionTable
 import { TopUpWalletModal } from '@/features/payment/components/TopUpWalletModal'
 import { SERIF_FONT } from '@/styles/tokens'
 
-const TX_TYPE_OPTIONS = [
-  { value: '', label: 'All' },
-  { value: WalletTransactionType.Credit, label: 'Credit' },
-  { value: WalletTransactionType.Debit, label: 'Debit' },
-  { value: WalletTransactionType.Hold, label: 'Hold' },
-  { value: WalletTransactionType.Release, label: 'Release' },
+const TX_TYPE_KEYS = [
+  { value: '', key: 'all' },
+  { value: WalletTransactionType.Credit, key: 'credit' },
+  { value: WalletTransactionType.Debit, key: 'debit' },
+  { value: WalletTransactionType.Hold, key: 'hold' },
+  { value: WalletTransactionType.Release, key: 'release' },
 ] as const
 
 export default function BuyerWalletPage() {
@@ -137,9 +137,9 @@ export default function BuyerWalletPage() {
               setPage(1)
             }}
             style={{ width: 160 }}
-            options={TX_TYPE_OPTIONS.map((opt) => ({
+            options={TX_TYPE_KEYS.map((opt) => ({
               value: opt.value,
-              label: t(`txTypeLabel.${opt.label.toLowerCase()}`, opt.label),
+              label: t(`txTypeLabel.${opt.key}`, opt.key),
             }))}
           />
         </Space>

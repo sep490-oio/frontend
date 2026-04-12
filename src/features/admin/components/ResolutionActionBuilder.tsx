@@ -4,75 +4,42 @@ import { WarningOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import type { ResolutionActionSet } from '@/features/dispute/api'
 
-// ── Option definitions ──────────────────────────────────────────────
+// ── Option value arrays (labels added inside component via t()) ─────
 
-const ESCROW_OPTIONS = [
-  { value: 'no_action', label: 'No Action' },
-  { value: 'release_to_seller', label: 'Release to Seller' },
-  { value: 'refund_buyer', label: 'Refund Buyer' },
-  { value: 'partial_refund', label: 'Partial Refund' },
-  { value: 'hold', label: 'Hold' },
-]
+const ESCROW_VALUES = ['no_action', 'release_to_seller', 'refund_buyer', 'partial_refund', 'hold'] as const
+const REFUND_VALUES = ['no_refund', 'full_refund', 'partial_refund'] as const
+const SHIPMENT_VALUES = ['no_action', 'cancel_shipment', 'mark_lost', 'rebook_shipment', 'open_return'] as const
+const ITEM_VALUES = ['no_action', 'return_to_active', 'hold_in_warehouse', 'return_to_seller', 'reject_listing'] as const
+const AUCTION_VALUES = ['no_action', 'relist', 'cancel'] as const
+const PENALTY_VALUES = ['no_action', 'flag_buyer', 'flag_seller'] as const
 
-const REFUND_OPTIONS = [
-  { value: 'no_refund', label: 'No Refund' },
-  { value: 'full_refund', label: 'Full Refund' },
-  { value: 'partial_refund', label: 'Partial Refund' },
-]
-
-const SHIPMENT_OPTIONS = [
-  { value: 'no_action', label: 'No Action' },
-  { value: 'cancel_shipment', label: 'Cancel Shipment' },
-  { value: 'mark_lost', label: 'Mark Lost' },
-  { value: 'rebook_shipment', label: 'Rebook Shipment' },
-  { value: 'open_return', label: 'Open Return' },
-]
-
-const ITEM_OPTIONS = [
-  { value: 'no_action', label: 'No Action' },
-  { value: 'return_to_active', label: 'Return to Active' },
-  { value: 'hold_in_warehouse', label: 'Hold in Warehouse' },
-  { value: 'return_to_seller', label: 'Return to Seller' },
-  { value: 'reject_listing', label: 'Reject Listing' },
-]
-
-const AUCTION_OPTIONS = [
-  { value: 'no_action', label: 'No Action' },
-  { value: 'relist', label: 'Relist' },
-  { value: 'cancel', label: 'Cancel' },
-]
-
-const PENALTY_OPTIONS = [
-  { value: 'no_action', label: 'No Action' },
-  { value: 'flag_buyer', label: 'Flag Buyer' },
-  { value: 'flag_seller', label: 'Flag Seller' },
-]
+// Maps snake_case option values to i18n key suffixes (camelCase)
+const VALUE_TO_KEY: Record<string, string> = {
+  no_action: 'noAction',
+  release_to_seller: 'releaseToSeller',
+  refund_buyer: 'refundBuyer',
+  partial_refund: 'partialRefund',
+  hold: 'hold',
+  no_refund: 'noRefund',
+  full_refund: 'fullRefund',
+  cancel_shipment: 'cancelShipment',
+  mark_lost: 'markLost',
+  rebook_shipment: 'rebookShipment',
+  open_return: 'openReturn',
+  return_to_active: 'returnToActive',
+  hold_in_warehouse: 'holdInWarehouse',
+  return_to_seller: 'returnToSeller',
+  reject_listing: 'rejectListing',
+  relist: 'relist',
+  cancel: 'cancel',
+  flag_buyer: 'flagBuyer',
+  flag_seller: 'flagSeller',
+}
 
 const MANUAL_FOLLOWUP_SHIPMENT = new Set(['rebook_shipment', 'open_return'])
 const MANUAL_FOLLOWUP_ITEM = new Set(['return_to_seller', 'reject_listing'])
 
-// ── Tooltips ────────────────────────────────────────────────────────
-
-const OPTION_TOOLTIPS: Record<string, string> = {
-  release_to_seller: 'Release escrow funds to the seller',
-  refund_buyer: 'Refund the full escrow amount to the buyer',
-  partial_refund: 'Refund a portion of the escrow amount',
-  hold: 'Keep funds in escrow pending further action',
-  full_refund: 'Buyer will receive a full refund',
-  no_refund: 'No refund will be issued',
-  cancel_shipment: 'Cancel the current shipment',
-  mark_lost: 'Mark the shipment as lost',
-  rebook_shipment: 'Rebook a new shipment for the item',
-  open_return: 'Open a return shipment to the seller',
-  return_to_active: 'Return item to active status for a new auction',
-  hold_in_warehouse: 'Keep the item in warehouse storage',
-  return_to_seller: 'Ship the item back to the seller',
-  reject_listing: 'Reject this listing from the platform',
-  relist: 'Return item to active status for a new auction',
-  cancel: 'Cancel the auction permanently',
-  flag_buyer: 'Flag the buyer account for review',
-  flag_seller: 'Flag the seller account for review',
-}
+// ── Tooltips (key suffixes matching VALUE_TO_KEY) ──────────────────
 
 // ── Outcome presets ─────────────────────────────────────────────────
 
@@ -109,44 +76,50 @@ export function getPresetForOutcome(outcome: string, domain?: string): Partial<R
   return { ...base, ...domainOverride }
 }
 
-// ── Summary helpers ─────────────────────────────────────────────────
+// ── Summary key mappings (value → i18n key under resolution.summary) ─
 
-const ACTION_SUMMARIES: Record<string, Record<string, string>> = {
+const SUMMARY_KEYS: Record<string, Record<string, string>> = {
   escrowAction: {
-    release_to_seller: 'Escrow will be released to the seller',
-    refund_buyer: 'Escrow will be refunded to the buyer',
-    partial_refund: 'Escrow will be partially refunded',
-    hold: 'Escrow funds will be held',
+    release_to_seller: 'escrowReleaseToSeller',
+    refund_buyer: 'escrowRefundBuyer',
+    partial_refund: 'escrowPartialRefund',
+    hold: 'escrowHold',
   },
   refundAction: {
-    full_refund: 'Buyer will receive a full refund',
-    partial_refund: 'Buyer will receive a partial refund',
+    full_refund: 'refundFull',
+    partial_refund: 'refundPartial',
   },
   shipmentAction: {
-    cancel_shipment: 'Shipment will be cancelled',
-    mark_lost: 'Shipment will be marked as lost',
-    rebook_shipment: 'A new shipment will be rebooked',
-    open_return: 'A return shipment will be opened',
+    cancel_shipment: 'shipmentCancel',
+    mark_lost: 'shipmentLost',
+    rebook_shipment: 'shipmentRebook',
+    open_return: 'shipmentReturn',
   },
   itemAction: {
-    return_to_active: 'Item will be returned to active status',
-    hold_in_warehouse: 'Item will be held in warehouse',
-    return_to_seller: 'Item will be returned to the seller',
-    reject_listing: 'Listing will be rejected',
+    return_to_active: 'itemReturnToActive',
+    hold_in_warehouse: 'itemHold',
+    return_to_seller: 'itemReturnToSeller',
+    reject_listing: 'itemRejectListing',
   },
   auctionAction: {
-    relist: 'Item will be relisted for auction',
-    cancel: 'Auction will be cancelled',
+    relist: 'auctionRelist',
+    cancel: 'auctionCancel',
   },
   penaltyAction: {
-    flag_buyer: 'Buyer account will be flagged for review',
-    flag_seller: 'Seller account will be flagged for review',
+    flag_buyer: 'penaltyFlagBuyer',
+    flag_seller: 'penaltyFlagSeller',
   },
 }
 
 // ── Validation ──────────────────────────────────────────────────────
 
-export function validateActionSet(actionSet: ResolutionActionSet): { errors: string[]; warnings: string[] } {
+// Validate requires a translate function to produce translated messages
+type TranslateFn = (key: string) => string
+
+export function validateActionSet(
+  actionSet: ResolutionActionSet,
+  t?: TranslateFn,
+): { errors: string[]; warnings: string[] } {
   const errors: string[] = []
   const warnings: string[] = []
 
@@ -154,11 +127,11 @@ export function validateActionSet(actionSet: ResolutionActionSet): { errors: str
     (actionSet.escrowAction === 'partial_refund' || actionSet.refundAction === 'partial_refund') &&
     (!actionSet.refundAmount || actionSet.refundAmount <= 0)
   ) {
-    errors.push('Refund amount must be greater than 0 when partial refund is selected.')
+    errors.push(t?.('resolution.validation.refundAmountRequired') ?? 'Refund amount must be greater than 0 when partial refund is selected.')
   }
 
   if (actionSet.escrowAction === 'release_to_seller' && actionSet.refundAction === 'full_refund') {
-    errors.push('Cannot release to seller and refund buyer simultaneously.')
+    errors.push(t?.('resolution.validation.conflictReleaseAndRefund') ?? 'Cannot release to seller and refund buyer simultaneously.')
   }
 
   const allNoAction = !actionSet.escrowAction || actionSet.escrowAction === 'no_action'
@@ -169,7 +142,7 @@ export function validateActionSet(actionSet: ResolutionActionSet): { errors: str
   const penNone = !actionSet.penaltyAction || actionSet.penaltyAction === 'no_action'
 
   if (allNoAction && allNoRefund && shipNone && itemNone && auctNone && penNone) {
-    warnings.push('No resolution actions selected. Are you sure?')
+    warnings.push(t?.('resolution.validation.noActionsWarning') ?? 'No resolution actions selected. Are you sure?')
   }
 
   return { errors, warnings }
@@ -185,26 +158,38 @@ interface ResolutionActionBuilderProps {
   errors?: string[]
 }
 
-function renderOptionLabel(opt: { value: string; label: string }, manualSet?: Set<string>) {
-  const tooltip = OPTION_TOOLTIPS[opt.value]
-  return (
-    <span title={tooltip}>
-      {opt.label}
-      {manualSet?.has(opt.value) && (
-        <Tag color="orange" style={{ marginLeft: 8, fontSize: 10, lineHeight: '16px', padding: '0 4px' }}>
-          Manual follow-up required
-        </Tag>
-      )}
-    </span>
-  )
-}
-
-function buildOptions(opts: { value: string; label: string }[], manualSet?: Set<string>) {
-  return opts.map((o) => ({ value: o.value, label: renderOptionLabel(o, manualSet) }))
-}
-
 export default function ResolutionActionBuilder({ value, onChange, domain: _domain, outcome, errors }: ResolutionActionBuilderProps) {
   const { t } = useTranslation('dispute')
+  const { t: ta } = useTranslation('admin')
+
+  // Build translated option arrays inside the component
+  const buildOpts = (values: readonly string[], prefix: string) =>
+    values.map((v) => ({ value: v, label: ta(`resolution.${prefix}.${VALUE_TO_KEY[v] ?? v}`) }))
+
+  const ESCROW_OPTIONS = buildOpts(ESCROW_VALUES, 'escrowOption')
+  const REFUND_OPTIONS = buildOpts(REFUND_VALUES, 'refundOption')
+  const SHIPMENT_OPTIONS = buildOpts(SHIPMENT_VALUES, 'shipmentOption')
+  const ITEM_OPTIONS = buildOpts(ITEM_VALUES, 'itemOption')
+  const AUCTION_OPTIONS = buildOpts(AUCTION_VALUES, 'auctionOption')
+  const PENALTY_OPTIONS = buildOpts(PENALTY_VALUES, 'penaltyOption')
+
+  const renderOptionLabel = (opt: { value: string; label: string }, manualSet?: Set<string>) => {
+    const tooltipKey = VALUE_TO_KEY[opt.value]
+    const tooltip = tooltipKey ? ta(`resolution.tooltip.${tooltipKey}`) : undefined
+    return (
+      <span title={tooltip}>
+        {opt.label}
+        {manualSet?.has(opt.value) && (
+          <Tag color="orange" style={{ marginLeft: 8, fontSize: 10, lineHeight: '16px', padding: '0 4px' }}>
+            {ta('resolution.manualFollowupRequired')}
+          </Tag>
+        )}
+      </span>
+    )
+  }
+
+  const buildOptions = (opts: { value: string; label: string }[], manualSet?: Set<string>) =>
+    opts.map((o) => ({ value: o.value, label: renderOptionLabel(o, manualSet) }))
 
   const update = (patch: Partial<ResolutionActionSet>) => {
     onChange({ ...value, ...patch })
@@ -220,10 +205,10 @@ export default function ResolutionActionBuilder({ value, onChange, domain: _doma
   // Summary lines
   const summaryLines = useMemo(() => {
     const lines: string[] = []
-    for (const [field, map] of Object.entries(ACTION_SUMMARIES)) {
+    for (const [field, map] of Object.entries(SUMMARY_KEYS)) {
       const val = value[field as keyof ResolutionActionSet] as string | undefined
       if (val && map[val]) {
-        let line = map[val]
+        let line = ta(`resolution.summary.${map[val]}`)
         if ((field === 'escrowAction' || field === 'refundAction') && val === 'partial_refund' && value.refundAmount) {
           line += ` (${value.refundAmount})`
         }
@@ -231,7 +216,7 @@ export default function ResolutionActionBuilder({ value, onChange, domain: _doma
       }
     }
     return lines
-  }, [value])
+  }, [value, ta])
 
   return (
     <Space direction="vertical" style={{ width: '100%' }} size="small">

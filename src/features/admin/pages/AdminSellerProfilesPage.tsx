@@ -9,18 +9,20 @@ import { formatDateTime } from '@/utils/format'
 import { SellerProfileStatus } from '@/types/enums'
 import type { SellerProfileDto } from '@/types'
 import { MONO_FONT } from '@/styles/tokens'
+import { htmlToPlainTextExcerpt } from '@/components/ui/SafeHtmlRenderer'
 import type { ColumnsType } from 'antd/es/table'
-
-const STATUS_OPTIONS = [
-  { value: '', label: '' },
-  { value: SellerProfileStatus.Pending, label: 'Pending' },
-  { value: SellerProfileStatus.Verified, label: 'Verified' },
-  { value: SellerProfileStatus.Rejected, label: 'Rejected' },
-  { value: SellerProfileStatus.Suspended, label: 'Suspended' },
-] as const
 
 export default function AdminSellerProfilesPage() {
   const { t } = useTranslation('admin')
+  const { t: tc } = useTranslation('common')
+
+  const STATUS_OPTIONS = [
+    { value: '', label: '' },
+    { value: SellerProfileStatus.Pending, label: tc('statusLabel.pending') },
+    { value: SellerProfileStatus.Verified, label: tc('statusLabel.verified') },
+    { value: SellerProfileStatus.Rejected, label: tc('statusLabel.rejected') },
+    { value: SellerProfileStatus.Suspended, label: tc('statusLabel.suspended') },
+  ]
   const { message } = App.useApp()
 
   const [statusFilter, setStatusFilter] = useState('')
@@ -68,7 +70,7 @@ export default function AdminSellerProfilesPage() {
       dataIndex: 'storeDescription',
       key: 'storeDescription',
       ellipsis: true,
-      render: (desc: string) => desc || '—',
+      render: (desc: string) => htmlToPlainTextExcerpt(desc) || '—',
     },
     {
       title: t('sellers.status'),

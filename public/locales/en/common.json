@@ -21,7 +21,10 @@
     "bids": "My Bids",
     "signIn": "Sign In",
     "signUp": "Sign Up",
-    "watching": "watching"
+    "watching": "watching",
+    "watchlist": "Watchlist",
+    "myShipments": "My Shipments",
+    "disputes": "Disputes"
   },
   "action": {
     "login": "Login",
@@ -180,5 +183,87 @@
   "noImage": "No image",
   "dragDropUpload": "Drag & drop or click to upload",
   "uploadLimit": "Up to {{max}} files ({{count}}/{{max}} uploaded)",
-  "selectFile": "Select a file"
+  "selectFile": "Select a file",
+  "guard": {
+    "noAccess": "You do not have permission to access this page.",
+    "noWarehouseAccess": "You do not have permission to access the warehouse area.",
+    "backToHome": "Back to home"
+  },
+  "layout": {
+    "lightMode": "Light mode",
+    "darkMode": "Dark mode",
+    "switchLanguage": "Switch language",
+    "backToPlatform": "Back to Platform",
+    "skipToContent": "Skip to main content",
+    "openMenu": "Open menu",
+    "toggleSidebar": "Toggle sidebar",
+    "switchToEn": "Switch to EN",
+    "switchToVi": "Switch to VI",
+    "copyright": "\u00a9 {{year}} OIO. All rights reserved.",
+    "statItems": "items",
+    "statUsers": "users",
+    "statVerified": "verified"
+  },
+  "footer": {
+    "tagline": "Premium auction platform for discerning collectors.",
+    "platform": "Platform",
+    "support": "Support",
+    "help": "Help Center",
+    "terms": "Terms of Service"
+  },
+  "capture": {
+    "positionFront": "Position the front of your ID within the frame",
+    "positionBack": "Position the back of your ID within the frame",
+    "centerFace": "Center your face in the oval",
+    "takeItemPhoto": "Take a clear photo of the item",
+    "tapToOpenCamera": "Tap to open camera",
+    "tapToActivate": "Tap here to activate your camera",
+    "takePhoto": "Take a clear photo",
+    "retake": "Retake",
+    "useThisPhoto": "Use this photo",
+    "cameraNotAvailable": "Camera not available on this device. Upload from file instead.",
+    "uploadFromFiles": "Upload from files",
+    "qualityIssue": "Quality issue",
+    "blinkEyes": "Please blink your eyes",
+    "turnHeadLeft": "Turn your head to the left",
+    "turnHeadRight": "Turn your head to the right",
+    "remaining": "{{count}}s remaining",
+    "readyCapture": "I'm ready \u2014 Capture now",
+    "attempt": "Attempt {{current}}/{{total}}",
+    "capturing": "Capturing... Hold still",
+    "livenessComplete": "Liveness check complete"
+  },
+  "emptyState": {
+    "title": "Nothing here yet"
+  },
+  "help": {
+    "title": "Help Center",
+    "description": "Guidance for bidding, deposits, realtime updates, and the quickest paths to support when something looks wrong.",
+    "topics": {
+      "bidding": {
+        "title": "How bidding works",
+        "body": "Place a deposit during the qualification window, then bid in real time while the auction is active. If you are outbid, the page updates automatically when your connection is live."
+      },
+      "deposits": {
+        "title": "Deposits and qualification",
+        "body": "Deposits are held while the auction is running. If you lose, the deposit returns to your wallet. If you win, it is applied to the final payment."
+      },
+      "questions": {
+        "title": "Questions and seller replies",
+        "body": "Questions posted on an item appear in the Q&A section. Sellers can answer directly from the listing, and connected viewers should see the update without refreshing."
+      }
+    },
+    "nextStep": "Need a next step?",
+    "nextStepDesc": "Browse active listings, review seller profiles, or sign in to manage your wallet and orders.",
+    "browseAuctions": "Browse auctions",
+    "browseItems": "Browse items",
+    "browseSellers": "Browse sellers",
+    "signIn": "Sign in"
+  },
+  "categories": {
+    "label": "OIO Categories",
+    "title": "Categories",
+    "subtitle": "Explore our auction product categories",
+    "empty": "No categories yet"
+  }
 }

@@ -9,66 +9,50 @@ import type { VerificationDocumentDto } from '@/types'
 
 interface SlotConfig {
   type: string
-  label: string
+  labelKey: string
   required: boolean
   accept: string
 }
 
 const SLOT_CONFIGS: Record<string, SlotConfig[]> = {
   government_id: [
-    { type: 'id_front', label: 'ID Front', required: true, accept: 'image/*' },
-    { type: 'id_back', label: 'ID Back', required: false, accept: 'image/*' },
-    { type: 'selfie', label: 'Selfie', required: true, accept: 'image/*' },
+    { type: 'id_front', labelKey: 'id_front', required: true, accept: 'image/*' },
+    { type: 'id_back', labelKey: 'id_back', required: false, accept: 'image/*' },
+    { type: 'selfie', labelKey: 'selfie', required: true, accept: 'image/*' },
   ],
   passport: [
-    { type: 'id_front', label: 'Passport Page', required: true, accept: 'image/*' },
-    { type: 'selfie', label: 'Selfie', required: true, accept: 'image/*' },
+    { type: 'id_front', labelKey: 'passport_page', required: true, accept: 'image/*' },
+    { type: 'selfie', labelKey: 'selfie', required: true, accept: 'image/*' },
   ],
   business_owner: [
-    { type: 'business_license', label: 'Business License', required: true, accept: 'image/*,.pdf' },
-    { type: 'id_front', label: 'ID Front', required: true, accept: 'image/*' },
+    { type: 'business_license', labelKey: 'business_license', required: true, accept: 'image/*,.pdf' },
+    { type: 'id_front', labelKey: 'id_front', required: true, accept: 'image/*' },
   ],
   manual: [
-    { type: 'other', label: 'Document', required: true, accept: 'image/*,.pdf' },
+    { type: 'other', labelKey: 'document', required: true, accept: 'image/*,.pdf' },
   ],
 }
 
-const STEP_GUIDES: Record<string, { title: string; tips: string[] }> = {
+const STEP_GUIDE_KEYS: Record<string, { titleKey: string; tipKeys: string[] }> = {
   id_front: {
-    title: 'Capture ID Front',
-    tips: [
-      'Place your ID on a flat, well-lit surface',
-      'Make sure all text and photo are clearly visible',
-      'Avoid glare and shadows on the card',
-    ],
+    titleKey: 'captureIdFront',
+    tipKeys: ['idFrontTip1', 'idFrontTip2', 'idFrontTip3'],
   },
   id_back: {
-    title: 'Capture ID Back',
-    tips: [
-      'Flip your ID card over',
-      'Ensure the barcode/MRZ zone is fully visible',
-      'Keep the card flat and steady',
-    ],
+    titleKey: 'captureIdBack',
+    tipKeys: ['idBackTip1', 'idBackTip2', 'idBackTip3'],
   },
   selfie: {
-    title: 'Take a Selfie',
-    tips: [
-      'Face the camera directly with a neutral expression',
-      'Ensure good lighting on your face — no harsh shadows',
-      'Remove glasses, hats, or face coverings',
-      'Hold the phone at eye level',
-    ],
+    titleKey: 'takeSelfie',
+    tipKeys: ['selfieTip1', 'selfieTip2', 'selfieTip3', 'selfieTip4'],
   },
   business_license: {
-    title: 'Capture Business License',
-    tips: [
-      'Ensure the full document is visible',
-      'All text must be legible',
-    ],
+    titleKey: 'captureBusinessLicense',
+    tipKeys: ['businessLicenseTip1', 'businessLicenseTip2'],
   },
   other: {
-    title: 'Capture Document',
-    tips: ['Ensure the full document is clearly visible'],
+    titleKey: 'captureDocument',
+    tipKeys: ['documentTip1'],
   },
 }
 
@@ -103,7 +87,11 @@ export function VerificationDocumentSlots({
 
   const currentSlot = slots[activeStep]
   const currentDoc = currentSlot ? getDocForSlot(currentSlot.type) : undefined
-  const guide = currentSlot ? (STEP_GUIDES[currentSlot.type] ?? STEP_GUIDES.other) : STEP_GUIDES.other
+  const guideKeys = currentSlot ? (STEP_GUIDE_KEYS[currentSlot.type] ?? STEP_GUIDE_KEYS.other) : STEP_GUIDE_KEYS.other
+  const guide = {
+    title: t(`stepGuide.${guideKeys.titleKey}`, guideKeys.titleKey),
+    tips: guideKeys.tipKeys.map((key) => t(`stepGuide.${key}`, key)),
+  }
 
   const handleCaptured = (blob: Blob) => {
     const file = new File([blob], `${currentSlot.type}.jpg`, { type: 'image/jpeg' })
@@ -127,7 +115,7 @@ export function VerificationDocumentSlots({
         items={slots.map((slot, idx) => {
           const doc = getDocForSlot(slot.type)
           return {
-            title: t(`docSlot.${slot.type}`, slot.label),
+            title: t(`docSlot.${slot.labelKey}`, slot.labelKey),
             description: doc ? t('captured', 'Captured') : slot.required ? t('required', 'Required') : t('optional', 'Optional'),
             status: doc ? 'finish' as const : idx === activeStep ? 'process' as const : 'wait' as const,
             icon: doc ? <CheckCircleOutlined style={{ color: 'var(--color-success)' }} /> : undefined,
@@ -150,7 +138,7 @@ export function VerificationDocumentSlots({
             {/* Header */}
             <Flex vertical align="center" gap={6}>
               <Typography.Text strong style={{ fontSize: 16 }}>
-                {t(`docSlot.${currentSlot.type}`, currentSlot.label)}
+                {t(`docSlot.${currentSlot.labelKey}`, currentSlot.labelKey)}
               </Typography.Text>
               <Tag color={currentSlot.required ? 'warning' : 'default'} style={{ fontSize: 11 }}>
                 {currentSlot.required ? t('required', 'Required') : t('recommended', 'Recommended')}
@@ -164,7 +152,7 @@ export function VerificationDocumentSlots({
                   <div style={{ position: 'relative' }}>
                     <Image
                       src={currentDoc.secureUrl}
-                      alt={currentSlot.label}
+                      alt={t(`docSlot.${currentSlot.labelKey}`, currentSlot.labelKey)}
                       width="100%"
                       style={{ maxHeight: 200, objectFit: 'contain', borderRadius: 8 }}
                       preview
@@ -271,7 +259,7 @@ export function VerificationDocumentSlots({
               textAlign: 'center',
             }}>
               <Typography.Text style={{ color: '#fff', fontSize: 15, fontWeight: 600, display: 'block' }}>
-                {t(`docSlot.${currentSlot.type}`, currentSlot.label)}
+                {t(`docSlot.${currentSlot.labelKey}`, currentSlot.labelKey)}
               </Typography.Text>
               <Typography.Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12 }}>
                 {guide.tips[0]}
@@ -317,7 +305,7 @@ export function VerificationDocumentSlots({
                     cursor: 'pointer',
                   }}
                 >
-                  <img src={doc.secureUrl} alt={slot.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img src={doc.secureUrl} alt={t(`docSlot.${slot.labelKey}`, slot.labelKey)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   <div style={{
                     position: 'absolute',
                     bottom: 0,
@@ -329,7 +317,7 @@ export function VerificationDocumentSlots({
                     textAlign: 'center',
                     padding: '1px 0',
                   }}>
-                    {slot.label}
+                    {t(`docSlot.${slot.labelKey}`, slot.labelKey)}
                   </div>
                 </div>
               )

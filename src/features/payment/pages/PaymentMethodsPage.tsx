@@ -158,8 +158,8 @@ export default function PaymentMethodsPage() {
             value={linkCardType}
             onChange={setLinkCardType}
             options={[
-              { value: '01', label: 'ATM' },
-              { value: '02', label: 'Visa/Master' },
+              { value: '01', label: t('linkCardTypeATM', 'ATM') },
+              { value: '02', label: t('linkCardTypeVisaMaster', 'Visa/Master') },
             ]}
             style={{ width: 130 }}
           />
@@ -278,7 +278,7 @@ export default function PaymentMethodsPage() {
                 <Input value={addProvider} onChange={(e) => setAddProvider(e.target.value)} placeholder={t('cardBrandPlaceholder', 'e.g. Visa, Mastercard')} />
               </Form.Item>
               <Form.Item label={t('lastFourDigits', 'Last 4 Digits')}>
-                <Input value={addLastFour} onChange={(e) => setAddLastFour(e.target.value)} maxLength={4} placeholder="1234" />
+                <Input value={addLastFour} onChange={(e) => setAddLastFour(e.target.value)} maxLength={4} placeholder={t('lastFourPlaceholder', '1234')} />
               </Form.Item>
               <Space>
                 <Form.Item label={t('expiryMonth', 'Expiry Month')}>

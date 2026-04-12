@@ -44,17 +44,17 @@ export default function BrowseItemsPage() {
 
   const items = data?.items ?? []
   const categoryOptions = [
-    { value: '', label: 'Tất cả danh mục' },
+    { value: '', label: t('browse.allCategories') },
     ...(categories ?? []).map((cat) => ({ value: cat.id, label: cat.name })),
   ]
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px 12px 48px' : '32px 24px 80px' }}>
       <h1 style={{ fontFamily: SERIF, fontWeight: 400, fontSize: isMobile ? 24 : 32, color: 'var(--color-text-primary)', marginBottom: 8 }}>
-        {t('browseTitle', 'Khám phá sản phẩm')}
+        {t('browse.title')}
       </h1>
       <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, marginBottom: isMobile ? 20 : 32 }}>
-        {t('browseSubtitle', 'Duyệt qua bộ sưu tập sản phẩm đa dạng trên nền tảng')}
+        {t('browse.subtitle')}
       </p>
 
       <Flex wrap="wrap" gap={12} style={{ marginBottom: isMobile ? 20 : 32 }} vertical={isMobile}>
@@ -66,7 +66,7 @@ export default function BrowseItemsPage() {
         />
         <Input
           prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
-          placeholder={t('searchPlaceholder', 'Tìm kiếm sản phẩm...')}
+          placeholder={t('browse.searchPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onPressEnter={() => setPage(1)}
@@ -83,7 +83,7 @@ export default function BrowseItemsPage() {
           ))}
         </Row>
       ) : items.length === 0 ? (
-        <Empty description={t('noItems', 'Không tìm thấy sản phẩm')} />
+        <Empty description={t('browse.noItems')} />
       ) : (
         <>
           <Row gutter={[isMobile ? 12 : 20, isMobile ? 12 : 20]}>

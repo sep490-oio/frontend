@@ -30,6 +30,9 @@
   "returnError": "Gửi yêu cầu trả hàng thất bại",
   "selectReason": "Chọn lý do",
   "descriptionPlaceholder": "Cung cấp thêm chi tiết...",
+  "myOrdersSubtitle": "Theo dõi và quản lý đơn hàng của bạn",
+  "product": "Sản phẩm",
+  "viewDetail": "Xem chi tiết",
   "statusTab": {
     "all": "Tất cả",
     "pendingPayment": "Chờ thanh toán",
@@ -37,8 +40,12 @@
     "shipped": "Đang giao",
     "delivered": "Đã giao",
     "completed": "Hoàn thành",
-    "cancelled": "Đã hủy"
+    "cancelled": "Đã hủy",
+    "Refunded": "Đã hoàn tiền",
+    "Disputed": "Đang tranh chấp"
   },
+  "expired": "Hết hạn",
+  "decisionWindowEnds": "Thời hạn quyết định: {{date}}",
   "status": {
     "pending_payment": "Chờ thanh toán",
     "paid": "Đã thanh toán",
@@ -94,11 +101,18 @@
     "buyerReceivedAt": "Người mua nhận hàng lúc",
     "buyerAcceptedAt": "Người mua chấp nhận lúc",
     "decisionWindowCountdown": "Thời gian quyết định còn lại",
+    "sellerListTitle": "Vận đơn trực tiếp",
+    "viewShipment": "Xem vận đơn",
+    "noShipments": "Chưa có vận đơn trực tiếp",
     "status": {
+      "all": "Tất cả",
       "draft": "Nháp",
       "carrier_booked": "Đã đặt vận chuyển",
+      "carrierBooked": "Đã đặt vận chuyển",
       "picked_up": "Đã lấy hàng",
+      "pickedUp": "Đã lấy hàng",
       "on_delivering": "Đang giao",
+      "onDelivering": "Đang giao",
       "delivered": "Đã giao",
       "accepted": "Đã chấp nhận",
       "disputed": "Đang tranh chấp",
@@ -144,7 +158,48 @@
     },
     "manualReview": {
       "flagged": "Vận đơn này đã được gắn cờ để kiểm tra thủ công.",
-      "reasonLabel": "Lý do kiểm tra"
+      "reasonLabel": "Lý do kiểm tra",
+      "badge": "Kiểm tra thủ công"
     }
+  },
+  "rejectReason": "Lý do từ chối",
+  "carrierCode": "Mã nhà vận chuyển",
+  "trackingCode": "Mã vận đơn",
+  "carrierPlaceholder": "GHTK / Viettel Post / ...",
+  "weightPlaceholder": "500",
+  "shippingMethodPlaceholder": "standard / express",
+  "disputeDomainOption": {
+    "order": "Đơn hàng",
+    "auction": "Phiên đấu giá",
+    "payment": "Thanh toán",
+    "shipment": "Vận chuyển",
+    "warehouse_item": "Hàng trong kho"
+  },
+  "sellerOrders": "Đơn hàng người bán",
+  "shipmentFeed": {
+    "title": "Vận đơn của tôi",
+    "kindDirect": "Trực tiếp",
+    "kindWarehouse": "Kho",
+    "scanQrToReceive": "Quét QR để nhận hàng",
+    "viewShipment": "Xem vận đơn",
+    "searchPlaceholder": "Tìm đơn hàng / mã vận đơn / tiêu đề",
+    "empty": "Chưa có vận đơn"
+  },
+  "disputeCaseTypeOption": {
+    "item_not_as_described": "Sản phẩm không đúng mô tả",
+    "item_damaged": "Sản phẩm bị hư hỏng",
+    "item_not_received": "Chưa nhận được hàng",
+    "wrong_item": "Sai sản phẩm",
+    "other": "Khác",
+    "bid_manipulation": "Thao túng đấu giá",
+    "counterfeit": "Hàng giả",
+    "misrepresentation": "Thông tin sai lệch",
+    "unauthorized_charge": "Trừ tiền trái phép",
+    "double_charge": "Trừ tiền hai lần",
+    "refund_not_received": "Chưa nhận được hoàn tiền",
+    "lost_in_transit": "Thất lạc khi vận chuyển",
+    "damaged_in_transit": "Hư hỏng khi vận chuyển",
+    "delivery_issue": "Vấn đề giao hàng",
+    "item_missing": "Thiếu sản phẩm"
   }
 }

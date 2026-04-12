@@ -10,20 +10,21 @@ import { useMySellerProfile } from '@/features/seller/api'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useEffect, useMemo, useRef } from 'react'
 
-const SHIPMENT_MODE_OPTIONS = [
-  { label: 'Platform Managed (GHN)', value: 'platform_managed' },
-  { label: 'External Carrier', value: 'external_carrier' },
-]
-
-const GHN_HANDLING_OPTIONS = [
-  { label: 'Cho thử hàng', value: 'CHOTHUHANG' },
-  { label: 'Cho xem hàng không thử', value: 'CHOXEMHANGKHONGTHU' },
-  { label: 'Không cho xem hàng', value: 'KHONGCHOXEMHANG' },
-]
-
 export default function BookInboundPage() {
   const { t } = useTranslation('warehouse')
   const { t: tc } = useTranslation('common')
+
+  const SHIPMENT_MODE_OPTIONS = [
+    { label: t('shipmentModeOption.platformManaged', 'Platform Managed (GHN)'), value: 'platform_managed' },
+    { label: t('shipmentModeOption.externalCarrier', 'External Carrier'), value: 'external_carrier' },
+  ]
+
+  const GHN_HANDLING_OPTIONS = [
+    { label: t('handlingOption.tryItem', 'Cho thử hàng'), value: 'CHOTHUHANG' },
+    { label: t('handlingOption.viewOnly', 'Cho xem hàng không thử'), value: 'CHOXEMHANGKHONGTHU' },
+    { label: t('handlingOption.noView', 'Không cho xem hàng'), value: 'KHONGCHOXEMHANG' },
+  ]
+
   const navigate = useNavigate()
   const prefix = useRoutePrefix()
   const { message } = App.useApp()

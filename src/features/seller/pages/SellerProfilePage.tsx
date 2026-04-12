@@ -9,6 +9,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
 import type { CreateSellerProfileRequest } from '@/types'
 import { RichTextEditor } from '@/components/ui/RichTextEditor'
+import { SafeHtmlRenderer } from '@/components/ui/SafeHtmlRenderer'
 
 /* ── Responsive label-value row for mobile ───────────────────────────── */
 interface InfoRowProps {
@@ -195,7 +196,7 @@ export default function SellerProfilePage() {
               // Mobile: vertical label-value rows
               <div>
                 <InfoRow label={t('storeName', 'Store Name')}>{profile.storeName}</InfoRow>
-                <InfoRow label="Status"><StatusBadge status={profile.status} /></InfoRow>
+                <InfoRow label={t('status', 'Status')}><StatusBadge status={profile.status} /></InfoRow>
                 <InfoRow label={t('rating', 'Rating')}>
                   {profile.rating} / 5 ({profile.reviewCount} {t('reviews', 'reviews')})
                 </InfoRow>
@@ -204,7 +205,7 @@ export default function SellerProfilePage() {
                   <InfoRow label={t('approvedAt', 'Approved')}>{formatDateTime(profile.approvedAt)}</InfoRow>
                 )}
                 <InfoRow label={t('storeDescription', 'Description')} fullWidth>
-                  {profile.description || '-'}
+                  {profile.description ? <SafeHtmlRenderer html={profile.description} /> : '-'}
                 </InfoRow>
               </div>
             ) : (
@@ -213,7 +214,7 @@ export default function SellerProfilePage() {
                 <Row gutter={[0, 0]}>
                   {[
                     { label: t('storeName', 'Store Name'), value: profile.storeName },
-                    { label: 'Status', value: <StatusBadge status={profile.status} /> },
+                    { label: t('status', 'Status'), value: <StatusBadge status={profile.status} /> },
                     { label: t('rating', 'Rating'), value: `${profile.rating} / 5 (${profile.reviewCount} ${t('reviews', 'reviews')})` },
                     { label: t('createdAt', 'Created'), value: formatDateTime(profile.createdAt) },
                     ...(profile.approvedAt ? [{ label: t('approvedAt', 'Approved'), value: formatDateTime(profile.approvedAt) }] : []),
@@ -228,7 +229,7 @@ export default function SellerProfilePage() {
                   <Col xs={24}>
                     <div style={{ padding: '14px 0' }}>
                       <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 4 }}>{t('storeDescription', 'Description')}</div>
-                      <div style={{ fontSize: 14, color: 'var(--color-text-primary)' }}>{profile.description || '-'}</div>
+                      <div style={{ fontSize: 14, color: 'var(--color-text-primary)' }}>{profile.description ? <SafeHtmlRenderer html={profile.description} /> : '-'}</div>
                     </div>
                   </Col>
                 </Row>

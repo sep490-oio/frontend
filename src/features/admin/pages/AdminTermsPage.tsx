@@ -11,17 +11,17 @@ import type { TermsDocumentDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
 import { SERIF_FONT, MONO_FONT } from '@/styles/tokens'
 
-const TERMS_TYPES = [
-  { value: 'platform', label: 'Platform Terms' },
-  { value: 'bidder', label: 'Bidder Terms' },
-  { value: 'seller', label: 'Seller Terms' },
-  { value: 'privacy', label: 'Privacy Policy' },
-]
-
 export default function AdminTermsPage() {
   const { t } = useTranslation('admin')
   const { t: tc } = useTranslation('common')
   const { message } = App.useApp()
+
+  const TERMS_TYPES = [
+    { value: 'platform', label: t('terms.typePlatform') },
+    { value: 'bidder', label: t('terms.typeBidder') },
+    { value: 'seller', label: t('terms.typeSeller') },
+    { value: 'privacy', label: t('terms.typePrivacy') },
+  ]
 
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [newType, setNewType] = useState('')
@@ -58,7 +58,7 @@ export default function AdminTermsPage() {
 
   const columns: ColumnsType<TermsDocumentDto> = [
     {
-      title: 'Type',
+      title: t('terms.type'),
       dataIndex: 'type',
       key: 'type',
       width: 160,
@@ -67,7 +67,7 @@ export default function AdminTermsPage() {
       ),
     },
     {
-      title: 'Version',
+      title: t('terms.version'),
       dataIndex: 'version',
       key: 'version',
       width: 80,
@@ -76,14 +76,14 @@ export default function AdminTermsPage() {
       ),
     },
     {
-      title: 'Status',
+      title: t('terms.status'),
       dataIndex: 'isActive',
       key: 'isActive',
       width: 120,
       render: (isActive: boolean) => <StatusBadge status={isActive ? 'active' : 'draft'} />,
     },
     {
-      title: 'Document',
+      title: t('terms.document'),
       key: 'file',
       ellipsis: true,
       render: (_, record) => {
@@ -96,7 +96,7 @@ export default function AdminTermsPage() {
             style={{ color: 'var(--color-accent)', display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
             <FileTextOutlined />
-            {record.fileName ?? 'Download'}
+            {record.fileName ?? t('terms.download')}
             {record.fileSize != null && (
               <span style={{ color: 'var(--color-text-secondary)', fontSize: 12 }}>
                 ({formatFileSize(record.fileSize)})
@@ -107,7 +107,7 @@ export default function AdminTermsPage() {
       },
     },
     {
-      title: 'Published',
+      title: t('terms.published'),
       dataIndex: 'publishedAt',
       key: 'publishedAt',
       width: 160,
@@ -118,7 +118,7 @@ export default function AdminTermsPage() {
       ),
     },
     {
-      title: 'Created',
+      title: tc('tableHeader.createdAt'),
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 160,
@@ -129,15 +129,15 @@ export default function AdminTermsPage() {
       ),
     },
     {
-      title: 'Actions',
+      title: tc('tableHeader.actions'),
       key: 'actions',
       width: 120,
       render: (_, record) => {
         if (record.isActive) return null
         return (
           <Popconfirm
-            title="Activate this terms document?"
-            description="This will deactivate the current active version."
+            title={t('terms.activateConfirm')}
+            description={t('terms.activateConfirmDesc')}
             onConfirm={() => handleActivate(record.id)}
           >
             <Button
@@ -145,7 +145,7 @@ export default function AdminTermsPage() {
               size="small"
               style={{ color: 'var(--color-accent)', fontWeight: 500, padding: 0 }}
             >
-              Activate
+              {t('terms.activate')}
             </Button>
           </Popconfirm>
         )
@@ -166,7 +166,7 @@ export default function AdminTermsPage() {
             margin: 0,
           }}
         >
-          {t('terms.title', 'Terms & Conditions')}
+          {t('terms.title')}
         </h1>
         <Button
           type="primary"
@@ -174,7 +174,7 @@ export default function AdminTermsPage() {
           onClick={() => setCreateModalOpen(true)}
           style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)', fontWeight: 500 }}
         >
-          {t('terms.createTerms', 'Create Terms')}
+          {t('terms.createTerms')}
         </Button>
       </div>
 
@@ -192,7 +192,7 @@ export default function AdminTermsPage() {
       <Modal
         title={
           <span style={{ fontFamily: SERIF_FONT, fontWeight: 400, fontSize: 20 }}>
-            {t('terms.createTerms', 'Create Terms Document')}
+            {t('terms.createTerms')}
           </span>
         }
         open={createModalOpen}
@@ -203,20 +203,20 @@ export default function AdminTermsPage() {
           disabled: !newType || !uploadedMediaId,
           style: { background: 'var(--color-accent)', borderColor: 'var(--color-accent)' },
         }}
-        okText="Create"
+        okText={tc('action.create')}
         width={560}
       >
         <Space direction="vertical" style={{ width: '100%' }} size={20}>
           {/* Type selection */}
           <div>
             <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-text-secondary)', display: 'block', marginBottom: 8 }}>
-              Terms Type
+              {t('terms.termsType')}
             </label>
             <Select
               value={newType || undefined}
               onChange={setNewType}
               options={TERMS_TYPES}
-              placeholder="Select terms type"
+              placeholder={t('terms.selectTermsType')}
               style={{ width: '100%' }}
             />
           </div>
@@ -225,7 +225,7 @@ export default function AdminTermsPage() {
           <div>
             <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-text-secondary)', display: 'block', marginBottom: 8 }}>
               <UploadOutlined style={{ marginRight: 6 }} />
-              Upload PDF Document
+              {t('terms.uploadPdf')}
             </label>
             <MediaUploader
               context="term_document"

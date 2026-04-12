@@ -20,6 +20,7 @@ import { AdminErrorState } from '@/features/admin/components/AdminErrorState'
 export default function AdminUserDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { t } = useTranslation('admin')
+  const { t: tc } = useTranslation('common')
   const { message } = App.useApp()
   const navigate = useNavigate()
 
@@ -168,11 +169,11 @@ export default function AdminUserDetailPage() {
                 value={user.status}
                 onChange={handleChangeStatus}
                 options={[
-                  { value: UserStatus.Active, label: 'Active' },
-                  { value: UserStatus.Inactive, label: 'Inactive' },
-                  { value: UserStatus.Suspended, label: 'Suspended' },
-                  { value: UserStatus.Banned, label: 'Banned' },
-                  { value: UserStatus.Locked, label: 'Locked' },
+                  { value: UserStatus.Active, label: tc('statusLabel.active') },
+                  { value: UserStatus.Inactive, label: tc('statusLabel.inactive') },
+                  { value: UserStatus.Suspended, label: tc('statusLabel.suspended') },
+                  { value: UserStatus.Banned, label: tc('statusLabel.banned') },
+                  { value: UserStatus.Locked, label: tc('statusLabel.locked') },
                 ]}
               />
               {user.status === UserStatus.Locked && (
@@ -228,10 +229,10 @@ export default function AdminUserDetailPage() {
               value={flagSeverity}
               onChange={setFlagSeverity}
               options={[
-                { value: AlertSeverity.Low, label: 'Low' },
-                { value: AlertSeverity.Medium, label: 'Medium' },
-                { value: AlertSeverity.High, label: 'High' },
-                { value: AlertSeverity.Critical, label: 'Critical' },
+                { value: AlertSeverity.Low, label: tc('statusLabel.low') },
+                { value: AlertSeverity.Medium, label: tc('statusLabel.medium') },
+                { value: AlertSeverity.High, label: tc('statusLabel.high') },
+                { value: AlertSeverity.Critical, label: tc('statusLabel.critical') },
               ]}
             />
           </div>

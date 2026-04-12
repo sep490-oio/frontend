@@ -17,7 +17,7 @@ export function LiveCapturedBadge({ size = 'small' }: LiveCapturedBadgeProps) {
         gap: 4,
         borderRadius: 100,
         padding: isSmall ? '1px 8px' : '2px 10px',
-        fontFamily: "'Inter', sans-serif",
+        fontFamily: "'Be Vietnam Pro', sans-serif",
         fontSize: isSmall ? 10 : 11,
         fontWeight: 500,
         textTransform: 'uppercase',

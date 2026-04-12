@@ -15,6 +15,7 @@ import type { ColumnsType } from 'antd/es/table'
 export default function AdminAuctionControlPage() {
   const { id } = useParams<{ id: string }>()
   const { t } = useTranslation('admin')
+  const { t: tc } = useTranslation('common')
   const { message } = App.useApp()
   const navigate = useNavigate()
 
@@ -235,9 +236,9 @@ export default function AdminAuctionControlPage() {
               onChange={setFlagAlertType}
               placeholder={t('auctionControl.selectAlertType', 'Select alert type')}
               options={[
-                { value: 'fraud', label: 'Fraud' },
-                { value: 'suspicious', label: 'Suspicious' },
-                { value: 'collusion', label: 'Collusion' },
+                { value: 'fraud', label: t('auctionControl.alertTypeOption.fraud') },
+                { value: 'suspicious', label: t('auctionControl.alertTypeOption.suspicious') },
+                { value: 'collusion', label: t('auctionControl.alertTypeOption.collusion') },
               ]}
             />
           </div>
@@ -249,10 +250,10 @@ export default function AdminAuctionControlPage() {
               onChange={setFlagSeverity}
               placeholder={t('auctionControl.selectSeverity', 'Select severity')}
               options={[
-                { value: 'low', label: 'Low' },
-                { value: 'medium', label: 'Medium' },
-                { value: 'high', label: 'High' },
-                { value: 'critical', label: 'Critical' },
+                { value: 'low', label: tc('statusLabel.low') },
+                { value: 'medium', label: tc('statusLabel.medium') },
+                { value: 'high', label: tc('statusLabel.high') },
+                { value: 'critical', label: tc('statusLabel.critical') },
               ]}
             />
           </div>
@@ -340,8 +341,8 @@ export default function AdminAuctionControlPage() {
               onChange={setResolveEmStatus}
               placeholder={t('auctionControl.selectStatus', 'Select status')}
               options={[
-                { value: 'resolved', label: 'Resolved' },
-                { value: 'dismissed', label: 'Dismissed' },
+                { value: 'resolved', label: t('auctionControl.resolutionStatus.resolved') },
+                { value: 'dismissed', label: t('auctionControl.resolutionStatus.dismissed') },
               ]}
             />
           </div>

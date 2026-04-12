@@ -214,7 +214,7 @@ export default function LoginPage() {
       {/* Divider */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '4px 0 24px' }}>
         <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
-        <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>or</span>
+        <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{t('or')}</span>
         <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
       </div>
 

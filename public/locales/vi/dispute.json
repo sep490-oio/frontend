@@ -19,13 +19,31 @@
   "filter": {
     "all": "Tất cả"
   },
+  "disputeNumber": "Số tranh chấp",
+  "myDisputes": "Tranh chấp của tôi",
+  "title": "Tiêu đề",
+  "domain": "Lĩnh vực",
+  "domainLabel": {
+    "order": "Đơn hàng",
+    "auction": "Đấu giá",
+    "payment": "Thanh toán",
+    "shipment": "Vận chuyển",
+    "warehouse_item": "Vật phẩm kho"
+  },
   "statusLabel": {
     "open": "Mở",
     "assigned": "Đã phân công",
     "in_progress": "Đang xử lý",
     "pending_response": "Chờ phản hồi",
     "resolved": "Đã giải quyết",
-    "closed": "Đã đóng"
+    "closed": "Đã đóng",
+    "awaiting_respondent": "Chờ bên phản hồi",
+    "awaiting_evidence": "Chờ bằng chứng",
+    "under_review": "Đang xem xét",
+    "awaiting_internal_review": "Chờ xem xét nội bộ",
+    "awaiting_resolution_approval": "Chờ phê duyệt giải quyết",
+    "rejected": "Bị từ chối",
+    "cancelled": "Đã hủy"
   },
   "priorityLabel": {
     "low": "Thấp",
@@ -56,6 +74,12 @@
     "misleadingDescription": "Mô tả gây hiểu lầm",
     "other": "Khác"
   },
+  "adminDisputes": "Tranh chấp",
+  "complainant": "Người khiếu nại",
+  "respondent": "Bên phản hồi",
+  "assignedTo": "Phân công cho",
+  "searchDisputes": "Tìm kiếm tranh chấp...",
+  "filterByDomain": "Lọc theo lĩnh vực",
   "disputeReason": {
     "notAsDescribed": "Sản phẩm không đúng mô tả",
     "damaged": "Sản phẩm bị hỏng",

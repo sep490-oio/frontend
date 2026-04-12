@@ -31,22 +31,22 @@ const DOMAIN_COLOR_MAP: Record<string, string> = {
   warehouse_item: 'orange',
 }
 
-const STATUS_OPTIONS = [
-  { value: '', label: 'All' },
-  { value: DisputeStatus.Open, label: 'Open' },
-  { value: DisputeStatus.AwaitingRespondent, label: 'Awaiting Respondent' },
-  { value: DisputeStatus.AwaitingEvidence, label: 'Awaiting Evidence' },
-  { value: DisputeStatus.UnderReview, label: 'Under Review' },
-  { value: DisputeStatus.AwaitingInternalReview, label: 'Awaiting Internal Review' },
-  { value: DisputeStatus.AwaitingResolutionApproval, label: 'Awaiting Resolution Approval' },
-  { value: DisputeStatus.Resolved, label: 'Resolved' },
-  { value: DisputeStatus.Rejected, label: 'Rejected' },
-  { value: DisputeStatus.Cancelled, label: 'Cancelled' },
-]
-
 export default function MyDisputesPage() {
   const { t } = useTranslation('dispute')
   const { t: tc } = useTranslation('common')
+
+  const STATUS_OPTIONS = [
+    { value: '', label: t('filter.all') },
+    { value: DisputeStatus.Open, label: t('statusLabel.open') },
+    { value: DisputeStatus.AwaitingRespondent, label: t('statusLabel.awaiting_respondent') },
+    { value: DisputeStatus.AwaitingEvidence, label: t('statusLabel.awaiting_evidence') },
+    { value: DisputeStatus.UnderReview, label: t('statusLabel.under_review') },
+    { value: DisputeStatus.AwaitingInternalReview, label: t('statusLabel.awaiting_internal_review') },
+    { value: DisputeStatus.AwaitingResolutionApproval, label: t('statusLabel.awaiting_resolution_approval') },
+    { value: DisputeStatus.Resolved, label: t('statusLabel.resolved') },
+    { value: DisputeStatus.Rejected, label: t('statusLabel.rejected') },
+    { value: DisputeStatus.Cancelled, label: t('statusLabel.cancelled') },
+  ]
   const navigate = useNavigate()
 
   const [filters, setFilters] = useState<DisputeFilterParams>({
@@ -94,7 +94,7 @@ export default function MyDisputesPage() {
       key: 'domain',
       width: 120,
       render: (domain: string) =>
-        domain ? <Tag color={DOMAIN_COLOR_MAP[domain] ?? 'default'}>{domain}</Tag> : '-',
+        domain ? <Tag color={DOMAIN_COLOR_MAP[domain] ?? 'default'}>{t(`domainLabel.${domain}`, domain)}</Tag> : '-',
     },
     {
       title: t('title', 'Title'),
@@ -129,10 +129,7 @@ export default function MyDisputesPage() {
       <Space style={{ marginBottom: 16 }}>
         <Select
           style={{ width: 200 }}
-          options={STATUS_OPTIONS.map((opt) => ({
-            ...opt,
-            label: opt.value ? t(`statusLabel.${opt.value}`, opt.label) : t('filter.all', opt.label),
-          }))}
+          options={STATUS_OPTIONS}
           value={filters.status ?? ''}
           onChange={handleStatusFilter}
           placeholder={t('filterByStatus', 'Filter by status')}

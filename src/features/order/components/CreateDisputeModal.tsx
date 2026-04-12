@@ -23,46 +23,14 @@ export interface CreateDisputeModalProps {
   prefillCaseType?: string
 }
 
-const DOMAIN_OPTIONS = [
-  { value: 'order', label: 'Order' },
-  { value: 'auction', label: 'Auction' },
-  { value: 'payment', label: 'Payment' },
-  { value: 'shipment', label: 'Shipment' },
-  { value: 'warehouse_item', label: 'Warehouse Item' },
-]
+const DOMAIN_KEYS = ['order', 'auction', 'payment', 'shipment', 'warehouse_item'] as const
 
-const CASE_TYPE_MAP: Record<string, { value: string; label: string }[]> = {
-  order: [
-    { value: 'item_not_as_described', label: 'Item not as described' },
-    { value: 'item_damaged', label: 'Item damaged' },
-    { value: 'item_not_received', label: 'Item not received' },
-    { value: 'wrong_item', label: 'Wrong item' },
-    { value: 'other', label: 'Other' },
-  ],
-  auction: [
-    { value: 'bid_manipulation', label: 'Bid manipulation' },
-    { value: 'counterfeit', label: 'Counterfeit' },
-    { value: 'misrepresentation', label: 'Misrepresentation' },
-    { value: 'other', label: 'Other' },
-  ],
-  payment: [
-    { value: 'unauthorized_charge', label: 'Unauthorized charge' },
-    { value: 'double_charge', label: 'Double charge' },
-    { value: 'refund_not_received', label: 'Refund not received' },
-    { value: 'other', label: 'Other' },
-  ],
-  shipment: [
-    { value: 'lost_in_transit', label: 'Lost in transit' },
-    { value: 'damaged_in_transit', label: 'Damaged in transit' },
-    { value: 'delivery_issue', label: 'Delivery issue' },
-    { value: 'other', label: 'Other' },
-  ],
-  warehouse_item: [
-    { value: 'item_damaged', label: 'Item damaged' },
-    { value: 'item_missing', label: 'Item missing' },
-    { value: 'wrong_item', label: 'Wrong item' },
-    { value: 'other', label: 'Other' },
-  ],
+const CASE_TYPE_KEYS: Record<string, string[]> = {
+  order: ['item_not_as_described', 'item_damaged', 'item_not_received', 'wrong_item', 'other'],
+  auction: ['bid_manipulation', 'counterfeit', 'misrepresentation', 'other'],
+  payment: ['unauthorized_charge', 'double_charge', 'refund_not_received', 'other'],
+  shipment: ['lost_in_transit', 'damaged_in_transit', 'delivery_issue', 'other'],
+  warehouse_item: ['item_damaged', 'item_missing', 'wrong_item', 'other'],
 }
 
 export function CreateDisputeModal({
@@ -91,6 +59,16 @@ export function CreateDisputeModal({
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
 
+  const domainOptions = DOMAIN_KEYS.map((key) => ({
+    value: key,
+    label: t(`disputeDomainOption.${key}`, key),
+  }))
+
+  const caseTypeOptions = (CASE_TYPE_KEYS[domain] ?? CASE_TYPE_KEYS['order']!).map((key) => ({
+    value: key,
+    label: t(`disputeCaseTypeOption.${key}`, key),
+  }))
+
   const isPending =
     createOrderDispute.isPending ||
     createAuctionDispute.isPending ||
@@ -104,8 +82,6 @@ export function CreateDisputeModal({
     setTitle('')
     setDescription('')
   }
-
-  const caseTypeOptions = CASE_TYPE_MAP[domain] ?? CASE_TYPE_MAP['order']!
 
   const handleSubmit = async () => {
     if (!domain || !caseType || !title.trim() || description.trim().length < 20) return
@@ -170,7 +146,7 @@ export function CreateDisputeModal({
               setCaseType('')
             }}
             placeholder={t('selectDomain', 'Select domain')}
-            options={DOMAIN_OPTIONS}
+            options={domainOptions}
           />
         </Form.Item>
         <Form.Item label={t('disputeCaseType', 'Case Type')} required>

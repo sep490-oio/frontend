@@ -11,7 +11,13 @@
     "quickActions": "Quick Actions",
     "reviewQueue": "Review Queue",
     "viewVerifications": "View Verifications",
-    "viewReports": "View Reports"
+    "viewReports": "View Reports",
+    "liveAuctions": "Live Auctions",
+    "noLiveAuctions": "No live auctions",
+    "riskLevel": "Risk Level",
+    "low": "Low",
+    "uptime": "Uptime",
+    "openTickets": "Open Tickets"
   },
   "users": {
     "title": "User Management",
@@ -100,7 +106,9 @@
     "verifySuccess": "Seller profile verified successfully",
     "rejectSuccess": "Seller profile rejected successfully",
     "rejectReason": "Rejection Reason",
-    "rejectReasonPlaceholder": "Enter rejection reason..."
+    "rejectReasonPlaceholder": "Enter rejection reason...",
+    "description": "Description",
+    "trustScore": "Trust Score"
   },
   "reviewQueue": {
     "title": "Review Queue",
@@ -159,7 +167,36 @@
     "amount": "Amount",
     "bidStatus": "Status",
     "bidDate": "Date",
-    "noEmergencies": "No emergencies"
+    "noEmergencies": "No emergencies",
+    "flagAuction": "Flag Auction",
+    "alertType": "Alert Type",
+    "selectAlertType": "Select alert type",
+    "severity": "Severity",
+    "selectSeverity": "Select severity",
+    "details": "Details",
+    "enterAlertDetails": "Enter alert details",
+    "flagButton": "Flag",
+    "flagSuccess": "Auction flagged successfully",
+    "triggerSource": "Trigger Source",
+    "enterTriggerSource": "Enter trigger source",
+    "detailsJson": "Details (JSON)",
+    "enterJsonDetails": "Enter details as JSON, e.g. {\"key\": \"value\"}",
+    "invalidJsonPayload": "Payload is not valid JSON",
+    "emergencyId": "Emergency ID",
+    "enterEmergencyId": "Enter Emergency ID",
+    "status": "Status",
+    "selectStatus": "Select status",
+    "enterResolutionDetails": "Enter resolution details",
+    "resolveButton": "Resolve Emergency",
+    "alertTypeOption": {
+      "fraud": "Fraud",
+      "suspicious": "Suspicious",
+      "collusion": "Collusion"
+    },
+    "resolutionStatus": {
+      "resolved": "Resolved",
+      "dismissed": "Dismissed"
+    }
   },
   "reports": {
     "title": "Reports",
@@ -198,7 +235,22 @@
     "allStatuses": "All statuses",
     "acknowledgeSuccess": "Alert acknowledged successfully",
     "resolveSuccess": "Alert resolved successfully",
-    "userRiskFlags": "User Risk Flags"
+    "userRiskFlags": "User Risk Flags",
+    "entity": "Entity",
+    "viewEntity": "View entity",
+    "details": "Details",
+    "open": "Open",
+    "acknowledged": "Acknowledged",
+    "resolved": "Resolved",
+    "all": "All",
+    "viewDetails": "View details",
+    "completedAuctions": "Completed Auction Queue",
+    "totalAlerts": "alerts",
+    "confirmAcknowledge": "Confirm Acknowledge",
+    "notesOptional": "Notes (optional)",
+    "resolutionNotesOptional": "Resolution notes (optional)",
+    "markAsIgnored": "Mark as ignored (false positive)",
+    "ignore": "Ignore"
   },
   "disputes": {
     "title": "Disputes",
@@ -253,7 +305,12 @@
     "rejectReasonPlaceholder": "Enter rejection reason...",
     "walletBalance": "Wallet Balance",
     "availableBalance": "Available Balance",
-    "pendingBalance": "Pending Balance"
+    "pendingBalance": "Pending Balance",
+    "bankName": "Bank",
+    "accountHolder": "Account Holder",
+    "complete": "Complete",
+    "completeConfirm": "Confirm bank transfer completed for this withdrawal?",
+    "completeSuccess": "Withdrawal completed"
   },
   "terms": {
     "title": "Terms & Conditions",
@@ -271,7 +328,20 @@
     "titlePlaceholder": "Enter title...",
     "createSuccess": "Terms created successfully",
     "activateSuccess": "Terms activated successfully",
-    "activateConfirm": "Are you sure you want to activate these terms?"
+    "activateConfirm": "Activate this terms document?",
+    "activateConfirmDesc": "This will deactivate the current active version.",
+    "typePlatform": "Platform Terms",
+    "typeBidder": "Bidder Terms",
+    "typeSeller": "Seller Terms",
+    "typePrivacy": "Privacy Policy",
+    "document": "Document",
+    "download": "Download",
+    "published": "Published",
+    "termsType": "Terms Type",
+    "selectTermsType": "Select terms type",
+    "uploadPdf": "Upload PDF Document",
+    "createError": "Failed to create terms",
+    "activateError": "Failed to activate terms"
   },
   "roles": {
     "title": "Roles & Permissions",
@@ -295,6 +365,63 @@
     "save": "Save",
     "create": "Create",
     "id": "ID"
+  },
+  "moderation": {
+    "title": "Moderation Center",
+    "all": "All",
+    "tabReports": "Reports",
+    "tabDisputes": "Disputes",
+    "filterByStatus": "Filter by status",
+    "assign": "Assign",
+    "resolve": "Resolve",
+    "escalate": "Escalate",
+    "dismiss": "Dismiss",
+    "escalatedFromReport": "Escalated from report",
+    "assignReportTitle": "Assign Report",
+    "assigneePlaceholder": "Assignee user ID",
+    "resolveReportTitle": "Resolve Report",
+    "enforcementAction": "Enforcement Action",
+    "resolutionNotesPlaceholder": "Resolution notes",
+    "escalateToDisputeTitle": "Escalate to Dispute",
+    "disputeTitlePlaceholder": "Dispute title",
+    "disputeTypeLabel": "Dispute Type",
+    "priorityLabel": "Priority",
+    "columns": {
+      "reporter": "Reporter",
+      "entity": "Entity",
+      "reason": "Reason",
+      "assigned": "Assigned",
+      "dispute": "Dispute",
+      "id": "ID",
+      "title": "Title",
+      "priority": "Priority"
+    },
+    "reportStatus": {
+      "actionTaken": "Action Taken",
+      "dismissed": "Dismissed"
+    },
+    "disputeStatus": {
+      "awaitingRespondent": "Awaiting Respondent",
+      "awaitingEvidence": "Awaiting Evidence",
+      "awaitingInternalReview": "Awaiting Internal Review",
+      "awaitingResolutionApproval": "Awaiting Resolution Approval"
+    },
+    "disputeType": {
+      "itemNotAsDescribed": "Item Not As Described",
+      "damagedItem": "Damaged Item",
+      "paymentIssue": "Payment Issue",
+      "counterfeit": "Counterfeit",
+      "other": "Other"
+    },
+    "priority": {
+      "urgent": "Urgent"
+    },
+    "enforcement": {
+      "noAction": "No action",
+      "warnUser": "Warn user",
+      "suspendListing": "Suspend listing",
+      "removeListing": "Remove listing"
+    }
   },
   "completedAuctions": {
     "title": "Completed Auctions",
@@ -341,7 +468,26 @@
       "alerts": "Alerts",
       "outboundShipment": "Outbound Shipment",
       "directShipment": "Seller Direct Shipment",
-      "back": "Back"
+      "back": "Back",
+      "shipBy": "Ship by",
+      "overdue": "Overdue",
+      "orderStatus": "Order Status",
+      "total": "Total",
+      "amountPaid": "Amount Paid",
+      "paidAt": "Paid at",
+      "createdAt": "Created at",
+      "shipTo": "Ship to",
+      "escalationDetails": "Escalation Details",
+      "shippingOverdue": "Shipping overdue",
+      "yes": "Yes",
+      "no": "No",
+      "escalatedAt": "Escalated at",
+      "escalationReason": "Escalation reason",
+      "status": "Status",
+      "carrier": "Carrier",
+      "trackingNumber": "Tracking number",
+      "shippingFee": "Shipping fee",
+      "estDelivery": "Est. delivery"
     },
     "directShipment": {
       "shipmentIdDisplay": "Shipment ID",
@@ -377,6 +523,138 @@
         "disputed": "Disputed",
         "completed": "Completed"
       }
+    }
+  },
+  "monitoringDrawer": {
+    "status": "Status",
+    "entity": "Entity",
+    "view": "View",
+    "entityId": "Entity ID",
+    "details": "Details",
+    "notes": "Notes",
+    "timeline": "Timeline",
+    "created": "Created",
+    "acknowledged": "Acknowledged",
+    "resolved": "Resolved",
+    "by": "by"
+  },
+  "disputeDetail": {
+    "outcomeOption": {
+      "favorBuyer": "Favor Buyer",
+      "favorSeller": "Favor Seller",
+      "favorPlatform": "Favor Platform",
+      "partialSplit": "Partial Split",
+      "voidClaim": "Void Claim",
+      "operationalRework": "Operational Rework"
+    },
+    "domainOption": {
+      "order": "Order",
+      "payment": "Payment",
+      "shipping": "Shipping",
+      "auction": "Auction",
+      "warehouse": "Warehouse",
+      "verification": "Verification"
+    }
+  },
+  "resolution": {
+    "escrowOption": {
+      "noAction": "No Action",
+      "releaseToSeller": "Release to Seller",
+      "refundBuyer": "Refund Buyer",
+      "partialRefund": "Partial Refund",
+      "hold": "Hold"
+    },
+    "refundOption": {
+      "noRefund": "No Refund",
+      "fullRefund": "Full Refund",
+      "partialRefund": "Partial Refund"
+    },
+    "shipmentOption": {
+      "noAction": "No Action",
+      "cancelShipment": "Cancel Shipment",
+      "markLost": "Mark Lost",
+      "rebookShipment": "Rebook Shipment",
+      "openReturn": "Open Return"
+    },
+    "itemOption": {
+      "noAction": "No Action",
+      "returnToActive": "Return to Active",
+      "holdInWarehouse": "Hold in Warehouse",
+      "returnToSeller": "Return to Seller",
+      "rejectListing": "Reject Listing"
+    },
+    "auctionOption": {
+      "noAction": "No Action",
+      "relist": "Relist",
+      "cancel": "Cancel"
+    },
+    "penaltyOption": {
+      "noAction": "No Action",
+      "flagBuyer": "Flag Buyer",
+      "flagSeller": "Flag Seller"
+    },
+    "manualFollowupRequired": "Manual follow-up required",
+    "tooltip": {
+      "releaseToSeller": "Release escrow funds to the seller",
+      "refundBuyer": "Refund the full escrow amount to the buyer",
+      "partialRefund": "Refund a portion of the escrow amount",
+      "hold": "Keep funds in escrow pending further action",
+      "fullRefund": "Buyer will receive a full refund",
+      "noRefund": "No refund will be issued",
+      "cancelShipment": "Cancel the current shipment",
+      "markLost": "Mark the shipment as lost",
+      "rebookShipment": "Rebook a new shipment for the item",
+      "openReturn": "Open a return shipment to the seller",
+      "returnToActive": "Return item to active status for a new auction",
+      "holdInWarehouse": "Keep the item in warehouse storage",
+      "returnToSeller": "Ship the item back to the seller",
+      "rejectListing": "Reject this listing from the platform",
+      "relist": "Return item to active status for a new auction",
+      "cancel": "Cancel the auction permanently",
+      "flagBuyer": "Flag the buyer account for review",
+      "flagSeller": "Flag the seller account for review"
+    },
+    "summary": {
+      "escrowReleaseToSeller": "Escrow will be released to the seller",
+      "escrowRefundBuyer": "Escrow will be refunded to the buyer",
+      "escrowPartialRefund": "Escrow will be partially refunded",
+      "escrowHold": "Escrow funds will be held",
+      "refundFull": "Buyer will receive a full refund",
+      "refundPartial": "Buyer will receive a partial refund",
+      "shipmentCancel": "Shipment will be cancelled",
+      "shipmentLost": "Shipment will be marked as lost",
+      "shipmentRebook": "A new shipment will be rebooked",
+      "shipmentReturn": "A return shipment will be opened",
+      "itemReturnToActive": "Item will be returned to active status",
+      "itemHold": "Item will be held in warehouse",
+      "itemReturnToSeller": "Item will be returned to the seller",
+      "itemRejectListing": "Listing will be rejected",
+      "auctionRelist": "Item will be relisted for auction",
+      "auctionCancel": "Auction will be cancelled",
+      "penaltyFlagBuyer": "Buyer account will be flagged for review",
+      "penaltyFlagSeller": "Seller account will be flagged for review"
+    },
+    "validation": {
+      "refundAmountRequired": "Refund amount must be greater than 0 when partial refund is selected.",
+      "conflictReleaseAndRefund": "Cannot release to seller and refund buyer simultaneously.",
+      "noActionsWarning": "No resolution actions selected. Are you sure?"
+    }
+  },
+  "disputeList": {
+    "allStatuses": "All",
+    "allDomains": "All Domains",
+    "statusLabel": {
+      "awaitingRespondent": "Awaiting Respondent",
+      "awaitingEvidence": "Awaiting Evidence",
+      "awaitingInternalReview": "Awaiting Internal Review",
+      "awaitingResolutionApproval": "Awaiting Resolution Approval"
+    },
+    "domainLabel": {
+      "order": "Order",
+      "auction": "Auction",
+      "payment": "Payment",
+      "shipment": "Shipment",
+      "warehouseItem": "Warehouse Item"
     }
   }
 }

@@ -1,8 +1,10 @@
 import { Card, Checkbox, Spin, Space, App, Row, Col } from 'antd'
+import { useTranslation } from 'react-i18next'
 import { useRoles, usePermissions, useTogglePermission } from '@/features/admin/api'
 import { SERIF_FONT, MONO_FONT } from '@/styles/tokens'
 
 export default function AdminRolesPage() {
+  const { t } = useTranslation('admin')
   const { message } = App.useApp()
 
   const { data: roles, isLoading: rolesLoading } = useRoles()
@@ -43,7 +45,7 @@ export default function AdminRolesPage() {
           margin: '0 0 24px',
         }}
       >
-        Roles & Permissions
+        {t('roles.title', 'Roles & Permissions')}
       </h1>
 
       {roleList.length === 0 ? (

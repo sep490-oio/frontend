@@ -138,11 +138,11 @@ export default function AdminCompletedAuctionDetailPage() {
                 </Descriptions.Item>
               )}
               {summary.shipByAt && (
-                <Descriptions.Item label="Ship by">
+                <Descriptions.Item label={t('completedAuctions.detail.shipBy')}>
                   <Flex align="center" gap={8}>
                     {formatDateTime(summary.shipByAt)}
                     {summary.isShippingOverdue && (
-                      <Tag color="error" icon={<WarningOutlined />}>Overdue</Tag>
+                      <Tag color="error" icon={<WarningOutlined />}>{t('completedAuctions.detail.overdue')}</Tag>
                     )}
                   </Flex>
                 </Descriptions.Item>
@@ -161,30 +161,30 @@ export default function AdminCompletedAuctionDetailPage() {
               <Descriptions.Item label={t('completedAuctions.columns.orderNumber')}>
                 {order.orderNumber}
               </Descriptions.Item>
-              <Descriptions.Item label="Order Status">
+              <Descriptions.Item label={t('completedAuctions.detail.orderStatus')}>
                 <StatusBadge status={order.status} />
               </Descriptions.Item>
-              <Descriptions.Item label="Total">
+              <Descriptions.Item label={t('completedAuctions.detail.total')}>
                 <Typography.Text strong>{formatCurrency(order.totalAmount ?? 0)}</Typography.Text>
                 {' '}{order.currency}
               </Descriptions.Item>
               {order.amountPaid != null && (
-                <Descriptions.Item label="Amount Paid">
+                <Descriptions.Item label={t('completedAuctions.detail.amountPaid')}>
                   {formatCurrency(order.amountPaid)}
                 </Descriptions.Item>
               )}
               {order.paidAt && (
-                <Descriptions.Item label="Paid at">
+                <Descriptions.Item label={t('completedAuctions.detail.paidAt')}>
                   {formatDateTime(order.paidAt)}
                 </Descriptions.Item>
               )}
               {order.createdAt && (
-                <Descriptions.Item label="Created at">
+                <Descriptions.Item label={t('completedAuctions.detail.createdAt')}>
                   {formatDateTime(order.createdAt)}
                 </Descriptions.Item>
               )}
               {order.shipping && (
-                <Descriptions.Item label="Ship to">
+                <Descriptions.Item label={t('completedAuctions.detail.shipTo')}>
                   <div>
                     {order.shipping.recipientName && (
                       <Typography.Text strong style={{ display: 'block' }}>
@@ -211,30 +211,30 @@ export default function AdminCompletedAuctionDetailPage() {
               title={
                 <Flex align="center" gap={8}>
                   <WarningOutlined style={{ color: 'var(--color-danger, #ff4d4f)' }} />
-                  Escalation Details
+                  {t('completedAuctions.detail.escalationDetails')}
                 </Flex>
               }
             >
               <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
                 {summary.shipByAt && (
-                  <Descriptions.Item label="Ship by at">
+                  <Descriptions.Item label={t('completedAuctions.detail.shipBy')}>
                     {formatDateTime(summary.shipByAt)}
                   </Descriptions.Item>
                 )}
-                <Descriptions.Item label="Shipping overdue">
+                <Descriptions.Item label={t('completedAuctions.detail.shippingOverdue')}>
                   {summary.isShippingOverdue ? (
-                    <Tag color="error">Yes</Tag>
+                    <Tag color="error">{t('completedAuctions.detail.yes')}</Tag>
                   ) : (
-                    <Tag color="success">No</Tag>
+                    <Tag color="success">{t('completedAuctions.detail.no')}</Tag>
                   )}
                 </Descriptions.Item>
                 {summary.escalatedAt && (
-                  <Descriptions.Item label="Escalated at">
+                  <Descriptions.Item label={t('completedAuctions.detail.escalatedAt')}>
                     {formatDateTime(summary.escalatedAt)}
                   </Descriptions.Item>
                 )}
                 {summary.escalationReason && (
-                  <Descriptions.Item label="Escalation reason" span={2}>
+                  <Descriptions.Item label={t('completedAuctions.detail.escalationReason')} span={2}>
                     {t(`completedAuctions.escalationReason.${summary.escalationReason}`, summary.escalationReason)}
                   </Descriptions.Item>
                 )}
@@ -249,26 +249,26 @@ export default function AdminCompletedAuctionDetailPage() {
             <Card title={t('completedAuctions.detail.outboundShipment')}>
               <Descriptions column={1} bordered size="small">
                 <Descriptions.Item label={t('common.id')}>{outboundShipment.id}</Descriptions.Item>
-                <Descriptions.Item label="Status">
+                <Descriptions.Item label={t('completedAuctions.detail.status')}>
                   <StatusBadge status={outboundShipment.status} />
                 </Descriptions.Item>
                 {outboundShipment.externalCarrierName && (
-                  <Descriptions.Item label="Carrier">
+                  <Descriptions.Item label={t('completedAuctions.detail.carrier')}>
                     {outboundShipment.externalCarrierName}
                   </Descriptions.Item>
                 )}
                 {outboundShipment.carrierTrackingNumber && (
-                  <Descriptions.Item label="Tracking number">
+                  <Descriptions.Item label={t('completedAuctions.detail.trackingNumber')}>
                     {outboundShipment.carrierTrackingNumber}
                   </Descriptions.Item>
                 )}
                 {outboundShipment.shippingFee != null && (
-                  <Descriptions.Item label="Shipping fee">
+                  <Descriptions.Item label={t('completedAuctions.detail.shippingFee')}>
                     {formatCurrency(outboundShipment.shippingFee ?? 0)}
                   </Descriptions.Item>
                 )}
                 {outboundShipment.estimatedDeliveryAt && (
-                  <Descriptions.Item label="Est. delivery">
+                  <Descriptions.Item label={t('completedAuctions.detail.estDelivery')}>
                     {formatDateTime(outboundShipment.estimatedDeliveryAt)}
                   </Descriptions.Item>
                 )}

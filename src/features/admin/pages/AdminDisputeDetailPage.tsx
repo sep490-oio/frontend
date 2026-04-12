@@ -33,26 +33,28 @@ import dayjs from 'dayjs'
 
 const TERMINAL_STATUSES = [DisputeStatus.Resolved, DisputeStatus.Rejected, DisputeStatus.Cancelled] as string[]
 
-const OUTCOME_OPTIONS = [
-  { value: 'favor_buyer', label: 'Favor Buyer' },
-  { value: 'favor_seller', label: 'Favor Seller' },
-  { value: 'favor_platform', label: 'Favor Platform' },
-  { value: 'partial_split', label: 'Partial Split' },
-  { value: 'void_claim', label: 'Void Claim' },
-  { value: 'operational_rework', label: 'Operational Rework' },
-]
-
-const RECOMMENDATION_OPTIONS = [
-  { value: 'favor_buyer', label: 'Favor Buyer' },
-  { value: 'favor_seller', label: 'Favor Seller' },
-  { value: 'favor_platform', label: 'Favor Platform' },
-  { value: 'partial_split', label: 'Partial Split' },
-  { value: 'void_claim', label: 'Void Claim' },
-  { value: 'operational_rework', label: 'Operational Rework' },
-]
-
 export default function AdminDisputeDetailPage() {
   const { t } = useTranslation('dispute')
+  const { t: ta } = useTranslation('admin')
+
+  const OUTCOME_OPTIONS = [
+    { value: 'favor_buyer', label: ta('disputeDetail.outcomeOption.favorBuyer') },
+    { value: 'favor_seller', label: ta('disputeDetail.outcomeOption.favorSeller') },
+    { value: 'favor_platform', label: ta('disputeDetail.outcomeOption.favorPlatform') },
+    { value: 'partial_split', label: ta('disputeDetail.outcomeOption.partialSplit') },
+    { value: 'void_claim', label: ta('disputeDetail.outcomeOption.voidClaim') },
+    { value: 'operational_rework', label: ta('disputeDetail.outcomeOption.operationalRework') },
+  ]
+
+  const RECOMMENDATION_OPTIONS = [
+    { value: 'favor_buyer', label: ta('disputeDetail.outcomeOption.favorBuyer') },
+    { value: 'favor_seller', label: ta('disputeDetail.outcomeOption.favorSeller') },
+    { value: 'favor_platform', label: ta('disputeDetail.outcomeOption.favorPlatform') },
+    { value: 'partial_split', label: ta('disputeDetail.outcomeOption.partialSplit') },
+    { value: 'void_claim', label: ta('disputeDetail.outcomeOption.voidClaim') },
+    { value: 'operational_rework', label: ta('disputeDetail.outcomeOption.operationalRework') },
+  ]
+
   const { id } = useParams<{ id: string }>()
   const { isMobile } = useBreakpoint()
   const { message: msg } = App.useApp()
@@ -101,7 +103,7 @@ export default function AdminDisputeDetailPage() {
   }, [resolveOutcome, dispute?.domain])
 
   // Validate action set
-  const actionSetValidation = useMemo(() => validateActionSet(resolveActionSet), [resolveActionSet])
+  const actionSetValidation = useMemo(() => validateActionSet(resolveActionSet, ta), [resolveActionSet, ta])
 
   // Parse context snapshot
   const contextSnapshot = useMemo(() => {
@@ -952,12 +954,12 @@ export default function AdminDisputeDetailPage() {
               style={{ width: '100%' }}
               placeholder={t('selectDomain', 'Select domain')}
               options={[
-                { value: 'order', label: 'Order' },
-                { value: 'payment', label: 'Payment' },
-                { value: 'shipping', label: 'Shipping' },
-                { value: 'auction', label: 'Auction' },
-                { value: 'warehouse', label: 'Warehouse' },
-                { value: 'verification', label: 'Verification' },
+                { value: 'order', label: ta('disputeDetail.domainOption.order') },
+                { value: 'payment', label: ta('disputeDetail.domainOption.payment') },
+                { value: 'shipping', label: ta('disputeDetail.domainOption.shipping') },
+                { value: 'auction', label: ta('disputeDetail.domainOption.auction') },
+                { value: 'warehouse', label: ta('disputeDetail.domainOption.warehouse') },
+                { value: 'verification', label: ta('disputeDetail.domainOption.verification') },
               ]}
               showSearch
               allowClear

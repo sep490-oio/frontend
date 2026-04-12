@@ -35,6 +35,23 @@
   "answerPosted": "Answer posted",
   "answerError": "Failed to post answer",
   "noQuestions": "No questions yet",
+  "noItems": "No items found",
+  "noItemsDesc": "Create your first item to get started.",
+  "submitItem": "Submit Item",
+  "submitVerifyQuestion": "Would you like the platform to verify this item? If yes, you will need to ship it to our warehouse for inspection.",
+  "submitNoVerify": "No, submit directly",
+  "submitWithVerify": "Yes, verify by platform",
+  "verificationFilter": "Platform verification",
+  "verifyAll": "All",
+  "verifyNeedsPlatform": "Needs Platform Verification",
+  "verifyDirectReview": "Direct Review",
+  "waitingReview": "Awaiting review...",
+  "waitingVerify": "Ship to warehouse",
+  "confirmInWarehouse": "Confirm in warehouse",
+  "activate": "Activate",
+  "viewAuction": "View Auction",
+  "viewOrder": "View Order",
+  "resubmit": "Resubmit",
   "statusTab": {
     "all": "All",
     "draft": "Draft",
@@ -43,5 +60,24 @@
     "approved": "Approved",
     "active": "Active",
     "rejected": "Rejected"
+  },
+  "statusPill": {
+    "all": "All",
+    "draft": "Draft",
+    "pending_verify": "Awaiting Shipment",
+    "pending_review": "Pending Review",
+    "pending_condition_confirmation": "Confirm Condition",
+    "approved": "Approved",
+    "active": "Active",
+    "in_auction": "In Auction",
+    "sold": "Sold",
+    "rejected": "Rejected"
+  },
+  "browse": {
+    "title": "Explore Items",
+    "subtitle": "Browse the diverse collection of items on the platform",
+    "allCategories": "All categories",
+    "searchPlaceholder": "Search items...",
+    "noItems": "No items found"
   }
 }

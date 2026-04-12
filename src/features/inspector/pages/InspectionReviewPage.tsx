@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Typography, Card, Button, Modal, Input, Select, Space, message, Alert } from 'antd'
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons'
+import { useTranslation } from 'react-i18next'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { useInspectionQueue, useReviewInspection } from '@/features/inspector/api'
 import type { InspectionQueueItem } from '@/features/inspector/api'
@@ -9,6 +10,7 @@ import { formatDateTime } from '@/utils/format'
 import { SERIF_FONT } from '@/styles/tokens'
 
 export default function InspectionReviewPage() {
+  const { t } = useTranslation('inspector')
   const [reviewModalOpen, setReviewModalOpen] = useState(false)
   const [selectedItem, setSelectedItem] = useState<InspectionQueueItem | null>(null)
   const [decision, setDecision] = useState<string>('')
@@ -45,41 +47,41 @@ export default function InspectionReviewPage() {
 
   const columns = [
     {
-      title: 'Item',
+      title: t('review.columnItem'),
       dataIndex: 'itemTitle',
       key: 'itemTitle',
       ellipsis: true,
     },
     {
-      title: 'Declared Condition',
+      title: t('review.columnDeclaredCondition'),
       dataIndex: 'declaredCondition',
       key: 'declaredCondition',
       width: 140,
       render: (v: string) => <StatusBadge status={v} size="small" />,
     },
     {
-      title: 'Actual Condition',
+      title: t('review.columnActualCondition'),
       dataIndex: 'conditionOnArrival',
       key: 'conditionOnArrival',
       width: 140,
       render: (v: string) => v ? <StatusBadge status={v} size="small" /> : '-',
     },
     {
-      title: 'Queue Status',
+      title: t('review.columnQueueStatus'),
       dataIndex: 'queueStatus',
       key: 'queueStatus',
       width: 140,
       render: (status: string) => <StatusBadge status={status} />,
     },
     {
-      title: 'Inspected',
+      title: t('review.columnInspected'),
       dataIndex: 'inspectedAt',
       key: 'inspectedAt',
       width: 160,
       render: (date: string) => date ? formatDateTime(date) : '-',
     },
     {
-      title: 'Actions',
+      title: t('review.columnActions'),
       key: 'actions',
       width: 200,
       render: (_: unknown, record: InspectionQueueItem) => (
@@ -91,7 +93,7 @@ export default function InspectionReviewPage() {
             onClick={() => openReviewModal(record, 'approve')}
             style={{ background: 'var(--color-success)', borderColor: 'var(--color-success)' }}
           >
-            Approve
+            {t('review.approve')}
           </Button>
           <Button
             danger
@@ -99,7 +101,7 @@ export default function InspectionReviewPage() {
             icon={<CloseOutlined />}
             onClick={() => openReviewModal(record, 'reject')}
           >
-            Reject
+            {t('review.reject')}
           </Button>
         </Space>
       ),
@@ -112,15 +114,15 @@ export default function InspectionReviewPage() {
         level={2}
         style={{ marginBottom: 24, fontFamily: SERIF_FONT, color: 'var(--color-text-primary)' }}
       >
-        Inspection Reviews
+        {t('review.title')}
       </Typography.Title>
 
       <Alert
         type="info"
         showIcon
         style={{ marginBottom: 16 }}
-        message="Fallback review queue"
-        description="Most inspections are approved or rejected inline from the inspection detail page. This queue is a fallback for historical items awaiting review or inspections where the inline review step did not complete."
+        message={t('review.fallbackTitle')}
+        description={t('review.fallbackDescription')}
       />
 
       <Card>
@@ -132,18 +134,18 @@ export default function InspectionReviewPage() {
           loading={isLoading}
           pagination={{
             showSizeChanger: true,
-            showTotal: (total) => `Total ${total} items`,
+            showTotal: (total) => t('review.totalItems', { total }),
           }}
         />
       </Card>
 
       <Modal
-        title="Review Inspection"
+        title={t('review.modalTitle')}
         open={reviewModalOpen}
         onCancel={() => setReviewModalOpen(false)}
         onOk={handleReview}
         confirmLoading={reviewMutation.isPending}
-        okText={decision === 'approve' ? 'Approve' : 'Reject'}
+        okText={decision === 'approve' ? t('review.approve') : t('review.reject')}
         okButtonProps={{
           danger: decision === 'reject',
           style: decision === 'approve' ? { background: 'var(--color-success)', borderColor: 'var(--color-success)' } : undefined,
@@ -152,42 +154,42 @@ export default function InspectionReviewPage() {
         {selectedItem && (
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
             <div>
-              <Typography.Text strong>Item:</Typography.Text>{' '}
+              <Typography.Text strong>{t('review.labelItem')}:</Typography.Text>{' '}
               <Typography.Text>{selectedItem.itemTitle}</Typography.Text>
             </div>
             <div>
-              <Typography.Text strong>Declared:</Typography.Text>{' '}
+              <Typography.Text strong>{t('review.labelDeclared')}:</Typography.Text>{' '}
               <StatusBadge status={selectedItem.declaredCondition} size="small" />
               {selectedItem.conditionOnArrival && (
                 <>
                   {' → '}
-                  <Typography.Text strong>Actual:</Typography.Text>{' '}
+                  <Typography.Text strong>{t('review.labelActual')}:</Typography.Text>{' '}
                   <StatusBadge status={selectedItem.conditionOnArrival} size="small" />
                 </>
               )}
             </div>
             <div>
               <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>
-                Decision
+                {t('review.labelDecision')}
               </Typography.Text>
               <Select
                 value={decision}
                 onChange={setDecision}
                 options={[
-                  { value: 'approve', label: 'Approve' },
-                  { value: 'reject', label: 'Reject' },
+                  { value: 'approve', label: t('review.approve') },
+                  { value: 'reject', label: t('review.reject') },
                 ]}
                 style={{ width: '100%' }}
               />
             </div>
             <div>
               <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>
-                Notes {decision === 'reject' && '(required)'}
+                {t('review.labelNotes')} {decision === 'reject' && t('review.required')}
               </Typography.Text>
               <Input.TextArea
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                placeholder="Add review notes"
+                placeholder={t('review.notesPlaceholder')}
                 rows={3}
               />
             </div>

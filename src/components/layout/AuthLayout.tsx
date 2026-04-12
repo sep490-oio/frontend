@@ -4,9 +4,9 @@ import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { SERIF_FONT, SANS_FONT, MONO_FONT } from '@/styles/tokens'
 
 const STATS = [
-  { value: '12K+', label: 'items' },
-  { value: '45K+', label: 'users' },
-  { value: '100%', label: 'verified' },
+  { value: '12K+', labelKey: 'layout.statItems' },
+  { value: '45K+', labelKey: 'layout.statUsers' },
+  { value: '100%', labelKey: 'layout.statVerified' },
 ]
 
 export function AuthLayout() {
@@ -86,7 +86,7 @@ export function AuthLayout() {
             {/* Stats */}
             <div style={{ display: 'flex', gap: 40 }}>
               {STATS.map((stat) => (
-                <div key={stat.label}>
+                <div key={stat.labelKey}>
                   <div
                     style={{
                       fontFamily: MONO_FONT,
@@ -108,7 +108,7 @@ export function AuthLayout() {
                       letterSpacing: '0.08em',
                     }}
                   >
-                    {stat.label}
+                    {t(stat.labelKey)}
                   </div>
                 </div>
               ))}

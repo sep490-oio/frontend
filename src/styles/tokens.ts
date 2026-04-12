@@ -6,9 +6,9 @@
  */
 
 // ── Fonts ────────────────────────────────────────────────────────────
-export const SERIF_FONT = "'DM Serif Display', Georgia, serif"
-export const SANS_FONT = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-export const MONO_FONT = "'DM Mono', 'Fira Code', monospace"
+export const SERIF_FONT = "'Noto Serif', Georgia, serif"
+export const SANS_FONT = "'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+export const MONO_FONT = "'JetBrains Mono', 'Fira Code', monospace"
 
 // ── Content Width Tiers ──────────────────────────────────────────────
 export const CONTENT_SM = 600

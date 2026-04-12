@@ -14,12 +14,12 @@ import type { WalletTransactionDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
 import { SERIF_FONT, MONO_FONT } from '@/styles/tokens'
 
-const TX_TYPE_OPTIONS = [
-  { value: '', label: 'All' },
-  { value: WalletTransactionType.Credit, label: 'Credit' },
-  { value: WalletTransactionType.Debit, label: 'Debit' },
-  { value: WalletTransactionType.Hold, label: 'Hold' },
-  { value: WalletTransactionType.Release, label: 'Release' },
+const TX_TYPE_KEYS = [
+  { value: '', key: 'all' },
+  { value: WalletTransactionType.Credit, key: 'credit' },
+  { value: WalletTransactionType.Debit, key: 'debit' },
+  { value: WalletTransactionType.Hold, key: 'hold' },
+  { value: WalletTransactionType.Release, key: 'release' },
 ] as const
 
 const balanceCardStyle: React.CSSProperties = {
@@ -220,9 +220,9 @@ export default function WalletPage() {
               setPage(1)
             }}
             style={{ width: 160 }}
-            options={TX_TYPE_OPTIONS.map((opt) => ({
+            options={TX_TYPE_KEYS.map((opt) => ({
               value: opt.value,
-              label: t(`txTypeLabel.${opt.label.toLowerCase()}`, opt.label),
+              label: t(`txTypeLabel.${opt.key}`, opt.key),
             }))}
           />
         </Space>
@@ -289,7 +289,7 @@ export default function WalletPage() {
               value={topupAmount}
               onChange={(v) => setTopupAmount(v)}
               addonAfter={wallet?.currency ?? 'VND'}
-              placeholder="100,000"
+              placeholder={t('topupAmountPlaceholder', '100,000')}
             />
           </div>
         </div>

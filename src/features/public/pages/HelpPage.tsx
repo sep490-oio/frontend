@@ -1,24 +1,13 @@
 import { Card, Col, Row, Typography } from 'antd'
 import { Link } from 'react-router'
+import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { SERIF_FONT } from '@/styles/tokens'
 
-const SUPPORT_TOPICS = [
-  {
-    title: 'How bidding works',
-    body: 'Place a deposit during the qualification window, then bid in real time while the auction is active. If you are outbid, the page updates automatically when your connection is live.',
-  },
-  {
-    title: 'Deposits and qualification',
-    body: 'Deposits are held while the auction is running. If you lose, the deposit returns to your wallet. If you win, it is applied to the final payment.',
-  },
-  {
-    title: 'Questions and seller replies',
-    body: 'Questions posted on an item appear in the Q&A section. Sellers can answer directly from the listing, and connected viewers should see the update without refreshing.',
-  },
-]
+const SUPPORT_TOPIC_KEYS = ['bidding', 'deposits', 'questions'] as const
 
 export default function HelpPage() {
+  const { t } = useTranslation('common')
   const { isMobile } = useBreakpoint()
 
   return (
@@ -31,7 +20,7 @@ export default function HelpPage() {
           marginBottom: 12,
         }}
       >
-        Help Center
+        {t('help.title')}
       </Typography.Title>
       <Typography.Paragraph
         style={{
@@ -42,13 +31,12 @@ export default function HelpPage() {
           maxWidth: isMobile ? '100%' : 760,
         }}
       >
-        Guidance for bidding, deposits, realtime updates, and the quickest paths to support when something
-        looks wrong.
+        {t('help.description')}
       </Typography.Paragraph>
 
       <Row gutter={[isMobile ? 12 : 20, isMobile ? 12 : 20]} style={{ marginBottom: isMobile ? 20 : 32 }}>
-        {SUPPORT_TOPICS.map((topic) => (
-          <Col key={topic.title} xs={24} md={8}>
+        {SUPPORT_TOPIC_KEYS.map((key) => (
+          <Col key={key} xs={24} md={8}>
             <Card
               style={{
                 background: 'linear-gradient(180deg, rgba(196, 147, 61, 0.08), rgba(250, 250, 247, 0.9))',
@@ -57,10 +45,10 @@ export default function HelpPage() {
               }}
             >
               <Typography.Title level={4} style={{ marginTop: 0 }}>
-                {topic.title}
+                {t(`help.topics.${key}.title`)}
               </Typography.Title>
               <Typography.Paragraph style={{ color: 'var(--color-text-secondary)', marginBottom: 0 }}>
-                {topic.body}
+                {t(`help.topics.${key}.body`)}
               </Typography.Paragraph>
             </Card>
           </Col>
@@ -68,15 +56,15 @@ export default function HelpPage() {
       </Row>
 
       <Card style={{ borderRadius: 12 }}>
-        <Typography.Title level={4}>Need a next step?</Typography.Title>
+        <Typography.Title level={4}>{t('help.nextStep')}</Typography.Title>
         <Typography.Paragraph style={{ color: 'var(--color-text-secondary)', marginBottom: 12 }}>
-          Browse active listings, review seller profiles, or sign in to manage your wallet and orders.
+          {t('help.nextStepDesc')}
         </Typography.Paragraph>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
-          <Link to="/auctions">Browse auctions</Link>
-          <Link to="/items">Browse items</Link>
-          <Link to="/sellers">Browse sellers</Link>
-          <Link to="/login">Sign in</Link>
+          <Link to="/auctions">{t('help.browseAuctions')}</Link>
+          <Link to="/items">{t('help.browseItems')}</Link>
+          <Link to="/sellers">{t('help.browseSellers')}</Link>
+          <Link to="/login">{t('help.signIn')}</Link>
         </div>
       </Card>
     </div>

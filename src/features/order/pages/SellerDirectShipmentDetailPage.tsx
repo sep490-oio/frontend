@@ -431,7 +431,7 @@ export default function SellerDirectShipmentDetailPage() {
             label={t('carrierName', 'Carrier Name')}
             rules={[{ required: true, whitespace: true, message: t('carrierRequired', 'Carrier name is required') }]}
           >
-            <Input placeholder="GHTK / Viettel Post / ..." />
+            <Input placeholder={t('carrierPlaceholder', 'GHTK / Viettel Post / ...')} />
           </Form.Item>
           <Form.Item
             name="trackingNumber"

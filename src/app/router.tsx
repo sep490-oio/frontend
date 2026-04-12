@@ -404,4 +404,6 @@ export const router = createBrowserRouter([
       ],
     }],
   },
+  // Catch-all: redirect unknown paths to homepage
+  { path: '*', element: <Navigate to="/" replace /> },
 ])
