@@ -19,13 +19,31 @@
   "filter": {
     "all": "All"
   },
+  "disputeNumber": "Number",
+  "myDisputes": "My Disputes",
+  "title": "Title",
+  "domain": "Domain",
+  "domainLabel": {
+    "order": "Order",
+    "auction": "Auction",
+    "payment": "Payment",
+    "shipment": "Shipment",
+    "warehouse_item": "Warehouse Item"
+  },
   "statusLabel": {
     "open": "Open",
     "assigned": "Assigned",
     "in_progress": "In Progress",
     "pending_response": "Pending Response",
     "resolved": "Resolved",
-    "closed": "Closed"
+    "closed": "Closed",
+    "awaiting_respondent": "Awaiting Respondent",
+    "awaiting_evidence": "Awaiting Evidence",
+    "under_review": "Under Review",
+    "awaiting_internal_review": "Awaiting Internal Review",
+    "awaiting_resolution_approval": "Awaiting Resolution Approval",
+    "rejected": "Rejected",
+    "cancelled": "Cancelled"
   },
   "priorityLabel": {
     "low": "Low",

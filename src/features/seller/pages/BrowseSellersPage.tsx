@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query'
 import type { PagedList, PaginationParams } from '@/types'
 
 import { SERIF_FONT, MONO_FONT } from '@/styles/tokens'
+import { htmlToPlainTextExcerpt } from '@/components/ui/SafeHtmlRenderer'
 
 const SERIF = SERIF_FONT
 const MONO = MONO_FONT
@@ -34,7 +35,8 @@ function useBrowseSellers(params?: PaginationParams & { search?: string }) {
 }
 
 export default function BrowseSellersPage() {
-  const { t } = useTranslation('common')
+  const { t } = useTranslation('seller')
+  const { t: tc } = useTranslation('common')
   const { isMobile, isTablet } = useBreakpoint()
   const navigate = useNavigate()
   const [page, setPage] = useState(1)
@@ -57,10 +59,10 @@ export default function BrowseSellersPage() {
           marginBottom: 6,
           marginTop: 0,
         }}>
-          Người bán
+          {t('browse.title')}
         </h1>
         <p style={{ color: 'var(--color-text-secondary)', fontSize: isMobile ? 13 : 14, margin: 0 }}>
-          Khám phá các nhà bán hàng uy tín trên nền tảng
+          {t('browse.subtitle')}
         </p>
       </div>
 
@@ -68,7 +70,7 @@ export default function BrowseSellersPage() {
       <div style={{ marginBottom: isMobile ? 16 : 28 }}>
         <Input
           prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
-          placeholder="Tìm kiếm người bán..."
+          placeholder={t('browse.searchPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onPressEnter={() => setPage(1)}
@@ -88,7 +90,7 @@ export default function BrowseSellersPage() {
           <Spin size="large" />
         </div>
       ) : sellers.length === 0 ? (
-        <Empty description="Không tìm thấy người bán" />
+        <Empty description={t('browse.noResults')} />
       ) : (
         <>
           <Row gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]}>
@@ -147,7 +149,7 @@ export default function BrowseSellersPage() {
                         whiteSpace: 'nowrap',
                         lineHeight: 1.4,
                       }}>
-                        {seller.storeDescription || '—'}
+                        {htmlToPlainTextExcerpt(seller.storeDescription) || '—'}
                       </div>
                     </div>
                   </Flex>
@@ -156,14 +158,14 @@ export default function BrowseSellersPage() {
                   <Flex gap={14} style={{ marginTop: isMobile ? 10 : 14, paddingTop: 10, borderTop: '1px solid var(--color-border-light)' }}>
                     <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
                       <StarOutlined style={{ marginRight: 4 }} />
-                      Trust:{' '}
+                      {t('browse.trust')}:{' '}
                       <span style={{ fontFamily: MONO, fontWeight: 500, color: 'var(--color-accent)' }}>
                         {seller.trustScore?.toFixed(0) ?? '—'}
                       </span>
                       /100
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-                      {seller.totalSalesCount ?? 0} sales
+                      {seller.totalSalesCount ?? 0} {t('browse.sales')}
                     </div>
                   </Flex>
                 </Card>
@@ -179,7 +181,7 @@ export default function BrowseSellersPage() {
                 pageSize={data?.metadata?.pageSize ?? pageSize}
                 total={totalCount}
                 showSizeChanger={!isMobile}
-                showTotal={isMobile ? undefined : (total) => t('pagination.total', { total })}
+                showTotal={isMobile ? undefined : (total) => tc('pagination.total', { total })}
                 onChange={(p, ps) => { setPage(p); setPageSize(ps) }}
                 size={isMobile ? 'small' : undefined}
               />

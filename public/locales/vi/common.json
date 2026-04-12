@@ -21,7 +21,10 @@
     "bids": "Lịch sử đấu giá",
     "signIn": "Đăng nhập",
     "signUp": "Đăng ký",
-    "watching": "đang theo dõi"
+    "watching": "đang theo dõi",
+    "watchlist": "Theo dõi",
+    "myShipments": "Vận đơn",
+    "disputes": "Tranh chấp"
   },
   "action": {
     "login": "Đăng nhập",
@@ -180,5 +183,113 @@
   "noImage": "Không có hình ảnh",
   "dragDropUpload": "Kéo thả hoặc nhấn để tải lên",
   "uploadLimit": "Tối đa {{max}} tệp ({{count}}/{{max}} đã tải)",
-  "selectFile": "Chọn một tệp"
+  "selectFile": "Chọn một tệp",
+  "guard": {
+    "noAccess": "Bạn không có quyền truy cập trang này.",
+    "noWarehouseAccess": "Bạn không có quyền truy cập khu vực kho.",
+    "backToHome": "Về trang chủ"
+  },
+  "layout": {
+    "lightMode": "Chế độ sáng",
+    "darkMode": "Chế độ tối",
+    "switchLanguage": "Đổi ngôn ngữ",
+    "backToPlatform": "Quay lại nền tảng",
+    "skipToContent": "Chuyển đến nội dung chính",
+    "openMenu": "Mở menu",
+    "toggleSidebar": "Thu gọn thanh bên",
+    "switchToEn": "Chuyển sang EN",
+    "switchToVi": "Chuyển sang VI",
+    "copyright": "\u00a9 {{year}} OIO. Tất cả quyền được bảo lưu.",
+    "statItems": "sản phẩm",
+    "statUsers": "người dùng",
+    "statVerified": "xác minh"
+  },
+  "footer": {
+    "tagline": "Nền tảng đấu giá cao cấp dành cho người sưu tầm.",
+    "platform": "Nền tảng",
+    "support": "Hỗ trợ",
+    "help": "Trung tâm trợ giúp",
+    "terms": "Điều khoản dịch vụ"
+  },
+  "capture": {
+    "positionFront": "Đặt mặt trước CCCD/CMND vào khung hình",
+    "positionBack": "Đặt mặt sau CCCD/CMND vào khung hình",
+    "centerFace": "Căn giữa khuôn mặt trong khung oval",
+    "takeItemPhoto": "Chụp ảnh rõ nét của sản phẩm",
+    "tapToOpenCamera": "Nhấn để mở camera",
+    "tapToActivate": "Nhấn vào đây để kích hoạt camera",
+    "takePhoto": "Chụp ảnh rõ nét",
+    "retake": "Chụp lại",
+    "useThisPhoto": "Dùng ảnh này",
+    "cameraNotAvailable": "Camera không khả dụng trên thiết bị này. Vui lòng tải lên từ tệp.",
+    "uploadFromFiles": "Tải lên từ tệp",
+    "qualityIssue": "Vấn đề chất lượng",
+    "blinkEyes": "Vui lòng chớp mắt",
+    "turnHeadLeft": "Quay đầu sang trái",
+    "turnHeadRight": "Quay đầu sang phải",
+    "remaining": "Còn {{count}} giây",
+    "readyCapture": "Tôi sẵn sàng — Chụp ngay",
+    "attempt": "Lần thử {{current}}/{{total}}",
+    "capturing": "Đang chụp... Giữ yên",
+    "livenessComplete": "Kiểm tra hoàn tất"
+  },
+  "emptyState": {
+    "title": "Chưa có gì ở đây"
+  },
+  "help": {
+    "title": "Trung tâm trợ giúp",
+    "description": "Hướng dẫn về đấu giá, đặt cọc, cập nhật thời gian thực và cách nhanh nhất để được hỗ trợ khi có vấn đề.",
+    "topics": {
+      "bidding": {
+        "title": "Cách đấu giá hoạt động",
+        "body": "Đặt cọc trong giai đoạn đăng ký, sau đó đấu giá theo thời gian thực khi phiên đấu giá đang diễn ra. Nếu bạn bị trả giá cao hơn, trang sẽ tự động cập nhật khi kết nối của bạn hoạt động."
+      },
+      "deposits": {
+        "title": "Đặt cọc và đăng ký tham gia",
+        "body": "Tiền đặt cọc được giữ trong suốt phiên đấu giá. Nếu bạn thua, tiền cọc sẽ trả về ví. Nếu bạn thắng, tiền cọc được khấu trừ vào thanh toán cuối cùng."
+      },
+      "questions": {
+        "title": "Câu hỏi và phản hồi từ người bán",
+        "body": "Câu hỏi được đăng trên sản phẩm sẽ hiển thị trong mục Hỏi & Đáp. Người bán có thể trả lời trực tiếp từ trang sản phẩm, và người xem đang kết nối sẽ thấy cập nhật mà không cần tải lại."
+      }
+    },
+    "nextStep": "Bước tiếp theo?",
+    "nextStepDesc": "Duyệt danh sách đấu giá, xem hồ sơ người bán, hoặc đăng nhập để quản lý ví và đơn hàng.",
+    "browseAuctions": "Xem đấu giá",
+    "browseItems": "Xem sản phẩm",
+    "browseSellers": "Xem người bán",
+    "signIn": "Đăng nhập"
+  },
+  "terms": {
+    "pageTitle": "Điều khoản & Điều kiện",
+    "pageSubtitle": "Xem xét và chấp nhận các điều khoản áp dụng cho việc sử dụng nền tảng của bạn.",
+    "type": {
+      "platform": "Điều khoản nền tảng",
+      "bidder": "Điều khoản người đấu giá",
+      "seller": "Thỏa thuận người bán",
+      "privacy": "Chính sách bảo mật",
+      "other": "Khác"
+    },
+    "acceptSuccess": "Chấp nhận điều khoản thành công",
+    "acceptError": "Chấp nhận điều khoản thất bại. Vui lòng thử lại.",
+    "noTerms": "Không có điều khoản",
+    "noTermsDesc": "Hiện tại không có điều khoản nào để xem xét.",
+    "published": "Đã xuất bản",
+    "created": "Đã tạo",
+    "accepted": "Đã chấp nhận",
+    "pending": "Chờ xử lý",
+    "previewUnavailable": "Không thể xem trước",
+    "useActionsBelow": "Sử dụng các thao tác bên dưới để mở hoặc tải tài liệu.",
+    "noDocument": "Tài liệu không khả dụng",
+    "openInNewTab": "Mở trong tab mới",
+    "download": "Tải xuống",
+    "accept": "Chấp nhận",
+    "selectToPreview": "Chọn một tài liệu để xem trước"
+  },
+  "categories": {
+    "label": "Danh mục OIO",
+    "title": "Danh mục",
+    "subtitle": "Khám phá các danh mục sản phẩm đấu giá của chúng tôi",
+    "empty": "Chưa có danh mục nào"
+  }
 }

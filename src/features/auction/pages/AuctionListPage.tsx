@@ -54,8 +54,8 @@ export default function AuctionListPage() {
                   letterSpacing: '-0.02em',
                 }}
               >
-                {t('heroTitle', 'Sở hữu tuyệt tác —')}<br />
-                <span style={{ color: 'var(--color-accent)' }}>{t('heroHighlight', 'Đã được kiểm định')}</span>
+                {t('heroTitle')}<br />
+                <span style={{ color: 'var(--color-accent)' }}>{t('heroHighlight')}</span>
               </h1>
               <p
                 style={{
@@ -66,7 +66,7 @@ export default function AuctionListPage() {
                   maxWidth: 400,
                 }}
               >
-                {t('heroSubtitle', 'Nền tảng đấu giá trực tuyến hàng đầu. Trải nghiệm những sản phẩm xác thực chuyên nghiệp, minh bạch và đáng tin cậy.')}
+                {t('heroSubtitle')}
               </p>
 
               <Flex gap={10} wrap="wrap" style={{ marginBottom: 28 }}>
@@ -83,7 +83,7 @@ export default function AuctionListPage() {
                     flex: isMobile ? 1 : undefined,
                   }}
                 >
-                  {t('heroExplore', 'Khám phá đấu giá')} <ArrowRightOutlined />
+                  {t('heroExplore')} <ArrowRightOutlined />
                 </Button>
                 <Button
                   size={isMobile ? 'middle' : 'large'}
@@ -97,15 +97,15 @@ export default function AuctionListPage() {
                     flex: isMobile ? 1 : undefined,
                   }}
                 >
-                  {t('heroConsign', 'Ký gửi vật phẩm')}
+                  {t('heroConsign')}
                 </Button>
               </Flex>
 
               <Flex gap={isMobile ? 24 : 40}>
                 {[
-                  { value: '12K+', label: t('heroStatItems', 'Sản phẩm') },
-                  { value: '45K+', label: t('heroStatUsers', 'Người dùng') },
-                  { value: '100%', label: t('heroStatVerified', 'Kiểm định') },
+                  { value: '12K+', label: t('heroStatItems') },
+                  { value: '45K+', label: t('heroStatUsers') },
+                  { value: '100%', label: t('heroStatVerified') },
                 ].map((s) => (
                   <div key={s.label}>
                     <div
@@ -176,7 +176,7 @@ export default function AuctionListPage() {
                           marginBottom: 4,
                         }}
                       >
-                        Đấu giá nổi bật
+                        {t('featuredBadge')}
                       </div>
                       <div style={{ fontFamily: MONO, fontSize: isMobile ? 16 : 20, fontWeight: 600, color: 'var(--color-accent)' }}>
                         {formatCurrency(heroItem.currentPrice?.amount ?? 0, heroItem.currency)}
@@ -204,7 +204,7 @@ export default function AuctionListPage() {
                 margin: 0,
               }}
             >
-              {t('newlyListed', 'Newly Listed')}
+              {t('newlyListed')}
             </h2>
             <Link
               to="/auctions?sortBy=CreatedAt+Desc"
@@ -219,7 +219,7 @@ export default function AuctionListPage() {
                 whiteSpace: 'nowrap',
               }}
             >
-              {t('viewAll', 'Xem tất cả')} <ArrowRightOutlined />
+              {t('viewAll')} <ArrowRightOutlined />
             </Link>
           </Flex>
 
@@ -233,7 +233,7 @@ export default function AuctionListPage() {
               ))}
             </Row>
           ) : !newAuctions?.items?.length ? (
-            <Empty description={t('noAuctions', 'No auctions found')} />
+            <Empty description={t('noAuctions')} />
           ) : (
             <Row gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]}>
               {newAuctions.items.map((auction) => (
@@ -269,7 +269,7 @@ export default function AuctionListPage() {
                             fontSize: 12,
                           }}
                         >
-                          {t('noImage', 'No image')}
+                          {t('noImage')}
                         </div>
                       )}
                       <div style={{ padding: isMobile ? '8px 10px' : 12 }}>
@@ -311,7 +311,7 @@ export default function AuctionListPage() {
                   margin: 0,
                 }}
               >
-                {t('trending', 'Trending')}
+                {t('trending')}
               </h2>
               <Link
                 to="/auctions?sortBy=ViewCount+Desc"
@@ -326,7 +326,7 @@ export default function AuctionListPage() {
                   whiteSpace: 'nowrap',
                 }}
               >
-                {t('viewAll', 'Xem tất cả')} <ArrowRightOutlined />
+                {t('viewAll')} <ArrowRightOutlined />
               </Link>
             </Flex>
             {trendingLoading ? (
@@ -373,7 +373,7 @@ export default function AuctionListPage() {
                               fontSize: 12,
                             }}
                           >
-                            {t('noImage', 'No image')}
+                            {t('noImage')}
                           </div>
                         )}
                         <div style={{ padding: isMobile ? '8px 10px' : 12 }}>
@@ -416,7 +416,7 @@ export default function AuctionListPage() {
                 marginBottom: 8,
               }}
             >
-              {t('categoriesLabel', 'TẤT CẢ DANH MỤC')}
+              {t('categoriesLabel')}
             </div>
             <h2
               style={{
@@ -427,10 +427,10 @@ export default function AuctionListPage() {
                 margin: '0 0 8px',
               }}
             >
-              {t('categoriesTitle', 'Danh mục')}
+              {t('categoriesTitle')}
             </h2>
             <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', margin: 0 }}>
-              {t('categoriesSubtitle', 'Khám phá các danh mục sản phẩm đấu giá của chúng tôi')}
+              {t('categoriesSubtitle')}
             </p>
           </div>
 
@@ -468,17 +468,6 @@ export default function AuctionListPage() {
                       }}
                     >
                       {cat.name}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: isMobile ? 11 : 13,
-                        color: 'var(--color-text-secondary)',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {cat.slug}
                     </div>
                   </div>
                 </Col>
@@ -559,7 +548,7 @@ export default function AuctionListPage() {
                 margin: 0,
               }}
             >
-              {t('featuredSection', 'Các đấu giá nổi bật')}
+              {t('featuredSection')}
             </h2>
             <a
               href="/auctions"
@@ -574,7 +563,7 @@ export default function AuctionListPage() {
                 whiteSpace: 'nowrap',
               }}
             >
-              {t('viewAll', 'Xem tất cả')} <ArrowRightOutlined />
+              {t('viewAll')} <ArrowRightOutlined />
             </a>
           </Flex>
           <Row className="oio-stagger" gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]}>
@@ -624,7 +613,7 @@ export default function AuctionListPage() {
           </p>
           <Flex gap={8} justify="center" vertical={isMobile} align={isMobile ? 'stretch' : undefined}>
             <Input
-              placeholder="Nhập email của bạn"
+              placeholder={t('emailPlaceholder')}
               style={{
                 maxWidth: isMobile ? '100%' : 280,
                 height: 44,

@@ -11,7 +11,13 @@
     "quickActions": "Thao tác nhanh",
     "reviewQueue": "Hàng đợi kiểm duyệt",
     "viewVerifications": "Xem xác minh",
-    "viewReports": "Xem báo cáo"
+    "viewReports": "Xem báo cáo",
+    "liveAuctions": "Phiên đấu giá trực tiếp",
+    "noLiveAuctions": "Không có phiên đấu giá trực tiếp",
+    "riskLevel": "Mức độ rủi ro",
+    "low": "Thấp",
+    "uptime": "Thời gian hoạt động",
+    "openTickets": "Phiếu hỗ trợ mở"
   },
   "users": {
     "title": "Quản lý người dùng",
@@ -100,7 +106,9 @@
     "verifySuccess": "Xác minh hồ sơ thành công",
     "rejectSuccess": "Từ chối hồ sơ thành công",
     "rejectReason": "Lý do từ chối",
-    "rejectReasonPlaceholder": "Nhập lý do từ chối..."
+    "rejectReasonPlaceholder": "Nhập lý do từ chối...",
+    "description": "Mô tả",
+    "trustScore": "Điểm uy tín"
   },
   "reviewQueue": {
     "title": "Hàng đợi kiểm duyệt",
@@ -159,7 +167,36 @@
     "amount": "Số tiền",
     "bidStatus": "Trạng thái",
     "bidDate": "Ngày đặt",
-    "noEmergencies": "Không có tình huống khẩn cấp"
+    "noEmergencies": "Không có tình huống khẩn cấp",
+    "flagAuction": "Đánh dấu phiên đấu giá",
+    "alertType": "Loại cảnh báo",
+    "selectAlertType": "Chọn loại cảnh báo",
+    "severity": "Mức độ",
+    "selectSeverity": "Chọn mức độ",
+    "details": "Chi tiết",
+    "enterAlertDetails": "Nhập chi tiết cảnh báo",
+    "flagButton": "Đánh dấu",
+    "flagSuccess": "Đánh dấu phiên đấu giá thành công",
+    "triggerSource": "Nguồn kích hoạt",
+    "enterTriggerSource": "Nhập nguồn kích hoạt",
+    "detailsJson": "Chi tiết (JSON)",
+    "enterJsonDetails": "Nhập chi tiết dạng JSON, vd: {\"key\": \"value\"}",
+    "invalidJsonPayload": "Payload không phải JSON hợp lệ",
+    "emergencyId": "Mã khẩn cấp",
+    "enterEmergencyId": "Nhập mã khẩn cấp",
+    "status": "Trạng thái",
+    "selectStatus": "Chọn trạng thái",
+    "enterResolutionDetails": "Nhập chi tiết giải quyết",
+    "resolveButton": "Giải quyết khẩn cấp",
+    "alertTypeOption": {
+      "fraud": "Gian lận",
+      "suspicious": "Đáng ngờ",
+      "collusion": "Thông đồng"
+    },
+    "resolutionStatus": {
+      "resolved": "Đã giải quyết",
+      "dismissed": "Đã bác bỏ"
+    }
   },
   "reports": {
     "title": "Báo cáo vi phạm",
@@ -198,7 +235,22 @@
     "allStatuses": "Tất cả trạng thái",
     "acknowledgeSuccess": "Xác nhận cảnh báo thành công",
     "resolveSuccess": "Giải quyết cảnh báo thành công",
-    "userRiskFlags": "Cờ rủi ro người dùng"
+    "userRiskFlags": "Cờ rủi ro người dùng",
+    "entity": "Đối tượng",
+    "viewEntity": "Xem đối tượng",
+    "details": "Chi tiết",
+    "open": "Mở",
+    "acknowledged": "Đã xác nhận",
+    "resolved": "Đã giải quyết",
+    "all": "Tất cả",
+    "viewDetails": "Xem chi tiết",
+    "completedAuctions": "Hàng đợi đấu giá đã hoàn thành",
+    "totalAlerts": "cảnh báo",
+    "confirmAcknowledge": "Xác nhận",
+    "notesOptional": "Ghi chú (không bắt buộc)",
+    "resolutionNotesOptional": "Ghi chú giải quyết (không bắt buộc)",
+    "markAsIgnored": "Đánh dấu là bỏ qua (dương tính giả)",
+    "ignore": "Bỏ qua"
   },
   "disputes": {
     "title": "Tranh chấp",
@@ -253,7 +305,12 @@
     "rejectReasonPlaceholder": "Nhập lý do từ chối...",
     "walletBalance": "Số dư ví",
     "availableBalance": "Số dư khả dụng",
-    "pendingBalance": "Số dư chờ xử lý"
+    "pendingBalance": "Số dư chờ xử lý",
+    "bankName": "Ngân hàng",
+    "accountHolder": "Chủ tài khoản",
+    "complete": "Hoàn tất",
+    "completeConfirm": "Xác nhận đã chuyển khoản cho yêu cầu rút tiền này?",
+    "completeSuccess": "Đã hoàn tất rút tiền"
   },
   "terms": {
     "title": "Điều khoản sử dụng",
@@ -271,7 +328,20 @@
     "titlePlaceholder": "Nhập tiêu đề...",
     "createSuccess": "Tạo điều khoản thành công",
     "activateSuccess": "Kích hoạt điều khoản thành công",
-    "activateConfirm": "Bạn có chắc muốn kích hoạt điều khoản này?"
+    "activateConfirm": "Kích hoạt điều khoản này?",
+    "activateConfirmDesc": "Phiên bản đang hoạt động hiện tại sẽ bị vô hiệu hóa.",
+    "typePlatform": "Điều khoản nền tảng",
+    "typeBidder": "Điều khoản người đấu giá",
+    "typeSeller": "Điều khoản người bán",
+    "typePrivacy": "Chính sách bảo mật",
+    "document": "Tài liệu",
+    "download": "Tải xuống",
+    "published": "Ngày đăng",
+    "termsType": "Loại điều khoản",
+    "selectTermsType": "Chọn loại điều khoản",
+    "uploadPdf": "Tải lên tài liệu PDF",
+    "createError": "Không thể tạo điều khoản",
+    "activateError": "Không thể kích hoạt điều khoản"
   },
   "roles": {
     "title": "Quản lý vai trò & quyền",
@@ -295,6 +365,63 @@
     "save": "Lưu",
     "create": "Tạo mới",
     "id": "ID"
+  },
+  "moderation": {
+    "title": "Trung tâm kiểm duyệt",
+    "all": "Tất cả",
+    "tabReports": "Báo cáo",
+    "tabDisputes": "Tranh chấp",
+    "filterByStatus": "Lọc theo trạng thái",
+    "assign": "Phân công",
+    "resolve": "Giải quyết",
+    "escalate": "Leo thang",
+    "dismiss": "Bác bỏ",
+    "escalatedFromReport": "Leo thang từ báo cáo",
+    "assignReportTitle": "Phân công báo cáo",
+    "assigneePlaceholder": "ID người phụ trách",
+    "resolveReportTitle": "Giải quyết báo cáo",
+    "enforcementAction": "Hành động xử lý",
+    "resolutionNotesPlaceholder": "Ghi chú giải quyết",
+    "escalateToDisputeTitle": "Leo thang thành tranh chấp",
+    "disputeTitlePlaceholder": "Tiêu đề tranh chấp",
+    "disputeTypeLabel": "Loại tranh chấp",
+    "priorityLabel": "Độ ưu tiên",
+    "columns": {
+      "reporter": "Người báo cáo",
+      "entity": "Đối tượng",
+      "reason": "Lý do",
+      "assigned": "Đã phân công",
+      "dispute": "Tranh chấp",
+      "id": "Mã",
+      "title": "Tiêu đề",
+      "priority": "Độ ưu tiên"
+    },
+    "reportStatus": {
+      "actionTaken": "Đã xử lý",
+      "dismissed": "Đã bác bỏ"
+    },
+    "disputeStatus": {
+      "awaitingRespondent": "Chờ bên bị đơn",
+      "awaitingEvidence": "Chờ bằng chứng",
+      "awaitingInternalReview": "Chờ xem xét nội bộ",
+      "awaitingResolutionApproval": "Chờ duyệt giải quyết"
+    },
+    "disputeType": {
+      "itemNotAsDescribed": "Sản phẩm không đúng mô tả",
+      "damagedItem": "Sản phẩm hư hỏng",
+      "paymentIssue": "Vấn đề thanh toán",
+      "counterfeit": "Hàng giả",
+      "other": "Khác"
+    },
+    "priority": {
+      "urgent": "Khẩn cấp"
+    },
+    "enforcement": {
+      "noAction": "Không xử lý",
+      "warnUser": "Cảnh cáo",
+      "suspendListing": "Tạm ngưng tin đăng",
+      "removeListing": "Gỡ tin đăng"
+    }
   },
   "completedAuctions": {
     "title": "Đấu giá đã hoàn thành",
@@ -341,7 +468,26 @@
       "alerts": "Cảnh báo",
       "outboundShipment": "Vận đơn kho",
       "directShipment": "Vận đơn người bán",
-      "back": "Quay lại"
+      "back": "Quay lại",
+      "shipBy": "Giao trước",
+      "overdue": "Quá hạn",
+      "orderStatus": "Trạng thái đơn",
+      "total": "Tổng cộng",
+      "amountPaid": "Số tiền đã trả",
+      "paidAt": "Thanh toán lúc",
+      "createdAt": "Tạo lúc",
+      "shipTo": "Giao đến",
+      "escalationDetails": "Chi tiết leo thang",
+      "shippingOverdue": "Quá hạn giao hàng",
+      "yes": "Có",
+      "no": "Không",
+      "escalatedAt": "Leo thang lúc",
+      "escalationReason": "Lý do leo thang",
+      "status": "Trạng thái",
+      "carrier": "Đơn vị vận chuyển",
+      "trackingNumber": "Mã vận đơn",
+      "shippingFee": "Phí vận chuyển",
+      "estDelivery": "Dự kiến giao"
     },
     "directShipment": {
       "shipmentIdDisplay": "Mã vận đơn",
@@ -367,6 +513,138 @@
         "disputed": "Đang tranh chấp",
         "completed": "Hoàn thành"
       }
+    }
+  },
+  "monitoringDrawer": {
+    "status": "Trạng thái",
+    "entity": "Đối tượng",
+    "view": "Xem",
+    "entityId": "Mã đối tượng",
+    "details": "Chi tiết",
+    "notes": "Ghi chú",
+    "timeline": "Dòng thời gian",
+    "created": "Đã tạo",
+    "acknowledged": "Đã xác nhận",
+    "resolved": "Đã giải quyết",
+    "by": "bởi"
+  },
+  "disputeDetail": {
+    "outcomeOption": {
+      "favorBuyer": "Có lợi cho người mua",
+      "favorSeller": "Có lợi cho người bán",
+      "favorPlatform": "Có lợi cho nền tảng",
+      "partialSplit": "Chia sẻ một phần",
+      "voidClaim": "Hủy khiếu nại",
+      "operationalRework": "Xử lý lại vận hành"
+    },
+    "domainOption": {
+      "order": "Đơn hàng",
+      "payment": "Thanh toán",
+      "shipping": "Vận chuyển",
+      "auction": "Đấu giá",
+      "warehouse": "Kho",
+      "verification": "Xác minh"
+    }
+  },
+  "resolution": {
+    "escrowOption": {
+      "noAction": "Không hành động",
+      "releaseToSeller": "Giải phóng cho người bán",
+      "refundBuyer": "Hoàn tiền người mua",
+      "partialRefund": "Hoàn tiền một phần",
+      "hold": "Giữ lại"
+    },
+    "refundOption": {
+      "noRefund": "Không hoàn tiền",
+      "fullRefund": "Hoàn tiền toàn bộ",
+      "partialRefund": "Hoàn tiền một phần"
+    },
+    "shipmentOption": {
+      "noAction": "Không hành động",
+      "cancelShipment": "Hủy vận đơn",
+      "markLost": "Đánh dấu thất lạc",
+      "rebookShipment": "Đặt lại vận đơn",
+      "openReturn": "Mở hoàn trả"
+    },
+    "itemOption": {
+      "noAction": "Không hành động",
+      "returnToActive": "Trả về hoạt động",
+      "holdInWarehouse": "Giữ trong kho",
+      "returnToSeller": "Trả về người bán",
+      "rejectListing": "Từ chối tin đăng"
+    },
+    "auctionOption": {
+      "noAction": "Không hành động",
+      "relist": "Đăng lại",
+      "cancel": "Hủy"
+    },
+    "penaltyOption": {
+      "noAction": "Không hành động",
+      "flagBuyer": "Đánh dấu người mua",
+      "flagSeller": "Đánh dấu người bán"
+    },
+    "manualFollowupRequired": "Cần theo dõi thủ công",
+    "tooltip": {
+      "releaseToSeller": "Giải phóng tiền ký quỹ cho người bán",
+      "refundBuyer": "Hoàn toàn bộ tiền ký quỹ cho người mua",
+      "partialRefund": "Hoàn một phần tiền ký quỹ",
+      "hold": "Giữ tiền trong ký quỹ chờ xử lý",
+      "fullRefund": "Người mua sẽ được hoàn tiền toàn bộ",
+      "noRefund": "Không hoàn tiền",
+      "cancelShipment": "Hủy vận đơn hiện tại",
+      "markLost": "Đánh dấu vận đơn thất lạc",
+      "rebookShipment": "Đặt lại vận đơn mới cho sản phẩm",
+      "openReturn": "Mở vận đơn hoàn trả cho người bán",
+      "returnToActive": "Trả sản phẩm về trạng thái hoạt động để đấu giá mới",
+      "holdInWarehouse": "Giữ sản phẩm trong kho",
+      "returnToSeller": "Gửi trả sản phẩm cho người bán",
+      "rejectListing": "Từ chối tin đăng khỏi nền tảng",
+      "relist": "Trả sản phẩm về trạng thái hoạt động để đấu giá mới",
+      "cancel": "Hủy phiên đấu giá vĩnh viễn",
+      "flagBuyer": "Đánh dấu tài khoản người mua để xem xét",
+      "flagSeller": "Đánh dấu tài khoản người bán để xem xét"
+    },
+    "summary": {
+      "escrowReleaseToSeller": "Tiền ký quỹ sẽ được giải phóng cho người bán",
+      "escrowRefundBuyer": "Tiền ký quỹ sẽ được hoàn cho người mua",
+      "escrowPartialRefund": "Tiền ký quỹ sẽ được hoàn một phần",
+      "escrowHold": "Tiền ký quỹ sẽ được giữ lại",
+      "refundFull": "Người mua sẽ được hoàn tiền toàn bộ",
+      "refundPartial": "Người mua sẽ được hoàn tiền một phần",
+      "shipmentCancel": "Vận đơn sẽ bị hủy",
+      "shipmentLost": "Vận đơn sẽ được đánh dấu thất lạc",
+      "shipmentRebook": "Vận đơn mới sẽ được đặt",
+      "shipmentReturn": "Vận đơn hoàn trả sẽ được mở",
+      "itemReturnToActive": "Sản phẩm sẽ được trả về trạng thái hoạt động",
+      "itemHold": "Sản phẩm sẽ được giữ trong kho",
+      "itemReturnToSeller": "Sản phẩm sẽ được trả về cho người bán",
+      "itemRejectListing": "Tin đăng sẽ bị từ chối",
+      "auctionRelist": "Sản phẩm sẽ được đăng lại đấu giá",
+      "auctionCancel": "Phiên đấu giá sẽ bị hủy",
+      "penaltyFlagBuyer": "Tài khoản người mua sẽ bị đánh dấu để xem xét",
+      "penaltyFlagSeller": "Tài khoản người bán sẽ bị đánh dấu để xem xét"
+    },
+    "validation": {
+      "refundAmountRequired": "Số tiền hoàn phải lớn hơn 0 khi chọn hoàn tiền một phần.",
+      "conflictReleaseAndRefund": "Không thể giải phóng cho người bán và hoàn tiền người mua cùng lúc.",
+      "noActionsWarning": "Chưa chọn hành động giải quyết nào. Bạn có chắc không?"
+    }
+  },
+  "disputeList": {
+    "allStatuses": "Tất cả",
+    "allDomains": "Tất cả lĩnh vực",
+    "statusLabel": {
+      "awaitingRespondent": "Chờ bên bị đơn",
+      "awaitingEvidence": "Chờ bằng chứng",
+      "awaitingInternalReview": "Chờ xem xét nội bộ",
+      "awaitingResolutionApproval": "Chờ duyệt giải quyết"
+    },
+    "domainLabel": {
+      "order": "Đơn hàng",
+      "auction": "Đấu giá",
+      "payment": "Thanh toán",
+      "shipment": "Vận chuyển",
+      "warehouseItem": "Sản phẩm kho"
     }
   }
 }

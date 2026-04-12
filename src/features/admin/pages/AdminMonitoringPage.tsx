@@ -21,11 +21,11 @@ import { parseAlertPayload, formatAlertType } from '@/features/admin/utils/parse
 import type { MonitoringAlertDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
 
-const SEVERITY_CONFIG: Record<string, { color: string; icon: React.ReactNode; label: string }> = {
-  low: { color: '#52c41a', icon: <CheckCircleOutlined />, label: 'Low' },
-  medium: { color: '#faad14', icon: <ExclamationCircleOutlined />, label: 'Medium' },
-  high: { color: '#ff4d4f', icon: <WarningOutlined />, label: 'High' },
-  critical: { color: 'var(--color-danger)', icon: <FireOutlined />, label: 'Critical' },
+const SEVERITY_STYLE: Record<string, { color: string; icon: React.ReactNode }> = {
+  low: { color: '#52c41a', icon: <CheckCircleOutlined /> },
+  medium: { color: '#faad14', icon: <ExclamationCircleOutlined /> },
+  high: { color: '#ff4d4f', icon: <WarningOutlined /> },
+  critical: { color: 'var(--color-danger)', icon: <FireOutlined /> },
 }
 
 const ENTITY_ROUTES: Record<string, (id: string) => string> = {
@@ -37,6 +37,7 @@ const ENTITY_ROUTES: Record<string, (id: string) => string> = {
 
 export default function AdminMonitoringPage() {
   const { t } = useTranslation('admin')
+  const { t: tc } = useTranslation('common')
   const { message } = App.useApp()
   const navigate = useNavigate()
 
@@ -100,17 +101,17 @@ export default function AdminMonitoringPage() {
       key: 'severity',
       width: 110,
       filters: [
-        { text: 'Low', value: 'low' },
-        { text: 'Medium', value: 'medium' },
-        { text: 'High', value: 'high' },
-        { text: 'Critical', value: 'critical' },
+        { text: tc('statusLabel.low'), value: 'low' },
+        { text: tc('statusLabel.medium'), value: 'medium' },
+        { text: tc('statusLabel.high'), value: 'high' },
+        { text: tc('statusLabel.critical'), value: 'critical' },
       ],
       onFilter: (value, record) => record.severity === value,
       render: (severity: string) => {
-        const cfg = SEVERITY_CONFIG[severity] ?? SEVERITY_CONFIG.low
+        const style = SEVERITY_STYLE[severity] ?? SEVERITY_STYLE.low
         return (
-          <Tag icon={cfg.icon} color={cfg.color} style={{ fontWeight: 600 }}>
-            {cfg.label}
+          <Tag icon={style.icon} color={style.color} style={{ fontWeight: 600 }}>
+            {tc(`statusLabel.${severity}`)}
           </Tag>
         )
       },
@@ -278,7 +279,7 @@ export default function AdminMonitoringPage() {
             current: page,
             pageSize: 15,
             onChange: setPage,
-            showTotal: (total) => `${total} alerts`,
+            showTotal: (total) => `${total} ${t('monitoring.totalAlerts', 'alerts')}`,
             showSizeChanger: false,
           }}
           rowClassName={(record) =>

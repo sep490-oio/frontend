@@ -30,6 +30,9 @@
   "returnError": "Failed to submit return request",
   "selectReason": "Select a reason",
   "descriptionPlaceholder": "Provide additional details...",
+  "myOrdersSubtitle": "Track and manage your purchases",
+  "product": "Product",
+  "viewDetail": "View Detail",
   "statusTab": {
     "all": "All",
     "pendingPayment": "Pending Payment",
@@ -37,8 +40,12 @@
     "shipped": "Shipped",
     "delivered": "Delivered",
     "completed": "Completed",
-    "cancelled": "Cancelled"
+    "cancelled": "Cancelled",
+    "Refunded": "Refunded",
+    "Disputed": "Disputed"
   },
+  "expired": "Expired",
+  "decisionWindowEnds": "Decision window ends: {{date}}",
   "status": {
     "pending_payment": "Pending Payment",
     "paid": "Paid",
@@ -94,11 +101,23 @@
     "buyerReceivedAt": "Buyer Received At",
     "buyerAcceptedAt": "Buyer Accepted At",
     "decisionWindowCountdown": "Decision Window Countdown",
+    "sellerListTitle": "Direct Shipments",
+    "viewShipment": "View Shipment",
+    "noShipments": "No direct shipments",
+    "manualReview": {
+      "flagged": "This shipment has been flagged for manual review.",
+      "reasonLabel": "Review Reason",
+      "badge": "Manual review"
+    },
     "status": {
+      "all": "All",
       "draft": "Draft",
       "carrier_booked": "Carrier Booked",
+      "carrierBooked": "Carrier Booked",
       "picked_up": "Picked Up",
+      "pickedUp": "Picked Up",
       "on_delivering": "On Delivering",
+      "onDelivering": "On Delivering",
       "delivered": "Delivered",
       "accepted": "Accepted",
       "disputed": "Disputed",
@@ -141,10 +160,46 @@
       "printLabel": "Print Label",
       "downloadLabel": "Download Label",
       "scanParcel": "Scan Parcel"
-    },
-    "manualReview": {
-      "flagged": "This shipment has been flagged for manual review.",
-      "reasonLabel": "Review Reason"
     }
+  },
+  "rejectReason": "Rejection Reason",
+  "carrierCode": "Carrier Code",
+  "trackingCode": "Tracking Number",
+  "carrierPlaceholder": "GHTK / Viettel Post / ...",
+  "weightPlaceholder": "500",
+  "shippingMethodPlaceholder": "standard / express",
+  "sellerOrders": "Seller Orders",
+  "shipmentFeed": {
+    "title": "My Shipments",
+    "kindDirect": "Direct",
+    "kindWarehouse": "Warehouse",
+    "scanQrToReceive": "Scan QR to receive",
+    "viewShipment": "View shipment",
+    "searchPlaceholder": "Search order / tracking / title",
+    "empty": "No shipments yet"
+  },
+  "disputeDomainOption": {
+    "order": "Order",
+    "auction": "Auction",
+    "payment": "Payment",
+    "shipment": "Shipment",
+    "warehouse_item": "Warehouse Item"
+  },
+  "disputeCaseTypeOption": {
+    "item_not_as_described": "Item not as described",
+    "item_damaged": "Item damaged",
+    "item_not_received": "Item not received",
+    "wrong_item": "Wrong item",
+    "other": "Other",
+    "bid_manipulation": "Bid manipulation",
+    "counterfeit": "Counterfeit",
+    "misrepresentation": "Misrepresentation",
+    "unauthorized_charge": "Unauthorized charge",
+    "double_charge": "Double charge",
+    "refund_not_received": "Refund not received",
+    "lost_in_transit": "Lost in transit",
+    "damaged_in_transit": "Damaged in transit",
+    "delivery_issue": "Delivery issue",
+    "item_missing": "Item missing"
   }
 }
