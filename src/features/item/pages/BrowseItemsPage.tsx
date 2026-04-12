@@ -1,18 +1,19 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback } from 'react'
 import { Input, Select, Pagination, Flex, Row, Col, Card, Empty, AutoComplete } from 'antd'
 import { SearchOutlined, EyeOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
+import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { useCategories } from '@/features/item/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { useDebounce } from '@/hooks/useDebounce'
 import apiClient from '@/lib/axios'
-import { useQuery } from '@tanstack/react-query'
 import type { PagedList, PaginationParams, ItemDto } from '@/types'
 import { SERIF_FONT } from '@/styles/tokens'
 
 const SERIF = SERIF_FONT
-const SUGGEST_DEBOUNCE_MS = 300
+const SUGGEST_MIN_LENGTH = 2
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -26,44 +27,55 @@ interface SearchParams {
   q: string
   page?: number
   page_size?: number
-  category?: string // category name (not ID)
+  category?: string // category name, not ID
   status?: string
 }
 
 // ─── Hooks ───────────────────────────────────────────────────────────────────
 
-/** Browse all items (no keyword required) — original endpoint */
+/** Browse all items — no keyword required. Uses legacy /items/public endpoint. */
 function useBrowseItems(params?: BrowseParams) {
   return useQuery({
     queryKey: ['items', 'browse', params],
-    queryFn: async () => {
-      const res = await apiClient.get<PagedList<ItemDto>>('/items/public', { params })
+    queryFn: async ({ signal }) => {
+      const res = await apiClient.get<PagedList<ItemDto>>('/items/public', { params, signal })
       return res.data
     },
+    placeholderData: keepPreviousData,
   })
 }
 
-/** Elasticsearch full-text search — requires a keyword */
+/**
+ * Elasticsearch full-text search — requires a keyword.
+ * Only fires when `enabled` is true (i.e. committedSearch is non-empty).
+ * Stale in-flight requests are cancelled automatically via AbortController signal.
+ */
 function useSearchItems(params: SearchParams, enabled: boolean) {
   return useQuery({
     queryKey: ['items', 'search', params],
-    queryFn: async () => {
-      const res = await apiClient.get<PagedList<ItemDto>>('/search/items', { params })
+    queryFn: async ({ signal }) => {
+      const res = await apiClient.get<PagedList<ItemDto>>('/search/items', { params, signal })
       return res.data
     },
     enabled,
+    placeholderData: keepPreviousData,
   })
 }
 
-/** Auto-complete suggestions from Elasticsearch */
-function useSuggestItems(q: string, enabled: boolean) {
+/**
+ * Auto-complete suggestions.
+ * Receives already-debounced `q` from call site via useDebounce.
+ * Only fires when q.length >= SUGGEST_MIN_LENGTH.
+ * Stale in-flight requests are cancelled automatically via AbortController signal.
+ */
+function useSuggestItems(q: string) {
   return useQuery({
     queryKey: ['items', 'suggest', q],
-    queryFn: async () => {
-      const res = await apiClient.get<string[]>('/search/items/suggest', { params: { q } })
+    queryFn: async ({ signal }) => {
+      const res = await apiClient.get<string[]>('/search/items/suggest', { params: { q }, signal })
       return res.data
     },
-    enabled: enabled && q.trim().length > 0,
+    enabled: q.trim().length >= SUGGEST_MIN_LENGTH,
     staleTime: 10_000,
   })
 }
@@ -76,38 +88,38 @@ export default function BrowseItemsPage() {
   const { isMobile } = useBreakpoint()
   const navigate = useNavigate()
 
-  // Pagination
+  // ── State ─────────────────────────────────────────────────────────────────
+
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(12)
 
-  // Search input (what the user is currently typing)
+  // What the user is currently typing → drives suggest dropdown
   const [inputValue, setInputValue] = useState('')
 
-  // Committed search keyword (only set when user presses Enter or selects a suggestion)
+  // Only updated on Enter / suggestion select → drives actual search query
   const [committedSearch, setCommittedSearch] = useState('')
 
-  // Category: keep both id (for browse) and name (for ES search)
+  // Category: id for browse endpoint, name for ES endpoint
   const [categoryId, setCategoryId] = useState('')
   const [categoryName, setCategoryName] = useState('')
 
-  // Suggest state
-  const [suggestEnabled, setSuggestEnabled] = useState(false)
-  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // ── Derived ───────────────────────────────────────────────────────────────
+
+  const isSearchMode = committedSearch.trim().length > 0
+
+  // Debounce input before passing to suggest hook — no manual timers needed
+  const debouncedInput = useDebounce(inputValue, 300)
 
   // ── Data ──────────────────────────────────────────────────────────────────
 
   const { data: categories } = useCategories()
 
-  const isSearchMode = committedSearch.trim().length > 0
-
-  // Browse (no keyword)
   const { data: browseData, isLoading: browseLoading } = useBrowseItems(
     !isSearchMode
       ? { pageNumber: page, pageSize, ...(categoryId ? { categoryId } : {}) }
       : undefined,
   )
 
-  // Search (has keyword)
   const { data: searchData, isLoading: searchLoading } = useSearchItems(
     {
       q: committedSearch,
@@ -118,8 +130,8 @@ export default function BrowseItemsPage() {
     isSearchMode,
   )
 
-  // Suggestions
-  const { data: suggestions } = useSuggestItems(inputValue, suggestEnabled)
+  // Suggestions receive debounced value — stale requests cancelled via signal
+  const { data: suggestions } = useSuggestItems(debouncedInput)
 
   const data = isSearchMode ? searchData : browseData
   const isLoading = isSearchMode ? searchLoading : browseLoading
@@ -127,27 +139,18 @@ export default function BrowseItemsPage() {
 
   // ── Handlers ─────────────────────────────────────────────────────────────
 
+  const commitSearch = useCallback((value: string) => {
+    setCommittedSearch(value.trim())
+    setPage(1)
+  }, [])
+
   const handleInputChange = useCallback((value: string) => {
     setInputValue(value)
-
-    // Debounce suggest calls
-    if (debounceTimer.current) clearTimeout(debounceTimer.current)
-    if (value.trim().length > 0) {
-      debounceTimer.current = setTimeout(() => {
-        setSuggestEnabled(true)
-      }, SUGGEST_DEBOUNCE_MS)
-    } else {
-      setSuggestEnabled(false)
-      // Clear search when input is emptied
+    // Revert to browse mode immediately when input is cleared
+    if (!value.trim()) {
       setCommittedSearch('')
       setPage(1)
     }
-  }, [])
-
-  const commitSearch = useCallback((value: string) => {
-    setSuggestEnabled(false)
-    setCommittedSearch(value.trim())
-    setPage(1)
   }, [])
 
   const handleSelect = useCallback((value: string) => {
@@ -159,15 +162,11 @@ export default function BrowseItemsPage() {
     commitSearch(inputValue)
   }, [commitSearch, inputValue])
 
-  const handleCategoryChange = useCallback(
-    (value: string) => {
-      setCategoryId(value)
-      const cat = (categories ?? []).find((c) => c.id === value)
-      setCategoryName(cat?.name ?? '')
-      setPage(1)
-    },
-    [categories],
-  )
+  const handleCategoryChange = useCallback((value: string) => {
+    setCategoryId(value)
+    setCategoryName((categories ?? []).find((c) => c.id === value)?.name ?? '')
+    setPage(1)
+  }, [categories])
 
   // ── Options ───────────────────────────────────────────────────────────────
 
@@ -218,11 +217,7 @@ export default function BrowseItemsPage() {
             prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
             placeholder={t('browse.searchPlaceholder')}
             onPressEnter={handlePressEnter}
-            style={{
-              borderRadius: 100,
-              height: 40,
-              borderColor: 'var(--color-border)',
-            }}
+            style={{ borderRadius: 100, height: 40, borderColor: 'var(--color-border)' }}
           />
         </AutoComplete>
       </Flex>
@@ -305,10 +300,7 @@ export default function BrowseItemsPage() {
                 total={data?.metadata?.totalCount ?? 0}
                 showSizeChanger={!isMobile}
                 showTotal={isMobile ? undefined : (total) => tc('pagination.total', { total })}
-                onChange={(p, ps) => {
-                  setPage(p)
-                  setPageSize(ps)
-                }}
+                onChange={(p, ps) => { setPage(p); setPageSize(ps) }}
                 size={isMobile ? 'small' : undefined}
               />
             </Flex>
