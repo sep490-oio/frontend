@@ -1,13 +1,14 @@
 import { useState } from 'react'
-import { Typography, Row, Col, Button, Space, Select, Modal, InputNumber, App, Card } from 'antd'
+import { Typography, Row, Col, Button, Space, Select, Card } from 'antd'
 import { WalletOutlined, ArrowDownOutlined, PlusOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { useWallet, useWalletTransactions, useWalletTopup } from '@/features/payment/api'
+import { useWallet, useWalletTransactions } from '@/features/payment/api'
 import { WalletTransactionType } from '@/types/enums'
 import { formatDateTime } from '@/utils/format'
 import { BalanceCard } from '@/features/payment/components/BalanceCard'
 import { TransactionTable } from '@/features/payment/components/TransactionTable'
+import { TopUpWalletModal } from '@/features/payment/components/TopUpWalletModal'
 import { SERIF_FONT } from '@/styles/tokens'
 
 const TX_TYPE_OPTIONS = [
@@ -22,16 +23,13 @@ export default function BuyerWalletPage() {
   const { t } = useTranslation('payment')
   const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
-  const { message } = App.useApp()
 
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [typeFilter, setTypeFilter] = useState<string>('')
   const [topupModalOpen, setTopupModalOpen] = useState(false)
-  const [topupAmount, setTopupAmount] = useState<number | null>(null)
 
   const { data: wallet, isLoading: walletLoading } = useWallet({ refetchInterval: 30000 })
-  const topupMutation = useWalletTopup()
   const { data: transactions, isLoading: txLoading } = useWalletTransactions(
     {
       pageNumber: page,
@@ -114,6 +112,7 @@ export default function BuyerWalletPage() {
         >
           {t('topup', 'Top Up')}
         </Button>
+
         <Button
           icon={<ArrowDownOutlined />}
           onClick={() => navigate('/me/wallet/withdraw')}
@@ -163,55 +162,11 @@ export default function BuyerWalletPage() {
         />
       </Card>
 
-      <Modal
-        title={t('topup', 'Deposit')}
+      <TopUpWalletModal
         open={topupModalOpen}
-        onCancel={() => {
-          setTopupModalOpen(false)
-          setTopupAmount(null)
-        }}
-        onOk={async () => {
-          if (!topupAmount || topupAmount <= 0) return
-          try {
-            const result = await topupMutation.mutateAsync({
-              amount: topupAmount,
-              currency: wallet?.currency ?? 'VND',
-              returnUrl: window.location.href,
-              clientReturnPath: '/me/wallet',
-            })
-            window.location.href = result.paymentUrl
-          } catch {
-            message.error(t('topupError', 'Deposit failed'))
-          }
-        }}
-        confirmLoading={topupMutation.isPending}
-        okButtonProps={{ disabled: !topupAmount || topupAmount <= 0 }}
-        okText={t('topupConfirm', 'Deposit')}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <Typography.Paragraph style={{ margin: 0, color: 'var(--color-text-secondary)' }}>
-            {t(
-              'topupExplain',
-              'Enter the amount you want to deposit into your wallet. You will be redirected to VnPay for payment.',
-            )}
-          </Typography.Paragraph>
-          <div>
-            <span className="oio-label" style={{ display: 'block', marginBottom: 6 }}>
-              {t('topupAmount', 'Amount')}
-            </span>
-            <InputNumber
-              style={{ width: '100%' }}
-              size="large"
-              min={10000}
-              step={50000}
-              value={topupAmount}
-              onChange={(v) => setTopupAmount(v)}
-              addonAfter={wallet?.currency ?? 'VND'}
-              placeholder="100,000"
-            />
-          </div>
-        </div>
-      </Modal>
+        onClose={() => setTopupModalOpen(false)}
+        currency={wallet?.currency ?? 'VND'}
+      />
     </div>
   )
 }

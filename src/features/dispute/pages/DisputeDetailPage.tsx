@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Typography, Card, Tag, Space, Spin, Empty, Button, Input, List, Divider, Avatar, Tooltip, Progress, Upload, Alert, Image } from 'antd'
 import { SendOutlined, PaperClipOutlined, UserOutlined, CloseCircleOutlined, CheckOutlined } from '@ant-design/icons'
+import DisputeAttachmentRenderer from '@/components/ui/DisputeAttachmentRenderer'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router'
 import { useDisputeThread, useDisputeMessages, useSendDisputeMessage, useMarkDisputeRead } from '@/features/dispute/api'
@@ -13,13 +14,14 @@ import type { DisputeMessageDto } from '@/types'
 import dayjs from 'dayjs'
 
 const STATUS_COLOR_MAP: Record<string, string> = {
-  [DisputeStatus.Draft]: 'default',
   [DisputeStatus.Open]: 'blue',
+  [DisputeStatus.AwaitingRespondent]: 'gold',
+  [DisputeStatus.AwaitingEvidence]: 'gold',
   [DisputeStatus.UnderReview]: 'orange',
-  [DisputeStatus.AwaitingResponse]: 'gold',
-  [DisputeStatus.Escalated]: 'red',
+  [DisputeStatus.AwaitingInternalReview]: 'orange',
+  [DisputeStatus.AwaitingResolutionApproval]: 'purple',
   [DisputeStatus.Resolved]: 'green',
-  [DisputeStatus.Closed]: 'default',
+  [DisputeStatus.Rejected]: 'red',
   [DisputeStatus.Cancelled]: 'default',
 }
 
@@ -136,7 +138,7 @@ export default function DisputeDetailPage() {
   // Use hub meta if available, otherwise API data
   const currentStatus = hub.disputeMeta?.status ?? dispute?.meta?.status
   const currentUpdatedAt = hub.disputeMeta?.updatedAt ?? dispute?.meta?.updatedAt
-  const terminalStatuses: DisputeStatus[] = [DisputeStatus.Resolved, DisputeStatus.Closed, DisputeStatus.Cancelled]
+  const terminalStatuses: DisputeStatus[] = [DisputeStatus.Resolved, DisputeStatus.Rejected, DisputeStatus.Cancelled]
   const isTerminal = terminalStatuses.includes(currentStatus as DisputeStatus)
 
   if (isLoadingDispute) {
@@ -285,22 +287,19 @@ export default function DisputeDetailPage() {
                     {msg.attachments && msg.attachments.length > 0 && (
                       <div style={{ marginTop: 6 }}>
                         <Image.PreviewGroup>
-                          {msg.attachments.map((att) =>
-                            att.resourceType === 'image' || att.format?.match(/^(jpg|jpeg|png|gif|webp|svg)$/i) ? (
-                              <Image
+                          <Space direction="vertical" size={4}>
+                            {msg.attachments.map((att) => (
+                              <DisputeAttachmentRenderer
                                 key={att.id}
-                                src={att.secureUrl}
-                                alt={att.fileName ?? 'attachment'}
-                                width={att.width && att.width > 200 ? 200 : att.width ?? 200}
-                                style={{ borderRadius: 8, marginRight: 4, marginTop: 4, cursor: 'pointer' }}
+                                resourceType={att.resourceType}
+                                format={att.format}
+                                secureUrl={att.secureUrl}
+                                fileName={att.fileName}
+                                bytes={att.bytes}
+                                durationSeconds={att.durationSeconds}
                               />
-                            ) : (
-                              <Typography.Link key={att.id} href={att.secureUrl} target="_blank" style={{ fontSize: 12, display: 'block' }}>
-                                <PaperClipOutlined style={{ marginRight: 4 }} />
-                                {att.fileName ?? t('attachment', 'Attachment')}
-                              </Typography.Link>
-                            )
-                          )}
+                            ))}
+                          </Space>
                         </Image.PreviewGroup>
                       </div>
                     )}

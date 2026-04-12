@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Typography, Tabs, Select, Space, Button, Modal, Input, Switch, InputNumber, App } from 'antd'
+import { Typography, Tabs, Select, Space, Button, Modal, Input, Switch, App } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
@@ -11,7 +11,6 @@ import {
   useAssignReport,
   useResolveReport,
   useEscalateReportToDispute,
-  useAdminResolveDispute,
 } from '@/features/admin/api'
 import { ReportStatus, DisputeStatus } from '@/types/enums'
 import type { ReportDto, DisputeDto } from '@/types'
@@ -27,13 +26,14 @@ const REPORT_STATUS_OPTIONS = [
 
 const DISPUTE_STATUS_OPTIONS = [
   { value: '', label: 'All' },
-  { value: DisputeStatus.Draft, label: 'Draft' },
   { value: DisputeStatus.Open, label: 'Open' },
+  { value: DisputeStatus.AwaitingRespondent, label: 'Awaiting Respondent' },
+  { value: DisputeStatus.AwaitingEvidence, label: 'Awaiting Evidence' },
   { value: DisputeStatus.UnderReview, label: 'Under Review' },
-  { value: DisputeStatus.AwaitingResponse, label: 'Awaiting Response' },
-  { value: DisputeStatus.Escalated, label: 'Escalated' },
+  { value: DisputeStatus.AwaitingInternalReview, label: 'Awaiting Internal Review' },
+  { value: DisputeStatus.AwaitingResolutionApproval, label: 'Awaiting Resolution Approval' },
   { value: DisputeStatus.Resolved, label: 'Resolved' },
-  { value: DisputeStatus.Closed, label: 'Closed' },
+  { value: DisputeStatus.Rejected, label: 'Rejected' },
   { value: DisputeStatus.Cancelled, label: 'Cancelled' },
 ]
 
@@ -88,13 +88,6 @@ export default function AdminModerationPage() {
   const [escalateDisputeType, setEscalateDisputeType] = useState('other')
   const [escalatePriority, setEscalatePriority] = useState('medium')
 
-  // Dispute modals state
-  const [resolveDisputeModalOpen, setResolveDisputeModalOpen] = useState(false)
-  const [resolveDisputeId, setResolveDisputeId] = useState('')
-  const [resolutionType, setResolutionType] = useState('full_refund')
-  const [refundAmount, setRefundAmount] = useState<number | null>(null)
-  const [disputeNotes, setDisputeNotes] = useState('')
-
   // Data hooks
   const reports = useAdminReports({ pageNumber: reportPage, pageSize, status: reportStatusFilter || undefined })
   const disputes = useAdminDisputes({ pageNumber: disputePage, pageSize, status: disputeStatusFilter || undefined })
@@ -103,7 +96,6 @@ export default function AdminModerationPage() {
   const assignReport = useAssignReport()
   const resolveReport = useResolveReport()
   const escalateToDispute = useEscalateReportToDispute()
-  const resolveDispute = useAdminResolveDispute()
 
   // Count unresolved items for tab badges
   const unresolvedReports = reports.data?.items?.filter(
@@ -229,26 +221,11 @@ export default function AdminModerationPage() {
     {
       title: 'Actions',
       key: 'actions',
-      render: (_: unknown, record: DisputeDto) => {
-        const terminalStatuses = [DisputeStatus.Resolved, DisputeStatus.Closed, DisputeStatus.Cancelled] as string[]
-        const canResolve = !terminalStatuses.includes(record.status)
-        return (
-          <Space size="small" wrap>
-            <Button size="small" onClick={() => navigate(`/admin/disputes/${record.id}`)}>
-              View
-            </Button>
-            {canResolve && (
-              <Button size="small" onClick={() => {
-                setResolveDisputeId(record.id)
-                setResolutionType('full_refund')
-                setRefundAmount(null)
-                setDisputeNotes('')
-                setResolveDisputeModalOpen(true)
-              }}>Resolve</Button>
-            )}
-          </Space>
-        )
-      },
+      render: (_: unknown, record: DisputeDto) => (
+        <Button size="small" onClick={() => navigate(`/admin/disputes/${record.id}`)}>
+          View
+        </Button>
+      ),
     },
   ]
 
@@ -289,21 +266,6 @@ export default function AdminModerationPage() {
       message.success('Report escalated to dispute')
       setEscalateModalOpen(false)
       if (result?.id) navigate(`/admin/disputes/${result.id}`)
-    } catch {
-      message.error(tc('error', 'Error'))
-    }
-  }
-
-  const handleResolveDispute = async () => {
-    try {
-      await resolveDispute.mutateAsync({
-        id: resolveDisputeId,
-        resolutionType,
-        amount: refundAmount ?? undefined,
-        notes: disputeNotes || undefined,
-      })
-      message.success('Dispute resolved')
-      setResolveDisputeModalOpen(false)
     } catch {
       message.error(tc('error', 'Error'))
     }
@@ -466,53 +428,6 @@ export default function AdminModerationPage() {
         </Space>
       </Modal>
 
-      {/* Resolve Dispute Modal */}
-      <Modal
-        title="Resolve Dispute"
-        open={resolveDisputeModalOpen}
-        onOk={handleResolveDispute}
-        onCancel={() => setResolveDisputeModalOpen(false)}
-        confirmLoading={resolveDispute.isPending}
-        width={480}
-      >
-        <Space direction="vertical" style={{ width: '100%' }} size="middle">
-          <div>
-            <div style={{ marginBottom: 4 }}>Resolution Type</div>
-            <Select
-              value={resolutionType}
-              onChange={setResolutionType}
-              options={[
-                { value: 'full_refund', label: 'Full Refund' },
-                { value: 'partial_refund', label: 'Partial Refund' },
-                { value: 'no_refund', label: 'No Refund' },
-                { value: 'dismiss', label: 'Dismiss' },
-              ]}
-              style={{ width: '100%' }}
-            />
-          </div>
-          {(resolutionType === 'full_refund' || resolutionType === 'partial_refund') && (
-            <div>
-              <div style={{ marginBottom: 4 }}>Refund Amount</div>
-              <InputNumber
-                value={refundAmount}
-                onChange={setRefundAmount}
-                min={0}
-                style={{ width: '100%' }}
-                formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-              />
-            </div>
-          )}
-          <div>
-            <div style={{ marginBottom: 4 }}>Notes</div>
-            <Input.TextArea
-              rows={3}
-              value={disputeNotes}
-              onChange={(e) => setDisputeNotes(e.target.value)}
-              placeholder="Resolution notes"
-            />
-          </div>
-        </Space>
-      </Modal>
     </div>
   )
 }

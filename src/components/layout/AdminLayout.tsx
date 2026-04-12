@@ -21,6 +21,7 @@ import {
   MenuOutlined,
   UserOutlined,
   GlobalOutlined,
+  ExceptionOutlined,
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
@@ -34,17 +35,36 @@ const SIDEBAR_WIDTH = 240
 const SIDEBAR_COLLAPSED = 72
 const HEADER_HEIGHT = 64
 
+// Shared icon-button style factory
+const iconBtnStyle = (accent = false): React.CSSProperties => ({
+  background: 'none',
+  border: 'none',
+  cursor: 'pointer',
+  padding: 8,
+  minWidth: 44,
+  minHeight: 44,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  color: accent ? 'var(--color-accent)' : 'var(--color-text-secondary)',
+  fontSize: 16,
+  borderRadius: 6,
+  transition: 'color 150ms ease',
+})
+
 export function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false)
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
-  const { isMobile } = useBreakpoint()
+  const { isMobile, isTablet } = useBreakpoint()
   const { t, i18n } = useTranslation('admin')
   const navigate = useNavigate()
   const location = useLocation()
   const { user } = useAuth()
   const { isDark, toggle: toggleTheme } = useTheme()
 
-  const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED : SIDEBAR_WIDTH
+  // On tablet: always collapse sidebar
+  const effectiveCollapsed = isTablet ? true : collapsed
+  const sidebarWidth = effectiveCollapsed ? SIDEBAR_COLLAPSED : SIDEBAR_WIDTH
 
   const menuItems = [
     { key: '/admin', icon: <DashboardOutlined />, label: t('menu.dashboard', 'Dashboard') },
@@ -53,6 +73,7 @@ export function AdminLayout() {
     { key: '/admin/sellers', icon: <ShopOutlined />, label: t('menu.sellers', 'Sellers') },
     { key: '/admin/items/review', icon: <AuditOutlined />, label: t('menu.itemReview', 'Item Review') },
     { key: '/admin/moderation', icon: <AlertOutlined />, label: t('menu.moderation', 'Moderation') },
+    { key: '/admin/disputes', icon: <ExceptionOutlined />, label: t('menu.disputes', 'Disputes') },
     { key: '/admin/auctions/completed', icon: <TrophyOutlined />, label: t('menu.completedAuctions', 'Completed Auctions') },
     { key: '/admin/monitoring', icon: <MonitorOutlined />, label: t('menu.monitoring', 'Monitoring') },
     { key: '/admin/payments', icon: <DollarOutlined />, label: t('menu.payments', 'Payments') },
@@ -73,9 +94,59 @@ export function AdminLayout() {
   const displayName = user?.profile?.displayName || user?.profile?.firstName || user?.userName || 'Admin'
   const avatarUrl = user?.profile?.avatarUrl
 
+  const renderMenuItems = (inDrawer = false) =>
+    menuItems.map((item) => {
+      const active = isActive(item.key)
+      const isIconOnly = !inDrawer && effectiveCollapsed
+      const menuItem = (
+        <div
+          key={item.key}
+          onClick={() => { navigate(item.key); if (inDrawer) setMobileDrawerOpen(false) }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && navigate(item.key)}
+          style={{
+            height: 44,
+            display: 'flex',
+            alignItems: 'center',
+            padding: isIconOnly ? '0' : '0 16px',
+            justifyContent: isIconOnly ? 'center' : 'flex-start',
+            margin: '2px 8px',
+            borderRadius: 8,
+            cursor: 'pointer',
+            fontFamily: SANS_FONT,
+            fontSize: 13,
+            fontWeight: active ? 500 : 400,
+            color: active ? 'var(--color-accent)' : 'var(--color-text-secondary)',
+            background: active ? 'var(--color-accent-light)' : 'transparent',
+            borderLeft: active ? '3px solid var(--color-accent)' : '3px solid transparent',
+            transition: 'all 150ms ease',
+            whiteSpace: 'nowrap',
+            gap: isIconOnly ? 0 : 12,
+          }}
+          onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = 'var(--color-accent-light)' }}
+          onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent' }}
+        >
+          <span style={{ fontSize: 16, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+            {item.icon}
+          </span>
+          {!isIconOnly && <span>{item.label}</span>}
+        </div>
+      )
+
+      if (isIconOnly) {
+        return (
+          <Tooltip key={item.key} title={item.label} placement="right">
+            {menuItem}
+          </Tooltip>
+        )
+      }
+      return menuItem
+    })
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-bg-primary)' }}>
-      {/* Sidebar (hidden on mobile) */}
+      {/* ── Sidebar (desktop + tablet icon-only) ── */}
       <aside
         style={{
           position: 'fixed',
@@ -98,8 +169,8 @@ export function AdminLayout() {
             height: HEADER_HEIGHT,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: collapsed ? 'center' : 'flex-start',
-            padding: collapsed ? '0' : '0 20px',
+            justifyContent: effectiveCollapsed ? 'center' : 'flex-start',
+            padding: effectiveCollapsed ? '0' : '0 20px',
             borderBottom: '1px solid var(--color-border)',
             flexShrink: 0,
           }}
@@ -108,7 +179,7 @@ export function AdminLayout() {
             to="/admin"
             style={{
               fontFamily: SERIF_FONT,
-              fontSize: collapsed ? 18 : 22,
+              fontSize: effectiveCollapsed ? 18 : 22,
               letterSpacing: '0.1em',
               color: 'var(--color-text-primary)',
               textDecoration: 'none',
@@ -119,7 +190,7 @@ export function AdminLayout() {
             }}
           >
             OIO
-            {!collapsed && (
+            {!effectiveCollapsed && (
               <span
                 style={{
                   fontFamily: SANS_FONT,
@@ -138,59 +209,11 @@ export function AdminLayout() {
         </div>
 
         {/* Menu */}
-        <nav style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '8px 0' }}>
-          {menuItems.map((item) => {
-            const active = isActive(item.key)
-            const menuItem = (
-              <div
-                key={item.key}
-                onClick={() => navigate(item.key)}
-                style={{
-                  height: 44,
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: collapsed ? '0 0 0 0' : '0 16px',
-                  justifyContent: collapsed ? 'center' : 'flex-start',
-                  margin: '2px 8px',
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  fontFamily: SANS_FONT,
-                  fontSize: 13,
-                  fontWeight: active ? 500 : 400,
-                  color: active ? 'var(--color-accent)' : 'var(--color-text-secondary)',
-                  background: active ? 'var(--color-accent-light)' : 'transparent',
-                  borderLeft: active ? '3px solid var(--color-accent)' : '3px solid transparent',
-                  transition: 'all 150ms ease',
-                  whiteSpace: 'nowrap',
-                  gap: collapsed ? 0 : 12,
-                  position: 'relative',
-                }}
-                onMouseEnter={(e) => {
-                  if (!active) {
-                    e.currentTarget.style.background = 'var(--color-accent-light)'
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!active) {
-                    e.currentTarget.style.background = 'transparent'
-                  }
-                }}
-              >
-                <span style={{ fontSize: 16, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-                  {item.icon}
-                </span>
-                {!collapsed && <span>{item.label}</span>}
-              </div>
-            )
-            if (collapsed) {
-              return (
-                <Tooltip key={item.key} title={item.label} placement="right">
-                  {menuItem}
-                </Tooltip>
-              )
-            }
-            return menuItem
-          })}
+        <nav
+          style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '8px 0' }}
+          aria-label="Admin navigation"
+        >
+          {renderMenuItems()}
         </nav>
 
         {/* Sidebar footer */}
@@ -201,70 +224,47 @@ export function AdminLayout() {
             flexShrink: 0,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: collapsed ? 'center' : 'flex-start',
+            justifyContent: effectiveCollapsed ? 'center' : 'flex-start',
           }}
         >
-          <span
-            style={{
-              fontFamily: SANS_FONT,
-              fontSize: 11,
-              color: 'var(--color-text-secondary)',
-              opacity: 0.6,
-            }}
-          >
-            {collapsed ? 'v1' : 'v1.0'}
+          <span style={{ fontFamily: SANS_FONT, fontSize: 11, color: 'var(--color-text-secondary)', opacity: 0.6 }}>
+            {effectiveCollapsed ? 'v1' : 'v1.0'}
           </span>
         </div>
       </aside>
 
-      {/* Mobile Drawer */}
+      {/* ── Mobile Drawer ── */}
       <Drawer
         title={
           <span style={{ fontFamily: SERIF_FONT, fontSize: 20, letterSpacing: '0.1em' }}>
-            OIO <span style={{ fontFamily: SANS_FONT, fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-accent)', marginLeft: 8 }}>Admin</span>
+            OIO{' '}
+            <span
+              style={{
+                fontFamily: SANS_FONT,
+                fontSize: 10,
+                fontWeight: 600,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                color: 'var(--color-accent)',
+                marginLeft: 8,
+              }}
+            >
+              Admin
+            </span>
           </span>
         }
         placement="left"
         onClose={() => setMobileDrawerOpen(false)}
         open={mobileDrawerOpen}
-        width={280}
+        width={Math.min(280, window.innerWidth * 0.85)}
         styles={{ body: { padding: 0 } }}
       >
-        <nav style={{ padding: '8px 0' }}>
-          {menuItems.map((item) => {
-            const active = isActive(item.key)
-            return (
-              <div
-                key={item.key}
-                onClick={() => { navigate(item.key); setMobileDrawerOpen(false) }}
-                style={{
-                  height: 44,
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '0 16px',
-                  margin: '2px 8px',
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  fontFamily: SANS_FONT,
-                  fontSize: 13,
-                  fontWeight: active ? 500 : 400,
-                  color: active ? 'var(--color-accent)' : 'var(--color-text-secondary)',
-                  background: active ? 'var(--color-accent-light)' : 'transparent',
-                  borderLeft: active ? '3px solid var(--color-accent)' : '3px solid transparent',
-                  gap: 12,
-                }}
-              >
-                <span style={{ fontSize: 16, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-                  {item.icon}
-                </span>
-                <span>{item.label}</span>
-              </div>
-            )
-          })}
+        <nav style={{ padding: '8px 0' }} aria-label="Admin navigation (mobile)">
+          {renderMenuItems(true)}
         </nav>
       </Drawer>
 
-      {/* Header */}
+      {/* ── Header ── */}
       <header
         style={{
           position: 'fixed',
@@ -277,62 +277,50 @@ export function AdminLayout() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0 24px',
+          padding: isMobile ? '0 12px' : '0 24px',
           transition: 'left 200ms ease',
           zIndex: 99,
+          gap: 8,
         }}
       >
-        {/* Left side: collapse toggle (desktop) / hamburger (mobile) + breadcrumb */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        {/* Left: toggle / hamburger + title */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 16, minWidth: 0 }}>
           {isMobile ? (
             <button
               onClick={() => setMobileDrawerOpen(true)}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 4,
-                display: 'flex',
-                alignItems: 'center',
-                color: 'var(--color-text-secondary)',
-                fontSize: 18,
-              }}
+              style={{ ...iconBtnStyle(), padding: 4 }}
               aria-label="Open menu"
             >
               <MenuOutlined />
             </button>
           ) : (
-            <button
-              onClick={() => setCollapsed(!collapsed)}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 4,
-                display: 'flex',
-                alignItems: 'center',
-                color: 'var(--color-text-secondary)',
-                fontSize: 18,
-              }}
-              aria-label="Toggle sidebar"
-            >
-              {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            </button>
+            !isTablet && (
+              <button
+                onClick={() => setCollapsed(!collapsed)}
+                style={{ ...iconBtnStyle(), padding: 4 }}
+                aria-label="Toggle sidebar"
+              >
+                {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              </button>
+            )
           )}
           <span
             style={{
               fontFamily: SANS_FONT,
-              fontSize: 14,
+              fontSize: isMobile ? 13 : 14,
               fontWeight: 500,
               color: 'var(--color-text-primary)',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
             }}
           >
-            OIO Admin
+            {isMobile ? 'Admin' : 'OIO Admin'}
           </span>
         </div>
 
-        {/* Right side: back link, theme, lang, user */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {/* Right: back, theme, lang, user */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 2 : 8, flexShrink: 0 }}>
           <button
             onClick={() => navigate('/')}
             style={{
@@ -340,7 +328,8 @@ export function AdminLayout() {
               border: '1px solid var(--color-border)',
               borderRadius: 6,
               cursor: 'pointer',
-              padding: '6px 12px',
+              padding: isMobile ? '6px 10px' : '6px 12px',
+              minHeight: 36,
               display: 'flex',
               alignItems: 'center',
               gap: 6,
@@ -348,6 +337,7 @@ export function AdminLayout() {
               fontSize: 12,
               color: 'var(--color-text-secondary)',
               transition: 'all 150ms ease',
+              whiteSpace: 'nowrap',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.borderColor = 'var(--color-accent)'
@@ -359,24 +349,13 @@ export function AdminLayout() {
             }}
           >
             <ArrowLeftOutlined style={{ fontSize: 11 }} />
-            Back to Platform
+            {!isMobile && 'Back to Platform'}
           </button>
 
           <Tooltip title={isDark ? 'Light mode' : 'Dark mode'}>
             <button
               onClick={toggleTheme}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 8,
-                display: 'flex',
-                alignItems: 'center',
-                color: 'var(--color-text-secondary)',
-                fontSize: 16,
-                borderRadius: 6,
-                transition: 'color 150ms ease',
-              }}
+              style={iconBtnStyle()}
               onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-accent)' }}
               onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-secondary)' }}
             >
@@ -387,46 +366,19 @@ export function AdminLayout() {
           <Tooltip title="Switch language">
             <button
               onClick={toggleLanguage}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 8,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 4,
-                color: 'var(--color-text-secondary)',
-                fontSize: 12,
-                fontFamily: SANS_FONT,
-                fontWeight: 500,
-                borderRadius: 6,
-                transition: 'color 150ms ease',
-              }}
+              style={{ ...iconBtnStyle(), gap: 4, fontSize: 12, fontFamily: SANS_FONT, fontWeight: 500 }}
               onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-accent)' }}
               onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-secondary)' }}
             >
               <GlobalOutlined style={{ fontSize: 14 }} />
-              {i18n.language === 'en' ? 'EN' : 'UK'}
+              {!isMobile && (i18n.language === 'en' ? 'EN' : 'UK')}
             </button>
           </Tooltip>
 
-          <div
-            style={{
-              width: 1,
-              height: 24,
-              background: 'var(--color-border)',
-              margin: '0 4px',
-            }}
-          />
+          <div style={{ width: 1, height: 24, background: 'var(--color-border)', margin: '0 4px', flexShrink: 0 }} />
 
           <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '4px 8px',
-              borderRadius: 8,
-            }}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 4px', borderRadius: 8 }}
           >
             <Avatar
               size={32}
@@ -435,9 +387,10 @@ export function AdminLayout() {
               style={{
                 backgroundColor: avatarUrl ? undefined : 'var(--color-accent-light)',
                 color: avatarUrl ? undefined : 'var(--color-accent)',
+                flexShrink: 0,
               }}
             />
-            {!collapsed && (
+            {!isMobile && !isTablet && (
               <span
                 style={{
                   fontFamily: SANS_FONT,
@@ -457,7 +410,7 @@ export function AdminLayout() {
         </div>
       </header>
 
-      {/* Content area */}
+      {/* ── Content area ── */}
       <main
         style={{
           marginLeft: isMobile ? 0 : sidebarWidth,
@@ -467,7 +420,7 @@ export function AdminLayout() {
           background: 'var(--color-bg-primary)',
         }}
       >
-        <Content style={{ padding: isMobile ? 16 : 32 }}>
+        <Content style={{ padding: isMobile ? 12 : isTablet ? 20 : 32 }}>
           <Outlet />
         </Content>
       </main>

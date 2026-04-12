@@ -1,7 +1,22 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Outlet, useNavigate, useLocation, Link } from 'react-router'
 import { Layout, Avatar, Dropdown, Button, Space, Drawer, Input } from 'antd'
-import { UserOutlined, LogoutOutlined, SettingOutlined, HistoryOutlined, SunOutlined, MoonOutlined, HeartOutlined, WalletOutlined, ShoppingOutlined, CommentOutlined, SafetyCertificateOutlined, MenuOutlined, CloseOutlined, SearchOutlined } from '@ant-design/icons'
+import {
+  UserOutlined,
+  LogoutOutlined,
+  SettingOutlined,
+  HistoryOutlined,
+  SunOutlined,
+  MoonOutlined,
+  HeartOutlined,
+  WalletOutlined,
+  ShoppingOutlined,
+  CommentOutlined,
+  SafetyCertificateOutlined,
+  MenuOutlined,
+  CloseOutlined,
+  SearchOutlined,
+} from '@ant-design/icons'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
@@ -9,8 +24,8 @@ import { useTheme } from '@/hooks/useTheme'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useAppSelector } from '@/app/store'
 import { NotificationDropdown } from '@/features/notification/components/NotificationDropdown'
-import { TermsAcceptanceBanner } from '@/features/user/components/TermsAcceptanceBanner'
-import { usePendingTerms, useCurrentUser } from '@/features/user/api'
+import { TermsAcceptanceModal } from '@/components/terms/TermsAcceptanceModal'
+import { useActiveTermsByType, useAcceptedTerms, useCurrentUser } from '@/features/user/api'
 import { SERIF_FONT, SANS_FONT } from '@/styles/tokens'
 
 function getRolesFromToken(token: string | null): string[] {
@@ -38,7 +53,9 @@ export function AppLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const debouncedSearch = useDebounce(searchQuery, 500)
-  const { isMobile } = useBreakpoint()
+  const { isMobile, isTablet } = useBreakpoint()
+
+  const isNarrow = isMobile || isTablet
 
   useEffect(() => {
     if (debouncedSearch.trim()) {
@@ -46,13 +63,33 @@ export function AppLayout() {
     }
   }, [debouncedSearch, navigate])
 
-  // Platform terms redirect — enforce before any app usage
-  const { data: platformTerms } = usePendingTerms('platform', { enabled: isAuthenticated })
+  // Platform terms — preview-first modal (no route redirect). The user can
+  // dismiss the modal and keep browsing; gated actions still require acceptance
+  // via their own local <TermsAcceptanceModal> instances.
+  //
+  // Source of truth: useActiveTermsByType('platform') confirms a publishable
+  // document exists, and useAcceptedTerms checks the user hasn't already
+  // accepted it. This avoids the stale-cache desync where usePendingTerms
+  // reported hasPending=true but the modal's own fetch found no document.
+  const { data: activePlatformTerm } = useActiveTermsByType('platform')
+  const { data: acceptedTermsList } = useAcceptedTerms({ enabled: isAuthenticated })
+  const [platformTermsModalOpen, setPlatformTermsModalOpen] = useState(false)
+  const [platformTermsAutoShown, setPlatformTermsAutoShown] = useState(false)
+
+  const platformTermNeedsAcceptance = useMemo(() => {
+    if (!activePlatformTerm || !acceptedTermsList) return false
+    const acceptedDocIds = new Set(
+      acceptedTermsList.map((a) => a.document?.id).filter(Boolean),
+    )
+    return !acceptedDocIds.has(activePlatformTerm.id)
+  }, [activePlatformTerm, acceptedTermsList])
+
   useEffect(() => {
-    if (isAuthenticated && platformTerms?.hasPending && !location.pathname.startsWith('/me/terms')) {
-      navigate(`/me/terms?type=platform&returnTo=${encodeURIComponent(location.pathname)}`)
+    if (isAuthenticated && platformTermNeedsAcceptance && !platformTermsAutoShown) {
+      setPlatformTermsModalOpen(true)
+      setPlatformTermsAutoShown(true)
     }
-  }, [isAuthenticated, platformTerms?.hasPending, location.pathname, navigate])
+  }, [isAuthenticated, platformTermNeedsAcceptance, platformTermsAutoShown])
 
   const userMenuItems = [
     { key: 'dashboard', icon: <UserOutlined />, label: t('common:menu.home', 'Dashboard') },
@@ -86,9 +123,48 @@ export function AppLayout() {
     }
   }
 
+  // All nav links (role-gated)
+  const navLinks = [
+    { to: '/auctions', label: t('common:menu.auctions', 'Auctions'), alwaysShow: true },
+    { to: '/items', label: t('common:menu.items', 'Items'), alwaysShow: true },
+    { to: '/sellers', label: t('common:menu.sellers', 'Sellers'), alwaysShow: true },
+    { to: '/about', label: t('common:menu.about', 'Về chúng tôi'), alwaysShow: true },
+    ...(isAuthenticated && roles.includes('admin')
+      ? [{ to: '/admin', label: t('common:menu.admin', 'Admin'), alwaysShow: false, accent: true }]
+      : []),
+    ...(isAuthenticated && (roles.includes('inspector') || roles.includes('warehousemanager'))
+      ? [{ to: '/inspector', label: t('common:menu.inspector', 'Inspector'), alwaysShow: false, accent: true }]
+      : []),
+    ...(isAuthenticated && (roles.includes('warehouse_staff') || roles.includes('warehousemanager') || roles.includes('admin'))
+      ? [{ to: '/warehouse-staff', label: t('common:menu.warehouse', 'Warehouse'), alwaysShow: false, accent: true }]
+      : []),
+    ...(isAuthenticated && roles.includes('seller')
+      ? [{ to: '/seller', label: t('common:menu.seller', 'Seller'), alwaysShow: false, accent: true }]
+      : []),
+  ]
+
   return (
     <Layout style={{ minHeight: '100vh', background: 'var(--color-bg-primary)' }}>
-      <a href="#main-content" style={{ position: 'absolute', left: '-9999px', top: 'auto', width: '1px', height: '1px', overflow: 'hidden', zIndex: 9999 }} onFocus={(e) => { e.currentTarget.style.position = 'static'; e.currentTarget.style.width = 'auto'; e.currentTarget.style.height = 'auto'; }}>Skip to main content</a>
+      <a
+        href="#main-content"
+        style={{
+          position: 'absolute',
+          left: '-9999px',
+          top: 'auto',
+          width: '1px',
+          height: '1px',
+          overflow: 'hidden',
+          zIndex: 9999,
+        }}
+        onFocus={(e) => {
+          e.currentTarget.style.position = 'static'
+          e.currentTarget.style.width = 'auto'
+          e.currentTarget.style.height = 'auto'
+        }}
+      >
+        Skip to main content
+      </a>
+
       {/* ─── Header ─── */}
       <Header
         style={{
@@ -99,7 +175,7 @@ export function AppLayout() {
           zIndex: 1000,
           height: 64,
           lineHeight: '64px',
-          padding: isMobile ? '0 16px' : '0 48px',
+          padding: isMobile ? '0 12px' : isTablet ? '0 24px' : '0 48px',
           background: isDark ? 'rgba(15, 15, 15, 0.95)' : 'rgba(250, 250, 247, 0.95)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
@@ -107,162 +183,71 @@ export function AppLayout() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          gap: 12,
         }}
       >
-        {/* Left: Hamburger (mobile) + Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          {isMobile && (
+        {/* Left: Hamburger (mobile/tablet) + Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, flexShrink: 0 }}>
+          {isNarrow && (
             <Button
               type="text"
               icon={<MenuOutlined />}
               onClick={() => setMobileMenuOpen(true)}
               aria-label="Open menu"
-              style={{ color: 'var(--color-text-primary)', fontSize: 18 }}
+              style={{ color: 'var(--color-text-primary)', fontSize: 18, minWidth: 44, minHeight: 44 }}
             />
           )}
           <Link
             to="/"
             style={{
               fontFamily: SERIF_FONT,
-              fontSize: 24,
+              fontSize: isMobile ? 20 : 24,
               letterSpacing: '0.1em',
               color: 'var(--color-text-primary)',
               textDecoration: 'none',
               fontWeight: 400,
+              flexShrink: 0,
             }}
           >
             OIO
           </Link>
         </div>
 
-        {/* Center: Nav links (hidden on mobile) */}
-        <nav
-          style={{
-            display: isMobile ? 'none' : 'flex',
-            gap: 32,
-            position: 'absolute',
-            left: '50%',
-            transform: 'translateX(-50%)',
-          }}
-        >
-          <Link
-            to="/auctions"
+        {/* Center: Nav links (desktop only) */}
+        {!isNarrow && (
+          <nav
             style={{
-              fontFamily: SANS_FONT,
-              fontSize: 14,
-              fontWeight: 500,
-              color: 'var(--color-text-primary)',
-              textDecoration: 'none',
-              transition: 'color 200ms ease',
+              display: 'flex',
+              gap: isTablet ? 20 : 32,
+              position: 'absolute',
+              left: '50%',
+              transform: 'translateX(-50%)',
             }}
           >
-            {t('common:menu.auctions', 'Auctions')}
-          </Link>
-          <Link
-            to="/items"
-            style={{
-              fontFamily: SANS_FONT,
-              fontSize: 14,
-              fontWeight: 500,
-              color: 'var(--color-text-primary)',
-              textDecoration: 'none',
-              transition: 'color 200ms ease',
-            }}
-          >
-            {t('common:menu.items', 'Items')}
-          </Link>
-          <Link
-            to="/sellers"
-            style={{
-              fontFamily: SANS_FONT,
-              fontSize: 14,
-              fontWeight: 500,
-              color: 'var(--color-text-primary)',
-              textDecoration: 'none',
-              transition: 'color 200ms ease',
-            }}
-          >
-            {t('common:menu.sellers', 'Sellers')}
-          </Link>
-          <Link
-            to="/about"
-            style={{
-              fontFamily: SANS_FONT,
-              fontSize: 14,
-              fontWeight: 500,
-              color: 'var(--color-text-primary)',
-              textDecoration: 'none',
-              transition: 'color 200ms ease',
-            }}
-          >
-            {t('common:menu.about', 'Về chúng tôi')}
-          </Link>
-          {isAuthenticated && roles.includes('admin') && (
-            <Link
-              to="/admin"
-              style={{
-                fontFamily: SANS_FONT,
-                fontSize: 14,
-                fontWeight: 500,
-                color: 'var(--color-accent)',
-                textDecoration: 'none',
-                transition: 'color 200ms ease',
-              }}
-            >
-              {t('common:menu.admin', 'Admin')}
-            </Link>
-          )}
-          {isAuthenticated && (roles.includes('inspector') || roles.includes('warehousemanager')) && (
-            <Link
-              to="/inspector"
-              style={{
-                fontFamily: SANS_FONT,
-                fontSize: 14,
-                fontWeight: 500,
-                color: 'var(--color-accent)',
-                textDecoration: 'none',
-                transition: 'color 200ms ease',
-              }}
-            >
-              {t('common:menu.inspector', 'Inspector')}
-            </Link>
-          )}
-          {isAuthenticated && (roles.includes('warehouse_staff') || roles.includes('warehousemanager') || roles.includes('admin')) && (
-            <Link
-              to="/warehouse-staff"
-              style={{
-                fontFamily: SANS_FONT,
-                fontSize: 14,
-                fontWeight: 500,
-                color: 'var(--color-accent)',
-                textDecoration: 'none',
-                transition: 'color 200ms ease',
-              }}
-            >
-              {t('common:menu.warehouse', 'Warehouse')}
-            </Link>
-          )}
-          {isAuthenticated && roles.includes('seller') && (
-            <Link
-              to="/seller"
-              style={{
-                fontFamily: SANS_FONT,
-                fontSize: 14,
-                fontWeight: 500,
-                color: 'var(--color-accent)',
-                textDecoration: 'none',
-                transition: 'color 200ms ease',
-              }}
-            >
-              {t('common:menu.seller', 'Seller')}
-            </Link>
-          )}
-        </nav>
+            {navLinks.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                style={{
+                  fontFamily: SANS_FONT,
+                  fontSize: 14,
+                  fontWeight: 500,
+                  color: (link as any).accent ? 'var(--color-accent)' : 'var(--color-text-primary)',
+                  textDecoration: 'none',
+                  transition: 'color 200ms ease',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+        )}
 
         {/* Right: Actions */}
-        <Space size="middle">
+        <Space size={isMobile ? 4 : 'middle'} style={{ flexShrink: 0 }}>
           {/* Search bar (desktop only) */}
-          {!isMobile && (
+          {!isNarrow && (
             <Input
               prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
               placeholder={t('common:action.search', 'Search...')}
@@ -274,7 +259,7 @@ export function AppLayout() {
                 }
               }}
               style={{
-                width: 180,
+                width: isTablet ? 140 : 180,
                 borderRadius: 100,
                 height: 32,
                 borderColor: 'var(--color-border)',
@@ -282,31 +267,37 @@ export function AppLayout() {
               }}
             />
           )}
-          {/* Language toggle */}
-          <Button
-            type="text"
-            aria-label="Switch language"
-            onClick={() => {
-              const next = i18n.language === 'vi' ? 'en' : 'vi'
-              i18n.changeLanguage(next)
-            }}
-            style={{
-              color: 'var(--color-text-secondary)',
-              fontSize: 13,
-              fontWeight: 500,
-              padding: '4px 8px',
-            }}
-          >
-            {i18n.language === 'vi' ? 'EN' : 'VI'}
-          </Button>
+
+          {/* Language toggle — hidden on mobile */}
+          {!isMobile && (
+            <Button
+              type="text"
+              aria-label="Switch language"
+              onClick={() => {
+                const next = i18n.language === 'vi' ? 'en' : 'vi'
+                i18n.changeLanguage(next)
+              }}
+              style={{
+                color: 'var(--color-text-secondary)',
+                fontSize: 13,
+                fontWeight: 500,
+                padding: '4px 8px',
+                minHeight: 44,
+              }}
+            >
+              {i18n.language === 'vi' ? 'EN' : 'VI'}
+            </Button>
+          )}
+
           {/* Theme toggle */}
           <Button
             type="text"
             aria-label="Toggle dark mode"
             icon={isDark ? <SunOutlined /> : <MoonOutlined />}
             onClick={toggleTheme}
-            style={{ color: 'var(--color-text-primary)' }}
+            style={{ color: 'var(--color-text-primary)', minWidth: 44, minHeight: 44 }}
           />
+
           {isAuthenticated ? (
             <>
               <NotificationDropdown />
@@ -326,39 +317,42 @@ export function AppLayout() {
               </Dropdown>
             </>
           ) : (
-            <Space size={12}>
+            <Space size={isMobile ? 6 : 12}>
               <Button
                 type="text"
                 onClick={() => navigate('/login')}
                 style={{
                   fontFamily: SANS_FONT,
-                  fontSize: 14,
+                  fontSize: isMobile ? 13 : 14,
                   fontWeight: 500,
                   color: 'var(--color-text-primary)',
                   height: 36,
+                  padding: isMobile ? '0 8px' : '0 15px',
                 }}
               >
                 {t('common:action.login', 'Sign In')}
               </Button>
-              <Button
-                type="primary"
-                onClick={() => navigate('/register')}
-                style={{
-                  fontFamily: SANS_FONT,
-                  fontSize: 14,
-                  fontWeight: 500,
-                  height: 36,
-                  borderRadius: 2,
-                }}
-              >
-                {t('common:action.register', 'Register')}
-              </Button>
+              {!isMobile && (
+                <Button
+                  type="primary"
+                  onClick={() => navigate('/register')}
+                  style={{
+                    fontFamily: SANS_FONT,
+                    fontSize: 14,
+                    fontWeight: 500,
+                    height: 36,
+                    borderRadius: 2,
+                  }}
+                >
+                  {t('common:action.register', 'Register')}
+                </Button>
+              )}
             </Space>
           )}
         </Space>
       </Header>
 
-      {/* ─── Mobile Navigation Drawer ─── */}
+      {/* ─── Mobile / Tablet Navigation Drawer ─── */}
       <Drawer
         title={
           <span style={{ fontFamily: SERIF_FONT, fontSize: 20, letterSpacing: '0.1em' }}>
@@ -368,10 +362,11 @@ export function AppLayout() {
         placement="left"
         onClose={() => setMobileMenuOpen(false)}
         open={mobileMenuOpen}
-        width={280}
+        width={Math.min(280, window.innerWidth * 0.85)}
         closeIcon={<CloseOutlined />}
         styles={{ body: { padding: 0 } }}
       >
+        {/* Drawer search */}
         <div style={{ padding: '12px 16px 8px' }}>
           <Input
             prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
@@ -387,57 +382,64 @@ export function AppLayout() {
             style={{ borderRadius: 100, height: 40, borderColor: 'var(--color-border)' }}
           />
         </div>
+
+        {/* Drawer nav links */}
         <nav style={{ display: 'flex', flexDirection: 'column', padding: '8px 0' }}>
-          {[
-            { to: '/auctions', label: t('common:menu.auctions', 'Auctions') },
-            { to: '/items', label: t('common:menu.items', 'Items') },
-            { to: '/sellers', label: t('common:menu.sellers', 'Sellers') },
-            { to: '/about', label: t('common:menu.about', 'About') },
-            ...(isAuthenticated && roles.includes('admin')
-              ? [{ to: '/admin', label: t('common:menu.admin', 'Admin') }]
-              : []),
-            ...(isAuthenticated && (roles.includes('inspector') || roles.includes('warehousemanager'))
-              ? [{ to: '/inspector', label: t('common:menu.inspector', 'Inspector') }]
-              : []),
-            ...(isAuthenticated && (roles.includes('warehouse_staff') || roles.includes('warehousemanager') || roles.includes('admin'))
-              ? [{ to: '/warehouse-staff', label: t('common:menu.warehouse', 'Warehouse') }]
-              : []),
-            ...(isAuthenticated && roles.includes('seller')
-              ? [{ to: '/seller', label: t('common:menu.seller', 'Seller') }]
-              : []),
-          ].map((item) => (
+          {navLinks.map((link) => (
             <Link
-              key={item.to}
-              to={item.to}
+              key={link.to}
+              to={link.to}
               onClick={() => setMobileMenuOpen(false)}
               style={{
                 fontFamily: SANS_FONT,
                 fontSize: 15,
                 fontWeight: 500,
-                color: location.pathname.startsWith(item.to)
+                color: location.pathname.startsWith(link.to)
                   ? 'var(--color-accent)'
                   : 'var(--color-text-primary)',
                 textDecoration: 'none',
                 padding: '12px 24px',
-                borderLeft: location.pathname.startsWith(item.to)
+                borderLeft: location.pathname.startsWith(link.to)
                   ? '3px solid var(--color-accent)'
                   : '3px solid transparent',
-                background: location.pathname.startsWith(item.to)
+                background: location.pathname.startsWith(link.to)
                   ? 'var(--color-accent-light, rgba(196, 147, 61, 0.08))'
                   : 'transparent',
               }}
             >
-              {item.label}
+              {link.label}
             </Link>
           ))}
         </nav>
+
+        {/* Language toggle in drawer (mobile only) */}
+        <div style={{ padding: '8px 24px', borderTop: '1px solid var(--color-border)', marginTop: 8 }}>
+          <Button
+            type="text"
+            onClick={() => {
+              const next = i18n.language === 'vi' ? 'en' : 'vi'
+              i18n.changeLanguage(next)
+            }}
+            style={{
+              color: 'var(--color-text-secondary)',
+              fontSize: 13,
+              fontWeight: 500,
+              padding: 0,
+              height: 44,
+            }}
+          >
+            {i18n.language === 'vi' ? 'Switch to EN' : 'Switch to VI'}
+          </Button>
+        </div>
       </Drawer>
 
-      {/* ─── Terms Acceptance Banner ─── */}
+      {/* ─── Platform Terms Modal ─── */}
       {isAuthenticated && (
-        <div style={{ marginTop: 64 }}>
-          <TermsAcceptanceBanner />
-        </div>
+        <TermsAcceptanceModal
+          open={platformTermsModalOpen}
+          onClose={() => setPlatformTermsModalOpen(false)}
+          termType="platform"
+        />
       )}
 
       {/* ─── Content ─── */}
@@ -449,7 +451,7 @@ export function AppLayout() {
           maxWidth: 1440,
           marginLeft: 'auto',
           marginRight: 'auto',
-          padding: isMobile ? '0 16px' : '0 48px',
+          padding: isMobile ? '0 12px' : isTablet ? '0 24px' : '0 48px',
           minHeight: 'calc(100vh - 64px - 200px)',
         }}
       >
@@ -463,7 +465,7 @@ export function AppLayout() {
         style={{
           background: 'var(--color-bg-primary)',
           borderTop: '1px solid var(--color-border)',
-          padding: isMobile ? '32px 16px' : '64px 48px',
+          padding: isMobile ? '32px 16px' : isTablet ? '48px 24px' : '64px 48px',
         }}
       >
         <div
@@ -471,8 +473,8 @@ export function AppLayout() {
             maxWidth: 1440,
             margin: '0 auto',
             display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-            gap: isMobile ? 24 : 48,
+            gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
+            gap: isMobile ? 24 : isTablet ? 32 : 48,
           }}
         >
           {/* Column 1 */}
@@ -488,7 +490,7 @@ export function AppLayout() {
             >
               OIO
             </div>
-            <p style={{ fontFamily: SANS_FONT, fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.7 }}>
+            <p style={{ fontFamily: SANS_FONT, fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.7, margin: 0 }}>
               {t('common:footer.tagline', 'Premium auction platform for discerning collectors.')}
             </p>
           </div>

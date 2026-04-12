@@ -16,8 +16,7 @@ import {
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useMyDirectShipment, useSubmitProofOfDelivery } from '@/features/order/api'
-import { MultiCaptureUploader, type CapturedPhoto } from '@/components/ui/MultiCaptureUploader'
-import { useMediaUpload } from '@/hooks/useMediaUpload'
+import { BuyerReceiptEvidenceSection } from '@/components/ui/BuyerReceiptEvidenceSection'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import type { PackageCondition } from '@/types'
 
@@ -46,12 +45,9 @@ export default function BuyerShipmentReceivePage() {
 
   const { data: shipment, isLoading, error } = useMyDirectShipment(shipmentId)
 
-  const [photos, setPhotos] = useState<CapturedPhoto[]>([])
   const [condition, setCondition] = useState<PackageCondition>('sealed_intact')
   const [notes, setNotes] = useState('')
-  const [submitting, setSubmitting] = useState(false)
 
-  const mediaUpload = useMediaUpload('shipment_delivery_photo')
   const submitProof = useSubmitProofOfDelivery()
 
   if (isLoading) {
@@ -76,40 +72,6 @@ export default function BuyerShipmentReceivePage() {
   const shipmentNotReady = notReadyStatuses.includes(shipment.status)
   const shipmentTerminal = terminalStatuses.includes(shipment.status)
   const shipmentBlocked = shipmentNotReady || shipmentTerminal
-  const canSubmit =
-    !alreadyReceipted &&
-    !shipmentBlocked &&
-    photos.length >= 1 &&
-    (!notesRequired || notes.trim().length > 0) &&
-    !submitting &&
-    !submitProof.isPending
-
-  const handleSubmit = async () => {
-    if (!canSubmit) return
-    setSubmitting(true)
-    try {
-      // Convert captured blobs to File objects and upload each, collecting
-      // the resulting mediaUploadIds for the proof-of-delivery submission.
-      const files = photos.map((p, i) => new File([p.blob], `delivery-${i + 1}.jpg`, { type: p.blob.type || 'image/jpeg' }))
-      const uploaded = await mediaUpload.uploadMultiple(files)
-      const deliveryPhotoMediaUploadIds = uploaded.map((r) => r.mediaUploadId)
-
-      const result = await submitProof.mutateAsync({
-        shipmentId: shipment.id,
-        orderId: shipment.orderId,
-        deliveryPhotoMediaUploadIds,
-        packageCondition: condition,
-        conditionNotes: notes.trim() || undefined,
-        source: token ? 'qr_scan' : 'order_page',
-      })
-      message.success(t('directShipment.receive.submitted', 'Proof of delivery submitted'))
-      navigate(`/me/orders/${result.orderId}`)
-    } catch (e) {
-      message.error((e as Error)?.message ?? t('genericError', 'Something went wrong'))
-    } finally {
-      setSubmitting(false)
-    }
-  }
 
   return (
     <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 12px' }}>
@@ -184,69 +146,64 @@ export default function BuyerShipmentReceivePage() {
       )}
 
       {!alreadyReceipted && (
-        <Card title={t('directShipment.receive.formTitle', 'Delivery Evidence')}>
-          {/* Form remains visible but submit is disabled via canSubmit when shipmentBlocked. */}
-          <Form layout="vertical">
-            <Form.Item
-              label={t('directShipment.receive.photosLabel', 'Delivery Photos (min 1)')}
-              required
-            >
-              <MultiCaptureUploader
-                maxPhotos={6}
-                step="item_photo"
-                facingMode="environment"
-                onPhotosChange={setPhotos}
-                instruction={t('directShipment.receive.photoInstruction', 'Take clear photos of the received parcel')}
-              />
-            </Form.Item>
-
-            <Form.Item
-              label={t('directShipment.receive.conditionLabel', 'Package Condition')}
-              required
-            >
-              <Radio.Group
-                value={condition}
-                onChange={(e) => setCondition(e.target.value)}
-                style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
+        <>
+          <Card title={t('directShipment.receive.conditionTitle', 'Package Condition')} style={{ marginBottom: 16 }}>
+            <Form layout="vertical">
+              <Form.Item
+                label={t('directShipment.receive.conditionLabel', 'Package Condition')}
+                required
               >
-                {CONDITIONS.map((c) => (
-                  <Radio key={c} value={c}>
-                    {t(`directShipment.conditions.${c}`, c)}
-                  </Radio>
-                ))}
-              </Radio.Group>
-            </Form.Item>
+                <Radio.Group
+                  value={condition}
+                  onChange={(e) => setCondition(e.target.value)}
+                  style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
+                >
+                  {CONDITIONS.map((c) => (
+                    <Radio key={c} value={c}>
+                      {t(`directShipment.conditions.${c}`, c)}
+                    </Radio>
+                  ))}
+                </Radio.Group>
+              </Form.Item>
 
-            <Form.Item
-              label={t('directShipment.receive.notesLabel', 'Notes')}
-              required={notesRequired}
-              help={
-                notesRequired
-                  ? t('directShipment.receive.notesRequired', 'Required when the package is not sealed & intact')
-                  : undefined
-              }
-            >
-              <Input.TextArea
-                rows={3}
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder={t('directShipment.receive.notesPlaceholder', 'Describe any issues with the package...')}
-              />
-            </Form.Item>
-
-            <Form.Item>
-              <Button
-                type="primary"
-                size="large"
-                loading={submitting || submitProof.isPending || mediaUpload.uploading}
-                disabled={!canSubmit}
-                onClick={handleSubmit}
+              <Form.Item
+                label={t('directShipment.receive.notesLabel', 'Notes')}
+                required={notesRequired}
+                help={
+                  notesRequired
+                    ? t('directShipment.receive.notesRequired', 'Required when the package is not sealed & intact')
+                    : undefined
+                }
               >
-                {t('directShipment.receive.submit', 'Submit Proof of Delivery')}
-              </Button>
-            </Form.Item>
-          </Form>
-        </Card>
+                <Input.TextArea
+                  rows={3}
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder={t('directShipment.receive.notesPlaceholder', 'Describe any issues with the package...')}
+                />
+              </Form.Item>
+            </Form>
+          </Card>
+
+          <BuyerReceiptEvidenceSection
+            title={t('directShipment.receive.formTitle', 'Delivery Evidence')}
+            hasSubmittedProof={false}
+            submitting={submitProof.isPending}
+            onSubmit={async (deliveryPhotoMediaUploadIds) => {
+              if (notesRequired && !notes.trim()) return
+              const result = await submitProof.mutateAsync({
+                shipmentId: shipment.id,
+                orderId: shipment.orderId,
+                deliveryPhotoMediaUploadIds,
+                packageCondition: condition,
+                conditionNotes: notes.trim() || undefined,
+                source: token ? 'qr_scan' : 'order_page',
+              })
+              message.success(t('directShipment.receive.submitted', 'Proof of delivery submitted'))
+              navigate(`/me/orders/${result.orderId}`)
+            }}
+          />
+        </>
       )}
     </div>
   )

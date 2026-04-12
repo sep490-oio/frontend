@@ -11,12 +11,15 @@ import {
   Result,
   message,
   Image,
+  Modal,
+  Form,
+  Alert,
 } from 'antd'
-import { CheckCircleOutlined } from '@ant-design/icons'
+import { CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined, WarningOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useParams, useNavigate } from 'react-router'
 import { useInboundShipmentById } from '@/features/warehouse/api'
-import { useInspectItem } from '@/features/inspector/api'
+import { useInspectItem, useReviewInspection } from '@/features/inspector/api'
 import type { WarehouseInspectionDto } from '@/features/inspector/api'
 import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { MultiCaptureUploader } from '@/components/ui/MultiCaptureUploader'
@@ -25,6 +28,12 @@ import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { SERIF_FONT } from '@/styles/tokens'
+
+type TerminalState =
+  | { kind: 'approved' }
+  | { kind: 'rejected'; reason: string }
+  | { kind: 'pending_seller_confirmation' }
+  | { kind: 'review_failed'; inspection: WarehouseInspectionDto }
 
 export default function InspectionDetailPage() {
   const { shipmentId } = useParams<{ shipmentId: string }>()
@@ -41,14 +50,19 @@ export default function InspectionDetailPage() {
   ]
   const { data: shipment, isLoading, isError } = useInboundShipmentById(shipmentId ?? '')
   const inspectMutation = useInspectItem()
+  const reviewMutation = useReviewInspection()
   const mediaUpload = useMediaUpload('warehouse_inspection_image')
 
   const [condition, setCondition] = useState<string>('')
   const [notes, setNotes] = useState('')
   const [capturedPhotos, setCapturedPhotos] = useState<CapturedPhoto[]>([])
-  const [_uploadedMediaIds, setUploadedMediaIds] = useState<string[]>([])
-  const [uploading, setUploading] = useState(false)
-  const [inspectionResult, setInspectionResult] = useState<WarehouseInspectionDto | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [decisionModalOpen, setDecisionModalOpen] = useState(false)
+  const [pickedDecision, setPickedDecision] = useState<'approve' | 'reject' | null>(null)
+  const [rejectReason, setRejectReason] = useState('')
+  const [rejectTouched, setRejectTouched] = useState(false)
+  const [terminal, setTerminal] = useState<TerminalState | null>(null)
+  const [lastInspection, setLastInspection] = useState<WarehouseInspectionDto | null>(null)
 
   if (isLoading) {
     return (
@@ -71,74 +85,176 @@ export default function InspectionDetailPage() {
     )
   }
 
-  const handleSubmit = async () => {
+  const openDecisionModal = () => {
     if (!condition) {
       message.warning(t('inspector:inspectionDetail.selectConditionWarning', 'Please select a condition'))
       return
     }
-    if (!shipmentId) return
+    if (capturedPhotos.length === 0) {
+      message.warning(t('inspector:inspectionDetail.photosRequired', 'Please capture at least one evidence photo'))
+      return
+    }
+    setPickedDecision(null)
+    setRejectReason('')
+    setRejectTouched(false)
+    setDecisionModalOpen(true)
+  }
 
+  const confirmDecision = async () => {
+    if (!shipmentId || !pickedDecision) return
+    if (pickedDecision === 'reject' && !rejectReason.trim()) {
+      setRejectTouched(true)
+      return
+    }
+
+    setSubmitting(true)
     try {
-      setUploading(true)
-      // Upload all captured photos first
+      // 1. Upload media
       const mediaIds: string[] = []
       for (const photo of capturedPhotos) {
         const file = new File([photo.blob], `inspection-${Date.now()}.jpg`, { type: 'image/jpeg' })
         const media = await mediaUpload.upload(file)
         mediaIds.push(media.mediaUploadId)
       }
-      setUploadedMediaIds(mediaIds)
 
-      const result = await inspectMutation.mutateAsync({
+      // 2. Inspect
+      const inspection = await inspectMutation.mutateAsync({
         shipmentId,
-        condition: condition,
+        condition,
         inspectionNotes: notes || undefined,
         inspectionMediaUploadIds: mediaIds.length > 0 ? mediaIds : undefined,
       })
-      setInspectionResult(result)
-      message.success(t('inspector:inspectionDetail.submitSuccess', 'Inspection submitted successfully'))
+      setLastInspection(inspection)
+
+      // Detect condition-confirmation-required branch from inspect response.
+      // Signal: decisionStatus indicates the server is waiting on the seller
+      // (e.g. "pending_seller_confirmation" / "condition_confirmation_required").
+      const status = (inspection.decisionStatus ?? '').toLowerCase()
+      const needsSellerConfirmation =
+        status.includes('seller') ||
+        status.includes('condition_confirmation') ||
+        status === 'condition_confirmation_required'
+
+      if (needsSellerConfirmation) {
+        setDecisionModalOpen(false)
+        setTerminal({ kind: 'pending_seller_confirmation' })
+        return
+      }
+
+      // 3. Review
+      try {
+        await reviewMutation.mutateAsync({
+          shipmentId,
+          decision: pickedDecision,
+          reason: pickedDecision === 'reject' ? rejectReason.trim() : undefined,
+        })
+        setDecisionModalOpen(false)
+        if (pickedDecision === 'approve') {
+          setTerminal({ kind: 'approved' })
+        } else {
+          setTerminal({ kind: 'rejected', reason: rejectReason.trim() })
+        }
+      } catch (reviewErr) {
+        setDecisionModalOpen(false)
+        setTerminal({ kind: 'review_failed', inspection })
+        message.warning(
+          t(
+            'inspector:inspectionDetail.reviewFailedWarning',
+            'Inspection saved, but the review step failed. Please retry from the fallback review queue.',
+          ),
+        )
+        // eslint-disable-next-line no-console
+        console.warn('Review step failed after inspection succeeded', reviewErr)
+      }
     } catch {
       message.error(t('inspector:inspectionDetail.submitError', 'Failed to submit inspection'))
     } finally {
-      setUploading(false)
+      setSubmitting(false)
     }
   }
 
-  if (inspectionResult) {
-    return (
-      <div>
+  if (terminal) {
+    if (terminal.kind === 'approved') {
+      return (
         <Result
+          status="success"
           icon={<CheckCircleOutlined style={{ color: '#4A7C59' }} />}
-          title={t('inspector:inspectionDetail.completedTitle', 'Inspection Completed')}
-          subTitle={t('inspector:inspectionDetail.completedSubtitle', 'Condition: {{condition}} | Decision: {{decision}}', { condition: inspectionResult.conditionOnArrival, decision: inspectionResult.decisionStatus })}
+          title={t('inspector:inspectionDetail.approvedTitle', 'Inspection approved')}
+          subTitle={t('inspector:inspectionDetail.approvedSubtitle', 'The item has been approved for listing.')}
           extra={[
-            <Button
-              key="queue"
-              type="primary"
-              onClick={() => navigate('/inspector/queue')}
-              style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
-            >
+            <Button key="queue" type="primary" onClick={() => navigate('/inspector/queue')}>
               {t('inspector:inspectionDetail.backToQueue', 'Back to Queue')}
-            </Button>,
-            <Button key="dashboard" onClick={() => navigate('/inspector')}>
-              {t('inspector:inspectionDetail.dashboard', 'Dashboard')}
             </Button>,
           ]}
         />
-        {inspectionResult.evidence.length > 0 && (
-          <Card title={t('inspector:inspectionDetail.uploadedEvidence', 'Uploaded Evidence')} style={{ maxWidth: isMobile ? '100%' : 600, margin: '0 auto', padding: isMobile ? 8 : undefined }}>
-            <Image.PreviewGroup>
-              <Space wrap>
-                {inspectionResult.evidence.map((e) => (
-                  <Image key={e.id} src={e.url} width={120} height={120} style={{ objectFit: 'cover', borderRadius: 4 }} />
-                ))}
-              </Space>
-            </Image.PreviewGroup>
-          </Card>
+      )
+    }
+    if (terminal.kind === 'rejected') {
+      return (
+        <Result
+          status="error"
+          icon={<CloseCircleOutlined style={{ color: '#cf1322' }} />}
+          title={t('inspector:inspectionDetail.rejectedTitle', 'Inspection rejected')}
+          subTitle={
+            <div>
+              <div>{t('inspector:inspectionDetail.rejectedSubtitle', 'The item has been rejected.')}</div>
+              {terminal.reason && (
+                <div style={{ marginTop: 8 }}>
+                  <Typography.Text strong>{t('inspector:inspectionDetail.reasonLabel', 'Reason')}: </Typography.Text>
+                  <Typography.Text>{terminal.reason}</Typography.Text>
+                </div>
+              )}
+            </div>
+          }
+          extra={[
+            <Button key="queue" type="primary" onClick={() => navigate('/inspector/queue')}>
+              {t('inspector:inspectionDetail.backToQueue', 'Back to Queue')}
+            </Button>,
+          ]}
+        />
+      )
+    }
+    if (terminal.kind === 'pending_seller_confirmation') {
+      return (
+        <Result
+          icon={<ClockCircleOutlined style={{ color: '#8c8c8c' }} />}
+          title={t('inspector:inspectionDetail.pendingSellerTitle', 'Awaiting seller condition confirmation')}
+          subTitle={t(
+            'inspector:inspectionDetail.pendingSellerSubtitle',
+            'The inspection has been saved. The seller must confirm the condition before a final decision can be made.',
+          )}
+          extra={[
+            <Button key="queue" type="primary" onClick={() => navigate('/inspector/queue')}>
+              {t('inspector:inspectionDetail.backToQueue', 'Back to Queue')}
+            </Button>,
+          ]}
+        />
+      )
+    }
+    // review_failed
+    return (
+      <Result
+        status="warning"
+        icon={<WarningOutlined style={{ color: '#faad14' }} />}
+        title={t('inspector:inspectionDetail.reviewFailedTitle', 'Inspection saved — manual review required')}
+        subTitle={t(
+          'inspector:inspectionDetail.reviewFailedSubtitle',
+          'The inspection was saved but the review step did not complete. Finish the review from the fallback review queue.',
         )}
-      </div>
+        extra={[
+          <Button key="reviews" type="primary" onClick={() => navigate('/inspector/reviews')}>
+            {t('inspector:inspectionDetail.goToReviews', 'Go to Review Queue')}
+          </Button>,
+          <Button key="queue" onClick={() => navigate('/inspector/queue')}>
+            {t('inspector:inspectionDetail.backToQueue', 'Back to Queue')}
+          </Button>,
+        ]}
+      />
     )
   }
+
+  const thumbnailSize = 96
+  const itemImage = shipment.itemImageUrl
 
   return (
     <div style={{ padding: isMobile ? 16 : 0 }}>
@@ -148,6 +264,52 @@ export default function InspectionDetailPage() {
       >
         {t('inspector:inspectionDetail.title', 'Inspect Shipment')}
       </Typography.Title>
+
+      {/* Item summary card */}
+      <Card style={{ marginBottom: isMobile ? 16 : 24 }}>
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+          {itemImage ? (
+            <Image
+              src={itemImage}
+              alt={shipment.itemTitle}
+              width={thumbnailSize}
+              height={thumbnailSize}
+              style={{ objectFit: 'cover', borderRadius: 6, background: 'var(--color-surface-muted, #f0f0f0)' }}
+            />
+          ) : (
+            <div
+              style={{
+                width: thumbnailSize,
+                height: thumbnailSize,
+                borderRadius: 6,
+                background: 'var(--color-surface-muted, #f0f0f0)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--color-text-secondary, #999)',
+                fontSize: 12,
+              }}
+            >
+              {t('inspector:inspectionDetail.noImage', 'No image')}
+            </div>
+          )}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <Typography.Title level={4} style={{ margin: 0, fontFamily: SERIF_FONT }}>
+              {shipment.itemTitle ?? t('inspector:inspectionDetail.untitledItem', 'Untitled item')}
+            </Typography.Title>
+            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+              {shipment.itemId}
+            </Typography.Text>
+            <div style={{ marginTop: 8 }}>
+              <Space wrap size="small">
+                {/* declaredCondition isn't on the shipment DTO; fall back to shipment.status for context */}
+                <StatusBadge status={shipment.status} />
+                {/* storage location is not on shipment DTO; omit if not available */}
+              </Space>
+            </div>
+          </div>
+        </div>
+      </Card>
 
       {/* Shipment info */}
       <Card title={t('inspector:inspectionDetail.shipmentInfo', 'Shipment Information')} style={{ marginBottom: isMobile ? 16 : 24 }}>
@@ -218,8 +380,7 @@ export default function InspectionDetailPage() {
             <Button
               type="primary"
               size="large"
-              onClick={handleSubmit}
-              loading={uploading || inspectMutation.isPending}
+              onClick={openDecisionModal}
               style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
             >
               {t('inspector:inspectionDetail.submitInspection', 'Submit Inspection')}
@@ -227,6 +388,80 @@ export default function InspectionDetailPage() {
           </div>
         </Space>
       </Card>
+
+      {/* Decision modal */}
+      <Modal
+        title={t('inspector:inspectionDetail.decisionTitle', 'Inspection Decision')}
+        open={decisionModalOpen}
+        onCancel={() => !submitting && setDecisionModalOpen(false)}
+        onOk={confirmDecision}
+        confirmLoading={submitting}
+        okText={t('inspector:inspectionDetail.confirm', 'Confirm')}
+        okButtonProps={{ disabled: !pickedDecision }}
+        cancelButtonProps={{ disabled: submitting }}
+      >
+        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          <Typography.Text>
+            {t('inspector:inspectionDetail.decisionPrompt', 'Select the final decision for this inspection.')}
+          </Typography.Text>
+          <Space>
+            <Button
+              type={pickedDecision === 'approve' ? 'primary' : 'default'}
+              icon={<CheckCircleOutlined />}
+              onClick={() => setPickedDecision('approve')}
+              style={
+                pickedDecision === 'approve'
+                  ? { background: 'var(--color-success, #4A7C59)', borderColor: 'var(--color-success, #4A7C59)' }
+                  : undefined
+              }
+            >
+              {t('inspector:inspectionDetail.approve', 'Approve')}
+            </Button>
+            <Button
+              danger={pickedDecision === 'reject'}
+              type={pickedDecision === 'reject' ? 'primary' : 'default'}
+              icon={<CloseCircleOutlined />}
+              onClick={() => setPickedDecision('reject')}
+            >
+              {t('inspector:inspectionDetail.reject', 'Reject')}
+            </Button>
+          </Space>
+
+          {pickedDecision === 'reject' && (
+            <Form layout="vertical">
+              <Form.Item
+                label={t('inspector:inspectionDetail.rejectReasonLabel', 'Rejection Reason')}
+                required
+                validateStatus={rejectTouched && !rejectReason.trim() ? 'error' : undefined}
+                help={
+                  rejectTouched && !rejectReason.trim()
+                    ? t('inspector:inspectionDetail.rejectReasonRequired', 'Please provide a rejection reason')
+                    : undefined
+                }
+              >
+                <Input.TextArea
+                  value={rejectReason}
+                  onChange={(e) => {
+                    setRejectReason(e.target.value)
+                    if (rejectTouched) setRejectTouched(true)
+                  }}
+                  onBlur={() => setRejectTouched(true)}
+                  rows={3}
+                  placeholder={t('inspector:inspectionDetail.rejectReasonPlaceholder', 'Explain why this item is being rejected')}
+                />
+              </Form.Item>
+            </Form>
+          )}
+
+          {lastInspection && (
+            <Alert
+              type="info"
+              showIcon
+              message={t('inspector:inspectionDetail.retryHint', 'Retrying a previously saved inspection — media will be re-uploaded.')}
+            />
+          )}
+        </Space>
+      </Modal>
     </div>
   )
 }

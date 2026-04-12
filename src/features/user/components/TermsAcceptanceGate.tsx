@@ -1,89 +1,58 @@
-import { useEffect } from 'react'
-import { Alert, Button, Typography } from 'antd'
-import { FileProtectOutlined } from '@ant-design/icons'
-import { useTranslation } from 'react-i18next'
-import { Link, useNavigate, useLocation } from 'react-router'
+import { useEffect, useState } from 'react'
 import { usePendingTerms } from '../api'
+import { TermsAcceptanceModal } from '@/components/terms/TermsAcceptanceModal'
 
 interface TermsAcceptanceGateProps {
   /** Term type to check: "platform", "seller", "bidder" */
   termType: string
-  /** Title shown in the alert banner */
-  title: string
-  /** Description of why terms acceptance is required */
-  description: string
-  /** Content to render (always rendered, with alert banner above when terms pending) */
+  /** Title shown in the alert banner (unused — retained for call-site compat) */
+  title?: string
+  /** Description of why terms acceptance is required (unused — retained for call-site compat) */
+  description?: string
+  /** Content to render. Always rendered. */
   children: React.ReactNode
   /** Callback when pending status changes — parent can use to disable actions */
   onPendingChange?: (hasPending: boolean) => void
-  /** When true, redirect to focused terms page instead of showing banner */
+  /** Deprecated: redirect mode is now a no-op. The modal opens automatically when terms are pending. */
   redirect?: boolean
 }
 
 /**
- * Terms acceptance gate with two modes:
- * - Banner mode (default): shows alert banner + renders children
- * - Redirect mode: navigates to /me/terms?type=X&returnTo=Y when terms pending
+ * Preview-first terms gate: auto-opens the reusable {@link TermsAcceptanceModal}
+ * when the user has pending terms of the given type, and always renders children.
+ * No routing, no redirects, no blocking alerts.
  */
 export function TermsAcceptanceGate({
   termType,
-  title,
-  description,
   children,
   onPendingChange,
-  redirect = false,
 }: TermsAcceptanceGateProps) {
-  const { t } = useTranslation('common')
-  const navigate = useNavigate()
-  const location = useLocation()
   const { data, isLoading } = usePendingTerms(termType)
-
   const hasPending = !isLoading && !!data?.hasPending && data.pendingTerms.length > 0
+
+  const [modalOpen, setModalOpen] = useState(false)
+  const [autoShown, setAutoShown] = useState(false)
 
   useEffect(() => {
     onPendingChange?.(hasPending)
   }, [hasPending, onPendingChange])
 
-  // Redirect mode: navigate to focused terms page
   useEffect(() => {
-    if (redirect && hasPending && !location.pathname.startsWith('/me/terms')) {
-      navigate(`/me/terms?type=${termType}&returnTo=${encodeURIComponent(location.pathname)}`)
+    if (hasPending && !autoShown) {
+      setModalOpen(true)
+      setAutoShown(true)
     }
-  }, [redirect, hasPending, termType, navigate, location.pathname])
+  }, [hasPending, autoShown])
 
-  // In redirect mode, don't render banner (redirect handles it)
-  if (redirect && hasPending) {
-    return null
-  }
+  const isKnownType = termType === 'platform' || termType === 'bidder' || termType === 'seller'
 
   return (
     <>
-      {hasPending && (
-        <Alert
-          type="warning"
-          showIcon
-          banner
-          icon={<FileProtectOutlined />}
-          style={{ marginBottom: 16, borderRadius: 8 }}
-          message={
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-              <div>
-                <Typography.Text strong>{title}</Typography.Text>
-                <Typography.Text type="secondary" style={{ marginLeft: 8, fontSize: 13 }}>
-                  {description}
-                </Typography.Text>
-              </div>
-              <Link to={`/me/terms?type=${termType}&returnTo=${encodeURIComponent(location.pathname)}`}>
-                <Button
-                  type="primary"
-                  size="small"
-                  style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
-                >
-                  {t('reviewTerms', 'Review & Accept Terms')}
-                </Button>
-              </Link>
-            </div>
-          }
+      {isKnownType && (
+        <TermsAcceptanceModal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          termType={termType as 'platform' | 'bidder' | 'seller'}
         />
       )}
       {children}

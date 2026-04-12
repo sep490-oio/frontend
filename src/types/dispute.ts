@@ -17,6 +17,124 @@ export interface DisputeSummaryDto {
   createdAt: string
 }
 
+// ── Phase-3 dispute types ───────────────────────────────────────────
+
+export interface DisputeListItemDto {
+  id: string
+  disputeNumber: string
+  status: string
+  domain?: string
+  caseType?: string
+  primaryTargetType?: string
+  title: string
+  complainantDisplayName?: string
+  respondentDisplayName?: string
+  assignedToDisplayName?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface DisputeDetailDto extends DisputeListItemDto {
+  description?: string
+  contextSnapshotJson?: string
+  resolutionOutcome?: string
+  resolutionReason?: string
+  resolutionActionSetJson?: string
+  resolvedByDisplayName?: string
+  resolvedAt?: string
+  orderId?: string
+  auctionId?: string
+  shipmentId?: string
+  warehouseItemId?: string
+  paymentId?: string
+  messages: DisputeMessageV2Dto[]
+  evidence: DisputeEvidenceDto[]
+  findings: DisputeFindingDto[]
+  assignedToUserId?: string
+  assignedAt?: string
+  canAssign: boolean
+  canRequestEvidence: boolean
+  canAddFinding: boolean
+  canResolve: boolean
+  canReject: boolean
+  requestedEvidenceAt?: string
+  requestedEvidenceByDisplayName?: string
+}
+
+export interface DisputeAssignableUserDto {
+  userId: string
+  displayName: string
+  role: string
+  domainCapabilities: string[]
+}
+
+export interface DisputeMessageV2Dto {
+  id: string
+  authorDisplayName: string
+  content: string
+  visibility: 'external' | 'internal'
+  createdAt: string
+  attachments?: {
+    id: string
+    secureUrl: string
+    fileName?: string
+    resourceType: string
+    format?: string
+    bytes?: number
+    width?: number
+    height?: number
+    durationSeconds?: number
+  }[]
+}
+
+export interface DisputeEvidenceDto {
+  id: string
+  mediaUploadId: string
+  secureUrl?: string
+  fileName?: string
+  resourceType?: string
+  format?: string
+  bytes?: number
+  durationSeconds?: number
+  createdAt: string
+}
+
+export interface AdminDisputeFindingReferenceDto {
+  referenceType: string
+  targetId: string
+  label: string
+  secureUrl?: string
+  resourceType?: string
+  messagePreview?: string
+  createdAt?: string
+}
+
+export interface DisputeFindingDto {
+  id: string
+  domain: string
+  authorDisplayName: string
+  verdictRecommendation?: string
+  summary: string
+  findingNote?: string
+  references?: AdminDisputeFindingReferenceDto[]
+  createdAt: string
+}
+
+export interface BuyerDisputeDetailDto extends DisputeListItemDto {
+  description?: string
+  orderId?: string
+  auctionId?: string
+  messages: DisputeMessageV2Dto[]
+  evidence: DisputeEvidenceDto[]
+}
+
+export interface CreateDisputeRequest {
+  domain: string
+  caseType: string
+  title: string
+  description: string
+}
+
 // For detail endpoint
 export interface DisputeThreadDto {
   meta: DisputeThreadMetaDto
@@ -57,6 +175,7 @@ export interface DisputeMessageAttachmentDto {
   format?: string
   width?: number
   height?: number
+  durationSeconds?: number
 }
 
 export interface DisputeThreadMetaDto {
@@ -64,6 +183,9 @@ export interface DisputeThreadMetaDto {
   disputeId?: string
   disputeNumber?: string
   title?: string
+  description?: string
+  domain?: string
+  caseType?: string
   status: DisputeStatus
   priority?: string
   complainantId?: string

@@ -2,7 +2,7 @@ import apiClient from '@/lib/axios'
 import { queryKeys } from '@/lib/queryClient'
 import { invalidateAndRefetchActive } from '@/lib/mutationFreshness'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import type { OrderDto, OrderReturnDto, CreateReturnRequest, PagedList, PaginationParams, UpdateOrderShippingRequest, SellerDirectShipmentDto, PackageCondition, SellerDirectShipmentListItem, MyDirectShipmentListItem } from '@/types'
+import type { OrderDto, OrderReturnDto, CreateReturnRequest, PagedList, PaginationParams, UpdateOrderShippingRequest, SellerDirectShipmentDto, PackageCondition, SellerDirectShipmentListItem, MyDirectShipmentListItem, BuyerShipmentListItemDto } from '@/types'
 
 // ── Queries ──────────────────────────────────────────────────────────
 
@@ -476,6 +476,28 @@ export function useMyDirectShipments(
     queryKey: ['me', 'shipments', 'list', params],
     queryFn: async () => {
       const res = await apiClient.get<PagedList<MyDirectShipmentListItem>>(
+        '/me/direct-shipments',
+        { params },
+      )
+      return res.data
+    },
+    ...options,
+  })
+}
+
+/**
+ * Unified buyer shipment feed — merges seller-direct and warehouse-outbound
+ * shipments into a single paged list. Backed by GET /api/me/shipments.
+ * Filters: `status` (raw shipment status), `shipmentKind`, `search`.
+ */
+export function useMyShipments(
+  params?: PaginationParams & { status?: string; shipmentKind?: 'seller_direct' | 'warehouse_outbound'; search?: string },
+  options?: { refetchInterval?: number },
+) {
+  return useQuery({
+    queryKey: ['me', 'shipments', 'unified', 'list', params],
+    queryFn: async () => {
+      const res = await apiClient.get<PagedList<BuyerShipmentListItemDto>>(
         '/me/shipments',
         { params },
       )

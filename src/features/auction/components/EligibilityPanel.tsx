@@ -16,10 +16,8 @@ interface EligibilityPanelProps {
   qualificationStartAt?: string
   qualificationEndAt?: string
   isSeller: boolean
-  onDepositWallet: () => void
-  onDepositVnPay: () => void
-  isWalletDepositLoading: boolean
-  isVnPayDepositLoading: boolean
+  onDeposit: () => void
+  depositLoading: boolean
 }
 
 export function EligibilityPanel({
@@ -31,10 +29,8 @@ export function EligibilityPanel({
   qualificationStartAt,
   qualificationEndAt,
   isSeller,
-  onDepositWallet,
-  onDepositVnPay,
-  isWalletDepositLoading,
-  isVnPayDepositLoading,
+  onDeposit,
+  depositLoading,
 }: EligibilityPanelProps) {
   const { t } = useTranslation('auction')
 
@@ -194,9 +190,10 @@ export function EligibilityPanel({
     )
   }
 
-  // Window is open — show deposit buttons
+  // Window is open — show deposit button (modal handles wallet/vnpay selection)
   const requiredAmount = depositAmount ?? 0
   const canAfford = walletBalance >= requiredAmount
+  void canAfford
 
   return (
     <div style={panelStyle}>
@@ -219,29 +216,18 @@ export function EligibilityPanel({
       )}
 
       <Typography.Text style={{ fontSize: 12, color: 'var(--color-text-secondary)', display: 'block', marginTop: 4 }}>
-        {t('walletBalance', 'Wallet balance')}: <strong style={{ color: canAfford ? 'var(--color-success)' : 'var(--color-danger)' }}>{formatCurrency(walletBalance, currency)}</strong>
+        {t('walletBalance', 'Wallet balance')}: <strong>{formatCurrency(walletBalance, currency)}</strong>
       </Typography.Text>
 
       <Button
         type="primary"
         block
         icon={<SafetyOutlined />}
-        onClick={onDepositWallet}
-        loading={isWalletDepositLoading}
-        disabled={!canAfford}
+        onClick={onDeposit}
+        loading={depositLoading}
         style={{ height: 48, borderRadius: 8, fontWeight: 500, fontSize: 15, background: 'var(--color-accent)', borderColor: 'var(--color-accent)', marginTop: 12 }}
       >
-        {t('depositWallet', 'Deposit from Wallet')}
-      </Button>
-
-      <Button
-        block
-        icon={<SafetyOutlined />}
-        onClick={onDepositVnPay}
-        loading={isVnPayDepositLoading}
-        style={{ height: 44, borderRadius: 8, borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)', marginTop: 8 }}
-      >
-        {t('depositVnPay', 'Deposit via VNPay')}
+        {t('deposit', 'Deposit')}
       </Button>
 
       <Typography.Text style={{ fontSize: 11, color: 'var(--color-text-secondary)', display: 'block', marginTop: 8, lineHeight: 1.6 }}>

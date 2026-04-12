@@ -1,10 +1,9 @@
-import { Row, Col, Spin, Alert, Button, App, Flex } from 'antd'
-import { useParams } from 'react-router'
+import { Row, Col, Spin, Alert, Button, Flex } from 'antd'
+import { useNavigate, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 // ArrowLeftOutlined removed — back button is in ShipmentHeader
 import {
   useInboundShipmentById,
-  useUpdateExternalStatus,
 } from '@/features/warehouse/api'
 import { useItemById } from '@/features/item/api'
 import { ShipmentHeader } from '@/features/warehouse/components/ShipmentHeader'
@@ -14,31 +13,13 @@ import { ShipmentOverview } from '@/features/warehouse/components/ShipmentOvervi
 export default function StaffShipmentDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { t } = useTranslation('warehouse')
-  const { message } = App.useApp()
+  const navigate = useNavigate()
 
   const { data: shipment, isLoading, error } = useInboundShipmentById(id ?? '')
-  const updateStatus = useUpdateExternalStatus()
   const { data: itemData } = useItemById(shipment?.itemId ?? '')
 
-  const isExternal = shipment?.providerCode === 'external'
-  const canConfirmArrival =
-    isExternal &&
-    (shipment?.status === 'awaiting_pickup' || shipment?.status === 'in_transit' || shipment?.status === 'seller_claims_arrived')
-
-  const handleConfirmArrival = () => {
-    if (!id) return
-    updateStatus.mutate(
-      { shipmentId: id, status: 'arrived' },
-      {
-        onSuccess: () => {
-          message.success(t('scan.arrivalConfirmed', 'Arrival confirmed'))
-        },
-        onError: () => {
-          message.error(t('scan.arrivalError', 'Failed to confirm arrival'))
-        },
-      },
-    )
-  }
+  const canReceive =
+    shipment?.status !== 'completed' && shipment?.status !== 'cancelled' && shipment?.status !== 'failed'
 
   if (isLoading) {
     return (
@@ -74,14 +55,15 @@ export default function StaffShipmentDetailPage() {
 
       <ShipmentStepper status={shipment.status} />
 
-      {canConfirmArrival && (
+      {canReceive && shipment.clientOrderCode && (
         <Flex style={{ marginBottom: 24 }}>
           <Button
             type="primary"
-            loading={updateStatus.isPending}
-            onClick={handleConfirmArrival}
+            onClick={() =>
+              navigate(`/warehouse-staff/receiving/packages/${encodeURIComponent(shipment.clientOrderCode)}`)
+            }
           >
-            {t('scan.confirmArrival', 'Confirm Arrival')}
+            {t('scan.receiveItem', 'Receive & Store')}
           </Button>
         </Flex>
       )}

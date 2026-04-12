@@ -1,25 +1,22 @@
-import { useState } from 'react'
-import { Button, Space, Modal, Flex, Tooltip, message } from 'antd'
+import { useState, useEffect } from 'react'
+import { Button, Space, Modal, Flex, Tooltip, message, Segmented } from 'antd'
 import {
   PlusOutlined,
   EditOutlined,
   SendOutlined,
   ShoppingOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
   EyeOutlined,
   ReloadOutlined,
   DeleteOutlined,
   RocketOutlined,
 } from '@ant-design/icons'
-import { useNavigate } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
 import { useTranslation } from 'react-i18next'
 import {
   useMyItems,
   useSubmitItem,
   useActivateItem,
-  useConfirmInspectedCondition,
   useResubmitItem,
 } from '@/features/item/api'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
@@ -69,10 +66,38 @@ export default function MyItemsPage() {
   const navigate = useNavigate()
   const prefix = useRoutePrefix()
   const [msgApi, contextHolder] = message.useMessage()
+  const [searchParams, setSearchParams] = useSearchParams()
 
-  const [statusFilter, setStatusFilter] = useState<string>('all')
+  // Filters are synchronized with the URL so deep-links from the dashboard
+  // and browser back/forward keep the view stable.
+  const statusFilter = searchParams.get('status') ?? 'all'
+  const verifyFilter =
+    (searchParams.get('verify') as 'all' | 'platform' | 'no_platform' | null) ?? 'all'
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
+
+  // Reset to page 1 whenever the filter query changes
+  useEffect(() => {
+    setPage(1)
+  }, [statusFilter, verifyFilter])
+
+  const setStatusFilter = (next: string) => {
+    setSearchParams((prev) => {
+      const sp = new URLSearchParams(prev)
+      if (next === 'all') sp.delete('status')
+      else sp.set('status', next)
+      return sp
+    })
+  }
+
+  const setVerifyFilter = (next: 'all' | 'platform' | 'no_platform') => {
+    setSearchParams((prev) => {
+      const sp = new URLSearchParams(prev)
+      if (next === 'all') sp.delete('verify')
+      else sp.set('verify', next)
+      return sp
+    })
+  }
 
   // Submit modal state
   const [submitModalOpen, setSubmitModalOpen] = useState(false)
@@ -82,12 +107,16 @@ export default function MyItemsPage() {
     pageNumber: page,
     pageSize,
     ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
+    ...(verifyFilter === 'platform'
+      ? { requiresPlatformInspection: true }
+      : verifyFilter === 'no_platform'
+      ? { requiresPlatformInspection: false }
+      : {}),
   }
 
   const { data, isLoading } = useMyItems(params)
   const submitItem = useSubmitItem()
   const activateItem = useActivateItem()
-  const confirmCondition = useConfirmInspectedCondition()
   const resubmitItem = useResubmitItem()
 
   const handleSubmitClick = (id: string) => {
@@ -112,12 +141,6 @@ export default function MyItemsPage() {
   const handleActivate = (id: string) => {
     activateItem.mutate(id, {
       onSuccess: () => msgApi.success(t('activateSuccess', 'Item activated')),
-    })
-  }
-
-  const handleConfirmCondition = (id: string) => {
-    confirmCondition.mutate(id, {
-      onSuccess: () => msgApi.success(t('confirmConditionSuccess', 'Condition confirmed')),
     })
   }
 
@@ -176,29 +199,20 @@ export default function MyItemsPage() {
           </span>
         )}
 
-        {/* Pending Condition Confirmation: Confirm, Reject */}
+        {/* Pending Condition Confirmation: deep-link to warehouse detail */}
         {s === ItemStatus.PendingConditionConfirmation && (
-          <>
-            <Tooltip title={t('confirmCondition', 'Confirm Condition')}>
-              <Button
-                type="text"
-                size="small"
-                icon={<CheckCircleOutlined />}
-                loading={confirmCondition.isPending}
-                onClick={() => handleConfirmCondition(record.id)}
-                style={{ color: 'var(--color-success)' }}
-              />
-            </Tooltip>
-            <Tooltip title={tc('action.reject', 'Reject')}>
-              <Button
-                type="text"
-                size="small"
-                danger
-                icon={<CloseCircleOutlined />}
-                disabled
-              />
-            </Tooltip>
-          </>
+          <Button
+            type="link"
+            size="small"
+            style={{ padding: 0 }}
+            onClick={() =>
+              navigate(
+                `/seller/warehouse/items?status=pending_condition_confirmation`,
+              )
+            }
+          >
+            {t('confirmInWarehouse', 'Confirm in warehouse')}
+          </Button>
         )}
 
         {/* Approved: Activate, Create Auction */}
@@ -376,6 +390,22 @@ export default function MyItemsPage() {
         </Button>
       </Flex>
 
+      {/* Verification dimension filter — distinct from item status */}
+      <Flex gap={12} align="center" style={{ marginBottom: 16 }} wrap="wrap">
+        <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
+          {t('verificationFilter', 'Platform verification')}:
+        </span>
+        <Segmented
+          value={verifyFilter}
+          onChange={(v) => setVerifyFilter(v as 'all' | 'platform' | 'no_platform')}
+          options={[
+            { label: t('verifyAll', 'All'), value: 'all' },
+            { label: t('verifyNeedsPlatform', 'Needs Platform Verification'), value: 'platform' },
+            { label: t('verifyDirectReview', 'Direct Review'), value: 'no_platform' },
+          ]}
+        />
+      </Flex>
+
       {/* Status pills */}
       <Flex gap={8} wrap="wrap" style={{ marginBottom: 24 }}>
         {STATUS_PILLS.map((pill) => (
@@ -383,10 +413,7 @@ export default function MyItemsPage() {
             key={pill.value}
             type="button"
             style={statusFilter === pill.value ? pillActive : pillBase}
-            onClick={() => {
-              setStatusFilter(pill.value)
-              setPage(1)
-            }}
+            onClick={() => setStatusFilter(pill.value)}
           >
             {pill.label}
           </button>

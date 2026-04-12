@@ -32,10 +32,12 @@ import type { CapturedPhoto } from '@/components/ui/MultiCaptureUploader'
 import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { AuctionTimingSection } from '@/features/auction/components/AuctionTimingSection'
-import { AuctionType, ItemCondition } from '@/types/enums'
+import { AuctionType, ItemCondition, ItemStatus } from '@/types/enums'
 import { DEFAULT_CURRENCY } from '@/utils/constants'
 import type { CreateAuctionRequest } from '@/features/auction/api'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { SERIF_FONT } from '@/styles/tokens'
+import { htmlToPlainTextExcerpt } from '@/components/ui/SafeHtmlRenderer'
 
 interface FormValues {
   title: string
@@ -50,7 +52,6 @@ interface FormValues {
   buyNowPrice?: number
   extensionMinutes: number
   currency: string
-  // Timing fields (optional — from AuctionTimingSection)
   qualificationStartAt?: string
   qualificationEndAt?: string
   startTime?: string
@@ -58,23 +59,16 @@ interface FormValues {
   autoExtend?: boolean
 }
 
-const AUCTION_TYPE_OPTIONS = Object.entries(AuctionType).map(([label, value]) => ({
-  label,
-  value,
-}))
-
-const CONDITION_OPTIONS = Object.entries(ItemCondition).map(([label, value]) => ({
-  label,
-  value,
-}))
+const AUCTION_TYPE_OPTIONS = Object.entries(AuctionType).map(([label, value]) => ({ label, value }))
+const CONDITION_OPTIONS = Object.entries(ItemCondition).map(([label, value]) => ({ label, value }))
 
 function SectionHeader({ number, title }: { number: number; title: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
       <span
         style={{
-          width: 32,
-          height: 32,
+          width: 28,
+          height: 28,
           borderRadius: '50%',
           background: 'var(--color-accent)',
           color: '#fff',
@@ -82,13 +76,13 @@ function SectionHeader({ number, title }: { number: number; title: string }) {
           alignItems: 'center',
           justifyContent: 'center',
           fontWeight: 600,
-          fontSize: 14,
+          fontSize: 13,
           flexShrink: 0,
         }}
       >
         {number}
       </span>
-      <h3 style={{ fontFamily: SERIF_FONT, margin: 0, fontSize: 18, color: 'var(--color-text-primary)' }}>
+      <h3 style={{ fontFamily: SERIF_FONT, margin: 0, fontSize: 17, color: 'var(--color-text-primary)' }}>
         {title}
       </h3>
     </div>
@@ -101,6 +95,7 @@ export default function CreateAuctionPage() {
   const navigate = useNavigate()
   const prefix = useRoutePrefix()
   const { message } = App.useApp()
+  const { isMobile } = useBreakpoint()
 
   const [searchParams] = useSearchParams()
   const itemId = searchParams.get('itemId')
@@ -108,7 +103,6 @@ export default function CreateAuctionPage() {
   const isEditMode = !!editId && !itemId
 
   const { data: editAuction, isLoading: editLoading } = useAuctionDetail(editId ?? '')
-
   const { data: existingItem, isLoading: itemLoading, isError: itemError } = useItemById(itemId ?? '')
 
   const [form] = Form.useForm<FormValues>()
@@ -120,7 +114,6 @@ export default function CreateAuctionPage() {
   const [requireVerification, setRequireVerification] = useState(false)
   const [selectedCondition, setSelectedCondition] = useState<string | null>(null)
 
-  // Submission state for partial failure recovery
   const [submissionStep, setSubmissionStep] = useState<string | null>(null)
   const [submissionError, setSubmissionError] = useState<string | null>(null)
   const [partialAuctionId, setPartialAuctionId] = useState<string | null>(null)
@@ -145,21 +138,15 @@ export default function CreateAuctionPage() {
     }
   }, [isEditMode, editAuction, form])
 
-  const categoryOptions = (categories ?? []).map((cat) => ({
-    label: cat.name,
-    value: cat.id,
-  }))
-
+  const categoryOptions = (categories ?? []).map((cat) => ({ label: cat.name, value: cat.id }))
   const submitItemMutation = useSubmitItem()
   const updateAuction = useUpdateAuction()
   const submitAuction = useSubmitAuction()
   const [savingDraft, setSavingDraft] = useState(false)
 
-  // Helper: check if timing fields are filled
   const hasTimingValues = (values: FormValues) =>
     !!(values.qualificationStartAt && values.qualificationEndAt && values.startTime && values.endTime)
 
-  // Helper: update auction with timing after creation
   const applyTiming = async (auctionId: string, values: FormValues) => {
     if (!hasTimingValues(values)) return
     await updateAuction.mutateAsync({
@@ -194,15 +181,10 @@ export default function CreateAuctionPage() {
     buyNowPrice: values.buyNowPrice,
     extensionMinutes: values.extensionMinutes,
     currency: values.currency,
-    images: uploadedImages?.map((img, i) => ({
-      mediaUploadId: img.mediaUploadId,
-      isPrimary: i === 0,
-      sortOrder: i,
-    })),
+    images: uploadedImages?.map((img, i) => ({ mediaUploadId: img.mediaUploadId, isPrimary: i === 0, sortOrder: i })),
     verifyByPlatform: requireVerification,
   }) as any as CreateAuctionRequest
 
-  // Save Draft: create auction as draft, optionally set timing
   const handleSaveDraft = async () => {
     try {
       const values = await form.validateFields()
@@ -238,7 +220,6 @@ export default function CreateAuctionPage() {
           const uploadedImages = await uploadCapturedPhotos()
           result = await createAuction.mutateAsync(buildPayload(values, uploadedImages))
         }
-        // Chain: set timing if provided
         if (hasTimingValues(values)) {
           try {
             await applyTiming(result.id, values)
@@ -259,7 +240,6 @@ export default function CreateAuctionPage() {
     }
   }
 
-  // Retry from the last failed step
   const handleRetry = async () => {
     if (!partialAuctionId || !submissionStep) return
     setSubmissionError(null)
@@ -285,14 +265,12 @@ export default function CreateAuctionPage() {
     }
   }
 
-  // Continue: create auction, set timing, submit item/auction
   const onFinish = async (values: FormValues) => {
     if (!hideItemFields && capturedPhotos.length === 0) {
       message.warning(t('photosRequiredError', 'Please capture at least 1 photo'))
       return
     }
 
-    // Clear previous partial failure state
     setSubmissionError(null)
     setSubmissionStep(null)
     setPartialAuctionId(null)
@@ -311,7 +289,6 @@ export default function CreateAuctionPage() {
           auctionType: values.auctionType,
         }
         await updateAuction.mutateAsync(pricingFields)
-        // Apply timing if provided
         if (hasTimingValues(values)) {
           setSubmissionStep('timing')
           try {
@@ -347,7 +324,6 @@ export default function CreateAuctionPage() {
           auctionType: values.auctionType,
         })
         setPartialAuctionId(result.id)
-        // Chain: timing → submit auction (item already approved → goes to Scheduled)
         if (hasTimingValues(values)) {
           setSubmissionStep('timing')
           try {
@@ -378,7 +354,6 @@ export default function CreateAuctionPage() {
         const payload = buildPayload(values, uploadedImages2)
         const result = await createAuction.mutateAsync(payload)
         setPartialAuctionId(result.id)
-        // Auto-submit item for admin review
         setSubmissionStep('submitting')
         try {
           await submitItemMutation.mutateAsync({
@@ -388,7 +363,6 @@ export default function CreateAuctionPage() {
           message.success(t('itemSubmitted', 'Auction created and item submitted for review'))
           setSubmissionStep(null)
         } catch {
-          // Draft saved but submission failed — stay on page, show retry
           setSubmissionStep(null)
           setSubmissionError(t('draftSavedSubmitFailed', 'Draft saved but item submission failed. You can submit from My Auctions.'))
           return
@@ -401,88 +375,7 @@ export default function CreateAuctionPage() {
     }
   }
 
-  if ((itemId && itemLoading) || (editLoading && isEditMode)) {
-    return (
-      <div style={{ maxWidth: 720, margin: '0 auto', paddingTop: 40 }}>
-        <Skeleton active paragraph={{ rows: 6 }} />
-      </div>
-    )
-  }
-
-  if (itemId && itemError) {
-    return (
-      <div style={{ maxWidth: 720, margin: '0 auto', paddingTop: 40 }}>
-        <Alert
-          type="error"
-          showIcon
-          message={t('itemLoadError', 'Failed to load item details')}
-          description={t('itemLoadErrorDesc', 'Could not load the selected item. You can create an auction from scratch instead.')}
-          style={{ marginBottom: 16, borderRadius: 8 }}
-        />
-        <Button
-          icon={<ArrowLeftOutlined />}
-          onClick={() => navigate(`${prefix}/auctions`)}
-        >
-          {tc('action.back', 'Back')}
-        </Button>
-      </div>
-    )
-  }
-
-  const pricingSectionNumber = hideItemFields ? 1 : 3
-
-  // Steps config
   const isSubmitting = !!submissionStep
-  const stepsItems = hideItemFields
-    ? [
-        {
-          title: t('stepPricing', 'Pricing & Time'),
-          status: (submissionStep === 'updating' || submissionStep === 'timing'
-            ? 'process'
-            : 'wait') as 'process' | 'wait' | 'finish',
-          icon: (submissionStep === 'updating' || submissionStep === 'timing') ? <LoadingOutlined /> : undefined,
-        },
-        {
-          title: t('stepSubmit', 'Submit'),
-          status: (submissionStep === 'submitting'
-            ? 'process'
-            : submissionStep === null && !submissionError
-              ? 'wait'
-              : 'wait') as 'process' | 'wait' | 'finish',
-          icon: submissionStep === 'submitting' ? <LoadingOutlined /> : undefined,
-        },
-      ]
-    : [
-        {
-          title: t('stepItemDetails', 'Item Details'),
-          status: 'wait' as const,
-        },
-        {
-          title: t('stepPhotos', 'Photos'),
-          status: (submissionStep === 'uploading'
-            ? 'process'
-            : capturedPhotos.length > 0
-              ? 'finish'
-              : 'wait') as 'process' | 'wait' | 'finish',
-          icon: submissionStep === 'uploading' ? <LoadingOutlined /> : capturedPhotos.length > 0 ? <CheckCircleOutlined /> : undefined,
-        },
-        {
-          title: t('stepPricing', 'Pricing & Time'),
-          status: (submissionStep === 'timing'
-            ? 'process'
-            : 'wait') as 'process' | 'wait' | 'finish',
-          icon: submissionStep === 'timing' ? <LoadingOutlined /> : undefined,
-        },
-        {
-          title: t('stepSubmit', 'Submit'),
-          status: (submissionStep === 'creating' || submissionStep === 'submitting'
-            ? 'process'
-            : 'wait') as 'process' | 'wait' | 'finish',
-          icon: (submissionStep === 'creating' || submissionStep === 'submitting') ? <LoadingOutlined /> : undefined,
-        },
-      ]
-
-  // Step label while submitting
   const stepStatusText: Record<string, string> = {
     uploading: t('stepStatusUploading', 'Uploading photos...'),
     creating: t('stepStatusCreating', 'Creating auction...'),
@@ -491,27 +384,100 @@ export default function CreateAuctionPage() {
     updating: t('stepStatusUpdating', 'Updating auction...'),
   }
 
+  const stepsItems = hideItemFields
+    ? [
+        {
+          title: t('stepPricing', 'Pricing & Time'),
+          status: (submissionStep === 'updating' || submissionStep === 'timing' ? 'process' : 'wait') as 'process' | 'wait' | 'finish',
+          icon: (submissionStep === 'updating' || submissionStep === 'timing') ? <LoadingOutlined /> : undefined,
+        },
+        {
+          title: t('stepSubmit', 'Submit'),
+          status: (submissionStep === 'submitting' ? 'process' : 'wait') as 'process' | 'wait' | 'finish',
+          icon: submissionStep === 'submitting' ? <LoadingOutlined /> : undefined,
+        },
+      ]
+    : [
+        { title: t('stepItemDetails', 'Item Details'), status: 'wait' as const },
+        {
+          title: t('stepPhotos', 'Photos'),
+          status: (submissionStep === 'uploading' ? 'process' : capturedPhotos.length > 0 ? 'finish' : 'wait') as 'process' | 'wait' | 'finish',
+          icon: submissionStep === 'uploading' ? <LoadingOutlined /> : capturedPhotos.length > 0 ? <CheckCircleOutlined /> : undefined,
+        },
+        {
+          title: t('stepPricing', 'Pricing & Time'),
+          status: (submissionStep === 'timing' ? 'process' : 'wait') as 'process' | 'wait' | 'finish',
+          icon: submissionStep === 'timing' ? <LoadingOutlined /> : undefined,
+        },
+        {
+          title: t('stepSubmit', 'Submit'),
+          status: (submissionStep === 'creating' || submissionStep === 'submitting' ? 'process' : 'wait') as 'process' | 'wait' | 'finish',
+          icon: (submissionStep === 'creating' || submissionStep === 'submitting') ? <LoadingOutlined /> : undefined,
+        },
+      ]
+
+  const pricingSectionNumber = hideItemFields ? 1 : 3
+
+  if ((itemId && itemLoading) || (editLoading && isEditMode)) {
+    return (
+      <div style={{ maxWidth: 720, margin: '0 auto', paddingTop: 40, paddingInline: isMobile ? 16 : 0 }}>
+        <Skeleton active paragraph={{ rows: 6 }} />
+      </div>
+    )
+  }
+
+  if (itemId && itemError) {
+    return (
+      <div style={{ maxWidth: 720, margin: '0 auto', paddingTop: 40, paddingInline: isMobile ? 16 : 0 }}>
+        <Alert
+          type="error"
+          showIcon
+          message={t('itemLoadError', 'Failed to load item details')}
+          description={t('itemLoadErrorDesc', 'Could not load the selected item. You can create an auction from scratch instead.')}
+          style={{ marginBottom: 16, borderRadius: 8 }}
+        />
+        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(`${prefix}/auctions`)}>
+          {tc('action.back', 'Back')}
+        </Button>
+      </div>
+    )
+  }
+
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto' }}>
-      <Space style={{ marginBottom: 16 }}>
+    <div
+      style={{
+        maxWidth: 720,
+        margin: '0 auto',
+        paddingInline: isMobile ? 16 : 0,
+        paddingBottom: isMobile ? 80 : 40,
+      }}
+    >
+      {/* Back button */}
+      <Space style={{ marginBottom: 12 }}>
         <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate(`${prefix}/auctions`)}>
           {tc('action.back', 'Back')}
         </Button>
       </Space>
 
       <Typography.Title
-        level={2}
-        style={{ fontFamily: SERIF_FONT, color: 'var(--color-text-primary)', marginBottom: 24 }}
+        level={isMobile ? 3 : 2}
+        style={{
+          fontFamily: SERIF_FONT,
+          color: 'var(--color-text-primary)',
+          marginBottom: 20,
+          fontSize: isMobile ? 20 : undefined,
+        }}
       >
         {isEditMode ? t('editAuction', 'Edit Auction') : t('createAuction', 'Tạo đấu giá mới')}
       </Typography.Title>
 
-      {/* ══════════════ Steps Progress Indicator ══════════════ */}
+      {/* Steps Progress */}
       <Card style={{ borderRadius: 12, border: '1px solid var(--color-border)', marginBottom: 16 }}>
         <Steps
           size="small"
           items={stepsItems}
           style={{ padding: '4px 0' }}
+          direction={isMobile && !hideItemFields ? 'vertical' : 'horizontal'}
         />
         {isSubmitting && submissionStep && stepStatusText[submissionStep] && (
           <div style={{ textAlign: 'center', marginTop: 8, fontSize: 13, color: 'var(--color-text-secondary)' }}>
@@ -520,7 +486,7 @@ export default function CreateAuctionPage() {
         )}
       </Card>
 
-      {/* ══════════════ Partial Failure Alert ══════════════ */}
+      {/* Partial Failure Alert */}
       {submissionError && (
         <Alert
           type="warning"
@@ -529,7 +495,7 @@ export default function CreateAuctionPage() {
           description={submissionError}
           style={{ marginBottom: 16, borderRadius: 8 }}
           action={
-            partialAuctionId && (submissionStep === null) ? (
+            partialAuctionId && submissionStep === null ? (
               <Space direction="vertical" size={4}>
                 <Button size="small" type="primary" onClick={handleRetry} style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}>
                   {t('retry', 'Retry')}
@@ -547,22 +513,20 @@ export default function CreateAuctionPage() {
         />
       )}
 
-      {/* ══════════════ Item Preview (from existing item or edit mode) ══════════════ */}
+      {/* Item Preview */}
       {(isFromItem || (isEditMode && existingItemForPreview)) && existingItemForPreview && (
-        <Card
-          style={{ borderRadius: 12, border: '1px solid var(--color-border)', marginBottom: 16 }}
-        >
+        <Card style={{ borderRadius: 12, border: '1px solid var(--color-border)', marginBottom: 16 }}>
           <SectionHeader number={1} title="Vật phẩm đã chọn" />
-          <div style={{ display: 'flex', gap: 16 }}>
+          <div style={{ display: 'flex', gap: 12, flexWrap: isMobile ? 'wrap' : undefined }}>
             {existingItemForPreview.images && existingItemForPreview.images.length > 0 && (
-              <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+              <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                 <Image.PreviewGroup>
-                  {existingItemForPreview.images.slice(0, 4).map((img: any) => (
+                  {existingItemForPreview.images.slice(0, isMobile ? 2 : 4).map((img: any) => (
                     <Image
                       key={img.id}
                       src={img.thumbnailUrl ?? img.url}
-                      width={64}
-                      height={64}
+                      width={isMobile ? 56 : 64}
+                      height={isMobile ? 56 : 64}
                       style={{ objectFit: 'cover', borderRadius: 8 }}
                     />
                   ))}
@@ -570,7 +534,7 @@ export default function CreateAuctionPage() {
               </div>
             )}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <Typography.Title level={5} style={{ margin: 0, fontFamily: SERIF_FONT }}>
+              <Typography.Title level={5} style={{ margin: 0, fontFamily: SERIF_FONT, fontSize: isMobile ? 14 : undefined }}>
                 {existingItemForPreview.title}
               </Typography.Title>
               <div style={{ marginTop: 4, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -578,14 +542,19 @@ export default function CreateAuctionPage() {
                 {existingItemForPreview.quantity > 1 && (
                   <Tag>{t('quantityLabel', 'Qty')}: {existingItemForPreview.quantity}</Tag>
                 )}
+                {(existingItemForPreview as any).requiresPlatformInspection === true && (
+                  <Tag icon={<SafetyCertificateOutlined />} color="blue">
+                    {t('verifiedByPlatform', 'Verified by platform')}
+                  </Tag>
+                )}
               </div>
               {existingItemForPreview.description && (
                 <Typography.Paragraph
                   type="secondary"
                   ellipsis={{ rows: 2 }}
-                  style={{ margin: '8px 0 0', fontSize: 13 }}
+                  style={{ margin: '6px 0 0', fontSize: 13 }}
                 >
-                  {existingItemForPreview.description}
+                  {htmlToPlainTextExcerpt(existingItemForPreview.description)}
                 </Typography.Paragraph>
               )}
             </div>
@@ -593,6 +562,7 @@ export default function CreateAuctionPage() {
         </Card>
       )}
 
+      {/* Main Form */}
       <Card style={{ borderRadius: 12, border: '1px solid var(--color-border)' }}>
         <Form<FormValues>
           form={form}
@@ -606,7 +576,7 @@ export default function CreateAuctionPage() {
             currency: DEFAULT_CURRENCY,
           }}
         >
-          {/* ══════════════ Section 1: Item Info (hidden when using existing item or editing) ══════════════ */}
+          {/* Section 1: Item Info */}
           {!hideItemFields && (
             <>
               <SectionHeader number={1} title="Thông tin vật phẩm" />
@@ -619,10 +589,10 @@ export default function CreateAuctionPage() {
                   { max: 255, message: t('titleMax', 'Title must not exceed 255 characters') },
                 ]}
               >
-                <Input placeholder={t('titlePlaceholder', 'Enter item title')} />
+                <Input placeholder={t('titlePlaceholder', 'Enter item title')} style={{ height: isMobile ? 44 : undefined }} />
               </Form.Item>
 
-              {/* Condition as pill/segmented toggle */}
+              {/* Condition pills */}
               <Form.Item
                 name="condition"
                 label={t('condition', 'Condition')}
@@ -638,7 +608,7 @@ export default function CreateAuctionPage() {
                         form.setFieldsValue({ condition: opt.value })
                       }}
                       style={{
-                        padding: '8px 20px',
+                        padding: isMobile ? '8px 14px' : '8px 20px',
                         borderRadius: 20,
                         border: `1.5px solid ${selectedCondition === opt.value ? 'var(--color-accent)' : 'var(--color-border)'}`,
                         background: selectedCondition === opt.value ? 'var(--color-accent)' : 'var(--color-bg-card)',
@@ -646,6 +616,7 @@ export default function CreateAuctionPage() {
                         fontWeight: 500,
                         fontSize: 13,
                         cursor: 'pointer',
+                        minHeight: 36,
                         transition: 'all 0.2s',
                       }}
                     >
@@ -662,6 +633,7 @@ export default function CreateAuctionPage() {
                   allowClear
                   showSearch
                   optionFilterProp="label"
+                  style={{ width: '100%' }}
                 />
               </Form.Item>
 
@@ -670,10 +642,10 @@ export default function CreateAuctionPage() {
               </Form.Item>
 
               <Form.Item name="quantity" label={t('quantity', 'Quantity')}>
-                <InputNumber style={{ width: '100%' }} min={1} />
+                <InputNumber style={{ width: '100%', height: isMobile ? 44 : undefined }} min={1} />
               </Form.Item>
 
-              {/* ══════════════ Section 2: Photos ══════════════ */}
+              {/* Section 2: Photos */}
               <div style={{ borderTop: '1px solid var(--color-border-light)', margin: '24px 0', paddingTop: 24 }}>
                 <SectionHeader number={2} title="Hình ảnh" />
               </div>
@@ -689,10 +661,11 @@ export default function CreateAuctionPage() {
             </>
           )}
 
-          {/* ══════════════ Section: Pricing & Time ══════════════ */}
+          {/* Section divider before Pricing */}
           {!hideItemFields && (
             <div style={{ borderTop: '1px solid var(--color-border-light)', margin: '24px 0', paddingTop: 24 }} />
           )}
+
           <SectionHeader number={pricingSectionNumber} title="Giá & Thời gian" />
 
           <Form.Item
@@ -700,7 +673,7 @@ export default function CreateAuctionPage() {
             label={t('auctionType', 'Auction Type')}
             rules={[{ required: true, message: t('typeRequired', 'Please select auction type') }]}
           >
-            <Select options={AUCTION_TYPE_OPTIONS} />
+            <Select options={AUCTION_TYPE_OPTIONS} style={{ width: '100%' }} />
           </Form.Item>
 
           <Form.Item
@@ -711,13 +684,7 @@ export default function CreateAuctionPage() {
               { type: 'number', min: 0, message: t('startingPriceMin', 'Starting price must be >= 0') },
             ]}
           >
-            <InputNumber
-              style={{ width: '100%' }}
-              min={0}
-              step={1000}
-              addonAfter={DEFAULT_CURRENCY}
-              placeholder="0"
-            />
+            <InputNumber style={{ width: '100%' }} min={0} step={1000} addonAfter={DEFAULT_CURRENCY} placeholder="0" />
           </Form.Item>
 
           <Form.Item
@@ -728,12 +695,7 @@ export default function CreateAuctionPage() {
               { type: 'number', min: 1, message: t('bidIncrementMin', 'Bid increment must be > 0') },
             ]}
           >
-            <InputNumber
-              style={{ width: '100%' }}
-              min={1000}
-              step={1000}
-              addonAfter={DEFAULT_CURRENCY}
-            />
+            <InputNumber style={{ width: '100%' }} min={1000} step={1000} addonAfter={DEFAULT_CURRENCY} />
           </Form.Item>
 
           <Form.Item name="reservePrice" label={t('reservePrice', 'Reserve Price')}>
@@ -760,89 +722,122 @@ export default function CreateAuctionPage() {
             <Input />
           </Form.Item>
 
-          {/* ── Timing Section (collapsible) ── */}
-          <AuctionTimingSection form={form} />
+          {/* Timing Section */}
+          <AuctionTimingSection
+            form={form}
+            itemApproved={
+              isEditMode
+                ? true
+                : isFromItem
+                  ? existingItem?.status === ItemStatus.Approved ||
+                    existingItem?.status === ItemStatus.Active ||
+                    existingItem?.status === ItemStatus.InAuction
+                  : true
+            }
+          />
 
-          {/* ── Verification Toggle ── */}
-          <div
-            style={{
-              borderTop: '1px solid var(--color-border-light)',
-              margin: '24px 0 20px',
-              paddingTop: 24,
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '16px 20px',
-                borderRadius: 12,
-                background: 'var(--color-accent-light)',
-                border: '1px solid var(--color-border-light)',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1 }}>
-                <SafetyCertificateOutlined style={{ fontSize: 20, color: 'var(--color-accent)' }} />
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-text-primary)' }}>
-                    Xác thực bởi Nền tảng
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 2 }}>
-                    Yêu cầu chuyên gia oio.vn kiểm định vật phẩm trước khi đấu giá.
+          {/* Verification Toggle */}
+          {!isFromItem && (
+            <div style={{ borderTop: '1px solid var(--color-border-light)', margin: '24px 0 20px', paddingTop: 24 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: isMobile ? '14px 16px' : '16px 20px',
+                  borderRadius: 12,
+                  background: 'var(--color-accent-light)',
+                  border: '1px solid var(--color-border-light)',
+                  gap: 12,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+                  <SafetyCertificateOutlined style={{ fontSize: 20, color: 'var(--color-accent)', flexShrink: 0 }} />
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-text-primary)' }}>
+                      Xác thực bởi Nền tảng
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 2 }}>
+                      Yêu cầu chuyên gia oio.vn kiểm định vật phẩm trước khi đấu giá.
+                    </div>
                   </div>
                 </div>
+                <Switch checked={requireVerification} onChange={setRequireVerification} />
               </div>
-              <Switch
-                checked={requireVerification}
-                onChange={setRequireVerification}
-              />
             </div>
-          </div>
+          )}
 
-          {/* ── Submit Buttons ── */}
+          {/* Submit Buttons */}
           <Form.Item style={{ marginTop: 24, marginBottom: 0 }}>
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-              <Button
-                size="large"
-                onClick={() => navigate(`${prefix}/auctions`)}
-                style={{
-                  borderRadius: 8,
-                  borderColor: 'var(--color-border)',
-                  color: 'var(--color-text-secondary)',
-                }}
-              >
-                {tc('action.cancel', 'Cancel')}
-              </Button>
-              <Button
-                size="large"
-                onClick={handleSaveDraft}
-                loading={savingDraft && (createAuction.isPending || createAuctionFromItem.isPending || updateAuction.isPending)}
-                disabled={(!hideItemFields && capturedPhotos.length === 0) || createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending}
-                style={{
-                  borderRadius: 8,
-                  borderColor: 'var(--color-accent)',
-                  color: 'var(--color-accent)',
-                }}
-              >
-                {t('saveDraft', 'Lưu bản nháp')}
-              </Button>
-              <Button
-                type="primary"
-                size="large"
-                htmlType="submit"
-                loading={!savingDraft && (createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending)}
-                disabled={(!hideItemFields && capturedPhotos.length === 0) || createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending}
-                style={{
-                  background: 'var(--color-accent)',
-                  borderColor: 'var(--color-accent)',
-                  borderRadius: 8,
-                  fontWeight: 600,
-                }}
-              >
-                {t('create', 'Tạo phiên đấu giá')}
-              </Button>
-            </div>
+            {isMobile ? (
+              /* Mobile: stacked buttons */
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <Button
+                  type="primary"
+                  size="large"
+                  htmlType="submit"
+                  loading={!savingDraft && (createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending)}
+                  disabled={(!hideItemFields && capturedPhotos.length === 0) || createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending}
+                  style={{
+                    background: 'var(--color-accent)',
+                    borderColor: 'var(--color-accent)',
+                    borderRadius: 8,
+                    fontWeight: 600,
+                    height: 48,
+                  }}
+                >
+                  {t('create', 'Tạo phiên đấu giá')}
+                </Button>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <Button
+                    size="large"
+                    onClick={handleSaveDraft}
+                    loading={savingDraft && (createAuction.isPending || createAuctionFromItem.isPending || updateAuction.isPending)}
+                    disabled={(!hideItemFields && capturedPhotos.length === 0) || createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending}
+                    style={{ flex: 1, borderRadius: 8, borderColor: 'var(--color-accent)', color: 'var(--color-accent)', height: 44 }}
+                  >
+                    {t('saveDraft', 'Lưu nháp')}
+                  </Button>
+                  <Button
+                    size="large"
+                    onClick={() => navigate(`${prefix}/auctions`)}
+                    style={{ flex: 1, borderRadius: 8, borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)', height: 44 }}
+                  >
+                    {tc('action.cancel', 'Cancel')}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              /* Desktop: inline buttons */
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+                <Button
+                  size="large"
+                  onClick={() => navigate(`${prefix}/auctions`)}
+                  style={{ borderRadius: 8, borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
+                >
+                  {tc('action.cancel', 'Cancel')}
+                </Button>
+                <Button
+                  size="large"
+                  onClick={handleSaveDraft}
+                  loading={savingDraft && (createAuction.isPending || createAuctionFromItem.isPending || updateAuction.isPending)}
+                  disabled={(!hideItemFields && capturedPhotos.length === 0) || createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending}
+                  style={{ borderRadius: 8, borderColor: 'var(--color-accent)', color: 'var(--color-accent)' }}
+                >
+                  {t('saveDraft', 'Lưu bản nháp')}
+                </Button>
+                <Button
+                  type="primary"
+                  size="large"
+                  htmlType="submit"
+                  loading={!savingDraft && (createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending)}
+                  disabled={(!hideItemFields && capturedPhotos.length === 0) || createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending}
+                  style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)', borderRadius: 8, fontWeight: 600 }}
+                >
+                  {t('create', 'Tạo phiên đấu giá')}
+                </Button>
+              </div>
+            )}
           </Form.Item>
         </Form>
       </Card>

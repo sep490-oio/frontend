@@ -1,4 +1,4 @@
-import { Tabs, Typography, Flex, Tooltip } from 'antd'
+import { Tabs, Typography, Flex, Tooltip, Grid } from 'antd'
 import { CheckCircleOutlined, SafetyOutlined } from '@ant-design/icons'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -7,6 +7,8 @@ import { StatusBadge } from '@/components/ui/StatusBadge'
 import { SafeHtmlRenderer } from '@/components/ui/SafeHtmlRenderer'
 import { ItemQA } from '@/features/item/components/ItemQA'
 import { formatCurrency, formatDate, formatDateTime } from '@/utils/format'
+
+const { useBreakpoint } = Grid
 
 export interface AuctionDetailTabsProps {
   item: {
@@ -47,7 +49,13 @@ export interface AuctionDetailTabsProps {
   qaLastSyncedAt?: number | null
 }
 
-function SellerIdentity({ sellerId, sellerUsername }: { sellerId?: string; sellerUsername?: string }) {
+function SellerIdentity({
+  sellerId,
+  sellerUsername,
+}: {
+  sellerId?: string
+  sellerUsername?: string
+}) {
   if (!sellerId) {
     return (
       <Typography.Text type="secondary">
@@ -68,34 +76,66 @@ function SellerIdentity({ sellerId, sellerUsername }: { sellerId?: string; selle
           borderRadius: '50%',
           color: 'var(--color-accent)',
           display: 'flex',
-          fontSize: 20,
+          fontSize: 18,
           fontWeight: 600,
-          height: 56,
+          flexShrink: 0,
+          height: 48,
           justifyContent: 'center',
-          width: 56,
+          width: 48,
         }}
       >
         {avatarChar}
       </div>
-      <div style={{ flex: 1 }}>
-        <div style={{ color: 'var(--color-text-primary)', fontSize: 16, fontWeight: 600, marginBottom: 4 }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div
+          style={{
+            color: 'var(--color-text-primary)',
+            fontSize: 15,
+            fontWeight: 600,
+            marginBottom: 2,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
           <Link to={`/sellers/${sellerId}`} style={{ color: 'inherit', textDecoration: 'none' }}>
             {sellerUsername ? (
               displayName
             ) : (
-              <Tooltip title={sellerId}>
-                {displayName}
-              </Tooltip>
+              <Tooltip title={sellerId}>{displayName}</Tooltip>
             )}
           </Link>
         </div>
-        <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+        <Typography.Text type="secondary" style={{ fontSize: 12 }}>
           Public seller activity and catalogue are available on the seller profile page.
         </Typography.Text>
-        <div style={{ marginTop: 12 }}>
-          <Link to={`/sellers/${sellerId}`}>View seller profile</Link>
+        <div style={{ marginTop: 8 }}>
+          <Link to={`/sellers/${sellerId}`} style={{ fontSize: 13 }}>
+            View seller profile
+          </Link>
         </div>
       </div>
+    </>
+  )
+}
+
+// Reusable spec row for key/value pairs
+function SpecRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <>
+      <span
+        style={{
+          color: 'var(--color-text-secondary)',
+          fontWeight: 500,
+          fontSize: 13,
+          lineHeight: 1.6,
+        }}
+      >
+        {label}
+      </span>
+      <span style={{ color: 'var(--color-text-primary)', fontSize: 13, lineHeight: 1.6 }}>
+        {children}
+      </span>
     </>
   )
 }
@@ -113,101 +153,160 @@ export function AuctionDetailTabs({
   qaLastSyncedAt = null,
 }: AuctionDetailTabsProps) {
   const { t } = useTranslation()
+  const screens = useBreakpoint()
+  const isMobile = !screens.md
   const sellerId = item.sellerId ?? auction.sellerId
+
+  // Responsive grid for spec table
+  const specGridStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: isMobile ? '120px 1fr' : '160px 1fr',
+    gap: '10px 12px',
+    fontSize: 14,
+  }
 
   return (
     <Tabs
       defaultActiveKey="condition"
+      size={isMobile ? 'small' : 'middle'}
+      style={{ width: '100%' }}
       items={[
         {
           key: 'condition',
-          label: t('specifications', 'Thông số kỹ thuật'),
+          label: t('specifications', 'Thông số'),
           children: (
-            <div style={{ maxWidth: 600 }}>
-              <Flex gap={8} align="center" style={{ marginBottom: 16 }}>
+            <div style={{ paddingTop: 4 }}>
+              <Flex gap={8} align="center" style={{ marginBottom: 14 }} wrap="wrap">
                 {item.condition ? <StatusBadge status={item.condition} /> : null}
               </Flex>
-              <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: '12px 16px', fontSize: 14 }}>
-                <span style={{ color: 'var(--color-text-secondary)', fontWeight: 500 }}>{t('condition', 'Tình trạng')}</span>
-                <span style={{ color: 'var(--color-text-primary)' }}>{item.condition}</span>
+              <div style={specGridStyle}>
+                <SpecRow label={t('condition', 'Tình trạng')}>{item.condition ?? '—'}</SpecRow>
                 {item.categoryId && (
-                  <>
-                    <span style={{ color: 'var(--color-text-secondary)', fontWeight: 500 }}>{t('category', 'Danh mục')}</span>
-                    <span style={{ color: 'var(--color-text-primary)' }}>{categoryName ?? item.categoryId}</span>
-                  </>
+                  <SpecRow label={t('category', 'Danh mục')}>
+                    {categoryName ?? item.categoryId}
+                  </SpecRow>
                 )}
-                <span style={{ color: 'var(--color-text-secondary)', fontWeight: 500 }}>{t('quantity', 'Số lượng')}</span>
-                <span style={{ color: 'var(--color-text-primary)' }}>{item.quantity ?? 1}</span>
-                <span style={{ color: 'var(--color-text-secondary)', fontWeight: 500 }}>{t('itemStatus', 'Trạng thái')}</span>
-                <span>{item.status ? <StatusBadge status={item.status} size="small" /> : '—'}</span>
-                <span style={{ color: 'var(--color-text-secondary)', fontWeight: 500 }}>{t('createdAt', 'Ngày tạo')}</span>
-                <span style={{ color: 'var(--color-text-primary)' }}>{item.createdAt ? formatDate(item.createdAt) : '—'}</span>
+                <SpecRow label={t('quantity', 'Số lượng')}>{item.quantity ?? 1}</SpecRow>
+                <SpecRow label={t('itemStatus', 'Trạng thái')}>
+                  {item.status ? <StatusBadge status={item.status} size="small" /> : '—'}
+                </SpecRow>
+                <SpecRow label={t('createdAt', 'Ngày tạo')}>
+                  {item.createdAt ? formatDate(item.createdAt) : '—'}
+                </SpecRow>
               </div>
             </div>
           ),
         },
         {
           key: 'description',
-          label: t('productDescription', 'Mô tả sản phẩm'),
+          label: t('productDescription', 'Mô tả'),
           children: (
-            <div style={{ maxWidth: 720 }}>
-              <div style={{ marginBottom: 32 }}>
-                <h3 style={{ color: 'var(--color-text-primary)', fontSize: 16, fontWeight: 600, letterSpacing: '0.04em', marginBottom: 12, textTransform: 'uppercase' }}>
+            <div style={{ paddingTop: 4 }}>
+              <div style={{ marginBottom: 24 }}>
+                <h3
+                  style={{
+                    color: 'var(--color-text-primary)',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    letterSpacing: '0.04em',
+                    marginBottom: 10,
+                    textTransform: 'uppercase',
+                  }}
+                >
                   {t('productOverview', 'Tổng quan sản phẩm')}
                 </h3>
                 {item.description ? (
                   <SafeHtmlRenderer html={item.description} />
                 ) : (
-                  <Typography.Text type="secondary">{t('noDescription', 'No description available.')}</Typography.Text>
+                  <Typography.Text type="secondary">
+                    {t('noDescription', 'Không có mô tả.')}
+                  </Typography.Text>
                 )}
               </div>
 
-              <div style={{ marginBottom: 32 }}>
-                <h3 style={{ color: 'var(--color-text-primary)', fontSize: 16, fontWeight: 600, letterSpacing: '0.04em', marginBottom: 16, textTransform: 'uppercase' }}>
-                  {t('conditionDetails', 'Tình trạng chi tiết')}
+              <div>
+                <h3
+                  style={{
+                    color: 'var(--color-text-primary)',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    letterSpacing: '0.04em',
+                    marginBottom: 12,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {t('conditionDetails', 'Chi tiết tình trạng')}
                 </h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {item.condition && (
-                    <div style={{ alignItems: 'flex-start', display: 'flex', gap: 10 }}>
-                      <CheckCircleOutlined style={{ color: 'var(--color-success)', flexShrink: 0, fontSize: 16, marginTop: 2 }} />
-                      <span style={{ color: 'var(--color-text-secondary)', fontSize: 14, lineHeight: 1.6 }}>
+                    <div style={{ alignItems: 'flex-start', display: 'flex', gap: 8 }}>
+                      <CheckCircleOutlined
+                        style={{
+                          color: 'var(--color-success)',
+                          flexShrink: 0,
+                          fontSize: 14,
+                          marginTop: 3,
+                        }}
+                      />
+                      <span
+                        style={{
+                          color: 'var(--color-text-secondary)',
+                          fontSize: 13,
+                          lineHeight: 1.6,
+                        }}
+                      >
                         {t('conditionLabel', 'Tình trạng')}:{' '}
-                        <strong style={{ color: 'var(--color-text-primary)' }}>{item.condition}</strong>
+                        <strong style={{ color: 'var(--color-text-primary)' }}>
+                          {item.condition}
+                        </strong>
                       </span>
                     </div>
                   )}
                   {item.quantity && item.quantity > 1 && (
-                    <div style={{ alignItems: 'flex-start', display: 'flex', gap: 10 }}>
-                      <CheckCircleOutlined style={{ color: 'var(--color-success)', flexShrink: 0, fontSize: 16, marginTop: 2 }} />
-                      <span style={{ color: 'var(--color-text-secondary)', fontSize: 14, lineHeight: 1.6 }}>
+                    <div style={{ alignItems: 'flex-start', display: 'flex', gap: 8 }}>
+                      <CheckCircleOutlined
+                        style={{
+                          color: 'var(--color-success)',
+                          flexShrink: 0,
+                          fontSize: 14,
+                          marginTop: 3,
+                        }}
+                      />
+                      <span
+                        style={{
+                          color: 'var(--color-text-secondary)',
+                          fontSize: 13,
+                          lineHeight: 1.6,
+                        }}
+                      >
                         {t('quantity', 'Số lượng')}:{' '}
-                        <strong style={{ color: 'var(--color-text-primary)' }}>{item.quantity}</strong>
-                      </span>
-                    </div>
-                  )}
-                  {item.categoryId && (
-                    <div style={{ alignItems: 'flex-start', display: 'flex', gap: 10 }}>
-                      <CheckCircleOutlined style={{ color: 'var(--color-success)', flexShrink: 0, fontSize: 16, marginTop: 2 }} />
-                      <span style={{ color: 'var(--color-text-secondary)', fontSize: 14, lineHeight: 1.6 }}>
-                        {t('category', 'Danh mục')}:{' '}
-                        <strong style={{ color: 'var(--color-text-primary)' }}>{categoryName ?? item.categoryId}</strong>
-                      </span>
-                    </div>
-                  )}
-                  {auction.verifyByPlatform && (
-                    <div style={{ alignItems: 'flex-start', display: 'flex', gap: 10 }}>
-                      <CheckCircleOutlined style={{ color: 'var(--color-success)', flexShrink: 0, fontSize: 16, marginTop: 2 }} />
-                      <span style={{ color: 'var(--color-text-secondary)', fontSize: 14, lineHeight: 1.6 }}>
-                        {t('platformVerified', 'Đã được nền tảng xác minh')}
+                        <strong style={{ color: 'var(--color-text-primary)' }}>
+                          {item.quantity}
+                        </strong>
                       </span>
                     </div>
                   )}
                   {item.createdAt && (
-                    <div style={{ alignItems: 'flex-start', display: 'flex', gap: 10 }}>
-                      <CheckCircleOutlined style={{ color: 'var(--color-success)', flexShrink: 0, fontSize: 16, marginTop: 2 }} />
-                      <span style={{ color: 'var(--color-text-secondary)', fontSize: 14, lineHeight: 1.6 }}>
+                    <div style={{ alignItems: 'flex-start', display: 'flex', gap: 8 }}>
+                      <CheckCircleOutlined
+                        style={{
+                          color: 'var(--color-success)',
+                          flexShrink: 0,
+                          fontSize: 14,
+                          marginTop: 3,
+                        }}
+                      />
+                      <span
+                        style={{
+                          color: 'var(--color-text-secondary)',
+                          fontSize: 13,
+                          lineHeight: 1.6,
+                        }}
+                      >
                         {t('listedDate', 'Ngày đăng')}:{' '}
-                        <strong style={{ color: 'var(--color-text-primary)' }}>{formatDate(item.createdAt)}</strong>
+                        <strong style={{ color: 'var(--color-text-primary)' }}>
+                          {formatDate(item.createdAt)}
+                        </strong>
                       </span>
                     </div>
                   )}
@@ -220,58 +319,92 @@ export function AuctionDetailTabs({
           key: 'bidHistory',
           label: (
             <span>
-              {t('bidHistory', 'Bid History')}
+              {t('bidHistory', 'Lịch sử giá')}
               {bidCount > 0 && (
-                <span style={{ background: 'var(--color-accent-light)', borderRadius: 10, color: 'var(--color-accent)', fontSize: 11, fontWeight: 600, marginLeft: 6, padding: '1px 6px' }}>
+                <span
+                  style={{
+                    background: 'var(--color-accent-light)',
+                    borderRadius: 10,
+                    color: 'var(--color-accent)',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    marginLeft: 6,
+                    padding: '1px 6px',
+                  }}
+                >
                   {bidCount}
                 </span>
               )}
             </span>
           ),
-          children: recentBids.length === 0 ? (
-            <Typography.Text type="secondary">{t('noBids', 'No bids yet')}</Typography.Text>
-          ) : (
-            <div style={{ maxWidth: 600 }}>
-              {recentBids.map((bid, index) => (
-                <Flex
-                  key={bid.id ?? `${bid.bidderId}-${index}`}
-                  justify="space-between"
-                  align="center"
-                  style={{
-                    borderBottom:
-                      index < recentBids.length - 1 ? '1px solid var(--color-border-light)' : undefined,
-                    padding: '12px 0',
-                  }}
-                >
-                  <Flex gap={8} align="center">
-                    <span className="oio-price" style={{ fontSize: 15 }}>
-                      {formatCurrency(
-                        typeof bid.amount === 'number' ? bid.amount : bid.amount?.amount ?? 0,
-                        typeof bid.amount === 'number' ? currency : bid.amount?.currency ?? currency,
+          children:
+            recentBids.length === 0 ? (
+              <Typography.Text type="secondary">{t('noBids', 'Chưa có lượt đặt giá')}</Typography.Text>
+            ) : (
+              <div style={{ paddingTop: 4 }}>
+                {recentBids.map((bid, index) => (
+                  <div
+                    key={bid.id ?? `${bid.bidderId}-${index}`}
+                    style={{
+                      borderBottom:
+                        index < recentBids.length - 1
+                          ? '1px solid var(--color-border-light)'
+                          : undefined,
+                      padding: '10px 0',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      gap: 8,
+                    }}
+                  >
+                    {/* Left: amount + badges */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 8px', alignItems: 'center', minWidth: 0 }}>
+                      <span className="oio-price" style={{ fontSize: 14, fontWeight: 600 }}>
+                        {formatCurrency(
+                          typeof bid.amount === 'number'
+                            ? bid.amount
+                            : bid.amount?.amount ?? 0,
+                          typeof bid.amount === 'number'
+                            ? currency
+                            : bid.amount?.currency ?? currency,
+                        )}
+                      </span>
+                      {bid.isAutoBid && <StatusBadge status="auto" size="small" />}
+                      {bid.status && <StatusBadge status={bid.status} size="small" />}
+                      {(bid.bidderDisplayName || bid.bidderId) && (
+                        <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                          {bid.bidderDisplayName ?? bid.bidderId?.slice(0, 8)}
+                        </Typography.Text>
                       )}
-                    </span>
-                    {bid.isAutoBid && <StatusBadge status="auto" size="small" />}
-                    {bid.status && <StatusBadge status={bid.status} size="small" />}
-                    {(bid.bidderDisplayName || bid.bidderId) && (
-                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                        {bid.bidderDisplayName ?? bid.bidderId?.slice(0, 8)}
-                      </Typography.Text>
-                    )}
-                  </Flex>
-                  <Typography.Text style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
-                    {bid.createdAt ? formatDateTime(bid.createdAt) : '—'}
-                  </Typography.Text>
-                </Flex>
-              ))}
-            </div>
-          ),
+                    </div>
+                    {/* Right: time */}
+                    <Typography.Text
+                      style={{
+                        color: 'var(--color-text-secondary)',
+                        fontSize: 12,
+                        flexShrink: 0,
+                        textAlign: 'right',
+                      }}
+                    >
+                      {bid.createdAt ? formatDateTime(bid.createdAt) : '—'}
+                    </Typography.Text>
+                  </div>
+                ))}
+              </div>
+            ),
         },
         {
           key: 'seller',
           label: t('sellerTab', 'Người bán'),
           children: (
-            <div style={{ maxWidth: 600 }}>
-              <div style={{ alignItems: 'center', display: 'flex', gap: 16, marginBottom: 20 }}>
+            <div style={{ paddingTop: 4 }}>
+              <div
+                style={{
+                  alignItems: 'flex-start',
+                  display: 'flex',
+                  gap: 14,
+                }}
+              >
                 <SellerIdentity sellerId={sellerId} sellerUsername={sellerUsername} />
               </div>
             </div>
@@ -279,27 +412,49 @@ export function AuctionDetailTabs({
         },
         {
           key: 'certification',
-          label: t('certificationTab', 'Chứng nhận và kiểm định'),
+          label: t('certificationTab', 'Chứng nhận'),
           children: (
-            <div style={{ maxWidth: 720 }}>
+            <div style={{ paddingTop: 4 }}>
               <div
                 style={{
-                  background: auction.verifyByPlatform ? 'rgba(74, 124, 89, 0.06)' : 'rgba(139, 115, 85, 0.06)',
-                  border: `1px solid ${auction.verifyByPlatform ? 'rgba(74, 124, 89, 0.2)' : 'var(--color-border)'}`,
+                  background: auction.verifyByPlatform
+                    ? 'rgba(74, 124, 89, 0.06)'
+                    : 'rgba(139, 115, 85, 0.06)',
+                  border: `1px solid ${
+                    auction.verifyByPlatform
+                      ? 'rgba(74, 124, 89, 0.2)'
+                      : 'var(--color-border)'
+                  }`,
                   borderRadius: 8,
-                  marginBottom: 24,
-                  padding: '20px 24px',
+                  marginBottom: 20,
+                  padding: isMobile ? '14px 16px' : '18px 20px',
                 }}
               >
-                <div style={{ alignItems: 'center', display: 'flex', gap: 12, marginBottom: 12 }}>
+                <div
+                  style={{
+                    alignItems: 'center',
+                    display: 'flex',
+                    gap: 10,
+                    marginBottom: 10,
+                  }}
+                >
                   <SafetyOutlined
                     style={{
-                      color: auction.verifyByPlatform ? 'var(--color-success)' : 'var(--color-text-secondary)',
-                      fontSize: 20,
+                      color: auction.verifyByPlatform
+                        ? 'var(--color-success)'
+                        : 'var(--color-text-secondary)',
+                      fontSize: 18,
+                      flexShrink: 0,
                     }}
                   />
                   <div>
-                    <span style={{ color: 'var(--color-text-primary)', fontSize: 15, fontWeight: 600 }}>
+                    <span
+                      style={{
+                        color: 'var(--color-text-primary)',
+                        fontSize: 14,
+                        fontWeight: 600,
+                      }}
+                    >
                       {t('inspectionStatus', 'Trạng thái kiểm định')}:{' '}
                       {auction.verifyByPlatform ? (
                         <span style={{ color: 'var(--color-success)' }}>
@@ -307,38 +462,56 @@ export function AuctionDetailTabs({
                         </span>
                       ) : (
                         <span style={{ color: 'var(--color-text-secondary)' }}>
-                          {t('pending', 'Chưa có kiểm định nền tảng')}
+                          {t('pending', 'Chưa có kiểm định')}
                         </span>
                       )}
                     </span>
                   </div>
                 </div>
-                <div style={{ color: 'var(--color-text-secondary)', fontSize: 13, lineHeight: 1.8, paddingLeft: 32 }}>
+                <div
+                  style={{
+                    color: 'var(--color-text-secondary)',
+                    fontSize: 13,
+                    lineHeight: 1.7,
+                    paddingLeft: isMobile ? 0 : 28,
+                  }}
+                >
                   <div>
                     {auction.verifyByPlatform
                       ? t(
                           'verifiedByPlatformNote',
-                          'OIO đã xác minh listing này trước khi mở đấu giá. Trang này hiện chỉ hiển thị trạng thái xác minh và thông tin kiểm định cơ bản.',
+                          'OIO đã xác minh listing này trước khi mở đấu giá.',
                         )
                       : t(
                           'noCertificateAvailable',
-                          'Listing này không có chứng chỉ hoặc biên bản kiểm định công khai trong dữ liệu hiện tại.',
+                          'Listing này không có chứng chỉ hoặc biên bản kiểm định công khai.',
                         )}
                   </div>
                   {auction.assignedAdminId && (
-                    <div>
+                    <div style={{ marginTop: 4 }}>
                       {t('reviewOwner', 'Nhân sự phụ trách')}:{' '}
-                      <strong style={{ color: 'var(--color-text-primary)' }}>{auction.assignedAdminId}</strong>
+                      <strong style={{ color: 'var(--color-text-primary)' }}>
+                        {auction.assignedAdminId}
+                      </strong>
                     </div>
                   )}
                   {auction.reservePrice && (
-                    <div>
+                    <div style={{ marginTop: 4 }}>
                       {t('reservePrice', 'Giá bảo lưu')}:{' '}
                       <strong style={{ color: 'var(--color-text-primary)' }}>
-                        {formatCurrency(auction.reservePrice.amount, auction.reservePrice.currency ?? currency)}
+                        {formatCurrency(
+                          auction.reservePrice.amount,
+                          auction.reservePrice.currency ?? currency,
+                        )}
                       </strong>
                       {' • '}
-                      <span style={{ color: auction.isReserveMet ? 'var(--color-success)' : 'var(--color-text-secondary)' }}>
+                      <span
+                        style={{
+                          color: auction.isReserveMet
+                            ? 'var(--color-success)'
+                            : 'var(--color-text-secondary)',
+                        }}
+                      >
                         {auction.isReserveMet
                           ? t('reserveMet', 'Đã đạt giá bảo lưu')
                           : t('reserveNotMet', 'Chưa đạt giá bảo lưu')}
@@ -348,22 +521,31 @@ export function AuctionDetailTabs({
                 </div>
               </div>
 
-              <h3 style={{ color: 'var(--color-text-primary)', fontSize: 14, fontWeight: 600, letterSpacing: '0.04em', marginBottom: 12, textTransform: 'uppercase' }}>
+              <h3
+                style={{
+                  color: 'var(--color-text-primary)',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  letterSpacing: '0.04em',
+                  marginBottom: 10,
+                  textTransform: 'uppercase',
+                }}
+              >
                 {t('itemInfo', 'Thông tin sản phẩm')}
               </h3>
-              <div style={{ display: 'grid', gap: '12px 16px', gridTemplateColumns: '160px 1fr', fontSize: 14 }}>
+              <div style={specGridStyle}>
                 {item.categoryId && (
-                  <>
-                    <span style={{ color: 'var(--color-text-secondary)' }}>{t('category', 'Danh mục')}</span>
-                    <span style={{ color: 'var(--color-text-primary)' }}>{categoryName ?? item.categoryId}</span>
-                  </>
+                  <SpecRow label={t('category', 'Danh mục')}>
+                    {categoryName ?? item.categoryId}
+                  </SpecRow>
                 )}
-                <span style={{ color: 'var(--color-text-secondary)' }}>{t('quantity', 'Số lượng')}</span>
-                <span style={{ color: 'var(--color-text-primary)' }}>{item.quantity ?? 1}</span>
-                <span style={{ color: 'var(--color-text-secondary)' }}>{t('itemStatus', 'Trạng thái')}</span>
-                <span>{item.status ? <StatusBadge status={item.status} size="small" /> : '—'}</span>
-                <span style={{ color: 'var(--color-text-secondary)' }}>{t('createdAt', 'Ngày tạo')}</span>
-                <span style={{ color: 'var(--color-text-primary)' }}>{item.createdAt ? formatDate(item.createdAt) : '—'}</span>
+                <SpecRow label={t('quantity', 'Số lượng')}>{item.quantity ?? 1}</SpecRow>
+                <SpecRow label={t('itemStatus', 'Trạng thái')}>
+                  {item.status ? <StatusBadge status={item.status} size="small" /> : '—'}
+                </SpecRow>
+                <SpecRow label={t('createdAt', 'Ngày tạo')}>
+                  {item.createdAt ? formatDate(item.createdAt) : '—'}
+                </SpecRow>
               </div>
             </div>
           ),

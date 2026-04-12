@@ -188,13 +188,14 @@ export const ReportStatus = {
 export type ReportStatus = (typeof ReportStatus)[keyof typeof ReportStatus]
 
 export const DisputeStatus = {
-  Draft: 'draft',
   Open: 'open',
+  AwaitingRespondent: 'awaiting_respondent',
+  AwaitingEvidence: 'awaiting_evidence',
   UnderReview: 'under_review',
-  AwaitingResponse: 'awaiting_response',
-  Escalated: 'escalated',
+  AwaitingInternalReview: 'awaiting_internal_review',
+  AwaitingResolutionApproval: 'awaiting_resolution_approval',
   Resolved: 'resolved',
-  Closed: 'closed',
+  Rejected: 'rejected',
   Cancelled: 'cancelled',
 } as const
 export type DisputeStatus = (typeof DisputeStatus)[keyof typeof DisputeStatus]

@@ -11,6 +11,11 @@ export interface ItemDto {
   quantity: number
   images: ItemMediaDto[]
   createdAt: string
+  /**
+   * True when the item's latest auction has VerifyByPlatform = true. Source
+   * of truth is Auction.VerifyByPlatform, NOT item.status.
+   */
+  requiresPlatformInspection?: boolean
 }
 
 export interface ItemMediaDto {

@@ -1,23 +1,32 @@
-import { useCallback } from 'react'
-import { useNavigate, useLocation } from 'react-router'
+import { useCallback, useState } from 'react'
 import { usePendingTerms } from '../api'
 
 /**
- * Hook for pre-action terms checking.
- * Returns { hasPending, redirect } — call redirect() before mutations
- * to send the user to the focused terms page with returnTo.
+ * Pre-action terms gate. Preview-first UX: callers mount the shared
+ * <TermsAcceptanceModal> and use `openModal()` before a gated action.
+ *
+ * `redirect` is kept as a no-op for backwards compatibility — it previously
+ * navigated to /me/terms, which broke in-flight actions and confused users.
  */
 export function useTermsGate(termType: string) {
-  const navigate = useNavigate()
-  const location = useLocation()
   const { data, isLoading } = usePendingTerms(termType)
+  const [modalOpen, setModalOpen] = useState(false)
 
   const hasPending = !isLoading && !!data?.hasPending && data.pendingTerms.length > 0
 
+  const openModal = useCallback(() => setModalOpen(true), [])
+  const closeModal = useCallback(() => setModalOpen(false), [])
   const redirect = useCallback(() => {
-    const returnTo = encodeURIComponent(location.pathname + location.search)
-    navigate(`/me/terms?type=${termType}&returnTo=${returnTo}`)
-  }, [navigate, location.pathname, location.search, termType])
+    // no-op: retained so existing call sites stay type-safe while the app
+    // migrates to the modal flow.
+  }, [])
 
-  return { hasPending, isLoading, redirect }
+  return {
+    hasPending,
+    isLoading,
+    modalOpen,
+    openModal,
+    closeModal,
+    redirect,
+  }
 }

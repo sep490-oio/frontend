@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { Card, Steps, Button, Popconfirm, Typography, Alert, Descriptions } from 'antd'
+import { OrderActionRow } from './OrderActionRow'
 import {
   DollarOutlined,
   SafetyOutlined,
@@ -248,7 +249,7 @@ export function EscrowTimeline({ order, isSeller, onAcceptRelease, onDispute, hi
             )}
             style={{ marginBottom: 16 }}
           />
-          <div style={{ display: 'flex', gap: 12 }}>
+          <OrderActionRow>
             <Popconfirm
               title={t('escrow.confirmRelease', 'Are you sure you want to release funds to the seller?')}
               onConfirm={onAcceptRelease}
@@ -257,15 +258,16 @@ export function EscrowTimeline({ order, isSeller, onAcceptRelease, onDispute, hi
             >
               <Button
                 type="primary"
+                size="middle"
                 style={{ background: 'var(--color-success)', borderColor: 'var(--color-success)' }}
               >
                 {t('escrow.acceptRelease', 'Accept & Release Funds')}
               </Button>
             </Popconfirm>
-            <Button onClick={onDispute}>
+            <Button danger size="middle" onClick={onDispute}>
               {t('escrow.raiseDispute', 'Raise Dispute')}
             </Button>
-          </div>
+          </OrderActionRow>
         </div>
       )}
 

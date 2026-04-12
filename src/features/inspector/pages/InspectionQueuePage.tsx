@@ -30,19 +30,54 @@ export default function InspectionQueuePage() {
     requiresPlatformInspection: inspectionFilter,
   })
 
+  const renderItemCell = (_: unknown, record: InspectionQueueItem) => {
+    const condition = record.conditionOnArrival ?? record.declaredCondition
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+        {record.itemImageUrl ? (
+          <img
+            src={record.itemImageUrl}
+            alt={record.itemTitle}
+            style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 4, flexShrink: 0, background: 'var(--color-surface-muted, #f0f0f0)' }}
+          />
+        ) : (
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: 4,
+              background: 'var(--color-surface-muted, #f0f0f0)',
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--color-text-secondary, #999)',
+              fontSize: 10,
+            }}
+          >
+            No image
+          </div>
+        )}
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {record.itemTitle}
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--color-text-secondary, #8c8c8c)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {record.itemId}
+          </div>
+          <div style={{ marginTop: 4 }}>
+            <StatusBadge status={condition} size="small" />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const columns = [
     {
       title: 'Item',
-      dataIndex: 'itemTitle',
-      key: 'itemTitle',
-      ellipsis: true,
-    },
-    {
-      title: 'Declared Condition',
-      dataIndex: 'declaredCondition',
-      key: 'declaredCondition',
-      width: 140,
-      render: (v: string) => <StatusBadge status={v} size="small" />,
+      key: 'item',
+      render: renderItemCell,
     },
     {
       title: 'Queue Status',
@@ -50,6 +85,13 @@ export default function InspectionQueuePage() {
       key: 'queueStatus',
       width: 150,
       render: (status: string) => <StatusBadge status={status} />,
+    },
+    {
+      title: 'Location',
+      dataIndex: 'storageLocationLabel',
+      key: 'storageLocationLabel',
+      width: 130,
+      render: (label?: string) => label ?? '-',
     },
     {
       title: 'Arrived',

@@ -35,9 +35,10 @@ export function getSellerActions({ status }: GetSellerActionsParams): SellerActi
       actions.push('viewDetail', 'cancel')
       break
     case 'sold':
-      actions.push('offerRunnerUp')
+      // No seller actions — the order is already paid/owned by the winner.
+      // offerRunnerUp is ONLY valid in payment_defaulted (backend enforced).
       break
-    case 'paymentdefaulted':
+    case 'payment_defaulted':
       actions.push('relist', 'offerRunnerUp')
       break
     case 'failed':

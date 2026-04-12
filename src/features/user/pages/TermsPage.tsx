@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Typography,
   Card,
@@ -9,25 +9,21 @@ import {
   Alert,
   App,
   Flex,
+  Row,
+  Col,
 } from 'antd'
 import {
   CheckCircleOutlined,
-  FilePdfOutlined,
   ClockCircleOutlined,
-  GlobalOutlined,
-  ShopOutlined,
-  AuditOutlined,
-  FileTextOutlined,
+  FilePdfOutlined,
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
-import { useSearchParams, useNavigate } from 'react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/queryClient'
 import apiClient from '@/lib/axios'
 import type { TermsDocumentDto } from '@/types'
-import { formatFileSize } from '@/utils/format'
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -73,117 +69,94 @@ function useAcceptTerms() {
 
 // ── Type config ────────────────────────────────────────────────────────
 
-interface TypeConfig {
-  label: string
-  description: string
-  icon: React.ReactNode
-}
+const GROUP_ORDER = ['platform', 'bidder', 'seller'] as const
+const OTHER_GROUP = 'other'
 
-const TYPE_CONFIG: Record<string, TypeConfig> = {
-  platform: {
-    label: 'Platform Terms',
-    description: 'These terms govern your use of the OIO auction platform, including account management, privacy, and acceptable use.',
-    icon: <GlobalOutlined />,
-  },
-  seller: {
-    label: 'Seller Agreement',
-    description: 'These terms cover your obligations as a seller, including commission rates, shipping requirements, and dispute resolution.',
-    icon: <ShopOutlined />,
-  },
-  bidder: {
-    label: 'Bidder Terms',
-    description: 'These terms cover your responsibilities when placing bids, including payment obligations, deposit requirements, and buyer protections.',
-    icon: <AuditOutlined />,
-  },
-}
-
-function getTypeConfig(type: string, t: (key: string, fallback: string) => string): TypeConfig {
-  const config = TYPE_CONFIG[type]
-  if (config) {
-    return {
-      label: t(`terms.type.${type}`, config.label),
-      description: t(`terms.type.${type}Desc`, config.description),
-      icon: config.icon,
-    }
-  }
-  return {
-    label: t(`terms.type.${type}`, type.charAt(0).toUpperCase() + type.slice(1) + ' Terms'),
-    description: t(`terms.type.${type}Desc`, `Terms and conditions for ${type} usage.`),
-    icon: <FileTextOutlined />,
+function groupLabel(type: string, t: (k: string, d: string) => string): string {
+  switch (type) {
+    case 'platform':
+      return t('terms.type.platform', 'Platform Terms')
+    case 'bidder':
+      return t('terms.type.bidder', 'Bidder Terms')
+    case 'seller':
+      return t('terms.type.seller', 'Seller Agreement')
+    case 'privacy':
+      return t('terms.type.privacy', 'Privacy Policy')
+    case OTHER_GROUP:
+      return t('terms.type.other', 'Other')
+    default:
+      return type.charAt(0).toUpperCase() + type.slice(1)
   }
 }
 
 // ── Component ──────────────────────────────────────────────────────────
 
-const TYPE_TITLES: Record<string, string> = {
-  platform: 'Platform Terms of Service',
-  seller: 'Seller Agreement',
-  bidder: 'Bidder Terms',
-}
-
 export default function TermsPage() {
   const { t } = useTranslation('common')
   const { isMobile } = useBreakpoint()
   const { message } = App.useApp()
-  const [searchParams] = useSearchParams()
-  const navigate = useNavigate()
-
-  const filterType = searchParams.get('type') ?? undefined
-  const returnTo = searchParams.get('returnTo')
-  const validReturnTo = returnTo && returnTo.startsWith('/') ? returnTo : null
-  const isFocusedMode = !!filterType
 
   const { data: activeTerms, isLoading: termsLoading } = useActiveTerms()
   const { data: acceptedTerms, isLoading: acceptedLoading } = useMyAcceptedTerms()
   const acceptMutation = useAcceptTerms()
 
-  const acceptedIds = useMemo(
-    () => new Set((acceptedTerms ?? []).map((a) => a.document?.id).filter(Boolean)),
-    [acceptedTerms],
+  const acceptedMap = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const a of acceptedTerms ?? []) {
+      if (a.document?.id) map.set(a.document.id, a.acceptedAt)
+    }
+    return map
+  }, [acceptedTerms])
+
+  // Group terms: platform/bidder/seller first, then archive group.
+  const grouped = useMemo(() => {
+    const bucket = new Map<string, TermsDocumentDto[]>()
+    for (const term of activeTerms ?? []) {
+      const key = (GROUP_ORDER as readonly string[]).includes(term.type) ? term.type : OTHER_GROUP
+      const list = bucket.get(key) ?? []
+      list.push(term)
+      bucket.set(key, list)
+    }
+    const ordered: Array<[string, TermsDocumentDto[]]> = []
+    for (const key of GROUP_ORDER) {
+      if (bucket.has(key)) ordered.push([key, bucket.get(key)!])
+    }
+    if (bucket.has(OTHER_GROUP)) ordered.push([OTHER_GROUP, bucket.get(OTHER_GROUP)!])
+    return ordered
+  }, [activeTerms])
+
+  const flatTerms = useMemo(() => grouped.flatMap(([, list]) => list), [grouped])
+
+  const firstPending = useMemo(
+    () => flatTerms.find((term) => !acceptedMap.has(term.id)) ?? null,
+    [flatTerms, acceptedMap],
   )
 
-  const getAcceptedDate = (termsId: string) =>
-    acceptedTerms?.find((a) => a.document?.id === termsId)?.acceptedAt
+  const [selectedId, setSelectedId] = useState<string | null>(null)
 
-  // Group terms by type, sorted: pending first within each group
-  const groupedTerms = useMemo(() => {
-    if (!activeTerms) return []
-    const groups = new Map<string, TermsDocumentDto[]>()
-    for (const term of activeTerms) {
-      const existing = groups.get(term.type) ?? []
-      existing.push(term)
-      groups.set(term.type, existing)
-    }
-    // Sort within each group: pending first, then accepted
-    for (const [type, terms] of groups) {
-      groups.set(
-        type,
-        terms.sort((a, b) => {
-          const aAccepted = acceptedIds.has(a.id) ? 1 : 0
-          const bAccepted = acceptedIds.has(b.id) ? 1 : 0
-          return aAccepted - bAccepted
-        }),
-      )
-    }
-    let entries = Array.from(groups.entries())
-    // In focused mode, filter to only the requested type
-    if (filterType) {
-      entries = entries.filter(([type]) => type === filterType)
-    }
-    return entries
-  }, [activeTerms, acceptedIds, filterType])
+  // Default selection: first pending if any, else first item.
+  useEffect(() => {
+    if (selectedId) return
+    const target = firstPending ?? flatTerms[0] ?? null
+    if (target) setSelectedId(target.id)
+  }, [firstPending, flatTerms, selectedId])
 
-  // Check if all terms of the filtered type are accepted (for Continue button)
-  const filteredTerms = filterType
-    ? activeTerms?.filter((t) => t.type === filterType) ?? []
-    : activeTerms ?? []
-  const allAccepted = filteredTerms.length > 0
-    ? filteredTerms.every((t) => acceptedIds.has(t.id))
-    : false
+  const selected = useMemo(
+    () => flatTerms.find((term) => term.id === selectedId) ?? null,
+    [flatTerms, selectedId],
+  )
+  const selectedAccepted = selected ? acceptedMap.has(selected.id) : false
+  const selectedAcceptedAt = selected ? acceptedMap.get(selected.id) : undefined
 
-  const onAccept = async (termsId: string) => {
+  const [previewErrored, setPreviewErrored] = useState(false)
+  useEffect(() => {
+    setPreviewErrored(false)
+  }, [selectedId])
+
+  const handleAccept = async () => {
+    if (!selected) return
     try {
-      await acceptMutation.mutateAsync(termsId)
+      await acceptMutation.mutateAsync(selected.id)
       message.success(t('terms.acceptSuccess', 'Terms accepted successfully'))
     } catch {
       message.error(t('terms.acceptError', 'Failed to accept terms. Please try again.'))
@@ -198,46 +171,10 @@ export default function TermsPage() {
     )
   }
 
-  return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: isMobile ? '0 12px' : undefined }}>
-      <Typography.Title level={2} style={{ marginBottom: 4 }}>
-        {isFocusedMode
-          ? t(`terms.type.${filterType}`, TYPE_TITLES[filterType!] ?? 'Terms')
-          : t('terms.pageTitle', 'Terms & Conditions')}
-      </Typography.Title>
-      <Typography.Paragraph type="secondary" style={{ marginBottom: 24 }}>
-        {isFocusedMode
-          ? t('terms.focusedSubtitle', 'Please review and accept the following terms to continue.')
-          : t('terms.pageSubtitle', 'Review and accept the terms that apply to your use of the platform.')}
-      </Typography.Paragraph>
-
-      {/* All accepted banner */}
-      {allAccepted && filteredTerms.length > 0 && (
-        <Alert
-          type="success"
-          showIcon
-          icon={<CheckCircleOutlined />}
-          message={t('terms.allAccepted', 'All terms have been accepted')}
-          description={t('terms.allAcceptedDesc', "You're all set! You have accepted all required terms.")}
-          style={{ marginBottom: 24 }}
-        />
-      )}
-
-      {/* Continue button in focused mode after all accepted */}
-      {isFocusedMode && allAccepted && validReturnTo && (
-        <Button
-          type="primary"
-          size="large"
-          block
-          onClick={() => navigate(validReturnTo)}
-          style={{ marginBottom: 24, height: 48, fontWeight: 500, background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
-        >
-          {t('terms.continue', 'Continue')}
-        </Button>
-      )}
-
-      {/* No terms state */}
-      {!activeTerms?.length && (
+  // ── Left pane: grouped list ────────────────────────────────────────
+  const leftPane = (
+    <Space direction="vertical" style={{ width: '100%' }} size={16}>
+      {grouped.length === 0 && (
         <Alert
           type="info"
           showIcon
@@ -245,138 +182,176 @@ export default function TermsPage() {
           description={t('terms.noTermsDesc', 'There are currently no terms to review.')}
         />
       )}
-
-      {/* Grouped terms by type */}
-      <Space direction="vertical" style={{ width: '100%' }} size={32}>
-        {groupedTerms.map(([type, terms]) => {
-          const config = getTypeConfig(type, t)
-
-          return (
-            <section key={type}>
-              {/* Section header */}
-              <Flex align="center" gap={10} style={{ marginBottom: 8 }}>
-                <span style={{ fontSize: 20, color: 'var(--color-accent)' }}>{config.icon}</span>
-                <Typography.Title level={4} style={{ margin: 0 }}>
-                  {config.label}
-                </Typography.Title>
-              </Flex>
-              <Typography.Paragraph type="secondary" style={{ fontSize: 13, marginBottom: 16 }}>
-                {config.description}
-              </Typography.Paragraph>
-
-              {/* Term cards */}
-              <Space direction="vertical" style={{ width: '100%' }} size={12}>
-                {terms.map((term) => {
-                  const accepted = acceptedIds.has(term.id)
-                  const acceptedDate = getAcceptedDate(term.id)
-
-                  return (
-                    <Card
-                      key={term.id}
-                      size="small"
-                      style={{
-                        borderColor: accepted
-                          ? 'rgba(74, 124, 89, 0.2)'
-                          : 'rgba(196, 146, 61, 0.3)',
-                        background: accepted
-                          ? undefined
-                          : 'rgba(196, 146, 61, 0.03)',
-                      }}
-                    >
-                      <Flex justify="space-between" align="flex-start" gap={isMobile ? 12 : 16} wrap="wrap" vertical={isMobile}>
-                        {/* Left: document info */}
-                        <div style={{ flex: 1, minWidth: isMobile ? undefined : 200 }}>
-                          <Flex align="center" gap={8} style={{ marginBottom: 8 }}>
-                            <FilePdfOutlined style={{ fontSize: 16, color: 'var(--color-accent)' }} />
-                            <Typography.Text strong>
-                              {term.fileName ?? `${config.label} v${term.version}`}
-                            </Typography.Text>
-                            <Tag color="blue" style={{ marginLeft: 4 }}>v{term.version}</Tag>
-                          </Flex>
-
-                          {/* Document link */}
-                          <div
-                            style={{
-                              padding: '10px 14px',
-                              borderRadius: 6,
-                              background: 'var(--color-bg-surface)',
-                              border: '1px solid var(--color-border-light)',
-                              marginBottom: 8,
-                            }}
-                          >
-                            {term.contentUrl ? (
-                              <Flex align="center" gap={8}>
-                                <FilePdfOutlined style={{ color: 'var(--color-text-secondary)' }} />
-                                <div style={{ flex: 1 }}>
-                                  <a
-                                    href={term.contentUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{ fontSize: 13, fontWeight: 500 }}
-                                  >
-                                    {t('terms.viewDocument', 'View Document')} ↗
-                                  </a>
-                                  {term.fileSize != null && (
-                                    <Typography.Text type="secondary" style={{ fontSize: 11, marginLeft: 8 }}>
-                                      ({formatFileSize(term.fileSize)})
-                                    </Typography.Text>
-                                  )}
-                                </div>
-                              </Flex>
-                            ) : (
-                              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                                {t('terms.noDocument', 'Document not available')}
-                              </Typography.Text>
-                            )}
-                          </div>
-
-                          {/* Published date */}
-                          <Typography.Text type="secondary" style={{ fontSize: 11 }}>
-                            {term.publishedAt
-                              ? `${t('terms.published', 'Published')}: ${dayjs(term.publishedAt).format('DD/MM/YYYY')}`
-                              : `${t('terms.created', 'Created')}: ${dayjs(term.createdAt).format('DD/MM/YYYY')}`}
-                          </Typography.Text>
-                        </div>
-
-                        {/* Right: status + action */}
-                        <div style={{ textAlign: isMobile ? 'left' : 'right', minWidth: isMobile ? undefined : 150 }}>
-                          {accepted ? (
-                            <>
-                              <Tag icon={<CheckCircleOutlined />} color="success">
-                                {t('terms.accepted', 'Accepted')}
-                              </Tag>
-                              <Typography.Text type="secondary" style={{ fontSize: 11, display: 'block', marginTop: 4 }}>
-                                {dayjs(acceptedDate).format('DD/MM/YYYY HH:mm')}
-                              </Typography.Text>
-                            </>
-                          ) : (
-                            <>
-                              <Tag icon={<ClockCircleOutlined />} color="warning" style={{ marginBottom: 8 }}>
-                                {t('terms.pending', 'Pending')}
-                              </Tag>
-                              <div>
-                                <Button
-                                  type="primary"
-                                  size="small"
-                                  onClick={() => onAccept(term.id)}
-                                  loading={acceptMutation.isPending}
-                                  style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
-                                >
-                                  {t('terms.accept', 'Accept')}
-                                </Button>
-                              </div>
-                            </>
-                          )}
-                        </div>
+      {grouped.map(([groupKey, list]) => (
+        <section key={groupKey}>
+          <Typography.Title level={5} style={{ marginBottom: 8 }}>
+            {groupLabel(groupKey, t)}
+          </Typography.Title>
+          <Space direction="vertical" style={{ width: '100%' }} size={8}>
+            {list.map((term) => {
+              const accepted = acceptedMap.has(term.id)
+              const isSelected = term.id === selectedId
+              return (
+                <Card
+                  key={term.id}
+                  size="small"
+                  hoverable
+                  onClick={() => setSelectedId(term.id)}
+                  style={{
+                    borderColor: isSelected ? 'var(--color-accent)' : undefined,
+                    background: isSelected ? 'rgba(196, 146, 61, 0.05)' : undefined,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Flex justify="space-between" align="center" gap={8}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <Flex align="center" gap={6} style={{ marginBottom: 4 }}>
+                        <FilePdfOutlined style={{ color: 'var(--color-accent)' }} />
+                        <Typography.Text strong ellipsis>
+                          {term.fileName ?? groupLabel(groupKey, t)}
+                        </Typography.Text>
+                        <Tag color="blue">v{term.version}</Tag>
                       </Flex>
-                    </Card>
-                  )
-                })}
-              </Space>
-            </section>
-          )
-        })}
+                      <Typography.Text type="secondary" style={{ fontSize: 11 }}>
+                        {term.publishedAt
+                          ? `${t('terms.published', 'Published')}: ${dayjs(term.publishedAt).format('DD/MM/YYYY')}`
+                          : `${t('terms.created', 'Created')}: ${dayjs(term.createdAt).format('DD/MM/YYYY')}`}
+                      </Typography.Text>
+                    </div>
+                    {accepted ? (
+                      <Tag icon={<CheckCircleOutlined />} color="success">
+                        {t('terms.accepted', 'Accepted')}
+                      </Tag>
+                    ) : (
+                      <Tag icon={<ClockCircleOutlined />} color="warning">
+                        {t('terms.pending', 'Pending')}
+                      </Tag>
+                    )}
+                  </Flex>
+                </Card>
+              )
+            })}
+          </Space>
+        </section>
+      ))}
+    </Space>
+  )
+
+  // ── Right pane: preview + actions ──────────────────────────────────
+  const rightPane = selected ? (
+    <Card>
+      <Space direction="vertical" style={{ width: '100%' }} size={12}>
+        <Flex justify="space-between" align="flex-start" wrap="wrap" gap={8}>
+          <div>
+            <Typography.Title level={4} style={{ margin: 0 }}>
+              {selected.fileName ?? groupLabel(selected.type, t)}
+            </Typography.Title>
+            <Space size={6} wrap style={{ marginTop: 4 }}>
+              <Tag>{groupLabel(selected.type, t)}</Tag>
+              <Tag color="blue">v{selected.version}</Tag>
+              {selected.publishedAt && (
+                <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                  {t('terms.published', 'Published')}: {dayjs(selected.publishedAt).format('DD/MM/YYYY')}
+                </Typography.Text>
+              )}
+            </Space>
+          </div>
+          {selectedAccepted ? (
+            <Tag icon={<CheckCircleOutlined />} color="success">
+              {t('terms.accepted', 'Accepted')}
+              {selectedAcceptedAt ? ` · ${dayjs(selectedAcceptedAt).format('DD/MM/YYYY')}` : ''}
+            </Tag>
+          ) : (
+            <Tag icon={<ClockCircleOutlined />} color="warning">
+              {t('terms.pending', 'Pending')}
+            </Tag>
+          )}
+        </Flex>
+
+        {selected.contentUrl && !previewErrored ? (
+          <object
+            data={`${selected.contentUrl}#toolbar=1`}
+            type="application/pdf"
+            onError={() => setPreviewErrored(true)}
+            style={{
+              width: '100%',
+              height: '70vh',
+              minHeight: 480,
+              border: '1px solid var(--color-border)',
+              borderRadius: 6,
+            }}
+          >
+            <Alert
+              type="info"
+              showIcon
+              message={t('terms.previewUnavailable', 'Preview unavailable')}
+              description={t('terms.useActionsBelow', 'Use the actions below to open or download the document.')}
+            />
+          </object>
+        ) : (
+          <Alert
+            type="warning"
+            showIcon
+            message={t('terms.previewUnavailable', 'Preview unavailable')}
+            description={
+              selected.contentUrl
+                ? t('terms.useActionsBelow', 'Use the actions below to open or download the document.')
+                : t('terms.noDocument', 'Document not available')
+            }
+          />
+        )}
+
+        <Flex gap={8} wrap="wrap">
+          {selected.contentUrl && (
+            <>
+              <Button
+                onClick={() => window.open(selected.contentUrl, '_blank', 'noopener,noreferrer')}
+              >
+                {t('terms.openInNewTab', 'Open in new tab')}
+              </Button>
+              <a href={selected.contentUrl} download>
+                <Button>{t('terms.download', 'Download')}</Button>
+              </a>
+            </>
+          )}
+          {!selectedAccepted && (
+            <Button
+              type="primary"
+              loading={acceptMutation.isPending}
+              onClick={handleAccept}
+              style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
+            >
+              {t('terms.accept', 'Accept')}
+            </Button>
+          )}
+        </Flex>
       </Space>
+    </Card>
+  ) : (
+    <Alert
+      type="info"
+      showIcon
+      message={t('terms.selectToPreview', 'Select a document to preview')}
+    />
+  )
+
+  return (
+    <div style={{ maxWidth: 1280, margin: '0 auto', padding: isMobile ? '0 12px' : '0 24px' }}>
+      <Typography.Title level={2} style={{ marginBottom: 4 }}>
+        {t('terms.pageTitle', 'Terms & Conditions')}
+      </Typography.Title>
+      <Typography.Paragraph type="secondary" style={{ marginBottom: 24 }}>
+        {t('terms.pageSubtitle', 'Review and accept the terms that apply to your use of the platform.')}
+      </Typography.Paragraph>
+
+      <Row gutter={[16, 16]}>
+        <Col xs={24} md={9}>
+          {leftPane}
+        </Col>
+        <Col xs={24} md={15}>
+          {rightPane}
+        </Col>
+      </Row>
     </div>
   )
 }
