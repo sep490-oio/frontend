@@ -34,23 +34,23 @@ import type { AuctionListItemDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
 import { AuctionTimingSection } from '@/features/auction/components/AuctionTimingSection'
 
-const STATUS_PILLS = [
-  { value: 'all', label: 'All' },
-  { value: AuctionStatus.Draft, label: 'Draft' },
-  { value: AuctionStatus.Approved, label: 'Approved' },
-  { value: AuctionStatus.Scheduled, label: 'Scheduled' },
-  { value: AuctionStatus.Active, label: 'Active' },
-  { value: AuctionStatus.Ended, label: 'Ended' },
-  { value: AuctionStatus.Sold, label: 'Sold' },
-  { value: AuctionStatus.Failed, label: 'Failed' },
-  { value: AuctionStatus.Cancelled, label: 'Cancelled' },
-  { value: AuctionStatus.Pending, label: 'Pending' },
-  { value: AuctionStatus.Terminated, label: 'Terminated' },
-] as const
-
 export default function MyAuctionsPage() {
   const { t } = useTranslation('auction')
   const { t: tc } = useTranslation('common')
+
+  const STATUS_PILLS = [
+    { value: 'all', label: t('statusTab.all') },
+    { value: AuctionStatus.Draft, label: tc('statusLabel.draft') },
+    { value: AuctionStatus.Approved, label: tc('statusLabel.approved') },
+    { value: AuctionStatus.Scheduled, label: tc('statusLabel.scheduled') },
+    { value: AuctionStatus.Active, label: tc('statusLabel.active') },
+    { value: AuctionStatus.Ended, label: tc('statusLabel.ended') },
+    { value: AuctionStatus.Sold, label: tc('statusLabel.sold') },
+    { value: AuctionStatus.Failed, label: tc('statusLabel.failed') },
+    { value: AuctionStatus.Cancelled, label: tc('statusLabel.cancelled') },
+    { value: AuctionStatus.Pending, label: tc('statusLabel.pending') },
+    { value: AuctionStatus.Terminated, label: tc('statusLabel.terminated') },
+  ]
   const navigate = useNavigate()
   const prefix = useRoutePrefix()
   const [msgApi, contextHolder] = message.useMessage()
@@ -625,10 +625,10 @@ export default function MyAuctionsPage() {
       >
         <Flex vertical gap={16} style={{ marginTop: 16 }}>
           {[
-            { label: 'Bắt đầu đăng ký *', key: 'qualificationStartAt' as const, placeholder: 'Chọn thời gian bắt đầu đăng ký' },
-            { label: 'Kết thúc đăng ký *', key: 'qualificationEndAt' as const, placeholder: 'Chọn thời gian kết thúc đăng ký' },
-            { label: 'Bắt đầu đấu giá *', key: 'startAt' as const, placeholder: 'Chọn thời gian bắt đầu đấu giá' },
-            { label: 'Kết thúc đấu giá *', key: 'endAt' as const, placeholder: 'Chọn thời gian kết thúc đấu giá' },
+            { label: t('relist.qualificationStart'), key: 'qualificationStartAt' as const, placeholder: t('relist.qualificationStartPlaceholder') },
+            { label: t('relist.qualificationEnd'), key: 'qualificationEndAt' as const, placeholder: t('relist.qualificationEndPlaceholder') },
+            { label: t('relist.auctionStart'), key: 'startAt' as const, placeholder: t('relist.auctionStartPlaceholder') },
+            { label: t('relist.auctionEnd'), key: 'endAt' as const, placeholder: t('relist.auctionEndPlaceholder') },
           ].map(({ label, key, placeholder }) => (
             <div key={key}>
               <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13 }}>{label}</label>

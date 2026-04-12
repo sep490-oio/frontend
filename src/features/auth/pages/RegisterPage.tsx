@@ -475,15 +475,15 @@ export default function RegisterPage() {
       >
         <div style={trustBadgeStyle}>
           <SafetyCertificateOutlined style={trustIconStyle} />
-          <span style={trustLabelStyle}>Secure Pay</span>
+          <span style={trustLabelStyle}>{t('trustBadge.securePay')}</span>
         </div>
         <div style={trustBadgeStyle}>
           <CheckCircleOutlined style={trustIconStyle} />
-          <span style={trustLabelStyle}>Verified</span>
+          <span style={trustLabelStyle}>{t('trustBadge.verified')}</span>
         </div>
         <div style={trustBadgeStyle}>
           <CustomerServiceOutlined style={trustIconStyle} />
-          <span style={trustLabelStyle}>24/7 Support</span>
+          <span style={trustLabelStyle}>{t('trustBadge.support')}</span>
         </div>
       </div>
     </div>

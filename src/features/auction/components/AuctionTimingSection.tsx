@@ -251,6 +251,7 @@ function CustomDurationPicker({
   onChange: (v: CustomDuration) => void
   placeholder?: string
 }) {
+  const { t } = useTranslation('auction')
   return (
     <Flex gap={8} style={{ marginTop: 10, width: '100%' }} align="center" wrap="wrap">
       <InputNumber
@@ -267,9 +268,9 @@ function CustomDurationPicker({
         style={{ flex: '1 1 110px', minWidth: 110 }}
         size="large"
         options={[
-          { label: 'minutes', value: 'minutes' },
-          { label: 'hours', value: 'hours' },
-          { label: 'days', value: 'days' },
+          { label: t('timing.minutes', 'minutes'), value: 'minutes' },
+          { label: t('timing.hours', 'hours'), value: 'hours' },
+          { label: t('timing.days', 'days'), value: 'days' },
         ]}
       />
     </Flex>
@@ -302,6 +303,7 @@ function MobileDateTimePicker({
   isMobile,
   label,
 }: MobileDateTimePickerProps) {
+  const { t } = useTranslation('auction')
   const [open, setOpen] = useState(false)
   const [draftDate, setDraftDate] = useState<string>('')
   const [draftTime, setDraftTime] = useState<string>('00:00')
@@ -379,7 +381,7 @@ function MobileDateTimePicker({
         }}
       >
         <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {displayValue || placeholder || 'Pick a date and time'}
+          {displayValue || placeholder || t('timing.pickDateTime', 'Pick a date and time')}
         </span>
         {/* Calendar icon — matches Ant DatePicker */}
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
@@ -397,7 +399,7 @@ function MobileDateTimePicker({
         footer={null}
         title={
           <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-text-primary, rgba(0,0,0,0.88))' }}>
-            {label || 'Select date & time'}
+            {label || t('timing.selectDateTime', 'Select date & time')}
           </span>
         }
         centered
@@ -429,7 +431,7 @@ function MobileDateTimePicker({
                 marginBottom: 8,
               }}
             >
-              Date
+              {t('timing.date', 'Date')}
             </Text>
             <input
               type="date"
@@ -469,7 +471,7 @@ function MobileDateTimePicker({
                 marginBottom: 8,
               }}
             >
-              Time
+              {t('timing.time', 'Time')}
             </Text>
             <input
               type="time"
@@ -534,7 +536,7 @@ function MobileDateTimePicker({
                 color: 'var(--color-text-secondary, rgba(0,0,0,0.65))',
               }}
             >
-              Clear
+              {t('timing.clear', 'Clear')}
             </Button>
             <Button
               type="primary"
@@ -550,7 +552,7 @@ function MobileDateTimePicker({
                 borderColor: 'var(--color-accent, #1677ff)',
               }}
             >
-              Confirm
+              {t('confirm', 'Confirm')}
             </Button>
           </div>
 
@@ -1085,7 +1087,7 @@ export function AuctionTimingSection({ form, itemApproved = true }: AuctionTimin
                   },
                   {
                     label: t('autoExtendTitle', 'Auto-extend'),
-                    value: state.autoExtend ? `on (${state.extensionMinutes} min)` : 'off',
+                    value: state.autoExtend ? t('timing.autoExtendOn', { minutes: state.extensionMinutes, defaultValue: `on (${state.extensionMinutes} min)` }) : t('timing.autoExtendOff', 'off'),
                   },
                 ].map(({ label, value }) => (
                   <Text

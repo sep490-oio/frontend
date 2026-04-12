@@ -19,9 +19,8 @@ export default function AboutPage() {
   const { isMobile } = useBreakpoint()
   const isVi = i18n.language === 'vi'
 
-  // Vietnamese doesn't render well in DM Serif Display — use Inter bold instead
-  const headingFont = isVi ? SANS_FONT : SERIF_FONT
-  const headingWeight = isVi ? 600 : 400
+  const headingFont = SERIF_FONT
+  const headingWeight = 400
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 16px' : '0 24px' }}>
@@ -41,7 +40,7 @@ export default function AboutPage() {
             marginBottom: 24,
           }}
         >
-          {t('about.heroLabel', 'OIO Auction House')}
+          {t('about.heroLabel')}
         </p>
         <h1
           style={{
@@ -55,7 +54,7 @@ export default function AboutPage() {
             letterSpacing: isVi ? '-0.01em' : '-0.02em',
           }}
         >
-          {t('about.heroTitle', isVi ? 'Nền Tảng Đấu Giá Trực Tuyến Cao Cấp' : 'The Quiet Authority of Exceptional Things')}
+          {t('about.heroTitle')}
         </h1>
         <p
           style={{
@@ -67,10 +66,7 @@ export default function AboutPage() {
             margin: '0 auto',
           }}
         >
-          {t(
-            'about.heroDescription',
-            'Nơi hội tụ những món đồ tinh tế, được tuyển chọn kỹ lưỡng cho những người sành sỏi.',
-          )}
+          {t('about.heroDescription')}
         </p>
       </section>
 
@@ -84,16 +80,16 @@ export default function AboutPage() {
       >
         <div>
           <p style={{ fontFamily: SANS_FONT, fontSize: 11, fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-accent)', marginBottom: 16 }}>
-            {t('about.storyLabel', 'Câu chuyện của chúng tôi')}
+            {t('about.storyLabel')}
           </p>
           <h2 style={{ fontFamily: headingFont, fontSize: isVi ? 30 : 36, fontWeight: headingWeight, lineHeight: 1.2, color: 'var(--color-text-primary)', marginBottom: 24 }}>
-            {t('about.storyTitle', 'Kết nối người yêu thích với những món đồ phi thường')}
+            {t('about.storyTitle')}
           </h2>
           <p style={{ fontFamily: SANS_FONT, fontSize: 15, lineHeight: 1.8, color: 'var(--color-text-secondary)', marginBottom: 20 }}>
-            {t('about.storyParagraph1', 'OIO ra đời từ niềm tin rằng mỗi món đồ đều mang trong mình một câu chuyện. Chúng tôi tạo ra không gian nơi những người sưu tầm, những nhà đầu tư và những tâm hồn yêu cái đẹp có thể tìm thấy những tác phẩm xứng đáng.')}
+            {t('about.storyParagraph1')}
           </p>
           <p style={{ fontFamily: SANS_FONT, fontSize: 15, lineHeight: 1.8, color: 'var(--color-text-secondary)' }}>
-            {t('about.storyParagraph2', 'Với quy trình kiểm định nghiêm ngặt và nền tảng công nghệ tiên tiến, mỗi phiên đấu giá trên OIO đều đảm bảo tính minh bạch, công bằng và an toàn tuyệt đối.')}
+            {t('about.storyParagraph2')}
           </p>
         </div>
 
@@ -103,9 +99,9 @@ export default function AboutPage() {
             OIO
           </div>
           {[
-            { number: '2024', label: t('about.statFounded', 'Năm thành lập') },
-            { number: '10,000+', label: t('about.statItems', 'Sản phẩm đã đấu giá') },
-            { number: '99.8%', label: t('about.statSatisfaction', 'Khách hàng hài lòng') },
+            { number: '2024', label: t('about.statFounded') },
+            { number: '10,000+', label: t('about.statItems') },
+            { number: '99.8%', label: t('about.statSatisfaction') },
           ].map((stat) => (
             <div key={stat.label} style={{ position: 'relative', zIndex: 1 }}>
               <div style={{ fontFamily: MONO_FONT, fontSize: 32, fontWeight: 500, color: 'var(--color-text-primary)', marginBottom: 4 }}>
@@ -122,17 +118,17 @@ export default function AboutPage() {
       {/* ─── How It Works ─── */}
       <section className="oio-fade-in oio-fade-in-delay-2" style={{ padding: isMobile ? '48px 0' : '100px 0', textAlign: 'center' }}>
         <p style={{ fontFamily: SANS_FONT, fontSize: 11, fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-accent)', marginBottom: 16 }}>
-          {t('about.howItWorksLabel', 'Cách thức hoạt động')}
+          {t('about.howItWorksLabel')}
         </p>
         <h2 style={{ fontFamily: headingFont, fontSize: isVi ? 30 : 36, fontWeight: headingWeight, color: 'var(--color-text-primary)', marginBottom: 64 }}>
-          {t('about.howItWorksTitle', 'Ba bước đơn giản')}
+          {t('about.howItWorksTitle')}
         </h2>
 
         <div className="oio-stagger" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? 24 : 48 }}>
           {[
-            { icon: <SearchOutlined style={{ fontSize: 28, color: 'var(--color-accent)' }} />, title: t('about.step1Title', 'Khám phá'), desc: t('about.step1Desc', 'Duyệt qua bộ sưu tập đa dạng với hàng ngàn sản phẩm được kiểm định chất lượng.') },
-            { icon: <ThunderboltOutlined style={{ fontSize: 28, color: 'var(--color-accent)' }} />, title: t('about.step2Title', 'Đấu giá'), desc: t('about.step2Desc', 'Đặt giá thầu theo thời gian thực. Hệ thống tự động đấu giá thông minh hỗ trợ bạn.') },
-            { icon: <TrophyOutlined style={{ fontSize: 28, color: 'var(--color-accent)' }} />, title: t('about.step3Title', 'Chiến thắng'), desc: t('about.step3Desc', 'Thanh toán an toàn và nhận hàng tận nơi với dịch vụ vận chuyển đáng tin cậy.') },
+            { icon: <SearchOutlined style={{ fontSize: 28, color: 'var(--color-accent)' }} />, title: t('about.step1Title'), desc: t('about.step1Desc') },
+            { icon: <ThunderboltOutlined style={{ fontSize: 28, color: 'var(--color-accent)' }} />, title: t('about.step2Title'), desc: t('about.step2Desc') },
+            { icon: <TrophyOutlined style={{ fontSize: 28, color: 'var(--color-accent)' }} />, title: t('about.step3Title'), desc: t('about.step3Desc') },
           ].map((step) => (
             <div key={step.title} style={{ padding: isMobile ? '20px 16px' : '40px 32px', textAlign: 'center' }}>
               <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--color-accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
@@ -152,18 +148,18 @@ export default function AboutPage() {
       {/* ─── Trust & Security ─── */}
       <section className="oio-fade-in oio-fade-in-delay-3" style={{ padding: isMobile ? '48px 0' : '100px 0', textAlign: 'center' }}>
         <p style={{ fontFamily: SANS_FONT, fontSize: 11, fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-accent)', marginBottom: 16 }}>
-          {t('about.trustLabel', 'Uy tín & Bảo mật')}
+          {t('about.trustLabel')}
         </p>
         <h2 style={{ fontFamily: headingFont, fontSize: isVi ? 30 : 36, fontWeight: headingWeight, color: 'var(--color-text-primary)', marginBottom: 64 }}>
-          {t('about.trustTitle', 'Đấu giá với sự an tâm tuyệt đối')}
+          {t('about.trustTitle')}
         </h2>
 
         <div className="oio-stagger" style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 12 : 32 }}>
           {[
-            { icon: <CheckCircleOutlined style={{ fontSize: 24, color: 'var(--color-accent)' }} />, title: t('about.trust1Title', 'Người bán xác minh'), desc: t('about.trust1Desc', 'Mọi người bán đều trải qua quy trình xác minh danh tính nghiêm ngặt.') },
-            { icon: <LockOutlined style={{ fontSize: 24, color: 'var(--color-accent)' }} />, title: t('about.trust2Title', 'Thanh toán an toàn'), desc: t('about.trust2Desc', 'Mã hóa SSL và hệ thống ví điện tử bảo mật tuyệt đối.') },
-            { icon: <SafetyCertificateOutlined style={{ fontSize: 24, color: 'var(--color-accent)' }} />, title: t('about.trust3Title', 'Kiểm định chất lượng'), desc: t('about.trust3Desc', 'Đội ngũ chuyên gia kiểm tra từng sản phẩm trước khi đấu giá.') },
-            { icon: <StarOutlined style={{ fontSize: 24, color: 'var(--color-accent)' }} />, title: t('about.trust4Title', 'Hỗ trợ 24/7'), desc: t('about.trust4Desc', 'Đội ngũ hỗ trợ khách hàng luôn sẵn sàng giải đáp mọi thắc mắc.') },
+            { icon: <CheckCircleOutlined style={{ fontSize: 24, color: 'var(--color-accent)' }} />, title: t('about.trust1Title'), desc: t('about.trust1Desc') },
+            { icon: <LockOutlined style={{ fontSize: 24, color: 'var(--color-accent)' }} />, title: t('about.trust2Title'), desc: t('about.trust2Desc') },
+            { icon: <SafetyCertificateOutlined style={{ fontSize: 24, color: 'var(--color-accent)' }} />, title: t('about.trust3Title'), desc: t('about.trust3Desc') },
+            { icon: <StarOutlined style={{ fontSize: 24, color: 'var(--color-accent)' }} />, title: t('about.trust4Title'), desc: t('about.trust4Desc') },
           ].map((item) => (
             <div key={item.title} style={{ padding: isMobile ? '16px 12px' : '32px 24px', background: 'var(--color-bg-card)', borderRadius: 2, border: '1px solid var(--color-border-light)' }}>
               <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--color-accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
@@ -184,10 +180,10 @@ export default function AboutPage() {
       <section className="oio-fade-in" style={{ textAlign: 'center', padding: isMobile ? '40px 0 60px' : '80px 0 120px' }}>
         <div style={{ width: 48, height: 1, background: 'var(--color-accent)', margin: '0 auto 48px', opacity: 0.4 }} />
         <h2 style={{ fontFamily: headingFont, fontSize: isVi ? 30 : 36, fontWeight: headingWeight, color: 'var(--color-text-primary)', marginBottom: 16 }}>
-          {t('about.ctaTitle', 'Bắt đầu khám phá')}
+          {t('about.ctaTitle')}
         </h2>
         <p style={{ fontFamily: SANS_FONT, fontSize: 16, color: 'var(--color-text-secondary)', marginBottom: 40, maxWidth: 480, margin: '0 auto 40px', lineHeight: 1.7 }}>
-          {t('about.ctaDescription', 'Khám phá hàng ngàn sản phẩm độc đáo đang chờ đón bạn trên OIO.')}
+          {t('about.ctaDescription')}
         </p>
         <Button
           type="primary"
@@ -196,7 +192,7 @@ export default function AboutPage() {
           className="oio-press"
           style={{ height: 52, padding: '0 48px', borderRadius: 2, fontWeight: 500, fontSize: 15, fontFamily: SANS_FONT, background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
         >
-          {t('about.ctaButton', 'Khám phá ngay')}
+          {t('about.ctaButton')}
         </Button>
       </section>
     </div>

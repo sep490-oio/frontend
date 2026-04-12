@@ -16,21 +16,9 @@ import type { OrderDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
 import { SERIF_FONT } from '@/styles/tokens'
 
-const STATUS_TABS = [
-  { key: 'all', label: 'all' },
-  { key: OrderStatus.PendingPayment, label: 'pendingPayment' },
-  { key: OrderStatus.Paid, label: 'paid' },
-  { key: OrderStatus.Shipped, label: 'shipped' },
-  { key: OrderStatus.Delivered, label: 'delivered' },
-  { key: OrderStatus.Completed, label: 'completed' },
-  { key: OrderStatus.Cancelled, label: 'cancelled' },
-  { key: OrderStatus.Refunded, label: 'Refunded' },
-  { key: OrderStatus.Disputed, label: 'Disputed' },
-] as const
-
-function formatCountdown(targetDate: string): string {
+function formatCountdown(targetDate: string, expiredLabel: string): string {
   const diff = new Date(targetDate).getTime() - Date.now()
-  if (diff <= 0) return 'Expired'
+  if (diff <= 0) return expiredLabel
   const hours = Math.floor(diff / (1000 * 60 * 60))
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
   if (hours > 24) {
@@ -41,19 +29,21 @@ function formatCountdown(targetDate: string): string {
 }
 
 function DecisionCountdown({ endsAt }: { endsAt: string }) {
-  const [display, setDisplay] = useState(() => formatCountdown(endsAt))
+  const { t } = useTranslation('order')
+  const expiredLabel = t('expired')
+  const [display, setDisplay] = useState(() => formatCountdown(endsAt, expiredLabel))
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setDisplay(formatCountdown(endsAt))
+      setDisplay(formatCountdown(endsAt, expiredLabel))
     }, 60_000)
     return () => clearInterval(interval)
-  }, [endsAt])
+  }, [endsAt, expiredLabel])
 
   const isExpired = new Date(endsAt).getTime() <= Date.now()
 
   return (
-    <Tooltip title={`Decision window ends: ${formatDateTime(endsAt)}`}>
+    <Tooltip title={t('decisionWindowEnds', { date: formatDateTime(endsAt) })}>
       <Tag
         icon={<ClockCircleOutlined />}
         color={isExpired ? 'default' : 'warning'}
@@ -78,6 +68,18 @@ const RETURN_STATUS_COLORS: Record<string, string> = {
 export default function MyOrdersPage() {
   const { t } = useTranslation('order')
   const { t: tc } = useTranslation('common')
+
+  const STATUS_TABS = [
+    { key: 'all', label: 'all' },
+    { key: OrderStatus.PendingPayment, label: 'pendingPayment' },
+    { key: OrderStatus.Paid, label: 'paid' },
+    { key: OrderStatus.Shipped, label: 'shipped' },
+    { key: OrderStatus.Delivered, label: 'delivered' },
+    { key: OrderStatus.Completed, label: 'completed' },
+    { key: OrderStatus.Cancelled, label: 'cancelled' },
+    { key: OrderStatus.Refunded, label: 'Refunded' },
+    { key: OrderStatus.Disputed, label: 'Disputed' },
+  ]
   const navigate = useNavigate()
   const prefix = useRoutePrefix()
   const { isMobile } = useBreakpoint()

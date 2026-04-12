@@ -18,7 +18,7 @@ import { formatCurrency, formatDateTime } from '@/utils/format'
 import { SERIF_FONT, MONO_FONT } from '@/styles/tokens'
 
 export default function DashboardPage() {
-  const { t } = useTranslation('common')
+  const { t } = useTranslation('user')
   const { isMobile } = useBreakpoint()
   const navigate = useNavigate()
 
@@ -43,10 +43,10 @@ export default function DashboardPage() {
           marginBottom: 4,
         }}
       >
-        {t('menu.home', 'Dashboard')}
+        {t('dashboard.title')}
       </h1>
       <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, marginBottom: 24 }}>
-        {t('status.developing', 'Overview of your auction activity')}
+        {t('dashboard.subtitle')}
       </p>
 
       {/* Stats Row */}
@@ -55,7 +55,7 @@ export default function DashboardPage() {
           <Card style={{ background: 'var(--color-accent-light)', borderColor: 'var(--color-border)', borderRadius: 12, cursor: 'pointer' }} onClick={() => navigate('/me/wallet')}>
             <WalletOutlined style={{ color: 'var(--color-accent)', fontSize: 20, marginBottom: 8 }} />
             <div style={{ color: 'var(--color-text-secondary)', fontSize: 12, marginBottom: 4 }}>
-              {t('menu.wallet', 'Wallet')}
+              {t('dashboard.wallet')}
             </div>
             <div style={{ fontFamily: MONO_FONT, fontSize: 22, fontWeight: 600, color: 'var(--color-text-primary)' }}>
               {wallet ? formatCurrency(wallet.availableBalance, wallet.currency) : '--'}
@@ -66,7 +66,7 @@ export default function DashboardPage() {
           <Card style={{ background: 'var(--color-accent-light)', borderColor: 'var(--color-border)', borderRadius: 12, cursor: 'pointer' }} onClick={() => navigate('/me/bids')}>
             <ThunderboltOutlined style={{ color: 'var(--color-accent)', fontSize: 20, marginBottom: 8 }} />
             <div style={{ color: 'var(--color-text-secondary)', fontSize: 12, marginBottom: 4 }}>
-              {t('menu.bids', 'Active Bids')}
+              {t('dashboard.activeBids')}
             </div>
             <div style={{ fontFamily: MONO_FONT, fontSize: 22, fontWeight: 600, color: 'var(--color-text-primary)' }}>
               {activeBids.length}
@@ -77,7 +77,7 @@ export default function DashboardPage() {
           <Card style={{ background: 'var(--color-accent-light)', borderColor: 'var(--color-border)', borderRadius: 12, cursor: 'pointer' }} onClick={() => navigate('/me/orders')}>
             <ShoppingOutlined style={{ color: 'var(--color-accent)', fontSize: 20, marginBottom: 8 }} />
             <div style={{ color: 'var(--color-text-secondary)', fontSize: 12, marginBottom: 4 }}>
-              {t('menu.myOrders', 'Orders')}
+              {t('dashboard.orders')}
             </div>
             <div style={{ fontFamily: MONO_FONT, fontSize: 22, fontWeight: 600, color: 'var(--color-text-primary)' }}>
               {recentOrders.length}
@@ -88,7 +88,7 @@ export default function DashboardPage() {
           <Card style={{ background: 'var(--color-accent-light)', borderColor: 'var(--color-border)', borderRadius: 12, cursor: 'pointer' }} onClick={() => navigate('/me/disputes')}>
             <CommentOutlined style={{ color: 'var(--color-accent)', fontSize: 20, marginBottom: 8 }} />
             <div style={{ color: 'var(--color-text-secondary)', fontSize: 12, marginBottom: 4 }}>
-              Disputes
+              {t('dashboard.disputes')}
             </div>
             <div style={{ fontFamily: MONO_FONT, fontSize: 22, fontWeight: 600, color: 'var(--color-text-primary)' }}>
               {disputes.length}
@@ -101,8 +101,8 @@ export default function DashboardPage() {
         {/* Active Bids */}
         <Col xs={24} lg={16}>
           <Card
-            title={<span style={{ fontFamily: SERIF_FONT, fontWeight: 400 }}>Đấu giá đang tham gia</span>}
-            extra={<Button type="link" onClick={() => navigate('/me/bids')} style={{ color: 'var(--color-accent)' }}>Xem tất cả</Button>}
+            title={<span style={{ fontFamily: SERIF_FONT, fontWeight: 400 }}>{t('dashboard.activeBidsTitle')}</span>}
+            extra={<Button type="link" onClick={() => navigate('/me/bids')} style={{ color: 'var(--color-accent)' }}>{t('dashboard.viewAll')}</Button>}
             style={{ borderRadius: 12, marginBottom: 24 }}
           >
             {activeBids.length > 0 ? (
@@ -127,13 +127,13 @@ export default function DashboardPage() {
                 ))}
               </Row>
             ) : (
-              <Empty description="Chưa có đấu giá nào" />
+              <Empty description={t('dashboard.noBids')} />
             )}
           </Card>
 
           {/* Shipment Tracking */}
           <Card
-            title={<span style={{ fontFamily: SERIF_FONT, fontWeight: 400 }}>Theo dõi giao hàng</span>}
+            title={<span style={{ fontFamily: SERIF_FONT, fontWeight: 400 }}>{t('dashboard.shipmentTracking')}</span>}
             style={{ borderRadius: 12 }}
           >
             {recentOrders.length > 0 ? (
@@ -157,17 +157,17 @@ export default function DashboardPage() {
                           : 0
                       }
                       items={[
-                        { title: 'Thanh toán' },
-                        { title: 'Đang giao' },
-                        { title: 'Đã nhận' },
-                        { title: 'Hoàn tất' },
+                        { title: t('dashboard.stepPayment') },
+                        { title: t('dashboard.stepShipping') },
+                        { title: t('dashboard.stepReceived') },
+                        { title: t('dashboard.stepCompleted') },
                       ]}
                     />
                   </div>
                 ))}
               </Space>
             ) : (
-              <Empty description="Chưa có đơn hàng nào đang giao" />
+              <Empty description={t('dashboard.noShipments')} />
             )}
           </Card>
         </Col>
@@ -176,8 +176,8 @@ export default function DashboardPage() {
         <Col xs={24} lg={8}>
           {/* Disputes */}
           <Card
-            title={<span style={{ fontFamily: SERIF_FONT, fontWeight: 400 }}>Tranh chấp</span>}
-            extra={<Button type="link" onClick={() => navigate('/me/disputes')} style={{ color: 'var(--color-accent)' }}>Xem tất cả</Button>}
+            title={<span style={{ fontFamily: SERIF_FONT, fontWeight: 400 }}>{t('dashboard.disputesTitle')}</span>}
+            extra={<Button type="link" onClick={() => navigate('/me/disputes')} style={{ color: 'var(--color-accent)' }}>{t('dashboard.viewAll')}</Button>}
             style={{ borderRadius: 12, marginBottom: 24 }}
           >
             {disputes.length > 0 ? (
@@ -201,7 +201,7 @@ export default function DashboardPage() {
                 ))}
               </Space>
             ) : (
-              <Empty description="Không có tranh chấp" />
+              <Empty description={t('dashboard.noDisputes')} />
             )}
           </Card>
 
@@ -209,17 +209,17 @@ export default function DashboardPage() {
           <Card style={{ borderRadius: 12, background: 'var(--color-accent-light)', textAlign: 'center', padding: '8px 0' }}>
             <ShopOutlined style={{ fontSize: 32, color: 'var(--color-accent)', marginBottom: 8 }} />
             <div style={{ fontFamily: SERIF_FONT, fontSize: 16, color: 'var(--color-text-primary)', marginBottom: 8 }}>
-              Trở thành Người bán
+              {t('dashboard.becomeSellerTitle')}
             </div>
             <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 16, maxWidth: 240, margin: '0 auto 16px' }}>
-              Bán vật phẩm của bạn trên nền tảng đấu giá hàng đầu
+              {t('dashboard.becomeSellerDesc')}
             </div>
             <Button
               type="primary"
               onClick={() => navigate('/seller/register')}
               style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)', fontWeight: 500 }}
             >
-              Đăng ký bán hàng
+              {t('dashboard.becomeSellerBtn')}
             </Button>
           </Card>
         </Col>

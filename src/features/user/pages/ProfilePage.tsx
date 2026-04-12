@@ -33,30 +33,24 @@ import { SERIF_FONT } from '@/styles/tokens'
 
 const { Text } = Typography
 
-// -- Schemas -------------------------------------------------------------------
+// -- Schema types (schemas created inside component to access i18n) ----------
 
-const profileSchema = z.object({
-  firstName: z.string().max(50, 'Toi da 50 ky tu').optional().or(z.literal('')),
-  lastName: z.string().max(50, 'Toi da 50 ky tu').optional().or(z.literal('')),
-  displayName: z.string().max(100, 'Toi da 100 ky tu').optional().or(z.literal('')),
-  dateOfBirth: z.string().optional().or(z.literal('')),
-  gender: z.string().optional().or(z.literal('')),
-})
+type ProfileFormValues = {
+  firstName?: string
+  lastName?: string
+  displayName?: string
+  dateOfBirth?: string
+  gender?: string
+}
 
-type ProfileFormValues = z.infer<typeof profileSchema>
+type PhoneFormValues = {
+  phoneNumber: string
+  countryCode: string
+}
 
-const phoneSchema = z.object({
-  phoneNumber: z.string().regex(/^[0-9]{9,11}$/, 'So dien thoai khong hop le'),
-  countryCode: z.string().min(1, 'Vui long chon ma quoc gia'),
-})
-
-type PhoneFormValues = z.infer<typeof phoneSchema>
-
-const confirmPhoneSchema = z.object({
-  code: z.string().length(6, 'Ma xac nhan phai gom 6 chu so'),
-})
-
-type ConfirmPhoneFormValues = z.infer<typeof confirmPhoneSchema>
+type ConfirmPhoneFormValues = {
+  code: string
+}
 
 // -- Styles --------------------------------------------------------------------
 
@@ -82,6 +76,25 @@ export default function ProfilePage() {
   const { t } = useTranslation('user')
   const { isMobile } = useBreakpoint()
   const { message } = App.useApp()
+
+  // Schemas defined inside component so validation messages use i18n
+  const profileSchema = z.object({
+    firstName: z.string().max(50, t('profile.validation.maxChars', { max: 50 })).optional().or(z.literal('')),
+    lastName: z.string().max(50, t('profile.validation.maxChars', { max: 50 })).optional().or(z.literal('')),
+    displayName: z.string().max(100, t('profile.validation.maxChars', { max: 100 })).optional().or(z.literal('')),
+    dateOfBirth: z.string().optional().or(z.literal('')),
+    gender: z.string().optional().or(z.literal('')),
+  })
+
+  const phoneSchema = z.object({
+    phoneNumber: z.string().regex(/^[0-9]{9,11}$/, t('profile.validation.phoneInvalid')),
+    countryCode: z.string().min(1, t('profile.validation.countryCodeRequired')),
+  })
+
+  const confirmPhoneSchema = z.object({
+    code: z.string().length(6, t('profile.validation.otpLength')),
+  })
+
   const [showPhoneVerify, setShowPhoneVerify] = useState(false)
   const [avatarUploadId, setAvatarUploadId] = useState<string | null>(null)
   const avatarUpload = useMediaUpload('user_avatar')
@@ -143,9 +156,9 @@ export default function ProfilePage() {
       })
       await queryClient.invalidateQueries({ queryKey: queryKeys.auth.currentUser() })
       await queryClient.invalidateQueries({ queryKey: queryKeys.users.profile() })
-      message.success(t('user:profile.updateSuccess', 'Profile updated successfully'))
+      message.success(t('profile.updateSuccess', 'Profile updated successfully'))
     } catch {
-      message.error(t('user:profile.updateError', 'Failed to update profile'))
+      message.error(t('profile.updateError', 'Failed to update profile'))
     }
   })
 
@@ -153,9 +166,9 @@ export default function ProfilePage() {
     try {
       await setPhoneNumber.mutateAsync(values)
       setShowPhoneVerify(true)
-      message.success(t('user:profile.otpSent', 'Verification code sent'))
+      message.success(t('profile.otpSent', 'Verification code sent'))
     } catch {
-      message.error(t('user:profile.otpSendError', 'Failed to send verification code'))
+      message.error(t('profile.otpSendError', 'Failed to send verification code'))
     }
   })
 
@@ -163,9 +176,9 @@ export default function ProfilePage() {
     try {
       await confirmPhone.mutateAsync({ verificationCode: values.code })
       setShowPhoneVerify(false)
-      message.success(t('user:profile.phoneVerified', 'Phone verified successfully'))
+      message.success(t('profile.phoneVerified', 'Phone verified successfully'))
     } catch {
-      message.error(t('user:profile.otpInvalid', 'Invalid verification code'))
+      message.error(t('profile.otpInvalid', 'Invalid verification code'))
     }
   })
 
@@ -190,10 +203,10 @@ export default function ProfilePage() {
           letterSpacing: '-0.01em',
         }}
       >
-        {t('user:profile.title', 'My Profile')}
+        {t('profile.title', 'My Profile')}
       </h1>
       <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, marginBottom: isMobile ? 20 : 32 }}>
-        {t('user:profile.subtitle', 'Manage your account information')}
+        {t('profile.subtitle', 'Manage your account information')}
       </p>
 
       {/* Email not confirmed banner */}
@@ -202,8 +215,8 @@ export default function ProfilePage() {
           type="warning"
           showIcon
           style={{ marginBottom: 24, borderRadius: 8 }}
-          message={t('user:profile.emailNotConfirmed', 'Your email is not verified')}
-          description={t('user:profile.emailNotConfirmedDesc', 'Please verify your email address to access all features. Check your inbox or click the button to resend.')}
+          message={t('profile.emailNotConfirmed', 'Your email is not verified')}
+          description={t('profile.emailNotConfirmedDesc', 'Please verify your email address to access all features. Check your inbox or click the button to resend.')}
           action={
             <Button
               size="small"
@@ -212,14 +225,14 @@ export default function ProfilePage() {
               onClick={async () => {
                 try {
                   await resendEmail.mutateAsync({ email: user.email })
-                  message.success(t('user:profile.resendSuccess', 'Verification email sent! Please check your inbox.'))
+                  message.success(t('profile.resendSuccess', 'Verification email sent! Please check your inbox.'))
                 } catch {
-                  message.error(t('user:profile.resendError', 'Failed to send verification email. Please wait 60 seconds between attempts.'))
+                  message.error(t('profile.resendError', 'Failed to send verification email. Please wait 60 seconds between attempts.'))
                 }
               }}
               style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
             >
-              {t('user:profile.resendEmail', 'Resend Verification Email')}
+              {t('profile.resendEmail', 'Resend Verification Email')}
             </Button>
           }
         />
@@ -266,15 +279,15 @@ export default function ProfilePage() {
               try {
                 const result = await avatarUpload.upload(file)
                 setAvatarUploadId(result.mediaUploadId)
-                message.success(t('user:profile.avatarUploaded', 'Avatar uploaded'))
+                message.success(t('profile.avatarUploaded', 'Avatar uploaded'))
               } catch {
-                message.error(t('user:profile.avatarUploadError', 'Failed to upload avatar'))
+                message.error(t('profile.avatarUploadError', 'Failed to upload avatar'))
               }
               return false
             }}
           >
             <Button icon={<UploadOutlined />} size="small" style={{ marginTop: 8 }} loading={avatarUpload.uploading}>
-              {t('user:profile.changeAvatar', 'Change Avatar')}
+              {t('profile.changeAvatar', 'Change Avatar')}
             </Button>
           </Upload>
           <Text type="secondary" style={{ fontSize: 13 }}>{user?.email}</Text>
@@ -284,20 +297,20 @@ export default function ProfilePage() {
       {/* Profile Form */}
       <Card
         style={{ marginBottom: 32 }}
-        title={<span style={sectionHeadingStyle}>{t('user:profile.personalInfo', 'Personal Information')}</span>}
+        title={<span style={sectionHeadingStyle}>{t('profile.personalInfo', 'Personal Information')}</span>}
       >
         <form onSubmit={onProfileSave}>
           <Row gutter={16}>
             <Col xs={24} sm={12}>
               <div style={{ marginBottom: 20 }}>
-                <label style={labelStyle}>{t('user:profile.firstName', 'First Name')}</label>
+                <label style={labelStyle}>{t('profile.firstName', 'First Name')}</label>
                 <Controller
                   name="firstName"
                   control={profileControl}
                   render={({ field }) => (
                     <Input
                       {...field}
-                      placeholder={t('user:profile.firstNamePlaceholder', 'Enter first name')}
+                      placeholder={t('profile.firstNamePlaceholder', 'Enter first name')}
                       status={profileErrors.firstName ? 'error' : undefined}
                       style={{ height: 42 }}
                     />
@@ -310,14 +323,14 @@ export default function ProfilePage() {
             </Col>
             <Col xs={24} sm={12}>
               <div style={{ marginBottom: 20 }}>
-                <label style={labelStyle}>{t('user:profile.lastName', 'Last Name')}</label>
+                <label style={labelStyle}>{t('profile.lastName', 'Last Name')}</label>
                 <Controller
                   name="lastName"
                   control={profileControl}
                   render={({ field }) => (
                     <Input
                       {...field}
-                      placeholder={t('user:profile.lastNamePlaceholder', 'Enter last name')}
+                      placeholder={t('profile.lastNamePlaceholder', 'Enter last name')}
                       status={profileErrors.lastName ? 'error' : undefined}
                       style={{ height: 42 }}
                     />
@@ -331,14 +344,14 @@ export default function ProfilePage() {
           </Row>
 
           <div style={{ marginBottom: 20 }}>
-            <label style={labelStyle}>{t('user:profile.displayName', 'Display Name')}</label>
+            <label style={labelStyle}>{t('profile.displayName', 'Display Name')}</label>
             <Controller
               name="displayName"
               control={profileControl}
               render={({ field }) => (
                 <Input
                   {...field}
-                  placeholder={t('user:profile.displayNamePlaceholder', 'Enter display name')}
+                  placeholder={t('profile.displayNamePlaceholder', 'Enter display name')}
                   status={profileErrors.displayName ? 'error' : undefined}
                   style={{ height: 42 }}
                 />
@@ -352,7 +365,7 @@ export default function ProfilePage() {
           <Row gutter={16}>
             <Col xs={24} sm={12}>
               <div style={{ marginBottom: 20 }}>
-                <label style={labelStyle}>{t('user:profile.dateOfBirth', 'Date of Birth')}</label>
+                <label style={labelStyle}>{t('profile.dateOfBirth', 'Date of Birth')}</label>
                 <Controller
                   name="dateOfBirth"
                   control={profileControl}
@@ -361,7 +374,7 @@ export default function ProfilePage() {
                       style={{ width: '100%', height: 42 }}
                       value={field.value ? dayjs(field.value) : null}
                       onChange={(date) => field.onChange(date ? date.format('YYYY-MM-DD') : '')}
-                      placeholder={t('user:profile.dateOfBirthPlaceholder', 'Select date of birth')}
+                      placeholder={t('profile.dateOfBirthPlaceholder', 'Select date of birth')}
                       format="DD/MM/YYYY"
                     />
                   )}
@@ -370,7 +383,7 @@ export default function ProfilePage() {
             </Col>
             <Col xs={24} sm={12}>
               <div style={{ marginBottom: 20 }}>
-                <label style={labelStyle}>{t('user:profile.gender', 'Gender')}</label>
+                <label style={labelStyle}>{t('profile.gender', 'Gender')}</label>
                 <Controller
                   name="gender"
                   control={profileControl}
@@ -378,12 +391,12 @@ export default function ProfilePage() {
                     <Select
                       {...field}
                       style={{ width: '100%' }}
-                      placeholder={t('user:profile.genderPlaceholder', 'Select gender')}
+                      placeholder={t('profile.genderPlaceholder', 'Select gender')}
                       allowClear
                       options={[
-                        { value: 'male', label: t('user:profile.genderMale', 'Male') },
-                        { value: 'female', label: t('user:profile.genderFemale', 'Female') },
-                        { value: 'other', label: t('user:profile.genderOther', 'Other') },
+                        { value: 'male', label: t('profile.genderMale', 'Male') },
+                        { value: 'female', label: t('profile.genderFemale', 'Female') },
+                        { value: 'other', label: t('profile.genderOther', 'Other') },
                       ]}
                     />
                   )}
@@ -398,7 +411,7 @@ export default function ProfilePage() {
             loading={updateProfile.isPending}
             style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
           >
-            {t('user:profile.saveChanges', 'Save Changes')}
+            {t('profile.saveChanges', 'Save Changes')}
           </Button>
         </form>
       </Card>
@@ -406,20 +419,20 @@ export default function ProfilePage() {
       {/* Phone Number Section */}
       <Card
         style={{ marginBottom: 32 }}
-        title={<span style={sectionHeadingStyle}>{t('user:profile.phoneNumber', 'Phone Number')}</span>}
+        title={<span style={sectionHeadingStyle}>{t('profile.phoneNumber', 'Phone Number')}</span>}
       >
         {user?.phoneNumberConfirmed ? (
           <Alert
             type="success"
             showIcon
             icon={<CheckCircleOutlined />}
-            message={t('user:profile.phoneConfirmed', 'Phone number {{code}} {{number}} has been verified', { code: user.countryCode ?? '', number: user.phoneNumber ?? '' })}
+            message={t('profile.phoneConfirmed', 'Phone number {{code}} {{number}} has been verified', { code: user.countryCode ?? '', number: user.phoneNumber ?? '' })}
             style={{ borderRadius: 2 }}
           />
         ) : (
           <>
             <Text type="secondary" style={{ display: 'block', marginBottom: 16, fontSize: 14 }}>
-              {t('user:profile.addPhoneHint', 'Add a phone number for better account security.')}
+              {t('profile.addPhoneHint', 'Add a phone number for better account security.')}
             </Text>
             <form onSubmit={onPhoneSave}>
               <Row gutter={8}>
@@ -448,7 +461,7 @@ export default function ProfilePage() {
                       <Input
                         {...field}
                         prefix={<PhoneOutlined />}
-                        placeholder={t('user:profile.phonePlaceholder', 'Enter phone number')}
+                        placeholder={t('profile.phonePlaceholder', 'Enter phone number')}
                         status={phoneErrors.phoneNumber ? 'error' : undefined}
                         style={{ height: 42 }}
                       />
@@ -466,7 +479,7 @@ export default function ProfilePage() {
                     icon={<PhoneOutlined />}
                     style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
                   >
-                    {t('user:profile.sendCode', 'Send Code')}
+                    {t('profile.sendCode', 'Send Code')}
                   </Button>
                 </Col>
               </Row>
@@ -483,7 +496,7 @@ export default function ProfilePage() {
                       render={({ field }) => (
                         <Input
                           {...field}
-                          placeholder={t('user:profile.otpPlaceholder', 'Enter 6-digit code')}
+                          placeholder={t('profile.otpPlaceholder', 'Enter 6-digit code')}
                           maxLength={6}
                           status={confirmErrors.code ? 'error' : undefined}
                           style={{ height: 42, fontFamily: 'var(--font-mono)', letterSpacing: '0.15em' }}
@@ -496,7 +509,7 @@ export default function ProfilePage() {
                       loading={confirmPhone.isPending}
                       style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
                     >
-                      {t('user:profile.confirm', 'Confirm')}
+                      {t('profile.confirm', 'Confirm')}
                     </Button>
                   </Space>
                   {confirmErrors.code && (

@@ -128,7 +128,7 @@ export function AppLayout() {
     { to: '/auctions', label: t('common:menu.auctions', 'Auctions'), alwaysShow: true },
     { to: '/items', label: t('common:menu.items', 'Items'), alwaysShow: true },
     { to: '/sellers', label: t('common:menu.sellers', 'Sellers'), alwaysShow: true },
-    { to: '/about', label: t('common:menu.about', 'Về chúng tôi'), alwaysShow: true },
+    { to: '/about', label: t('common:menu.about'), alwaysShow: true },
     ...(isAuthenticated && roles.includes('admin')
       ? [{ to: '/admin', label: t('common:menu.admin', 'Admin'), alwaysShow: false, accent: true }]
       : []),
@@ -162,7 +162,7 @@ export function AppLayout() {
           e.currentTarget.style.height = 'auto'
         }}
       >
-        Skip to main content
+        {t('common:layout.skipToContent')}
       </a>
 
       {/* ─── Header ─── */}
@@ -193,7 +193,7 @@ export function AppLayout() {
               type="text"
               icon={<MenuOutlined />}
               onClick={() => setMobileMenuOpen(true)}
-              aria-label="Open menu"
+              aria-label={t('common:layout.openMenu')}
               style={{ color: 'var(--color-text-primary)', fontSize: 18, minWidth: 44, minHeight: 44 }}
             />
           )}
@@ -272,7 +272,7 @@ export function AppLayout() {
           {!isMobile && (
             <Button
               type="text"
-              aria-label="Switch language"
+              aria-label={t('common:layout.switchLanguage')}
               onClick={() => {
                 const next = i18n.language === 'vi' ? 'en' : 'vi'
                 i18n.changeLanguage(next)
@@ -292,7 +292,7 @@ export function AppLayout() {
           {/* Theme toggle */}
           <Button
             type="text"
-            aria-label="Toggle dark mode"
+            aria-label={isDark ? t('common:layout.lightMode') : t('common:layout.darkMode')}
             icon={isDark ? <SunOutlined /> : <MoonOutlined />}
             onClick={toggleTheme}
             style={{ color: 'var(--color-text-primary)', minWidth: 44, minHeight: 44 }}
@@ -428,7 +428,7 @@ export function AppLayout() {
               height: 44,
             }}
           >
-            {i18n.language === 'vi' ? 'Switch to EN' : 'Switch to VI'}
+            {i18n.language === 'vi' ? t('common:layout.switchToEn') : t('common:layout.switchToVi')}
           </Button>
         </div>
       </Drawer>

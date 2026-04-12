@@ -238,12 +238,12 @@ export default function VnPayReturnPage() {
             )}
             {formattedPayDate && (
               <Descriptions.Item label={t('payment:vnpayReturn.time', 'Time')}>
-                <span style={{ fontFamily: "'Inter', sans-serif" }}>{formattedPayDate}</span>
+                <span style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>{formattedPayDate}</span>
               </Descriptions.Item>
             )}
             {orderInfo && (
               <Descriptions.Item label={t('payment:vnpayReturn.content', 'Content')}>
-                <span style={{ fontFamily: "'Inter', sans-serif" }}>{orderInfo}</span>
+                <span style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>{orderInfo}</span>
               </Descriptions.Item>
             )}
             {!isSuccess && result?.responseCode && (

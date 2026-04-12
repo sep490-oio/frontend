@@ -26,11 +26,11 @@ import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { MultiCaptureUploader } from '@/components/ui/MultiCaptureUploader'
 import type { CapturedPhoto } from '@/components/ui/MultiCaptureUploader'
 
-const GHN_HANDLING_OPTIONS = [
-  { label: 'Cho thử hàng', value: 'CHOTHUHANG' },
-  { label: 'Cho xem hàng không thử', value: 'CHOXEMHANGKHONGTHU' },
-  { label: 'Không cho xem hàng', value: 'KHONGCHOXEMHANG' },
-]
+const GHN_HANDLING_KEYS = [
+  { value: 'CHOTHUHANG', key: 'tryItem' },
+  { value: 'CHOXEMHANGKHONGTHU', key: 'viewOnly' },
+  { value: 'KHONGCHOXEMHANG', key: 'noView' },
+] as const
 
 /**
  * Canonical warehouse-staff outbound booking screen.
@@ -453,7 +453,10 @@ export default function OutboundDetailPage() {
                 label={t('ghnHandlingNote', 'GHN Handling Note')}
               >
                 <Select
-                  options={GHN_HANDLING_OPTIONS}
+                  options={GHN_HANDLING_KEYS.map((opt) => ({
+                    value: opt.value,
+                    label: t(`handlingOption.${opt.key}`, opt.key),
+                  }))}
                   placeholder={t('ghnHandlingPlaceholder', 'Select handling preference (optional)')}
                   allowClear
                 />

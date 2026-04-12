@@ -1,5 +1,6 @@
 import { Typography, Flex } from 'antd'
 import { InboxOutlined } from '@ant-design/icons'
+import { useTranslation } from 'react-i18next'
 
 interface EmptyStateProps {
   title?: string
@@ -9,11 +10,13 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({
-  title = 'Nothing here yet',
+  title,
   description,
   icon,
   action,
 }: EmptyStateProps) {
+  const { t } = useTranslation('common')
+  const displayTitle = title ?? t('emptyState.title')
   return (
     <Flex
       vertical
@@ -29,7 +32,7 @@ export function EmptyState({
         className="oio-serif"
         style={{ fontSize: 20, color: 'var(--color-text-primary)' }}
       >
-        {title}
+        {displayTitle}
       </Typography.Text>
       {description && (
         <Typography.Text

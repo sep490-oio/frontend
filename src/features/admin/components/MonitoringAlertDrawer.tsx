@@ -21,6 +21,7 @@ import {
   WarningOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
+import { useTranslation } from 'react-i18next'
 import { useAcknowledgeAlert, useResolveAlert } from '@/features/admin/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
@@ -28,11 +29,11 @@ import { AlertSeverity, AlertStatus } from '@/types/enums'
 import { parseAlertPayload, formatAlertType } from '@/features/admin/utils/parseAlertPayload'
 import type { MonitoringAlertDto } from '@/types'
 
-const SEVERITY_CONFIG: Record<string, { color: string; icon: React.ReactNode; label: string }> = {
-  [AlertSeverity.Low]: { color: '#52c41a', icon: <CheckCircleOutlined />, label: 'Low' },
-  [AlertSeverity.Medium]: { color: '#faad14', icon: <ExclamationCircleOutlined />, label: 'Medium' },
-  [AlertSeverity.High]: { color: '#ff4d4f', icon: <WarningOutlined />, label: 'High' },
-  [AlertSeverity.Critical]: { color: 'var(--color-danger)', icon: <FireOutlined />, label: 'Critical' },
+const SEVERITY_STYLE: Record<string, { color: string; icon: React.ReactNode }> = {
+  [AlertSeverity.Low]: { color: '#52c41a', icon: <CheckCircleOutlined /> },
+  [AlertSeverity.Medium]: { color: '#faad14', icon: <ExclamationCircleOutlined /> },
+  [AlertSeverity.High]: { color: '#ff4d4f', icon: <WarningOutlined /> },
+  [AlertSeverity.Critical]: { color: 'var(--color-danger)', icon: <FireOutlined /> },
 }
 
 const ENTITY_ROUTES: Partial<Record<string, (id: string) => string>> = {
@@ -49,6 +50,8 @@ interface MonitoringAlertDrawerProps {
 }
 
 export function MonitoringAlertDrawer({ alert, open, onClose }: MonitoringAlertDrawerProps) {
+  const { t } = useTranslation('admin')
+  const { t: tc } = useTranslation('common')
   const { message } = App.useApp()
   const navigate = useNavigate()
 
@@ -71,32 +74,32 @@ export function MonitoringAlertDrawer({ alert, open, onClose }: MonitoringAlertD
 
   if (!alert) return null
 
-  const severityCfg = SEVERITY_CONFIG[alert.severity] ?? SEVERITY_CONFIG[AlertSeverity.Low]
+  const severityStyle = SEVERITY_STYLE[alert.severity] ?? SEVERITY_STYLE[AlertSeverity.Low]
   const parsed = parseAlertPayload(alert.alertType, alert.payload)
   const entityRouteFn = ENTITY_ROUTES[alert.entityType?.toLowerCase()]
 
   const handleAcknowledge = async () => {
     try {
       await acknowledgeAlert.mutateAsync({ id: alert.id, notes: ackNotes || undefined })
-      message.success('Alert acknowledged')
+      message.success(t('monitoring.acknowledgeSuccess'))
       setAckNotes('')
       setShowAckInput(false)
       onClose()
     } catch {
-      message.error('An error occurred')
+      message.error(t('common.error'))
     }
   }
 
   const handleResolve = async () => {
     try {
       await resolveAlert.mutateAsync({ id: alert.id, ignored: resolveIgnored, notes: resolveNotes || undefined })
-      message.success('Alert resolved')
+      message.success(t('monitoring.resolveSuccess'))
       setResolveNotes('')
       setResolveIgnored(false)
       setShowResolveInput(false)
       onClose()
     } catch {
-      message.error('An error occurred')
+      message.error(t('common.error'))
     }
   }
 
@@ -112,7 +115,7 @@ export function MonitoringAlertDrawer({ alert, open, onClose }: MonitoringAlertD
       color: '#1677ff',
       children: (
         <div>
-          <Typography.Text strong>Created</Typography.Text>
+          <Typography.Text strong>{t('monitoringDrawer.created')}</Typography.Text>
           <br />
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>
             {formatDateTime(alert.createdAt)}
@@ -126,10 +129,10 @@ export function MonitoringAlertDrawer({ alert, open, onClose }: MonitoringAlertD
             color: '#faad14',
             children: (
               <div>
-                <Typography.Text strong>Acknowledged</Typography.Text>
+                <Typography.Text strong>{t('monitoringDrawer.acknowledged')}</Typography.Text>
                 <br />
                 <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                  by {alert.acknowledgedBy} — {formatDateTime(alert.acknowledgedAt!)}
+                  {t('monitoringDrawer.by')} {alert.acknowledgedBy} — {formatDateTime(alert.acknowledgedAt!)}
                 </Typography.Text>
               </div>
             ),
@@ -142,10 +145,10 @@ export function MonitoringAlertDrawer({ alert, open, onClose }: MonitoringAlertD
             color: '#52c41a',
             children: (
               <div>
-                <Typography.Text strong>Resolved</Typography.Text>
+                <Typography.Text strong>{t('monitoringDrawer.resolved')}</Typography.Text>
                 <br />
                 <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                  by {alert.resolvedBy} — {formatDateTime(alert.resolvedAt!)}
+                  {t('monitoringDrawer.by')} {alert.resolvedBy} — {formatDateTime(alert.resolvedAt!)}
                 </Typography.Text>
               </div>
             ),
@@ -158,10 +161,10 @@ export function MonitoringAlertDrawer({ alert, open, onClose }: MonitoringAlertD
     <Drawer
       title={
         <Flex align="center" gap={8}>
-          {severityCfg.icon}
+          {severityStyle.icon}
           <span>{formatAlertType(alert.alertType)}</span>
-          <Tag color={severityCfg.color} style={{ marginLeft: 4 }}>
-            {severityCfg.label}
+          <Tag color={severityStyle.color} style={{ marginLeft: 4 }}>
+            {tc(`statusLabel.${alert.severity}`)}
           </Tag>
         </Flex>
       }
@@ -172,10 +175,10 @@ export function MonitoringAlertDrawer({ alert, open, onClose }: MonitoringAlertD
       <Space direction="vertical" size={20} style={{ width: '100%' }}>
         {/* Status */}
         <Descriptions column={1} size="small" bordered>
-          <Descriptions.Item label="Status">
+          <Descriptions.Item label={t('monitoringDrawer.status')}>
             <StatusBadge status={alert.status} />
           </Descriptions.Item>
-          <Descriptions.Item label="Entity">
+          <Descriptions.Item label={t('monitoringDrawer.entity')}>
             <Space>
               <Typography.Text>{alert.entityType}</Typography.Text>
               {entityRouteFn && (
@@ -186,12 +189,12 @@ export function MonitoringAlertDrawer({ alert, open, onClose }: MonitoringAlertD
                   onClick={handleNavigateToEntity}
                   style={{ padding: 0 }}
                 >
-                  View
+                  {t('monitoringDrawer.view')}
                 </Button>
               )}
             </Space>
           </Descriptions.Item>
-          <Descriptions.Item label="Entity ID">
+          <Descriptions.Item label={t('monitoringDrawer.entityId')}>
             <Typography.Text copyable style={{ fontSize: 12 }}>
               {alert.entityId}
             </Typography.Text>
@@ -202,7 +205,7 @@ export function MonitoringAlertDrawer({ alert, open, onClose }: MonitoringAlertD
         {Object.keys(parsed.details).length > 0 && (
           <div>
             <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>
-              Details
+              {t('monitoringDrawer.details')}
             </Typography.Text>
             <Descriptions column={1} size="small" bordered>
               {Object.entries(parsed.details).map(([key, value]) => (
@@ -218,7 +221,7 @@ export function MonitoringAlertDrawer({ alert, open, onClose }: MonitoringAlertD
         {alert.notes && (
           <div>
             <Typography.Text strong style={{ display: 'block', marginBottom: 4 }}>
-              Notes
+              {t('monitoringDrawer.notes')}
             </Typography.Text>
             <Typography.Paragraph type="secondary" style={{ fontSize: 13, margin: 0 }}>
               {alert.notes}
@@ -229,7 +232,7 @@ export function MonitoringAlertDrawer({ alert, open, onClose }: MonitoringAlertD
         {/* Timeline */}
         <div>
           <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>
-            Timeline
+            {t('monitoringDrawer.timeline')}
           </Typography.Text>
           <Timeline items={timelineItems} />
         </div>
@@ -244,7 +247,7 @@ export function MonitoringAlertDrawer({ alert, open, onClose }: MonitoringAlertD
                     rows={2}
                     value={ackNotes}
                     onChange={(e) => setAckNotes(e.target.value)}
-                    placeholder="Notes (optional)"
+                    placeholder={t('monitoring.notesOptional')}
                   />
                   <Space>
                     <Button
@@ -253,14 +256,14 @@ export function MonitoringAlertDrawer({ alert, open, onClose }: MonitoringAlertD
                       loading={acknowledgeAlert.isPending}
                       onClick={handleAcknowledge}
                     >
-                      Confirm Acknowledge
+                      {t('monitoring.confirmAcknowledge')}
                     </Button>
-                    <Button onClick={() => setShowAckInput(false)}>Cancel</Button>
+                    <Button onClick={() => setShowAckInput(false)}>{t('common.cancel')}</Button>
                   </Space>
                 </Space>
               ) : (
                 <Button icon={<BellOutlined />} onClick={() => setShowAckInput(true)}>
-                  Acknowledge
+                  {t('monitoring.acknowledge')}
                 </Button>
               )}
             </>
@@ -277,14 +280,14 @@ export function MonitoringAlertDrawer({ alert, open, onClose }: MonitoringAlertD
                       size="small"
                     />
                     <Typography.Text style={{ fontSize: 13 }}>
-                      Mark as ignored (false positive)
+                      {t('monitoring.markAsIgnored')}
                     </Typography.Text>
                   </Flex>
                   <Input.TextArea
                     rows={2}
                     value={resolveNotes}
                     onChange={(e) => setResolveNotes(e.target.value)}
-                    placeholder="Resolution notes (optional)"
+                    placeholder={t('monitoring.resolutionNotesOptional')}
                   />
                   <Space>
                     <Button
@@ -299,9 +302,9 @@ export function MonitoringAlertDrawer({ alert, open, onClose }: MonitoringAlertD
                           : { background: 'var(--color-success)', borderColor: 'var(--color-success)' }
                       }
                     >
-                      {resolveIgnored ? 'Ignore' : 'Resolve'}
+                      {resolveIgnored ? t('monitoring.ignore') : t('monitoring.resolve')}
                     </Button>
-                    <Button onClick={() => setShowResolveInput(false)}>Cancel</Button>
+                    <Button onClick={() => setShowResolveInput(false)}>{t('common.cancel')}</Button>
                   </Space>
                 </Space>
               ) : (
@@ -309,7 +312,7 @@ export function MonitoringAlertDrawer({ alert, open, onClose }: MonitoringAlertD
                   icon={<CheckCircleOutlined style={{ color: 'var(--color-success)' }} />}
                   onClick={() => setShowResolveInput(true)}
                 >
-                  Resolve
+                  {t('monitoring.resolve')}
                 </Button>
               )}
             </>

@@ -55,7 +55,7 @@ export default function ItemDetailPage() {
   }
 
   if (!item) {
-    return <Empty description={t('notFound', 'Item not found')} />
+    return <Empty description={t('notFound')} />
   }
 
   const galleryImages = (item.images ?? []).map((img) => ({

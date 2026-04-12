@@ -47,6 +47,7 @@ export function InspectorLayout() {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
   const { isMobile, isTablet } = useBreakpoint()
   const { t, i18n } = useTranslation('inspector')
+  const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
   const location = useLocation()
   const { user } = useAuth()
@@ -317,10 +318,10 @@ export function InspectorLayout() {
             }}
           >
             <ArrowLeftOutlined style={{ fontSize: 11 }} />
-            {!isMobile && 'Back to Platform'}
+            {!isMobile && tc('layout.backToPlatform')}
           </button>
 
-          <Tooltip title={isDark ? 'Light mode' : 'Dark mode'}>
+          <Tooltip title={isDark ? tc('layout.lightMode') : tc('layout.darkMode')}>
             <button
               onClick={toggleTheme}
               style={iconBtnStyle()}
@@ -331,7 +332,7 @@ export function InspectorLayout() {
             </button>
           </Tooltip>
 
-          <Tooltip title="Switch language">
+          <Tooltip title={tc('layout.switchLanguage')}>
             <button
               onClick={toggleLanguage}
               style={{ ...iconBtnStyle(), gap: 4, fontSize: 12, fontFamily: SANS_FONT, fontWeight: 500 }}
@@ -339,7 +340,7 @@ export function InspectorLayout() {
               onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-secondary)' }}
             >
               <GlobalOutlined style={{ fontSize: 14 }} />
-              {!isMobile && (i18n.language === 'en' ? 'EN' : 'UK')}
+              {!isMobile && (i18n.language === 'vi' ? 'EN' : 'VI')}
             </button>
           </Tooltip>
 

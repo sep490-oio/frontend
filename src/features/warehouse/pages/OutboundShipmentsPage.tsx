@@ -39,7 +39,7 @@ export default function OutboundShipmentsPage() {
 
   const columns: ColumnsType<OutboundShipmentDto> = [
     {
-      title: t('shipmentId', 'Shipment ID'),
+      title: t('shipmentId'),
       dataIndex: 'id',
       key: 'id',
       ellipsis: true,
@@ -60,54 +60,54 @@ export default function OutboundShipmentsPage() {
       ),
     },
     {
-      title: t('orderId', 'Order'),
+      title: t('orderId'),
       dataIndex: 'orderId',
       key: 'orderId',
       ellipsis: true,
       width: 150,
     },
     {
-      title: t('recipientAddress', 'Recipient'),
+      title: t('recipientAddress'),
       dataIndex: 'recipientAddress',
       key: 'recipientAddress',
       ellipsis: true,
     },
     {
-      title: t('provider', 'Provider'),
+      title: t('provider'),
       dataIndex: 'providerCode',
       key: 'providerCode',
       width: 120,
     },
     {
-      title: t('trackingNumber', 'Tracking Number'),
+      title: t('trackingNumber'),
       dataIndex: 'carrierTrackingNumber',
       key: 'carrierTrackingNumber',
       width: 160,
       render: (val: string) => val || '-',
     },
     {
-      title: 'Status',
+      title: t('statusTab.status'),
       dataIndex: 'status',
       key: 'status',
       width: 120,
       render: (status: string) => <StatusBadge status={status} />,
     },
     {
-      title: t('dispatchedAt', 'Shipped'),
+      title: t('dispatchedAt'),
       dataIndex: 'dispatchedAt',
       key: 'dispatchedAt',
       width: 150,
       render: (date: string) => (date ? formatDateTime(date) : '-'),
     },
     {
-      title: t('deliveredAt', 'Delivered'),
+      title: t('deliveredAt'),
       dataIndex: 'deliveredAt',
       key: 'deliveredAt',
       width: 150,
       render: (date: string) => (date ? formatDateTime(date) : '-'),
     },
     {
-      title: tc('action.view', 'Actions'),
+      title: tc('action.view'),
       key: 'actions',
       width: 100,
       render: (_: unknown, record: OutboundShipmentDto) => (
@@ -117,7 +117,7 @@ export default function OutboundShipmentsPage() {
           icon={<EyeOutlined />}
           onClick={() => navigate(`/seller/warehouse/outbound/${record.id}`)}
         >
-          {tc('action.view', 'View')}
+          {tc('action.view')}
         </Button>
       ),
     },
@@ -127,7 +127,7 @@ export default function OutboundShipmentsPage() {
     <div>
       <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
         <Typography.Title level={2} style={{ margin: 0 }}>
-          {t('outboundShipments', 'Outbound Shipments')}
+          {t('outboundShipments')}
         </Typography.Title>
       </Space>
 
@@ -139,7 +139,7 @@ export default function OutboundShipmentsPage() {
         }}
         items={STATUS_TABS.map((tab) => ({
           key: tab.key,
-          label: t(`statusTab.${tab.label}`, tab.label.charAt(0).toUpperCase() + tab.label.slice(1)),
+          label: t(`statusTab.${tab.label}`),
         }))}
       />
 

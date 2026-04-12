@@ -34,9 +34,9 @@ export default function NotificationPrefsPage() {
   const [dirty, setDirty] = useState(false)
 
   const channels = [
-    { key: 'email', label: 'Email', icon: <MailOutlined />, description: t('notificationPrefs.channelEmail') },
-    { key: 'push', label: 'Push', icon: <BellOutlined />, description: t('notificationPrefs.channelPush') },
-    { key: 'sms', label: 'SMS', icon: <MessageOutlined />, description: t('notificationPrefs.channelSms') },
+    { key: 'email', label: t('notificationPrefs.channelEmailLabel'), icon: <MailOutlined />, description: t('notificationPrefs.channelEmail') },
+    { key: 'push', label: t('notificationPrefs.channelPushLabel'), icon: <BellOutlined />, description: t('notificationPrefs.channelPush') },
+    { key: 'sms', label: t('notificationPrefs.channelSmsLabel'), icon: <MessageOutlined />, description: t('notificationPrefs.channelSms') },
   ]
 
   useEffect(() => {

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Typography, Select, Button, Space, Card } from 'antd'
 import { SearchOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
+import { useTranslation } from 'react-i18next'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { useInspectionQueue } from '@/features/inspector/api'
 import type { InspectionQueueItem } from '@/features/inspector/api'
@@ -9,14 +10,16 @@ import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
 import { SERIF_FONT } from '@/styles/tokens'
 
-const STATUS_OPTIONS = [
-  { value: '', label: 'All' },
-  { value: 'awaiting_inspection', label: 'Awaiting Inspection' },
-  { value: 'pending_review', label: 'Pending Review' },
-]
-
 export default function InspectionQueuePage() {
+  const { t } = useTranslation('inspector')
+  const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
+
+  const STATUS_OPTIONS = [
+    { value: '', label: t('queue.statusAll') },
+    { value: 'awaiting_inspection', label: t('queue.statusAwaitingInspection') },
+    { value: 'pending_review', label: t('queue.statusPendingReview') },
+  ]
   const [statusFilter, setStatusFilter] = useState('')
   const [inspectionFilter, setInspectionFilter] = useState<boolean | undefined>(true)
 
@@ -55,7 +58,7 @@ export default function InspectionQueuePage() {
               fontSize: 10,
             }}
           >
-            No image
+            {t('queue.noImage')}
           </div>
         )}
         <div style={{ minWidth: 0, flex: 1 }}>
@@ -75,33 +78,33 @@ export default function InspectionQueuePage() {
 
   const columns = [
     {
-      title: 'Item',
+      title: t('queue.columnItem'),
       key: 'item',
       render: renderItemCell,
     },
     {
-      title: 'Queue Status',
+      title: t('queue.columnQueueStatus'),
       dataIndex: 'queueStatus',
       key: 'queueStatus',
       width: 150,
       render: (status: string) => <StatusBadge status={status} />,
     },
     {
-      title: 'Location',
+      title: t('queue.columnLocation'),
       dataIndex: 'storageLocationLabel',
       key: 'storageLocationLabel',
       width: 130,
       render: (label?: string) => label ?? '-',
     },
     {
-      title: 'Arrived',
+      title: t('queue.columnArrived'),
       dataIndex: 'arrivedAt',
       key: 'arrivedAt',
       width: 160,
       render: (date: string) => date ? formatDateTime(date) : '-',
     },
     {
-      title: 'Actions',
+      title: t('queue.columnActions'),
       key: 'actions',
       width: 120,
       render: (_: unknown, record: InspectionQueueItem) => (
@@ -111,7 +114,7 @@ export default function InspectionQueuePage() {
           onClick={() => navigate(`/inspector/inspections/${record.inboundShipmentId}`)}
           style={{ color: 'var(--color-accent)' }}
         >
-          Inspect
+          {t('queue.inspect')}
         </Button>
       ),
     },
@@ -123,7 +126,7 @@ export default function InspectionQueuePage() {
         level={2}
         style={{ marginBottom: 24, fontFamily: SERIF_FONT, color: 'var(--color-text-primary)' }}
       >
-        Inspection Queue
+        {t('queue.title')}
       </Typography.Title>
 
       <Card style={{ marginBottom: 16 }}>
@@ -133,7 +136,7 @@ export default function InspectionQueuePage() {
             onChange={setStatusFilter}
             options={STATUS_OPTIONS}
             style={{ width: 200 }}
-            placeholder="Filter by status"
+            placeholder={t('queue.filterByStatus')}
           />
           <Select
             value={inspectionFilter === undefined ? '' : inspectionFilter ? 'true' : 'false'}
@@ -142,9 +145,9 @@ export default function InspectionQueuePage() {
               setPage(1)
             }}
             options={[
-              { value: '', label: 'All' },
-              { value: 'true', label: 'Requires Platform Inspection' },
-              { value: 'false', label: 'No Platform Inspection' },
+              { value: '', label: t('queue.inspectionAll') },
+              { value: 'true', label: t('queue.inspectionRequiresPlatform') },
+              { value: 'false', label: t('queue.inspectionNoPlatform') },
             ]}
             style={{ width: 220 }}
           />
@@ -163,7 +166,7 @@ export default function InspectionQueuePage() {
             pageSize: data?.metadata?.pageSize ?? pageSize,
             total: data?.metadata?.totalCount ?? 0,
             showSizeChanger: true,
-            showTotal: (total) => `Total ${total} items`,
+            showTotal: (total) => tc('pagination.total', { total }),
             onChange: (p, ps) => { setPage(p); setPageSize(ps); },
           }}
         />

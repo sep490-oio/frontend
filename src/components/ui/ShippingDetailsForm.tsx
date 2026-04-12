@@ -24,9 +24,10 @@ interface ShippingDetailsFormProps {
   form: ReturnType<typeof Form.useForm<ShippingDetailsFormValues>>[0]
 }
 
-const SHIPPING_MODE_OPTIONS = [
-  { value: 'platform', label: 'GHN (Giao Hàng Nhanh)' },
-  { value: 'external', label: 'Tự vận chuyển / Hãng khác' },
+// Note: shipping mode labels use warehouse namespace t() calls inside the component
+const SHIPPING_MODE_OPTIONS_KEYS = [
+  { value: 'platform', labelKey: 'shippingModePlatform' },
+  { value: 'external', labelKey: 'shippingModeExternal' },
 ]
 
 export default function ShippingDetailsForm({ form }: ShippingDetailsFormProps) {
@@ -48,7 +49,7 @@ export default function ShippingDetailsForm({ form }: ShippingDetailsFormProps) 
         </Col>
         <Col span={12}>
           <Form.Item name="senderPhone" label={t('senderPhone', 'Phone Number')} rules={[{ required: true, message: t('senderPhoneRequired', 'Required') }]}>
-            <Input placeholder="e.g. 0912345678" />
+            <Input placeholder={t('senderPhonePlaceholder', '0912345678')} />
           </Form.Item>
         </Col>
       </Row>
@@ -85,12 +86,12 @@ export default function ShippingDetailsForm({ form }: ShippingDetailsFormProps) 
       <Row gutter={12}>
         <Col span={12}>
           <Form.Item name="weightGrams" label={t('weightGrams', 'Weight (grams)')} rules={[{ required: true, message: t('weightGramsRequired', 'Required') }]}>
-            <InputNumber min={1} style={{ width: '100%' }} placeholder="e.g. 500" />
+            <InputNumber min={1} style={{ width: '100%' }} placeholder={t('weightPlaceholder', '500')} />
           </Form.Item>
         </Col>
         <Col span={12}>
           <Form.Item name="insuranceValue" label={t('insuranceValueLabel', 'Insurance Value (VND)')} rules={[{ required: true, message: t('insuranceValueRequired', 'Required') }]}>
-            <InputNumber min={0} style={{ width: '100%' }} placeholder="e.g. 1000000" addonAfter="VND" />
+            <InputNumber min={0} style={{ width: '100%' }} placeholder={t('insurancePlaceholder', '1000000')} addonAfter="VND" />
           </Form.Item>
         </Col>
       </Row>
@@ -131,7 +132,7 @@ export default function ShippingDetailsForm({ form }: ShippingDetailsFormProps) 
               form.setFieldsValue({ providerCode: undefined })
             }
           }}
-          options={SHIPPING_MODE_OPTIONS}
+          options={SHIPPING_MODE_OPTIONS_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey, o.value === 'platform' ? 'GHN (Giao Hang Nhanh)' : 'Self-delivery / Other carrier') }))}
         />
       </Form.Item>
 

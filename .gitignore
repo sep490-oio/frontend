@@ -137,3 +137,15 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Claude Code local config
+.claude/
+
+# E2E test artifacts (screenshots, samples, MCP config)
+e2e/
+
+# Figma reference images
+figma-reference/
+
+# Internal FE docs (AI reference only)
+docs/

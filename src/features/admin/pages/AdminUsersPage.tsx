@@ -11,18 +11,18 @@ import { UserStatus } from '@/types/enums'
 import type { UserListItemDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
 
-const STATUS_OPTIONS = [
-  { value: '', label: '' },
-  { value: UserStatus.Active, label: 'Active' },
-  { value: UserStatus.Inactive, label: 'Inactive' },
-  { value: UserStatus.Locked, label: 'Locked' },
-  { value: UserStatus.Banned, label: 'Banned' },
-  { value: UserStatus.Suspended, label: 'Suspended' },
-] as const
-
 export default function AdminUsersPage() {
   const { t } = useTranslation('admin')
   const { t: tc } = useTranslation('common')
+
+  const STATUS_OPTIONS = [
+    { value: '', label: '' },
+    { value: UserStatus.Active, label: tc('statusLabel.active') },
+    { value: UserStatus.Inactive, label: tc('statusLabel.inactive') },
+    { value: UserStatus.Locked, label: tc('statusLabel.locked') },
+    { value: UserStatus.Banned, label: tc('statusLabel.banned') },
+    { value: UserStatus.Suspended, label: tc('statusLabel.suspended') },
+  ]
   const { message } = App.useApp()
   const navigate = useNavigate()
 

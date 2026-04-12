@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { Button, Typography, Alert, Upload, Flex } from 'antd'
 import { CameraOutlined, ReloadOutlined, CheckOutlined, UploadOutlined } from '@ant-design/icons'
+import { useTranslation } from 'react-i18next'
 import { useCamera } from '@/hooks/useCamera'
 import { validateCaptureQuality } from '@/components/ui/CaptureQualityValidator'
 import { LivenessChallengeOverlay } from '@/components/ui/LivenessChallenge'
@@ -32,11 +33,11 @@ const OVERLAY_STYLES: Record<OverlayType, React.CSSProperties> = {
   },
 }
 
-const STEP_INSTRUCTIONS: Record<string, string> = {
-  id_front: 'Position the front of your ID within the frame',
-  id_back: 'Position the back of your ID within the frame',
-  selfie: 'Center your face in the oval',
-  item_photo: 'Take a clear photo of the item',
+const STEP_INSTRUCTION_KEYS: Record<string, string> = {
+  id_front: 'capture.positionFront',
+  id_back: 'capture.positionBack',
+  selfie: 'capture.centerFace',
+  item_photo: 'capture.takeItemPhoto',
 }
 
 export function SecureCaptureUploader({
@@ -47,6 +48,7 @@ export function SecureCaptureUploader({
   instruction,
   children,
 }: SecureCaptureUploaderProps) {
+  const { t } = useTranslation('common')
   const { videoRef, isSupported, isActive, error, startCamera, stopCamera, takeSnapshot } = useCamera()
   const [preview, setPreview] = useState<string | null>(null)
   const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null)
@@ -120,7 +122,7 @@ export function SecureCaptureUploader({
   if (!isSupported) {
     return (
       <div style={{ textAlign: 'center', padding: 24 }}>
-        <Alert type="info" message="Camera not available on this device. Upload from file instead." style={{ marginBottom: 16 }} />
+        <Alert type="info" message={t('capture.cameraNotAvailable')} style={{ marginBottom: 16 }} />
         <Upload
           showUploadList={false}
           accept="image/*"
@@ -133,7 +135,7 @@ export function SecureCaptureUploader({
             return false
           }}
         >
-          <Button icon={<UploadOutlined />}>Upload from files</Button>
+          <Button icon={<UploadOutlined />}>{t('capture.uploadFromFiles')}</Button>
         </Upload>
       </div>
     )
@@ -145,9 +147,9 @@ export function SecureCaptureUploader({
       <div style={{ textAlign: 'center' }}>
         <img src={preview} alt="Captured" style={{ width: '100%', maxHeight: 400, objectFit: 'contain', borderRadius: 8, marginBottom: 12 }} />
         <Flex justify="center" gap={12}>
-          <Button icon={<ReloadOutlined />} onClick={handleRetake}>Retake</Button>
+          <Button icon={<ReloadOutlined />} onClick={handleRetake}>{t('capture.retake')}</Button>
           <Button type="primary" icon={<CheckOutlined />} onClick={handleUse} style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}>
-            Use this photo
+            {t('capture.useThisPhoto')}
           </Button>
         </Flex>
       </div>
@@ -175,10 +177,10 @@ export function SecureCaptureUploader({
       >
         <CameraOutlined style={{ fontSize: 48, color: 'var(--color-accent)' }} />
         <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-text-primary)' }}>
-          {instruction || STEP_INSTRUCTIONS[step] || 'Tap to open camera'}
+          {instruction || t(STEP_INSTRUCTION_KEYS[step] || 'capture.tapToOpenCamera')}
         </span>
         <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-          Tap here to activate your camera
+          {t('capture.tapToActivate')}
         </span>
       </div>
     )
@@ -230,7 +232,7 @@ export function SecureCaptureUploader({
       {/* Instruction */}
       <div style={{ position: 'absolute', bottom: 80, left: 0, right: 0, textAlign: 'center' }}>
         <Typography.Text style={{ color: '#fff', fontSize: 14, background: 'rgba(0,0,0,0.5)', padding: '6px 16px', borderRadius: 20 }}>
-          {instruction || STEP_INSTRUCTIONS[step] || 'Take a clear photo'}
+          {instruction || t(STEP_INSTRUCTION_KEYS[step] || 'capture.takePhoto')}
         </Typography.Text>
       </div>
 
@@ -238,7 +240,7 @@ export function SecureCaptureUploader({
       {qualityIssues.length > 0 && (
         <Alert
           type="warning"
-          message="Quality issue"
+          message={t('capture.qualityIssue')}
           description={qualityIssues.join(' ')}
           style={{ position: 'absolute', top: 8, left: 8, right: 8 }}
           closable

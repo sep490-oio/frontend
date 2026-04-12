@@ -1177,7 +1177,7 @@ export default function OrderDetailPage() {
         centered
       >
         <Form layout="vertical">
-          <Form.Item label="Lý do từ chối" required>
+          <Form.Item label={t('rejectReason', 'Rejection Reason')} required>
             <Input.TextArea
               rows={3}
               value={rejectReason}
@@ -1211,14 +1211,14 @@ export default function OrderDetailPage() {
         centered
       >
         <Form layout="vertical">
-          <Form.Item label="Mã nhà vận chuyển" required>
+          <Form.Item label={t('carrierCode', 'Carrier Code')} required>
             <Input
               value={shipProviderCode}
               onChange={(e) => setShipProviderCode(e.target.value)}
               placeholder={t('providerCodePlaceholder', 'vd: ghn, ghtk, viettelpost')}
             />
           </Form.Item>
-          <Form.Item label="Mã vận đơn" required>
+          <Form.Item label={t('trackingCode', 'Tracking Number')} required>
             <Input
               value={shipTrackingNumber}
               onChange={(e) => setShipTrackingNumber(e.target.value)}

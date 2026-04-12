@@ -13,13 +13,6 @@ import { MONO_FONT, SERIF_FONT } from '@/styles/tokens'
 
 type SortKey = 'endingSoon' | 'newest' | 'priceLow' | 'priceHigh'
 
-const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
-  { value: 'endingSoon', label: 'Ending Soon' },
-  { value: 'newest', label: 'Newest' },
-  { value: 'priceLow', label: 'Price Low→High' },
-  { value: 'priceHigh', label: 'Price High→Low' },
-]
-
 function sortItems(items: WatchlistItemDto[], sortKey: SortKey): WatchlistItemDto[] {
   const copy = [...items]
   switch (sortKey) {
@@ -39,6 +32,13 @@ function sortItems(items: WatchlistItemDto[], sortKey: SortKey): WatchlistItemDt
 export default function WatchlistPage() {
   const { t } = useTranslation('auction')
   const { t: tc } = useTranslation('common')
+
+  const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
+    { value: 'endingSoon', label: t('sort.endingSoon') },
+    { value: 'newest', label: t('sort.newest') },
+    { value: 'priceLow', label: t('sort.priceLow') },
+    { value: 'priceHigh', label: t('sort.priceHigh') },
+  ]
   const navigate = useNavigate()
   const { message } = App.useApp()
   const { isMobile } = useBreakpoint()

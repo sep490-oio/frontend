@@ -50,7 +50,7 @@ export default function PublicSellerPage() {
   }
 
   if (!seller) {
-    return <Empty description={t('sellerNotFound', 'Seller not found')} />
+    return <Empty description={t('sellerNotFound')} />
   }
 
   const items = itemsData?.items ?? []
@@ -180,7 +180,7 @@ export default function PublicSellerPage() {
                   }}
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
-                  Verified
+                  {t('public.verified')}
                 </span>
               )}
 
@@ -204,7 +204,7 @@ export default function PublicSellerPage() {
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  TOP RATED
+                  {t('public.topRated')}
                 </span>
               )}
             </div>
@@ -220,11 +220,11 @@ export default function PublicSellerPage() {
                     color: trustScore > 90 ? 'var(--color-success)' : trustScore > 70 ? 'var(--color-accent)' : 'var(--color-text-secondary)',
                   }}
                 >
-                  Trust: {trustScore}/100
+                  {t('browse.trust')}: {trustScore}/100
                 </span>
               )}
               <span style={{ fontFamily: SANS_FONT, fontSize: 13, color: 'var(--color-text-tertiary)' }}>
-                {t('memberSince', 'Thành viên từ')} {formatDateTime(seller.createdAt)}
+                {t('public.memberSince')} {formatDateTime(seller.createdAt)}
               </span>
             </div>
 
@@ -250,16 +250,16 @@ export default function PublicSellerPage() {
         {[
           {
             value: formatNumber(totalItems),
-            label: t('totalItems', 'Sản phẩm'),
+            label: t('public.totalItems'),
           },
           {
             value: seller.rating > 0 ? seller.rating.toFixed(1) : '—',
-            label: t('rating', 'Đánh giá'),
-            sublabel: seller.reviewCount > 0 ? `(${formatNumber(seller.reviewCount)} ${t('reviews', 'đánh giá')})` : undefined,
+            label: t('public.rating'),
+            sublabel: seller.reviewCount > 0 ? `(${formatNumber(seller.reviewCount)} ${t('public.reviews')})` : undefined,
           },
           {
             value: seller.status,
-            label: t('trustStatus', 'Trạng thái'),
+            label: t('public.trustStatus'),
             isBadge: true,
           },
         ].map((stat) => (
@@ -317,10 +317,10 @@ export default function PublicSellerPage() {
               margin: 0,
             }}
           >
-            {t('sellerItems', 'Sản phẩm')}
+            {t('sellerItems')}
           </h2>
           <span style={{ fontFamily: SANS_FONT, fontSize: 13, color: 'var(--color-text-tertiary)', whiteSpace: 'nowrap' }}>
-            {formatNumber(totalItems)} {t('items', 'sản phẩm')}
+            {formatNumber(totalItems)} {t('public.items')}
           </span>
         </div>
 
@@ -340,7 +340,7 @@ export default function PublicSellerPage() {
               borderRadius: 12,
             }}
           >
-            {t('noItems', 'Chưa có sản phẩm nào')}
+            {t('public.noItems')}
           </div>
         ) : (
           <>
@@ -435,7 +435,7 @@ export default function PublicSellerPage() {
                     >
                       {item.auction
                         ? formatCurrency(item.auction.currentPrice, item.auction.currency)
-                        : t('noAuctionPrice', 'Chưa có giá đấu')}
+                        : t('public.noAuctionPrice')}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <StatusBadge status={item.status} size="small" />
@@ -482,11 +482,11 @@ export default function PublicSellerPage() {
               margin: 0,
             }}
           >
-            {t('reviews', 'Reviews')}
+            {t('public.reviewsTitle')}
           </h2>
           {seller.reviewCount > 0 && (
             <span style={{ fontFamily: SANS_FONT, fontSize: 13, color: 'var(--color-text-tertiary)', whiteSpace: 'nowrap' }}>
-              {formatNumber(seller.reviewCount)} {t('reviews', 'reviews')}
+              {formatNumber(seller.reviewCount)} {t('public.reviews')}
             </span>
           )}
         </div>
@@ -519,7 +519,7 @@ export default function PublicSellerPage() {
             <div>
               <Rate disabled allowHalf value={seller.rating} style={{ fontSize: isMobile ? 14 : 18 }} />
               <div style={{ fontFamily: SANS_FONT, fontSize: 13, color: 'var(--color-text-tertiary)', marginTop: 4 }}>
-                {t('basedOn', 'Based on')} {formatNumber(seller.reviewCount)} {t('reviews', 'reviews')}
+                {t('public.basedOn')} {formatNumber(seller.reviewCount)} {t('public.reviews')}
               </div>
             </div>
           </div>
@@ -541,7 +541,7 @@ export default function PublicSellerPage() {
               borderRadius: 12,
             }}
           >
-            {t('noReviews', 'No reviews yet')}
+            {t('public.noReviews')}
           </div>
         ) : (
           <>
@@ -559,7 +559,7 @@ export default function PublicSellerPage() {
                   <div style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                       <span style={{ fontFamily: SANS_FONT, fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                        {review.reviewerName || t('anonymousReviewer', 'Anonymous')}
+                        {review.reviewerName || t('public.anonymousReviewer')}
                       </span>
                       <Rate disabled value={review.overallRating} style={{ fontSize: isMobile ? 12 : 14 }} />
                     </div>

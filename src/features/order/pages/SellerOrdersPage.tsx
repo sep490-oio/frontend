@@ -416,7 +416,7 @@ export default function SellerOrdersPage() {
             label={t('carrierName', 'Carrier Name')}
             rules={[{ required: true, whitespace: true, message: t('carrierRequired', 'Carrier name is required') }]}
           >
-            <Input placeholder="GHTK / Viettel Post / ..." />
+            <Input placeholder={t('carrierPlaceholder', 'GHTK / Viettel Post / ...')} />
           </Form.Item>
           <Form.Item
             name="carrierTrackingNumber"
@@ -433,10 +433,10 @@ export default function SellerOrdersPage() {
               { type: 'number', min: 1, message: t('weightMinInvalid', 'Weight must be greater than 0') },
             ]}
           >
-            <InputNumber style={{ width: '100%' }} min={1} placeholder="500" />
+            <InputNumber style={{ width: '100%' }} min={1} placeholder={t('weightPlaceholder', '500')} />
           </Form.Item>
           <Form.Item name="shippingMethod" label={t('shippingMethod', 'Shipping Method (optional)')}>
-            <Input placeholder="standard / express" />
+            <Input placeholder={t('shippingMethodPlaceholder', 'standard / express')} />
           </Form.Item>
         </Form>
       </Modal>

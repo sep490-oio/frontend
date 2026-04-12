@@ -15,54 +15,55 @@ import {
 import { ReportStatus, DisputeStatus } from '@/types/enums'
 import type { ReportDto, DisputeDto } from '@/types'
 
-const REPORT_STATUS_OPTIONS = [
-  { value: '', label: 'All' },
-  { value: ReportStatus.Open, label: 'Open' },
-  { value: ReportStatus.UnderReview, label: 'Under Review' },
-  { value: ReportStatus.ActionTaken, label: 'Action Taken' },
-  { value: ReportStatus.Dismissed, label: 'Dismissed' },
-  { value: ReportStatus.Closed, label: 'Closed' },
-]
-
-const DISPUTE_STATUS_OPTIONS = [
-  { value: '', label: 'All' },
-  { value: DisputeStatus.Open, label: 'Open' },
-  { value: DisputeStatus.AwaitingRespondent, label: 'Awaiting Respondent' },
-  { value: DisputeStatus.AwaitingEvidence, label: 'Awaiting Evidence' },
-  { value: DisputeStatus.UnderReview, label: 'Under Review' },
-  { value: DisputeStatus.AwaitingInternalReview, label: 'Awaiting Internal Review' },
-  { value: DisputeStatus.AwaitingResolutionApproval, label: 'Awaiting Resolution Approval' },
-  { value: DisputeStatus.Resolved, label: 'Resolved' },
-  { value: DisputeStatus.Rejected, label: 'Rejected' },
-  { value: DisputeStatus.Cancelled, label: 'Cancelled' },
-]
-
-const DISPUTE_TYPE_OPTIONS = [
-  { value: 'item_not_as_described', label: 'Item Not As Described' },
-  { value: 'damaged_item', label: 'Damaged Item' },
-  { value: 'payment_issue', label: 'Payment Issue' },
-  { value: 'counterfeit', label: 'Counterfeit' },
-  { value: 'other', label: 'Other' },
-]
-
-const PRIORITY_OPTIONS = [
-  { value: 'low', label: 'Low' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'high', label: 'High' },
-  { value: 'urgent', label: 'Urgent' },
-]
-
-const ENFORCEMENT_OPTIONS = [
-  { value: 'none', label: 'No action' },
-  { value: 'warn_user', label: 'Warn user' },
-  { value: 'suspend_listing', label: 'Suspend listing' },
-  { value: 'remove_listing', label: 'Remove listing' },
-]
-
 export default function AdminModerationPage() {
+  const { t } = useTranslation('admin')
   const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
   const { message } = App.useApp()
+
+  const REPORT_STATUS_OPTIONS = [
+    { value: '', label: t('moderation.all') },
+    { value: ReportStatus.Open, label: tc('statusLabel.open') },
+    { value: ReportStatus.UnderReview, label: tc('statusLabel.under_review') },
+    { value: ReportStatus.ActionTaken, label: t('moderation.reportStatus.actionTaken') },
+    { value: ReportStatus.Dismissed, label: t('moderation.reportStatus.dismissed') },
+    { value: ReportStatus.Closed, label: tc('statusLabel.closed') },
+  ]
+
+  const DISPUTE_STATUS_OPTIONS = [
+    { value: '', label: t('moderation.all') },
+    { value: DisputeStatus.Open, label: tc('statusLabel.open') },
+    { value: DisputeStatus.AwaitingRespondent, label: t('moderation.disputeStatus.awaitingRespondent') },
+    { value: DisputeStatus.AwaitingEvidence, label: t('moderation.disputeStatus.awaitingEvidence') },
+    { value: DisputeStatus.UnderReview, label: tc('statusLabel.under_review') },
+    { value: DisputeStatus.AwaitingInternalReview, label: t('moderation.disputeStatus.awaitingInternalReview') },
+    { value: DisputeStatus.AwaitingResolutionApproval, label: t('moderation.disputeStatus.awaitingResolutionApproval') },
+    { value: DisputeStatus.Resolved, label: tc('statusLabel.resolved') },
+    { value: DisputeStatus.Rejected, label: tc('statusLabel.rejected') },
+    { value: DisputeStatus.Cancelled, label: tc('statusLabel.cancelled') },
+  ]
+
+  const DISPUTE_TYPE_OPTIONS = [
+    { value: 'item_not_as_described', label: t('moderation.disputeType.itemNotAsDescribed') },
+    { value: 'damaged_item', label: t('moderation.disputeType.damagedItem') },
+    { value: 'payment_issue', label: t('moderation.disputeType.paymentIssue') },
+    { value: 'counterfeit', label: t('moderation.disputeType.counterfeit') },
+    { value: 'other', label: t('moderation.disputeType.other') },
+  ]
+
+  const PRIORITY_OPTIONS = [
+    { value: 'low', label: tc('statusLabel.low') },
+    { value: 'medium', label: tc('statusLabel.medium') },
+    { value: 'high', label: tc('statusLabel.high') },
+    { value: 'urgent', label: t('moderation.priority.urgent') },
+  ]
+
+  const ENFORCEMENT_OPTIONS = [
+    { value: 'none', label: t('moderation.enforcement.noAction') },
+    { value: 'warn_user', label: t('moderation.enforcement.warnUser') },
+    { value: 'suspend_listing', label: t('moderation.enforcement.suspendListing') },
+    { value: 'remove_listing', label: t('moderation.enforcement.removeListing') },
+  ]
 
   const [activeTab, setActiveTab] = useState('reports')
   const [reportStatusFilter, setReportStatusFilter] = useState('')
@@ -108,50 +109,50 @@ export default function AdminModerationPage() {
   // Reports columns
   const reportColumns = [
     {
-      title: 'Reporter',
+      title: t('moderation.columns.reporter'),
       dataIndex: 'reporterId',
       key: 'reporterId',
       render: (v: string) => v?.slice(0, 8) + '...',
     },
     {
-      title: 'Entity',
+      title: t('moderation.columns.entity'),
       dataIndex: 'entityType',
       key: 'entityType',
       render: (type: string, r: ReportDto) => (
         <span>{type} #{r.entityId?.slice(0, 8)}</span>
       ),
     },
-    { title: 'Reason', dataIndex: 'reasonCode', key: 'reasonCode' },
+    { title: t('moderation.columns.reason'), dataIndex: 'reasonCode', key: 'reasonCode' },
     {
-      title: 'Status',
+      title: tc('tableHeader.status'),
       dataIndex: 'status',
       key: 'status',
       render: (s: string) => <StatusBadge status={s} />,
     },
     {
-      title: 'Assigned',
+      title: t('moderation.columns.assigned'),
       dataIndex: 'assignedTo',
       key: 'assignedTo',
       render: (v: string | null) => v ? v.slice(0, 8) + '...' : '-',
     },
     {
-      title: 'Dispute',
+      title: t('moderation.columns.dispute'),
       dataIndex: 'disputeId',
       key: 'disputeId',
       render: (v: string | null) => v ? (
         <Button type="link" size="small" onClick={() => navigate(`/admin/disputes/${v}`)}>
-          View
+          {tc('action.view')}
         </Button>
       ) : '-',
     },
     {
-      title: 'Created',
+      title: tc('tableHeader.createdAt'),
       dataIndex: 'createdAt',
       key: 'createdAt',
       render: (v: string) => formatDateTime(v),
     },
     {
-      title: 'Actions',
+      title: tc('tableHeader.actions'),
       key: 'actions',
       render: (_: unknown, record: ReportDto) => {
         const canAct = record.status === ReportStatus.Open || record.status === ReportStatus.UnderReview
@@ -163,21 +164,21 @@ export default function AdminModerationPage() {
                   setAssignReportId(record.id)
                   setAssigneeId('')
                   setAssignModalOpen(true)
-                }}>Assign</Button>
+                }}>{t('moderation.assign')}</Button>
                 <Button size="small" onClick={() => {
                   setResolveReportId(record.id)
                   setResolutionNotes('')
                   setDismissedFlag(false)
                   setEnforcementAction('none')
                   setResolveReportModalOpen(true)
-                }}>Resolve</Button>
+                }}>{t('moderation.resolve')}</Button>
                 <Button size="small" type="primary" onClick={() => {
                   setEscalateReportId(record.id)
-                  setEscalateTitle('Escalated from report')
+                  setEscalateTitle(t('moderation.escalatedFromReport'))
                   setEscalateDisputeType('other')
                   setEscalatePriority('medium')
                   setEscalateModalOpen(true)
-                }}>Escalate</Button>
+                }}>{t('moderation.escalate')}</Button>
               </>
             )}
           </Space>
@@ -189,41 +190,41 @@ export default function AdminModerationPage() {
   // Dispute columns
   const disputeColumns = [
     {
-      title: 'ID',
+      title: t('moderation.columns.id'),
       dataIndex: 'disputeNumber',
       key: 'disputeNumber',
       render: (v: string) => v || '-',
     },
     {
-      title: 'Title',
+      title: t('moderation.columns.title'),
       dataIndex: 'title',
       key: 'title',
       ellipsis: true,
     },
     {
-      title: 'Status',
+      title: tc('tableHeader.status'),
       dataIndex: 'status',
       key: 'status',
       render: (s: string) => <StatusBadge status={s} />,
     },
     {
-      title: 'Priority',
+      title: t('moderation.columns.priority'),
       dataIndex: 'priority',
       key: 'priority',
       render: (s: string) => <StatusBadge status={s} size="small" />,
     },
     {
-      title: 'Created',
+      title: tc('tableHeader.createdAt'),
       dataIndex: 'createdAt',
       key: 'createdAt',
       render: (v: string) => formatDateTime(v),
     },
     {
-      title: 'Actions',
+      title: tc('tableHeader.actions'),
       key: 'actions',
       render: (_: unknown, record: DisputeDto) => (
         <Button size="small" onClick={() => navigate(`/admin/disputes/${record.id}`)}>
-          View
+          {tc('action.view')}
         </Button>
       ),
     },
@@ -274,7 +275,7 @@ export default function AdminModerationPage() {
   const tabItems = [
     {
       key: 'reports',
-      label: `Reports${unresolvedReports > 0 ? ` (${unresolvedReports})` : ''}`,
+      label: `${t('moderation.tabReports')}${unresolvedReports > 0 ? ` (${unresolvedReports})` : ''}`,
       children: (
         <>
           <Space style={{ marginBottom: 16 }}>
@@ -283,7 +284,7 @@ export default function AdminModerationPage() {
               onChange={(v) => { setReportStatusFilter(v); setReportPage(1) }}
               options={REPORT_STATUS_OPTIONS}
               style={{ width: 160 }}
-              placeholder="Filter by status"
+              placeholder={t('moderation.filterByStatus')}
             />
           </Space>
           <ResponsiveTable
@@ -304,7 +305,7 @@ export default function AdminModerationPage() {
     },
     {
       key: 'disputes',
-      label: `Disputes${unresolvedDisputes > 0 ? ` (${unresolvedDisputes})` : ''}`,
+      label: `${t('moderation.tabDisputes')}${unresolvedDisputes > 0 ? ` (${unresolvedDisputes})` : ''}`,
       children: (
         <>
           <Space style={{ marginBottom: 16 }}>
@@ -313,7 +314,7 @@ export default function AdminModerationPage() {
               onChange={(v) => { setDisputeStatusFilter(v); setDisputePage(1) }}
               options={DISPUTE_STATUS_OPTIONS}
               style={{ width: 180 }}
-              placeholder="Filter by status"
+              placeholder={t('moderation.filterByStatus')}
             />
           </Space>
           <ResponsiveTable
@@ -336,20 +337,20 @@ export default function AdminModerationPage() {
 
   return (
     <div>
-      <Typography.Title level={2}>Moderation Center</Typography.Title>
+      <Typography.Title level={2}>{t('moderation.title')}</Typography.Title>
 
       <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabItems} />
 
       {/* Assign Report Modal */}
       <Modal
-        title="Assign Report"
+        title={t('moderation.assignReportTitle')}
         open={assignModalOpen}
         onOk={handleAssign}
         onCancel={() => setAssignModalOpen(false)}
         confirmLoading={assignReport.isPending}
       >
         <Input
-          placeholder="Assignee user ID"
+          placeholder={t('moderation.assigneePlaceholder')}
           value={assigneeId}
           onChange={(e) => setAssigneeId(e.target.value)}
         />
@@ -357,7 +358,7 @@ export default function AdminModerationPage() {
 
       {/* Resolve Report Modal (with Enforcement) */}
       <Modal
-        title="Resolve Report"
+        title={t('moderation.resolveReportTitle')}
         open={resolveReportModalOpen}
         onOk={handleResolveReport}
         onCancel={() => setResolveReportModalOpen(false)}
@@ -366,12 +367,12 @@ export default function AdminModerationPage() {
       >
         <Space direction="vertical" style={{ width: '100%' }} size="middle">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>Dismiss</span>
+            <span>{t('moderation.dismiss')}</span>
             <Switch checked={dismissedFlag} onChange={setDismissedFlag} />
           </div>
           {!dismissedFlag && (
             <div>
-              <div style={{ marginBottom: 4 }}>Enforcement Action</div>
+              <div style={{ marginBottom: 4 }}>{t('moderation.enforcementAction')}</div>
               <Select
                 value={enforcementAction}
                 onChange={setEnforcementAction}
@@ -384,14 +385,14 @@ export default function AdminModerationPage() {
             rows={3}
             value={resolutionNotes}
             onChange={(e) => setResolutionNotes(e.target.value)}
-            placeholder="Resolution notes"
+            placeholder={t('moderation.resolutionNotesPlaceholder')}
           />
         </Space>
       </Modal>
 
       {/* Escalate to Dispute Modal */}
       <Modal
-        title="Escalate to Dispute"
+        title={t('moderation.escalateToDisputeTitle')}
         open={escalateModalOpen}
         onOk={handleEscalateToDispute}
         onCancel={() => setEscalateModalOpen(false)}
@@ -400,15 +401,15 @@ export default function AdminModerationPage() {
       >
         <Space direction="vertical" style={{ width: '100%' }} size="middle">
           <div>
-            <div style={{ marginBottom: 4 }}>Title</div>
+            <div style={{ marginBottom: 4 }}>{t('moderation.columns.title')}</div>
             <Input
               value={escalateTitle}
               onChange={(e) => setEscalateTitle(e.target.value)}
-              placeholder="Dispute title"
+              placeholder={t('moderation.disputeTitlePlaceholder')}
             />
           </div>
           <div>
-            <div style={{ marginBottom: 4 }}>Dispute Type</div>
+            <div style={{ marginBottom: 4 }}>{t('moderation.disputeTypeLabel')}</div>
             <Select
               value={escalateDisputeType}
               onChange={setEscalateDisputeType}
@@ -417,7 +418,7 @@ export default function AdminModerationPage() {
             />
           </div>
           <div>
-            <div style={{ marginBottom: 4 }}>Priority</div>
+            <div style={{ marginBottom: 4 }}>{t('moderation.priorityLabel')}</div>
             <Select
               value={escalatePriority}
               onChange={setEscalatePriority}

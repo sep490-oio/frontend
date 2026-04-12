@@ -68,6 +68,7 @@ export function SellerLayout() {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
   const { isMobile, isTablet } = useBreakpoint()
   const { t, i18n } = useTranslation('seller')
+  const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
   const location = useLocation()
   const { user } = useAuth()
@@ -81,7 +82,7 @@ export function SellerLayout() {
     { key: '/seller', icon: <DashboardOutlined />, label: t('menu.dashboard', 'Dashboard') },
     {
       type: 'group',
-      label: t('menu.groupProducts', 'San pham'),
+      label: t('menu.groupProducts'),
       children: [
         { key: '/seller/items', icon: <ShoppingOutlined />, label: t('menu.myItems', 'My Items') },
         { key: '/seller/items/create', icon: <PlusCircleOutlined />, label: t('menu.createItem', 'Create Item') },
@@ -89,14 +90,14 @@ export function SellerLayout() {
     },
     {
       type: 'group',
-      label: t('menu.groupAuctions', 'Dau gia'),
+      label: t('menu.groupAuctions'),
       children: [
         { key: '/seller/auctions', icon: <ThunderboltOutlined />, label: t('menu.myAuctions', 'My Auctions') },
       ],
     },
     {
       type: 'group',
-      label: t('menu.groupBusiness', 'Kinh doanh'),
+      label: t('menu.groupBusiness'),
       children: [
         { key: '/seller/orders', icon: <OrderedListOutlined />, label: t('menu.orders', 'Orders') },
         { key: '/seller/shipments', icon: <ExportOutlined />, label: t('menu.directShipments', 'Direct Shipments') },
@@ -105,7 +106,7 @@ export function SellerLayout() {
     },
     {
       type: 'group',
-      label: t('menu.groupWarehouse', 'Kho hang'),
+      label: t('menu.groupWarehouse'),
       children: [
         { key: '/seller/warehouse/inbound', icon: <ImportOutlined />, label: t('menu.inbound', 'Inbound Shipments') },
         { key: '/seller/warehouse/outbound', icon: <ExportOutlined />, label: t('menu.outbound', 'Outbound Shipments') },
@@ -114,7 +115,7 @@ export function SellerLayout() {
     },
     {
       type: 'group',
-      label: t('menu.groupSettings', 'Cai dat'),
+      label: t('menu.groupSettings'),
       children: [
         { key: '/seller/profile', icon: <UserOutlined />, label: t('menu.profile', 'Profile') },
         { key: '/seller/verification', icon: <SafetyCertificateOutlined />, label: t('menu.verification', 'Verification') },
@@ -415,10 +416,10 @@ export function SellerLayout() {
             }}
           >
             <ArrowLeftOutlined style={{ fontSize: 11 }} />
-            {!isMobile && 'Back to Platform'}
+            {!isMobile && tc('layout.backToPlatform')}
           </button>
 
-          <Tooltip title={isDark ? 'Light mode' : 'Dark mode'}>
+          <Tooltip title={isDark ? tc('layout.lightMode') : tc('layout.darkMode')}>
             <button
               onClick={toggleTheme}
               style={iconBtnStyle()}
@@ -429,7 +430,7 @@ export function SellerLayout() {
             </button>
           </Tooltip>
 
-          <Tooltip title="Switch language">
+          <Tooltip title={tc('layout.switchLanguage')}>
             <button
               onClick={toggleLanguage}
               style={{ ...iconBtnStyle(), gap: 4, fontSize: 12, fontFamily: SANS_FONT, fontWeight: 500 }}
@@ -437,7 +438,7 @@ export function SellerLayout() {
               onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-secondary)' }}
             >
               <GlobalOutlined style={{ fontSize: 14 }} />
-              {!isMobile && (i18n.language === 'en' ? 'EN' : 'UK')}
+              {!isMobile && (i18n.language === 'vi' ? 'EN' : 'VI')}
             </button>
           </Tooltip>
 

@@ -108,12 +108,12 @@ export default function SellerOutboundShipmentsListPage() {
               )}
               {shipment.dispatchedAt && (
                 <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                  · {t('warehouse:dispatchedAt', 'Dispatched')}: {formatDateTime(shipment.dispatchedAt)}
+                  · {t('warehouse:dispatchedAt')}: {formatDateTime(shipment.dispatchedAt)}
                 </Typography.Text>
               )}
               {shipment.deliveredAt && (
                 <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                  · {t('warehouse:deliveredAt', 'Delivered')}: {formatDateTime(shipment.deliveredAt)}
+                  · {t('warehouse:deliveredAt')}: {formatDateTime(shipment.deliveredAt)}
                 </Typography.Text>
               )}
             </Flex>
@@ -122,7 +122,7 @@ export default function SellerOutboundShipmentsListPage() {
               icon={<EyeOutlined />}
               onClick={() => navigate(`/seller/warehouse/outbound/${shipment.shipmentId}`)}
             >
-              {t('warehouse:viewShipment', 'View Shipment')}
+              {t('warehouse:viewShipment')}
             </Button>
           </Flex>
         </Flex>
@@ -134,7 +134,7 @@ export default function SellerOutboundShipmentsListPage() {
     <div style={{ maxWidth: 1200, margin: '0 auto' }}>
       <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
         <h1 style={{ fontFamily: SERIF_FONT, fontWeight: 400, fontSize: 28, margin: 0 }}>
-          {t('warehouse:outboundShipments', 'Outbound Shipments')}
+          {t('warehouse:outboundShipments')}
         </h1>
       </Space>
 
@@ -143,7 +143,7 @@ export default function SellerOutboundShipmentsListPage() {
           <Spin size="large" />
         </div>
       ) : !data || data.items.length === 0 ? (
-        <Empty description={t('warehouse:noShipments', 'No outbound shipments yet')} />
+        <Empty description={t('warehouse:noShipments')} />
       ) : (
         <List dataSource={data.items} renderItem={renderShipmentCard} split={false} />
       )}

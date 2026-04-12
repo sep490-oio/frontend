@@ -30,7 +30,7 @@ const lightTheme = {
     colorInfo: '#2563EB',
 
     // Typography
-    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    fontFamily: "'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
     fontSize: 14,
     fontSizeHeading1: 36,
     fontSizeHeading2: 28,

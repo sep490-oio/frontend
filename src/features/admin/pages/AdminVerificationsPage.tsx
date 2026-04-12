@@ -11,17 +11,19 @@ import { IdentityVerificationStatus } from '@/types/enums'
 import type { VerificationDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
 
-const STATUS_OPTIONS = [
-  { value: '', label: 'All' },
-  { value: IdentityVerificationStatus.Pending, label: 'Pending' },
-  { value: IdentityVerificationStatus.Submitted, label: 'Submitted' },
-  { value: IdentityVerificationStatus.UnderReview, label: 'Under Review' },
-  { value: IdentityVerificationStatus.Approved, label: 'Approved' },
-  { value: IdentityVerificationStatus.Rejected, label: 'Rejected' },
-] as const
-
 export default function AdminVerificationsPage() {
   const { t } = useTranslation('admin')
+  const { t: tc } = useTranslation('common')
+
+  const STATUS_OPTIONS = [
+    { value: '', label: t('verifications.allStatuses') },
+    { value: IdentityVerificationStatus.Pending, label: tc('statusLabel.pending') },
+    { value: IdentityVerificationStatus.Submitted, label: tc('statusLabel.submitted') },
+    { value: IdentityVerificationStatus.UnderReview, label: tc('statusLabel.under_review') },
+    { value: IdentityVerificationStatus.Approved, label: tc('statusLabel.approved') },
+    { value: IdentityVerificationStatus.Rejected, label: tc('statusLabel.rejected') },
+  ]
+
   const { message } = App.useApp()
   const navigate = useNavigate()
 
@@ -128,10 +130,7 @@ export default function AdminVerificationsPage() {
           style={{ width: 200 }}
           allowClear
           onClear={() => setStatusFilter('')}
-          options={STATUS_OPTIONS.map((opt) => ({
-            value: opt.value,
-            label: opt.value ? opt.label : t('verifications.allStatuses'),
-          }))}
+          options={STATUS_OPTIONS}
         />
       </Space>
 

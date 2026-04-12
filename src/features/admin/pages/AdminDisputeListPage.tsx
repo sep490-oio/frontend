@@ -31,31 +31,32 @@ const DOMAIN_COLOR_MAP: Record<string, string> = {
   warehouse_item: 'orange',
 }
 
-const STATUS_OPTIONS = [
-  { value: '', label: 'All' },
-  { value: DisputeStatus.Open, label: 'Open' },
-  { value: DisputeStatus.AwaitingRespondent, label: 'Awaiting Respondent' },
-  { value: DisputeStatus.AwaitingEvidence, label: 'Awaiting Evidence' },
-  { value: DisputeStatus.UnderReview, label: 'Under Review' },
-  { value: DisputeStatus.AwaitingInternalReview, label: 'Awaiting Internal Review' },
-  { value: DisputeStatus.AwaitingResolutionApproval, label: 'Awaiting Resolution Approval' },
-  { value: DisputeStatus.Resolved, label: 'Resolved' },
-  { value: DisputeStatus.Rejected, label: 'Rejected' },
-  { value: DisputeStatus.Cancelled, label: 'Cancelled' },
-]
-
-const DOMAIN_OPTIONS = [
-  { value: '', label: 'All Domains' },
-  { value: 'order', label: 'Order' },
-  { value: 'auction', label: 'Auction' },
-  { value: 'payment', label: 'Payment' },
-  { value: 'shipment', label: 'Shipment' },
-  { value: 'warehouse_item', label: 'Warehouse Item' },
-]
-
 export default function AdminDisputeListPage() {
   const { t } = useTranslation('dispute')
   const { t: tc } = useTranslation('common')
+  const { t: ta } = useTranslation('admin')
+
+  const STATUS_OPTIONS = [
+    { value: '', label: ta('disputeList.allStatuses') },
+    { value: DisputeStatus.Open, label: tc('statusLabel.open') },
+    { value: DisputeStatus.AwaitingRespondent, label: ta('disputeList.statusLabel.awaitingRespondent') },
+    { value: DisputeStatus.AwaitingEvidence, label: ta('disputeList.statusLabel.awaitingEvidence') },
+    { value: DisputeStatus.UnderReview, label: tc('statusLabel.under_review') },
+    { value: DisputeStatus.AwaitingInternalReview, label: ta('disputeList.statusLabel.awaitingInternalReview') },
+    { value: DisputeStatus.AwaitingResolutionApproval, label: ta('disputeList.statusLabel.awaitingResolutionApproval') },
+    { value: DisputeStatus.Resolved, label: tc('statusLabel.resolved') },
+    { value: DisputeStatus.Rejected, label: tc('statusLabel.rejected') },
+    { value: DisputeStatus.Cancelled, label: tc('statusLabel.cancelled') },
+  ]
+
+  const DOMAIN_OPTIONS = [
+    { value: '', label: ta('disputeList.allDomains') },
+    { value: 'order', label: ta('disputeList.domainLabel.order') },
+    { value: 'auction', label: ta('disputeList.domainLabel.auction') },
+    { value: 'payment', label: ta('disputeList.domainLabel.payment') },
+    { value: 'shipment', label: ta('disputeList.domainLabel.shipment') },
+    { value: 'warehouse_item', label: ta('disputeList.domainLabel.warehouseItem') },
+  ]
   const navigate = useNavigate()
 
   const [filters, setFilters] = useState<DisputeFilterParams>({

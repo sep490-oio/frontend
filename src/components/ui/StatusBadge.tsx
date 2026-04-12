@@ -211,7 +211,7 @@ export function StatusBadge({ status, size }: StatusBadgeProps) {
         alignItems: 'center',
         borderRadius: 100,
         padding,
-        fontFamily: "'Inter', sans-serif",
+        fontFamily: "'Be Vietnam Pro', sans-serif",
         fontSize,
         fontWeight: 500,
         textTransform: 'uppercase',

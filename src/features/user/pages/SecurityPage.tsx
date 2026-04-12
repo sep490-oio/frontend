@@ -53,12 +53,12 @@ function useChangePasswordSchema() {
   const { t } = useTranslation('auth')
   return useMemo(() => z
     .object({
-      currentPassword: z.string().min(1, tv('required', 'Trường này là bắt buộc')),
+      currentPassword: z.string().min(1, tv('required')),
       newPassword: createPasswordSchema(tv),
-      confirmPassword: z.string().min(1, tv('required', 'Trường này là bắt buộc')),
+      confirmPassword: z.string().min(1, tv('required')),
     })
     .refine((data) => data.newPassword === data.confirmPassword, {
-      message: t('passwordMismatch', 'Mật khẩu không khớp'),
+      message: t('register.passwordMismatch'),
       path: ['confirmPassword'],
     }), [tv, t])
 }
