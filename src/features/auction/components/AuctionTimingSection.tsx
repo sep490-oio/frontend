@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import {
   Collapse,
   DatePicker,
@@ -669,6 +669,13 @@ export function AuctionTimingSection({ form, itemApproved = true }: AuctionTimin
     },
     [syncFormFromState],
   )
+
+  useEffect(() => {
+    if (!state.advancedOverride) {
+      syncFormFromState(state)
+    }
+
+  }, [])
 
   const handleAdvancedFieldChange = () => {
     setState((prev) => ({ ...prev, advancedOverride: true }))
