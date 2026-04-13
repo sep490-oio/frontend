@@ -12,12 +12,14 @@ import { formatDateTime } from '@/utils/format'
 import type { ItemReviewDto } from '@/types'
 import { AdminErrorState } from '@/features/admin/components/AdminErrorState'
 import type { ColumnsType } from 'antd/es/table'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 
 export default function AdminItemDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { t } = useTranslation('admin')
   const { message } = App.useApp()
   const navigate = useNavigate()
+  const { isMobile } = useBreakpoint()
 
   const { data: item, isLoading, error, refetch } = useAdminItemDetail(id!)
   const approveItem = useApproveItem()
@@ -63,7 +65,7 @@ export default function AdminItemDetailPage() {
       title: t('itemDetail.action'),
       dataIndex: 'action',
       key: 'action',
-      width: 120,
+      width: 110,
       render: (action: string) => <StatusBadge status={action} size="small" />,
     },
     {
@@ -77,28 +79,32 @@ export default function AdminItemDetailPage() {
       title: t('itemDetail.date'),
       dataIndex: 'createdAt',
       key: 'createdAt',
-      width: 160,
+      width: 150,
       render: (date: string) => formatDateTime(date),
     },
   ]
 
   return (
-    <div>
+    <div style={{ padding: isMobile ? '0 0 100px' : undefined }}>
       <Space style={{ marginBottom: 16 }}>
-        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/admin/items/review')}>
+        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/admin/items/review')} style={{ minHeight: 44 }}>
           {t('common.back')}
         </Button>
       </Space>
 
-      <Typography.Title level={2} style={{ marginBottom: 24 }}>
+      <Typography.Title level={isMobile ? 3 : 2} style={{ marginBottom: isMobile ? 16 : 24 }}>
         {t('itemDetail.title')}
       </Typography.Title>
 
-      <Card title={t('itemDetail.info')} style={{ marginBottom: 24 }}>
-        <Descriptions column={{ xs: 1, sm: 2 }} bordered>
-          <Descriptions.Item label={t('common.id')}>{item.id}</Descriptions.Item>
+      <Card title={t('itemDetail.info')} style={{ marginBottom: 16, borderRadius: 12 }}>
+        <Descriptions column={{ xs: 1, sm: 2 }} bordered size={isMobile ? 'small' : 'default'}>
+          <Descriptions.Item label={t('common.id')}>
+            <Typography.Text copyable style={{ fontSize: isMobile ? 12 : 14 }}>{item.id}</Typography.Text>
+          </Descriptions.Item>
           <Descriptions.Item label={t('reviewQueue.itemTitle')}>{item.title}</Descriptions.Item>
-          <Descriptions.Item label={t('reviewQueue.seller')}>{item.sellerId}</Descriptions.Item>
+          <Descriptions.Item label={t('reviewQueue.seller')}>
+            <Typography.Text ellipsis style={{ maxWidth: isMobile ? 160 : undefined }}>{item.sellerId}</Typography.Text>
+          </Descriptions.Item>
           <Descriptions.Item label={t('itemDetail.condition')}>{item.condition}</Descriptions.Item>
           <Descriptions.Item label={t('itemDetail.quantity')}>{item.quantity}</Descriptions.Item>
           <Descriptions.Item label={t('verifications.status')}>
@@ -111,41 +117,88 @@ export default function AdminItemDetailPage() {
             </Descriptions.Item>
           )}
         </Descriptions>
+
         {item.description && (
           <div style={{ marginTop: 16 }}>
             <Typography.Text strong>Description:</Typography.Text>
             <SafeHtmlRenderer html={item.description} style={{ marginTop: 8 }} />
           </div>
         )}
+
         {item.images && item.images.length > 0 && (
-          <Space wrap style={{ marginTop: 16 }}>
-            {item.images.map((img) => (
-              <Image key={img.id} src={img.url} width={120} style={{ borderRadius: 8 }} />
-            ))}
-          </Space>
+          <div style={{ marginTop: 16 }}>
+            <Image.PreviewGroup>
+              <Space wrap size={8}>
+                {item.images.map((img) => (
+                  <Image
+                    key={img.id}
+                    src={img.url}
+                    width={isMobile ? 80 : 120}
+                    height={isMobile ? 80 : 120}
+                    style={{ borderRadius: 8, objectFit: 'cover' }}
+                  />
+                ))}
+              </Space>
+            </Image.PreviewGroup>
+          </div>
         )}
       </Card>
 
       {/* Review history */}
-      <Card title={t('itemDetail.reviewHistory')} style={{ marginBottom: 24 }}>
-        <ResponsiveTable<ItemReviewDto>
-          rowKey="id"
-          columns={reviewColumns}
-          dataSource={item.reviews ?? []}
-          pagination={false}
-          mobileMode="list"
-        />
+      <Card title={t('itemDetail.reviewHistory')} style={{ marginBottom: 16, borderRadius: 12 }}>
+        <div style={{ overflowX: 'auto' }}>
+          <ResponsiveTable<ItemReviewDto>
+            rowKey="id"
+            columns={reviewColumns}
+            dataSource={item.reviews ?? []}
+            pagination={false}
+            mobileMode="list"
+          />
+        </div>
       </Card>
 
-      {/* Actions */}
-      <Space>
-        <Button type="primary" onClick={handleApprove} loading={approveItem.isPending}>
-          {t('reviewQueue.approve')}
-        </Button>
-        <Button danger onClick={() => setRejectModalOpen(true)}>
-          {t('reviewQueue.reject')}
-        </Button>
-      </Space>
+      {/* Actions — sticky on mobile */}
+      {isMobile ? (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: '12px 16px',
+            background: 'var(--color-bg-primary, #fff)',
+            borderTop: '1px solid var(--color-border, #f0f0f0)',
+            zIndex: 100,
+            display: 'flex',
+            gap: 12,
+          }}
+        >
+          <Button
+            type="primary"
+            onClick={handleApprove}
+            loading={approveItem.isPending}
+            style={{ flex: 1, minHeight: 48 }}
+          >
+            {t('reviewQueue.approve')}
+          </Button>
+          <Button
+            danger
+            onClick={() => setRejectModalOpen(true)}
+            style={{ flex: 1, minHeight: 48 }}
+          >
+            {t('reviewQueue.reject')}
+          </Button>
+        </div>
+      ) : (
+        <Space>
+          <Button type="primary" onClick={handleApprove} loading={approveItem.isPending}>
+            {t('reviewQueue.approve')}
+          </Button>
+          <Button danger onClick={() => setRejectModalOpen(true)}>
+            {t('reviewQueue.reject')}
+          </Button>
+        </Space>
+      )}
 
       <Modal
         title={t('reviewQueue.reject')}
@@ -153,6 +206,8 @@ export default function AdminItemDetailPage() {
         onOk={handleReject}
         onCancel={() => { setRejectModalOpen(false); setRejectReason('') }}
         confirmLoading={rejectItem.isPending}
+        centered={isMobile}
+        style={isMobile ? { top: 'auto', bottom: 0, margin: 0, paddingBottom: 0 } : undefined}
       >
         <Typography.Text strong>{t('itemDetail.rejectReason')}</Typography.Text>
         <Input.TextArea

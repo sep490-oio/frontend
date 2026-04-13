@@ -210,13 +210,15 @@ export default function BrowseItemsPage() {
           value={inputValue}
           onChange={handleInputChange}
           onSelect={handleSelect}
-          style={{ maxWidth: isMobile ? '100%' : 300 }}
+          style={isMobile ? { flex: 1, borderRadius: 100, overflow: 'hidden' } : { width: 240, borderRadius: 100, overflow: 'hidden' }}
           popupMatchSelectWidth={false}
         >
           <Input
             prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
             placeholder={t('browse.searchPlaceholder')}
             onPressEnter={handlePressEnter}
+            allowClear
+            onClear={() => handleInputChange('')}
             style={{ borderRadius: 100, height: 40, borderColor: 'var(--color-border)' }}
           />
         </AutoComplete>

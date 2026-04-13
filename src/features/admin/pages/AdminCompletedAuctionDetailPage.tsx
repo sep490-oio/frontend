@@ -43,6 +43,8 @@ export default function AdminCompletedAuctionDetailPage() {
   const { auctionId } = useParams<{ auctionId: string }>()
   const { t } = useTranslation('admin')
   const navigate = useNavigate()
+  // Simple breakpoint — avoids adding a hook import to a file that doesn't use it yet
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
 
   const { data, isLoading, error, refetch } = useAdminCompletedAuctionDetail(auctionId!)
 
@@ -71,14 +73,14 @@ export default function AdminCompletedAuctionDetailPage() {
     summary.isShippingOverdue
 
   return (
-    <div>
+    <div style={{ padding: isMobile ? '0 0 80px' : undefined }}>
       <Space style={{ marginBottom: 16 }}>
         <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/admin/auctions/completed')}>
           {t('completedAuctions.detail.back')}
         </Button>
       </Space>
 
-      <Typography.Title level={2} style={{ marginBottom: 24 }}>
+      <Typography.Title level={isMobile ? 3 : 2} style={{ marginBottom: isMobile ? 16 : 24 }}>
         <TrophyOutlined style={{ marginRight: 8 }} />
         {t('completedAuctions.detail.title')}
       </Typography.Title>

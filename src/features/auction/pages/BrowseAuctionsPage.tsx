@@ -387,7 +387,7 @@ export default function BrowseAuctionsPage() {
             value={inputValue}
             onChange={handleInputChange}
             onSelect={handleSelect}
-            style={{ width: 240 }}
+            style={{ width: 240, borderRadius: 100, overflow: 'hidden' }}
             popupMatchSelectWidth={false}
           >
             <Input
@@ -414,7 +414,7 @@ export default function BrowseAuctionsPage() {
               value={inputValue}
               onChange={handleInputChange}
               onSelect={handleSelect}
-              style={{ flex: 1 }}
+              style={{ flex: 1, borderRadius: 100, overflow: 'hidden' }}
               popupMatchSelectWidth={false}
             >
               <Input
@@ -545,7 +545,7 @@ export default function BrowseAuctionsPage() {
               showTotal={isMobile ? undefined : (total) => tc('pagination.total', { total })}
               onChange={(p, ps) => setFilters((prev) => ({ ...prev, pageNumber: p, pageSize: ps }))}
               size={isMobile ? 'small' : undefined}
-            />
+          />
           </Flex>
         </>
       )}

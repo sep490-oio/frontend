@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Typography, Select, Space, Input, Segmented, Tag } from 'antd'
+import { Typography, Select, Space, Input, Tag, Button, Drawer } from 'antd'
+import { FilterOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
@@ -10,6 +11,7 @@ import type { DisputeListItemDto } from '@/types'
 import type { TablePaginationConfig } from 'antd/es/table'
 import { useDebounce } from '@/hooks/useDebounce'
 import { formatDateTime } from '@/utils/format'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 
 const STATUS_COLOR_MAP: Record<string, string> = {
   [DisputeStatus.Open]: 'blue',
@@ -35,6 +37,8 @@ export default function AdminDisputeListPage() {
   const { t } = useTranslation('dispute')
   const { t: tc } = useTranslation('common')
   const { t: ta } = useTranslation('admin')
+  const { isMobile } = useBreakpoint()
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false)
 
   const STATUS_OPTIONS = [
     { value: '', label: ta('disputeList.allStatuses') },
@@ -153,16 +157,15 @@ export default function AdminDisputeListPage() {
     },
   ]
 
-  return (
-    <div>
-      <Typography.Title level={2}>{t('adminDisputes', 'Disputes')}</Typography.Title>
+  const activeFiltersCount = [filters.status, filters.domain].filter(Boolean).length
 
-      <Space wrap style={{ marginBottom: 16 }}>
-        <Segmented
-          options={STATUS_OPTIONS.map((opt) => ({
-            value: opt.value,
-            label: opt.label,
-          }))}
+  const filterContent = (
+    <Space direction="vertical" style={{ width: '100%' }} size={12}>
+      <div>
+        <Typography.Text strong style={{ display: 'block', marginBottom: 6 }}>{t('status', 'Status')}</Typography.Text>
+        <Select
+          style={{ width: '100%' }}
+          options={STATUS_OPTIONS}
           value={filters.status ?? ''}
           onChange={(value) =>
             setFilters((prev) => ({
@@ -171,9 +174,13 @@ export default function AdminDisputeListPage() {
               pageNumber: 1,
             }))
           }
+          placeholder={t('filterByStatus', 'Filter by status')}
         />
+      </div>
+      <div>
+        <Typography.Text strong style={{ display: 'block', marginBottom: 6 }}>{t('domain', 'Domain')}</Typography.Text>
         <Select
-          style={{ width: 160 }}
+          style={{ width: '100%' }}
           options={DOMAIN_OPTIONS}
           value={filters.domain ?? ''}
           onChange={(value) =>
@@ -185,34 +192,157 @@ export default function AdminDisputeListPage() {
           }
           placeholder={t('filterByDomain', 'Filter by domain')}
         />
-        <Input.Search
-          placeholder={t('searchDisputes', 'Search disputes...')}
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          allowClear
-          style={{ width: 220 }}
-        />
-      </Space>
+      </div>
+    </Space>
+  )
 
-      <ResponsiveTable<DisputeListItemDto>
-        mobileMode="card"
-        columns={columns}
-        dataSource={data?.items ?? []}
-        rowKey="id"
-        loading={isLoading}
-        onRow={(record) => ({
-          onClick: () => navigate(`/admin/disputes/${record.id}`),
-          style: { cursor: 'pointer' },
-        })}
-        pagination={{
-          current: data?.metadata?.currentPage ?? 1,
-          pageSize: data?.metadata?.pageSize ?? 10,
-          total: data?.metadata?.totalCount ?? 0,
-          showSizeChanger: true,
-          showTotal: (total) => tc('pagination.total', { total }),
-        }}
-        onChange={handleTableChange}
-      />
+  return (
+    <div style={{ padding: isMobile ? '0 0 80px' : undefined }}>
+      <Typography.Title level={isMobile ? 3 : 2} style={{ marginBottom: isMobile ? 12 : 24 }}>
+        {t('adminDisputes', 'Disputes')}
+      </Typography.Title>
+
+      {isMobile ? (
+        /* Mobile: search bar + filter button */
+        <Space style={{ width: '100%', marginBottom: 16 }} direction="vertical" size={10}>
+          <Space.Compact style={{ width: '100%' }}>
+            <Input.Search
+              placeholder={t('searchDisputes', 'Search disputes...')}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              allowClear
+              style={{ flex: 1, minHeight: 44 }}
+            />
+            <Button
+              icon={<FilterOutlined />}
+              onClick={() => setFilterDrawerOpen(true)}
+              style={{ minHeight: 44, minWidth: 60, position: 'relative' }}
+            >
+              {activeFiltersCount > 0 && (
+                <span style={{
+                  position: 'absolute',
+                  top: 4, right: 4,
+                  background: 'var(--color-accent, #1677ff)',
+                  color: '#fff',
+                  borderRadius: '50%',
+                  fontSize: 10,
+                  width: 16, height: 16,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  lineHeight: 1,
+                }}>
+                  {activeFiltersCount}
+                </span>
+              )}
+            </Button>
+          </Space.Compact>
+          {/* Active filter chips */}
+          {activeFiltersCount > 0 && (
+            <Space wrap size={6}>
+              {filters.status && (
+                <Tag closable onClose={() => setFilters((p) => ({ ...p, status: undefined, pageNumber: 1 }))}>
+                  {STATUS_OPTIONS.find((o) => o.value === filters.status)?.label ?? filters.status}
+                </Tag>
+              )}
+              {filters.domain && (
+                <Tag closable onClose={() => setFilters((p) => ({ ...p, domain: undefined, pageNumber: 1 }))}>
+                  {DOMAIN_OPTIONS.find((o) => o.value === filters.domain)?.label ?? filters.domain}
+                </Tag>
+              )}
+            </Space>
+          )}
+        </Space>
+      ) : (
+        /* Desktop: horizontal filters */
+        <Space wrap style={{ marginBottom: 16 }}>
+          <Select
+            style={{ width: 200 }}
+            options={STATUS_OPTIONS}
+            value={filters.status ?? ''}
+            onChange={(value) =>
+              setFilters((prev) => ({
+                ...prev,
+                status: (value as string) || undefined,
+                pageNumber: 1,
+              }))
+            }
+            placeholder={t('filterByStatus', 'Filter by status')}
+          />
+          <Select
+            style={{ width: 160 }}
+            options={DOMAIN_OPTIONS}
+            value={filters.domain ?? ''}
+            onChange={(value) =>
+              setFilters((prev) => ({
+                ...prev,
+                domain: value || undefined,
+                pageNumber: 1,
+              }))
+            }
+            placeholder={t('filterByDomain', 'Filter by domain')}
+          />
+          <Input.Search
+            placeholder={t('searchDisputes', 'Search disputes...')}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            allowClear
+            style={{ width: 220 }}
+          />
+        </Space>
+      )}
+
+      {/* Mobile filter drawer */}
+      <Drawer
+        title={t('filters', 'Filters')}
+        placement="bottom"
+        open={filterDrawerOpen}
+        onClose={() => setFilterDrawerOpen(false)}
+        height="auto"
+        styles={{ body: { paddingBottom: 32 } }}
+        extra={
+          <Button
+            type="link"
+            onClick={() => {
+              setFilters((p) => ({ ...p, status: undefined, domain: undefined, pageNumber: 1 }))
+              setFilterDrawerOpen(false)
+            }}
+          >
+            {t('clearAll', 'Clear all')}
+          </Button>
+        }
+      >
+        {filterContent}
+        <Button
+          type="primary"
+          block
+          style={{ marginTop: 16, minHeight: 44 }}
+          onClick={() => setFilterDrawerOpen(false)}
+        >
+          {t('applyFilters', 'Apply Filters')}
+        </Button>
+      </Drawer>
+
+      <div style={{ overflowX: 'auto' }}>
+        <ResponsiveTable<DisputeListItemDto>
+          mobileMode="card"
+          columns={columns}
+          dataSource={data?.items ?? []}
+          rowKey="id"
+          loading={isLoading}
+          onRow={(record) => ({
+            onClick: () => navigate(`/admin/disputes/${record.id}`),
+            style: { cursor: 'pointer', minHeight: 56 },
+          })}
+          pagination={{
+            current: data?.metadata?.currentPage ?? 1,
+            pageSize: data?.metadata?.pageSize ?? 10,
+            total: data?.metadata?.totalCount ?? 0,
+            showSizeChanger: !isMobile,
+            showTotal: (total) => tc('pagination.total', { total }),
+            simple: isMobile,
+          }}
+          onChange={handleTableChange}
+        />
+      </div>
     </div>
   )
 }

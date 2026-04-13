@@ -18,11 +18,13 @@ import { formatDateTime, formatCurrency } from '@/utils/format'
 import { WithdrawalStatus } from '@/types/enums'
 import type { WithdrawalRequestDto, PaymentTransactionDto, EscrowDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 
 export default function AdminPaymentsPage() {
   const { t } = useTranslation('admin')
   const { t: tc } = useTranslation('common')
   const { message } = App.useApp()
+  const { isMobile } = useBreakpoint()
 
   const [activeTab, setActiveTab] = useState('overview')
 
@@ -103,14 +105,14 @@ export default function AdminPaymentsPage() {
       title: t('payments.amount'),
       dataIndex: 'amount',
       key: 'amount',
-      width: 160,
+      width: 140,
       render: (amount: number) => formatCurrency(amount),
     },
     {
       title: t('payments.status'),
       dataIndex: 'status',
       key: 'status',
-      width: 120,
+      width: 110,
       render: (status: string) => <StatusBadge status={status} />,
     },
     {
@@ -123,7 +125,7 @@ export default function AdminPaymentsPage() {
       title: t('payments.accountNumber'),
       dataIndex: 'accountNumberMasked',
       key: 'accountNumberMasked',
-      width: 160,
+      width: 150,
     },
     {
       title: t('payments.accountHolder'),
@@ -135,21 +137,32 @@ export default function AdminPaymentsPage() {
       title: t('payments.createdAt'),
       dataIndex: 'createdAt',
       key: 'createdAt',
-      width: 160,
+      width: 150,
       render: (date: string) => formatDateTime(date),
     },
     {
       title: t('reports.actions'),
       key: 'actions',
-      width: 180,
+      width: 160,
       render: (_, record) => {
         if (record.status === WithdrawalStatus.Pending) {
           return (
             <Space size={4}>
-              <Button type="link" size="small" onClick={() => handleApprove(record.id)}>
+              <Button
+                type="link"
+                size="small"
+                onClick={() => handleApprove(record.id)}
+                style={{ minHeight: isMobile ? 44 : undefined, padding: isMobile ? '0 8px' : undefined }}
+              >
                 {t('payments.approve')}
               </Button>
-              <Button type="link" size="small" danger onClick={() => { setRejectId(record.id); setRejectModalOpen(true) }}>
+              <Button
+                type="link"
+                size="small"
+                danger
+                onClick={() => { setRejectId(record.id); setRejectModalOpen(true) }}
+                style={{ minHeight: isMobile ? 44 : undefined, padding: isMobile ? '0 8px' : undefined }}
+              >
                 {t('payments.reject')}
               </Button>
             </Space>
@@ -177,7 +190,7 @@ export default function AdminPaymentsPage() {
       title: t('common.id'),
       dataIndex: 'id',
       key: 'id',
-      width: 200,
+      width: 180,
       ellipsis: true,
     },
     {
@@ -190,21 +203,21 @@ export default function AdminPaymentsPage() {
       title: t('payments.amount'),
       dataIndex: 'amount',
       key: 'amount',
-      width: 160,
+      width: 140,
       render: (amount: number, record) => formatCurrency(amount, record.currency),
     },
     {
       title: t('payments.status'),
       dataIndex: 'status',
       key: 'status',
-      width: 120,
+      width: 110,
       render: (status: string) => <StatusBadge status={status} />,
     },
     {
       title: t('payments.orderId'),
       dataIndex: 'orderId',
       key: 'orderId',
-      width: 200,
+      width: 180,
       ellipsis: true,
       render: (val: string | undefined) => val ?? '-',
     },
@@ -212,7 +225,7 @@ export default function AdminPaymentsPage() {
       title: t('payments.createdAt'),
       dataIndex: 'createdAt',
       key: 'createdAt',
-      width: 160,
+      width: 150,
       render: (date: string) => formatDateTime(date),
     },
   ]
@@ -222,38 +235,41 @@ export default function AdminPaymentsPage() {
       title: t('common.id'),
       dataIndex: 'id',
       key: 'id',
-      width: 200,
+      width: 180,
       ellipsis: true,
     },
     {
       title: t('payments.orderId'),
       dataIndex: 'orderId',
       key: 'orderId',
-      width: 200,
+      width: 180,
       ellipsis: true,
     },
     {
       title: t('payments.amount'),
       dataIndex: 'amount',
       key: 'amount',
-      width: 160,
+      width: 140,
       render: (amount: number, record) => formatCurrency(amount, record.currency),
     },
     {
       title: t('payments.status'),
       dataIndex: 'status',
       key: 'status',
-      width: 120,
+      width: 110,
       render: (status: string) => <StatusBadge status={status} />,
     },
     {
       title: t('payments.createdAt'),
       dataIndex: 'createdAt',
       key: 'createdAt',
-      width: 160,
+      width: 150,
       render: (date: string) => formatDateTime(date),
     },
   ]
+
+  // Shared filter select style
+  const filterSelectStyle = { width: isMobile ? '100%' : 200, marginBottom: 16 }
 
   const tabItems = [
     {
@@ -261,72 +277,79 @@ export default function AdminPaymentsPage() {
       label: t('payments.overview'),
       children: (
         <>
-          <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-            <Col xs={24} sm={12} lg={6}>
-              <Card loading={summaryLoading}>
+          {/* Summary stat cards — 2-col on mobile, 4-col on large */}
+          <Row gutter={[12, 12]} style={{ marginBottom: isMobile ? 16 : 24 }}>
+            <Col xs={12} sm={12} lg={6}>
+              <Card loading={summaryLoading} styles={{ body: { padding: isMobile ? '12px' : '24px' } }}>
                 <Statistic
-                  title={t('payments.totalRevenue')}
+                  title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('payments.totalRevenue')}</span>}
                   value={summary?.totalRevenue ?? 0}
                   formatter={(val) => formatCurrency(val as number)}
-                  valueStyle={{ color: '#3f8600' }}
+                  valueStyle={{ color: '#3f8600', fontSize: isMobile ? 16 : 24 }}
                 />
               </Card>
             </Col>
-            <Col xs={24} sm={12} lg={6}>
-              <Card loading={summaryLoading}>
+            <Col xs={12} sm={12} lg={6}>
+              <Card loading={summaryLoading} styles={{ body: { padding: isMobile ? '12px' : '24px' } }}>
                 <Statistic
-                  title={t('payments.totalPayouts')}
+                  title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('payments.totalPayouts')}</span>}
                   value={summary?.totalPayouts ?? 0}
                   formatter={(val) => formatCurrency(val as number)}
+                  valueStyle={{ fontSize: isMobile ? 16 : 24 }}
                 />
               </Card>
             </Col>
-            <Col xs={24} sm={12} lg={6}>
-              <Card loading={summaryLoading}>
+            <Col xs={12} sm={12} lg={6}>
+              <Card loading={summaryLoading} styles={{ body: { padding: isMobile ? '12px' : '24px' } }}>
                 <Statistic
-                  title={t('payments.pendingWithdrawals')}
+                  title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('payments.pendingWithdrawals')}</span>}
                   value={summary?.pendingWithdrawals ?? 0}
                   formatter={(val) => formatCurrency(val as number)}
-                  valueStyle={{ color: '#faad14' }}
+                  valueStyle={{ color: '#faad14', fontSize: isMobile ? 16 : 24 }}
                 />
               </Card>
             </Col>
-            <Col xs={24} sm={12} lg={6}>
-              <Card loading={summaryLoading}>
+            <Col xs={12} sm={12} lg={6}>
+              <Card loading={summaryLoading} styles={{ body: { padding: isMobile ? '12px' : '24px' } }}>
                 <Statistic
-                  title={t('payments.platformBalance')}
+                  title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('payments.platformBalance')}</span>}
                   value={summary?.platformBalance ?? 0}
                   formatter={(val) => formatCurrency(val as number)}
-                  valueStyle={{ color: '#1677ff' }}
+                  valueStyle={{ color: '#1677ff', fontSize: isMobile ? 16 : 24 }}
                 />
               </Card>
             </Col>
           </Row>
 
           {/* Platform wallet */}
-          <Card title={t('payments.walletBalance')} loading={walletLoading}>
-            <Row gutter={[16, 16]}>
-              <Col xs={24} sm={8}>
+          <Card
+            title={t('payments.walletBalance')}
+            loading={walletLoading}
+            style={{ borderRadius: 12 }}
+          >
+            <Row gutter={[isMobile ? 12 : 16, 12]}>
+              <Col xs={8} sm={8}>
                 <Statistic
-                  title={t('payments.availableBalance')}
+                  title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('payments.availableBalance')}</span>}
                   value={wallet?.availableBalance ?? 0}
                   formatter={(val) => formatCurrency(val as number, wallet?.currency)}
-                  valueStyle={{ color: '#3f8600' }}
+                  valueStyle={{ color: '#3f8600', fontSize: isMobile ? 14 : 20 }}
                 />
               </Col>
-              <Col xs={24} sm={8}>
+              <Col xs={8} sm={8}>
                 <Statistic
-                  title={t('payments.pendingBalance')}
+                  title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('payments.pendingBalance')}</span>}
                   value={wallet?.pendingBalance ?? 0}
                   formatter={(val) => formatCurrency(val as number, wallet?.currency)}
-                  valueStyle={{ color: '#faad14' }}
+                  valueStyle={{ color: '#faad14', fontSize: isMobile ? 14 : 20 }}
                 />
               </Col>
-              <Col xs={24} sm={8}>
+              <Col xs={8} sm={8}>
                 <Statistic
-                  title={t('payments.platformBalance')}
+                  title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('payments.platformBalance')}</span>}
                   value={wallet?.totalBalance ?? 0}
                   formatter={(val) => formatCurrency(val as number, wallet?.currency)}
+                  valueStyle={{ fontSize: isMobile ? 14 : 20 }}
                 />
               </Col>
             </Row>
@@ -339,38 +362,39 @@ export default function AdminPaymentsPage() {
       label: t('payments.withdrawals'),
       children: (
         <>
-          <Space style={{ marginBottom: 16 }}>
-            <Select
-              placeholder={t('payments.filterStatus')}
-              value={wStatus}
-              onChange={(val) => { setWStatus(val); setWPage(1) }}
-              style={{ width: 200 }}
-              allowClear
-              onClear={() => setWStatus('')}
-              options={[
-                { value: '', label: t('payments.allStatuses') },
-                { value: 'pending', label: tc('statusLabel.pending') },
-                { value: 'approved', label: tc('statusLabel.approved') },
-                { value: 'rejected', label: tc('statusLabel.rejected') },
-                { value: 'completed', label: tc('statusLabel.completed') },
-              ]}
-            />
-          </Space>
-          <ResponsiveTable<WithdrawalRequestDto>
-            rowKey="id"
-            columns={withdrawalColumns}
-            dataSource={withdrawals?.items ?? []}
-            loading={wLoading}
-            mobileMode="list"
-            pagination={{
-              current: withdrawals?.metadata?.currentPage ?? wPage,
-              pageSize: withdrawals?.metadata?.pageSize ?? wPageSize,
-              total: withdrawals?.metadata?.totalCount ?? 0,
-              showSizeChanger: true,
-              showTotal: (total) => tc('pagination.total', { total }),
-              onChange: (p, ps) => { setWPage(p); setWPageSize(ps) },
-            }}
+          <Select
+            placeholder={t('payments.filterStatus')}
+            value={wStatus}
+            onChange={(val) => { setWStatus(val); setWPage(1) }}
+            style={filterSelectStyle}
+            allowClear
+            onClear={() => setWStatus('')}
+            options={[
+              { value: '', label: t('payments.allStatuses') },
+              { value: 'pending', label: tc('statusLabel.pending') },
+              { value: 'approved', label: tc('statusLabel.approved') },
+              { value: 'rejected', label: tc('statusLabel.rejected') },
+              { value: 'completed', label: tc('statusLabel.completed') },
+            ]}
           />
+          <div style={{ overflowX: 'auto' }}>
+            <ResponsiveTable<WithdrawalRequestDto>
+              rowKey="id"
+              columns={withdrawalColumns}
+              dataSource={withdrawals?.items ?? []}
+              loading={wLoading}
+              mobileMode="list"
+              pagination={{
+                current: withdrawals?.metadata?.currentPage ?? wPage,
+                pageSize: withdrawals?.metadata?.pageSize ?? wPageSize,
+                total: withdrawals?.metadata?.totalCount ?? 0,
+                showSizeChanger: !isMobile,
+                showTotal: (total) => tc('pagination.total', { total }),
+                simple: isMobile,
+                onChange: (p, ps) => { setWPage(p); setWPageSize(ps) },
+              }}
+            />
+          </div>
         </>
       ),
     },
@@ -379,37 +403,38 @@ export default function AdminPaymentsPage() {
       label: t('payments.transactions'),
       children: (
         <>
-          <Space style={{ marginBottom: 16 }}>
-            <Select
-              placeholder={t('payments.filterStatus')}
-              value={tStatus}
-              onChange={(val) => { setTStatus(val); setTPage(1) }}
-              style={{ width: 200 }}
-              allowClear
-              onClear={() => setTStatus('')}
-              options={[
-                { value: '', label: t('payments.allStatuses') },
-                { value: 'pending', label: tc('statusLabel.pending') },
-                { value: 'completed', label: tc('statusLabel.completed') },
-                { value: 'failed', label: tc('statusLabel.failed') },
-              ]}
-            />
-          </Space>
-          <ResponsiveTable<PaymentTransactionDto>
-            rowKey="id"
-            columns={transactionColumns}
-            dataSource={transactions?.items ?? []}
-            loading={tLoading}
-            mobileMode="list"
-            pagination={{
-              current: transactions?.metadata?.currentPage ?? tPage,
-              pageSize: transactions?.metadata?.pageSize ?? tPageSize,
-              total: transactions?.metadata?.totalCount ?? 0,
-              showSizeChanger: true,
-              showTotal: (total) => tc('pagination.total', { total }),
-              onChange: (p, ps) => { setTPage(p); setTPageSize(ps) },
-            }}
+          <Select
+            placeholder={t('payments.filterStatus')}
+            value={tStatus}
+            onChange={(val) => { setTStatus(val); setTPage(1) }}
+            style={filterSelectStyle}
+            allowClear
+            onClear={() => setTStatus('')}
+            options={[
+              { value: '', label: t('payments.allStatuses') },
+              { value: 'pending', label: tc('statusLabel.pending') },
+              { value: 'completed', label: tc('statusLabel.completed') },
+              { value: 'failed', label: tc('statusLabel.failed') },
+            ]}
           />
+          <div style={{ overflowX: 'auto' }}>
+            <ResponsiveTable<PaymentTransactionDto>
+              rowKey="id"
+              columns={transactionColumns}
+              dataSource={transactions?.items ?? []}
+              loading={tLoading}
+              mobileMode="list"
+              pagination={{
+                current: transactions?.metadata?.currentPage ?? tPage,
+                pageSize: transactions?.metadata?.pageSize ?? tPageSize,
+                total: transactions?.metadata?.totalCount ?? 0,
+                showSizeChanger: !isMobile,
+                showTotal: (total) => tc('pagination.total', { total }),
+                simple: isMobile,
+                onChange: (p, ps) => { setTPage(p); setTPageSize(ps) },
+              }}
+            />
+          </div>
         </>
       ),
     },
@@ -418,50 +443,54 @@ export default function AdminPaymentsPage() {
       label: t('payments.escrows'),
       children: (
         <>
-          <Space style={{ marginBottom: 16 }}>
-            <Select
-              placeholder={t('payments.filterStatus')}
-              value={eStatus}
-              onChange={(val) => { setEStatus(val); setEPage(1) }}
-              style={{ width: 200 }}
-              allowClear
-              onClear={() => setEStatus('')}
-              options={[
-                { value: '', label: t('payments.allStatuses') },
-                { value: 'held', label: tc('statusLabel.held') },
-                { value: 'released', label: tc('statusLabel.released') },
-                { value: 'disputed', label: tc('statusLabel.disputed') },
-                { value: 'refunded', label: tc('statusLabel.refunded') },
-              ]}
-            />
-          </Space>
-          <ResponsiveTable<EscrowDto>
-            rowKey="id"
-            columns={escrowColumns}
-            dataSource={escrows?.items ?? []}
-            loading={eLoading}
-            mobileMode="list"
-            pagination={{
-              current: escrows?.metadata?.currentPage ?? ePage,
-              pageSize: escrows?.metadata?.pageSize ?? ePageSize,
-              total: escrows?.metadata?.totalCount ?? 0,
-              showSizeChanger: true,
-              showTotal: (total) => tc('pagination.total', { total }),
-              onChange: (p, ps) => { setEPage(p); setEPageSize(ps) },
-            }}
+          <Select
+            placeholder={t('payments.filterStatus')}
+            value={eStatus}
+            onChange={(val) => { setEStatus(val); setEPage(1) }}
+            style={filterSelectStyle}
+            allowClear
+            onClear={() => setEStatus('')}
+            options={[
+              { value: '', label: t('payments.allStatuses') },
+              { value: 'held', label: tc('statusLabel.held') },
+              { value: 'released', label: tc('statusLabel.released') },
+              { value: 'disputed', label: tc('statusLabel.disputed') },
+              { value: 'refunded', label: tc('statusLabel.refunded') },
+            ]}
           />
+          <div style={{ overflowX: 'auto' }}>
+            <ResponsiveTable<EscrowDto>
+              rowKey="id"
+              columns={escrowColumns}
+              dataSource={escrows?.items ?? []}
+              loading={eLoading}
+              mobileMode="list"
+              pagination={{
+                current: escrows?.metadata?.currentPage ?? ePage,
+                pageSize: escrows?.metadata?.pageSize ?? ePageSize,
+                total: escrows?.metadata?.totalCount ?? 0,
+                showSizeChanger: !isMobile,
+                showTotal: (total) => tc('pagination.total', { total }),
+                simple: isMobile,
+                onChange: (p, ps) => { setEPage(p); setEPageSize(ps) },
+              }}
+            />
+          </div>
         </>
       ),
     },
   ]
 
   return (
-    <div>
-      <Typography.Title level={2} style={{ marginBottom: 24 }}>
+    <div style={{ padding: isMobile ? '0 0 80px' : undefined }}>
+      <Typography.Title level={isMobile ? 3 : 2} style={{ marginBottom: isMobile ? 16 : 24 }}>
         <DollarOutlined /> {t('payments.title')}
       </Typography.Title>
 
-      <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabItems} />
+      {/* Tabs — allow horizontal scroll on very small screens */}
+      <div style={{ overflowX: 'auto' }}>
+        <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabItems} />
+      </div>
 
       {/* Reject withdrawal modal */}
       <Modal
@@ -470,6 +499,7 @@ export default function AdminPaymentsPage() {
         onOk={handleReject}
         onCancel={() => { setRejectModalOpen(false); setRejectReason('') }}
         confirmLoading={rejectWithdrawal.isPending}
+        centered={isMobile}
       >
         <Typography.Text strong>{t('payments.rejectReason')}</Typography.Text>
         <Input.TextArea
