@@ -28,6 +28,7 @@ import { SingleCaptureUploader } from '@/components/ui/SingleCaptureUploader'
 import { StorageLocationMap } from '@/features/warehouse-staff/components/StorageLocationMap'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { getProviderLabel } from '@/features/warehouse/utils/shipmentLabels'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import type { InboundPackageItemDto } from '@/types'
 
 const allowUploadFallback = import.meta.env.VITE_ALLOW_UPLOAD === 'true'
@@ -37,6 +38,7 @@ export default function ReceivePackagePage() {
   const navigate = useNavigate()
   const { t } = useTranslation('warehouse')
   const { message } = App.useApp()
+  const { isMobile } = useBreakpoint()
 
   const cameraAvailable =
     typeof navigator !== 'undefined' && Boolean(navigator.mediaDevices?.getUserMedia)
@@ -109,19 +111,35 @@ export default function ReceivePackagePage() {
     return <Alert type="error" showIcon message={t('error.notFound', 'Package not found')} />
   }
 
+  const cardMargin = isMobile ? 12 : 16
+
   return (
-    <div style={{ maxWidth: 960 }}>
-      <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
-        <Typography.Title level={3} style={{ margin: 0 }}>
+    <div style={{ maxWidth: 960, padding: isMobile ? '0 4px' : undefined }}>
+      {/* Header */}
+      <Flex
+        justify="space-between"
+        align={isMobile ? 'flex-start' : 'center'}
+        gap={isMobile ? 8 : 0}
+        style={{ marginBottom: cardMargin }}
+        vertical={isMobile}
+      >
+        <Typography.Title
+          level={isMobile ? 4 : 3}
+          style={{ margin: 0, lineHeight: 1.3 }}
+        >
           {t('receive.packageTitle', 'Package')}: {pkg.clientOrderCode}
         </Typography.Title>
-        <Button onClick={() => navigate('/warehouse-staff/receiving')}>
+        <Button
+          onClick={() => navigate('/warehouse-staff/receiving')}
+          style={{ minHeight: 44 }}
+          block={isMobile}
+        >
           {t('action.backToReceiving', 'Back to Receiving')}
         </Button>
       </Flex>
 
-      {/* Summary */}
-      <Card style={{ marginBottom: 16 }}>
+      {/* Summary Card */}
+      <Card style={{ marginBottom: cardMargin }}>
         <Descriptions column={{ xs: 1, sm: 2 }} size="small">
           <Descriptions.Item label={t('table.provider', 'Provider')}>
             {getProviderLabel(pkg.providerCode)}
@@ -132,24 +150,41 @@ export default function ReceivePackagePage() {
           <Descriptions.Item label={t('table.trackingNumber', 'Tracking')}>
             {pkg.carrierTrackingNumber ?? '—'}
           </Descriptions.Item>
-          <Descriptions.Item label={t('table.itemCount', 'Items')}>{pkg.items.length}</Descriptions.Item>
-          <Descriptions.Item label={t('sender', 'Sender')}>{pkg.senderName ?? '—'}</Descriptions.Item>
-          <Descriptions.Item label={t('senderPhone', 'Phone')}>{pkg.senderPhone ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label={t('table.itemCount', 'Items')}>
+            {pkg.items.length}
+          </Descriptions.Item>
+          <Descriptions.Item label={t('sender', 'Sender')}>
+            {pkg.senderName ?? '—'}
+          </Descriptions.Item>
+          <Descriptions.Item label={t('senderPhone', 'Phone')}>
+            {pkg.senderPhone ?? '—'}
+          </Descriptions.Item>
         </Descriptions>
         {pkg.receiptMedia.length > 0 && (
           <div style={{ marginTop: 12 }}>
-            <Typography.Text strong>{t('receive.receiptPhotos', 'Receipt photos')}</Typography.Text>
+            <Typography.Text strong style={{ fontSize: isMobile ? 13 : 14 }}>
+              {t('receive.receiptPhotos', 'Receipt photos')}
+            </Typography.Text>
             <Image.PreviewGroup>
               <Space wrap style={{ marginTop: 8 }}>
                 {pkg.receiptMedia.map((url) => (
-                  <Image key={url} src={url} width={100} height={100} style={{ objectFit: 'cover', borderRadius: 6 }} />
+                  <Image
+                    key={url}
+                    src={url}
+                    width={isMobile ? 80 : 100}
+                    height={isMobile ? 80 : 100}
+                    style={{ objectFit: 'cover', borderRadius: 6 }}
+                  />
                 ))}
               </Space>
             </Image.PreviewGroup>
           </div>
         )}
         {pkg.receiptNotes && (
-          <Typography.Paragraph type="secondary" style={{ marginTop: 8 }}>
+          <Typography.Paragraph
+            type="secondary"
+            style={{ marginTop: 8, fontSize: isMobile ? 13 : 14 }}
+          >
             {pkg.receiptNotes}
           </Typography.Paragraph>
         )}
@@ -157,7 +192,10 @@ export default function ReceivePackagePage() {
 
       {/* Receive CTA */}
       {!isReceived && (
-        <Card title={t('receive.receivePackage', 'Receive Package')} style={{ marginBottom: 16 }}>
+        <Card
+          title={t('receive.receivePackage', 'Receive Package')}
+          style={{ marginBottom: cardMargin }}
+        >
           {cameraBlockedInProd && (
             <Alert
               type="error"
@@ -175,14 +213,19 @@ export default function ReceivePackagePage() {
               type="warning"
               showIcon
               style={{ marginBottom: 12 }}
-              message={t('cameraUnavailableFallback', 'Camera unavailable — file upload fallback is enabled.')}
+              message={t(
+                'cameraUnavailableFallback',
+                'Camera unavailable — file upload fallback is enabled.',
+              )}
             />
           )}
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-              gap: 12,
+              gridTemplateColumns: isMobile
+                ? 'repeat(2, 1fr)'
+                : 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: isMobile ? 10 : 12,
               marginBottom: 12,
             }}
           >
@@ -223,18 +266,26 @@ export default function ReceivePackagePage() {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 maxLength={500}
+                style={{ fontSize: isMobile ? 16 : 14 }}
               />
             </Form.Item>
-            <Button type="primary" loading={receive.isPending} disabled={!canSubmit} onClick={handleSubmit}>
+            <Button
+              type="primary"
+              loading={receive.isPending}
+              disabled={!canSubmit}
+              onClick={handleSubmit}
+              block={isMobile}
+              style={{ minHeight: isMobile ? 48 : 36, fontSize: isMobile ? 15 : 14 }}
+            >
               {t('receive.submit', 'Receive Shipment')}
             </Button>
           </Form>
         </Card>
       )}
 
-      {/* Items */}
+      {/* Items in package */}
       <Card title={t('receive.itemsInPackage', 'Items in this package')}>
-        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+        <Space direction="vertical" size={isMobile ? 12 : 'middle'} style={{ width: '100%' }}>
           {pkg.items.map((item) => {
             const isStored = item.warehouseItemStatus === 'stored'
             const isInspected =
@@ -244,56 +295,97 @@ export default function ReceivePackagePage() {
             const canStore =
               Boolean(item.warehouseItemId) && item.warehouseItemStatus === 'received'
             return (
-              <Flex key={item.inboundShipmentId} gap={12} align="center">
-                {item.itemImageUrl ? (
-                  <img
-                    src={item.itemImageUrl}
-                    alt={item.itemTitle}
-                    style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 6 }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      width: 64,
-                      height: 64,
-                      borderRadius: 6,
-                      background: 'var(--color-bg-surface)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <InboxOutlined style={{ fontSize: 24 }} />
-                  </div>
-                )}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <Typography.Text strong style={{ display: 'block' }} ellipsis>
-                    {item.itemTitle ?? item.itemId}
-                  </Typography.Text>
-                  <Space size={8} wrap>
-                    <StatusBadge status={item.inboundStatus} />
-                    {item.warehouseItemStatus && <Tag>{item.warehouseItemStatus}</Tag>}
+              <div
+                key={item.inboundShipmentId}
+                style={{
+                  padding: isMobile ? '10px 0' : undefined,
+                  borderBottom: '1px solid var(--color-border, #f0f0f0)',
+                }}
+              >
+                <Flex gap={12} align="flex-start">
+                  {item.itemImageUrl ? (
+                    <img
+                      src={item.itemImageUrl}
+                      alt={item.itemTitle}
+                      style={{
+                        width: isMobile ? 56 : 64,
+                        height: isMobile ? 56 : 64,
+                        objectFit: 'cover',
+                        borderRadius: 8,
+                        flexShrink: 0,
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: isMobile ? 56 : 64,
+                        height: isMobile ? 56 : 64,
+                        borderRadius: 8,
+                        background: 'var(--color-bg-surface)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <InboxOutlined style={{ fontSize: 24 }} />
+                    </div>
+                  )}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <Typography.Text
+                      strong
+                      style={{ display: 'block', fontSize: isMobile ? 14 : 13 }}
+                      ellipsis
+                    >
+                      {item.itemTitle ?? item.itemId}
+                    </Typography.Text>
+                    <Space size={6} wrap style={{ marginTop: 4 }}>
+                      <StatusBadge status={item.inboundStatus} />
+                      {item.warehouseItemStatus && <Tag>{item.warehouseItemStatus}</Tag>}
+                    </Space>
                     {item.storageLocationLabel && (
-                      <Typography.Text type="secondary">
+                      <Typography.Text
+                        type="secondary"
+                        style={{ display: 'block', fontSize: 12, marginTop: 4 }}
+                      >
                         {t('storingAt', 'Storing at:')} {item.storageLocationLabel}
                       </Typography.Text>
                     )}
-                  </Space>
-                </div>
-                <Space>
-                  {canStore && (
-                    <Button type="primary" onClick={() => setStoringItem(item)}>
-                      {t('receive.storeItem', 'Store')}
-                    </Button>
-                  )}
-                  {isStored && item.warehouseItemId && (
-                    <Button onClick={() => navigate(`/warehouse-staff/items/${item.warehouseItemId}`)}>
-                      {t('action.view', 'View')}
-                    </Button>
-                  )}
-                  {isInspected && <Tag color="green">{t('receive.inspected', 'Inspected')}</Tag>}
-                </Space>
-              </Flex>
+
+                    {/* Action buttons — stacked vertically on mobile */}
+                    <Space
+                      direction={isMobile ? 'vertical' : 'horizontal'}
+                      size={isMobile ? 8 : 'small'}
+                      style={{ marginTop: isMobile ? 10 : 8, width: isMobile ? '100%' : undefined }}
+                    >
+                      {canStore && (
+                        <Button
+                          type="primary"
+                          onClick={() => setStoringItem(item)}
+                          block={isMobile}
+                          style={{ minHeight: isMobile ? 44 : undefined }}
+                        >
+                          {t('receive.storeItem', 'Store')}
+                        </Button>
+                      )}
+                      {isStored && item.warehouseItemId && (
+                        <Button
+                          onClick={() => navigate(`/warehouse-staff/items/${item.warehouseItemId}`)}
+                          block={isMobile}
+                          style={{ minHeight: isMobile ? 44 : undefined }}
+                        >
+                          {t('action.view', 'View')}
+                        </Button>
+                      )}
+                      {isInspected && (
+                        <Tag color="green" style={{ margin: 0 }}>
+                          {t('receive.inspected', 'Inspected')}
+                        </Tag>
+                      )}
+                    </Space>
+                  </div>
+                </Flex>
+              </div>
             )
           })}
         </Space>
@@ -303,14 +395,19 @@ export default function ReceivePackagePage() {
       <Modal
         open={Boolean(storingItem)}
         title={t('receive.pickStorageLocation', 'Pick a storage location')}
-        width={720}
+        width={isMobile ? '100%' : 720}
+        style={isMobile ? { top: 0, margin: 0, padding: 0, maxWidth: '100vw' } : undefined}
         onCancel={() => {
           setStoringItem(null)
           setSelectedLocationId(undefined)
         }}
         onOk={handleStore}
         okText={t('receive.storeItem', 'Store')}
-        okButtonProps={{ disabled: !selectedLocationId, loading: storeItem.isPending }}
+        okButtonProps={{
+          disabled: !selectedLocationId,
+          loading: storeItem.isPending,
+          style: { minHeight: isMobile ? 44 : undefined },
+        }}
       >
         <StorageLocationMap
           locations={locations ?? []}

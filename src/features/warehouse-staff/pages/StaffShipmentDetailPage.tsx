@@ -1,7 +1,6 @@
-import { Row, Col, Spin, Alert, Button, Flex } from 'antd'
+import { Row, Col, Spin, Alert, Button, Flex, Grid } from 'antd'
 import { useNavigate, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
-// ArrowLeftOutlined removed — back button is in ShipmentHeader
 import {
   useInboundShipmentById,
 } from '@/features/warehouse/api'
@@ -10,10 +9,14 @@ import { ShipmentHeader } from '@/features/warehouse/components/ShipmentHeader'
 import { ShipmentStepper } from '@/features/warehouse/components/ShipmentStepper'
 import { ShipmentOverview } from '@/features/warehouse/components/ShipmentOverview'
 
+const { useBreakpoint } = Grid
+
 export default function StaffShipmentDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { t } = useTranslation('warehouse')
   const navigate = useNavigate()
+  const screens = useBreakpoint()
+  const isMobile = !screens.md
 
   const { data: shipment, isLoading, error } = useInboundShipmentById(id ?? '')
   const { data: itemData } = useItemById(shipment?.itemId ?? '')
@@ -41,7 +44,7 @@ export default function StaffShipmentDetailPage() {
   }
 
   return (
-    <div>
+    <div style={{ paddingBottom: isMobile ? 32 : 0 }}>
       <ShipmentHeader
         clientOrderCode={shipment.clientOrderCode}
         status={shipment.status}
@@ -59,6 +62,9 @@ export default function StaffShipmentDetailPage() {
         <Flex style={{ marginBottom: 24 }}>
           <Button
             type="primary"
+            size={isMobile ? 'large' : 'middle'}
+            block={isMobile}
+            style={{ minHeight: 44 }}
             onClick={() =>
               navigate(`/warehouse-staff/receiving/packages/${encodeURIComponent(shipment.clientOrderCode)}`)
             }
@@ -68,7 +74,7 @@ export default function StaffShipmentDetailPage() {
         </Flex>
       )}
 
-      <Row gutter={[24, 24]}>
+      <Row gutter={[isMobile ? 0 : 24, 16]}>
         <Col xs={24} lg={16}>
           <ShipmentOverview
             shipment={shipment}
