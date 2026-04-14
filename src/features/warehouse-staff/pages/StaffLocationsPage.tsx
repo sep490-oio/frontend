@@ -11,6 +11,7 @@ import {
   Tag,
   Popconfirm,
   message,
+  Grid,
 } from 'antd'
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons'
 import { useNavigate, useSearchParams } from 'react-router'
@@ -28,6 +29,8 @@ import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { formatDateTime } from '@/utils/format'
 import { SANS_FONT } from '@/styles/tokens'
 
+const { useBreakpoint } = Grid
+
 interface CreateLocationForm {
   zone: string
   aisle: string
@@ -40,6 +43,8 @@ export default function StaffLocationsPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const focus = searchParams.get('focus') ?? undefined
+  const screens = useBreakpoint()
+  const isMobile = !screens.md
 
   const { data: locations, isLoading: loadingLocs } = useStorageLocations({ vacantOnly: false })
   const { data: itemsPage, isLoading: loadingItems } = useWarehouseItems({ pageSize: 500 })
@@ -87,9 +92,11 @@ export default function StaffLocationsPage() {
       render: (label: string) => <Typography.Text strong>{label}</Typography.Text>,
     },
     { title: t('staffLocations.zone', 'Zone'), dataIndex: 'zone', key: 'zone' },
-    { title: t('staffLocations.aisle', 'Aisle'), dataIndex: 'aisle', key: 'aisle' },
-    { title: t('staffLocations.shelf', 'Shelf'), dataIndex: 'shelf', key: 'shelf' },
-    { title: t('staffLocations.bin', 'Bin'), dataIndex: 'bin', key: 'bin' },
+    ...(!isMobile ? [
+      { title: t('staffLocations.aisle', 'Aisle'), dataIndex: 'aisle', key: 'aisle' },
+      { title: t('staffLocations.shelf', 'Shelf'), dataIndex: 'shelf', key: 'shelf' },
+      { title: t('staffLocations.bin', 'Bin'), dataIndex: 'bin', key: 'bin' },
+    ] : []),
     {
       title: t('staffLocations.status', 'Status'),
       dataIndex: 'isOccupied',
@@ -101,12 +108,12 @@ export default function StaffLocationsPage() {
           <Tag color="green">{t('staffLocations.available', 'Available')}</Tag>
         ),
     },
-    {
+    ...(!isMobile ? [{
       title: t('staffLocations.created', 'Created'),
       dataIndex: 'createdAt',
       key: 'createdAt',
       render: (date: string) => formatDateTime(date),
-    },
+    }] : []),
     {
       title: t('staffLocations.actions', 'Actions'),
       key: 'actions',
@@ -122,10 +129,11 @@ export default function StaffLocationsPage() {
             type="text"
             danger
             icon={<DeleteOutlined />}
-            size="small"
+            size={isMobile ? 'middle' : 'small'}
             disabled={record.isOccupied}
+            style={{ minHeight: 44, minWidth: 44 }}
           >
-            {t('staffLocations.delete', 'Delete')}
+            {!isMobile && t('staffLocations.delete', 'Delete')}
           </Button>
         </Popconfirm>
       ),
@@ -137,7 +145,7 @@ export default function StaffLocationsPage() {
       key: 'map',
       label: t('staffLocations.tabMap', 'Map'),
       children: (
-        <Card>
+        <Card style={{ marginBottom: 16 }}>
           <OccupancyLocationMap
             locations={locations ?? []}
             itemsByLocationId={itemsByLocationId}
@@ -152,11 +160,14 @@ export default function StaffLocationsPage() {
       key: 'list',
       label: t('staffLocations.tabList', 'Locations'),
       children: (
-        <Card>
+        <Card style={{ marginBottom: 16 }}>
           <Space style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
             <Button
               type="primary"
               icon={<PlusOutlined />}
+              size={isMobile ? 'large' : 'middle'}
+              block={isMobile}
+              style={{ minHeight: 44 }}
               onClick={() => setCreateOpen(true)}
             >
               {t('staffLocations.addLocation', 'Add Location')}
@@ -168,7 +179,8 @@ export default function StaffLocationsPage() {
             dataSource={locations ?? []}
             rowKey="id"
             loading={loadingLocs}
-            pagination={{ pageSize: 20, showSizeChanger: true }}
+            pagination={{ pageSize: 20, showSizeChanger: !isMobile }}
+            scroll={isMobile ? undefined : { x: true }}
           />
         </Card>
       ),
@@ -177,56 +189,43 @@ export default function StaffLocationsPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: 24 }}>
-        <Typography.Title level={3} style={{ margin: 0 }}>
+      <div style={{ marginBottom: 20 }}>
+        <Typography.Title level={isMobile ? 4 : 3} style={{ margin: 0 }}>
           {t('staffLocations.title', 'Storage Locations')}
         </Typography.Title>
-        <Typography.Text type="secondary" style={{ fontFamily: SANS_FONT, fontSize: 13 }}>
+        <Typography.Text type="secondary" style={{ fontFamily: SANS_FONT, fontSize: isMobile ? 13 : 13 }}>
           {t('staffLocations.subtitle', 'Manage warehouse topology and view occupancy')}
         </Typography.Text>
       </div>
 
-      <Tabs defaultActiveKey="map" items={tabItems} />
+      <Tabs defaultActiveKey="map" items={tabItems} size={isMobile ? 'large' : 'middle'} />
 
       <Modal
         title={t('staffLocations.addStorageLocation', 'Add Storage Location')}
         open={createOpen}
-        onCancel={() => {
-          setCreateOpen(false)
-          form.resetFields()
-        }}
+        onCancel={() => { setCreateOpen(false); form.resetFields() }}
         onOk={handleCreate}
         confirmLoading={createMutation.isPending}
         okText={t('staffLocations.create', 'Create')}
+        width={isMobile ? '95vw' : 520}
+        style={isMobile ? { top: 20 } : undefined}
       >
         <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
-          <Form.Item
-            name="zone"
-            label={t('staffLocations.zone', 'Zone')}
-            rules={[{ required: true, message: t('staffLocations.zoneRequired', 'Zone is required') }]}
-          >
-            <Input placeholder="e.g. A" />
+          <Form.Item name="zone" label={t('staffLocations.zone', 'Zone')}
+            rules={[{ required: true, message: t('staffLocations.zoneRequired', 'Zone is required') }]}>
+            <Input size="large" placeholder="e.g. A" />
           </Form.Item>
-          <Form.Item
-            name="aisle"
-            label={t('staffLocations.aisle', 'Aisle')}
-            rules={[{ required: true, message: t('staffLocations.aisleRequired', 'Aisle is required') }]}
-          >
-            <Input placeholder="e.g. 01" />
+          <Form.Item name="aisle" label={t('staffLocations.aisle', 'Aisle')}
+            rules={[{ required: true, message: t('staffLocations.aisleRequired', 'Aisle is required') }]}>
+            <Input size="large" placeholder="e.g. 01" />
           </Form.Item>
-          <Form.Item
-            name="shelf"
-            label={t('staffLocations.shelf', 'Shelf')}
-            rules={[{ required: true, message: t('staffLocations.shelfRequired', 'Shelf is required') }]}
-          >
-            <Input placeholder="e.g. 03" />
+          <Form.Item name="shelf" label={t('staffLocations.shelf', 'Shelf')}
+            rules={[{ required: true, message: t('staffLocations.shelfRequired', 'Shelf is required') }]}>
+            <Input size="large" placeholder="e.g. 03" />
           </Form.Item>
-          <Form.Item
-            name="bin"
-            label={t('staffLocations.bin', 'Bin')}
-            rules={[{ required: true, message: t('staffLocations.binRequired', 'Bin is required') }]}
-          >
-            <Input placeholder="e.g. B2" />
+          <Form.Item name="bin" label={t('staffLocations.bin', 'Bin')}
+            rules={[{ required: true, message: t('staffLocations.binRequired', 'Bin is required') }]}>
+            <Input size="large" placeholder="e.g. B2" />
           </Form.Item>
         </Form>
       </Modal>

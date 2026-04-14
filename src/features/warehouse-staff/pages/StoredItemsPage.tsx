@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Typography, Table, Avatar, Flex, Input, Segmented, Empty } from 'antd'
+import { Typography, Table, Avatar, Flex, Input, Segmented, Empty, Grid } from 'antd'
 import { PictureOutlined, SearchOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -10,11 +10,16 @@ import { StatusBadge } from '@/components/ui/StatusBadge'
 import { SANS_FONT } from '@/styles/tokens'
 import { formatDateTime } from '@/utils/format'
 
+const { useBreakpoint } = Grid
+
 const STATUS_OPTIONS = ['all', 'received', 'stored', 'reserved', 'dispatched'] as const
 
 export default function StoredItemsPage() {
   const { t } = useTranslation('warehouse')
   const navigate = useNavigate()
+  const screens = useBreakpoint()
+  const isMobile = !screens.md
+
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -27,7 +32,6 @@ export default function StoredItemsPage() {
     search: search.trim() || undefined,
   })
 
-  // Client-side fallback filter (in case BE ignores `search`)
   const rows = useMemo(() => {
     const items = data?.items ?? []
     const q = search.trim().toLowerCase()
@@ -41,7 +45,49 @@ export default function StoredItemsPage() {
     )
   }, [data, search])
 
-  const columns: ColumnsType<WarehouseItemDto> = [
+
+  const mobileColumns: ColumnsType<WarehouseItemDto> = [
+    {
+      title: '',
+      key: 'thumb',
+      width: 60,
+      render: (_, record) => (
+        <Avatar
+          shape="square"
+          size={52}
+          src={record.itemImageUrl ?? undefined}
+          icon={!record.itemImageUrl ? <PictureOutlined /> : undefined}
+          style={{ borderRadius: 8 }}
+        />
+      ),
+    },
+    {
+      title: t('storedItems.columns.title', 'Item'),
+      key: 'info',
+      render: (_, record) => (
+        <div>
+          <div style={{ fontFamily: SANS_FONT, fontSize: 14, fontWeight: 500, marginBottom: 4 }}>
+            {record.itemTitle ?? '—'}
+          </div>
+          <Flex gap={6} align="center" wrap="wrap">
+            <StatusBadge status={record.status} />
+            {record.storageLocationLabel && (
+              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                {record.storageLocationLabel}
+              </Typography.Text>
+            )}
+          </Flex>
+          {record.sellerName && (
+            <Typography.Text type="secondary" style={{ fontFamily: SANS_FONT, fontSize: 12, display: 'block', marginTop: 2 }}>
+              {record.sellerName}
+            </Typography.Text>
+          )}
+        </div>
+      ),
+    },
+  ]
+
+  const desktopColumns: ColumnsType<WarehouseItemDto> = [
     {
       title: '',
       key: 'thumb',
@@ -111,8 +157,8 @@ export default function StoredItemsPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: 24 }}>
-        <Typography.Title level={3} style={{ margin: 0 }}>
+      <div style={{ marginBottom: 20 }}>
+        <Typography.Title level={isMobile ? 4 : 3} style={{ margin: 0 }}>
           {t('storedItems.title', 'Stored Items')}
         </Typography.Title>
         <Typography.Text type="secondary" style={{ fontFamily: SANS_FONT, fontSize: 13 }}>
@@ -120,52 +166,49 @@ export default function StoredItemsPage() {
         </Typography.Text>
       </div>
 
-      <Flex gap={12} align="center" wrap="wrap" style={{ marginBottom: 16 }}>
-        <Segmented
-          value={statusFilter}
-          onChange={(v) => {
-            setStatusFilter(String(v))
-            setPage(1)
-          }}
-          options={STATUS_OPTIONS.map((s) => ({
-            label: t(`storedItems.status.${s}`, s.charAt(0).toUpperCase() + s.slice(1)),
-            value: s,
-          }))}
-        />
+      <Flex gap={12} vertical={isMobile} style={{ marginBottom: 16 }}>
+        <div style={isMobile ? { overflowX: 'auto', paddingBottom: 4 } : undefined}>
+          <Segmented
+            value={statusFilter}
+            onChange={(v) => { setStatusFilter(String(v)); setPage(1) }}
+            options={STATUS_OPTIONS.map((s) => ({
+              label: t(`storedItems.status.${s}`, s.charAt(0).toUpperCase() + s.slice(1)),
+              value: s,
+            }))}
+            style={isMobile ? { whiteSpace: 'nowrap' } : undefined}
+          />
+        </div>
         <Input
           allowClear
           prefix={<SearchOutlined />}
+          size={isMobile ? 'large' : 'middle'}
           placeholder={t('storedItems.searchPlaceholder', 'Search title, seller, code, location')}
           value={search}
-          onChange={(e) => {
-            setSearch(e.target.value)
-            setPage(1)
-          }}
-          style={{ maxWidth: 320 }}
+          onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+          style={isMobile ? { width: '100%' } : { maxWidth: 320 }}
         />
       </Flex>
 
       <Table<WarehouseItemDto>
         rowKey="id"
-        columns={columns}
+        columns={isMobile ? mobileColumns : desktopColumns}
         dataSource={rows}
         loading={isLoading}
         onRow={(record) => ({
           onClick: () => navigate(`/warehouse-staff/items/${record.id}`),
-          style: { cursor: 'pointer' },
+          style: { cursor: 'pointer', minHeight: 60 },
         })}
         locale={{
           emptyText: <Empty description={t('storedItems.empty', 'No warehouse items')} />,
         }}
+        scroll={isMobile ? undefined : { x: true }}
         pagination={{
           current: data?.metadata?.currentPage ?? page,
           pageSize: data?.metadata?.pageSize ?? pageSize,
           total: data?.metadata?.totalCount ?? 0,
-          showSizeChanger: true,
-          onChange: (p, ps) => {
-            setPage(p)
-            setPageSize(ps)
-          },
+          showSizeChanger: !isMobile,
+          simple: isMobile,
+          onChange: (p, ps) => { setPage(p); setPageSize(ps) },
         }}
       />
     </div>

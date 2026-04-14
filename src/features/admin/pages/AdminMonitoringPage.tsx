@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import {
   Typography, Card, Tabs, Tag, Button, Space, App,
-  Tooltip, Flex, Badge, Statistic, Row, Col,
+  Tooltip, Flex, Badge, Statistic, Row, Col, Select,
 } from 'antd'
 import {
   AlertOutlined, CheckCircleOutlined, BellOutlined,
   WarningOutlined, FireOutlined, ExclamationCircleOutlined,
-  EyeOutlined, LinkOutlined,
+  EyeOutlined, LinkOutlined, FilterOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -20,6 +20,7 @@ import { MonitoringAlertDrawer } from '@/features/admin/components/MonitoringAle
 import { parseAlertPayload, formatAlertType } from '@/features/admin/utils/parseAlertPayload'
 import type { MonitoringAlertDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 
 const SEVERITY_STYLE: Record<string, { color: string; icon: React.ReactNode }> = {
   low: { color: '#52c41a', icon: <CheckCircleOutlined /> },
@@ -40,18 +41,17 @@ export default function AdminMonitoringPage() {
   const { t: tc } = useTranslation('common')
   const { message } = App.useApp()
   const navigate = useNavigate()
+  const { isMobile } = useBreakpoint()
 
   const [statusTab, setStatusTab] = useState<string>('open')
   const [page, setPage] = useState(1)
   const [drawerAlert, setDrawerAlert] = useState<MonitoringAlertDto | null>(null)
+  const [severityFilter, setSeverityFilter] = useState<string | undefined>()
 
-  // Fetch all alerts for dashboard stats (no filter)
   const { data: allAlerts } = useMonitoringAlerts({})
-  // Fetch filtered alerts for table
   const { data: filteredAlerts, isLoading } = useMonitoringAlerts({
     ...(statusTab && statusTab !== 'all' ? { status: statusTab } : {}),
   })
-  // Completed auctions count (pageSize=1 just to get totalCount)
   const { data: completedAuctions } = useAdminCompletedAuctions({ pageSize: 1 })
 
   const acknowledgeAlert = useAcknowledgeAlert()
@@ -83,12 +83,17 @@ export default function AdminMonitoringPage() {
     if (routeFn) navigate(routeFn(entityId))
   }
 
+
+  const displayedAlerts = (filteredAlerts ?? []).filter((a) =>
+    severityFilter ? a.severity === severityFilter : true
+  )
+
   const columns: ColumnsType<MonitoringAlertDto> = [
     {
       title: t('monitoring.type', 'Type'),
       dataIndex: 'alertType',
       key: 'alertType',
-      width: 200,
+      width: 190,
       render: (type: string) => (
         <Typography.Text strong style={{ fontSize: 13 }}>
           {formatAlertType(type)}
@@ -100,13 +105,16 @@ export default function AdminMonitoringPage() {
       dataIndex: 'severity',
       key: 'severity',
       width: 110,
-      filters: [
-        { text: tc('statusLabel.low'), value: 'low' },
-        { text: tc('statusLabel.medium'), value: 'medium' },
-        { text: tc('statusLabel.high'), value: 'high' },
-        { text: tc('statusLabel.critical'), value: 'critical' },
-      ],
-      onFilter: (value, record) => record.severity === value,
+      
+      ...(!isMobile ? {
+        filters: [
+          { text: tc('statusLabel.low'), value: 'low' },
+          { text: tc('statusLabel.medium'), value: 'medium' },
+          { text: tc('statusLabel.high'), value: 'high' },
+          { text: tc('statusLabel.critical'), value: 'critical' },
+        ],
+        onFilter: (value: unknown, record: MonitoringAlertDto) => record.severity === value,
+      } : {}),
       render: (severity: string) => {
         const style = SEVERITY_STYLE[severity] ?? SEVERITY_STYLE.low
         return (
@@ -120,13 +128,13 @@ export default function AdminMonitoringPage() {
       title: t('monitoring.status', 'Status'),
       dataIndex: 'status',
       key: 'status',
-      width: 130,
+      width: 120,
       render: (status: string) => <StatusBadge status={status} />,
     },
     {
       title: t('monitoring.entity', 'Entity'),
       key: 'entity',
-      width: 140,
+      width: 130,
       render: (_, record) => {
         const hasRoute = !!ENTITY_ROUTES[record.entityType?.toLowerCase()]
         return (
@@ -137,7 +145,7 @@ export default function AdminMonitoringPage() {
               icon={hasRoute ? <LinkOutlined /> : undefined}
               onClick={(e) => navigateToEntity(record.entityType, record.entityId, e)}
               disabled={!hasRoute}
-              style={{ padding: 0, fontSize: 12 }}
+              style={{ padding: 0, fontSize: 12, minHeight: isMobile ? 44 : undefined }}
             >
               {record.entityType}
             </Button>
@@ -163,7 +171,7 @@ export default function AdminMonitoringPage() {
       title: t('monitoring.createdAt', 'Created'),
       dataIndex: 'createdAt',
       key: 'createdAt',
-      width: 160,
+      width: 150,
       sorter: (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
       defaultSortOrder: 'descend',
       render: (date: string) => (
@@ -175,7 +183,7 @@ export default function AdminMonitoringPage() {
     {
       title: t('monitoring.actions', 'Actions'),
       key: 'actions',
-      width: 160,
+      width: 120,
       render: (_, record) => (
         <Space size={4}>
           <Tooltip title={t('monitoring.viewDetails', 'View details')}>
@@ -183,6 +191,7 @@ export default function AdminMonitoringPage() {
               type="text"
               size="small"
               icon={<EyeOutlined />}
+              style={{ minHeight: isMobile ? 44 : undefined, minWidth: isMobile ? 44 : undefined }}
               onClick={(e) => { e.stopPropagation(); setDrawerAlert(record) }}
             />
           </Tooltip>
@@ -193,6 +202,7 @@ export default function AdminMonitoringPage() {
                 size="small"
                 icon={<BellOutlined />}
                 loading={acknowledgeAlert.isPending}
+                style={{ minHeight: isMobile ? 44 : undefined, minWidth: isMobile ? 44 : undefined }}
                 onClick={(e) => { e.stopPropagation(); void handleAcknowledge(record.id) }}
               />
             </Tooltip>
@@ -204,6 +214,7 @@ export default function AdminMonitoringPage() {
                 size="small"
                 icon={<CheckCircleOutlined style={{ color: 'var(--color-success)' }} />}
                 loading={resolveAlert.isPending}
+                style={{ minHeight: isMobile ? 44 : undefined, minWidth: isMobile ? 44 : undefined }}
                 onClick={(e) => { e.stopPropagation(); void handleResolve(record.id) }}
               />
             </Tooltip>
@@ -228,14 +239,14 @@ export default function AdminMonitoringPage() {
   ]
 
   return (
-    <div>
+    <div style={{ padding: isMobile ? '0 0 80px' : undefined }}>
       <style>{`
         .oio-row-critical td { background: #fff1f0 !important; border-left: 3px solid #ff4d4f; }
       `}</style>
 
       {/* Header */}
-      <Flex justify="space-between" align="center" style={{ marginBottom: 24 }}>
-        <Typography.Title level={3} style={{ margin: 0 }}>
+      <Flex justify="space-between" align="center" style={{ marginBottom: isMobile ? 16 : 24 }}>
+        <Typography.Title level={isMobile ? 3 : 3} style={{ margin: 0, fontSize: isMobile ? 18 : undefined }}>
           <AlertOutlined style={{ marginRight: 8 }} />
           {t('monitoring.title', 'System Monitoring')}
         </Typography.Title>
@@ -245,53 +256,80 @@ export default function AdminMonitoringPage() {
       <MonitoringDashboard alerts={allAlerts ?? []} />
 
       {/* Quick-links row */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+      <Row gutter={[12, 12]} style={{ marginBottom: isMobile ? 16 : 24 }}>
         <Col xs={12} sm={6}>
           <Card
             hoverable
             onClick={() => navigate('/admin/auctions/completed')}
-            style={{ cursor: 'pointer' }}
+            style={{ cursor: 'pointer', borderRadius: 12 }}
+            styles={{ body: { padding: isMobile ? '12px' : '24px' } }}
           >
             <Statistic
-              title={t('monitoring.completedAuctions', 'Completed Auction Queue')}
+              title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('monitoring.completedAuctions', 'Completed Auction Queue')}</span>}
               value={completedAuctions?.metadata?.totalCount ?? 0}
+              valueStyle={{ fontSize: isMobile ? 20 : 28 }}
             />
           </Card>
         </Col>
       </Row>
 
       {/* Tabs + Table */}
-      <Card>
-        <Tabs
-          activeKey={statusTab}
-          onChange={(key) => { setStatusTab(key); setPage(1) }}
-          items={tabItems}
-          style={{ marginBottom: 0 }}
-        />
+      <Card style={{ borderRadius: 12 }} styles={{ body: { padding: isMobile ? '0 0 12px' : '24px' } }}>
 
-        <ResponsiveTable<MonitoringAlertDto>
-          rowKey="id"
-          columns={columns}
-          dataSource={filteredAlerts ?? []}
-          loading={isLoading}
-          mobileMode="list"
-          pagination={{
-            current: page,
-            pageSize: 15,
-            onChange: setPage,
-            showTotal: (total) => `${total} ${t('monitoring.totalAlerts', 'alerts')}`,
-            showSizeChanger: false,
-          }}
-          rowClassName={(record) =>
-            record.severity === AlertSeverity.Critical && record.status === AlertStatus.Open
-              ? 'oio-row-critical'
-              : ''
-          }
-          onRow={(record) => ({
-            onClick: () => setDrawerAlert(record),
-            style: { cursor: 'pointer' },
-          })}
-        />
+        {isMobile && (
+          <div style={{ padding: '12px 16px 8px' }}>
+            <Select
+              placeholder={
+                <span><FilterOutlined style={{ marginRight: 4 }} />{t('monitoring.severity', 'Severity')}</span>
+              }
+              value={severityFilter}
+              onChange={(v) => setSeverityFilter(v)}
+              allowClear
+              onClear={() => setSeverityFilter(undefined)}
+              style={{ width: '100%' }}
+              options={[
+                { value: 'low', label: tc('statusLabel.low') },
+                { value: 'medium', label: tc('statusLabel.medium') },
+                { value: 'high', label: tc('statusLabel.high') },
+                { value: 'critical', label: tc('statusLabel.critical') },
+              ]}
+            />
+          </div>
+        )}
+
+        <div style={{ overflowX: 'auto' }}>
+          <Tabs
+            activeKey={statusTab}
+            onChange={(key) => { setStatusTab(key); setPage(1) }}
+            items={tabItems}
+            style={{ padding: isMobile ? '0 16px' : '0' }}
+          />
+
+          <ResponsiveTable<MonitoringAlertDto>
+            rowKey="id"
+            columns={columns}
+            dataSource={displayedAlerts}
+            loading={isLoading}
+            mobileMode="list"
+            pagination={{
+              current: page,
+              pageSize: 15,
+              onChange: setPage,
+              showTotal: isMobile ? undefined : (total) => `${total} ${t('monitoring.totalAlerts', 'alerts')}`,
+              showSizeChanger: false,
+              simple: isMobile,
+            }}
+            rowClassName={(record) =>
+              record.severity === AlertSeverity.Critical && record.status === AlertStatus.Open
+                ? 'oio-row-critical'
+                : ''
+            }
+            onRow={(record) => ({
+              onClick: () => setDrawerAlert(record),
+              style: { cursor: 'pointer', minHeight: isMobile ? 56 : undefined },
+            })}
+          />
+        </div>
       </Card>
 
       {/* Detail Drawer */}

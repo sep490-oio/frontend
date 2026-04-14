@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Typography, Tabs, Select, Space, Button, Modal, Input, Switch, App } from 'antd'
+import { Typography, Tabs, Select, Space, Button, Modal, Input, Switch, App, Drawer } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
@@ -14,12 +14,14 @@ import {
 } from '@/features/admin/api'
 import { ReportStatus, DisputeStatus } from '@/types/enums'
 import type { ReportDto, DisputeDto } from '@/types'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 
 export default function AdminModerationPage() {
   const { t } = useTranslation('admin')
   const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
   const { message } = App.useApp()
+  const { isMobile } = useBreakpoint()
 
   const REPORT_STATUS_OPTIONS = [
     { value: '', label: t('moderation.all') },
@@ -72,18 +74,18 @@ export default function AdminModerationPage() {
   const [disputePage, setDisputePage] = useState(1)
   const [pageSize] = useState(10)
 
-  // Report modals state
+  // Report modals/drawers state
   const [assignModalOpen, setAssignModalOpen] = useState(false)
   const [assignReportId, setAssignReportId] = useState('')
   const [assigneeId, setAssigneeId] = useState('')
 
-  const [resolveReportModalOpen, setResolveReportModalOpen] = useState(false)
+  const [resolveDrawerOpen, setResolveDrawerOpen] = useState(false)
   const [resolveReportId, setResolveReportId] = useState('')
   const [resolutionNotes, setResolutionNotes] = useState('')
   const [dismissedFlag, setDismissedFlag] = useState(false)
   const [enforcementAction, setEnforcementAction] = useState('none')
 
-  const [escalateModalOpen, setEscalateModalOpen] = useState(false)
+  const [escalateDrawerOpen, setEscalateDrawerOpen] = useState(false)
   const [escalateReportId, setEscalateReportId] = useState('')
   const [escalateTitle, setEscalateTitle] = useState('')
   const [escalateDisputeType, setEscalateDisputeType] = useState('other')
@@ -98,7 +100,6 @@ export default function AdminModerationPage() {
   const resolveReport = useResolveReport()
   const escalateToDispute = useEscalateReportToDispute()
 
-  // Count unresolved items for tab badges
   const unresolvedReports = reports.data?.items?.filter(
     (r: ReportDto) => r.status === ReportStatus.Open || r.status === ReportStatus.UnderReview
   ).length ?? 0
@@ -106,39 +107,43 @@ export default function AdminModerationPage() {
     (d: DisputeDto) => d.status === DisputeStatus.Open || d.status === DisputeStatus.UnderReview
   ).length ?? 0
 
-  // Reports columns
   const reportColumns = [
     {
       title: t('moderation.columns.reporter'),
       dataIndex: 'reporterId',
       key: 'reporterId',
+      ellipsis: true,
       render: (v: string) => v?.slice(0, 8) + '...',
     },
     {
       title: t('moderation.columns.entity'),
       dataIndex: 'entityType',
       key: 'entityType',
+      width: 130,
       render: (type: string, r: ReportDto) => (
         <span>{type} #{r.entityId?.slice(0, 8)}</span>
       ),
     },
-    { title: t('moderation.columns.reason'), dataIndex: 'reasonCode', key: 'reasonCode' },
+    { title: t('moderation.columns.reason'), dataIndex: 'reasonCode', key: 'reasonCode', ellipsis: true },
     {
       title: tc('tableHeader.status'),
       dataIndex: 'status',
       key: 'status',
+      width: 110,
       render: (s: string) => <StatusBadge status={s} />,
     },
     {
       title: t('moderation.columns.assigned'),
       dataIndex: 'assignedTo',
       key: 'assignedTo',
+      width: 110,
       render: (v: string | null) => v ? v.slice(0, 8) + '...' : '-',
     },
     {
       title: t('moderation.columns.dispute'),
       dataIndex: 'disputeId',
       key: 'disputeId',
+      width: 80,
       render: (v: string | null) => v ? (
         <Button type="link" size="small" onClick={() => navigate(`/admin/disputes/${v}`)}>
           {tc('action.view')}
@@ -149,13 +154,35 @@ export default function AdminModerationPage() {
       title: tc('tableHeader.createdAt'),
       dataIndex: 'createdAt',
       key: 'createdAt',
+      width: 150,
       render: (v: string) => formatDateTime(v),
     },
     {
       title: tc('tableHeader.actions'),
       key: 'actions',
+      width: isMobile ? 80 : 200,
       render: (_: unknown, record: ReportDto) => {
         const canAct = record.status === ReportStatus.Open || record.status === ReportStatus.UnderReview
+        if (isMobile) {
+          // Simplified on mobile — full actions available after tapping
+          return canAct ? (
+            <Button
+              size="small"
+              type="primary"
+              onClick={(e) => {
+                e.stopPropagation()
+                setEscalateReportId(record.id)
+                setEscalateTitle(t('moderation.escalatedFromReport'))
+                setEscalateDisputeType('other')
+                setEscalatePriority('medium')
+                setEscalateDrawerOpen(true)
+              }}
+              style={{ fontSize: 12 }}
+            >
+              {t('moderation.escalate')}
+            </Button>
+          ) : null
+        }
         return (
           <Space size="small" wrap>
             {canAct && (
@@ -170,14 +197,14 @@ export default function AdminModerationPage() {
                   setResolutionNotes('')
                   setDismissedFlag(false)
                   setEnforcementAction('none')
-                  setResolveReportModalOpen(true)
+                  setResolveDrawerOpen(true)
                 }}>{t('moderation.resolve')}</Button>
                 <Button size="small" type="primary" onClick={() => {
                   setEscalateReportId(record.id)
                   setEscalateTitle(t('moderation.escalatedFromReport'))
                   setEscalateDisputeType('other')
                   setEscalatePriority('medium')
-                  setEscalateModalOpen(true)
+                  setEscalateDrawerOpen(true)
                 }}>{t('moderation.escalate')}</Button>
               </>
             )}
@@ -187,12 +214,12 @@ export default function AdminModerationPage() {
     },
   ]
 
-  // Dispute columns
   const disputeColumns = [
     {
       title: t('moderation.columns.id'),
       dataIndex: 'disputeNumber',
       key: 'disputeNumber',
+      width: 120,
       render: (v: string) => v || '-',
     },
     {
@@ -205,23 +232,27 @@ export default function AdminModerationPage() {
       title: tc('tableHeader.status'),
       dataIndex: 'status',
       key: 'status',
+      width: 110,
       render: (s: string) => <StatusBadge status={s} />,
     },
     {
       title: t('moderation.columns.priority'),
       dataIndex: 'priority',
       key: 'priority',
+      width: 100,
       render: (s: string) => <StatusBadge status={s} size="small" />,
     },
     {
       title: tc('tableHeader.createdAt'),
       dataIndex: 'createdAt',
       key: 'createdAt',
+      width: 150,
       render: (v: string) => formatDateTime(v),
     },
     {
       title: tc('tableHeader.actions'),
       key: 'actions',
+      width: 80,
       render: (_: unknown, record: DisputeDto) => (
         <Button size="small" onClick={() => navigate(`/admin/disputes/${record.id}`)}>
           {tc('action.view')}
@@ -250,7 +281,7 @@ export default function AdminModerationPage() {
         enforcementAction: dismissedFlag ? undefined : enforcementAction,
       })
       message.success('Report resolved')
-      setResolveReportModalOpen(false)
+      setResolveDrawerOpen(false)
     } catch {
       message.error(tc('error', 'Error'))
     }
@@ -265,7 +296,7 @@ export default function AdminModerationPage() {
         priority: escalatePriority,
       })
       message.success('Report escalated to dispute')
-      setEscalateModalOpen(false)
+      setEscalateDrawerOpen(false)
       if (result?.id) navigate(`/admin/disputes/${result.id}`)
     } catch {
       message.error(tc('error', 'Error'))
@@ -278,28 +309,43 @@ export default function AdminModerationPage() {
       label: `${t('moderation.tabReports')}${unresolvedReports > 0 ? ` (${unresolvedReports})` : ''}`,
       children: (
         <>
-          <Space style={{ marginBottom: 16 }}>
-            <Select
-              value={reportStatusFilter}
-              onChange={(v) => { setReportStatusFilter(v); setReportPage(1) }}
-              options={REPORT_STATUS_OPTIONS}
-              style={{ width: 160 }}
-              placeholder={t('moderation.filterByStatus')}
-            />
-          </Space>
-          <ResponsiveTable
-            columns={reportColumns}
-            dataSource={reports.data?.items ?? []}
-            rowKey="id"
-            loading={reports.isLoading}
-            pagination={{
-              current: reportPage,
-              pageSize,
-              total: reports.data?.metadata?.totalCount ?? 0,
-              onChange: setReportPage,
-            }}
-            mobileMode="card"
+          <Select
+            value={reportStatusFilter}
+            onChange={(v) => { setReportStatusFilter(v); setReportPage(1) }}
+            options={REPORT_STATUS_OPTIONS}
+            style={{ width: isMobile ? '100%' : 180, marginBottom: 16 }}
+            placeholder={t('moderation.filterByStatus')}
           />
+          <div style={{ overflowX: 'auto' }}>
+            <ResponsiveTable
+              columns={reportColumns}
+              dataSource={reports.data?.items ?? []}
+              rowKey="id"
+              loading={reports.isLoading}
+              mobileMode="card"
+              onRow={isMobile ? (record: ReportDto) => ({
+                onClick: () => {
+                  const canAct = record.status === ReportStatus.Open || record.status === ReportStatus.UnderReview
+                  if (canAct) {
+                    setResolveReportId(record.id)
+                    setResolutionNotes('')
+                    setDismissedFlag(false)
+                    setEnforcementAction('none')
+                    setResolveDrawerOpen(true)
+                  }
+                },
+                style: { cursor: 'pointer', minHeight: 56 },
+              }) : undefined}
+              pagination={{
+                current: reportPage,
+                pageSize,
+                total: reports.data?.metadata?.totalCount ?? 0,
+                onChange: setReportPage,
+                simple: isMobile,
+                showSizeChanger: false,
+              }}
+            />
+          </div>
         </>
       ),
     },
@@ -308,38 +354,51 @@ export default function AdminModerationPage() {
       label: `${t('moderation.tabDisputes')}${unresolvedDisputes > 0 ? ` (${unresolvedDisputes})` : ''}`,
       children: (
         <>
-          <Space style={{ marginBottom: 16 }}>
-            <Select
-              value={disputeStatusFilter}
-              onChange={(v) => { setDisputeStatusFilter(v); setDisputePage(1) }}
-              options={DISPUTE_STATUS_OPTIONS}
-              style={{ width: 180 }}
-              placeholder={t('moderation.filterByStatus')}
-            />
-          </Space>
-          <ResponsiveTable
-            columns={disputeColumns}
-            dataSource={disputes.data?.items ?? []}
-            rowKey="id"
-            loading={disputes.isLoading}
-            pagination={{
-              current: disputePage,
-              pageSize,
-              total: disputes.data?.metadata?.totalCount ?? 0,
-              onChange: setDisputePage,
-            }}
-            mobileMode="card"
+          <Select
+            value={disputeStatusFilter}
+            onChange={(v) => { setDisputeStatusFilter(v); setDisputePage(1) }}
+            options={DISPUTE_STATUS_OPTIONS}
+            style={{ width: isMobile ? '100%' : 200, marginBottom: 16 }}
+            placeholder={t('moderation.filterByStatus')}
           />
+          <div style={{ overflowX: 'auto' }}>
+            <ResponsiveTable
+              columns={disputeColumns}
+              dataSource={disputes.data?.items ?? []}
+              rowKey="id"
+              loading={disputes.isLoading}
+              mobileMode="card"
+              onRow={(record: DisputeDto) => ({
+                onClick: () => navigate(`/admin/disputes/${record.id}`),
+                style: { cursor: 'pointer', minHeight: 56 },
+              })}
+              pagination={{
+                current: disputePage,
+                pageSize,
+                total: disputes.data?.metadata?.totalCount ?? 0,
+                onChange: setDisputePage,
+                simple: isMobile,
+                showSizeChanger: false,
+              }}
+            />
+          </div>
         </>
       ),
     },
   ]
 
   return (
-    <div>
-      <Typography.Title level={2}>{t('moderation.title')}</Typography.Title>
+    <div style={{ padding: isMobile ? '0 0 80px' : undefined }}>
+      <Typography.Title level={isMobile ? 3 : 2} style={{ marginBottom: isMobile ? 16 : 24 }}>
+        {t('moderation.title')}
+      </Typography.Title>
 
-      <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabItems} />
+      <Tabs
+        activeKey={activeTab}
+        onChange={setActiveTab}
+        items={tabItems}
+        style={{ overflowX: 'auto' }}
+      />
 
       {/* Assign Report Modal */}
       <Modal
@@ -348,87 +407,212 @@ export default function AdminModerationPage() {
         onOk={handleAssign}
         onCancel={() => setAssignModalOpen(false)}
         confirmLoading={assignReport.isPending}
+        centered={isMobile}
       >
         <Input
           placeholder={t('moderation.assigneePlaceholder')}
           value={assigneeId}
           onChange={(e) => setAssigneeId(e.target.value)}
+          style={{ minHeight: 44 }}
         />
       </Modal>
 
-      {/* Resolve Report Modal (with Enforcement) */}
-      <Modal
-        title={t('moderation.resolveReportTitle')}
-        open={resolveReportModalOpen}
-        onOk={handleResolveReport}
-        onCancel={() => setResolveReportModalOpen(false)}
-        confirmLoading={resolveReport.isPending}
-        width={480}
-      >
-        <Space direction="vertical" style={{ width: '100%' }} size="middle">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>{t('moderation.dismiss')}</span>
-            <Switch checked={dismissedFlag} onChange={setDismissedFlag} />
-          </div>
-          {!dismissedFlag && (
+      {/* Resolve Report — Drawer on mobile, Modal on desktop */}
+      {isMobile ? (
+        <Drawer
+          title={t('moderation.resolveReportTitle')}
+          placement="bottom"
+          open={resolveDrawerOpen}
+          onClose={() => setResolveDrawerOpen(false)}
+          height="auto"
+          styles={{ body: { paddingBottom: 32 } }}
+          extra={
+            <Button
+              type="primary"
+              onClick={handleResolveReport}
+              loading={resolveReport.isPending}
+            >
+              {t('moderation.resolve')}
+            </Button>
+          }
+        >
+          <Space direction="vertical" style={{ width: '100%' }} size={16}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: 44 }}>
+              <span style={{ fontSize: 15 }}>{t('moderation.dismiss')}</span>
+              <Switch checked={dismissedFlag} onChange={setDismissedFlag} />
+            </div>
+            {!dismissedFlag && (
+              <div>
+                <div style={{ marginBottom: 6, fontWeight: 500 }}>{t('moderation.enforcementAction')}</div>
+                <Select
+                  value={enforcementAction}
+                  onChange={setEnforcementAction}
+                  options={ENFORCEMENT_OPTIONS}
+                  style={{ width: '100%' }}
+                />
+              </div>
+            )}
+            <Input.TextArea
+              rows={3}
+              value={resolutionNotes}
+              onChange={(e) => setResolutionNotes(e.target.value)}
+              placeholder={t('moderation.resolutionNotesPlaceholder')}
+            />
+            {/* On mobile, also give access to Assign and Escalate */}
+            <Space direction="vertical" style={{ width: '100%' }} size={8}>
+              <Button
+                block
+                style={{ minHeight: 44 }}
+                onClick={() => {
+                  setResolveDrawerOpen(false)
+                  setAssignReportId(resolveReportId)
+                  setAssigneeId('')
+                  setAssignModalOpen(true)
+                }}
+              >
+                {t('moderation.assign')}
+              </Button>
+              <Button
+                type="primary"
+                block
+                style={{ minHeight: 44 }}
+                onClick={() => {
+                  setResolveDrawerOpen(false)
+                  setEscalateReportId(resolveReportId)
+                  setEscalateTitle(t('moderation.escalatedFromReport'))
+                  setEscalateDisputeType('other')
+                  setEscalatePriority('medium')
+                  setEscalateDrawerOpen(true)
+                }}
+              >
+                {t('moderation.escalate')}
+              </Button>
+            </Space>
+          </Space>
+        </Drawer>
+      ) : (
+        <Modal
+          title={t('moderation.resolveReportTitle')}
+          open={resolveDrawerOpen}
+          onOk={handleResolveReport}
+          onCancel={() => setResolveDrawerOpen(false)}
+          confirmLoading={resolveReport.isPending}
+          width={480}
+        >
+          <Space direction="vertical" style={{ width: '100%' }} size="middle">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>{t('moderation.dismiss')}</span>
+              <Switch checked={dismissedFlag} onChange={setDismissedFlag} />
+            </div>
+            {!dismissedFlag && (
+              <div>
+                <div style={{ marginBottom: 4 }}>{t('moderation.enforcementAction')}</div>
+                <Select
+                  value={enforcementAction}
+                  onChange={setEnforcementAction}
+                  options={ENFORCEMENT_OPTIONS}
+                  style={{ width: '100%' }}
+                />
+              </div>
+            )}
+            <Input.TextArea
+              rows={3}
+              value={resolutionNotes}
+              onChange={(e) => setResolutionNotes(e.target.value)}
+              placeholder={t('moderation.resolutionNotesPlaceholder')}
+            />
+          </Space>
+        </Modal>
+      )}
+
+      {/* Escalate to Dispute — Drawer on mobile, Modal on desktop */}
+      {isMobile ? (
+        <Drawer
+          title={t('moderation.escalateToDisputeTitle')}
+          placement="bottom"
+          open={escalateDrawerOpen}
+          onClose={() => setEscalateDrawerOpen(false)}
+          height="auto"
+          styles={{ body: { paddingBottom: 32 } }}
+          extra={
+            <Button
+              type="primary"
+              onClick={handleEscalateToDispute}
+              loading={escalateToDispute.isPending}
+            >
+              {t('moderation.escalate')}
+            </Button>
+          }
+        >
+          <Space direction="vertical" style={{ width: '100%' }} size={16}>
             <div>
-              <div style={{ marginBottom: 4 }}>{t('moderation.enforcementAction')}</div>
+              <div style={{ marginBottom: 6, fontWeight: 500 }}>{t('moderation.columns.title')}</div>
+              <Input
+                value={escalateTitle}
+                onChange={(e) => setEscalateTitle(e.target.value)}
+                placeholder={t('moderation.disputeTitlePlaceholder')}
+                style={{ minHeight: 44 }}
+              />
+            </div>
+            <div>
+              <div style={{ marginBottom: 6, fontWeight: 500 }}>{t('moderation.disputeTypeLabel')}</div>
               <Select
-                value={enforcementAction}
-                onChange={setEnforcementAction}
-                options={ENFORCEMENT_OPTIONS}
+                value={escalateDisputeType}
+                onChange={setEscalateDisputeType}
+                options={DISPUTE_TYPE_OPTIONS}
                 style={{ width: '100%' }}
               />
             </div>
-          )}
-          <Input.TextArea
-            rows={3}
-            value={resolutionNotes}
-            onChange={(e) => setResolutionNotes(e.target.value)}
-            placeholder={t('moderation.resolutionNotesPlaceholder')}
-          />
-        </Space>
-      </Modal>
-
-      {/* Escalate to Dispute Modal */}
-      <Modal
-        title={t('moderation.escalateToDisputeTitle')}
-        open={escalateModalOpen}
-        onOk={handleEscalateToDispute}
-        onCancel={() => setEscalateModalOpen(false)}
-        confirmLoading={escalateToDispute.isPending}
-        width={480}
-      >
-        <Space direction="vertical" style={{ width: '100%' }} size="middle">
-          <div>
-            <div style={{ marginBottom: 4 }}>{t('moderation.columns.title')}</div>
-            <Input
-              value={escalateTitle}
-              onChange={(e) => setEscalateTitle(e.target.value)}
-              placeholder={t('moderation.disputeTitlePlaceholder')}
-            />
-          </div>
-          <div>
-            <div style={{ marginBottom: 4 }}>{t('moderation.disputeTypeLabel')}</div>
-            <Select
-              value={escalateDisputeType}
-              onChange={setEscalateDisputeType}
-              options={DISPUTE_TYPE_OPTIONS}
-              style={{ width: '100%' }}
-            />
-          </div>
-          <div>
-            <div style={{ marginBottom: 4 }}>{t('moderation.priorityLabel')}</div>
-            <Select
-              value={escalatePriority}
-              onChange={setEscalatePriority}
-              options={PRIORITY_OPTIONS}
-              style={{ width: '100%' }}
-            />
-          </div>
-        </Space>
-      </Modal>
-
+            <div>
+              <div style={{ marginBottom: 6, fontWeight: 500 }}>{t('moderation.priorityLabel')}</div>
+              <Select
+                value={escalatePriority}
+                onChange={setEscalatePriority}
+                options={PRIORITY_OPTIONS}
+                style={{ width: '100%' }}
+              />
+            </div>
+          </Space>
+        </Drawer>
+      ) : (
+        <Modal
+          title={t('moderation.escalateToDisputeTitle')}
+          open={escalateDrawerOpen}
+          onOk={handleEscalateToDispute}
+          onCancel={() => setEscalateDrawerOpen(false)}
+          confirmLoading={escalateToDispute.isPending}
+          width={480}
+        >
+          <Space direction="vertical" style={{ width: '100%' }} size="middle">
+            <div>
+              <div style={{ marginBottom: 4 }}>{t('moderation.columns.title')}</div>
+              <Input
+                value={escalateTitle}
+                onChange={(e) => setEscalateTitle(e.target.value)}
+                placeholder={t('moderation.disputeTitlePlaceholder')}
+              />
+            </div>
+            <div>
+              <div style={{ marginBottom: 4 }}>{t('moderation.disputeTypeLabel')}</div>
+              <Select
+                value={escalateDisputeType}
+                onChange={setEscalateDisputeType}
+                options={DISPUTE_TYPE_OPTIONS}
+                style={{ width: '100%' }}
+              />
+            </div>
+            <div>
+              <div style={{ marginBottom: 4 }}>{t('moderation.priorityLabel')}</div>
+              <Select
+                value={escalatePriority}
+                onChange={setEscalatePriority}
+                options={PRIORITY_OPTIONS}
+                style={{ width: '100%' }}
+              />
+            </div>
+          </Space>
+        </Modal>
+      )}
     </div>
   )
 }

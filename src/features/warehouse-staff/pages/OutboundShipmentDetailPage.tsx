@@ -68,10 +68,16 @@ export default function OutboundShipmentDetailPage() {
     })
   }
 
+  const containerStyle = {
+    maxWidth: 960,
+    margin: '0 auto',
+    padding: isMobile ? '0 12px' : undefined,
+  }
+
   if (isLoading) {
     return (
-      <div style={{ maxWidth: 960, margin: '0 auto', padding: isMobile ? '0 12px' : undefined }}>
-        <Card>
+      <div style={containerStyle}>
+        <Card style={{ marginBottom: 12 }}>
           <Skeleton active />
         </Card>
       </div>
@@ -80,9 +86,14 @@ export default function OutboundShipmentDetailPage() {
 
   if (isError || !detail) {
     return (
-      <div style={{ maxWidth: 960, margin: '0 auto', padding: isMobile ? '0 12px' : undefined }}>
+      <div style={containerStyle}>
         <Space style={{ marginBottom: 16 }}>
-          <Button type="text" icon={<ArrowLeftOutlined />} onClick={handleBack}>
+          <Button
+            type="text"
+            icon={<ArrowLeftOutlined />}
+            onClick={handleBack}
+            style={{ minHeight: 44, paddingLeft: 0 }}
+          >
             {tc('action.back', 'Back')}
           </Button>
         </Space>
@@ -96,33 +107,49 @@ export default function OutboundShipmentDetailPage() {
   }
 
   const isExternal = detail.shipmentMode === 'external_carrier'
+  const cardMargin = isMobile ? 12 : 0
 
   return (
-    <div style={{ maxWidth: 960, margin: '0 auto', padding: isMobile ? '0 12px' : undefined }}>
-      <Space style={{ marginBottom: 16 }}>
-        <Button type="text" icon={<ArrowLeftOutlined />} onClick={handleBack}>
+    <div style={containerStyle}>
+      <Space style={{ marginBottom: isMobile ? 12 : 16 }}>
+        <Button
+          type="text"
+          icon={<ArrowLeftOutlined />}
+          onClick={handleBack}
+          style={{ minHeight: 44, paddingLeft: 0 }}
+        >
           {tc('action.back', 'Back')}
         </Button>
       </Space>
 
-      <Typography.Title level={2} style={{ marginBottom: 4 }}>
+      <Typography.Title
+        level={isMobile ? 3 : 2}
+        style={{ marginBottom: 4, lineHeight: 1.3 }}
+      >
         {t('staffOutboundShipments.detailTitle', 'Outbound Shipment')}
       </Typography.Title>
-      <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
+      <Typography.Text
+        type="secondary"
+        style={{ display: 'block', marginBottom: isMobile ? 12 : 16, fontSize: isMobile ? 12 : 13 }}
+      >
         {detail.orderNumber}
       </Typography.Text>
 
-      <Row gutter={[16, 16]}>
+      <Row gutter={[isMobile ? 0 : 16, isMobile ? 0 : 16]}>
+        {/* QR Code card */}
         {isExternal &&
           detail.status !== 'failed' &&
           detail.status !== 'returned' &&
           detail.status !== 'cancelled' && (
             <Col xs={24}>
-              <Card title={t('staffOutboundShipments.qrCard', 'Shipment QR')}>
+              <Card
+                title={t('staffOutboundShipments.qrCard', 'Shipment QR')}
+                style={{ marginBottom: cardMargin }}
+              >
                 {detail.qrPayload && !detail.qrTokenRevokedAt ? (
                   <Space direction="vertical" size={12} style={{ width: '100%' }}>
                     <div style={{ textAlign: 'center' }}>
-                      <QRCode value={detail.qrPayload} size={200} />
+                      <QRCode value={detail.qrPayload} size={isMobile ? 160 : 200} />
                     </div>
                     <Typography.Paragraph
                       copyable={{ text: detail.qrPayload }}
@@ -159,9 +186,12 @@ export default function OutboundShipmentDetailPage() {
               </Card>
             </Col>
           )}
+
+        {/* Item Summary */}
         <Col xs={24} md={12}>
           <Card
             title={t('staffOutboundShipments.itemCard', 'Item Summary')}
+            style={{ marginBottom: cardMargin }}
             styles={{ body: { paddingTop: 12 } }}
           >
             <Space align="start" size={12}>
@@ -169,31 +199,41 @@ export default function OutboundShipmentDetailPage() {
                 <img
                   src={detail.itemPrimaryImageUrl}
                   alt={detail.itemTitle ?? ''}
-                  style={{ width: 80, height: 80, borderRadius: 6, objectFit: 'cover' }}
+                  style={{
+                    width: isMobile ? 72 : 80,
+                    height: isMobile ? 72 : 80,
+                    borderRadius: 8,
+                    objectFit: 'cover',
+                    flexShrink: 0,
+                  }}
                 />
               ) : (
                 <div
                   style={{
-                    width: 80,
-                    height: 80,
-                    borderRadius: 6,
+                    width: isMobile ? 72 : 80,
+                    height: isMobile ? 72 : 80,
+                    borderRadius: 8,
                     background: '#f0f0f0',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     color: '#bbb',
                     fontSize: 28,
+                    flexShrink: 0,
                   }}
                 >
                   <PictureOutlined />
                 </div>
               )}
               <div style={{ minWidth: 0 }}>
-                <Typography.Text strong style={{ display: 'block', fontSize: 15 }}>
+                <Typography.Text strong style={{ display: 'block', fontSize: isMobile ? 14 : 15 }}>
                   {detail.itemTitle ?? '—'}
                 </Typography.Text>
                 {detail.storageLocationLabel && (
-                  <Typography.Text type="secondary" style={{ display: 'block', fontSize: 12 }}>
+                  <Typography.Text
+                    type="secondary"
+                    style={{ display: 'block', fontSize: 12, marginTop: 2 }}
+                  >
                     {t('staffOutboundShipments.storage', 'Storage')}: {detail.storageLocationLabel}
                   </Typography.Text>
                 )}
@@ -210,11 +250,17 @@ export default function OutboundShipmentDetailPage() {
           </Card>
         </Col>
 
+        {/* Order Info */}
         <Col xs={24} md={12}>
-          <Card title={t('staffOutboundShipments.orderCard', 'Order Info')}>
+          <Card
+            title={t('staffOutboundShipments.orderCard', 'Order Info')}
+            style={{ marginBottom: cardMargin }}
+          >
             <Descriptions column={1} size="small">
               <Descriptions.Item label={t('staffOutboundShipments.orderNumber', 'Order')}>
-                {detail.orderNumber}
+                <Typography.Text style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>
+                  {detail.orderNumber}
+                </Typography.Text>
               </Descriptions.Item>
               <Descriptions.Item label={t('staffOutboundShipments.status', 'Status')}>
                 <StatusBadge status={detail.status} />
@@ -230,8 +276,12 @@ export default function OutboundShipmentDetailPage() {
           </Card>
         </Col>
 
+        {/* Recipient */}
         <Col xs={24} md={12}>
-          <Card title={t('staffOutboundShipments.recipientCard', 'Recipient')}>
+          <Card
+            title={t('staffOutboundShipments.recipientCard', 'Recipient')}
+            style={{ marginBottom: cardMargin }}
+          >
             <Descriptions column={1} size="small">
               <Descriptions.Item label={t('staffOutboundShipments.recipientName', 'Name')}>
                 {detail.recipientName ?? '—'}
@@ -246,8 +296,12 @@ export default function OutboundShipmentDetailPage() {
           </Card>
         </Col>
 
+        {/* Shipment Details */}
         <Col xs={24} md={12}>
-          <Card title={t('staffOutboundShipments.metadataCard', 'Shipment Details')}>
+          <Card
+            title={t('staffOutboundShipments.metadataCard', 'Shipment Details')}
+            style={{ marginBottom: cardMargin }}
+          >
             <Descriptions column={1} size="small">
               <Descriptions.Item label={t('staffOutboundShipments.provider', 'Provider')}>
                 {detail.providerCode}
@@ -289,8 +343,12 @@ export default function OutboundShipmentDetailPage() {
           </Card>
         </Col>
 
+        {/* Timeline */}
         <Col xs={24}>
-          <Card title={t('staffOutboundShipments.timelineCard', 'Timeline')}>
+          <Card
+            title={t('staffOutboundShipments.timelineCard', 'Timeline')}
+            style={{ marginBottom: cardMargin }}
+          >
             {detail.events.length === 0 ? (
               <Typography.Text type="secondary">
                 {t('staffOutboundShipments.noEvents', 'No events recorded yet.')}
@@ -299,21 +357,17 @@ export default function OutboundShipmentDetailPage() {
               <Timeline
                 items={detail.events.map((e) => ({
                   color:
-                    e.source === 'carrier'
-                      ? 'blue'
-                      : e.source === 'manual'
-                      ? 'orange'
-                      : 'gray',
+                    e.source === 'carrier' ? 'blue' : e.source === 'manual' ? 'orange' : 'gray',
                   children: (
                     <div>
-                      <div style={{ fontWeight: 500 }}>{e.label}</div>
-                      <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+                      <div style={{ fontWeight: 500, fontSize: isMobile ? 14 : 13 }}>{e.label}</div>
+                      <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 2 }}>
                         {formatDateTime(e.occurredAt)}
                         {' · '}
                         {e.source}
                       </div>
                       {e.note && (
-                        <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+                        <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 2 }}>
                           {e.note}
                         </div>
                       )}
@@ -325,9 +379,13 @@ export default function OutboundShipmentDetailPage() {
           </Card>
         </Col>
 
+        {/* Manual Status Actions */}
         {detail.allowedManualStatuses.length > 0 && (
           <Col xs={24}>
-            <Card title={t('staffOutboundShipments.actionsCard', 'Manual Status Actions')}>
+            <Card
+              title={t('staffOutboundShipments.actionsCard', 'Manual Status Actions')}
+              style={{ marginBottom: cardMargin }}
+            >
               <Typography.Text
                 type="secondary"
                 style={{ display: 'block', marginBottom: 12, fontSize: 12 }}
@@ -337,7 +395,7 @@ export default function OutboundShipmentDetailPage() {
                   'External-carrier shipments are updated manually. Choose the next status.',
                 )}
               </Typography.Text>
-              <Space wrap>
+              <Space wrap={!isMobile} direction={isMobile ? 'vertical' : 'horizontal'} style={{ width: '100%' }}>
                 {detail.allowedManualStatuses.map((s) => (
                   <Button
                     key={s}
@@ -345,6 +403,8 @@ export default function OutboundShipmentDetailPage() {
                     danger={statusButtonDanger(s)}
                     loading={updateStatus.isPending}
                     onClick={() => handleAction(s)}
+                    block={isMobile}
+                    style={{ minHeight: isMobile ? 44 : undefined, fontSize: isMobile ? 14 : undefined }}
                   >
                     {t(`staffOutboundShipments.actions.${s}`, s)}
                   </Button>
