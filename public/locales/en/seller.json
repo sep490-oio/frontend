@@ -190,5 +190,6 @@
   "capturedDocuments": "Captured documents",
   "storeDescriptionRequired": "Please describe your store",
   "identityVerified": "Identity Verified",
-  "verifyIdentity": "Verify Your Identity"
+  "verifyIdentity": "Verify Your Identity",
+  "verifiedDesc": "Your identity has been verified. You can now create a seller profile and participate in all auctions."
 }

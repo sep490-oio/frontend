@@ -79,5 +79,24 @@
     "allCategories": "All categories",
     "searchPlaceholder": "Search items...",
     "noItems": "No items found"
-  }
+  },
+  "itemDetails": "Item Details",
+  "verifyByPlatform": "Platform Verification",
+  "verifyByPlatformDesc": "Ship item to our warehouse for professional inspection and authentication.",
+  "auctionSection": "Auction Settings",
+  "auctionSectionOptional": "Optional — set up auction details now",
+  "createAndSubmit": "Create & Submit",
+  "createAndSubmitWithAuction": "Create & Submit with Auction",
+  "saveDraft": "Save as Draft",
+  "realtimeLive": "Realtime active",
+  "realtimeFallback": "Using periodic refresh",
+  "lastSynced": "Updated {{time}}",
+  "loading": "Loading…",
+  "pendingQuestion": "Sending…",
+  "answering": "Sending…",
+  "noAnswer": "No reply yet",
+  "loadingMore": "Loading more…",
+  "loadMore": "Load more",
+  "askLabel": "Ask a question",
+  "sending": "Sending…"
 }

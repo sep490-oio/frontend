@@ -17,6 +17,7 @@
     "about": "About Us",
     "categories": "Categories",
     "admin": "Admin",
+    "warehouse": "Warehouse",
     "inspector": "Inspector",
     "bids": "My Bids",
     "signIn": "Sign In",
@@ -139,7 +140,11 @@
     "won": "Won",
     "exhausted": "Exhausted",
     "escalated": "Escalated",
-    "awaiting_response": "Awaiting Response"
+    "awaiting_response": "Awaiting Response",
+    "picked_up": "Picked Up",
+    "on_delivering": "On Delivering",
+    "dispatched": "Dispatched",
+    "condition_confirmed": "Condition Confirmed"
   },
   "about": {
     "heroLabel": "OIO Auction House",

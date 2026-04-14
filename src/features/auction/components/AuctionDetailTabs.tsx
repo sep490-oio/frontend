@@ -56,10 +56,11 @@ function SellerIdentity({
   sellerId?: string
   sellerUsername?: string
 }) {
+  const { t } = useTranslation('auction')
   if (!sellerId) {
     return (
       <Typography.Text type="secondary">
-        Seller profile is not available for this listing.
+        {t('noSellerProfile', 'Seller profile is not available for this listing.')}
       </Typography.Text>
     )
   }
@@ -107,11 +108,11 @@ function SellerIdentity({
           </Link>
         </div>
         <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-          Public seller activity and catalogue are available on the seller profile page.
+          {t('sellerActivityDesc', 'Public seller activity and catalogue are available on the seller profile page.')}
         </Typography.Text>
         <div style={{ marginTop: 8 }}>
           <Link to={`/sellers/${sellerId}`} style={{ fontSize: 13 }}>
-            View seller profile
+            {t('viewSellerProfile', 'View seller profile')}
           </Link>
         </div>
       </div>
@@ -152,7 +153,8 @@ export function AuctionDetailTabs({
   qaConnected = false,
   qaLastSyncedAt = null,
 }: AuctionDetailTabsProps) {
-  const { t } = useTranslation()
+  const { t } = useTranslation('auction')
+  const { t: tc } = useTranslation('common')
   const screens = useBreakpoint()
   const isMobile = !screens.md
   const sellerId = item.sellerId ?? auction.sellerId
@@ -180,7 +182,9 @@ export function AuctionDetailTabs({
                 {item.condition ? <StatusBadge status={item.condition} /> : null}
               </Flex>
               <div style={specGridStyle}>
-                <SpecRow label={t('condition', 'Tình trạng')}>{item.condition ?? '—'}</SpecRow>
+                <SpecRow label={t('condition', 'Tình trạng')}>
+                  {item.condition ? tc(`statusLabel.${item.condition}`, item.condition) : '—'}
+                </SpecRow>
                 {item.categoryId && (
                   <SpecRow label={t('category', 'Danh mục')}>
                     {categoryName ?? item.categoryId}
@@ -257,7 +261,7 @@ export function AuctionDetailTabs({
                       >
                         {t('conditionLabel', 'Tình trạng')}:{' '}
                         <strong style={{ color: 'var(--color-text-primary)' }}>
-                          {item.condition}
+                          {item.condition ? tc(`statusLabel.${item.condition}`, item.condition) : ''}
                         </strong>
                       </span>
                     </div>
@@ -487,14 +491,9 @@ export function AuctionDetailTabs({
                           'Listing này không có chứng chỉ hoặc biên bản kiểm định công khai.',
                         )}
                   </div>
-                  {auction.assignedAdminId && (
-                    <div style={{ marginTop: 4 }}>
-                      {t('reviewOwner', 'Nhân sự phụ trách')}:{' '}
-                      <strong style={{ color: 'var(--color-text-primary)' }}>
-                        {auction.assignedAdminId}
-                      </strong>
-                    </div>
-                  )}
+                  {/* Review-owner row hidden: DTO exposes only the admin's UUID, not a display name.
+                      Showing the raw UUID to public viewers is not useful. Restore once BE adds
+                      an `assignedAdminDisplayName` field to AuctionDto. */}
                   {auction.reservePrice && (
                     <div style={{ marginTop: 4 }}>
                       {t('reservePrice', 'Giá bảo lưu')}:{' '}

@@ -17,7 +17,7 @@ import { ArrowLeftOutlined } from '@ant-design/icons'
 import { useParams, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
-import { useItemById, useChooseItemShipping } from '@/features/item/api'
+import { useItemById, useChooseItemShipping, useCategories } from '@/features/item/api'
 import { useAuctionHub } from '@/features/auction/hooks/useAuctionHub'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { SafeHtmlRenderer } from '@/components/ui/SafeHtmlRenderer'
@@ -38,6 +38,7 @@ export default function ItemDetailPage() {
   const { isMobile } = useBreakpoint()
 
   const { data: item, isLoading } = useItemById(id ?? '')
+  const { data: categories } = useCategories()
   const { data: currentUser } = useCurrentUser()
   const hub = useAuctionHub(undefined, id)
   const chooseShipping = useChooseItemShipping()
@@ -94,7 +95,7 @@ export default function ItemDetailPage() {
             </Descriptions.Item>
             {item.categoryId && (
               <Descriptions.Item label={t('category', 'Category')}>
-                {item.categoryId}
+                {categories?.find((c) => c.id === item.categoryId)?.name ?? item.categoryId}
               </Descriptions.Item>
             )}
             <Descriptions.Item label={t('createdAt', 'Listed')}>

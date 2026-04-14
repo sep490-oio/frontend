@@ -242,7 +242,7 @@ export default function BookInboundPage() {
           )}
           <Form.Item
             name="itemIds"
-            label={t('selectItems', 'Select Items')}
+            label={t('selectItem', 'Select Items')}
             rules={[{ required: true, message: t('itemRequired', 'Please select at least one item') }]}
           >
             <Select
@@ -254,7 +254,7 @@ export default function BookInboundPage() {
               optionFilterProp="label"
               placeholder={
                 hasEligibleItems
-                  ? t('selectItemsPlaceholder', 'Search and select items to ship')
+                  ? t('selectItemPlaceholder', 'Search and select items to ship')
                   : t('noEligibleInboundItemsPlaceholder', 'No eligible items to ship')
               }
             />

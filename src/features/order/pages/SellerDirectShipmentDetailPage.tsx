@@ -188,7 +188,7 @@ export default function SellerDirectShipmentDetailPage() {
           {tc('action.back', 'Back')}
         </Button>
         <Button icon={<PrinterOutlined />} onClick={() => setPrintModalOpen(true)}>
-          {t('directShipment.printLabel', 'Print Label')}
+          {t('directShipment.labels.printLabel', 'Print Label')}
         </Button>
       </Space>
 
@@ -299,7 +299,7 @@ export default function SellerDirectShipmentDetailPage() {
         title={
           <Flex gap={8} align="center">
             <CameraOutlined />
-            {t('directShipment.packagePhotos', 'Package Photos')}
+            {t('directShipment.dispatch.packagePhotos', 'Package Photos')}
           </Flex>
         }
         style={{ marginTop: 16 }}
@@ -331,7 +331,7 @@ export default function SellerDirectShipmentDetailPage() {
 
       {/* Handover proofs */}
       <Card
-        title={t('directShipment.handoverProofs', 'Handover Proofs')}
+        title={t('directShipment.dispatch.handoverProofs', 'Handover Proofs')}
         style={{ marginTop: 16 }}
         extra={
           handoverAllowed && (
@@ -340,7 +340,7 @@ export default function SellerDirectShipmentDetailPage() {
               icon={<CameraOutlined />}
               onClick={() => setHandoverModalOpen(true)}
             >
-              {t('directShipment.addHandoverProofs', 'Add Handover Proofs')}
+              {t('directShipment.dispatch.addHandoverProofs', 'Add Handover Proofs')}
             </Button>
           )
         }
@@ -449,7 +449,7 @@ export default function SellerDirectShipmentDetailPage() {
           </Form.Item>
 
           <Typography.Text strong style={{ display: 'block', marginTop: 8, marginBottom: 8 }}>
-            {t('directShipment.packagePhotos', 'Package Photos')}{' '}
+            {t('directShipment.dispatch.packagePhotos', 'Package Photos')}{' '}
             <Typography.Text type="danger">*</Typography.Text>
           </Typography.Text>
           <MultiCaptureUploader
@@ -468,7 +468,7 @@ export default function SellerDirectShipmentDetailPage() {
 
       {/* Handover proofs modal */}
       <Modal
-        title={t('directShipment.addHandoverProofs', 'Add Handover Proofs')}
+        title={t('directShipment.dispatch.addHandoverProofs', 'Add Handover Proofs')}
         open={handoverModalOpen}
         onCancel={() => setHandoverModalOpen(false)}
         onOk={handleHandoverSubmit}

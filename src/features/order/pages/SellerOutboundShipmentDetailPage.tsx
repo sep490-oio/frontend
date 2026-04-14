@@ -143,7 +143,7 @@ export default function SellerOutboundShipmentDetailPage() {
               {shipment.shipmentId}
             </Typography.Text>
           </Descriptions.Item>
-          <Descriptions.Item label={t('common:createdAt', 'Created At')}>
+          <Descriptions.Item label={t('common:tableHeader.createdAt', 'Created At')}>
             {formatDateTime(shipment.createdAt)}
           </Descriptions.Item>
           {shipment.packedAt && (
