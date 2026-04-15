@@ -25,12 +25,23 @@ export function EmptyState({
       gap={16}
       style={{ padding: '80px 24px', textAlign: 'center' }}
     >
-      <div style={{ fontSize: 48, color: 'var(--color-text-secondary)', lineHeight: 1, opacity: 0.5 }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 80,
+        height: 80,
+        borderRadius: '50%',
+        background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)',
+        boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.8), 0 4px 12px rgba(0,0,0,0.05)',
+        fontSize: 32,
+        color: '#64748b',
+        marginBottom: 8
+      }}>
         {icon ?? <InboxOutlined />}
       </div>
       <Typography.Text
-        className="oio-serif"
-        style={{ fontSize: 20, color: 'var(--color-text-primary)' }}
+        style={{ fontSize: 18, fontWeight: 600, color: '#0f172a' }}
       >
         {displayTitle}
       </Typography.Text>

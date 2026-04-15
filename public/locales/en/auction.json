@@ -180,7 +180,7 @@
   "qualOpenLater": "Schedule qualification for later",
   "scheduledQualStartPlaceholder": "Pick a date and time",
   "qualDurationLabel": "Qualification phase lasts",
-  "durationCustom": "Custom\u2026",
+  "durationCustom": "Custom…",
   "biddingGapLabel": "Bidding starts after qualification closes",
   "biddingGapHelp": "Gap between qualification closing and bidding opening. Minimum 1 minute.",
   "auctionDurationLabel": "Auction duration",
@@ -228,5 +228,6 @@
     "auctionStartPlaceholder": "Select auction start time",
     "auctionEnd": "Auction end *",
     "auctionEndPlaceholder": "Select auction end time"
-  }
+  },
+  "startsIn": "Starts in"
 }

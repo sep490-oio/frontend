@@ -3,6 +3,7 @@ import type { ItemCondition, ItemStatus } from './enums'
 export interface ItemDto {
   id: string
   sellerId: string
+  sellerName?: string
   categoryId?: string
   title: string
   description?: string
@@ -11,6 +12,16 @@ export interface ItemDto {
   quantity: number
   images: ItemMediaDto[]
   createdAt: string
+  hasLiveAuction?: boolean
+  auction?: {
+    auctionId: string
+    auctionStatus: string
+    auctionType: string
+    currentPrice: number
+    currency: string
+    startTime: string
+    endTime: string
+  }
   /**
    * True when the item's latest auction has VerifyByPlatform = true. Source
    * of truth is Auction.VerifyByPlatform, NOT item.status.
@@ -22,9 +33,17 @@ export interface ItemMediaDto {
   id: string
   url: string
   thumbnailUrl?: string
-  type: 'image' | 'video'
+  type?: 'image' | 'video'
+  resourceType?: string
+  publicId?: string
   isPrimary: boolean
-  uploadedAt: string
+  sortOrder?: number
+  fileName?: string
+  bytes?: number
+  format?: string
+  width?: number
+  height?: number
+  uploadedAt?: string
 }
 
 export interface CreateItemRequest {
