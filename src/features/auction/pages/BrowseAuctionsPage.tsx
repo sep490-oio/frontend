@@ -79,22 +79,22 @@ function parseSortString(sortBy: string | undefined): { sort_by?: string; desc?:
 // ─── Pill styles (mirror AuctionListPage) ────────────────────────────────────
 
 const pillBase: React.CSSProperties = {
-  padding: '8px 20px',
+  padding: '10px 24px',
   borderRadius: 100,
-  fontSize: 13,
-  fontWeight: 500,
+  fontSize: 14,
+  fontWeight: 600,
   cursor: 'pointer',
   transition: 'all 200ms ease',
-  border: '1px solid var(--color-border)',
-  background: 'transparent',
-  color: 'var(--color-text-secondary)',
+  border: '1px solid var(--color-border, rgba(255,255,255,0.1))',
+  background: 'var(--color-bg-surface, rgba(255,255,255,0.05))',
+  color: 'var(--color-text-primary, #e5e7eb)',
   whiteSpace: 'nowrap',
 }
 
 const pillActive: React.CSSProperties = {
   ...pillBase,
-  background: 'var(--color-accent)',
-  borderColor: 'var(--color-accent)',
+  background: 'var(--color-accent, #3b82f6)',
+  borderColor: 'var(--color-accent, #3b82f6)',
   color: '#fff',
 }
 
@@ -303,16 +303,16 @@ export default function BrowseAuctionsPage() {
         padding: isMobile ? '16px 12px 64px' : isTablet ? '24px 16px 64px' : '40px 24px 80px',
       }}
     >
-      {/* ── Header (mobile/tablet only) ── */}
-      {isNarrow && (
-        <div style={{ marginBottom: isMobile ? 16 : 24 }}>
+      {/* ── Header ── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 48, flexWrap: 'wrap', gap: 16 }}>
+        <div>
           <h1
             style={{
               fontFamily: SERIF,
-              fontWeight: 400,
-              fontSize: isMobile ? 22 : 26,
+              fontWeight: 700,
+              fontSize: isMobile ? 32 : 40,
               color: 'var(--color-text-primary)',
-              marginBottom: 6,
+              marginBottom: 8,
               lineHeight: 1.2,
             }}
           >
@@ -321,7 +321,7 @@ export default function BrowseAuctionsPage() {
           <p
             style={{
               color: 'var(--color-text-secondary)',
-              fontSize: isMobile ? 13 : 14,
+              fontSize: 16,
               marginBottom: 0,
               lineHeight: 1.5,
             }}
@@ -329,7 +329,13 @@ export default function BrowseAuctionsPage() {
             {t('browse.subtitle')}
           </p>
         </div>
-      )}
+        {!isMobile && (
+           <a href="#" style={{ color: 'var(--color-accent, #3b82f6)', fontWeight: 500, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+              {t('viewAll', 'Xem tất cả')}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 16, height: 16 }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+           </a>
+        )}
+      </div>
 
       {/* ════════════════════════════════════════════════════════════════════
           DESKTOP LAYOUT

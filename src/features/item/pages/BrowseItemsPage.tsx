@@ -1,11 +1,12 @@
 import { useState, useCallback } from 'react'
-import { Input, Select, Pagination, Flex, Row, Col, Card, Empty, AutoComplete } from 'antd'
+import { Input, Select, Pagination, Flex, Row, Col, Empty, AutoComplete } from 'antd'
 import { SearchOutlined, EyeOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { useCategories } from '@/features/item/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
+import { CountdownTimer } from '@/components/ui/CountdownTimer'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useDebounce } from '@/hooks/useDebounce'
 import apiClient from '@/lib/axios'
@@ -83,7 +84,7 @@ function useSuggestItems(q: string) {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function BrowseItemsPage() {
-  const { t } = useTranslation('item')
+  const { t, i18n } = useTranslation('item')
   const { t: tc } = useTranslation('common')
   const { isMobile } = useBreakpoint()
   const navigate = useNavigate()
@@ -181,20 +182,32 @@ export default function BrowseItemsPage() {
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px 12px 48px' : '32px 24px 80px' }}>
-      <h1
-        style={{
-          fontFamily: SERIF,
-          fontWeight: 400,
-          fontSize: isMobile ? 24 : 32,
-          color: 'var(--color-text-primary)',
-          marginBottom: 8,
-        }}
-      >
-        {t('browse.title')}
-      </h1>
-      <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, marginBottom: isMobile ? 20 : 32 }}>
-        {t('browse.subtitle')}
-      </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 48, flexWrap: 'wrap', gap: 16 }}>
+        <div>
+          <h1
+            style={{
+              fontFamily: SERIF,
+              fontWeight: 700,
+              fontSize: isMobile ? 32 : 40,
+              color: 'var(--color-text-primary)',
+              marginBottom: 8,
+              lineHeight: 1.2,
+            }}
+          >
+            {t('browse.title')}
+          </h1>
+          <p
+            style={{
+              color: 'var(--color-text-secondary)',
+              fontSize: 16,
+              marginBottom: 0,
+              lineHeight: 1.5,
+            }}
+          >
+            {t('browse.subtitle')}
+          </p>
+        </div>
+      </div>
 
       {/* ── Filter bar ── */}
       <Flex wrap="wrap" gap={12} style={{ marginBottom: isMobile ? 20 : 32 }} vertical={isMobile}>
@@ -239,19 +252,53 @@ export default function BrowseItemsPage() {
             {items.map((item) => {
               const primaryImage = item.images?.find((img) => img.isPrimary) ?? item.images?.[0]
               return (
-                <Col key={item.id} xs={24} sm={12} lg={6}>
-                  <Card
-                    hoverable
+                <Col key={item.id} xs={24} sm={12} lg={8}>
+                  <div
+                    className="oio-press group"
                     onClick={() => navigate(`/items/${item.id}`)}
-                    style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid var(--color-border-light)' }}
-                    styles={{ body: { padding: 0 } }}
+                    style={{
+                      cursor: 'pointer',
+                      background: 'var(--color-bg-card, #11141b)',
+                      border: '1px solid var(--color-border, rgba(255,255,255,0.05))',
+                      borderRadius: 24,
+                      padding: 16,
+                      transition: 'all 0.3s ease',
+                      outline: 'none',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      height: '100%',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--color-accent, rgba(59, 130, 246, 0.5))';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--color-border, rgba(255,255,255,0.05))';
+                    }}
                   >
-                    <div style={{ aspectRatio: '4/3', background: 'var(--color-bg-surface)', overflow: 'hidden' }}>
+                    <div
+                      style={{
+                        position: 'relative',
+                        borderRadius: 16,
+                        overflow: 'hidden',
+                        aspectRatio: '4/5',
+                        marginBottom: 24,
+                        background: 'var(--color-bg-surface, #1f2937)',
+                        flexShrink: 0,
+                      }}
+                    >
                       {primaryImage?.url ? (
                         <img
                           src={primaryImage.url}
                           alt={item.title}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            display: 'block',
+                            transition: 'transform 0.5s ease',
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                         />
                       ) : (
                         <div
@@ -266,27 +313,58 @@ export default function BrowseItemsPage() {
                           <EyeOutlined style={{ fontSize: 32, opacity: 0.3 }} />
                         </div>
                       )}
+
+                      <div style={{ position: 'absolute', bottom: 12, left: 12, right: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', zIndex: 10 }}>
+                        <div style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', padding: '4px 10px', borderRadius: 100, border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 11, fontWeight: 500 }}>
+                          {t('browse.postedAt', 'Posted:')} {new Date(item.createdAt).toLocaleDateString(i18n.language || 'vi-VN')}
+                        </div>
+                        {item.auction && (
+                          <div style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', padding: '4px 10px', borderRadius: 100, border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center' }}>
+                            <CountdownTimer endTime={item.auction.endTime} size="small" />
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div style={{ padding: 14 }}>
-                      <div
+                    <div style={{ padding: '0 8px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+                      <h3
                         style={{
-                          fontWeight: 600,
-                          fontSize: 14,
-                          color: 'var(--color-text-primary)',
-                          marginBottom: 6,
+                          fontWeight: 700,
+                          fontSize: 18,
+                          marginBottom: 8,
+                          color: 'var(--color-text-primary, #f3f4f6)',
+                          whiteSpace: 'nowrap',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
                         }}
                       >
                         {item.title}
+                      </h3>
+                      {item.sellerName && (
+                        <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--color-accent, #3494f8)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10, fontWeight: 'bold' }}>
+                            {item.sellerName.charAt(0).toUpperCase()}
+                          </div>
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.sellerName}</span>
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto', paddingTop: 16 }}>
+                        <Flex gap={8} align="center" style={{ flex: 1, flexWrap: 'wrap' }}>
+                          <StatusBadge status={item.condition} size="small" />
+                          <StatusBadge status={item.status} size="small" />
+                        </Flex>
+                        {item.auction && (
+                          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                            <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
+                              {item.hasLiveAuction ? t('browse.liveBid', 'Live Bid') : t('browse.currentPrice', 'Current Price')}
+                            </div>
+                            <div className="oio-price" style={{ fontSize: 16, color: 'var(--color-accent, #3494f8)', fontWeight: 700 }}>
+                              {new Intl.NumberFormat(i18n.language || 'vi-VN', { style: 'currency', currency: item.auction.currency }).format(item.auction.currentPrice)}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <Flex gap={8} align="center">
-                        <StatusBadge status={item.condition} size="small" />
-                        <StatusBadge status={item.status} size="small" />
-                      </Flex>
                     </div>
-                  </Card>
+                  </div>
                 </Col>
               )
             })}

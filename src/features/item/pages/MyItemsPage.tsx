@@ -41,22 +41,22 @@ const STATUS_PILL_VALUES = [
 ] as const
 
 const pillBase: React.CSSProperties = {
-  padding: '8px 20px',
+  padding: '10px 24px',
   borderRadius: 100,
-  fontSize: 13,
-  fontWeight: 500,
+  fontSize: 14,
+  fontWeight: 600,
   cursor: 'pointer',
   transition: 'all 200ms ease',
-  border: '1px solid var(--color-border)',
-  background: 'transparent',
-  color: 'var(--color-text-secondary)',
+  border: '1px solid var(--color-border, rgba(255,255,255,0.1))',
+  background: 'var(--color-bg-surface, rgba(255,255,255,0.05))',
+  color: 'var(--color-text-primary, #e5e7eb)',
   whiteSpace: 'nowrap',
 }
 
 const pillActive: React.CSSProperties = {
   ...pillBase,
-  background: 'var(--color-accent)',
-  borderColor: 'var(--color-accent)',
+  background: 'var(--color-accent, #3b82f6)',
+  borderColor: 'var(--color-accent, #3b82f6)',
   color: '#fff',
 }
 
@@ -363,17 +363,17 @@ export default function MyItemsPage() {
 
       {/* Header */}
       <Flex justify="space-between" align="center" style={{ marginBottom: 32 }}>
-        <h2
-          className="oio-serif"
+        <h1
           style={{
             margin: 0,
-            fontSize: 28,
-            fontWeight: 600,
+            fontSize: 40,
+            fontWeight: 700,
             color: 'var(--color-text-primary)',
+            letterSpacing: '-0.02em',
           }}
         >
           {t('myItems', 'My Items')}
-        </h2>
+        </h1>
         <Button
           type="primary"
           icon={<PlusOutlined />}
