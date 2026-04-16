@@ -461,7 +461,7 @@ export function AuctionSidebar({
               <Flex vertical gap={8} align="center">
                 <InfoCircleOutlined style={{ fontSize: 24, color: 'var(--color-text-secondary)' }} />
                 <Typography.Text style={{ fontSize: 14, textAlign: 'center', color: 'var(--color-text-secondary)' }}>
-                  {t('auctionCancelled', 'Phiên đấu giá đã bị hủy.')}
+                  {t('auctionCancelled', 'This auction has been cancelled.')}
                 </Typography.Text>
               </Flex>
             </Card>
@@ -477,11 +477,11 @@ export function AuctionSidebar({
               <Typography.Text
                 style={{ fontSize: 14, textAlign: 'center', color: 'var(--color-text-secondary)' }}
               >
-                {auctionAction.message || t('auctionEndedGeneric', 'Phiên đấu giá đã kết thúc.')}
+                {auctionAction.message || t('auctionEndedGeneric', 'This auction has ended.')}
               </Typography.Text>
               {currentPrice > 0 && (bidCount ?? 0) > 0 && (
                 <Typography.Text style={{ fontSize: 13, color: 'var(--color-text-primary)', fontWeight: 500 }}>
-                  {t('finalPrice', 'Giá cuối cùng')}: {formatCurrency(currentPrice, currency)}
+                  {t('finalPrice', 'Final price')}: {formatCurrency(currentPrice, currency)}
                 </Typography.Text>
               )}
             </Flex>
@@ -727,11 +727,11 @@ export function AuctionSidebar({
           }}
         >
           <Typography.Text style={{ color: 'var(--color-success)', fontWeight: 500, fontSize: 13 }}>
-            {t('auctionEnded', 'Đấu giá đã kết thúc!')}
+            {t('auctionEnded', 'Auction Ended!')}
             {auctionEnded.winnerDisplayName && (
               <>
                 {' '}
-                {t('winner', 'Người thắng')}: {auctionEnded.winnerDisplayName} &mdash;{' '}
+                {t('winner', 'Winner')}: {auctionEnded.winnerDisplayName} &mdash;{' '}
                 {formatCurrency(auctionEnded.finalPrice, currency)}
               </>
             )}

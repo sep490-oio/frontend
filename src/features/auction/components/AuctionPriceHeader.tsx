@@ -115,7 +115,7 @@ export const AuctionPriceHeader: React.FC<AuctionPriceHeaderProps> = ({
               color: 'var(--color-danger)',
             }}
           >
-            ⏰ {t('endingSoon', 'Sắp kết thúc')}
+            ⏰ {t('endingSoon', 'Ending Soon')}
           </span>
         </div>
       )}
@@ -143,7 +143,7 @@ export const AuctionPriceHeader: React.FC<AuctionPriceHeaderProps> = ({
               letterSpacing: '0.06em',
             }}
           >
-            {t('currentBid', 'GIÁ HIỆN TẠI')}
+            {t('currentBid', 'Current Bid')}
           </span>
           <PriceDisplay amount={currentPrice} currency={currency} size="large" />
         </div>
@@ -186,7 +186,7 @@ export const AuctionPriceHeader: React.FC<AuctionPriceHeaderProps> = ({
                 letterSpacing: '0.04em',
               }}
             >
-              {t('timeRemaining', 'Thời gian còn lại')}
+              {t('timeRemaining', 'Time Remaining')}
             </span>
             <CountdownTimer
               endTime={endTime}
@@ -201,21 +201,21 @@ export const AuctionPriceHeader: React.FC<AuctionPriceHeaderProps> = ({
       {/* Meta info: starting price, buy now, increment */}
       <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: '4px 16px' }}>
         <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-          {t('startingPrice', 'Giá khởi điểm')}:{' '}
+          {t('startingPrice', 'Starting Price')}:{' '}
           <strong style={{ color: 'var(--color-text-primary)' }}>
             {formatCurrency(auction.startingPrice?.amount ?? 0, currency)}
           </strong>
         </span>
         {auction.buyNowPrice != null && (
           <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-            {t('buyNowPrice', 'Mua ngay')}:{' '}
+            {t('buyNowPrice', 'Buy Now')}:{' '}
             <strong style={{ color: 'var(--color-accent)' }}>
               {formatCurrency(auction.buyNowPrice.amount, currency)}
             </strong>
           </span>
         )}
         <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-          {t('bidIncrement', 'Bước giá')}:{' '}
+          {t('bidIncrement', 'Bid Increment')}:{' '}
           <strong style={{ color: 'var(--color-text-primary)' }}>
             {formatCurrency(auction.bidIncrement?.amount ?? 0, currency)}
           </strong>
@@ -235,7 +235,7 @@ export const AuctionPriceHeader: React.FC<AuctionPriceHeaderProps> = ({
               marginBottom: 4,
             }}
           >
-            {t('startsIn', 'Bắt đầu sau')}
+            {t('startsIn', 'Starts In')}
           </span>
           <CountdownTimer
             endTime={auction.startTime}
@@ -250,12 +250,12 @@ export const AuctionPriceHeader: React.FC<AuctionPriceHeaderProps> = ({
       <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: '2px 16px' }}>
         {auction.startTime && (
           <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-            {t('startTime', 'Bắt đầu')}: {formatDateTime(auction.startTime)}
+            {t('startTime', 'Start Time')}: {formatDateTime(auction.startTime)}
           </span>
         )}
         {auction.endTime && (
           <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-            {t('endTime', 'Kết thúc')}: {formatDateTime(endTime ?? auction.endTime)}
+            {t('endTime', 'Ends At')}: {formatDateTime(endTime ?? auction.endTime)}
           </span>
         )}
       </div>
@@ -263,9 +263,9 @@ export const AuctionPriceHeader: React.FC<AuctionPriceHeaderProps> = ({
       {/* Auto-extend info */}
       {auction.autoExtend && (
         <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 4 }}>
-          {t('autoExtend', 'Tự động gia hạn')}: {t('yes', 'Có')}, +{auction.extensionMinutes}
+          {t('autoExtend', 'Auto-extend')}: {t('yes', 'Yes')}, +{auction.extensionMinutes}
           {t('min', 'min')} (max {MAX_EXTENSIONS_PER_AUCTION},{' '}
-          {t('used', 'đã dùng')} {auction.extensionCount})
+          {t('used', 'used')} {auction.extensionCount})
         </div>
       )}
 

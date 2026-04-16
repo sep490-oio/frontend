@@ -23,7 +23,7 @@ export interface AuctionDetailTabsProps {
     images?: { url: string }[]
     sellerId?: string
   }
-  auction: {
+  auction?: {
     sellerId?: string
     bidCount?: number
     verifyByPlatform?: boolean
@@ -31,7 +31,7 @@ export interface AuctionDetailTabsProps {
     reservePrice?: { amount: number; currency?: string } | null
     isReserveMet?: boolean
   }
-  recentBids: Array<{
+  recentBids?: Array<{
     id?: string
     bidderId?: string
     bidderDisplayName?: string
@@ -40,9 +40,9 @@ export interface AuctionDetailTabsProps {
     status?: string
     createdAt?: string
   }>
-  currency: string
-  bidCount: number
-  isSeller: boolean
+  currency?: string
+  bidCount?: number
+  isSeller?: boolean
   sellerUsername?: string
   categoryName?: string
   qaConnected?: boolean
@@ -56,10 +56,12 @@ function SellerIdentity({
   sellerId?: string
   sellerUsername?: string
 }) {
+  const { t } = useTranslation()
+
   if (!sellerId) {
     return (
       <Typography.Text type="secondary">
-        Seller profile is not available for this listing.
+        {t('sellerProfileNotAvailable', 'Seller profile is not available for this listing.')}
       </Typography.Text>
     )
   }
@@ -107,11 +109,11 @@ function SellerIdentity({
           </Link>
         </div>
         <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-          Public seller activity and catalogue are available on the seller profile page.
+          {t('publicSellerActivity', 'Public seller activity and catalogue are available on the seller profile page.')}
         </Typography.Text>
         <div style={{ marginTop: 8 }}>
           <Link to={`/sellers/${sellerId}`} style={{ fontSize: 13 }}>
-            View seller profile
+            {t('viewSellerProfile', 'View seller profile')}
           </Link>
         </div>
       </div>
@@ -143,10 +145,10 @@ function SpecRow({ label, children }: { label: string; children: React.ReactNode
 export function AuctionDetailTabs({
   item,
   auction,
-  recentBids,
-  currency,
-  bidCount,
-  isSeller,
+  recentBids = [],
+  currency = 'VND',
+  bidCount = 0,
+  isSeller = false,
   sellerUsername,
   categoryName,
   qaConnected = false,
@@ -155,7 +157,7 @@ export function AuctionDetailTabs({
   const { t } = useTranslation()
   const screens = useBreakpoint()
   const isMobile = !screens.md
-  const sellerId = item.sellerId ?? auction.sellerId
+  const sellerId = item.sellerId ?? auction?.sellerId
 
   // Responsive grid for spec table
   const specGridStyle: React.CSSProperties = {
@@ -165,14 +167,9 @@ export function AuctionDetailTabs({
     fontSize: 14,
   }
 
-  return (
-    <Tabs
-      defaultActiveKey="condition"
-      size={isMobile ? 'small' : 'middle'}
-      style={{ width: '100%' }}
-      items={[
-        {
-          key: 'condition',
+  const tabItems = [
+    {
+      key: 'condition',
           label: t('specifications', 'Thông số'),
           children: (
             <div style={{ paddingTop: 4 }}>
@@ -315,7 +312,7 @@ export function AuctionDetailTabs({
             </div>
           ),
         },
-        {
+        auction ? {
           key: 'bidHistory',
           label: (
             <span>
@@ -392,7 +389,7 @@ export function AuctionDetailTabs({
                 ))}
               </div>
             ),
-        },
+        } : null,
         {
           key: 'seller',
           label: t('sellerTab', 'Người bán'),
@@ -410,7 +407,7 @@ export function AuctionDetailTabs({
             </div>
           ),
         },
-        {
+        auction ? {
           key: 'certification',
           label: t('certificationTab', 'Chứng nhận'),
           children: (
@@ -549,7 +546,7 @@ export function AuctionDetailTabs({
               </div>
             </div>
           ),
-        },
+        } : null,
         {
           key: 'qna',
           label: t('qna', 'Q&A'),
@@ -562,7 +559,14 @@ export function AuctionDetailTabs({
             />
           ),
         },
-      ]}
+      ].filter((x) => x !== null) as NonNullable<any>
+
+  return (
+    <Tabs
+      defaultActiveKey="condition"
+      size={isMobile ? 'small' : 'middle'}
+      style={{ width: '100%' }}
+      items={tabItems}
     />
   )
 }

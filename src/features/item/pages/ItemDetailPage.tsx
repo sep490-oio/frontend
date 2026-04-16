@@ -1,10 +1,7 @@
 import { useState } from 'react'
 import {
-  Typography,
   Row,
   Col,
-  Card,
-  Descriptions,
   Spin,
   Empty,
   Space,
@@ -17,14 +14,12 @@ import { ArrowLeftOutlined } from '@ant-design/icons'
 import { useParams, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
-import { useItemById, useChooseItemShipping } from '@/features/item/api'
+import { useItemById, useChooseItemShipping, useCategories } from '@/features/item/api'
 import { useAuctionHub } from '@/features/auction/hooks/useAuctionHub'
 import { StatusBadge } from '@/components/ui/StatusBadge'
-import { SafeHtmlRenderer } from '@/components/ui/SafeHtmlRenderer'
 import { ImageGallery } from '@/components/ui/ImageGallery'
-import { formatDateTime } from '@/utils/format'
 import { useCurrentUser } from '@/features/user/api'
-import { ItemQA } from '@/features/item/components/ItemQA'
+import { AuctionDetailTabs } from '@/features/auction/components/AuctionDetailTabs'
 import { ItemStatus } from '@/types/enums'
 import ShippingDetailsForm from '@/components/ui/ShippingDetailsForm'
 import type { ShippingDetailsFormValues } from '@/components/ui/ShippingDetailsForm'
@@ -44,7 +39,10 @@ export default function ItemDetailPage() {
   const [shippingForm] = Form.useForm<ShippingDetailsFormValues>()
   const [shippingModalOpen, setShippingModalOpen] = useState(false)
 
+  const { data: categories } = useCategories()
   const isSeller = currentUser?.id === item?.sellerId
+
+  const categoryName = categories?.find((c) => c.id === item?.categoryId)?.name ?? item?.categoryId
 
   if (isLoading) {
     return (
@@ -72,62 +70,74 @@ export default function ItemDetailPage() {
         </Button>
       </Space>
 
-      <Row gutter={[24, isMobile ? 16 : 24]}>
-        {/* Image Gallery */}
-        <Col xs={24} xl={12}>
-          <ImageGallery images={galleryImages} alt={item.title} />
+      <Row gutter={isMobile ? [0, 24] : [48, 32]}>
+        {/* ══ LEFT COLUMN ══════════════════════════════════ */}
+        <Col xs={24} lg={14} className="space-y-8" data-purpose="product-display">
+          {/* Image Gallery */}
+          <div className="glass-card overflow-hidden aspect-square flex flex-col p-8" style={{ marginBottom: 32 }}>
+            <ImageGallery images={galleryImages} alt={item.title} />
+          </div>
+
         </Col>
 
-        {/* Item Info */}
-        <Col xs={24} xl={12}>
-          <Typography.Title level={2} style={{ marginTop: 0, marginBottom: 16 }}>{item.title}</Typography.Title>
-
-          <Descriptions column={1} bordered size="small" style={{ marginBottom: 16 }}>
-            <Descriptions.Item label={t('condition', 'Condition')}>
-              <StatusBadge status={item.condition} />
-            </Descriptions.Item>
-            <Descriptions.Item label={t('status', 'Status')}>
+        {/* ══ RIGHT COLUMN ═════════════════════════════════ */}
+        <Col xs={24} lg={10} className="oio-fade-in oio-fade-in-delay-1 space-y-6">
+          {/* Title & Badges */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <StatusBadge status={item.status} />
-            </Descriptions.Item>
-            <Descriptions.Item label={t('quantity', 'Quantity')}>
-              {item.quantity}
-            </Descriptions.Item>
-            {item.categoryId && (
-              <Descriptions.Item label={t('category', 'Category')}>
-                {item.categoryId}
-              </Descriptions.Item>
-            )}
-            <Descriptions.Item label={t('createdAt', 'Listed')}>
-              {formatDateTime(item.createdAt)}
-            </Descriptions.Item>
-          </Descriptions>
+              {item.condition && <StatusBadge status={item.condition} />}
+            </div>
+            <h1 className="oio-serif" style={{ fontSize: isMobile ? 32 : 36, lineHeight: 1.2, margin: 0, fontWeight: 700 }}>
+              {item.title}
+            </h1>
+            <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>
+              {t('itemCode', 'Mã vật phẩm')}: <strong style={{ color: 'var(--color-text-primary)' }}>#{item.id?.substring(0, 6).toUpperCase()}</strong>
+            </p>
+          </div>
 
-          {/* Shipping — Seller only, pending_verify status only */}
+          {/* Description & Specs & Q&A via Tabs */}
+          <div className="glass-card p-8" data-purpose="product-info-tabs" style={{ marginBottom: 24 }}>
+            <AuctionDetailTabs
+              item={item}
+              isSeller={isSeller}
+              categoryName={categoryName}
+              qaConnected={hub.connected}
+              qaLastSyncedAt={hub.lastSyncedAt}
+            />
+          </div>
+
+          {/* Shipping Config — Seller only */}
           {isSeller && item.status === ItemStatus.PendingVerify && (
-            <Button
-              type="primary"
-              style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
-              onClick={() => { shippingForm.resetFields(); setShippingModalOpen(true) }}
-            >
-              {t('configShipping', 'Configure Shipping')}
-            </Button>
+            <div className="glass-card p-8 space-y-6">
+              <h3 style={{
+                color: 'var(--color-text-primary)',
+                fontSize: 13,
+                fontWeight: 600,
+                letterSpacing: '0.04em',
+                marginBottom: 16,
+                textTransform: 'uppercase',
+              }}>
+                {t('sellerActions', 'Hành động của người bán')}
+              </h3>
+              <Button
+                block
+                type="primary"
+                style={{
+                  height: 48,
+                  borderRadius: 8,
+                  fontWeight: 600,
+                  background: 'var(--color-accent)',
+                  borderColor: 'var(--color-accent)'
+                }}
+                onClick={() => { shippingForm.resetFields(); setShippingModalOpen(true) }}
+              >
+                {t('configShipping', 'Configure Shipping')}
+              </Button>
+            </div>
           )}
         </Col>
       </Row>
-
-      {/* Description — full width below image+info */}
-      {item.description && (
-        <Card
-          style={{ marginTop: isMobile ? 16 : 24 }}
-          styles={{ body: { padding: isMobile ? 16 : 24 } }}
-        >
-          <Typography.Title level={4} style={{ marginTop: 0, marginBottom: 16 }}>
-            {t('description', 'Description')}
-          </Typography.Title>
-          <SafeHtmlRenderer html={item.description} />
-        </Card>
-      )}
-
       {/* Shipping Modal */}
       <Modal
         title={t('shippingDetails', 'Shipping Details')}
@@ -149,14 +159,6 @@ export default function ItemDetailPage() {
       >
         <ShippingDetailsForm form={shippingForm} />
       </Modal>
-
-      {/* Q&A Section */}
-      <ItemQA
-        itemId={id ?? ''}
-        isSeller={isSeller}
-        realtimeConnected={hub.connected}
-        lastSyncedAt={hub.lastSyncedAt}
-      />
     </div>
   )
 }

@@ -132,7 +132,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
               }}
             >
               <span className="animate-pulse" style={{ width: 6, height: 6, background: '#22c55e', borderRadius: '50%' }} />
-              {t('auctionStatusActive')}
+              {t('statusTab.active')}
             </span>
           )}
           {auction.status === AuctionStatus.Scheduled && (
@@ -154,7 +154,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
               }}
             >
               <span style={{ width: 6, height: 6, background: '#fb923c', borderRadius: '50%' }} />
-              {t('auctionStatusScheduled')}
+              {t('statusTab.scheduled')}
             </span>
           )}
           <span
@@ -171,7 +171,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
               border: '1px solid rgba(59, 130, 246, 0.2)',
             }}
           >
-            {auction.auctionType === 'sealed' ? t('typeSealed') : t('typeVerified')}
+            {auction.auctionType === 'sealed' ? t('browse.typeSealed') : t('browse.typeRegular')}
           </span>
         </div>
 
