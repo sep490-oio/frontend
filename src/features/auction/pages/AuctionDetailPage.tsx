@@ -23,6 +23,7 @@ import { useParams, useNavigate, useSearchParams, useLocation } from 'react-rout
 import { useTranslation } from 'react-i18next'
 import { useTermsGate } from '@/features/user/hooks/useTermsGate'
 import { TermsAcceptanceModal } from '@/components/terms/TermsAcceptanceModal'
+import { useSellerById } from '@/features/seller/api'
 import {
   useAuctionDetail,
   usePlaceBid,
@@ -98,6 +99,7 @@ function computeQualificationState(
 export default function AuctionDetailPage() {
   const { t } = useTranslation('auction')
   const { t: td } = useTranslation('dispute')
+  const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
   const { message, modal } = App.useApp()
   const { id } = useParams<{ id: string }>()
@@ -115,7 +117,7 @@ export default function AuctionDetailPage() {
   // Navigation source memory: when coming from /me/bids etc., the calling page
   // passes `returnTo` + `returnLabel` so Back/breadcrumb return to the right origin.
   const returnTo = navState?.returnTo ?? '/auctions'
-  const returnLabel = navState?.returnLabel ?? 'Auctions'
+  const returnLabel = navState?.returnLabel ?? t('auctions', 'Auctions')
   const { isMobile, isTablet, isDesktop } = useBreakpoint()
   const bidderTerms = useTermsGate('bidder')
   const { isAuthenticated } = useAuth()
@@ -299,6 +301,8 @@ export default function AuctionDetailPage() {
   // ── Derived auction state ──────────────────────────────────────────
   const auction = data?.auction
   const item = data?.item
+  const sellerId = item?.sellerId ?? auction?.sellerId
+  const { data: sellerProfile } = useSellerById(sellerId ?? '')
   // Use data.recentBids as the canonical source (realtime-patched by useAuctionHub).
   // The public /auctions/{id} endpoint already embeds recentBids, and the protected
   // /auctions/{id}/bids endpoint is not needed on this page.
@@ -874,7 +878,7 @@ const handleSellerCancel = () => {
             <div style={{ fontSize: 14, color: 'var(--color-text-secondary)', display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
               {item.categoryId && <span>{categoryName ?? item.categoryId}</span>}
               {item.categoryId && item.condition && <span>&middot;</span>}
-              {item.condition && <span>{item.condition}</span>}
+              {item.condition && <span>{tc(`statusLabel.${item.condition}`, item.condition)}</span>}
               {item.createdAt && (
                 <>
                   <span>&middot;</span>
@@ -894,6 +898,7 @@ const handleSellerCancel = () => {
               bidCount={bidCount}
               isSeller={isSeller}
               categoryName={categoryName}
+              sellerUsername={sellerProfile?.storeName}
               qaConnected={hub.connected}
               qaLastSyncedAt={hub.lastSyncedAt}
             />

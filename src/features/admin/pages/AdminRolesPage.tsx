@@ -1,10 +1,17 @@
-import { Card, Checkbox, Spin, Space, App, Row, Col, Typography, Input } from 'antd'
+import { useMemo, useState } from 'react'
+import { Card, Spin, App, Row, Col, Input } from 'antd'
 import { SearchOutlined } from '@ant-design/icons'
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useRoles, usePermissions, useTogglePermission } from '@/features/admin/api'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
-import { SERIF_FONT, MONO_FONT } from '@/styles/tokens'
+import { SERIF_FONT } from '@/styles/tokens'
+import {
+  PERMISSION_CATEGORIES,
+  type PermissionCategory,
+  getPermissionCategory,
+  permissionI18nPath,
+} from '@/features/admin/utils/permissionMeta'
+import { RolePermissionCard } from '@/features/admin/components/RolePermissionCard'
 
 export default function AdminRolesPage() {
   const { t } = useTranslation('admin')
@@ -15,8 +22,43 @@ export default function AdminRolesPage() {
   const { data: permissionsData, isLoading: permissionsLoading } = usePermissions()
   const togglePermission = useTogglePermission()
 
-  // Permission search filter (helpful on mobile where lists are long)
   const [permSearch, setPermSearch] = useState('')
+
+  const permissionNames = useMemo(() => permissionsData?.items ?? [], [permissionsData])
+
+  // Filter perms by matching slug OR translated label OR description.
+  // Falls back to raw slug match when i18n keys are missing.
+  const filteredPerms = useMemo(() => {
+    const q = permSearch.trim().toLowerCase()
+    if (!q) return permissionNames
+    return permissionNames.filter((slug) => {
+      if (slug.toLowerCase().includes(q)) return true
+      const base = permissionI18nPath(slug)
+      const label = t(`${base}.label`, slug).toLowerCase()
+      const desc = t(`${base}.description`, '').toLowerCase()
+      return label.includes(q) || desc.includes(q)
+    })
+  }, [permissionNames, permSearch, t])
+
+  const permissionsByCategory = useMemo(() => {
+    const map: Record<PermissionCategory, string[]> = {
+      admin: [],
+      me: [],
+      items: [],
+      auctions: [],
+      warehouse: [],
+      media: [],
+      categories: [],
+    }
+    for (const slug of filteredPerms) {
+      map[getPermissionCategory(slug)].push(slug)
+    }
+    // Stable alphabetical ordering within each category for readability.
+    for (const cat of PERMISSION_CATEGORIES) {
+      map[cat].sort()
+    }
+    return map
+  }, [filteredPerms])
 
   const isLoading = rolesLoading || permissionsLoading
 
@@ -29,17 +71,13 @@ export default function AdminRolesPage() {
   }
 
   const roleList = roles ?? []
-  const permissionNames = permissionsData?.items ?? []
-  const filteredPerms = permSearch.trim()
-    ? permissionNames.filter((p) => p.toLowerCase().includes(permSearch.toLowerCase()))
-    : permissionNames
 
-  const handleToggle = async (roleName: string, permissionName: string, currentlyActive: boolean) => {
+  const handleToggle = async (roleName: string, slug: string, currentlyActive: boolean) => {
     try {
-      await togglePermission.mutateAsync({ role: roleName, permission: permissionName, isActive: !currentlyActive })
-      message.success('Permission updated')
+      await togglePermission.mutateAsync({ role: roleName, permission: slug, isActive: !currentlyActive })
+      message.success(t('roles.toggleSuccess', 'Permission updated successfully'))
     } catch {
-      message.error('Failed to update permission')
+      message.error(t('roles.toggleError', 'Failed to update permission'))
     }
   }
 
@@ -57,88 +95,41 @@ export default function AdminRolesPage() {
         {t('roles.title', 'Roles & Permissions')}
       </h1>
 
-      {/* Permission search — useful on mobile to find a specific perm quickly */}
       {permissionNames.length > 6 && (
         <Input
           prefix={<SearchOutlined />}
-          placeholder="Filter permissions..."
+          placeholder={t('roles.filterPermissions', 'Filter permissions...')}
           value={permSearch}
           onChange={(e) => setPermSearch(e.target.value)}
           allowClear
-          style={{ marginBottom: 16, maxWidth: 320 }}
+          style={{ marginBottom: 16, maxWidth: 360 }}
         />
       )}
 
       {roleList.length === 0 ? (
         <Card>
-          <span style={{ color: 'var(--color-text-secondary)' }}>No roles found</span>
+          <span style={{ color: 'var(--color-text-secondary)' }}>
+            {t('roles.noRoles', 'No roles found')}
+          </span>
         </Card>
       ) : (
         <Row gutter={[16, 16]}>
-          {roleList.map((role) => {
-            const matchingPerms = filteredPerms
-            const grantedCount = role.permissions.filter((p) => filteredPerms.includes(p)).length
-
-            return (
-              <Col xs={24} lg={12} key={role.name}>
-                <Card
-                  title={
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: isMobile ? 15 : 16, fontWeight: 600, textTransform: 'capitalize' }}>
-                        {role.name}
-                      </span>
-                      <span style={{ fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 400 }}>
-                        {grantedCount}/{matchingPerms.length} granted
-                      </span>
-                    </div>
-                  }
-                  style={{ borderRadius: 12 }}
-                  styles={{ body: { padding: isMobile ? '12px 16px' : '16px 24px' } }}
-                >
-                  {matchingPerms.length > 0 ? (
-                    <Space direction="vertical" style={{ width: '100%' }} size={isMobile ? 2 : 4}>
-                      {matchingPerms.map((perm) => {
-                        const hasPermission = role.permissions.includes(perm)
-                        return (
-                          <div
-                            key={perm}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              minHeight: isMobile ? 40 : 28,
-                              borderRadius: 6,
-                              padding: isMobile ? '4px 0' : '2px 0',
-                            }}
-                          >
-                            <Checkbox
-                              checked={hasPermission}
-                              onChange={() => handleToggle(role.name, perm, hasPermission)}
-                              style={{ fontSize: 13, width: '100%' }}
-                            >
-                              <Typography.Text
-                                style={{
-                                  fontFamily: MONO_FONT,
-                                  fontSize: isMobile ? 11 : 12,
-                                  color: hasPermission ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
-                                  wordBreak: 'break-all',
-                                }}
-                              >
-                                {perm}
-                              </Typography.Text>
-                            </Checkbox>
-                          </div>
-                        )
-                      })}
-                    </Space>
-                  ) : (
-                    <span style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
-                      {permSearch ? 'No matching permissions' : 'No permissions defined'}
-                    </span>
-                  )}
-                </Card>
-              </Col>
-            )
-          })}
+          {roleList.map((role) => (
+            <Col xs={24} lg={12} key={role.name}>
+              <RolePermissionCard
+                roleName={role.name}
+                grantedPermissions={role.permissions}
+                permissionsByCategory={permissionsByCategory}
+                onToggle={(slug, currentlyActive) => handleToggle(role.name, slug, currentlyActive)}
+                isMobile={isMobile}
+                emptyText={
+                  permSearch
+                    ? t('roles.noMatches', 'No matching permissions')
+                    : t('roles.noPermissions', 'No permissions defined')
+                }
+              />
+            </Col>
+          ))}
         </Row>
       )}
     </div>

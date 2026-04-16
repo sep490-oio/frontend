@@ -10,19 +10,10 @@ import { useCreateAuction } from '@/features/auction/api'
 import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { MultiCaptureUploader } from '@/components/ui/MultiCaptureUploader'
 import type { CapturedPhoto } from '@/components/ui/MultiCaptureUploader'
-import { ItemCondition, AuctionType } from '@/types/enums'
+import { AuctionType } from '@/types/enums'
 import type { CreateItemRequest } from '@/types'
 import { RichTextEditor } from '@/components/ui/RichTextEditor'
-
-const CONDITION_OPTIONS = Object.entries(ItemCondition).map(([label, value]) => ({
-  label,
-  value,
-}))
-
-const AUCTION_TYPE_OPTIONS = Object.entries(AuctionType).map(([label, value]) => ({
-  label,
-  value,
-}))
+import { useConditionOptions, useAuctionTypeOptions } from '@/utils/enumLabels'
 
 interface AuctionFields {
   auctionType: string
@@ -47,6 +38,8 @@ export default function CreateItemPage() {
   const createItem = useCreateItem()
   const submitItem = useSubmitItem()
   const createAuction = useCreateAuction()
+  const CONDITION_OPTIONS = useConditionOptions()
+  const AUCTION_TYPE_OPTIONS = useAuctionTypeOptions()
   const mediaUpload = useMediaUpload('item_image')
   const { data: categories, isLoading: categoriesLoading } = useCategories()
   const [capturedPhotos, setCapturedPhotos] = useState<CapturedPhoto[]>([])

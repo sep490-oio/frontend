@@ -143,5 +143,17 @@
   "walletProvider": "Nhà cung cấp ví",
   "walletProviderPlaceholder": "VD: MoMo, ZaloPay",
   "setAsDefault": "Đặt làm phương thức thanh toán mặc định",
-  "cardVnPayHint": "Với thẻ, chúng tôi khuyên bạn liên kết qua VNPay để bảo mật mã hóa."
+  "cardVnPayHint": "Với thẻ, chúng tôi khuyên bạn liên kết qua VNPay để bảo mật mã hóa.",
+  "topUpWallet": "Nạp tiền vào ví",
+  "topUp": "Nạp tiền",
+  "topUpOrderInfo": "Nạp tiền vào ví",
+  "paymentMethod": "Phương thức thanh toán",
+  "paymentSource": "Nguồn thanh toán",
+  "newVnPayCard": "Thanh toán bằng thẻ VNPay mới",
+  "managePaymentMethods": "Quản lý phương thức thanh toán",
+  "saveCardForTopUp": "Lưu thẻ cho các lần nạp tiếp theo",
+  "domesticCard": "Thẻ ATM / nội địa",
+  "internationalCard": "Thẻ quốc tế (Visa/Master)",
+  "accountHolder": "Chủ tài khoản",
+  "accountHolderPlaceholder": "Họ tên trên tài khoản ngân hàng"
 }
