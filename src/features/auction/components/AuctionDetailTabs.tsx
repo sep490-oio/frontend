@@ -113,6 +113,7 @@ function SellerIdentity({
           )}
         </div>
 
+
         {seller && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Rate disabled allowHalf value={rating} style={{ color: 'var(--color-accent)', fontSize: 14 }} />
