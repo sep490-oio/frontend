@@ -78,7 +78,10 @@
     "subtitle": "Duyệt qua bộ sưu tập sản phẩm đa dạng trên nền tảng",
     "allCategories": "Tất cả danh mục",
     "searchPlaceholder": "Tìm kiếm sản phẩm...",
-    "noItems": "Không tìm thấy sản phẩm"
+    "noItems": "Không tìm thấy sản phẩm",
+    "postedAt": "Đã đăng:",
+    "liveBid": "Giá đấu hiện tại",
+    "currentPrice": "Giá hiện tại"
   },
   "itemDetails": "Thông tin sản phẩm",
   "verifyByPlatform": "Xác minh qua sàn",

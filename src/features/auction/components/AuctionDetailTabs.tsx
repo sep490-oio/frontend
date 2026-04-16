@@ -1,4 +1,5 @@
-import { Tabs, Typography, Flex, Tooltip, Grid } from 'antd'
+import { Tabs, Typography, Flex, Tooltip, Grid, Rate } from 'antd'
+import { useSellerById } from '@/features/seller/api'
 import { CheckCircleOutlined, SafetyOutlined } from '@ant-design/icons'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -23,7 +24,7 @@ export interface AuctionDetailTabsProps {
     images?: { url: string }[]
     sellerId?: string
   }
-  auction: {
+  auction?: {
     sellerId?: string
     bidCount?: number
     verifyByPlatform?: boolean
@@ -31,7 +32,7 @@ export interface AuctionDetailTabsProps {
     reservePrice?: { amount: number; currency?: string } | null
     isReserveMet?: boolean
   }
-  recentBids: Array<{
+  recentBids?: Array<{
     id?: string
     bidderId?: string
     bidderDisplayName?: string
@@ -40,9 +41,9 @@ export interface AuctionDetailTabsProps {
     status?: string
     createdAt?: string
   }>
-  currency: string
-  bidCount: number
-  isSeller: boolean
+  currency?: string
+  bidCount?: number
+  isSeller?: boolean
   sellerUsername?: string
   categoryName?: string
   qaConnected?: boolean
@@ -57,16 +58,20 @@ function SellerIdentity({
   sellerUsername?: string
 }) {
   const { t } = useTranslation('auction')
+  const { data: seller } = useSellerById(sellerId || '')
+
   if (!sellerId) {
     return (
       <Typography.Text type="secondary">
-        {t('noSellerProfile', 'Seller profile is not available for this listing.')}
+        {t('sellerProfileNotAvailable', 'Seller profile is not available for this listing.')}
       </Typography.Text>
     )
   }
 
-  const displayName = sellerUsername ?? `${sellerId.slice(0, 8)}…`
+  const displayName = seller?.storeName || sellerUsername || `${sellerId.slice(0, 8)}…`
   const avatarChar = displayName[0]?.toUpperCase()
+  const reviewCount = seller?.reviewCount || 0
+  const rating = seller?.rating || 0
 
   return (
     <>
@@ -87,32 +92,43 @@ function SellerIdentity({
       >
         {avatarChar}
       </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
         <div
           style={{
             color: 'var(--color-text-primary)',
-            fontSize: 15,
-            fontWeight: 600,
-            marginBottom: 2,
+            fontSize: 16,
+            fontWeight: 700,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
           }}
         >
           <Link to={`/sellers/${sellerId}`} style={{ color: 'inherit', textDecoration: 'none' }}>
-            {sellerUsername ? (
-              displayName
-            ) : (
-              <Tooltip title={sellerId}>{displayName}</Tooltip>
-            )}
+            {displayName}
           </Link>
+          {seller?.status === 'verified' && (
+            <Tooltip title={t('verifiedSeller', 'Verified Seller')}>
+              <CheckCircleOutlined style={{ color: 'var(--color-success)', marginLeft: 6, fontSize: 14 }} />
+            </Tooltip>
+          )}
         </div>
-        <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-          {t('sellerActivityDesc', 'Public seller activity and catalogue are available on the seller profile page.')}
+
+        {seller && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Rate disabled allowHalf value={rating} style={{ color: 'var(--color-accent)', fontSize: 14 }} />
+            <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+              ({reviewCount} {t('reviews', 'đánh giá')})
+            </Typography.Text>
+          </div>
+        )}
+
+        <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+          {t('publicSellerActivity', 'Public seller activity and catalogue are available on the seller profile page.')}
         </Typography.Text>
-        <div style={{ marginTop: 8 }}>
-          <Link to={`/sellers/${sellerId}`} style={{ fontSize: 13 }}>
-            {t('viewSellerProfile', 'View seller profile')}
+
+        <div style={{ marginTop: 4 }}>
+          <Link to={`/sellers/${sellerId}`} style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-accent)' }}>
+            {t('viewSellerProfile', 'View seller profile')} &rarr;
           </Link>
         </div>
       </div>
@@ -144,10 +160,10 @@ function SpecRow({ label, children }: { label: string; children: React.ReactNode
 export function AuctionDetailTabs({
   item,
   auction,
-  recentBids,
-  currency,
-  bidCount,
-  isSeller,
+  recentBids = [],
+  currency = 'VND',
+  bidCount = 0,
+  isSeller = false,
   sellerUsername,
   categoryName,
   qaConnected = false,
@@ -157,7 +173,7 @@ export function AuctionDetailTabs({
   const { t: tc } = useTranslation('common')
   const screens = useBreakpoint()
   const isMobile = !screens.md
-  const sellerId = item.sellerId ?? auction.sellerId
+  const sellerId = item.sellerId ?? auction?.sellerId
 
   // Responsive grid for spec table
   const specGridStyle: React.CSSProperties = {
@@ -167,14 +183,9 @@ export function AuctionDetailTabs({
     fontSize: 14,
   }
 
-  return (
-    <Tabs
-      defaultActiveKey="condition"
-      size={isMobile ? 'small' : 'middle'}
-      style={{ width: '100%' }}
-      items={[
-        {
-          key: 'condition',
+  const tabItems = [
+    {
+      key: 'condition',
           label: t('specifications', 'Thông số'),
           children: (
             <div style={{ paddingTop: 4 }}>
@@ -319,7 +330,7 @@ export function AuctionDetailTabs({
             </div>
           ),
         },
-        {
+        auction ? {
           key: 'bidHistory',
           label: (
             <span>
@@ -396,7 +407,7 @@ export function AuctionDetailTabs({
                 ))}
               </div>
             ),
-        },
+        } : null,
         {
           key: 'seller',
           label: t('sellerTab', 'Người bán'),
@@ -414,7 +425,7 @@ export function AuctionDetailTabs({
             </div>
           ),
         },
-        {
+        auction ? {
           key: 'certification',
           label: t('certificationTab', 'Chứng nhận'),
           children: (
@@ -548,7 +559,7 @@ export function AuctionDetailTabs({
               </div>
             </div>
           ),
-        },
+        } : null,
         {
           key: 'qna',
           label: t('qna', 'Q&A'),
@@ -561,7 +572,14 @@ export function AuctionDetailTabs({
             />
           ),
         },
-      ]}
+      ].filter((x) => x !== null) as NonNullable<any>
+
+  return (
+    <Tabs
+      defaultActiveKey="condition"
+      size={isMobile ? 'small' : 'middle'}
+      style={{ width: '100%' }}
+      items={tabItems}
     />
   )
 }

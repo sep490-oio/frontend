@@ -7,9 +7,9 @@
   --color-bg-card: #FFFFFF;
   --color-text-primary: #0F172A;
   --color-text-secondary: #64748B;
-  --color-accent: #2563EB;
-  --color-accent-hover: #1D4ED8;
-  --color-accent-light: rgba(37, 99, 235, 0.08);
+  --color-accent: #137fec;
+  --color-accent-hover: #106bc7;
+  --color-accent-light: rgba(19, 127, 236, 0.08);
   --color-success: #4A7C59;
   --color-danger: #C4513D;
   --color-border: #E2E8F0;
@@ -35,18 +35,18 @@
 /* ─── Dark Mode ─── */
 
 [data-theme="dark"] {
-  --color-bg-primary: #0F172A;
-  --color-bg-surface: #1E293B;
-  --color-bg-card: #1E293B;
+  --color-bg-primary: #05070a;
+  --color-bg-surface: #11141b;
+  --color-bg-card: #11141b;
   --color-text-primary: #F1F5F9;
   --color-text-secondary: #94A3B8;
-  --color-accent: #3B82F6;
-  --color-accent-hover: #2563EB;
-  --color-accent-light: rgba(59, 130, 246, 0.1);
+  --color-accent: #3494f8;
+  --color-accent-hover: #137fec;
+  --color-accent-light: rgba(52, 148, 248, 0.1);
   --color-success: #5A9C6B;
   --color-danger: #D4634E;
-  --color-border: #334155;
-  --color-border-light: #1E293B;
+  --color-border: #1f242f;
+  --color-border-light: #11141b;
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -267,7 +267,7 @@ h1.oio-serif, .oio-display {
 /* ─── Selection ─── */
 
 ::selection {
-  background: rgba(37, 99, 235, 0.15);
+  background: rgba(19, 127, 236, 0.15);
   color: var(--color-text-primary);
 }
 
@@ -285,7 +285,7 @@ h1.oio-serif, .oio-display {
 .ant-input:focus,
 .ant-input-focused,
 .ant-input-number-focused {
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1) !important;
+  box-shadow: 0 0 0 2px rgba(19, 127, 236, 0.1) !important;
 }
 
 /* Card hover lift */
@@ -373,12 +373,12 @@ h1.oio-serif, .oio-display {
   font-weight: 500 !important;
   letter-spacing: 0.01em !important;
   transition: all 200ms ease !important;
-  background: linear-gradient(to right, #2563EB, #1D4ED8) !important;
+  background: linear-gradient(to right, #137fec, #106bc7) !important;
   border: none !important;
 }
 
 .ant-btn-primary:not(:disabled):hover {
-  background: linear-gradient(to right, #1D4ED8, #1E40AF) !important;
+  background: linear-gradient(to right, #106bc7, #0c5299) !important;
   filter: none !important;
   transform: translateY(-1px) !important;
 }

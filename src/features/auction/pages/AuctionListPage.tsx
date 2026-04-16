@@ -6,11 +6,12 @@ import { useAuctions } from '@/features/auction/api'
 import { useCategories } from '@/features/item/api'
 import { AuctionCard } from '@/components/ui/AuctionCard'
 import { CountdownTimer } from '@/components/ui/CountdownTimer'
-import { PriceDisplay } from '@/components/ui/PriceDisplay'
 import { AuctionStatus } from '@/types/enums'
 import { formatCurrency } from '@/utils/format'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { SERIF_FONT, MONO_FONT } from '@/styles/tokens'
+
+import { useTheme } from '@/hooks/useTheme'
 
 const SERIF = SERIF_FONT
 const MONO = MONO_FONT
@@ -20,11 +21,12 @@ export default function AuctionListPage() {
   const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
   const { isMobile, isTablet } = useBreakpoint()
+  const { isDark } = useTheme()
 
-  const { data: featuredData } = useAuctions({ pageNumber: 1, pageSize: 4, status: AuctionStatus.Active, sortBy: 'BidCount Desc' }, { refetchInterval: 30000 })
+  const { data: featuredData } = useAuctions({ pageNumber: 1, pageSize: 3, status: AuctionStatus.Active, sortBy: 'BidCount Desc' }, { refetchInterval: 30000 })
   const { data: categories } = useCategories()
-  const { data: newAuctions, isLoading: newLoading } = useAuctions({ status: AuctionStatus.Active, sortBy: 'CreatedAt Desc', pageSize: 8 })
-  const { data: trendingAuctions, isLoading: trendingLoading } = useAuctions({ status: AuctionStatus.Active, sortBy: 'ViewCount Desc', pageSize: 8 })
+  const { data: newAuctions, isLoading: newLoading } = useAuctions({ status: AuctionStatus.Active, sortBy: 'CreatedAt Desc', pageSize: 6 })
+  const { data: trendingAuctions, isLoading: trendingLoading } = useAuctions({ status: AuctionStatus.Active, sortBy: 'ViewCount Desc', pageSize: 6 })
 
   const featured = featuredData?.items ?? []
   const heroItem = featured[0]
@@ -37,7 +39,9 @@ export default function AuctionListPage() {
       <section
         style={{
           padding: isMobile ? '36px 16px 28px' : isTablet ? '48px 20px' : '64px 24px',
-          background: 'linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 50%, #DBEAFE 100%)',
+          background: isDark 
+            ? 'linear-gradient(135deg, #05070a 0%, #0a0e17 50%, #0d1629 100%)'
+            : 'linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 50%, #DBEAFE 100%)',
         }}
       >
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
@@ -225,10 +229,10 @@ export default function AuctionListPage() {
 
           {newLoading ? (
             <Row gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]}>
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Col xs={12} sm={8} xl={6} key={i}>
-                  <Skeleton.Image active style={{ width: '100%', height: isMobile ? 120 : 160 }} />
-                  <Skeleton active paragraph={{ rows: 1 }} style={{ marginTop: 8 }} />
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Col xs={12} sm={12} md={8} xl={8} key={i}>
+                  <Skeleton.Image active style={{ width: '100%', height: isMobile ? 180 : 240 }} />
+                  <Skeleton active paragraph={{ rows: 2 }} style={{ marginTop: 8 }} />
                 </Col>
               ))}
             </Row>
@@ -237,59 +241,8 @@ export default function AuctionListPage() {
           ) : (
             <Row gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]}>
               {newAuctions.items.map((auction) => (
-                <Col xs={12} sm={8} xl={6} key={auction.id}>
-                  <Link to={`/auctions/${auction.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                    <div
-                      className="oio-card-hover"
-                      style={{
-                        borderRadius: 8,
-                        overflow: 'hidden',
-                        background: 'var(--color-bg-card)',
-                        border: '1px solid var(--color-border)',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      {auction.primaryImageUrl ? (
-                        <div style={{ aspectRatio: '4/3', overflow: 'hidden' }}>
-                          <img
-                            src={auction.primaryImageUrl}
-                            alt={auction.itemTitle}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                          />
-                        </div>
-                      ) : (
-                        <div
-                          style={{
-                            aspectRatio: '4/3',
-                            background: 'var(--color-bg-surface)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: 'var(--color-text-secondary)',
-                            fontSize: 12,
-                          }}
-                        >
-                          {t('noImage')}
-                        </div>
-                      )}
-                      <div style={{ padding: isMobile ? '8px 10px' : 12 }}>
-                        <div
-                          style={{
-                            fontSize: isMobile ? 12 : 14,
-                            fontWeight: 500,
-                            color: 'var(--color-text-primary)',
-                            marginBottom: 4,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          {auction.itemTitle}
-                        </div>
-                        <PriceDisplay price={auction.currentPrice} size="small" />
-                      </div>
-                    </div>
-                  </Link>
+                <Col xs={12} sm={12} md={8} xl={8} key={auction.id}>
+                  <AuctionCard auction={auction} />
                 </Col>
               ))}
             </Row>
@@ -331,69 +284,18 @@ export default function AuctionListPage() {
             </Flex>
             {trendingLoading ? (
               <Row gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]}>
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <Col xs={12} sm={8} xl={6} key={i}>
-                    <Skeleton.Image active style={{ width: '100%', height: isMobile ? 120 : 160 }} />
-                    <Skeleton active paragraph={{ rows: 1 }} style={{ marginTop: 8 }} />
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <Col xs={12} sm={12} md={8} xl={8} key={i}>
+                    <Skeleton.Image active style={{ width: '100%', height: isMobile ? 180 : 240 }} />
+                    <Skeleton active paragraph={{ rows: 2 }} style={{ marginTop: 8 }} />
                   </Col>
                 ))}
               </Row>
             ) : (
               <Row gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]}>
                 {trendingAuctions.items.map((auction) => (
-                  <Col xs={12} sm={8} xl={6} key={auction.id}>
-                    <Link to={`/auctions/${auction.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                      <div
-                        className="oio-card-hover"
-                        style={{
-                          borderRadius: 8,
-                          overflow: 'hidden',
-                          background: 'var(--color-bg-card)',
-                          border: '1px solid var(--color-border)',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        {auction.primaryImageUrl ? (
-                          <div style={{ aspectRatio: '4/3', overflow: 'hidden' }}>
-                            <img
-                              src={auction.primaryImageUrl}
-                              alt={auction.itemTitle}
-                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            />
-                          </div>
-                        ) : (
-                          <div
-                            style={{
-                              aspectRatio: '4/3',
-                              background: 'var(--color-bg-surface)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              color: 'var(--color-text-secondary)',
-                              fontSize: 12,
-                            }}
-                          >
-                            {t('noImage')}
-                          </div>
-                        )}
-                        <div style={{ padding: isMobile ? '8px 10px' : 12 }}>
-                          <div
-                            style={{
-                              fontSize: isMobile ? 12 : 14,
-                              fontWeight: 500,
-                              color: 'var(--color-text-primary)',
-                              marginBottom: 4,
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {auction.itemTitle}
-                          </div>
-                          <PriceDisplay price={auction.currentPrice} size="small" />
-                        </div>
-                      </div>
-                    </Link>
+                  <Col xs={12} sm={12} md={8} xl={8} key={auction.id}>
+                    <AuctionCard auction={auction} />
                   </Col>
                 ))}
               </Row>
@@ -568,7 +470,7 @@ export default function AuctionListPage() {
           </Flex>
           <Row className="oio-stagger" gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]}>
             {featured.map((auction) => (
-              <Col key={auction.id} xs={12} sm={12} md={8} xl={6}>
+              <Col key={auction.id} xs={12} sm={12} md={8} xl={8}>
                 <AuctionCard auction={auction} />
               </Col>
             ))}

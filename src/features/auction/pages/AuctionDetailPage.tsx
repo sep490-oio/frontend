@@ -58,6 +58,7 @@ import { AuctionStatus } from '@/types/enums'
 import { formatCurrency, formatDate } from '@/utils/format'
 import { DEFAULT_CURRENCY } from '@/utils/constants'
 import { NotificationAggregator } from '@/features/auction/utils/NotificationAggregator'
+import { StatusBadge } from '@/components/ui/StatusBadge'
 import { AuctionDetailTabs } from '@/features/auction/components/AuctionDetailTabs'
 import { AuctionSidebar } from '@/features/auction/components/AuctionSidebar'
 import { AuctionDepositModal } from '@/features/auction/components/AuctionDepositModal'
@@ -99,7 +100,6 @@ function computeQualificationState(
 export default function AuctionDetailPage() {
   const { t } = useTranslation('auction')
   const { t: td } = useTranslation('dispute')
-  const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
   const { message, modal } = App.useApp()
   const { id } = useParams<{ id: string }>()
@@ -362,8 +362,8 @@ export default function AuctionDetailPage() {
       }
     })
     return () => { aggregatorRef.current?.destroy() }
-  // message and t are stable refs, currency changes rarely
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // message and t are stable refs, currency changes rarely
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Push each bid event into the aggregator
@@ -471,10 +471,10 @@ export default function AuctionDetailPage() {
       // Otherwise fall back to client-side computation (for backward compatibility until BE is updated)
       return auction
         ? computeQualificationState(
-            { ...auction, sellerId: item?.sellerId ?? auction.sellerId ?? '' },
-            currentUser?.id,
-            isQualified,
-          )
+          { ...auction, sellerId: item?.sellerId ?? auction.sellerId ?? '' },
+          currentUser?.id,
+          isQualified,
+        )
         : ('before_window' as QualificationState)
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -681,7 +681,7 @@ export default function AuctionDetailPage() {
     }
   }
 
-const handleSellerCancel = () => {
+  const handleSellerCancel = () => {
     setCancelReason('')
     setCancelModalOpen(true)
   }
@@ -813,26 +813,26 @@ const handleSellerCancel = () => {
       )}
 
       {/* Seller action bar */}
-        {isSeller && (
-          <SellerActionBar
-            status={auction?.status ?? ''}
-            verifyByPlatform={auction?.verifyByPlatform}
-            itemStatus={item?.status}
-            isMobile={isMobile}
-            onEdit={() => navigate(`/seller/items/${item?.id}/edit`)}
-            onSubmit={handleSellerSubmit}
-            onSetTiming={handleSetTiming}
-            onViewDetail={() => { /* already on detail page */ }}
-            onCancel={handleSellerCancel}
-            onConfigureShipping={() => { shippingForm.resetFields(); setShippingModalOpen(true) }}
-            onOfferRunnerUp={() => offerRunnerUp.mutateAsync(id!).then(() => message.success(t('offerRunnerUpSuccess', 'Offer sent')))}
-            onRelist={() => { setRelistForm({ qualificationStartAt: null, qualificationEndAt: null, startAt: null, endAt: null }); setRelistModalOpen(true) }}
-            isSubmitLoading={submitAuctionMutation.isPending}
-            isCancelLoading={cancelAuctionMutation.isPending}
-            isOfferRunnerUpLoading={offerRunnerUp.isPending}
-            isRelistLoading={relistAuction.isPending}
-          />
-        )}
+      {isSeller && (
+        <SellerActionBar
+          status={auction?.status ?? ''}
+          verifyByPlatform={auction?.verifyByPlatform}
+          itemStatus={item?.status}
+          isMobile={isMobile}
+          onEdit={() => navigate(`/seller/items/${item?.id}/edit`)}
+          onSubmit={handleSellerSubmit}
+          onSetTiming={handleSetTiming}
+          onViewDetail={() => { /* already on detail page */ }}
+          onCancel={handleSellerCancel}
+          onConfigureShipping={() => { shippingForm.resetFields(); setShippingModalOpen(true) }}
+          onOfferRunnerUp={() => offerRunnerUp.mutateAsync(id!).then(() => message.success(t('offerRunnerUpSuccess', 'Offer sent')))}
+          onRelist={() => { setRelistForm({ qualificationStartAt: null, qualificationEndAt: null, startAt: null, endAt: null }); setRelistModalOpen(true) }}
+          isSubmitLoading={submitAuctionMutation.isPending}
+          isCancelLoading={cancelAuctionMutation.isPending}
+          isOfferRunnerUpLoading={offerRunnerUp.isPending}
+          isRelistLoading={relistAuction.isPending}
+        />
+      )}
 
       {/* Status explanation banners */}
       {auction.status === AuctionStatus.PaymentDefaulted && (
@@ -878,7 +878,7 @@ const handleSellerCancel = () => {
             <div style={{ fontSize: 14, color: 'var(--color-text-secondary)', display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
               {item.categoryId && <span>{categoryName ?? item.categoryId}</span>}
               {item.categoryId && item.condition && <span>&middot;</span>}
-              {item.condition && <span>{tc(`statusLabel.${item.condition}`, item.condition)}</span>}
+              {item.condition && <StatusBadge status={item.condition} size="small" />}
               {item.createdAt && (
                 <>
                   <span>&middot;</span>
@@ -1007,9 +1007,9 @@ const handleSellerCancel = () => {
               data?.currentUserBidState ??
               (knownPositionFromNav
                 ? {
-                    position: knownPositionFromNav,
-                    isCurrentWinner: knownPositionFromNav === 'won',
-                  }
+                  position: knownPositionFromNav,
+                  isCurrentWinner: knownPositionFromNav === 'won',
+                }
                 : undefined)
             }
             isMobile={isMobile}
@@ -1204,19 +1204,19 @@ const handleSellerCancel = () => {
 
       {/* Shipping Details Modal */}
       <Modal
-        title="Thông tin vận chuyển"
+        title={t('shippingDetails', 'Shipping Details')}
         open={shippingModalOpen}
         onCancel={() => setShippingModalOpen(false)}
         onOk={async () => {
           try {
             const values = await shippingForm.validateFields()
             await chooseShipping.mutateAsync({ auctionId: id!, ...values })
-            message.success('Đã lưu thông tin vận chuyển')
+            message.success(t('shippingSaved', 'Shipping details saved'))
             setShippingModalOpen(false)
             shippingForm.resetFields()
-          } catch { message.error('Vui lòng điền đầy đủ thông tin') }
+          } catch { message.error(t('shippingError', 'Please fill in all required fields')) }
         }}
-        okText="Xác nhận"
+        okText={t('confirm', 'Confirm')}
         okButtonProps={{ loading: chooseShipping.isPending }}
         centered
         width={isMobile ? '95%' : 520}

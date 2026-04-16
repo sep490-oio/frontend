@@ -19,6 +19,7 @@ import type {
   ReceiveInboundPackageRequest,
   PagedList,
   PaginationParams,
+  GhnMetadata,
 } from '@/types'
 
 // ── Inbound Shipments ───────────────────────────────────────────────
@@ -73,13 +74,16 @@ export interface BookInboundShipmentRequest {
   providerCode?: string
   notes?: string
   ghnHandlingNote?: string
+  senderMetadata?: GhnMetadata
 }
 
 export function useBookInbound() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (data: BookInboundShipmentRequest) => {
-      const res = await apiClient.post<InboundShipmentDto[]>('/warehouse/inbound-shipments', data)
+      const isGhn = data.shipmentMode === 'platform_managed' || data.providerCode === 'ghn'
+      const url = isGhn ? '/warehouse/ghn/book-inbound' : '/warehouse/inbound-shipments'
+      const res = await apiClient.post<InboundShipmentDto[]>(url, data)
       return res.data
     },
     onSuccess: async () => {
@@ -282,6 +286,14 @@ export interface BookOutboundRequest {
   recipientWard: string
   recipientDistrict: string
   recipientProvince: string
+  recipientMetadata?: GhnMetadata
+  senderName?: string
+  senderPhone?: string
+  senderAddress?: string
+  senderWard?: string
+  senderDistrict?: string
+  senderProvince?: string
+  senderMetadata?: GhnMetadata
   // Package
   weightGrams: number
   insuranceValue: number
@@ -320,7 +332,9 @@ export function useBookOutbound() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (data: BookOutboundRequest) => {
-      const res = await apiClient.post<OutboundShipmentDto>('/warehouse/outbound-shipments', data)
+      const isGhn = data.shipmentMode === 'platform_managed' || data.providerCode === 'ghn'
+      const url = isGhn ? '/warehouse/ghn/book-outbound' : '/warehouse/outbound-shipments'
+      const res = await apiClient.post<OutboundShipmentDto>(url, data)
       return res.data
     },
     onSuccess: async (_data, variables) => {

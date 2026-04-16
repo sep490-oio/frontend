@@ -41,6 +41,7 @@ import { PaymentMethodType } from '@/types/enums'
 import { formatDateTime, formatCurrency } from '@/utils/format'
 import type { PaymentMethodDto } from '@/types'
 import { SERIF_FONT, MONO_FONT } from '@/styles/tokens'
+import GhnAddressSelect from '@/components/ui/GhnAddressSelect'
 
 const WALLET_METHOD_ID = '__wallet__'
 
@@ -98,6 +99,7 @@ export default function CheckoutPage() {
         district: order.shipping.district ?? '',
         city: order.shipping.city ?? '',
         postalCode: order.shipping.postalCode ?? '',
+        recipientMetadata: order.shipping.recipientMetadata,
       }
     }
 
@@ -111,6 +113,7 @@ export default function CheckoutPage() {
         district: defaultAddress.district,
         city: defaultAddress.city,
         postalCode: defaultAddress.postalCode ?? '',
+        recipientMetadata: defaultAddress.metadata as any,
       }
     }
 
@@ -172,6 +175,7 @@ export default function CheckoutPage() {
         district: values.district.trim(),
         city: values.city.trim(),
         postalCode: values.postalCode?.trim() || undefined,
+        recipientMetadata: values.recipientMetadata,
       })
       setShippingSaved(true)
       return true
@@ -450,32 +454,15 @@ export default function CheckoutPage() {
           >
             <Input placeholder={t('streetPlaceholder', 'House number, street name')} />
           </Form.Item>
-          <Flex gap={12} wrap="wrap">
-            <Form.Item
-              name="ward"
-              label={t('ward', 'Ward')}
-              style={{ flex: '1 1 180px' }}
-              rules={[{ required: true, whitespace: true, message: t('wardRequired', 'Ward is required') }]}
-            >
-              <Input />
-            </Form.Item>
-            <Form.Item
-              name="district"
-              label={t('district', 'District')}
-              style={{ flex: '1 1 180px' }}
-              rules={[{ required: true, whitespace: true, message: t('districtRequired', 'District is required') }]}
-            >
-              <Input />
-            </Form.Item>
-            <Form.Item
-              name="city"
-              label={t('city', 'City / Province')}
-              style={{ flex: '1 1 180px' }}
-              rules={[{ required: true, whitespace: true, message: t('cityRequired', 'City is required') }]}
-            >
-              <Input />
-            </Form.Item>
-          </Flex>
+          
+          <GhnAddressSelect
+            form={shippingForm}
+            provinceName="city"
+            districtName="district"
+            wardName="ward"
+            metadataName="recipientMetadata"
+          />
+
           <Form.Item name="postalCode" label={t('postalCode', 'Postal Code (optional)')}>
             <Input />
           </Form.Item>

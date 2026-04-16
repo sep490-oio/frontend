@@ -97,7 +97,7 @@ export function AutoBidDashboard({
               onClick={onPause}
               size="small"
             >
-              {t('autoBid.pause', 'Tạm dừng')}
+              {t('autoBid.pause', 'Pause')}
             </Button>
           ) : isPaused ? (
             <Button
@@ -107,16 +107,15 @@ export function AutoBidDashboard({
               size="small"
               type="primary"
             >
-              {t('autoBid.resume', 'Tiếp tục')}
+              {t('autoBid.resume', 'Resume')}
             </Button>
           ) : null)}
       </Flex>
 
-      {/* Budget progress bar */}
       <div style={{ marginBottom: 16 }}>
         <Flex justify="space-between" style={{ marginBottom: 4 }}>
           <Text type="secondary" style={{ fontSize: 12 }}>
-            {t('autoBid.budgetUsed', 'Ngân sách đã dùng')}
+            {t('autoBid.budgetUsed', 'Budget Used')}
           </Text>
           <Text style={{ fontSize: 12, fontWeight: 500 }}>
             {formatCurrency(usedAmount, currency)} / {formatCurrency(maxAmount, currency)}
@@ -131,7 +130,7 @@ export function AutoBidDashboard({
         />
         <Flex justify="flex-end" style={{ marginTop: 2 }}>
           <Text type="secondary" style={{ fontSize: 11 }}>
-            {t('autoBid.remaining', 'Còn lại')}: {formatCurrency(remainingBudget, currency)}
+            {t('autoBid.remaining', 'Remaining')}: {formatCurrency(remainingBudget, currency)}
           </Text>
         </Flex>
       </div>
@@ -146,20 +145,20 @@ export function AutoBidDashboard({
         }}
       >
         <StatItem
-          label={t('autoBid.maxAmount', 'Số tiền tối đa')}
+          label={t('autoBid.maxAmount', 'Max Amount')}
           value={formatCurrency(maxAmount, currency)}
         />
         <StatItem
-          label={t('autoBid.used', 'Đã dùng')}
+          label={t('autoBid.used', 'Used')}
           value={formatCurrency(usedAmount, currency)}
         />
         <StatItem
-          label={t('autoBid.remaining', 'Còn lại')}
+          label={t('autoBid.remaining', 'Remaining')}
           value={formatCurrency(remainingBudget, currency)}
         />
         {autoBid.incrementAmount && (
           <StatItem
-            label={t('autoBid.increment', 'Bước giá')}
+            label={t('autoBid.increment', 'Increment')}
             value={formatCurrency(
               autoBid.incrementAmount.amount,
               autoBid.incrementAmount.currency ?? currency,
@@ -167,7 +166,7 @@ export function AutoBidDashboard({
           />
         )}
         <StatItem
-          label={t('autoBid.totalPlaced', 'Lần tự động')}
+          label={t('autoBid.totalPlaced', 'Total Placed')}
           value={String(autoBid.totalAutoBids ?? 0)}
         />
       </div>
@@ -177,7 +176,7 @@ export function AutoBidDashboard({
         <Alert
           type="warning"
           showIcon
-          message={t('autoBid.exhaustedMessage', 'Ngân sách tự động đặt giá đã hết.')}
+          message={t('autoBid.exhaustedMessage', 'Auto-bid budget is exhausted.')}
           style={{ marginBottom: 12 }}
         />
       )}
@@ -185,7 +184,7 @@ export function AutoBidDashboard({
         <Alert
           type="success"
           showIcon
-          message={t('autoBid.wonMessage', 'Tự động đặt giá đã thắng đấu giá!')}
+          message={t('autoBid.wonMessage', 'Auto-bid has won the auction!')}
           style={{ marginBottom: 12 }}
         />
       )}
@@ -193,7 +192,7 @@ export function AutoBidDashboard({
         <Alert
           type="error"
           showIcon
-          message={t('autoBid.outbidMessage', 'Tự động đặt giá đã bị vượt qua.')}
+          message={t('autoBid.outbidMessage', 'Auto-bid has been outbid.')}
           style={{ marginBottom: 12 }}
         />
       )}
@@ -211,7 +210,7 @@ export function AutoBidDashboard({
       >
         {t(
           'autoBid.cascadeWarning',
-          'Trong tình huống cạnh tranh, nhiều lần đặt giá tự động có thể kích hoạt liên tiếp.',
+          'In competitive situations, multiple automatic bids may trigger consecutively.',
         )}
       </Text>
 
@@ -219,38 +218,38 @@ export function AutoBidDashboard({
       {!isTerminal && (
         <Flex gap={8} wrap="wrap">
           <Button icon={<EditOutlined />} onClick={onModify} style={{ minHeight: 36 }}>
-            {t('autoBid.modify', 'Chỉnh sửa')}
+            {t('autoBid.modify', 'Modify')}
           </Button>
           {isActive && (
             <Popconfirm
-              title={t('autoBid.pauseTitle', 'Tạm dừng tự động đặt giá')}
+              title={t('autoBid.pauseTitle', 'Pause auto-bid')}
               description={t(
                 'autoBid.pauseWarning',
-                'Tạm dừng sẽ dừng đặt giá tự động nhưng vẫn giữ tiền cọc. Bạn có thể tiếp tục bất cứ lúc nào.',
+                'Pausing will stop automatic bidding but keep your deposit. You can resume at any time.',
               )}
               onConfirm={onPause}
-              okText={t('common.confirm', 'Xác nhận')}
-              cancelText={t('common.cancel', 'Hủy')}
+              okText={t('common.confirm', 'Confirm')}
+              cancelText={t('common.cancel', 'Cancel')}
             >
               <Button
                 icon={<PauseCircleOutlined />}
                 loading={isPauseLoading}
                 style={{ minHeight: 36 }}
               >
-                {t('autoBid.pause', 'Tạm dừng')}
+                {t('autoBid.pause', 'Pause')}
               </Button>
             </Popconfirm>
           )}
           {(isActive || isPaused) && (
             <Popconfirm
-              title={t('autoBid.cancelTitle', 'Hủy tự động đặt giá')}
+              title={t('autoBid.cancelTitle', 'Cancel auto-bid')}
               description={t(
                 'autoBid.cancelWarning',
-                'Hủy sẽ dừng vĩnh viễn việc tự động đặt giá và hoàn tiền cọc về ví. Thao tác này không thể hoàn tác.',
+                'Canceling will permanently stop automatic bidding and refund your deposit. This action cannot be undone.',
               )}
               onConfirm={onCancelAutoBid}
-              okText={t('common.confirm', 'Xác nhận')}
-              cancelText={t('common.cancel', 'Hủy')}
+              okText={t('common.confirm', 'Confirm')}
+              cancelText={t('common.cancel', 'Cancel')}
               okButtonProps={{ danger: true }}
             >
               <Button
@@ -259,7 +258,7 @@ export function AutoBidDashboard({
                 loading={isCancelLoading}
                 style={{ minHeight: 36 }}
               >
-                {t('autoBid.cancel', 'Hủy tự động')}
+                {t('autoBid.cancel', 'Cancel')}
               </Button>
             </Popconfirm>
           )}

@@ -78,7 +78,10 @@
     "subtitle": "Browse the diverse collection of items on the platform",
     "allCategories": "All categories",
     "searchPlaceholder": "Search items...",
-    "noItems": "No items found"
+    "noItems": "No items found",
+    "postedAt": "Posted:",
+    "liveBid": "Live Bid",
+    "currentPrice": "Current Price"
   },
   "itemDetails": "Item Details",
   "verifyByPlatform": "Platform Verification",
