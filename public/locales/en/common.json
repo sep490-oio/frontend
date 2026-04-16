@@ -292,5 +292,12 @@
   "reserveMet": "Reserve Met",
   "reserveNotMet": "Reserve Not Met",
   "itemInfo": "Product Information",
-  "qna": "Q&A"
+  "qna": "Q&A",
+  "itemCondition": {
+    "new": "New",
+    "like_new": "Like New",
+    "very_good": "Very Good",
+    "good": "Good",
+    "acceptable": "Acceptable"
+  }
 }

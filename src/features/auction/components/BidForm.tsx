@@ -70,7 +70,7 @@ export default function BidForm({
   priceHistory,
   onExpandChart,
 }: BidFormProps) {
-  const { t } = useTranslation()
+  const { t } = useTranslation('auction')
   const navigate = useNavigate()
   const inputRef = useRef<InputNumberRef | null>(null)
   const screens = useBreakpoint()

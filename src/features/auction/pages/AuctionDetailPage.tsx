@@ -57,6 +57,7 @@ import { AuctionStatus } from '@/types/enums'
 import { formatCurrency, formatDate } from '@/utils/format'
 import { DEFAULT_CURRENCY } from '@/utils/constants'
 import { NotificationAggregator } from '@/features/auction/utils/NotificationAggregator'
+import { StatusBadge } from '@/components/ui/StatusBadge'
 import { AuctionDetailTabs } from '@/features/auction/components/AuctionDetailTabs'
 import { AuctionSidebar } from '@/features/auction/components/AuctionSidebar'
 import { AuctionDepositModal } from '@/features/auction/components/AuctionDepositModal'
@@ -874,7 +875,7 @@ export default function AuctionDetailPage() {
             <div style={{ fontSize: 14, color: 'var(--color-text-secondary)', display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
               {item.categoryId && <span>{categoryName ?? item.categoryId}</span>}
               {item.categoryId && item.condition && <span>&middot;</span>}
-              {item.condition && <span>{item.condition}</span>}
+              {item.condition && <StatusBadge status={item.condition} size="small" />}
               {item.createdAt && (
                 <>
                   <span>&middot;</span>

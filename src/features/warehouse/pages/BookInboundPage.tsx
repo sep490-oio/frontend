@@ -9,6 +9,8 @@ import { useAddresses, useCurrentUser, useCurrentUserProfile } from '@/features/
 import { useMySellerProfile } from '@/features/seller/api'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useEffect, useMemo, useRef } from 'react'
+import GhnAddressSelect from '@/components/ui/GhnAddressSelect'
+import type { GhnMetadata } from '@/types'
 
 export default function BookInboundPage() {
   const { t } = useTranslation('warehouse')
@@ -93,6 +95,7 @@ export default function BookInboundPage() {
         senderWard: defaultAddress.ward ?? '',
         senderDistrict: defaultAddress.district ?? '',
         senderProvince: defaultAddress.city ?? '',
+        senderMetadata: defaultAddress.metadata as any,
         _fromDefaultAddress: true as const,
       }
     }
@@ -116,6 +119,7 @@ export default function BookInboundPage() {
       senderWard: '',
       senderDistrict: '',
       senderProvince: '',
+      senderMetadata: undefined,
       _fromDefaultAddress: false as const,
     }
   }, [addresses, currentUser, currentProfile, mySellerProfile])
@@ -156,6 +160,7 @@ export default function BookInboundPage() {
     senderWard?: string
     senderDistrict?: string
     senderProvince?: string
+    senderMetadata?: GhnMetadata
     weight: number
     length: number
     width: number
@@ -193,6 +198,7 @@ export default function BookInboundPage() {
         senderWard: values.senderWard,
         senderDistrict: values.senderDistrict,
         senderProvince: values.senderProvince,
+        senderMetadata: values.senderMetadata,
         lengthCm: values.length,
         widthCm: values.width,
         heightCm: values.height,
@@ -417,6 +423,14 @@ export default function BookInboundPage() {
           >
             <Input.TextArea rows={3} placeholder={t('senderAddressPlaceholder', 'Full address')} />
           </Form.Item>
+
+          <GhnAddressSelect
+            form={form}
+            provinceName="senderProvince"
+            districtName="senderDistrict"
+            wardName="senderWard"
+            metadataName="senderMetadata"
+          />
 
           <Divider>{t('dimensions', 'Package Dimensions')}</Divider>
 

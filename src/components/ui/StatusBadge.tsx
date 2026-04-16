@@ -96,8 +96,15 @@ const STATUS_STYLES: Record<string, StatusBadgeStyle> = {
 
   // Special
   auto: { bg: 'rgba(22,119,255,0.08)', color: '#1677ff' },
-  regular: { bg: 'var(--color-bg-surface)', color: 'var(--color-text-secondary)' },
-  sealed: { bg: 'rgba(139,115,85,0.1)', color: 'var(--color-accent)' },
+  regular: { bg: 'rgba(22,119,255,0.1)', color: '#1677ff' },
+  sealed: { bg: 'rgba(138,43,226,0.1)', color: '#8A2BE2' }, // Purple tone for sealed
+
+  // Item Conditions
+  new: { bg: 'rgba(74,124,89,0.15)', color: 'var(--color-success)', border: 'var(--color-success)' },
+  like_new: { bg: 'rgba(22,119,255,0.15)', color: '#1677ff', border: '#1677ff' },
+  very_good: { bg: 'rgba(196,146,61,0.15)', color: '#C4923D', border: '#C4923D' },
+  good: { bg: 'var(--color-bg-surface)', color: 'var(--color-text-primary)' },
+  acceptable: { bg: 'rgba(196,81,61,0.1)', color: 'var(--color-danger)' },
 }
 
 const DEFAULT_STYLE: StatusBadgeStyle = {

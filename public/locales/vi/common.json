@@ -124,7 +124,7 @@
     "like_new": "Như mới",
     "very_good": "Rất tốt",
     "good": "Tốt",
-    "acceptable": "Chấp nhận được",
+    "acceptable": "Có thể chấp nhận",
     "excellent": "Xuất sắc",
     "fair": "Trung bình",
     "poor": "Kém",
@@ -318,5 +318,12 @@
   "reserveMet": "Đã đạt giá bảo lưu",
   "reserveNotMet": "Chưa đạt giá bảo lưu",
   "itemInfo": "Thông tin sản phẩm",
-  "qna": "Q&A"
+  "qna": "Q&A",
+  "itemCondition": {
+    "new": "Mới",
+    "like_new": "Như mới",
+    "very_good": "Rất tốt",
+    "good": "Tốt",
+    "acceptable": "Có thể chấp nhận"
+  }
 }

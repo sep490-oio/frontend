@@ -9,6 +9,7 @@ import type { AuctionListItemDto } from '@/types'
 import { MONO_FONT } from '@/styles/tokens'
 import { useAuth } from '@/hooks/useAuth'
 import { useWatchAuction, useUnwatchAuction } from '@/features/auction/api'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 
 interface AuctionCardProps {
   auction: AuctionListItemDto
@@ -28,6 +29,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
   const { t } = useTranslation('auction')
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
+  const { isMobile } = useBreakpoint()
   const watchMutation = useWatchAuction()
   const unwatchMutation = useUnwatchAuction()
   const [watching, setWatching] = useState(false)
@@ -58,8 +60,8 @@ export function AuctionCard({ auction }: AuctionCardProps) {
         cursor: 'pointer',
         background: 'var(--color-bg-card, #11141b)',
         border: '1px solid var(--color-border, rgba(255,255,255,0.05))',
-        borderRadius: 24,
-        padding: 16,
+        borderRadius: isMobile ? 16 : 24,
+        padding: isMobile ? 10 : 16,
         transition: 'all 0.3s ease',
         outline: 'none',
       }}
@@ -74,10 +76,10 @@ export function AuctionCard({ auction }: AuctionCardProps) {
       <div
         style={{
           position: 'relative',
-          borderRadius: 16,
+          borderRadius: isMobile ? 12 : 16,
           overflow: 'hidden',
           aspectRatio: '4/5',
-          marginBottom: 24,
+          marginBottom: isMobile ? 16 : 24,
           background: 'var(--color-bg-surface, #1f2937)',
         }}
       >
@@ -112,63 +114,60 @@ export function AuctionCard({ auction }: AuctionCardProps) {
         )}
 
         {/* Top Badges */}
-        <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 6, zIndex: 10 }}>
           {isActive && (
             <span
               style={{
-                background: 'rgba(34, 197, 94, 0.2)',
-                color: '#4ade80',
-                fontSize: 10,
+                background: 'var(--color-success)',
+                color: '#ffffff',
+                fontSize: 11,
                 fontWeight: 700,
-                padding: '4px 12px',
+                padding: '5px 12px',
                 borderRadius: 100,
                 textTransform: 'uppercase',
-                letterSpacing: '-0.02em',
-                backdropFilter: 'blur(12px)',
-                border: '1px solid rgba(34, 197, 94, 0.2)',
+                letterSpacing: '0.04em',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 6,
               }}
             >
-              <span className="animate-pulse" style={{ width: 6, height: 6, background: '#22c55e', borderRadius: '50%' }} />
+              <span className="animate-pulse" style={{ width: 6, height: 6, background: '#ffffff', borderRadius: '50%' }} />
               {t('statusTab.active')}
             </span>
           )}
           {auction.status === AuctionStatus.Scheduled && (
             <span
               style={{
-                background: 'rgba(249, 115, 22, 0.2)',
-                color: '#fb923c',
-                fontSize: 10,
+                background: '#f97316',
+                color: '#ffffff',
+                fontSize: 11,
                 fontWeight: 700,
-                padding: '4px 12px',
+                padding: '5px 12px',
                 borderRadius: 100,
                 textTransform: 'uppercase',
-                letterSpacing: '-0.02em',
-                backdropFilter: 'blur(12px)',
-                border: '1px solid rgba(249, 115, 22, 0.2)',
+                letterSpacing: '0.04em',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 6,
               }}
             >
-              <span style={{ width: 6, height: 6, background: '#fb923c', borderRadius: '50%' }} />
+              <span style={{ width: 6, height: 6, background: '#ffffff', borderRadius: '50%' }} />
               {t('statusTab.scheduled')}
             </span>
           )}
           <span
             style={{
-              background: 'rgba(59, 130, 246, 0.2)',
-              color: '#3b82f6',
-              fontSize: 10,
+              background: auction.auctionType === 'sealed' ? '#c026d3' : 'var(--color-accent, #3b82f6)',
+              color: '#ffffff',
+              fontSize: 11,
               fontWeight: 700,
-              padding: '4px 12px',
+              padding: '5px 12px',
               borderRadius: 100,
               textTransform: 'uppercase',
-              letterSpacing: '-0.02em',
-              backdropFilter: 'blur(12px)',
-              border: '1px solid rgba(59, 130, 246, 0.2)',
+              letterSpacing: '0.04em',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
             }}
           >
             {auction.auctionType === 'sealed' ? t('browse.typeSealed') : t('browse.typeRegular')}
@@ -235,7 +234,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
         <h3
           style={{
             fontWeight: 700,
-            fontSize: 18,
+            fontSize: isMobile ? 14 : 18,
             marginBottom: 4,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
@@ -273,10 +272,10 @@ export function AuctionCard({ auction }: AuctionCardProps) {
             width: '100%',
             background: isActive ? 'var(--color-accent, #3b82f6)' : 'rgba(255,255,255,0.05)',
             color: isActive ? '#fff' : 'var(--color-text-secondary, #9ca3af)',
-            padding: '12px 0',
-            borderRadius: 12,
+            padding: isMobile ? '8px 0' : '12px 0',
+            borderRadius: isMobile ? 8 : 12,
             fontWeight: 700,
-            fontSize: 14,
+            fontSize: isMobile ? 12 : 14,
             border: `1px solid ${isActive ? 'var(--color-accent, #3b82f6)' : 'var(--color-border, rgba(255,255,255,0.1))'}`,
             transition: 'all 0.3s ease',
             cursor: isActive || auction.status === AuctionStatus.Scheduled ? 'pointer' : 'not-allowed',

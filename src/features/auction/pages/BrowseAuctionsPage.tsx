@@ -342,8 +342,8 @@ export default function BrowseAuctionsPage() {
           Single filter bar: [status pills ····] [category] [type] [sort] [search]
           ════════════════════════════════════════════════════════════════════ */}
       {!isNarrow && (
-        <Flex wrap="wrap" gap={12} align="center" style={{ marginBottom: 32 }}>
-          {/* Status pills */}
+        <Flex wrap="wrap" justify="space-between" gap={16} align="center" style={{ marginBottom: 32 }}>
+          {/* Status pills - will auto grow to push right side, or stack cleanly if wrapped */}
           <Flex gap={8} wrap="wrap" style={{ flex: '1 1 auto' }}>
             {STATUS_PILLS.map((pill) => (
               <button
@@ -357,54 +357,57 @@ export default function BrowseAuctionsPage() {
             ))}
           </Flex>
 
-          {/* Category */}
-          <Select
-            style={{ width: 180 }}
-            options={categoryOptions}
-            value={categoryId}
-            onChange={handleCategoryChange}
-            variant="borderless"
-            popupMatchSelectWidth={false}
-          />
-
-          {/* Auction type */}
-          <Select
-            style={{ width: 150 }}
-            options={AUCTION_TYPE_OPTIONS}
-            value={filters.auctionType ?? ''}
-            onChange={(v) => updateFilter('auctionType', v)}
-            variant="borderless"
-            popupMatchSelectWidth={false}
-          />
-
-          {/* Sort */}
-          <Select
-            style={{ width: 180 }}
-            options={SORT_OPTIONS}
-            value={filters.sortBy ?? 'EndTime Asc'}
-            onChange={(v) => updateFilter('sortBy', v)}
-            variant="borderless"
-            popupMatchSelectWidth={false}
-          />
-
-          {/* Search with autocomplete */}
-          <AutoComplete
-            options={suggestOptions}
-            value={inputValue}
-            onChange={handleInputChange}
-            onSelect={handleSelect}
-            style={{ width: 240, borderRadius: 100, overflow: 'hidden' }}
-            popupMatchSelectWidth={false}
-          >
-            <Input
-              prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
-              placeholder={t('searchPlaceholder')}
-              onPressEnter={handlePressEnter}
-              allowClear
-              onClear={() => handleInputChange('')}
-              style={{ borderRadius: 100, height: 40, borderColor: 'var(--color-border)' }}
+          {/* Right Side: Selects + Search */}
+          <Flex gap={12} align="center" wrap="wrap">
+            {/* Category */}
+            <Select
+              style={{ minWidth: 160 }}
+              options={categoryOptions}
+              value={categoryId}
+              onChange={handleCategoryChange}
+              variant="borderless"
+              popupMatchSelectWidth={false}
             />
-          </AutoComplete>
+
+            {/* Auction type */}
+            <Select
+              style={{ minWidth: 130 }}
+              options={AUCTION_TYPE_OPTIONS}
+              value={filters.auctionType ?? ''}
+              onChange={(v) => updateFilter('auctionType', v)}
+              variant="borderless"
+              popupMatchSelectWidth={false}
+            />
+
+            {/* Sort */}
+            <Select
+              style={{ minWidth: 160 }}
+              options={SORT_OPTIONS}
+              value={filters.sortBy ?? 'EndTime Asc'}
+              onChange={(v) => updateFilter('sortBy', v)}
+              variant="borderless"
+              popupMatchSelectWidth={false}
+            />
+
+            {/* Search with autocomplete */}
+            <AutoComplete
+              options={suggestOptions}
+              value={inputValue}
+              onChange={handleInputChange}
+              onSelect={handleSelect}
+              style={{ width: 220, borderRadius: 100, overflow: 'hidden' }}
+              popupMatchSelectWidth={false}
+            >
+              <Input
+                prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
+                placeholder={t('searchPlaceholder')}
+                onPressEnter={handlePressEnter}
+                allowClear
+                onClear={() => handleInputChange('')}
+                style={{ borderRadius: 100, height: 40, borderColor: 'var(--color-border)' }}
+              />
+            </AutoComplete>
+          </Flex>
         </Flex>
       )}
 

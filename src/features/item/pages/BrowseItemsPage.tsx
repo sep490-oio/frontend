@@ -262,8 +262,8 @@ export default function BrowseItemsPage() {
                       cursor: 'pointer',
                       background: 'var(--color-bg-card, #11141b)',
                       border: '1px solid var(--color-border, rgba(255,255,255,0.05))',
-                      borderRadius: 24,
-                      padding: 16,
+                      borderRadius: isMobile ? 16 : 24,
+                      padding: isMobile ? 10 : 16,
                       transition: 'all 0.3s ease',
                       outline: 'none',
                       display: 'flex',
@@ -280,10 +280,10 @@ export default function BrowseItemsPage() {
                     <div
                       style={{
                         position: 'relative',
-                        borderRadius: 16,
+                        borderRadius: isMobile ? 12 : 16,
                         overflow: 'hidden',
-                        aspectRatio: '4/5',
-                        marginBottom: 24,
+                        aspectRatio: isMobile ? '1/1' : '4/5',
+                        marginBottom: isMobile ? 16 : 24,
                         background: 'var(--color-bg-surface, #1f2937)',
                         flexShrink: 0,
                       }}
@@ -331,7 +331,7 @@ export default function BrowseItemsPage() {
                       <h3
                         style={{
                           fontWeight: 700,
-                          fontSize: 18,
+                          fontSize: isMobile ? 14 : 18,
                           marginBottom: 8,
                           color: 'var(--color-text-primary, #f3f4f6)',
                           whiteSpace: 'nowrap',

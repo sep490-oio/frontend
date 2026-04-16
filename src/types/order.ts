@@ -1,4 +1,5 @@
 import type { EscrowStatus, OrderReturnStatus, OrderStatus } from './enums'
+import type { GhnMetadata } from './address'
 
 export interface ShipmentEvidenceDto {
   id: string
@@ -284,6 +285,7 @@ export interface OrderShippingDto {
   composedAddress: string
   /** True when the snapshot carries a real, fully-populated structured address. */
   isStructured: boolean
+  recipientMetadata?: GhnMetadata
 }
 
 export interface UpdateOrderShippingRequest {
@@ -294,6 +296,7 @@ export interface UpdateOrderShippingRequest {
   district: string
   city: string
   postalCode?: string
+  recipientMetadata?: GhnMetadata
 }
 
 export interface OrderReturnDto {

@@ -64,7 +64,7 @@ export const AuctionPriceHeader: React.FC<AuctionPriceHeaderProps> = ({
   onCountdownEnd,
   serverTimeOffset = 0,
 }) => {
-  const { t } = useTranslation()
+  const { t } = useTranslation('auction')
   const screens = useBreakpoint()
   const isMobile = !screens.md
 
@@ -250,12 +250,12 @@ export const AuctionPriceHeader: React.FC<AuctionPriceHeaderProps> = ({
       <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: '2px 16px' }}>
         {auction.startTime && (
           <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-            {t('startTime', 'Start Time')}: {formatDateTime(auction.startTime)}
+            {t('startTime', 'Start Time')}: <strong style={{ color: 'var(--color-text-primary)' }}>{formatDateTime(auction.startTime)}</strong>
           </span>
         )}
         {auction.endTime && (
           <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-            {t('endTime', 'Ends At')}: {formatDateTime(endTime ?? auction.endTime)}
+            {t('endTime', 'Ends At')}: <strong style={{ color: 'var(--color-text-primary)' }}>{formatDateTime(endTime ?? auction.endTime)}</strong>
           </span>
         )}
       </div>
@@ -263,9 +263,8 @@ export const AuctionPriceHeader: React.FC<AuctionPriceHeaderProps> = ({
       {/* Auto-extend info */}
       {auction.autoExtend && (
         <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 4 }}>
-          {t('autoExtend', 'Auto-extend')}: {t('yes', 'Yes')}, +{auction.extensionMinutes}
-          {t('min', 'min')} (max {MAX_EXTENSIONS_PER_AUCTION},{' '}
-          {t('used', 'used')} {auction.extensionCount})
+          {t('autoExtend', 'Auto-extend')}: <strong style={{ color: 'var(--color-text-primary)' }}>{t('yes', 'Yes')}, +{auction.extensionMinutes}{t('min', 'min')}</strong> (max {MAX_EXTENSIONS_PER_AUCTION},{' '}
+          {t('used', 'used')} <strong style={{ color: 'var(--color-text-primary)' }}>{auction.extensionCount}</strong>)
         </div>
       )}
 

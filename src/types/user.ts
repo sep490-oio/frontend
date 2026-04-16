@@ -1,4 +1,5 @@
 import type { Gender, AddressType, UserStatus } from './enums'
+import type { GhnMetadata } from './address'
 
 export interface UserDto {
   id: string
@@ -46,6 +47,7 @@ export interface UserAddressDto {
   postalCode?: string
   isDefault: boolean
   createdAt?: string
+  metadata?: GhnMetadata
 }
 
 export interface CreateAddressRequest {
@@ -59,6 +61,7 @@ export interface CreateAddressRequest {
   postalCode?: string
   countryCode?: string
   isDefault?: boolean
+  metadata?: GhnMetadata
 }
 
 export interface ChangePasswordRequest {

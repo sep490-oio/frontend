@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Form, Input, InputNumber, Select, Row, Col, Divider, Typography } from 'antd'
 import { useTranslation } from 'react-i18next'
+import GhnAddressSelect from '@/components/ui/GhnAddressSelect'
+import type { GhnMetadata } from '@/types'
 
 export interface ShippingDetailsFormValues {
   senderName: string
@@ -9,6 +11,7 @@ export interface ShippingDetailsFormValues {
   senderWard: string
   senderDistrict: string
   senderProvince: string
+  senderMetadata?: GhnMetadata
   weightGrams: number
   insuranceValue: number
   providerCode?: string
@@ -58,23 +61,13 @@ export default function ShippingDetailsForm({ form }: ShippingDetailsFormProps) 
         <Input placeholder={t('senderAddressPlaceholder', 'Full address')} />
       </Form.Item>
 
-      <Row gutter={12}>
-        <Col span={8}>
-          <Form.Item name="senderWard" label={t('ward', 'Ward')} rules={[{ required: true, message: t('wardRequired', 'Required') }]}>
-            <Input placeholder={t('wardPlaceholder', 'Enter ward')} />
-          </Form.Item>
-        </Col>
-        <Col span={8}>
-          <Form.Item name="senderDistrict" label={t('district', 'District')} rules={[{ required: true, message: t('districtRequired', 'Required') }]}>
-            <Input placeholder={t('districtPlaceholder', 'Enter district')} />
-          </Form.Item>
-        </Col>
-        <Col span={8}>
-          <Form.Item name="senderProvince" label={t('province', 'Province/City')} rules={[{ required: true, message: t('provinceRequired', 'Required') }]}>
-            <Input placeholder={t('provincePlaceholder', 'Enter province/city')} />
-          </Form.Item>
-        </Col>
-      </Row>
+      <GhnAddressSelect
+        form={form}
+        provinceName="senderProvince"
+        districtName="senderDistrict"
+        wardName="senderWard"
+        metadataName="senderMetadata"
+      />
 
       <Divider style={{ margin: '12px 0 16px' }} />
 
