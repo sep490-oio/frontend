@@ -112,7 +112,8 @@ function SellerIdentity({
             </Tooltip>
           )}
         </div>
-        
+
+
         {seller && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Rate disabled allowHalf value={rating} style={{ color: 'var(--color-accent)', fontSize: 14 }} />
@@ -193,7 +194,9 @@ export function AuctionDetailTabs({
                 {item.condition ? <StatusBadge status={item.condition} /> : null}
               </Flex>
               <div style={specGridStyle}>
-                <SpecRow label={t('condition', 'Tình trạng')}>{item.condition ? tc(`itemCondition.${item.condition}`, item.condition) : '—'}</SpecRow>
+                <SpecRow label={t('condition', 'Tình trạng')}>
+                  {item.condition ? tc(`statusLabel.${item.condition}`, item.condition) : '—'}
+                </SpecRow>
                 {item.categoryId && (
                   <SpecRow label={t('category', 'Danh mục')}>
                     {categoryName ?? item.categoryId}
@@ -270,7 +273,7 @@ export function AuctionDetailTabs({
                       >
                         {t('conditionLabel', 'Tình trạng')}:{' '}
                         <strong style={{ color: 'var(--color-text-primary)' }}>
-                          {tc(`itemCondition.${item.condition}`, item.condition)}
+                          {item.condition ? tc(`statusLabel.${item.condition}`, item.condition) : ''}
                         </strong>
                       </span>
                     </div>
@@ -500,14 +503,9 @@ export function AuctionDetailTabs({
                           'Listing này không có chứng chỉ hoặc biên bản kiểm định công khai.',
                         )}
                   </div>
-                  {auction.assignedAdminId && (
-                    <div style={{ marginTop: 4 }}>
-                      {t('reviewOwner', 'Nhân sự phụ trách')}:{' '}
-                      <strong style={{ color: 'var(--color-text-primary)' }}>
-                        {auction.assignedAdminId}
-                      </strong>
-                    </div>
-                  )}
+                  {/* Review-owner row hidden: DTO exposes only the admin's UUID, not a display name.
+                      Showing the raw UUID to public viewers is not useful. Restore once BE adds
+                      an `assignedAdminDisplayName` field to AuctionDto. */}
                   {auction.reservePrice && (
                     <div style={{ marginTop: 4 }}>
                       {t('reservePrice', 'Giá bảo lưu')}:{' '}

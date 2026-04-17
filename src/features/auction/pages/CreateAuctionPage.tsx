@@ -32,7 +32,8 @@ import type { CapturedPhoto } from '@/components/ui/MultiCaptureUploader'
 import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { AuctionTimingSection } from '@/features/auction/components/AuctionTimingSection'
-import { AuctionType, ItemCondition, ItemStatus } from '@/types/enums'
+import { AuctionType, ItemStatus } from '@/types/enums'
+import { useConditionOptions, useAuctionTypeOptions } from '@/utils/enumLabels'
 import { DEFAULT_CURRENCY } from '@/utils/constants'
 import type { CreateAuctionRequest } from '@/features/auction/api'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
@@ -58,9 +59,6 @@ interface FormValues {
   endTime?: string
   autoExtend?: boolean
 }
-
-const AUCTION_TYPE_OPTIONS = Object.entries(AuctionType).map(([label, value]) => ({ label, value }))
-const CONDITION_OPTIONS = Object.entries(ItemCondition).map(([label, value]) => ({ label, value }))
 
 function SectionHeader({ number, title }: { number: number; title: string }) {
   return (
@@ -92,6 +90,8 @@ function SectionHeader({ number, title }: { number: number; title: string }) {
 export default function CreateAuctionPage() {
   const { t } = useTranslation('auction')
   const { t: tc } = useTranslation('common')
+  const CONDITION_OPTIONS = useConditionOptions()
+  const AUCTION_TYPE_OPTIONS = useAuctionTypeOptions()
   const navigate = useNavigate()
   const prefix = useRoutePrefix()
   const { message } = App.useApp()
@@ -516,7 +516,7 @@ export default function CreateAuctionPage() {
       {/* Item Preview */}
       {(isFromItem || (isEditMode && existingItemForPreview)) && existingItemForPreview && (
         <Card style={{ borderRadius: 12, border: '1px solid var(--color-border)', marginBottom: 16 }}>
-          <SectionHeader number={1} title="Vật phẩm đã chọn" />
+          <SectionHeader number={1} title={t('selectedItem', 'Selected Item')} />
           <div style={{ display: 'flex', gap: 12, flexWrap: isMobile ? 'wrap' : undefined }}>
             {existingItemForPreview.images && existingItemForPreview.images.length > 0 && (
               <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
@@ -579,7 +579,7 @@ export default function CreateAuctionPage() {
           {/* Section 1: Item Info */}
           {!hideItemFields && (
             <>
-              <SectionHeader number={1} title="Thông tin vật phẩm" />
+              <SectionHeader number={1} title={t('itemInfo', 'Item Info')} />
 
               <Form.Item
                 name="title"
@@ -647,7 +647,7 @@ export default function CreateAuctionPage() {
 
               {/* Section 2: Photos */}
               <div style={{ borderTop: '1px solid var(--color-border-light)', margin: '24px 0', paddingTop: 24 }}>
-                <SectionHeader number={2} title="Hình ảnh" />
+                <SectionHeader number={2} title={t('photos', 'Photos')} />
               </div>
 
               <Form.Item label={t('photos', 'Photos')} required>
@@ -666,7 +666,7 @@ export default function CreateAuctionPage() {
             <div style={{ borderTop: '1px solid var(--color-border-light)', margin: '24px 0', paddingTop: 24 }} />
           )}
 
-          <SectionHeader number={pricingSectionNumber} title="Giá & Thời gian" />
+          <SectionHeader number={pricingSectionNumber} title={t('pricingAndTiming', 'Pricing & Time')} />
 
           <Form.Item
             name="auctionType"

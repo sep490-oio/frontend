@@ -17,6 +17,7 @@
     "about": "Về chúng tôi",
     "categories": "Danh mục",
     "admin": "Quản trị",
+    "warehouse": "Kho vận",
     "inspector": "Kiểm định",
     "bids": "Lịch sử đấu giá",
     "signIn": "Đăng nhập",
@@ -139,7 +140,11 @@
     "won": "Đã thắng",
     "exhausted": "Hết ngân sách",
     "escalated": "Đã leo thang",
-    "awaiting_response": "Chờ phản hồi"
+    "awaiting_response": "Chờ phản hồi",
+    "picked_up": "Đã lấy hàng",
+    "on_delivering": "Đang giao",
+    "dispatched": "Đã gửi đi",
+    "condition_confirmed": "Đã xác nhận tình trạng"
   },
   "about": {
     "heroLabel": "Nhà Đấu Giá OIO",

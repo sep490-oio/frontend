@@ -129,7 +129,7 @@ export function SellerLayout() {
   }
 
   const toggleLanguage = () => {
-    const next = i18n.language === 'en' ? 'uk' : 'en'
+    const next = i18n.language === 'en' ? 'vi' : 'en'
     i18n.changeLanguage(next)
   }
 

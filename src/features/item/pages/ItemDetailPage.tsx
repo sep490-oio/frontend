@@ -33,13 +33,13 @@ export default function ItemDetailPage() {
   const { isMobile } = useBreakpoint()
 
   const { data: item, isLoading } = useItemById(id ?? '')
+  const { data: categories } = useCategories()
   const { data: currentUser } = useCurrentUser()
   const hub = useAuctionHub(undefined, id)
   const chooseShipping = useChooseItemShipping()
   const [shippingForm] = Form.useForm<ShippingDetailsFormValues>()
   const [shippingModalOpen, setShippingModalOpen] = useState(false)
 
-  const { data: categories } = useCategories()
   const isSeller = currentUser?.id === item?.sellerId
 
   const categoryName = categories?.find((c) => c.id === item?.categoryId)?.name ?? item?.categoryId

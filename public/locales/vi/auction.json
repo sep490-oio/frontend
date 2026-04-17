@@ -272,6 +272,8 @@
   "inspectionStatus": "Trạng thái kiểm định",
   "approved": "Đã phê duyệt",
   "pending": "Chưa có kiểm định",
+  "verifiedByPlatformNote": "OIO đã xác minh listing này trước khi mở đấu giá.",
+  "noCertificateAvailable": "Listing này không có chứng chỉ hoặc biên bản kiểm định công khai.",
   "reviewOwner": "Nhân sự phụ trách",
   "reserveMet": "Đã đạt giá bảo lưu",
   "reserveNotMet": "Chưa đạt giá bảo lưu",
