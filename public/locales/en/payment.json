@@ -143,5 +143,17 @@
   "walletProvider": "Wallet Provider",
   "walletProviderPlaceholder": "e.g. MoMo, ZaloPay",
   "setAsDefault": "Set as default payment method",
-  "cardVnPayHint": "For cards, we recommend linking via VNPay for secure tokenization."
+  "cardVnPayHint": "For cards, we recommend linking via VNPay for secure tokenization.",
+  "topUpWallet": "Top Up Your Wallet",
+  "topUp": "Top Up",
+  "topUpOrderInfo": "Wallet top-up",
+  "paymentMethod": "Payment Method",
+  "paymentSource": "Payment Source",
+  "newVnPayCard": "Pay with new VNPay card",
+  "managePaymentMethods": "Manage payment methods",
+  "saveCardForTopUp": "Save this card for future top-ups",
+  "domesticCard": "ATM / Domestic Card",
+  "internationalCard": "International Card (Visa/Master)",
+  "accountHolder": "Account Holder",
+  "accountHolderPlaceholder": "Full name on bank account"
 }

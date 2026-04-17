@@ -82,5 +82,24 @@
     "postedAt": "Đã đăng:",
     "liveBid": "Giá đấu hiện tại",
     "currentPrice": "Giá hiện tại"
-  }
+  },
+  "itemDetails": "Thông tin sản phẩm",
+  "verifyByPlatform": "Xác minh qua sàn",
+  "verifyByPlatformDesc": "Gửi sản phẩm đến kho để được kiểm định và xác thực chuyên nghiệp.",
+  "auctionSection": "Thiết lập phiên đấu giá",
+  "auctionSectionOptional": "Tùy chọn — thiết lập chi tiết phiên đấu giá ngay",
+  "createAndSubmit": "Tạo & Gửi duyệt",
+  "createAndSubmitWithAuction": "Tạo & Gửi duyệt kèm phiên đấu giá",
+  "saveDraft": "Lưu nháp",
+  "realtimeLive": "Realtime đang hoạt động",
+  "realtimeFallback": "Đang dùng làm mới định kỳ",
+  "lastSynced": "Cập nhật {{time}}",
+  "loading": "Đang tải…",
+  "pendingQuestion": "Đang gửi…",
+  "answering": "Đang gửi…",
+  "noAnswer": "Chưa trả lời",
+  "loadingMore": "Đang tải thêm…",
+  "loadMore": "Xem thêm câu hỏi",
+  "askLabel": "Đặt câu hỏi",
+  "sending": "Đang gửi…"
 }

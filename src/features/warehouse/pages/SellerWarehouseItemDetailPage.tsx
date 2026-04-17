@@ -71,7 +71,7 @@ export default function SellerWarehouseItemDetailPage() {
     entries.push({
       ts: data.updatedAt,
       label: data.storageLocationLabel
-        ? t('timeline.storedAt', 'Stored on {{location}}', { location: data.storageLocationLabel })
+        ? t('storedOn', 'Stored on {{location}}', { location: data.storageLocationLabel })
         : t('timeline.stored', 'Stored'),
     })
   }
@@ -163,7 +163,7 @@ export default function SellerWarehouseItemDetailPage() {
           </Button>
         )}
         <Button onClick={() => navigate(`/seller/warehouse/outbound/${data.outboundShipmentId}`)}>
-          {t('viewOutboundShipment', 'View outbound shipment')}
+          {t('warehouseItem.viewOutboundShipment', 'View outbound shipment')}
         </Button>
       </Space>
     </Card>
@@ -400,7 +400,7 @@ export default function SellerWarehouseItemDetailPage() {
       {msgCtx}
       <Space style={{ marginBottom: 16 }}>
         <Button onClick={() => navigate('/seller/warehouse/items')}>
-          ← {t('backToList', 'Back to list')}
+          {t('backToList', '← Back to list')}
         </Button>
       </Space>
       <Space direction="vertical" size={16} style={{ width: '100%' }}>

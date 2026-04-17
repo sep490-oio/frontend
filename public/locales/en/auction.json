@@ -272,6 +272,8 @@
   "inspectionStatus": "Inspection status",
   "approved": "Approved",
   "pending": "Pending inspection",
+  "verifiedByPlatformNote": "OIO verified this listing before opening the auction.",
+  "noCertificateAvailable": "No public certificate or inspection record for this listing.",
   "reviewOwner": "Reviewer",
   "reserveMet": "Reserve met",
   "reserveNotMet": "Reserve not met",
