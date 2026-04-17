@@ -753,92 +753,12 @@ export function AuctionSidebar({
     )
   }
 
-  // ── Mobile: scrollable content + sticky bottom CTA bar ───────────
-  const showMobileBottomBar =
-    !isTerminal &&
-    isActive &&
-    qualState === 'qualified' &&
-    auction.auctionType !== 'sealed'
-
+  // ── Mobile: scrollable content ───────────
   return (
     <>
-      {/* Scrollable content, pad bottom for sticky bar */}
-      <div style={{ paddingBottom: showMobileBottomBar ? 80 : 0 }}>
+      <div>
         {sidebarContent}
       </div>
-
-      {/* Sticky bottom CTA bar on mobile */}
-      {showMobileBottomBar && (
-        <div
-          style={{
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            zIndex: 100,
-            background: 'var(--color-bg-base, #fff)',
-            borderTop: '1px solid var(--color-border)',
-            padding: '10px 16px',
-            display: 'flex',
-            gap: 8,
-            alignItems: 'center',
-          }}
-        >
-          {/* Current price mini display */}
-          <div style={{ flex: '0 0 auto', minWidth: 0 }}>
-            <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', lineHeight: 1.2 }}>
-              {t('currentBid', 'Giá hiện tại')}
-            </div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-accent)', lineHeight: 1.2 }}>
-              {formatCurrency(currentPrice, currency)}
-            </div>
-          </div>
-
-          {/* Bid amount input compact */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <input
-              type="number"
-              value={bidAmount ?? ''}
-              min={minBid}
-              step={bidIncrement}
-              placeholder={`≥ ${formatCurrency(minBid, currency)}`}
-              onChange={(e) => onBidAmountChange(e.target.value ? Number(e.target.value) : null)}
-              style={{
-                width: '100%',
-                height: 44,
-                borderRadius: 8,
-                border: `1px solid ${bidAmount != null && bidAmount < minBid ? 'var(--color-danger)' : 'var(--color-border)'}`,
-                padding: '0 10px',
-                fontSize: 14,
-                background: 'var(--color-bg-surface)',
-                color: 'var(--color-text-primary)',
-                outline: 'none',
-                boxSizing: 'border-box',
-              }}
-            />
-          </div>
-
-          {/* Place Bid button */}
-          <Button
-            type="primary"
-            loading={isPlacingBid}
-            disabled={!bidAmount || (bidAmount != null && bidAmount < minBid)}
-            onClick={onPlaceBid}
-            style={{
-              height: 44,
-              borderRadius: 8,
-              fontWeight: 600,
-              fontSize: 14,
-              flex: '0 0 auto',
-              background: 'var(--color-accent)',
-              borderColor: 'var(--color-accent)',
-              paddingInline: 16,
-            }}
-          >
-            {t('placeBid', 'Đặt giá')}
-          </Button>
-        </div>
-      )}
     </>
   )
 }

@@ -901,6 +901,7 @@ export default function AuctionDetailPage() {
               sellerUsername={sellerProfile?.storeName}
               qaConnected={hub.connected}
               qaLastSyncedAt={hub.lastSyncedAt}
+              currentUserId={currentUser?.id}
             />
           </div>
         </Col>
@@ -1020,72 +1021,6 @@ export default function AuctionDetailPage() {
         </Col>
       </Row>
 
-      {/* Sticky mobile bid bar */}
-      {!isDesktop && isActive && qualState === 'qualified' && (
-        <div
-          style={{
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            zIndex: 100,
-            background: 'var(--color-bg-card)',
-            borderTop: '1px solid var(--color-border)',
-            padding: '12px 16px',
-            paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
-          }}
-        >
-          {data?.currentUserBidState?.position === 'outbid' && (
-            <div style={{ marginBottom: 8, textAlign: 'center' }}>
-              <Typography.Text style={{ color: 'var(--color-danger)', fontWeight: 600, fontSize: 13 }}>
-                {t('positionOutbid', 'You have been outbid')}
-              </Typography.Text>
-            </div>
-          )}
-          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 8 }}>
-            <InputNumber
-              style={{ flex: 1, width: '100%', height: 44 }}
-              size="large"
-              min={minBid}
-              step={auction?.bidIncrement?.amount ?? 10000}
-              value={bidAmount}
-              onChange={(v) => setBidAmount(v)}
-              placeholder={formatCurrency(minBid, currency)}
-              addonAfter={currency}
-              status={bidAmount != null && bidAmount < minBid ? 'error' : undefined}
-            />
-            <Popconfirm
-              title={t('confirmBidTitle', 'Confirm your bid')}
-              description={`${t('bidAmount', 'Bid')}: ${formatCurrency(bidAmount ?? 0, currency)}`}
-              onConfirm={handlePlaceBid}
-              okText={t('confirmBid', 'Confirm')}
-              cancelText={t('cancel', 'Cancel')}
-              okButtonProps={{ loading: placeBidMutation.isPending }}
-              disabled={!bidAmount || bidAmount < minBid || placeBidMutation.isPending}
-            >
-              <Button
-                type="primary"
-                block={isMobile}
-                loading={placeBidMutation.isPending}
-                disabled={!bidAmount || bidAmount < minBid}
-                style={{
-                  height: 44,
-                  padding: isMobile ? undefined : '0 32px',
-                  fontWeight: 500,
-                  background: 'var(--color-accent)',
-                  borderColor: 'var(--color-accent)',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {t('bid', 'Bid')}
-              </Button>
-            </Popconfirm>
-          </div>
-          <Typography.Text style={{ fontSize: 11, color: 'var(--color-text-secondary)', display: 'block', marginTop: 4, textAlign: 'center' }}>
-            {t('minimumBid', 'Min')}: {formatCurrency(minBid, currency)}
-          </Typography.Text>
-        </div>
-      )}
 
       {/* Buy-Now Cap Modal — shown when a bid crossed the buy-now ceiling and was capped to buyNowPrice */}
       <Modal

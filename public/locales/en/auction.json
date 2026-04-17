@@ -492,5 +492,6 @@
   "removedFromWatchlist": "Removed from watchlist",
   "removeFromWatchlist": "Remove",
   "notifyOnBid": "Notify on new bids",
-  "notifyOnEnd": "Notify when auction ends"
+  "notifyOnEnd": "Notify when auction ends",
+  "you": "You"
 }
