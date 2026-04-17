@@ -499,7 +499,7 @@ export function NotificationDropdown() {
       trigger="click"
       placement="bottomRight"
       arrow={false}
-      styles={{ body: { padding: 0, borderRadius: 4, overflow: 'hidden' } }}
+      overlayInnerStyle={{ padding: 0, borderRadius: 4, overflow: 'hidden' }}
     >
       <Badge count={unreadCount} size="small" offset={[-2, 2]}>
         <Button
