@@ -520,6 +520,14 @@ export default function AuctionDetailPage() {
             currentPrice: { ...old.auction.currentPrice, amount: effectiveAmount },
             bidCount: (old.auction.bidCount ?? 0) + 1,
           },
+          currentUserBidState: {
+            ...old.currentUserBidState,
+            position: result.wasImmediatelyOutbid ? 'outbid' : 'leading',
+            isCurrentWinner: !result.wasImmediatelyOutbid,
+            latestBidAmount: effectiveAmount,
+            latestBidAt: new Date().toISOString(),
+            hasAutoBid: old.currentUserBidState?.hasAutoBid ?? false,
+          },
         } : old,
       )
 

@@ -241,7 +241,7 @@ export default function AuctionListPage() {
           ) : (
             <Row gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]}>
               {newAuctions.items.map((auction) => (
-                <Col xs={12} sm={12} md={8} xl={8} key={auction.id}>
+                <Col xs={24} sm={12} md={8} xl={8} key={auction.id}>
                   <AuctionCard auction={auction} />
                 </Col>
               ))}
@@ -294,9 +294,9 @@ export default function AuctionListPage() {
             ) : (
               <Row gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]}>
                 {trendingAuctions.items.map((auction) => (
-                  <Col xs={12} sm={12} md={8} xl={8} key={auction.id}>
-                    <AuctionCard auction={auction} />
-                  </Col>
+                <Col xs={24} sm={12} md={8} xl={8} key={auction.id}>
+                  <AuctionCard auction={auction} />
+                </Col>
                 ))}
               </Row>
             )}
@@ -470,7 +470,7 @@ export default function AuctionListPage() {
           </Flex>
           <Row className="oio-stagger" gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]}>
             {featured.map((auction) => (
-              <Col key={auction.id} xs={12} sm={12} md={8} xl={8}>
+              <Col key={auction.id} xs={24} sm={12} md={8} xl={8}>
                 <AuctionCard auction={auction} />
               </Col>
             ))}

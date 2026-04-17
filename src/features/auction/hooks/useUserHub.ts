@@ -118,5 +118,5 @@ export function useUserHub(auctionId?: string, currentUserId?: string | null) {
       connection.off('AutoBidStateChanged', autoBidStateChangedHandler)
       connection.off('AuctionPositionChanged', auctionPositionChangedHandler)
     }
-  }, [auctionId, qc])
+  }, [auctionId, currentUserId, qc])
 }

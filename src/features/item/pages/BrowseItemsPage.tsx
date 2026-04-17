@@ -270,95 +270,97 @@ export default function BrowseItemsPage() {
                       e.currentTarget.style.borderColor = 'var(--color-border, rgba(255,255,255,0.05))';
                     }}
                   >
-                    <div
-                      style={{
-                        position: 'relative',
-                        borderRadius: isMobile ? 12 : 16,
-                        overflow: 'hidden',
-                        aspectRatio: isMobile ? '1/1' : '4/5',
-                        marginBottom: isMobile ? 16 : 24,
-                        background: 'var(--color-bg-surface, #1f2937)',
-                        flexShrink: 0,
-                      }}
-                    >
-                      {primaryImage?.url ? (
-                        <img
-                          src={primaryImage.url}
-                          alt={item.title}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            display: 'block',
-                            transition: 'transform 0.5s ease',
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                        />
-                      ) : (
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            height: '100%',
-                            color: 'var(--color-text-secondary)',
-                          }}
-                        >
-                          <EyeOutlined style={{ fontSize: 32, opacity: 0.3 }} />
-                        </div>
-                      )}
-
-                      <div style={{ position: 'absolute', bottom: 12, left: 12, right: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', zIndex: 10 }}>
-                        <div style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', padding: '4px 10px', borderRadius: 100, border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 11, fontWeight: 500 }}>
-                          {t('browse.postedAt', 'Posted:')} {new Date(item.createdAt).toLocaleDateString(i18n.language || 'vi-VN')}
-                        </div>
-                        {item.auction && (
-                          <div style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', padding: '4px 10px', borderRadius: 100, border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center' }}>
-                            <CountdownTimer endTime={item.auction.endTime} size="small" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div style={{ padding: '0 8px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-                      <h3
+                    <>
+                      <div
                         style={{
-                          fontWeight: 700,
-                          fontSize: isMobile ? 14 : 18,
-                          marginBottom: 8,
-                          color: 'var(--color-text-primary, #f3f4f6)',
-                          whiteSpace: 'nowrap',
+                          position: 'relative',
+                          borderRadius: isMobile ? 12 : 16,
                           overflow: 'hidden',
-                          textOverflow: 'ellipsis',
+                          aspectRatio: isMobile ? '16/10' : '4/5',
+                          marginBottom: isMobile ? 16 : 24,
+                          background: 'var(--color-bg-surface, #1f2937)',
+                          flexShrink: 0,
                         }}
                       >
-                        {item.title}
-                      </h3>
-                      {item.sellerName && (
-                        <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--color-accent, #3494f8)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10, fontWeight: 'bold' }}>
-                            {item.sellerName.charAt(0).toUpperCase()}
-                          </div>
-                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.sellerName}</span>
-                        </div>
-                      )}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto', paddingTop: 16 }}>
-                        <Flex gap={8} align="center" style={{ flex: 1, flexWrap: 'wrap' }}>
-                          <StatusBadge status={item.condition} size="small" />
-                          <StatusBadge status={item.status} size="small" />
-                        </Flex>
-                        {item.auction && (
-                          <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                            <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
-                              {item.hasLiveAuction ? t('browse.liveBid', 'Live Bid') : t('browse.currentPrice', 'Current Price')}
-                            </div>
-                            <div className="oio-price" style={{ fontSize: 16, color: 'var(--color-accent, #3494f8)', fontWeight: 700 }}>
-                              {new Intl.NumberFormat(i18n.language || 'vi-VN', { style: 'currency', currency: item.auction.currency }).format(item.auction.currentPrice)}
-                            </div>
+                        {primaryImage?.url ? (
+                          <img
+                            src={primaryImage.url}
+                            alt={item.title}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              display: 'block',
+                              transition: 'transform 0.5s ease',
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              height: '100%',
+                              color: 'var(--color-text-secondary)',
+                            }}
+                          >
+                            <EyeOutlined style={{ fontSize: 32, opacity: 0.3 }} />
                           </div>
                         )}
+
+                        <div style={{ position: 'absolute', bottom: 12, left: 12, right: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', zIndex: 10 }}>
+                          <div style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', padding: '4px 10px', borderRadius: 100, border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 11, fontWeight: 500 }}>
+                            {t('browse.postedAt', 'Posted:')} {new Date(item.createdAt).toLocaleDateString(i18n.language || 'vi-VN')}
+                          </div>
+                          {item.auction && (
+                            <div style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', padding: '4px 10px', borderRadius: 100, border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center' }}>
+                              <CountdownTimer endTime={item.auction.endTime} size="small" />
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                      <div style={{ padding: '0 8px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+                        <h3
+                          style={{
+                            fontWeight: 700,
+                            fontSize: isMobile ? 14 : 18,
+                            marginBottom: 8,
+                            color: 'var(--color-text-primary, #f3f4f6)',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                        >
+                          {item.title}
+                        </h3>
+                        {item.sellerName && (
+                          <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--color-accent, #3494f8)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10, fontWeight: 'bold' }}>
+                              {item.sellerName.charAt(0).toUpperCase()}
+                            </div>
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.sellerName}</span>
+                          </div>
+                        )}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto', paddingTop: 16 }}>
+                          <Flex gap={8} align="center" style={{ flex: 1, flexWrap: 'wrap' }}>
+                            <StatusBadge status={item.condition} size="small" />
+                            <StatusBadge status={item.status} size="small" />
+                          </Flex>
+                          {item.auction && (
+                            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                              <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
+                                {item.hasLiveAuction ? t('browse.liveBid', 'Live Bid') : t('browse.currentPrice', 'Current Price')}
+                              </div>
+                              <div className="oio-price" style={{ fontSize: 16, color: 'var(--color-accent, #3494f8)', fontWeight: 700 }}>
+                                {new Intl.NumberFormat(i18n.language || 'vi-VN', { style: 'currency', currency: item.auction.currency }).format(item.auction.currentPrice)}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </>
                   </div>
                 </Col>
               )

@@ -78,7 +78,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
           position: 'relative',
           borderRadius: isMobile ? 12 : 16,
           overflow: 'hidden',
-          aspectRatio: '4/5',
+          aspectRatio: isMobile ? '16/10' : '4/5',
           marginBottom: isMobile ? 16 : 24,
           background: 'var(--color-bg-surface, #1f2937)',
         }}
@@ -234,7 +234,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
         <h3
           style={{
             fontWeight: 700,
-            fontSize: isMobile ? 14 : 18,
+            fontSize: 18,
             marginBottom: 4,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
@@ -272,10 +272,10 @@ export function AuctionCard({ auction }: AuctionCardProps) {
             width: '100%',
             background: isActive ? 'var(--color-accent, #3b82f6)' : 'rgba(255,255,255,0.05)',
             color: isActive ? '#fff' : 'var(--color-text-secondary, #9ca3af)',
-            padding: isMobile ? '8px 0' : '12px 0',
-            borderRadius: isMobile ? 8 : 12,
+            padding: '12px 0',
+            borderRadius: 12,
             fontWeight: 700,
-            fontSize: isMobile ? 12 : 14,
+            fontSize: 14,
             border: `1px solid ${isActive ? 'var(--color-accent, #3b82f6)' : 'var(--color-border, rgba(255,255,255,0.1))'}`,
             transition: 'all 0.3s ease',
             cursor: isActive || auction.status === AuctionStatus.Scheduled ? 'pointer' : 'not-allowed',
