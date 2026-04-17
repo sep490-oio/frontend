@@ -104,6 +104,18 @@ export function useWatchlist(params?: PaginationParams) {
   })
 }
 
+export function useSuggestAuctions(q: string) {
+  return useQuery({
+    queryKey: ['auctions', 'suggest', q],
+    queryFn: async ({ signal }) => {
+      const res = await apiClient.get<string[]>('/search/auctions/suggest', { params: { q }, signal })
+      return res.data
+    },
+    enabled: q.trim().length >= 2,
+    staleTime: 10_000,
+  })
+}
+
 // ── My Bids ─────────────────────────────────────────────────────────
 
 export interface MyBidDto {

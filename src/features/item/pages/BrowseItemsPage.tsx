@@ -1,10 +1,10 @@
 import { useState, useCallback } from 'react'
 import { Input, Select, Pagination, Flex, Row, Col, Empty, AutoComplete } from 'antd'
 import { SearchOutlined, EyeOutlined } from '@ant-design/icons'
-import { useNavigate } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
-import { useCategories } from '@/features/item/api'
+import { useCategories, useSuggestItems } from '@/features/item/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { CountdownTimer } from '@/components/ui/CountdownTimer'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
@@ -14,7 +14,6 @@ import type { PagedList, PaginationParams, ItemDto } from '@/types'
 import { SERIF_FONT } from '@/styles/tokens'
 
 const SERIF = SERIF_FONT
-const SUGGEST_MIN_LENGTH = 2
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -63,23 +62,7 @@ function useSearchItems(params: SearchParams, enabled: boolean) {
   })
 }
 
-/**
- * Auto-complete suggestions.
- * Receives already-debounced `q` from call site via useDebounce.
- * Only fires when q.length >= SUGGEST_MIN_LENGTH.
- * Stale in-flight requests are cancelled automatically via AbortController signal.
- */
-function useSuggestItems(q: string) {
-  return useQuery({
-    queryKey: ['items', 'suggest', q],
-    queryFn: async ({ signal }) => {
-      const res = await apiClient.get<string[]>('/search/items/suggest', { params: { q }, signal })
-      return res.data
-    },
-    enabled: q.trim().length >= SUGGEST_MIN_LENGTH,
-    staleTime: 10_000,
-  })
-}
+
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -94,11 +77,14 @@ export default function BrowseItemsPage() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(12)
 
+  const [searchParams, setSearchParams] = useSearchParams()
+  const initialSearch = searchParams.get('search') ?? ''
+
   // What the user is currently typing → drives suggest dropdown
-  const [inputValue, setInputValue] = useState('')
+  const [inputValue, setInputValue] = useState(initialSearch)
 
   // Only updated on Enter / suggestion select → drives actual search query
-  const [committedSearch, setCommittedSearch] = useState('')
+  const [committedSearch, setCommittedSearch] = useState(initialSearch)
 
   // Category: id for browse endpoint, name for ES endpoint
   const [categoryId, setCategoryId] = useState('')
@@ -141,9 +127,15 @@ export default function BrowseItemsPage() {
   // ── Handlers ─────────────────────────────────────────────────────────────
 
   const commitSearch = useCallback((value: string) => {
-    setCommittedSearch(value.trim())
+    const trimmed = value.trim()
+    setCommittedSearch(trimmed)
     setPage(1)
-  }, [])
+    if (trimmed) {
+      setSearchParams({ search: trimmed })
+    } else {
+      setSearchParams({})
+    }
+  }, [setSearchParams])
 
   const handleInputChange = useCallback((value: string) => {
     setInputValue(value)
@@ -151,8 +143,9 @@ export default function BrowseItemsPage() {
     if (!value.trim()) {
       setCommittedSearch('')
       setPage(1)
+      setSearchParams({})
     }
-  }, [])
+  }, [setSearchParams])
 
   const handleSelect = useCallback((value: string) => {
     setInputValue(value)

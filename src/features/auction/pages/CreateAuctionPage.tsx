@@ -684,7 +684,18 @@ export default function CreateAuctionPage() {
               { type: 'number', min: 0, message: t('startingPriceMin', 'Starting price must be >= 0') },
             ]}
           >
-            <InputNumber style={{ width: '100%' }} min={0} step={1000} addonAfter={DEFAULT_CURRENCY} placeholder="0" />
+            <InputNumber
+              style={{ width: '100%' }}
+              min={0}
+              step={1000}
+              addonAfter={DEFAULT_CURRENCY}
+              placeholder="0"
+              formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+              parser={(v) => {
+                const parsed = (v ?? '').replace(/\$\s?|(,*)/g, '')
+                return parsed ? Number(parsed) : null as any
+              }}
+            />
           </Form.Item>
 
           <Form.Item
@@ -695,7 +706,17 @@ export default function CreateAuctionPage() {
               { type: 'number', min: 1, message: t('bidIncrementMin', 'Bid increment must be > 0') },
             ]}
           >
-            <InputNumber style={{ width: '100%' }} min={1000} step={1000} addonAfter={DEFAULT_CURRENCY} />
+            <InputNumber
+              style={{ width: '100%' }}
+              min={1000}
+              step={1000}
+              addonAfter={DEFAULT_CURRENCY}
+              formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+              parser={(v) => {
+                const parsed = (v ?? '').replace(/\$\s?|(,*)/g, '')
+                return parsed ? Number(parsed) : null as any
+              }}
+            />
           </Form.Item>
 
           <Form.Item name="reservePrice" label={t('reservePrice', 'Reserve Price')}>
@@ -705,6 +726,11 @@ export default function CreateAuctionPage() {
               step={1000}
               addonAfter={DEFAULT_CURRENCY}
               placeholder={t('reservePricePlaceholder', 'Optional - minimum price to sell')}
+              formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+              parser={(v) => {
+                const parsed = (v ?? '').replace(/\$\s?|(,*)/g, '')
+                return parsed ? Number(parsed) : null as any
+              }}
             />
           </Form.Item>
 
@@ -715,6 +741,11 @@ export default function CreateAuctionPage() {
               step={1000}
               addonAfter={DEFAULT_CURRENCY}
               placeholder={t('buyNowPricePlaceholder', 'Optional - instant purchase price')}
+              formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+              parser={(v) => {
+                const parsed = (v ?? '').replace(/\$\s?|(,*)/g, '')
+                return parsed ? Number(parsed) : null as any
+              }}
             />
           </Form.Item>
 

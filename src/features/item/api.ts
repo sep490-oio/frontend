@@ -126,6 +126,18 @@ export function usePublicItems(params?: PaginationParams & { categoryId?: string
   })
 }
 
+export function useSuggestItems(q: string) {
+  return useQuery({
+    queryKey: ['items', 'suggest', q],
+    queryFn: async ({ signal }) => {
+      const res = await apiClient.get<string[]>('/search/items/suggest', { params: { q }, signal })
+      return res.data
+    },
+    enabled: q.trim().length >= 2,
+    staleTime: 10_000,
+  })
+}
+
 // ── Batch Media ─────────────────────────────────────────────────────
 
 export function useBatchAddMedia() {

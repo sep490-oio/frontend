@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import apiClient, { extractArray } from '@/lib/axios'
 import { queryKeys } from '@/lib/queryClient'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useAppSelector } from '@/app/store'
 import type {
   UserDto,
   UserProfileDto,
@@ -282,6 +283,18 @@ export function useActiveTermsByType(termType: string) {
  */
 export function usePendingTerms(termType?: string, options?: { enabled?: boolean }) {
   const enabled = options?.enabled ?? true
+  const accessToken = useAppSelector((state) => state.auth.accessToken)
+
+  const roles = useMemo(() => {
+    if (!accessToken) return []
+    try {
+      const payload = JSON.parse(atob(accessToken.split('.')[1]))
+      const r: string[] = Array.isArray(payload.role) ? payload.role : payload.role ? [payload.role] : []
+      return r.map((role) => role.toLowerCase())
+    } catch {
+      return []
+    }
+  }, [accessToken])
 
   const { data: activeTerms, isLoading: activeLoading } = useQuery({
     queryKey: [...queryKeys.terms.all, 'active'],
@@ -307,12 +320,24 @@ export function usePendingTerms(termType?: string, options?: { enabled?: boolean
       // Fallback: { id } (acceptance ID, not document ID — skip)
       return null
     }).filter(Boolean) as string[])
-    let pending = activeTerms.filter((t) => !acceptedDocIds.has(t.id))
+
+    // Base types everyone sees
+    const universalTypes = new Set(['platform', 'bidder', 'privacy', 'other'])
+    const userRoles = new Set(roles)
+
+    let pending = activeTerms.filter((t) => {
+      // Hide term if it's a role-specific term and the user doesn't have the role
+      if (!universalTypes.has(t.type) && !userRoles.has(t.type)) {
+        return false
+      }
+      return !acceptedDocIds.has(t.id)
+    })
+
     if (termType) {
       pending = pending.filter((t) => t.type === termType)
     }
     return pending
-  }, [activeTerms, acceptedTerms, termType])
+  }, [activeTerms, acceptedTerms, termType, roles])
 
   return {
     data: { hasPending: pendingTerms.length > 0, pendingTerms },

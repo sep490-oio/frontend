@@ -4,7 +4,7 @@ import { SearchOutlined, FilterOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
-import { useAuctions } from '@/features/auction/api'
+import { useAuctions, useSuggestAuctions } from '@/features/auction/api'
 import { useCategories } from '@/features/item/api'
 import apiClient from '@/lib/axios'
 import { AuctionCard } from '@/components/ui/AuctionCard'
@@ -50,23 +50,7 @@ function useSearchAuctions(params: SearchAuctionParams, enabled: boolean) {
   })
 }
 
-/**
- * Auto-complete suggestions.
- * Receives already-debounced `q` from call site via useDebounce.
- * Only fires when q.length >= SUGGEST_MIN_LENGTH.
- * Stale in-flight requests are cancelled automatically via AbortController signal.
- */
-function useSuggestAuctions(q: string) {
-  return useQuery({
-    queryKey: ['auctions', 'suggest', q],
-    queryFn: async ({ signal }) => {
-      const res = await apiClient.get<string[]>('/search/auctions/suggest', { params: { q }, signal })
-      return res.data
-    },
-    enabled: q.trim().length >= SUGGEST_MIN_LENGTH,
-    staleTime: 10_000,
-  })
-}
+
 
 // ─── Helper: split legacy "Field Dir" sort string ────────────────────────────
 
@@ -104,7 +88,7 @@ export default function BrowseAuctionsPage() {
   const { t } = useTranslation('auction')
   const { t: tc } = useTranslation('common')
   const { isMobile, isTablet } = useBreakpoint()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false)
 
   const isNarrow = isMobile || isTablet
@@ -205,9 +189,19 @@ export default function BrowseAuctionsPage() {
   }, [])
 
   const commitSearch = useCallback((value: string) => {
-    setCommittedSearch(value.trim())
+    const trimmed = value.trim()
+    setCommittedSearch(trimmed)
     setFilters((prev) => ({ ...prev, pageNumber: 1 }))
-  }, [])
+
+    // Update URL params
+    const newParams = new URLSearchParams(searchParams)
+    if (trimmed) {
+      newParams.set('search', trimmed)
+    } else {
+      newParams.delete('search')
+    }
+    setSearchParams(newParams)
+  }, [searchParams, setSearchParams])
 
   const handleInputChange = useCallback((value: string) => {
     setInputValue(value)
@@ -215,8 +209,12 @@ export default function BrowseAuctionsPage() {
     if (!value.trim()) {
       setCommittedSearch('')
       setFilters((prev) => ({ ...prev, pageNumber: 1 }))
+
+      const newParams = new URLSearchParams(searchParams)
+      newParams.delete('search')
+      setSearchParams(newParams)
     }
-  }, [])
+  }, [searchParams, setSearchParams])
 
   const handleSelect = useCallback((value: string) => {
     setInputValue(value)
@@ -330,10 +328,10 @@ export default function BrowseAuctionsPage() {
           </p>
         </div>
         {!isMobile && (
-           <a href="#" style={{ color: 'var(--color-accent, #3b82f6)', fontWeight: 500, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
-              {t('viewAll', 'Xem tất cả')}
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 16, height: 16 }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
-           </a>
+          <a href="#" style={{ color: 'var(--color-accent, #3b82f6)', fontWeight: 500, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+            {t('viewAll', 'Xem tất cả')}
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 16, height: 16 }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+          </a>
         )}
       </div>
 
@@ -554,7 +552,7 @@ export default function BrowseAuctionsPage() {
               showTotal={isMobile ? undefined : (total) => tc('pagination.total', { total })}
               onChange={(p, ps) => setFilters((prev) => ({ ...prev, pageNumber: p, pageSize: ps }))}
               size={isMobile ? 'small' : undefined}
-          />
+            />
           </Flex>
         </>
       )}

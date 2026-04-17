@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Outlet, useNavigate, useLocation, Link } from 'react-router'
-import { Layout, Avatar, Dropdown, Button, Space, Drawer, Input } from 'antd'
+import { Layout, Avatar, Dropdown, Button, Space, Drawer, Input, AutoComplete } from 'antd'
 import {
   UserOutlined,
   LogoutOutlined,
@@ -26,6 +26,7 @@ import { useAppSelector } from '@/app/store'
 import { NotificationDropdown } from '@/features/notification/components/NotificationDropdown'
 import { TermsAcceptanceModal } from '@/components/terms/TermsAcceptanceModal'
 import { useActiveTermsByType, useAcceptedTerms, useCurrentUser } from '@/features/user/api'
+import { useSuggestAuctions } from '@/features/auction/api'
 import { SERIF_FONT, SANS_FONT } from '@/styles/tokens'
 
 function getRolesFromToken(token: string | null): string[] {
@@ -57,11 +58,16 @@ export function AppLayout() {
 
   const isNarrow = isMobile || isTablet
 
-  useEffect(() => {
-    if (debouncedSearch.trim()) {
-      navigate('/auctions?search=' + encodeURIComponent(debouncedSearch.trim()))
+  const { data: suggestions } = useSuggestAuctions(debouncedSearch)
+  const suggestOptions = (suggestions ?? []).map((s: string) => ({ value: s, label: s }))
+
+  const handleSearchSelect = (val: string) => {
+    setSearchQuery(val)
+    if (val.trim()) {
+      setMobileMenuOpen(false)
+      navigate('/auctions?search=' + encodeURIComponent(val.trim()))
     }
-  }, [debouncedSearch, navigate])
+  }
 
   // Platform terms — preview-first modal (no route redirect). The user can
   // dismiss the modal and keep browsing; gated actions still require acceptance
@@ -248,24 +254,34 @@ export function AppLayout() {
         <Space size={isMobile ? 4 : 'middle'} style={{ flexShrink: 0 }}>
           {/* Search bar (desktop only) */}
           {!isNarrow && (
-            <Input
-              prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
-              placeholder={t('common:action.search', 'Search...')}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onPressEnter={() => {
-                if (searchQuery.trim()) {
-                  navigate('/auctions?search=' + encodeURIComponent(searchQuery.trim()))
-                }
-              }}
-              style={{
-                width: isTablet ? 140 : 180,
-                borderRadius: 100,
-                height: 32,
-                borderColor: 'var(--color-border)',
-                background: 'transparent',
-              }}
-            />
+            <div style={{ lineHeight: '36px', height: 36 }}>
+              <AutoComplete
+                options={suggestOptions}
+                value={searchQuery}
+                onChange={setSearchQuery}
+                onSelect={handleSearchSelect}
+                popupMatchSelectWidth={false}
+                style={{
+                  width: isTablet ? 160 : 200,
+                  height: 36,
+                  borderRadius: 100,
+                  overflow: 'hidden',
+                }}
+              >
+                <Input
+                  prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
+                  placeholder={t('common:action.search', 'Search auctions...')}
+                  onPressEnter={() => handleSearchSelect(searchQuery)}
+                  allowClear
+                  style={{
+                    borderRadius: 100,
+                    height: 36,
+                    borderColor: 'var(--color-border)',
+                    background: 'rgba(255,255,255,0.02)',
+                  }}
+                />
+              </AutoComplete>
+            </div>
           )}
 
           {/* Language toggle — hidden on mobile */}
@@ -368,19 +384,24 @@ export function AppLayout() {
       >
         {/* Drawer search */}
         <div style={{ padding: '12px 16px 8px' }}>
-          <Input
-            prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
-            placeholder={t('common:action.search', 'Search auctions...')}
+          <AutoComplete
+            options={suggestOptions}
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onPressEnter={() => {
-              if (searchQuery.trim()) {
-                setMobileMenuOpen(false)
-                navigate('/auctions?search=' + encodeURIComponent(searchQuery.trim()))
-              }
-            }}
-            style={{ borderRadius: 100, height: 40, borderColor: 'var(--color-border)' }}
-          />
+            onChange={setSearchQuery}
+            onSelect={handleSearchSelect}
+            popupMatchSelectWidth={false}
+            style={{ width: '100%', height: 40, borderRadius: 100, overflow: 'hidden' }}
+          >
+            <div style={{ lineHeight: '40px', height: 40 }}>
+              <Input
+                prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
+                placeholder={t('common:action.search', 'Search auctions...')}
+                onPressEnter={() => handleSearchSelect(searchQuery)}
+                allowClear
+                style={{ borderRadius: 100, height: 40, borderColor: 'var(--color-border)' }}
+              />
+            </div>
+          </AutoComplete>
         </div>
 
         {/* Drawer nav links */}

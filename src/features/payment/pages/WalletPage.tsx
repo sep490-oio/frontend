@@ -290,6 +290,11 @@ export default function WalletPage() {
               onChange={(v) => setTopupAmount(v)}
               addonAfter={wallet?.currency ?? 'VND'}
               placeholder={t('topupAmountPlaceholder', '100,000')}
+              formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+              parser={(v) => {
+                const parsed = (v ?? '').replace(/\$\s?|(,*)/g, '')
+                return parsed ? Number(parsed) : null as any
+              }}
             />
           </div>
         </div>

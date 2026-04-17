@@ -6,110 +6,143 @@ interface StatusBadgeStyle {
   border?: string
 }
 
-const STATUS_STYLES: Record<string, StatusBadgeStyle> = {
-  // Auction/Item active states
-  active: { bg: 'var(--color-success)', color: '#fff' },
-  live: { bg: 'var(--color-danger)', color: '#fff' },
+// ── Semantic Variants ──
 
-  // Scheduled/upcoming
-  scheduled: { bg: 'transparent', color: 'var(--color-accent)', border: 'var(--color-accent)' },
-  upcoming: { bg: 'transparent', color: 'var(--color-accent)', border: 'var(--color-accent)' },
+type BadgeVariant = 
+  | 'solid-success' | 'solid-danger' | 'solid-accent' | 'solid-info' | 'solid-warning' | 'solid-purple' | 'solid-neutral'
+  | 'soft-success' | 'soft-danger' | 'soft-warning' | 'soft-info' | 'soft-purple'
+  | 'outline-success' | 'outline-info' | 'outline-warning' | 'outline-neutral' | 'outline-danger'
+  | 'neutral'
 
-  // Success states
-  sold: { bg: 'var(--color-success)', color: '#fff' },
-  completed: { bg: 'var(--color-success)', color: '#fff' },
-  verified: { bg: 'var(--color-success)', color: '#fff' },
-  approved: { bg: 'rgba(74,124,89,0.1)', color: 'var(--color-success)' },
+const VARIANT_STYLES: Record<BadgeVariant, StatusBadgeStyle> = {
+  // Solid (high emphasis)
+  'solid-success': { bg: 'var(--color-success)', color: '#fff', border: 'var(--color-success)' },
+  'solid-danger': { bg: 'var(--color-danger)', color: '#fff', border: 'var(--color-danger)' },
+  'solid-accent': { bg: 'var(--color-accent)', color: '#fff', border: 'var(--color-accent)' },
+  'solid-info': { bg: '#1677ff', color: '#fff', border: '#1677ff' },
+  'solid-warning': { bg: '#f59e0b', color: '#fff', border: '#f59e0b' },
+  'solid-purple': { bg: '#8A2BE2', color: '#fff', border: '#8A2BE2' },
+  'solid-neutral': { bg: '#4b5563', color: '#fff', border: '#4b5563' },
+  
+  // Soft (medium emphasis, translucent bg with border)
+  'soft-success': { bg: 'rgba(74,124,89,0.15)', color: 'var(--color-success)', border: 'rgba(74,124,89,0.3)' },
+  'soft-danger': { bg: 'rgba(196,81,61,0.12)', color: 'var(--color-danger)', border: 'rgba(196,81,61,0.3)' },
+  'soft-warning': { bg: 'rgba(196,146,61,0.15)', color: 'var(--color-accent)', border: 'rgba(196,146,61,0.3)' },
+  'soft-info': { bg: 'rgba(22,119,255,0.15)', color: '#1677ff', border: 'rgba(22,119,255,0.3)' },
+  'soft-purple': { bg: 'rgba(138,43,226,0.15)', color: '#8A2BE2', border: 'rgba(138,43,226,0.3)' },
 
-  // Pending/review states
-  draft: { bg: 'var(--color-bg-surface)', color: 'var(--color-text-secondary)', border: 'var(--color-border)' },
-  pending: { bg: 'rgba(139,115,85,0.1)', color: 'var(--color-accent)' },
-  pending_review: { bg: 'rgba(139,115,85,0.1)', color: 'var(--color-accent)' },
-  pending_verify: { bg: 'rgba(139,115,85,0.15)', color: 'var(--color-accent)' },
-  pending_condition_confirmation: { bg: 'rgba(196,146,61,0.1)', color: '#C4923D' },
-  submitted: { bg: 'rgba(139,115,85,0.1)', color: 'var(--color-accent)' },
-  under_review: { bg: 'rgba(139,115,85,0.1)', color: 'var(--color-accent)' },
+  // Outline (condition tags - transparent bg)
+  'outline-success': { bg: 'transparent', color: 'var(--color-success)', border: 'var(--color-success)' },
+  'outline-info': { bg: 'transparent', color: '#1677ff', border: '#1677ff' },
+  'outline-warning': { bg: 'transparent', color: 'var(--color-accent)', border: 'var(--color-accent)' },
+  'outline-neutral': { bg: 'transparent', color: 'var(--color-text-secondary)', border: 'var(--color-border)' },
+  'outline-danger': { bg: 'transparent', color: 'var(--color-danger)', border: 'var(--color-danger)' },
 
-  // Warning states
-  payment_defaulted: { bg: 'rgba(196,146,61,0.1)', color: '#C4923D' },
-  in_auction: { bg: 'rgba(22,119,255,0.1)', color: '#1677ff' },
-
-  // Error states
-  ended: { bg: 'var(--color-bg-surface)', color: 'var(--color-text-secondary)' },
-  failed: { bg: 'rgba(196,81,61,0.08)', color: 'var(--color-danger)' },
-  cancelled: { bg: 'rgba(196,81,61,0.08)', color: 'var(--color-danger)' },
-  rejected: { bg: 'rgba(196,81,61,0.08)', color: 'var(--color-danger)' },
-  terminated: { bg: 'rgba(196,81,61,0.12)', color: 'var(--color-danger)' },
-  removed: { bg: 'rgba(196,81,61,0.08)', color: 'var(--color-danger)' },
-  suspended: { bg: 'rgba(196,81,61,0.08)', color: 'var(--color-danger)' },
-  banned: { bg: 'rgba(196,81,61,0.12)', color: 'var(--color-danger)' },
-
-  // Processing/transitional
-  processing: { bg: 'rgba(22,119,255,0.08)', color: '#1677ff' },
-  inactive: { bg: 'var(--color-bg-surface)', color: 'var(--color-text-secondary)', border: 'var(--color-border)' },
-  locked: { bg: 'var(--color-bg-surface)', color: 'var(--color-text-secondary)', border: 'var(--color-border)' },
-
-  // Escrow states (match BE values)
-  holding: { bg: 'rgba(196,146,61,0.1)', color: '#C4923D' },
-  released_to_seller: { bg: 'rgba(74,124,89,0.1)', color: 'var(--color-success)' },
-  refunded_to_buyer: { bg: 'rgba(22,119,255,0.1)', color: '#1677ff' },
-
-  // Wallet transaction types
-  hold: { bg: 'rgba(196,146,61,0.1)', color: '#C4923D' },
-  release: { bg: 'rgba(74,124,89,0.1)', color: 'var(--color-success)' },
-  credit: { bg: 'rgba(74,124,89,0.1)', color: 'var(--color-success)' },
-  debit: { bg: 'rgba(196,81,61,0.08)', color: 'var(--color-danger)' },
-  refunded: { bg: 'rgba(22,119,255,0.1)', color: '#1677ff' },
-
-  // Report states (match BE values)
-  action_taken: { bg: 'rgba(74,124,89,0.1)', color: 'var(--color-success)' },
-  dismissed: { bg: 'var(--color-bg-surface)', color: 'var(--color-text-secondary)' },
-
-  // Alert states (match BE AlertStatus)
-  open: { bg: 'rgba(196,146,61,0.1)', color: '#C4923D' },
-  ignored: { bg: 'var(--color-bg-surface)', color: 'var(--color-text-secondary)' },
-
-  // Order return states (match BE OrderReturnStatus)
-  return_in_transit: { bg: 'rgba(22,119,255,0.08)', color: '#1677ff' },
-  seller_received: { bg: 'rgba(74,124,89,0.1)', color: 'var(--color-success)' },
-  buyer_followup: { bg: 'rgba(139,115,85,0.1)', color: 'var(--color-accent)' },
-  resolved: { bg: 'rgba(74,124,89,0.1)', color: 'var(--color-success)' },
-
-  // SealedBid states (match BE values)
-  invalidated: { bg: 'rgba(196,81,61,0.08)', color: 'var(--color-danger)' },
-  withdrawn: { bg: 'var(--color-bg-surface)', color: 'var(--color-text-secondary)' },
-
-  // Qualification states
-  qualified: { bg: 'rgba(74,124,89,0.1)', color: 'var(--color-success)' },
-  waived: { bg: 'rgba(74,124,89,0.1)', color: 'var(--color-success)' },
-  expired: { bg: 'var(--color-bg-surface)', color: 'var(--color-text-secondary)' },
-
-  // Deposit states
-  held: { bg: 'rgba(196,146,61,0.1)', color: '#C4923D' },
-  returned: { bg: 'rgba(74,124,89,0.1)', color: 'var(--color-success)' },
-  forfeited: { bg: 'rgba(196,81,61,0.08)', color: 'var(--color-danger)' },
-  converted_to_payment: { bg: 'rgba(22,119,255,0.1)', color: '#1677ff' },
-
-  // Winner offer states
-  accepted: { bg: 'rgba(74,124,89,0.1)', color: 'var(--color-success)' },
-  declined: { bg: 'rgba(196,81,61,0.08)', color: 'var(--color-danger)' },
-
-  // Special
-  auto: { bg: 'rgba(22,119,255,0.08)', color: '#1677ff' },
-  regular: { bg: 'rgba(22,119,255,0.1)', color: '#1677ff' },
-  sealed: { bg: 'rgba(138,43,226,0.1)', color: '#8A2BE2' }, // Purple tone for sealed
-
-  // Item Conditions
-  new: { bg: 'rgba(74,124,89,0.15)', color: 'var(--color-success)', border: 'var(--color-success)' },
-  like_new: { bg: 'rgba(22,119,255,0.15)', color: '#1677ff', border: '#1677ff' },
-  very_good: { bg: 'rgba(196,146,61,0.15)', color: '#C4923D', border: '#C4923D' },
-  good: { bg: 'var(--color-bg-surface)', color: 'var(--color-text-primary)' },
-  acceptable: { bg: 'rgba(196,81,61,0.1)', color: 'var(--color-danger)' },
+  // Neutral (low emphasis)
+  'neutral': { bg: 'var(--color-bg-surface)', color: 'var(--color-text-secondary)', border: 'var(--color-border)' },
 }
 
-const DEFAULT_STYLE: StatusBadgeStyle = {
-  bg: 'var(--color-bg-surface)',
-  color: 'var(--color-text-secondary)',
+// ── Mapping ──
+
+const STATUS_VARIANT_MAP: Record<string, BadgeVariant> = {
+  // Auction/Item active states
+  active: 'solid-success',
+  live: 'solid-danger',
+
+  // Scheduled/upcoming
+  scheduled: 'soft-warning',
+  upcoming: 'soft-warning',
+
+  // Success states
+  sold: 'solid-success',
+  completed: 'solid-success',
+  verified: 'solid-success',
+  approved: 'soft-success',
+
+  // Pending/review states
+  draft: 'neutral',
+  pending: 'soft-warning',
+  pending_review: 'soft-warning',
+  pending_verify: 'soft-warning',
+  pending_condition_confirmation: 'soft-warning',
+  submitted: 'soft-warning',
+  under_review: 'soft-warning',
+
+  // Warning states
+  payment_defaulted: 'soft-danger',
+  in_auction: 'soft-info',
+
+  // Error states
+  ended: 'neutral',
+  failed: 'soft-danger',
+  cancelled: 'soft-danger',
+  rejected: 'soft-danger',
+  terminated: 'soft-danger',
+  removed: 'soft-danger',
+  suspended: 'soft-danger',
+  banned: 'solid-danger',
+
+  // Processing/transitional
+  processing: 'soft-info',
+  inactive: 'neutral',
+  locked: 'neutral',
+
+  // Escrow states
+  holding: 'soft-warning',
+  released_to_seller: 'soft-success',
+  refunded_to_buyer: 'soft-info',
+
+  // Wallet transaction types
+  hold: 'soft-warning',
+  release: 'soft-success',
+  credit: 'soft-success',
+  debit: 'soft-danger',
+  refunded: 'soft-info',
+
+  // Report states
+  action_taken: 'soft-success',
+  dismissed: 'neutral',
+
+  // Alert states
+  open: 'soft-warning',
+  ignored: 'neutral',
+
+  // Order return states
+  return_in_transit: 'soft-info',
+  seller_received: 'soft-success',
+  buyer_followup: 'soft-warning',
+  resolved: 'soft-success',
+
+  // SealedBid states
+  invalidated: 'soft-danger',
+  withdrawn: 'neutral',
+
+  // Qualification states
+  qualified: 'soft-success',
+  waived: 'soft-success',
+  expired: 'neutral',
+
+  // Deposit states
+  held: 'soft-warning',
+  returned: 'soft-success',
+  forfeited: 'soft-danger',
+  converted_to_payment: 'soft-info',
+
+  // Winner offer states
+  accepted: 'soft-success',
+  declined: 'soft-danger',
+
+  // Special
+  auto: 'solid-info',
+  regular: 'solid-info',
+  sealed: 'solid-purple',
+
+  // Item Conditions (Solid style to match Active)
+  new: 'solid-success',
+  like_new: 'solid-info',
+  very_good: 'solid-warning',
+  good: 'solid-neutral',
+  acceptable: 'solid-danger',
 }
 
 const CHECK_ICON = (
@@ -200,7 +233,8 @@ export function StatusBadge({ status, size }: StatusBadgeProps) {
   const { t } = useTranslation('common')
   if (!status) return null
   const normalized = status.toLowerCase()
-  const style = STATUS_STYLES[normalized] ?? DEFAULT_STYLE
+  const variant = STATUS_VARIANT_MAP[normalized] ?? 'neutral'
+  const style = VARIANT_STYLES[variant]
 
   const label = t(
     `statusLabel.${normalized}`,
@@ -216,18 +250,20 @@ export function StatusBadge({ status, size }: StatusBadgeProps) {
       style={{
         display: 'inline-flex',
         alignItems: 'center',
+        justifyContent: 'center',
         borderRadius: 100,
         padding,
         fontFamily: "'Be Vietnam Pro', sans-serif",
         fontSize,
-        fontWeight: 500,
+        fontWeight: 700,
         textTransform: 'uppercase',
         letterSpacing: '0.04em',
         lineHeight: '18px',
         whiteSpace: 'nowrap',
         background: style.bg,
         color: style.color,
-        border: style.border ? `1px solid ${style.border}` : 'none',
+        border: `1px solid ${style.border || 'transparent'}`,
+        boxSizing: 'border-box',
       }}
     >
       {getStatusIcon(normalized)}
