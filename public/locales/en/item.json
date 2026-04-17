@@ -91,9 +91,7 @@
   "verifyByPlatformDesc": "Ship item to our warehouse for professional inspection and authentication.",
   "auctionSection": "Auction Settings",
   "auctionSectionOptional": "Optional — set up auction details now",
-  "createAndSubmit": "Create & Submit",
-  "createAndSubmitWithAuction": "Create & Submit with Auction",
-  "saveDraft": "Save as Draft",
+
   "realtimeLive": "Realtime active",
   "realtimeFallback": "Using periodic refresh",
   "lastSynced": "Updated {{time}}",
