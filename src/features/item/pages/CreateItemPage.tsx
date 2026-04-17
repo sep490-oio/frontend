@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Typography, Form, Input, Select, InputNumber, Button, Card, Space, App, Switch, Collapse, Row, Col, Flex } from 'antd'
+import { Typography, Form, Input, Select, InputNumber, Button, Card, Space, App, Switch, Row, Col, Flex } from 'antd'
 import { ArrowLeftOutlined, ThunderboltOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
@@ -168,7 +168,7 @@ export default function CreateItemPage() {
         initialValues={{ quantity: 1, auctionType: AuctionType.Regular, bidIncrement: 10000, extensionMinutes: 5 }}
       >
         {/* Basic Info */}
-        <Card 
+        <Card
           title={<span style={{ fontSize: 16 }}>{t('basicInfo', 'Basic Info')}</span>}
           style={{ marginBottom: 24, borderRadius: 12, border: '1px solid var(--color-border)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
           styles={{ header: { borderBottom: '1px solid var(--color-border)' } }}
@@ -224,7 +224,7 @@ export default function CreateItemPage() {
         </Card>
 
         {/* Description */}
-        <Card 
+        <Card
           title={<span style={{ fontSize: 16 }}>{t('description', 'Description')}</span>}
           style={{ marginBottom: 24, borderRadius: 12, border: '1px solid var(--color-border)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
           styles={{ header: { borderBottom: '1px solid var(--color-border)' } }}
@@ -241,7 +241,7 @@ export default function CreateItemPage() {
         </Card>
 
         {/* Photos */}
-        <Card 
+        <Card
           title={<span style={{ fontSize: 16 }}>{t('media', 'Photos')}</span>}
           style={{ marginBottom: 24, borderRadius: 12, border: '1px solid var(--color-border)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
           styles={{ header: { borderBottom: '1px solid var(--color-border)' } }}
@@ -279,9 +279,9 @@ export default function CreateItemPage() {
 
         {/* Optional Auction Section */}
         <Card
-          style={{ 
-            marginBottom: 24, 
-            borderRadius: 12, 
+          style={{
+            marginBottom: 24,
+            borderRadius: 12,
             border: includeAuction ? '1px solid var(--color-accent)' : '1px solid var(--color-border)',
             boxShadow: includeAuction ? '0 4px 12px rgba(196, 146, 61, 0.1)' : '0 2px 8px rgba(0,0,0,0.04)',
             transition: 'all 0.3s'
@@ -408,9 +408,9 @@ export default function CreateItemPage() {
           display: 'flex',
           justifyContent: 'center',
         }}>
-          <Flex 
-            justify="flex-end" 
-            gap={8} 
+          <Flex
+            justify="flex-end"
+            gap={8}
             wrap={false}
             style={{ width: '100%', maxWidth: 880, overflowX: 'auto', paddingBottom: 4 }}
           >

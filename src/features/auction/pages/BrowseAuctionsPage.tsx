@@ -16,7 +16,6 @@ import type { AuctionFilterParams, PagedList, AuctionListItemDto } from '@/types
 import { SERIF_FONT } from '@/styles/tokens'
 
 const SERIF = SERIF_FONT
-const SUGGEST_MIN_LENGTH = 2
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
