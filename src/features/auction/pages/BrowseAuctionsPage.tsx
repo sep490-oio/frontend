@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { Input, Select, Pagination, Flex, Row, Col, InputNumber, Drawer, Button, AutoComplete } from 'antd'
 import { SearchOutlined, FilterOutlined, AppstoreOutlined, SortAscendingOutlined, TagOutlined, CheckCircleOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
@@ -50,8 +50,6 @@ function useSearchAuctions(params: SearchAuctionParams, enabled: boolean) {
   })
 }
 
-
-
 // ─── Helper: split legacy "Field Dir" sort string ────────────────────────────
 
 function parseSortString(sortBy: string | undefined): { sort_by?: string; desc?: boolean } {
@@ -60,15 +58,7 @@ function parseSortString(sortBy: string | undefined): { sort_by?: string; desc?:
   return { sort_by: field?.toLowerCase(), desc: dir?.toLowerCase() !== 'asc' }
 }
 
-// ─── Pill styles (mirror AuctionListPage) ────────────────────────────────────
-
-
-
-
-
 // ─── Component ───────────────────────────────────────────────────────────────
-
-
 
 export default function BrowseAuctionsPage() {
   const { t } = useTranslation('auction')
@@ -114,6 +104,7 @@ export default function BrowseAuctionsPage() {
     pageNumber: 1,
     pageSize: 12,
     status: initialStatus as AuctionStatus | undefined,
+    sortBy: 'EndTime Asc',
   })
 
   // What the user is currently typing → drives suggest dropdown
@@ -312,12 +303,7 @@ export default function BrowseAuctionsPage() {
             {t('browse.subtitle')}
           </p>
         </div>
-        {!isMobile && (
-          <a href="#" style={{ color: 'var(--color-accent, #3b82f6)', fontWeight: 500, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
-            {t('viewAll', 'Xem tất cả')}
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 16, height: 16 }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
-          </a>
-        )}
+
       </div>
 
       {/* ════════════════════════════════════════════════════════════════════
@@ -337,24 +323,38 @@ export default function BrowseAuctionsPage() {
             paddingRight: 8,
             scrollbarWidth: 'thin'
           }}>
-            <AutoComplete
-              options={suggestOptions}
-              value={inputValue}
-              onChange={handleInputChange}
-              onSelect={handleSelect}
-              style={{ width: '100%', marginBottom: 20 }}
-              popupMatchSelectWidth={false}
-            >
-              <Input
-                prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)', marginRight: 4 }} />}
-                placeholder={t('searchPlaceholder')}
-                onPressEnter={handlePressEnter}
-                allowClear
-                onClear={() => handleInputChange('')}
-                size="large"
-                style={{ borderRadius: 100, height: 48, borderColor: 'var(--color-border)', fontSize: 15 }}
-              />
-            </AutoComplete>
+            <div style={{
+              marginBottom: 24,
+              background: 'rgba(255, 255, 255, 0.05)',
+              borderRadius: 100,
+              border: '1px solid var(--color-border-light)',
+              overflow: 'hidden',
+              transition: 'all 0.3s ease',
+            }}>
+              <AutoComplete
+                options={suggestOptions}
+                value={inputValue}
+                onChange={handleInputChange}
+                onSelect={handleSelect}
+                style={{ width: '100%' }}
+                popupMatchSelectWidth={false}
+              >
+                <Input
+                  prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)', marginRight: 8 }} />}
+                  placeholder={t('searchPlaceholder')}
+                  onPressEnter={handlePressEnter}
+                  allowClear
+                  onClear={() => handleInputChange('')}
+                  size="large"
+                  variant="borderless"
+                  style={{
+                    height: 52,
+                    fontSize: 15,
+                    background: 'transparent',
+                  }}
+                />
+              </AutoComplete>
+            </div>
 
             <FilterWidget title={t('browse.allCategories', 'Danh mục')} icon={<AppstoreOutlined />}>
               <Select
@@ -451,7 +451,7 @@ export default function BrowseAuctionsPage() {
                   className="oio-stagger"
                   style={{ display: 'grid', gridTemplateColumns: isTablet ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 24 }}
                 >
-                  {data.items.map((auction) => (
+                  {data.items.map((auction: AuctionListItemDto) => (
                     <AuctionCard key={auction.id} auction={auction} />
                   ))}
                 </div>
@@ -588,7 +588,7 @@ export default function BrowseAuctionsPage() {
         ) : (
           <>
             <Row className="oio-stagger" gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]}>
-              {data.items.map((auction) => (
+              {data.items.map((auction: AuctionListItemDto) => (
                 <Col key={auction.id} xs={24} sm={12} md={8} xl={6}>
                   <AuctionCard auction={auction} />
                 </Col>

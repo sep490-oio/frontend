@@ -254,30 +254,36 @@ export function AppLayout() {
         <Space size={isMobile ? 4 : 'middle'} style={{ flexShrink: 0 }}>
           {/* Search bar (desktop only) */}
           {!isNarrow && (
-            <div style={{ lineHeight: '36px', height: 36 }}>
+            <div style={{
+              lineHeight: '36px',
+              height: 36,
+              background: 'rgba(255, 255, 255, 0.04)',
+              borderRadius: 100,
+              border: '1px solid var(--color-border-light)',
+              overflow: 'hidden',
+              display: 'flex',
+              alignItems: 'center',
+              width: isTablet ? 180 : 240,
+              transition: 'all 0.3s ease',
+            }}>
               <AutoComplete
                 options={suggestOptions}
                 value={searchQuery}
                 onChange={setSearchQuery}
                 onSelect={handleSearchSelect}
                 popupMatchSelectWidth={false}
-                style={{
-                  width: isTablet ? 160 : 200,
-                  height: 36,
-                  borderRadius: 100,
-                  overflow: 'hidden',
-                }}
+                style={{ width: '100%' }}
               >
                 <Input
-                  prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
-                  placeholder={t('common:action.search', 'Search auctions...')}
+                  prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)', marginLeft: 8 }} />}
+                  placeholder={t('common:action.search', 'Search actions...')}
                   onPressEnter={() => handleSearchSelect(searchQuery)}
                   allowClear
+                  variant="borderless"
                   style={{
-                    borderRadius: 100,
-                    height: 36,
-                    borderColor: 'var(--color-border)',
-                    background: 'rgba(255,255,255,0.02)',
+                    height: 34,
+                    fontSize: 13,
+                    background: 'transparent',
                   }}
                 />
               </AutoComplete>
@@ -384,24 +390,37 @@ export function AppLayout() {
       >
         {/* Drawer search */}
         <div style={{ padding: '12px 16px 8px' }}>
-          <AutoComplete
-            options={suggestOptions}
-            value={searchQuery}
-            onChange={setSearchQuery}
-            onSelect={handleSearchSelect}
-            popupMatchSelectWidth={false}
-            style={{ width: '100%', height: 40, borderRadius: 100, overflow: 'hidden' }}
-          >
-            <div style={{ lineHeight: '40px', height: 40 }}>
+          <div style={{
+            height: 40,
+            background: 'rgba(255, 255, 255, 0.05)',
+            borderRadius: 100,
+            border: '1px solid var(--color-border-light)',
+            overflow: 'hidden',
+            display: 'flex',
+            alignItems: 'center',
+          }}>
+            <AutoComplete
+              options={suggestOptions}
+              value={searchQuery}
+              onChange={setSearchQuery}
+              onSelect={handleSearchSelect}
+              popupMatchSelectWidth={false}
+              style={{ width: '100%' }}
+            >
               <Input
-                prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
+                prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)', marginLeft: 8 }} />}
                 placeholder={t('common:action.search', 'Search auctions...')}
                 onPressEnter={() => handleSearchSelect(searchQuery)}
                 allowClear
-                style={{ borderRadius: 100, height: 40, borderColor: 'var(--color-border)' }}
+                variant="borderless"
+                style={{
+                  height: 38,
+                  fontSize: 14,
+                  background: 'transparent',
+                }}
               />
-            </div>
-          </AutoComplete>
+            </AutoComplete>
+          </div>
         </div>
 
         {/* Drawer nav links */}

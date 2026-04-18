@@ -1,5 +1,4 @@
 {
-  "dashboard": "Seller Dashboard",
   "createProfile": "Create Seller Profile",
   "sellerProfile": "Seller Profile",
   "noProfile": "You have not created a seller profile yet",
@@ -26,7 +25,7 @@
   "newItem": "New Item",
   "manageItems": "Manage Items",
   "recentAuctions": "Recent Auctions",
-  "noAuctions": "No active auctions",
+  "noAuctions": "No auctions yet",
   "auctionTitle": "Title",
   "currentPrice": "Current Price",
   "bids": "Bids",
@@ -116,15 +115,11 @@
     "history": "History",
     "ordersAwaitingShipment": "Awaiting Shipment"
   },
-  "recentAuctions": "Recent Auctions",
-  "noAuctions": "No auctions yet",
   "pendingActions": "Pending Actions",
   "itemsPendingReview": "{{count}} items pending review",
   "draftAuctionsNeedSubmission": "{{count}} draft auctions need submission",
   "viewAll": "View All",
   "pendingBalance": "Pending",
-  "noProfile": "You have not created a seller profile yet",
-  "createProfile": "Create Seller Profile",
   "browse": {
     "title": "Sellers",
     "subtitle": "Discover trusted sellers on the platform",
