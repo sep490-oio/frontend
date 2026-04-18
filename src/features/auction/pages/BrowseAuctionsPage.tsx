@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback } from 'react'
 import { Input, Select, Pagination, Flex, Row, Col, InputNumber, Drawer, Button, AutoComplete } from 'antd'
 import { SearchOutlined, FilterOutlined, AppstoreOutlined, SortAscendingOutlined, TagOutlined, CheckCircleOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
@@ -313,10 +313,10 @@ export default function BrowseAuctionsPage() {
       {!isNarrow && (
         <Flex gap={32} align="flex-start" style={{ marginBottom: 32 }}>
           {/* Left Sidebar */}
-          <div style={{ 
-            width: 280, 
-            flexShrink: 0, 
-            position: 'sticky', 
+          <div style={{
+            width: 280,
+            flexShrink: 0,
+            position: 'sticky',
             top: 100,
             maxHeight: 'calc(100vh - 120px)',
             overflowY: 'auto',
@@ -371,8 +371,8 @@ export default function BrowseAuctionsPage() {
             <FilterWidget title={t('browse.filterState', 'Trạng thái')} icon={<CheckCircleOutlined />} noPadding>
               <Flex vertical>
                 {STATUS_PILLS.map((pill, idx) => {
-                   const isActive = activeStatus === pill.value;
-                   return (
+                  const isActive = activeStatus === pill.value;
+                  return (
                     <div
                       key={pill.value}
                       onClick={() => updateFilter('status', pill.value)}
@@ -395,8 +395,8 @@ export default function BrowseAuctionsPage() {
                       }}>
                         {isActive && <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--color-accent)' }} />}
                       </div>
-                      <span style={{ 
-                        fontSize: 14, 
+                      <span style={{
+                        fontSize: 14,
                         fontWeight: isActive ? 600 : 500,
                         color: isActive ? 'var(--color-accent)' : 'var(--color-text-primary)'
                       }}>
