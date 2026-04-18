@@ -2,18 +2,18 @@
 
 :root {
   /* Colors */
-  --color-bg-primary: #F8FAFC;
-  --color-bg-surface: #F1F5F9;
+  --color-bg-primary: #FDFBF7;
+  --color-bg-surface: #F7F5F0;
   --color-bg-card: #FFFFFF;
-  --color-text-primary: #0F172A;
+  --color-text-primary: #1c1c1c;
   --color-text-secondary: #64748B;
   --color-accent: #137fec;
   --color-accent-hover: #106bc7;
   --color-accent-light: rgba(19, 127, 236, 0.08);
   --color-success: #4A7C59;
   --color-danger: #C4513D;
-  --color-border: #E2E8F0;
-  --color-border-light: #F1F5F9;
+  --color-border: #E8E5DF;
+  --color-border-light: #F7F5F0;
 
   /* Typography */
   --font-serif: 'Noto Serif', Georgia, 'Times New Roman', serif;

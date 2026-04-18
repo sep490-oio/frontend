@@ -155,7 +155,7 @@ export default function CreateAuctionPage() {
       endTime: values.endTime,
       qualificationStartAt: values.qualificationStartAt,
       qualificationEndAt: values.qualificationEndAt,
-      autoExtend: values.autoExtend ?? false,
+      autoExtend: values.auctionType === AuctionType.Sealed ? false : (values.autoExtend ?? false),
       extensionMinutes: values.extensionMinutes ?? 5,
     })
   }
@@ -179,7 +179,7 @@ export default function CreateAuctionPage() {
     bidIncrement: values.bidIncrement,
     reservePrice: values.reservePrice,
     buyNowPrice: values.buyNowPrice,
-    extensionMinutes: values.extensionMinutes,
+    extensionMinutes: values.auctionType === AuctionType.Sealed ? undefined : values.extensionMinutes,
     currency: values.currency,
     images: uploadedImages?.map((img, i) => ({ mediaUploadId: img.mediaUploadId, isPrimary: i === 0, sortOrder: i })),
     verifyByPlatform: requireVerification,
@@ -196,7 +196,7 @@ export default function CreateAuctionPage() {
           bidIncrement: values.bidIncrement,
           reservePrice: values.reservePrice,
           buyNowPrice: values.buyNowPrice,
-          extensionMinutes: values.extensionMinutes,
+          extensionMinutes: values.auctionType === AuctionType.Sealed ? undefined : values.extensionMinutes,
           currency: values.currency,
           auctionType: values.auctionType,
         }
@@ -212,7 +212,7 @@ export default function CreateAuctionPage() {
             bidIncrement: values.bidIncrement,
             reservePrice: values.reservePrice,
             buyNowPrice: values.buyNowPrice,
-            extensionMinutes: values.extensionMinutes,
+            extensionMinutes: values.auctionType === AuctionType.Sealed ? undefined : values.extensionMinutes,
             currency: values.currency,
             auctionType: values.auctionType,
           })
@@ -223,8 +223,10 @@ export default function CreateAuctionPage() {
         if (hasTimingValues(values)) {
           try {
             await applyTiming(result.id, values)
-          } catch {
-            message.warning(t('draftSavedTimingFailed', 'Draft saved but timing not set. You can configure timing later.'))
+          } catch (err: any) {
+            const detail = err?.response?.data?.detail
+            const msg = t('draftSavedTimingFailed', 'Draft saved but timing not set. You can configure timing later.')
+            message.warning(detail ? `${msg} - ${detail}` : msg)
             navigate(`${prefix}/auctions`)
             return
           }
@@ -232,9 +234,9 @@ export default function CreateAuctionPage() {
         message.success(t('draftSaved', 'Draft saved successfully'))
         navigate(`${prefix}/auctions`)
       }
-    } catch (err) {
+    } catch (err: any) {
       if (err && typeof err === 'object' && 'errorFields' in err) return
-      message.error(t('createError', 'Failed to save draft'))
+      message.error(err?.response?.data?.detail || t('createError', 'Failed to save draft'))
     } finally {
       setSavingDraft(false)
     }
@@ -260,8 +262,10 @@ export default function CreateAuctionPage() {
         setSubmissionStep(null)
         navigate(`${prefix}/auctions`)
       }
-    } catch {
-      setSubmissionError(t('retryFailed', 'Retry failed. Please try again or go to My Auctions.'))
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail
+      const msg = t('retryFailed', 'Retry failed. Please try again or go to My Auctions.')
+      setSubmissionError(detail ? `${msg} - ${detail}` : msg)
     }
   }
 
@@ -284,7 +288,7 @@ export default function CreateAuctionPage() {
           bidIncrement: values.bidIncrement,
           reservePrice: values.reservePrice,
           buyNowPrice: values.buyNowPrice,
-          extensionMinutes: values.extensionMinutes,
+          extensionMinutes: values.auctionType === AuctionType.Sealed ? undefined : values.extensionMinutes,
           currency: values.currency,
           auctionType: values.auctionType,
         }
@@ -293,9 +297,11 @@ export default function CreateAuctionPage() {
           setSubmissionStep('timing')
           try {
             await applyTiming(editId!, values)
-          } catch {
+          } catch (err: any) {
             setSubmissionStep(null)
-            setSubmissionError(t('updatedTimingFailed', 'Auction updated but timing not set. You can configure timing later.'))
+            const detail = err?.response?.data?.detail
+            const msg = t('updatedTimingFailed', 'Auction updated but timing not set. You can configure timing later.')
+            setSubmissionError(detail ? `${msg} - ${detail}` : msg)
             setPartialAuctionId(editId!)
             return
           }
@@ -305,9 +311,11 @@ export default function CreateAuctionPage() {
           await submitAuction.mutateAsync(editId!)
           message.success(t('auctionUpdatedAndSubmitted', 'Auction updated and submitted successfully!'))
           setSubmissionStep(null)
-        } catch {
+        } catch (err: any) {
           setSubmissionStep(null)
-          setSubmissionError(t('updatedSubmitFailed', 'Auction updated but submission failed. Submit from My Auctions.'))
+          const detail = err?.response?.data?.detail
+          const msg = t('updatedSubmitFailed', 'Auction updated but submission failed. Submit from My Auctions.')
+          setSubmissionError(detail ? `${msg} - ${detail}` : msg)
           setPartialAuctionId(editId!)
           return
         }
@@ -319,7 +327,7 @@ export default function CreateAuctionPage() {
           bidIncrement: values.bidIncrement,
           reservePrice: values.reservePrice,
           buyNowPrice: values.buyNowPrice,
-          extensionMinutes: values.extensionMinutes,
+          extensionMinutes: values.auctionType === AuctionType.Sealed ? undefined : values.extensionMinutes,
           currency: values.currency,
           auctionType: values.auctionType,
         })
@@ -328,9 +336,11 @@ export default function CreateAuctionPage() {
           setSubmissionStep('timing')
           try {
             await applyTiming(result.id, values)
-          } catch {
+          } catch (err: any) {
             setSubmissionStep(null)
-            setSubmissionError(t('createdTimingFailed', 'Auction created but timing not set. Configure timing in My Auctions.'))
+            const detail = err?.response?.data?.detail
+            const msg = t('createdTimingFailed', 'Auction created but timing not set. Configure timing in My Auctions.')
+            setSubmissionError(detail ? `${msg} - ${detail}` : msg)
             return
           }
           setSubmissionStep('submitting')
@@ -338,9 +348,11 @@ export default function CreateAuctionPage() {
             await submitAuction.mutateAsync(result.id)
             message.success(t('auctionScheduled', 'Auction scheduled successfully!'))
             setSubmissionStep(null)
-          } catch {
+          } catch (err: any) {
             setSubmissionStep(null)
-            setSubmissionError(t('timingSetSubmitFailed', 'Auction created with timing but submission failed. Submit from My Auctions.'))
+            const detail = err?.response?.data?.detail
+            const msg = t('timingSetSubmitFailed', 'Auction created with timing but submission failed. Submit from My Auctions.')
+            setSubmissionError(detail ? `${msg} - ${detail}` : msg)
             return
           }
         } else {
@@ -362,16 +374,19 @@ export default function CreateAuctionPage() {
           })
           message.success(t('itemSubmitted', 'Auction created and item submitted for review'))
           setSubmissionStep(null)
-        } catch {
+        } catch (err: any) {
           setSubmissionStep(null)
-          setSubmissionError(t('draftSavedSubmitFailed', 'Draft saved but item submission failed. You can submit from My Auctions.'))
+          const detail = err?.response?.data?.detail
+          const msg = t('draftSavedSubmitFailed', 'Draft saved but item submission failed. You can submit from My Auctions.')
+          setSubmissionError(detail ? `${msg} - ${detail}` : msg)
           return
         }
       }
       navigate(`${prefix}/auctions`)
-    } catch {
+    } catch (err: any) {
       setSubmissionStep(null)
-      message.error(t('createError', 'Failed to create auction'))
+      const detail = err?.response?.data?.detail
+      message.error(detail || t('createError', 'Failed to create auction'))
     }
   }
 

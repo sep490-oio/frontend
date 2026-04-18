@@ -150,7 +150,7 @@ export function AppLayout() {
   ]
 
   return (
-    <Layout style={{ minHeight: '100vh', background: 'var(--color-bg-primary)' }}>
+    <Layout style={{ minHeight: '100vh', background: 'var(--color-bg-primary)', overflowX: 'hidden' }}>
       <a
         href="#main-content"
         style={{

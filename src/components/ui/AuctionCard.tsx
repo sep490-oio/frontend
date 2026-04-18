@@ -159,7 +159,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
           )}
           <span
             style={{
-              background: auction.auctionType === 'sealed' ? '#c026d3' : 'var(--color-accent, #3b82f6)',
+              background: auction.auctionType?.toLowerCase() === 'sealed' ? '#c026d3' : 'var(--color-accent, #3b82f6)',
               color: '#ffffff',
               fontSize: 11,
               fontWeight: 700,
@@ -170,7 +170,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
               boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
             }}
           >
-            {auction.auctionType === 'sealed' ? t('browse.typeSealed') : t('browse.typeRegular')}
+            {auction.auctionType?.toLowerCase() === 'sealed' ? t('browse.typeSealed', 'Kín') : t('browse.typeRegular', 'Thường')}
           </span>
         </div>
 

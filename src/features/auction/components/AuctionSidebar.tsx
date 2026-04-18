@@ -321,13 +321,13 @@ export function AuctionSidebar({
   )
 
   const showBidForm =
-    auction.auctionType !== 'sealed' &&
+    auction.auctionType?.toLowerCase() !== 'sealed' &&
     isActive &&
     qualState === 'qualified' &&
     (isDesktop || isMobileScreen)
 
   const showSealedPanel =
-    auction.auctionType === 'sealed' &&
+    auction.auctionType?.toLowerCase() === 'sealed' &&
     (isActive || isTerminal) &&
     (isDesktop || isMobileScreen) &&
     !!auctionId
