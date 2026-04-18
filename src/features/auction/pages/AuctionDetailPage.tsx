@@ -247,7 +247,13 @@ export default function AuctionDetailPage() {
       return
     }
 
-    if (qualificationStatus === 'rejected' || qualificationStatus === 'expired') {
+    // Explicitly remove qualification if server says so
+    if (
+      qualificationStatus === ('rejected' as any) ||
+      qualificationStatus === ('expired' as any) ||
+      qualificationStatus === ('none' as any) ||
+      qualificationStatus === ('pending' as any)
+    ) {
       localStorage.removeItem(storageKey)
       setIsQualified(false)
     }
@@ -458,27 +464,52 @@ export default function AuctionDetailPage() {
     return () => window.clearTimeout(timeout)
   }, [auction, auction?.qualificationEndAt, auction?.qualificationStartAt, qualificationBoundaryTick])
 
-  // Prefer server-sourced qualification status over localStorage
+  // Prefer server-sourced qualification status over localStorage when available
   const serverQualStatus = data?.currentUserParticipant?.qualificationStatus
-  const qualState = useMemo(
-    () => {
-      // If server provides qualification status, use it directly
-      if (serverQualStatus === 'qualified' || serverQualStatus === 'waived') return 'qualified' as QualificationState
-      if (serverQualStatus === 'rejected') return 'window_closed' as QualificationState
-      if (serverQualStatus === 'expired') return 'window_closed' as QualificationState
+  const qualState = useMemo(() => {
+    // 1. If we are the seller, we are never "qualified" in the bidding sense
+    if (isAuthenticated && currentUser?.id === sellerId) return 'is_seller' as QualificationState
 
-      // Otherwise fall back to client-side computation (for backward compatibility until BE is updated)
-      return auction
-        ? computeQualificationState(
-          { ...auction, sellerId: item?.sellerId ?? auction.sellerId ?? '' },
-          currentUser?.id,
-          isQualified,
-        )
-        : ('before_window' as QualificationState)
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [auction, item, currentUser?.id, isQualified, qualificationBoundaryTick, serverQualStatus],
-  )
+    // 2. If the server provides an explicit status for the current user, use it as the source of truth
+    if (isAuthenticated && serverQualStatus) {
+      if (serverQualStatus === 'qualified' || serverQualStatus === 'waived') return 'qualified' as QualificationState
+      // If server says they are clearly not qualified (pending, rejected, etc.), return a boundary state
+      if (
+        (serverQualStatus as any) === 'rejected' ||
+        (serverQualStatus as any) === 'expired' ||
+        (serverQualStatus as any) === 'none' ||
+        (serverQualStatus as any) === 'pending'
+      ) {
+        // Fall back to window calculation but NOT to 'qualified'
+        const base = auction
+          ? computeQualificationState(
+            { ...auction, sellerId: item?.sellerId ?? auction.sellerId ?? '' },
+            currentUser?.id,
+            false, // Don't use local storage qualified flag if server has a participant record
+          )
+          : 'before_window'
+        return base === 'qualified' ? 'window_open' : base // Ensure we don't return 'qualified'
+      }
+    }
+
+    // 3. Fallback for guests or initial loads: trust localStorage ONLY for guests or very early loads
+    return auction
+      ? computeQualificationState(
+        { ...auction, sellerId: item?.sellerId ?? auction.sellerId ?? '' },
+        currentUser?.id,
+        isQualified,
+      )
+      : ('before_window' as QualificationState)
+  }, [
+    auction,
+    item,
+    currentUser?.id,
+    isQualified,
+    qualificationBoundaryTick,
+    serverQualStatus,
+    isAuthenticated,
+    sellerId,
+  ])
 
   // ── Handlers ────────────────────────────────────────────────────
 
@@ -990,6 +1021,7 @@ export default function AuctionDetailPage() {
                 ? () => navigate(`/checkout/${winnerPayNowOrderId}`)
                 : undefined
             }
+            canBid={isActive && isAuthenticated && qualState === 'qualified' && !isSeller}
             currentBuyerOrder={data?.currentBuyerOrder}
             onViewOrderClick={(orderId) => navigate(`/me/orders/${orderId}`)}
             isOrderProvisioning={pollingForOrder}

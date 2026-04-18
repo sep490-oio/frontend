@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { Input, Select, Pagination, Flex, Row, Col, InputNumber, Drawer, Button, AutoComplete } from 'antd'
-import { SearchOutlined, FilterOutlined } from '@ant-design/icons'
+import { SearchOutlined, FilterOutlined, AppstoreOutlined, SortAscendingOutlined, TagOutlined, CheckCircleOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
@@ -9,6 +9,7 @@ import { useCategories } from '@/features/item/api'
 import apiClient from '@/lib/axios'
 import { AuctionCard } from '@/components/ui/AuctionCard'
 import { EmptyState } from '@/components/ui/EmptyState'
+import FilterWidget from '@/components/ui/FilterWidget'
 import { AuctionStatus, AuctionType } from '@/types/enums'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -61,27 +62,13 @@ function parseSortString(sortBy: string | undefined): { sort_by?: string; desc?:
 
 // ─── Pill styles (mirror AuctionListPage) ────────────────────────────────────
 
-const pillBase: React.CSSProperties = {
-  padding: '10px 24px',
-  borderRadius: 100,
-  fontSize: 14,
-  fontWeight: 600,
-  cursor: 'pointer',
-  transition: 'all 200ms ease',
-  border: '1px solid var(--color-border, rgba(255,255,255,0.1))',
-  background: 'var(--color-bg-surface, rgba(255,255,255,0.05))',
-  color: 'var(--color-text-primary, #e5e7eb)',
-  whiteSpace: 'nowrap',
-}
 
-const pillActive: React.CSSProperties = {
-  ...pillBase,
-  background: 'var(--color-accent, #3b82f6)',
-  borderColor: 'var(--color-accent, #3b82f6)',
-  color: '#fff',
-}
+
+
 
 // ─── Component ───────────────────────────────────────────────────────────────
+
+
 
 export default function BrowseAuctionsPage() {
   const { t } = useTranslation('auction')
@@ -295,9 +282,8 @@ export default function BrowseAuctionsPage() {
   return (
     <div
       style={{
-        maxWidth: isNarrow ? 1200 : 1440,
-        margin: '0 auto',
-        padding: isMobile ? '16px 12px 64px' : isTablet ? '24px 16px 64px' : '40px 24px 80px',
+        width: '100%',
+        padding: isMobile ? '16px 12px 64px' : isTablet ? '24px 16px 64px' : '40px 48px 80px',
       }}
     >
       {/* ── Header ── */}
@@ -336,75 +322,153 @@ export default function BrowseAuctionsPage() {
 
       {/* ════════════════════════════════════════════════════════════════════
           DESKTOP LAYOUT
-          Single filter bar: [status pills ····] [category] [type] [sort] [search]
+          Sidebar: [Search Widget] [Category Widget] [Status Widget] [Sort Widget]
           ════════════════════════════════════════════════════════════════════ */}
       {!isNarrow && (
-        <Flex wrap="wrap" justify="space-between" gap={16} align="center" style={{ marginBottom: 32 }}>
-          {/* Status pills - will auto grow to push right side, or stack cleanly if wrapped */}
-          <Flex gap={8} wrap="wrap" style={{ flex: '1 1 auto' }}>
-            {STATUS_PILLS.map((pill) => (
-              <button
-                key={pill.value}
-                type="button"
-                style={activeStatus === pill.value ? pillActive : pillBase}
-                onClick={() => updateFilter('status', pill.value)}
-              >
-                {pill.label}
-              </button>
-            ))}
-          </Flex>
-
-          {/* Right Side: Selects + Search */}
-          <Flex gap={12} align="center" wrap="wrap">
-            {/* Category */}
-            <Select
-              style={{ minWidth: 160 }}
-              options={categoryOptions}
-              value={categoryId}
-              onChange={handleCategoryChange}
-              variant="borderless"
-              popupMatchSelectWidth={false}
-            />
-
-            {/* Auction type */}
-            <Select
-              style={{ minWidth: 130 }}
-              options={AUCTION_TYPE_OPTIONS}
-              value={filters.auctionType ?? ''}
-              onChange={(v) => updateFilter('auctionType', v)}
-              variant="borderless"
-              popupMatchSelectWidth={false}
-            />
-
-            {/* Sort */}
-            <Select
-              style={{ minWidth: 160 }}
-              options={SORT_OPTIONS}
-              value={filters.sortBy ?? 'EndTime Asc'}
-              onChange={(v) => updateFilter('sortBy', v)}
-              variant="borderless"
-              popupMatchSelectWidth={false}
-            />
-
-            {/* Search with autocomplete */}
+        <Flex gap={32} align="flex-start" style={{ marginBottom: 32 }}>
+          {/* Left Sidebar */}
+          <div style={{ 
+            width: 280, 
+            flexShrink: 0, 
+            position: 'sticky', 
+            top: 100,
+            maxHeight: 'calc(100vh - 120px)',
+            overflowY: 'auto',
+            paddingRight: 8,
+            scrollbarWidth: 'thin'
+          }}>
             <AutoComplete
               options={suggestOptions}
               value={inputValue}
               onChange={handleInputChange}
               onSelect={handleSelect}
-              style={{ width: 220, borderRadius: 100, overflow: 'hidden' }}
+              style={{ width: '100%', marginBottom: 20 }}
               popupMatchSelectWidth={false}
             >
               <Input
-                prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
+                prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)', marginRight: 4 }} />}
                 placeholder={t('searchPlaceholder')}
                 onPressEnter={handlePressEnter}
                 allowClear
                 onClear={() => handleInputChange('')}
-                style={{ borderRadius: 100, height: 40, borderColor: 'var(--color-border)' }}
+                size="large"
+                style={{ borderRadius: 100, height: 48, borderColor: 'var(--color-border)', fontSize: 15 }}
               />
             </AutoComplete>
-          </Flex>
+
+            <FilterWidget title={t('browse.allCategories', 'Danh mục')} icon={<AppstoreOutlined />}>
+              <Select
+                style={{ width: '100%' }}
+                options={categoryOptions}
+                value={categoryId}
+                onChange={handleCategoryChange}
+                size="large"
+                variant="filled"
+                popupMatchSelectWidth={false}
+              />
+            </FilterWidget>
+
+            <FilterWidget title={t('browse.filterState', 'Trạng thái')} icon={<CheckCircleOutlined />} noPadding>
+              <Flex vertical>
+                {STATUS_PILLS.map((pill, idx) => {
+                   const isActive = activeStatus === pill.value;
+                   return (
+                    <div
+                      key={pill.value}
+                      onClick={() => updateFilter('status', pill.value)}
+                      style={{
+                        padding: '14px 20px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                        borderBottom: idx < STATUS_PILLS.length - 1 ? '1px solid var(--color-border)' : 'none',
+                        background: isActive ? 'var(--color-accent-light)' : 'transparent',
+                        transition: 'background 0.2s',
+                      }}
+                    >
+                      <div style={{
+                        width: 18, height: 18,
+                        borderRadius: '50%',
+                        border: `2px solid ${isActive ? 'var(--color-accent)' : 'var(--color-border)'}`,
+                        display: 'flex', justifyContent: 'center', alignItems: 'center'
+                      }}>
+                        {isActive && <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--color-accent)' }} />}
+                      </div>
+                      <span style={{ 
+                        fontSize: 14, 
+                        fontWeight: isActive ? 600 : 500,
+                        color: isActive ? 'var(--color-accent)' : 'var(--color-text-primary)'
+                      }}>
+                        {pill.label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </Flex>
+            </FilterWidget>
+
+            <FilterWidget title={t('browse.filterType', 'Hình thức')} icon={<TagOutlined />}>
+              <Select
+                style={{ width: '100%' }}
+                options={AUCTION_TYPE_OPTIONS}
+                value={filters.auctionType ?? ''}
+                onChange={(v) => updateFilter('auctionType', v)}
+                size="large"
+                variant="filled"
+                popupMatchSelectWidth={false}
+              />
+            </FilterWidget>
+
+            <FilterWidget title={t('browse.filterSort', 'Sắp xếp')} icon={<SortAscendingOutlined />}>
+              <Select
+                style={{ width: '100%' }}
+                options={SORT_OPTIONS}
+                value={filters.sortBy ?? 'EndTime Asc'}
+                onChange={(v) => updateFilter('sortBy', v)}
+                size="large"
+                variant="filled"
+                popupMatchSelectWidth={false}
+              />
+            </FilterWidget>
+          </div>
+
+          {/* Right Grid Content */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {isLoading ? (
+              <Row gutter={[16, 16]}>
+                {[...Array(6)].map((_, i) => (
+                  <Col key={i} xs={24} sm={12} md={12} xl={8}>
+                    <div className="oio-skeleton" style={{ aspectRatio: '3/4', borderRadius: 8 }} />
+                  </Col>
+                ))}
+              </Row>
+            ) : !data?.items?.length ? (
+              <EmptyState title={t('noAuctions')} />
+            ) : (
+              <>
+                <div
+                  className="oio-stagger"
+                  style={{ display: 'grid', gridTemplateColumns: isTablet ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 24 }}
+                >
+                  {data.items.map((auction) => (
+                    <AuctionCard key={auction.id} auction={auction} />
+                  ))}
+                </div>
+
+                <Flex justify="center" style={{ marginTop: 64 }}>
+                  <Pagination
+                    current={data.metadata.currentPage}
+                    pageSize={data.metadata.pageSize}
+                    total={data.metadata.totalCount}
+                    showSizeChanger={true}
+                    showTotal={(total) => tc('pagination.total', { total })}
+                    onChange={(p, ps) => setFilters((prev) => ({ ...prev, pageNumber: p, pageSize: ps }))}
+                  />
+                </Flex>
+              </>
+            )}
+          </div>
         </Flex>
       )}
 
@@ -509,29 +573,20 @@ export default function BrowseAuctionsPage() {
         </>
       )}
 
-      {/* ── Grid ── */}
-      {isLoading ? (
-        <Row gutter={[16, 16]}>
-          {[...Array(isMobile ? 4 : 8)].map((_, i) => (
-            <Col key={i} xs={12} sm={12} md={8} xl={6}>
-              <div className="oio-skeleton" style={{ aspectRatio: '3/4', borderRadius: 8 }} />
-            </Col>
-          ))}
-        </Row>
-      ) : !data?.items?.length ? (
-        <EmptyState title={t('noAuctions')} />
-      ) : (
-        <>
-          {!isNarrow ? (
-            <div
-              className="oio-stagger"
-              style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 32 }}
-            >
-              {data.items.map((auction) => (
-                <AuctionCard key={auction.id} auction={auction} />
-              ))}
-            </div>
-          ) : (
+      {/* ── Grid Mobile ── */}
+      {isNarrow && (
+        isLoading ? (
+          <Row gutter={[16, 16]}>
+            {[...Array(isMobile ? 4 : 8)].map((_, i) => (
+              <Col key={i} xs={12} sm={12} md={8} xl={6}>
+                <div className="oio-skeleton" style={{ aspectRatio: '3/4', borderRadius: 8 }} />
+              </Col>
+            ))}
+          </Row>
+        ) : !data?.items?.length ? (
+          <EmptyState title={t('noAuctions')} />
+        ) : (
+          <>
             <Row className="oio-stagger" gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]}>
               {data.items.map((auction) => (
                 <Col key={auction.id} xs={24} sm={12} md={8} xl={6}>
@@ -539,21 +594,20 @@ export default function BrowseAuctionsPage() {
                 </Col>
               ))}
             </Row>
-          )}
-
-          {/* Pagination */}
-          <Flex justify="center" style={{ marginTop: isNarrow ? (isMobile ? 28 : 48) : 64 }}>
-            <Pagination
-              current={data.metadata.currentPage}
-              pageSize={data.metadata.pageSize}
-              total={data.metadata.totalCount}
-              showSizeChanger={!isMobile}
-              showTotal={isMobile ? undefined : (total) => tc('pagination.total', { total })}
-              onChange={(p, ps) => setFilters((prev) => ({ ...prev, pageNumber: p, pageSize: ps }))}
-              size={isMobile ? 'small' : undefined}
-            />
-          </Flex>
-        </>
+            {/* Pagination */}
+            <Flex justify="center" style={{ marginTop: isMobile ? 28 : 48 }}>
+              <Pagination
+                current={data.metadata.currentPage}
+                pageSize={data.metadata.pageSize}
+                total={data.metadata.totalCount}
+                showSizeChanger={!isMobile}
+                showTotal={isMobile ? undefined : (total) => tc('pagination.total', { total })}
+                onChange={(p, ps) => setFilters((prev) => ({ ...prev, pageNumber: p, pageSize: ps }))}
+                size={isMobile ? 'small' : undefined}
+              />
+            </Flex>
+          </>
+        )
       )}
     </div>
   )

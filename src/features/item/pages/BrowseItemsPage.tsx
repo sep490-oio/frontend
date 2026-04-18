@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { Input, Select, Pagination, Flex, Row, Col, Empty, AutoComplete } from 'antd'
-import { SearchOutlined, EyeOutlined } from '@ant-design/icons'
+import { SearchOutlined, EyeOutlined, AppstoreOutlined } from '@ant-design/icons'
 import { useNavigate, useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
@@ -12,6 +12,7 @@ import { useDebounce } from '@/hooks/useDebounce'
 import apiClient from '@/lib/axios'
 import type { PagedList, PaginationParams, ItemDto } from '@/types'
 import { SERIF_FONT } from '@/styles/tokens'
+import FilterWidget from '@/components/ui/FilterWidget'
 
 const SERIF = SERIF_FONT
 
@@ -21,6 +22,8 @@ interface BrowseParams extends PaginationParams {
   categoryId?: string
   search?: string
   condition?: string
+  status?: string
+  sortBy?: string
 }
 
 interface SearchParams {
@@ -28,7 +31,9 @@ interface SearchParams {
   page?: number
   page_size?: number
   category?: string // category name, not ID
+  condition?: string
   status?: string
+  sortBy?: string
 }
 
 // ─── Hooks ───────────────────────────────────────────────────────────────────
@@ -66,10 +71,13 @@ function useSearchItems(params: SearchParams, enabled: boolean) {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
+
+
 export default function BrowseItemsPage() {
   const { t, i18n } = useTranslation('item')
   const { t: tc } = useTranslation('common')
-  const { isMobile } = useBreakpoint()
+  const { isMobile, isTablet } = useBreakpoint()
+  const isNarrow = isMobile || isTablet
   const navigate = useNavigate()
 
   // ── State ─────────────────────────────────────────────────────────────────
@@ -87,8 +95,13 @@ export default function BrowseItemsPage() {
   const [committedSearch, setCommittedSearch] = useState(initialSearch)
 
   // Category: id for browse endpoint, name for ES endpoint
-  const [categoryId, setCategoryId] = useState('')
-  const [categoryName, setCategoryName] = useState('')
+  const [categoryId, setCategoryId] = useState(searchParams.get('categoryId') ?? '')
+  const [categoryName, setCategoryName] = useState(searchParams.get('categoryName') ?? '')
+
+  // Widget Filters
+  const [itemCondition, setItemCondition] = useState('all')
+  const [itemStatus, setItemStatus] = useState('all')
+  const [sortBy, setSortBy] = useState('newest')
 
   // ── Derived ───────────────────────────────────────────────────────────────
 
@@ -103,7 +116,14 @@ export default function BrowseItemsPage() {
 
   const { data: browseData, isLoading: browseLoading } = useBrowseItems(
     !isSearchMode
-      ? { pageNumber: page, pageSize, ...(categoryId ? { categoryId } : {}) }
+      ? { 
+          pageNumber: page, 
+          pageSize, 
+          ...(categoryId ? { categoryId } : {}),
+          condition: itemCondition !== 'all' ? itemCondition : undefined,
+          status: itemStatus !== 'all' ? itemStatus : undefined,
+          sortBy
+        }
       : undefined,
   )
 
@@ -113,6 +133,9 @@ export default function BrowseItemsPage() {
       page,
       page_size: pageSize,
       ...(categoryName ? { category: categoryName } : {}),
+      condition: itemCondition !== 'all' ? itemCondition : undefined,
+      status: itemStatus !== 'all' ? itemStatus : undefined,
+      sortBy
     },
     isSearchMode,
   )
@@ -130,12 +153,15 @@ export default function BrowseItemsPage() {
     const trimmed = value.trim()
     setCommittedSearch(trimmed)
     setPage(1)
+    
+    const nextParams = new URLSearchParams(searchParams)
     if (trimmed) {
-      setSearchParams({ search: trimmed })
+      nextParams.set('search', trimmed)
     } else {
-      setSearchParams({})
+      nextParams.delete('search')
     }
-  }, [setSearchParams])
+    setSearchParams(nextParams)
+  }, [searchParams, setSearchParams])
 
   const handleInputChange = useCallback((value: string) => {
     setInputValue(value)
@@ -143,9 +169,11 @@ export default function BrowseItemsPage() {
     if (!value.trim()) {
       setCommittedSearch('')
       setPage(1)
-      setSearchParams({})
+      const nextParams = new URLSearchParams(searchParams)
+      nextParams.delete('search')
+      setSearchParams(nextParams)
     }
-  }, [setSearchParams])
+  }, [searchParams, setSearchParams])
 
   const handleSelect = useCallback((value: string) => {
     setInputValue(value)
@@ -158,9 +186,20 @@ export default function BrowseItemsPage() {
 
   const handleCategoryChange = useCallback((value: string) => {
     setCategoryId(value)
-    setCategoryName((categories ?? []).find((c) => c.id === value)?.name ?? '')
+    const cat = (categories ?? []).find((c) => c.id === value)
+    setCategoryName(cat?.name ?? '')
     setPage(1)
-  }, [categories])
+
+    const nextParams = new URLSearchParams(searchParams)
+    if (value) {
+      nextParams.set('categoryId', value)
+      if (cat) nextParams.set('categoryName', cat.name)
+    } else {
+      nextParams.delete('categoryId')
+      nextParams.delete('categoryName')
+    }
+    setSearchParams(nextParams)
+  }, [categories, searchParams, setSearchParams])
 
   // ── Options ───────────────────────────────────────────────────────────────
 
@@ -174,7 +213,7 @@ export default function BrowseItemsPage() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px 12px 48px' : '32px 24px 80px' }}>
+    <div style={{ width: '100%', padding: isMobile ? '16px 12px 48px' : '32px 48px 80px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 48, flexWrap: 'wrap', gap: 16 }}>
         <div>
           <h1
@@ -202,33 +241,138 @@ export default function BrowseItemsPage() {
         </div>
       </div>
 
-      {/* ── Filter bar ── */}
-      <Flex wrap="wrap" gap={12} style={{ marginBottom: isMobile ? 20 : 32 }} vertical={isMobile}>
-        <Select
-          style={{ width: isMobile ? '100%' : 200 }}
-          options={categoryOptions}
-          value={categoryId}
-          onChange={handleCategoryChange}
-        />
-
-        <AutoComplete
-          options={suggestOptions}
-          value={inputValue}
-          onChange={handleInputChange}
-          onSelect={handleSelect}
-          style={isMobile ? { flex: 1, borderRadius: 100, overflow: 'hidden' } : { width: 240, borderRadius: 100, overflow: 'hidden' }}
-          popupMatchSelectWidth={false}
-        >
-          <Input
-            prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
-            placeholder={t('browse.searchPlaceholder')}
-            onPressEnter={handlePressEnter}
-            allowClear
-            onClear={() => handleInputChange('')}
-            style={{ borderRadius: 100, height: 40, borderColor: 'var(--color-border)' }}
+      {/* ── Filter bar (Mobile) ── */}
+      {isMobile && (
+        <Flex wrap="wrap" gap={12} style={{ marginBottom: 20 }} vertical={isMobile}>
+          <AutoComplete
+            options={suggestOptions}
+            value={inputValue}
+            onChange={handleInputChange}
+            onSelect={handleSelect}
+            style={{ flex: 1, borderRadius: 100, overflow: 'hidden' }}
+            popupMatchSelectWidth={false}
+          >
+            <Input
+              prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
+              placeholder={t('browse.searchPlaceholder')}
+              onPressEnter={handlePressEnter}
+              allowClear
+              onClear={() => handleInputChange('')}
+              style={{ borderRadius: 100, height: 44, borderColor: 'var(--color-border)' }}
+            />
+          </AutoComplete>
+          <Select
+            style={{ width: '100%' }}
+            options={categoryOptions}
+            value={categoryId}
+            onChange={handleCategoryChange}
+            size="large"
           />
-        </AutoComplete>
-      </Flex>
+        </Flex>
+      )}
+
+      {/* ── Main content Desktop/Grid ── */}
+      <Flex gap={32} align="flex-start">
+        {!isNarrow && (
+          <Col span={6}>
+            <div style={{ position: 'sticky', top: 100, maxHeight: 'calc(100vh - 120px)', overflowY: 'auto', paddingRight: 4 }}>
+              <AutoComplete
+                options={suggestOptions}
+                value={inputValue}
+                onChange={handleInputChange}
+                onSelect={handleSelect}
+                style={{ width: '100%', marginBottom: 20 }}
+                popupMatchSelectWidth={false}
+              >
+                <Input
+                  prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)', marginRight: 4 }} />}
+                  placeholder={t('browse.searchPlaceholder')}
+                  onPressEnter={handlePressEnter}
+                  allowClear
+                  onClear={() => handleInputChange('')}
+                  size="large"
+                  style={{ borderRadius: 100, height: 48, borderColor: 'var(--color-border)', fontSize: 15 }}
+                />
+              </AutoComplete>
+
+              <FilterWidget title={t('browse.allCategories', 'Danh mục')} icon={<AppstoreOutlined />}>
+                <Select
+                  style={{ width: '100%' }}
+                  options={categoryOptions}
+                  value={categoryId}
+                  onChange={handleCategoryChange}
+                  size="large"
+                  variant="filled"
+                  popupMatchSelectWidth={false}
+                />
+              </FilterWidget>
+
+              <FilterWidget title={t('browse.filterCondition', 'Tình trạng vật phẩm')} icon={<EyeOutlined />} noPadding>
+                <div style={{ padding: '12px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                    <input type="radio" name="itemCondition" checked={itemCondition === 'all'} onChange={() => setItemCondition('all')} style={{ accentColor: 'var(--color-accent)' }} />
+                    <span style={{ fontSize: 15, color: 'var(--color-text-primary)' }}>{t('browse.conditionAll', 'Tất cả tình trạng')}</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                    <input type="radio" name="itemCondition" checked={itemCondition === 'new'} onChange={() => setItemCondition('new')} style={{ accentColor: 'var(--color-accent)' }} />
+                    <span style={{ fontSize: 15, color: 'var(--color-text-primary)' }}>{t('browse.conditionNew', 'Mới')}</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                    <input type="radio" name="itemCondition" checked={itemCondition === 'like_new'} onChange={() => setItemCondition('like_new')} style={{ accentColor: 'var(--color-accent)' }} />
+                    <span style={{ fontSize: 15, color: 'var(--color-text-primary)' }}>{t('browse.conditionLikeNew', 'Như mới')}</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                    <input type="radio" name="itemCondition" checked={itemCondition === 'very_good'} onChange={() => setItemCondition('very_good')} style={{ accentColor: 'var(--color-accent)' }} />
+                    <span style={{ fontSize: 15, color: 'var(--color-text-primary)' }}>{t('browse.conditionVeryGood', 'Rất tốt')}</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                    <input type="radio" name="itemCondition" checked={itemCondition === 'good'} onChange={() => setItemCondition('good')} style={{ accentColor: 'var(--color-accent)' }} />
+                    <span style={{ fontSize: 15, color: 'var(--color-text-primary)' }}>{t('browse.conditionGood', 'Tốt')}</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                    <input type="radio" name="itemCondition" checked={itemCondition === 'acceptable'} onChange={() => setItemCondition('acceptable')} style={{ accentColor: 'var(--color-accent)' }} />
+                    <span style={{ fontSize: 15, color: 'var(--color-text-primary)' }}>{t('browse.conditionAcceptable', 'Có thể chấp nhận')}</span>
+                  </label>
+                </div>
+              </FilterWidget>
+
+              <FilterWidget title={t('browse.filterStatus', 'Trạng thái')} noPadding>
+                <div style={{ padding: '12px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                    <input type="radio" name="itemStatus" checked={itemStatus === 'all'} onChange={() => setItemStatus('all')} style={{ accentColor: 'var(--color-accent)' }} />
+                    <span style={{ fontSize: 15, color: 'var(--color-text-primary)' }}>{t('browse.statusAll', 'Tất cả trạng thái')}</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                    <input type="radio" name="itemStatus" checked={itemStatus === 'active'} onChange={() => setItemStatus('active')} style={{ accentColor: 'var(--color-accent)' }} />
+                    <span style={{ fontSize: 15, color: 'var(--color-text-primary)' }}>{t('browse.statusActive', 'Đang hoạt động')}</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                    <input type="radio" name="itemStatus" checked={itemStatus === 'auction'} onChange={() => setItemStatus('auction')} style={{ accentColor: 'var(--color-accent)' }} />
+                    <span style={{ fontSize: 15, color: 'var(--color-text-primary)' }}>{t('browse.statusAuction', 'Đang đấu giá')}</span>
+                  </label>
+                </div>
+              </FilterWidget>
+
+              <FilterWidget title={t('browse.filterSort', 'Sắp xếp theo thời gian đăng')} noPadding>
+                <div style={{ padding: '16px 20px' }}>
+                  <Select
+                    style={{ width: '100%' }}
+                    value={sortBy}
+                    onChange={setSortBy}
+                    options={[
+                      { value: 'newest', label: t('browse.sortNewest', 'Mới nhất') },
+                      { value: 'oldest', label: t('browse.sortOldest', 'Cũ nhất') },
+                    ]}
+                    size="large"
+                    variant="filled"
+                  />
+                </div>
+              </FilterWidget>
+            </div>
+          </Col>
+        )}
+
+        <div style={{ flex: 1, minWidth: 0 }}>
 
       {/* ── Item grid ── */}
       {isLoading ? (
@@ -382,6 +526,8 @@ export default function BrowseItemsPage() {
           )}
         </>
       )}
+        </div>
+      </Flex>
     </div>
   )
 }

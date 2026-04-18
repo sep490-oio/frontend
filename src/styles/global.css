@@ -199,6 +199,13 @@ body {
   line-height: 1.6;
 }
 
+/* Ensure sticky works with Ant Design Layout */
+.ant-layout, 
+.ant-layout-content,
+.oio-page-enter {
+  overflow: visible !important;
+}
+
 /* ─── Serif Headlines ─── */
 
 .oio-serif {

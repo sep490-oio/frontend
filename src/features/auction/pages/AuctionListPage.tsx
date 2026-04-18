@@ -1,6 +1,6 @@
 import { Input, Flex, Button, Row, Col, Skeleton, Empty } from 'antd'
 import { SafetyCertificateOutlined, LockOutlined, ThunderboltOutlined, ArrowRightOutlined } from '@ant-design/icons'
-import { Link, useNavigate } from 'react-router'
+import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useAuctions } from '@/features/auction/api'
 import { useCategories } from '@/features/item/api'
@@ -212,21 +212,7 @@ export default function AuctionListPage() {
             >
               {t('newlyListed')}
             </h2>
-            <Link
-              to="/auctions?sortBy=CreatedAt+Desc"
-              style={{
-                fontSize: 13,
-                fontWeight: 500,
-                color: 'var(--color-accent)',
-                textDecoration: 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {t('viewAll')} <ArrowRightOutlined />
-            </Link>
+
           </Flex>
 
           {newLoading ? (
@@ -268,21 +254,7 @@ export default function AuctionListPage() {
               >
                 {t('trending')}
               </h2>
-              <Link
-                to="/auctions?sortBy=ViewCount+Desc"
-                style={{
-                  fontSize: 13,
-                  fontWeight: 500,
-                  color: 'var(--color-accent)',
-                  textDecoration: 'none',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {t('viewAll')} <ArrowRightOutlined />
-              </Link>
+
             </Flex>
             {trendingLoading ? (
               <Row gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]}>
@@ -454,21 +426,7 @@ export default function AuctionListPage() {
             >
               {t('featuredSection')}
             </h2>
-            <a
-              href="/auctions"
-              style={{
-                fontSize: 13,
-                fontWeight: 500,
-                color: 'var(--color-accent)',
-                textDecoration: 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {t('viewAll')} <ArrowRightOutlined />
-            </a>
+
           </Flex>
           <Row className="oio-stagger" gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]}>
             {featured.map((auction) => (

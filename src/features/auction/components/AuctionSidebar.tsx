@@ -240,6 +240,7 @@ export interface AuctionSidebarProps {
 
   auctionId?: string
   sealedBidInfo?: SealedBidInfoDto | null
+  canBid?: boolean
 }
 
 // ── Component ────────────────────────────────────────────────────────
@@ -303,6 +304,7 @@ export function AuctionSidebar({
   isDesktop,
   auctionId,
   sealedBidInfo,
+  canBid = false,
 }: AuctionSidebarProps) {
   const { t } = useTranslation('auction')
   const screens = useBreakpoint()
@@ -322,8 +324,7 @@ export function AuctionSidebar({
 
   const showBidForm =
     auction.auctionType?.toLowerCase() !== 'sealed' &&
-    isActive &&
-    qualState === 'qualified' &&
+    (isActive || isTerminal) &&
     (isDesktop || isMobileScreen)
 
   const showSealedPanel =
@@ -334,9 +335,9 @@ export function AuctionSidebar({
 
   const showBuyNow =
     !isTerminal &&
-    !isSeller &&
     auction.buyNowPrice != null &&
     !auction.isBuyNowReserved &&
+    canBid &&
     (isActive || (isScheduled && (qualState === 'window_open' || qualState === 'qualified')))
 
   const showBuyNowReserved =
@@ -349,145 +350,145 @@ export function AuctionSidebar({
   // ── Terminal outcome block (IIFE) ────────────────────────────────
   const terminalBlock = isTerminal
     ? (() => {
-        const position = currentUserBidState?.position
-        const finalPriceAmount = auctionEnded?.finalPrice ?? currentPrice
-        const isUserWinner = position === 'won' || auctionAction.type === 'won'
-        const isUserLoser =
-          position === 'lost' || position === 'outbid' || auctionAction.type === 'lost'
-        const isCancelled =
-          auctionAction.type === 'cancelled' ||
-          auction.status === 'cancelled' ||
-          auction.status === 'Cancelled'
+      const position = currentUserBidState?.position
+      const finalPriceAmount = auctionEnded?.finalPrice ?? currentPrice
+      const isUserWinner = position === 'won' || auctionAction.type === 'won'
+      const isUserLoser =
+        position === 'lost' || position === 'outbid' || auctionAction.type === 'lost'
+      const isCancelled =
+        auctionAction.type === 'cancelled' ||
+        auction.status === 'cancelled' ||
+        auction.status === 'Cancelled'
 
-        if (isUserWinner) {
-          return (
-            <Card
-              style={{
-                marginTop: 16,
-                borderColor: 'var(--color-success)',
-                background: 'rgba(74, 124, 89, 0.06)',
-              }}
-            >
-              <Flex vertical gap={12} align="center">
-                <CheckCircleOutlined style={{ fontSize: 28, color: 'var(--color-success)' }} />
-                <Typography.Text strong style={{ color: 'var(--color-success)', fontSize: 15 }}>
-                  {t('youWon', 'Bạn đã thắng')}
-                </Typography.Text>
-                <Typography.Text style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
-                  {t('finalPrice', 'Giá cuối cùng')}: {formatCurrency(finalPriceAmount, currency)}
-                </Typography.Text>
-                {currentBuyerOrder?.canPayNow && onCheckoutClick && (
-                  <Button
-                    type="primary"
-                    block
-                    onClick={onCheckoutClick}
-                    style={{
-                      height: 48,
-                      borderRadius: 8,
-                      fontWeight: 500,
-                      background: 'var(--color-success)',
-                      borderColor: 'var(--color-success)',
-                    }}
+      if (isUserWinner) {
+        return (
+          <Card
+            style={{
+              marginTop: 16,
+              borderColor: 'var(--color-success)',
+              background: 'rgba(74, 124, 89, 0.06)',
+            }}
+          >
+            <Flex vertical gap={12} align="center">
+              <CheckCircleOutlined style={{ fontSize: 28, color: 'var(--color-success)' }} />
+              <Typography.Text strong style={{ color: 'var(--color-success)', fontSize: 15 }}>
+                {t('youWon', 'Bạn đã thắng')}
+              </Typography.Text>
+              <Typography.Text style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
+                {t('finalPrice', 'Giá cuối cùng')}: {formatCurrency(finalPriceAmount, currency)}
+              </Typography.Text>
+              {currentBuyerOrder?.canPayNow && onCheckoutClick && (
+                <Button
+                  type="primary"
+                  block
+                  onClick={onCheckoutClick}
+                  style={{
+                    height: 48,
+                    borderRadius: 8,
+                    fontWeight: 500,
+                    background: 'var(--color-success)',
+                    borderColor: 'var(--color-success)',
+                  }}
+                >
+                  {t('completePayment', 'Hoàn tất thanh toán')}
+                </Button>
+              )}
+              {currentBuyerOrder && !currentBuyerOrder.canPayNow && onViewOrderClick && (
+                <Button
+                  type="primary"
+                  block
+                  onClick={() => onViewOrderClick(currentBuyerOrder.orderId)}
+                  style={{ height: 48, borderRadius: 8, fontWeight: 500 }}
+                >
+                  {t('viewOrder', 'Xem đơn hàng')}
+                </Button>
+              )}
+              {!currentBuyerOrder && isOrderProvisioning && (
+                <Button block disabled style={{ height: 48, borderRadius: 8 }}>
+                  <Spin size="small" indicator={<LoadingOutlined spin style={{ marginRight: 8 }} />} />
+                  {t('orderBeingPrepared', 'Đang chuẩn bị đơn hàng...')}
+                </Button>
+              )}
+              {!currentBuyerOrder && !isOrderProvisioning && (
+                <Flex vertical gap={8} style={{ width: '100%' }}>
+                  <Typography.Text
+                    style={{ color: 'var(--color-text-secondary)', fontSize: 13, textAlign: 'center' }}
                   >
-                    {t('completePayment', 'Hoàn tất thanh toán')}
-                  </Button>
-                )}
-                {currentBuyerOrder && !currentBuyerOrder.canPayNow && onViewOrderClick && (
-                  <Button
-                    type="primary"
-                    block
-                    onClick={() => onViewOrderClick(currentBuyerOrder.orderId)}
-                    style={{ height: 48, borderRadius: 8, fontWeight: 500 }}
-                  >
-                    {t('viewOrder', 'Xem đơn hàng')}
-                  </Button>
-                )}
-                {!currentBuyerOrder && isOrderProvisioning && (
-                  <Button block disabled style={{ height: 48, borderRadius: 8 }}>
-                    <Spin size="small" indicator={<LoadingOutlined spin style={{ marginRight: 8 }} />} />
-                    {t('orderBeingPrepared', 'Đang chuẩn bị đơn hàng...')}
-                  </Button>
-                )}
-                {!currentBuyerOrder && !isOrderProvisioning && (
-                  <Flex vertical gap={8} style={{ width: '100%' }}>
-                    <Typography.Text
-                      style={{ color: 'var(--color-text-secondary)', fontSize: 13, textAlign: 'center' }}
+                    {t('orderBeingCreated', 'Đơn hàng đang được tạo, vui lòng tải lại sau')}
+                  </Typography.Text>
+                  {onReloadOrder && (
+                    <Button
+                      block
+                      icon={<ReloadOutlined />}
+                      onClick={onReloadOrder}
+                      style={{ height: 48, borderRadius: 8 }}
                     >
-                      {t('orderBeingCreated', 'Đơn hàng đang được tạo, vui lòng tải lại sau')}
-                    </Typography.Text>
-                    {onReloadOrder && (
-                      <Button
-                        block
-                        icon={<ReloadOutlined />}
-                        onClick={onReloadOrder}
-                        style={{ height: 48, borderRadius: 8 }}
-                      >
-                        {t('reload', 'Tải lại')}
-                      </Button>
-                    )}
-                  </Flex>
-                )}
-              </Flex>
-            </Card>
-          )
-        }
+                      {t('reload', 'Tải lại')}
+                    </Button>
+                  )}
+                </Flex>
+              )}
+            </Flex>
+          </Card>
+        )
+      }
 
-        if (isUserLoser) {
-          return (
-            <Card
-              style={{ marginTop: 16, borderColor: 'var(--color-border)', background: 'var(--color-bg-surface)' }}
-            >
-              <Flex vertical gap={12} align="center">
-                <InfoCircleOutlined style={{ fontSize: 28, color: 'var(--color-text-secondary)' }} />
-                <Typography.Text strong style={{ fontSize: 15, textAlign: 'center' }}>
-                  {t('youDidNotWin', 'Bạn không thắng')}
-                </Typography.Text>
-                <Typography.Text style={{ fontSize: 13, color: 'var(--color-text-primary)', fontWeight: 500 }}>
-                  {t('finalPrice', 'Giá cuối cùng')}: {formatCurrency(finalPriceAmount, currency)}
-                </Typography.Text>
-                <Typography.Text style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
-                  {t('depositRefund', 'Tiền cọc sẽ được hoàn về ví.')}
-                </Typography.Text>
-              </Flex>
-            </Card>
-          )
-        }
+      if (isUserLoser) {
+        return (
+          <Card
+            style={{ marginTop: 16, borderColor: 'var(--color-border)', background: 'var(--color-bg-surface)' }}
+          >
+            <Flex vertical gap={12} align="center">
+              <InfoCircleOutlined style={{ fontSize: 28, color: 'var(--color-text-secondary)' }} />
+              <Typography.Text strong style={{ fontSize: 15, textAlign: 'center' }}>
+                {t('youDidNotWin', 'Bạn không thắng')}
+              </Typography.Text>
+              <Typography.Text style={{ fontSize: 13, color: 'var(--color-text-primary)', fontWeight: 500 }}>
+                {t('finalPrice', 'Giá cuối cùng')}: {formatCurrency(finalPriceAmount, currency)}
+              </Typography.Text>
+              <Typography.Text style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
+                {t('depositRefund', 'Tiền cọc sẽ được hoàn về ví.')}
+              </Typography.Text>
+            </Flex>
+          </Card>
+        )
+      }
 
-        if (isCancelled) {
-          return (
-            <Card
-              style={{ marginTop: 16, borderColor: 'var(--color-border)', background: 'var(--color-bg-surface)' }}
-            >
-              <Flex vertical gap={8} align="center">
-                <InfoCircleOutlined style={{ fontSize: 24, color: 'var(--color-text-secondary)' }} />
-                <Typography.Text style={{ fontSize: 14, textAlign: 'center', color: 'var(--color-text-secondary)' }}>
-                  {t('auctionCancelled', 'This auction has been cancelled.')}
-                </Typography.Text>
-              </Flex>
-            </Card>
-          )
-        }
-
+      if (isCancelled) {
         return (
           <Card
             style={{ marginTop: 16, borderColor: 'var(--color-border)', background: 'var(--color-bg-surface)' }}
           >
             <Flex vertical gap={8} align="center">
               <InfoCircleOutlined style={{ fontSize: 24, color: 'var(--color-text-secondary)' }} />
-              <Typography.Text
-                style={{ fontSize: 14, textAlign: 'center', color: 'var(--color-text-secondary)' }}
-              >
-                {auctionAction.message || t('auctionEndedGeneric', 'This auction has ended.')}
+              <Typography.Text style={{ fontSize: 14, textAlign: 'center', color: 'var(--color-text-secondary)' }}>
+                {t('auctionCancelled', 'This auction has been cancelled.')}
               </Typography.Text>
-              {currentPrice > 0 && (bidCount ?? 0) > 0 && (
-                <Typography.Text style={{ fontSize: 13, color: 'var(--color-text-primary)', fontWeight: 500 }}>
-                  {t('finalPrice', 'Final price')}: {formatCurrency(currentPrice, currency)}
-                </Typography.Text>
-              )}
             </Flex>
           </Card>
         )
-      })()
+      }
+
+      return (
+        <Card
+          style={{ marginTop: 16, borderColor: 'var(--color-border)', background: 'var(--color-bg-surface)' }}
+        >
+          <Flex vertical gap={8} align="center">
+            <InfoCircleOutlined style={{ fontSize: 24, color: 'var(--color-text-secondary)' }} />
+            <Typography.Text
+              style={{ fontSize: 14, textAlign: 'center', color: 'var(--color-text-secondary)' }}
+            >
+              {auctionAction.message || t('auctionEndedGeneric', 'This auction has ended.')}
+            </Typography.Text>
+            {currentPrice > 0 && (bidCount ?? 0) > 0 && (
+              <Typography.Text style={{ fontSize: 13, color: 'var(--color-text-primary)', fontWeight: 500 }}>
+                {t('finalPrice', 'Final price')}: {formatCurrency(currentPrice, currency)}
+              </Typography.Text>
+            )}
+          </Flex>
+        </Card>
+      )
+    })()
     : null
 
   // ── Live action cards (non-terminal, from SignalR) ────────────────
@@ -599,6 +600,7 @@ export function AuctionSidebar({
           isTerminal={isTerminal}
           sealedBidInfo={sealedBidInfo}
           isSeller={isSeller}
+          canBid={canBid}
         />
       )}
 
@@ -629,6 +631,7 @@ export function AuctionSidebar({
             isCancelLoading={isCancelLoading}
             priceHistory={priceHistory}
             onExpandChart={onExpandChart}
+            canBid={canBid}
           />
         </div>
       )}

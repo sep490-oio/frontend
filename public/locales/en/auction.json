@@ -126,7 +126,10 @@
     "allCategories": "All categories",
     "filterDrawerTitle": "Filters",
     "applyFilters": "Apply",
-    "filters": "Filters"
+    "filters": "Filters",
+    "filterState": "Status",
+    "filterType": "Auction Type",
+    "filterSort": "Sort By"
   },
   "heroTitle": "Own a masterpiece —",
   "heroHighlight": "Professionally verified",

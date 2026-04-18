@@ -150,7 +150,7 @@ export function AppLayout() {
   ]
 
   return (
-    <Layout style={{ minHeight: '100vh', background: 'var(--color-bg-primary)', overflowX: 'hidden' }}>
+    <Layout style={{ minHeight: '100vh', background: 'var(--color-bg-primary)' }}>
       <a
         href="#main-content"
         style={{
@@ -469,7 +469,7 @@ export function AppLayout() {
         style={{
           marginTop: 64,
           width: '100%',
-          maxWidth: 1440,
+          maxWidth: 1600,
           marginLeft: 'auto',
           marginRight: 'auto',
           padding: isMobile ? '0 12px' : isTablet ? '0 24px' : '0 48px',
@@ -491,7 +491,7 @@ export function AppLayout() {
       >
         <div
           style={{
-            maxWidth: 1440,
+            maxWidth: 1600,
             margin: '0 auto',
             display: 'grid',
             gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
@@ -570,7 +570,7 @@ export function AppLayout() {
         {/* Copyright */}
         <div
           style={{
-            maxWidth: 1440,
+            maxWidth: 1600,
             margin: '0 auto',
             paddingTop: 32,
             marginTop: 48,

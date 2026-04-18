@@ -138,7 +138,10 @@
     "allCategories": "Tất cả danh mục",
     "filterDrawerTitle": "Bộ lọc",
     "applyFilters": "Áp dụng",
-    "filters": "Lọc"
+    "filters": "Lọc",
+    "filterState": "Trạng thái",
+    "filterType": "Hình thức",
+    "filterSort": "Sắp xếp"
   },
   "heroTitle": "Sở hữu tuyệt tác —",
   "heroHighlight": "Đã được kiểm định",

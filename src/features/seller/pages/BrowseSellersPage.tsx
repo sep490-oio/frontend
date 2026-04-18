@@ -1,54 +1,70 @@
 import { useState } from 'react'
-import { Input, Pagination, Flex, Row, Col, Spin, Empty } from 'antd'
-import { SearchOutlined, ShopOutlined, SafetyCertificateOutlined, StarOutlined } from '@ant-design/icons'
+import { Input, Pagination, Flex, Row, Col, Spin, Empty, Select } from 'antd'
+import { SearchOutlined, ShopOutlined, StarOutlined, CheckCircleOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
-import apiClient from '@/lib/axios'
-import { useQuery } from '@tanstack/react-query'
-import type { PagedList, PaginationParams } from '@/types'
+import { useBrowseSellers } from '@/features/seller/api'
 
 import { SERIF_FONT, MONO_FONT } from '@/styles/tokens'
+import FilterWidget from '@/components/ui/FilterWidget'
 import { htmlToPlainTextExcerpt } from '@/components/ui/SafeHtmlRenderer'
 
 const SERIF = SERIF_FONT
 const MONO = MONO_FONT
 
-interface SellerListItem {
-  id: string
-  storeName: string
-  storeDescription?: string
-  status: string
-  totalSalesCount: number
-  trustScore: number
-  createdAt: string
-}
 
-function useBrowseSellers(params?: PaginationParams & { search?: string }) {
-  return useQuery({
-    queryKey: ['sellers', 'browse', params],
-    queryFn: async () => {
-      const res = await apiClient.get<PagedList<SellerListItem>>('/sellers', { params })
-      return res.data
-    },
-  })
-}
+
+// ─── Component ───────────────────────────────────────────────────────────────
+
+
 
 export default function BrowseSellersPage() {
   const { t } = useTranslation('seller')
   const { t: tc } = useTranslation('common')
   const { isMobile, isTablet } = useBreakpoint()
+  const isNarrow = isMobile || isTablet
+
   const navigate = useNavigate()
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(12)
   const [search, setSearch] = useState('')
 
-  const { data, isLoading } = useBrowseSellers({ pageNumber: page, pageSize, ...(search ? { search } : {}) })
-  const sellers = data?.items ?? []
+  // Widget States
+  const [sellerRating, setSellerRating] = useState('all')
+  const [storeTypeOfficial, setStoreTypeOfficial] = useState(true)
+  const [storeTypePersonal, setStoreTypePersonal] = useState(true)
+  const [sortBy, setSortBy] = useState('popular')
+
+  const { data, isLoading } = useBrowseSellers({ 
+    pageNumber: page, 
+    pageSize, 
+    search: search || undefined
+  })
+  
+  let sellers = data?.items ?? []
+  
+  // Restore Frontend Filtering (Safer for now)
+  if (sellerRating === '4plus') {
+    sellers = sellers.filter(s => (s.trustScore ?? 0) >= 80) // Assuming 80/100 is 4 stars
+  } else if (sellerRating === '5star') {
+    sellers = sellers.filter(s => (s.trustScore ?? 0) >= 95)
+  }
+
+  // Restore Frontend Sorting
+  if (sortBy === 'newest') {
+    sellers = [...sellers].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  } else if (sortBy === 'items_desc') {
+    // totalSalesCount is optional/any, so fallback to 0
+    sellers = [...sellers].sort((a, b) => ((b as any).totalSalesCount ?? 0) - ((a as any).totalSalesCount ?? 0))
+  } else {
+    sellers = [...sellers].sort((a, b) => (b.trustScore ?? 0) - (a.trustScore ?? 0))
+  }
+
   const totalCount = data?.metadata?.totalCount ?? 0
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px 12px 48px' : isTablet ? '24px 16px 64px' : '32px 24px 80px' }}>
+    <div style={{ width: '100%', padding: isMobile ? '16px 12px 48px' : isTablet ? '24px 16px 64px' : '32px 48px 80px' }}>
       {/* ── Page Header ──────────────────────────────────────────────── */}
       <div style={{ marginBottom: isMobile ? 16 : 24 }}>
         <h1 style={{
@@ -66,25 +82,106 @@ export default function BrowseSellersPage() {
         </p>
       </div>
 
-      {/* ── Search Bar ───────────────────────────────────────────────── */}
-      <div style={{ marginBottom: isMobile ? 16 : 28 }}>
-        <Input
-          prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
-          placeholder={t('browse.searchPlaceholder')}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          onPressEnter={() => setPage(1)}
-          style={{
-            maxWidth: isMobile ? '100%' : 360,
-            width: '100%',
-            borderRadius: 100,
-            height: 44,
-            borderColor: 'var(--color-border)',
-          }}
-        />
-      </div>
+      {/* ── Search Bar (Mobile) ────────────────────────────────────────────── */}
+      {isMobile && (
+        <div style={{ marginBottom: 20 }}>
+          <Input
+            prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
+            placeholder={t('browse.searchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onPressEnter={() => setPage(1)}
+            style={{
+              width: '100%',
+              borderRadius: 100,
+              height: 44,
+              borderColor: 'var(--color-border)',
+            }}
+          />
+        </div>
+      )}
 
       {/* ── Content ──────────────────────────────────────────────────── */}
+      <Flex gap={32} align="flex-start">
+        {!isNarrow && (
+          <div style={{ 
+            width: 280, 
+            flexShrink: 0, 
+            position: 'sticky', 
+            top: 100,
+            maxHeight: 'calc(100vh - 120px)',
+            overflowY: 'auto',
+            paddingRight: 8,
+            scrollbarWidth: 'thin'
+          }}>
+            <Input
+              prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)', marginRight: 4 }} />}
+              placeholder={t('browse.searchPlaceholder', 'Tìm kiếm cửa hàng...')}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onPressEnter={() => setPage(1)}
+              size="large"
+              allowClear
+              style={{
+                width: '100%',
+                borderRadius: 100,
+                height: 48,
+                borderColor: 'var(--color-border)',
+                marginBottom: 20,
+                fontSize: 15
+              }}
+            />
+
+            <FilterWidget title={t('browse.filterRating', 'Đánh giá cửa hàng')} noPadding>
+              <div style={{ padding: '12px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                  <input type="radio" name="sellerRating" checked={sellerRating === 'all'} onChange={() => setSellerRating('all')} style={{ accentColor: 'var(--color-accent)' }} />
+                  <span style={{ fontSize: 15, color: 'var(--color-text-primary)' }}>{t('browse.ratingAll', 'Tất cả đánh giá')}</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                  <input type="radio" name="sellerRating" checked={sellerRating === '4plus'} onChange={() => setSellerRating('4plus')} style={{ accentColor: 'var(--color-accent)' }} />
+                  <span style={{ fontSize: 15, color: 'var(--color-text-primary)' }}>{t('browse.rating4Plus', 'Từ 4 sao trở lên')}</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                  <input type="radio" name="sellerRating" checked={sellerRating === '5star'} onChange={() => setSellerRating('5star')} style={{ accentColor: 'var(--color-accent)' }} />
+                  <span style={{ fontSize: 15, color: 'var(--color-text-primary)' }}>{t('browse.rating5Star', '5 sao (Uy tín)')}</span>
+                </label>
+              </div>
+            </FilterWidget>
+
+            <FilterWidget title={t('browse.filterType', 'Loại hình Cửa hàng')} noPadding>
+              <div style={{ padding: '12px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={storeTypeOfficial} onChange={e => setStoreTypeOfficial(e.target.checked)} style={{ accentColor: 'var(--color-accent)' }} />
+                  <span style={{ fontSize: 15, color: 'var(--color-text-primary)' }}>{t('browse.typeOfficial', 'Cửa hàng chính hãng')}</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={storeTypePersonal} onChange={e => setStoreTypePersonal(e.target.checked)} style={{ accentColor: 'var(--color-accent)' }} />
+                  <span style={{ fontSize: 15, color: 'var(--color-text-primary)' }}>{t('browse.typePersonal', 'Cá nhân')}</span>
+                </label>
+              </div>
+            </FilterWidget>
+
+            <FilterWidget title={t('browse.filterSort', 'Sắp xếp')} noPadding>
+              <div style={{ padding: '16px 20px' }}>
+                <Select
+                  value={sortBy}
+                  onChange={setSortBy}
+                  style={{ width: isMobile ? '100%' : 160 }}
+                  options={[
+                    { value: 'popular', label: t('browse.sortPopular') },
+                    { value: 'newest', label: t('browse.sortNewest') },
+                    { value: 'items_desc', label: t('browse.sortItemsCount') },
+                  ]}
+                  size="large"
+                  variant="filled"
+                />
+              </div>
+            </FilterWidget>
+          </div>
+        )}
+
+        <div style={{ flex: 1, minWidth: 0 }}>
       {isLoading ? (
         <div style={{ textAlign: 'center', padding: isMobile ? 40 : 80 }}>
           <Spin size="large" />
@@ -172,12 +269,12 @@ export default function BrowseSellersPage() {
                         }}
                       >
                         {seller.storeName}
-                        {seller.status === 'approved' && (
-                          <SafetyCertificateOutlined style={{ color: 'var(--color-success)', fontSize: 16 }} />
+                        {seller.status === 'verified' && (
+                          <CheckCircleOutlined style={{ color: '#1890ff', fontSize: 14 }} title="Verified Seller" />
                         )}
                       </h3>
                       <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 16, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                        {htmlToPlainTextExcerpt(seller.storeDescription) || '—'}
+                        {htmlToPlainTextExcerpt(seller.description || '') || '—'}
                       </div>
 
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto', paddingTop: 16 }}>
@@ -195,7 +292,7 @@ export default function BrowseSellersPage() {
                             {t('browse.sales')}
                           </div>
                           <div style={{ fontSize: 16, color: 'var(--color-text-primary)', fontWeight: 700 }}>
-                            {seller.totalSalesCount ?? 0}
+                            <span>{(seller as any).totalSalesCount ?? 0} {tc('common.sales')}</span>
                           </div>
                         </div>
                       </div>
@@ -221,6 +318,8 @@ export default function BrowseSellersPage() {
           )}
         </>
       )}
+        </div>
+      </Flex>
     </div>
   )
 }

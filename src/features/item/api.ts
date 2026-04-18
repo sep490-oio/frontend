@@ -116,7 +116,15 @@ export function useConfirmInspectedCondition() {
 
 // ── Public Items ────────────────────────────────────────────────────
 
-export function usePublicItems(params?: PaginationParams & { categoryId?: string; search?: string }) {
+export function usePublicItems(
+  params?: PaginationParams & { 
+    categoryId?: string; 
+    search?: string;
+    condition?: string;
+    status?: string;
+    sortBy?: string;
+  }
+) {
   return useQuery({
     queryKey: [...queryKeys.items.list(params), 'public'],
     queryFn: async () => {
