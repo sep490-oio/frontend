@@ -218,16 +218,32 @@ export default function AuctionDetailPage() {
   // Qualification status — check localStorage + URL param after VnPay return
   const [searchParams] = useSearchParams()
   const depositedParam = searchParams.get('deposited') === 'true'
-  const storageKey = id ? `oio_qualified_${id}` : ''
+
+  // User-scoped storage key prevents leaked qualification state between accounts on the same machine.
+  // When no user is logged in, we use a guest-scoped key.
+  const storageKey = useMemo(() => {
+    if (!id) return ''
+    const userId = currentUser?.id ?? 'guest'
+    return `oio_qualified_${userId}_${id}`
+  }, [id, currentUser?.id])
 
   const [isQualified, setIsQualified] = useState(() => {
-    if (!id) return false
+    if (!storageKey) return false
     return localStorage.getItem(storageKey) === 'true'
   })
 
+  // Re-read qualification from storage when the user context changes
+  useEffect(() => {
+    if (storageKey) {
+      setIsQualified(localStorage.getItem(storageKey) === 'true')
+    } else {
+      setIsQualified(false)
+    }
+  }, [storageKey])
+
   // If returning from VnPay deposit with success flag, mark qualified
   useEffect(() => {
-    if (depositedParam && id) {
+    if (depositedParam && id && storageKey) {
       localStorage.setItem(storageKey, 'true')
       setIsQualified(true)
       // Clean URL params
@@ -237,27 +253,30 @@ export default function AuctionDetailPage() {
     }
   }, [depositedParam, id, storageKey])
 
+  // Sync qualification status with server data
   useEffect(() => {
-    if (!id || !data?.currentUserParticipant?.qualificationStatus) return
+    if (!id || !storageKey || !isAuthenticated) return
 
-    const qualificationStatus = data.currentUserParticipant.qualificationStatus
-    if (qualificationStatus === 'qualified' || qualificationStatus === 'waived') {
-      localStorage.setItem(storageKey, 'true')
-      setIsQualified(true)
+    // Special case: if data is loaded but user has no participant record, they are not qualified.
+    // Important: we must ensure data is actually loaded (not currently fetching for the first time).
+    if (data && !isLoading && !data.currentUserParticipant) {
+      localStorage.removeItem(storageKey)
+      setIsQualified(false)
       return
     }
 
-    // Explicitly remove qualification if server says so
-    if (
-      qualificationStatus === ('rejected' as any) ||
-      qualificationStatus === ('expired' as any) ||
-      qualificationStatus === ('none' as any) ||
-      qualificationStatus === ('pending' as any)
-    ) {
+    const qualificationStatus = data?.currentUserParticipant?.qualificationStatus
+    if (!qualificationStatus) return
+
+    if (qualificationStatus === 'qualified' || qualificationStatus === 'waived') {
+      localStorage.setItem(storageKey, 'true')
+      setIsQualified(true)
+    } else {
+      // For any other status (none, pending, rejected, expired), clear the optimistic flag
       localStorage.removeItem(storageKey)
       setIsQualified(false)
     }
-  }, [data?.currentUserParticipant?.qualificationStatus, id, storageKey])
+  }, [data, id, storageKey, isAuthenticated, isLoading])
 
   // Sync isWatching from API response
   useEffect(() => {

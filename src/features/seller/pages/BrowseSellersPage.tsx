@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import { Input, Pagination, Flex, Row, Col, Spin, Empty, Select } from 'antd'
-import { SearchOutlined, ShopOutlined, StarOutlined, CheckCircleOutlined } from '@ant-design/icons'
-import { useNavigate } from 'react-router'
+import { useState, useEffect } from 'react'
+import { Input, Pagination, Flex, Row, Col, Spin, Empty, Select, Button } from 'antd'
+import { SearchOutlined, ShopOutlined, StarOutlined, CheckCircleOutlined, ClearOutlined } from '@ant-design/icons'
+import { useNavigate, useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useBrowseSellers } from '@/features/seller/api'
@@ -25,16 +25,28 @@ export default function BrowseSellersPage() {
   const { isMobile, isTablet } = useBreakpoint()
   const isNarrow = isMobile || isTablet
 
+  const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(12)
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(searchParams.get('search') ?? '')
 
   // Widget States
-  const [sellerRating, setSellerRating] = useState('all')
-  const [storeTypeOfficial, setStoreTypeOfficial] = useState(true)
-  const [storeTypePersonal, setStoreTypePersonal] = useState(true)
-  const [sortBy, setSortBy] = useState('popular')
+  const [sellerRating, setSellerRating] = useState(searchParams.get('sellerRating') ?? 'all')
+  const [storeTypeOfficial, setStoreTypeOfficial] = useState(searchParams.get('storeTypeOfficial') !== 'false')
+  const [storeTypePersonal, setStoreTypePersonal] = useState(searchParams.get('storeTypePersonal') !== 'false')
+  const [sortBy, setSortBy] = useState(searchParams.get('sortBy') ?? 'popular')
+
+  // URL Sync
+  useEffect(() => {
+    const params = new URLSearchParams()
+    if (search.trim()) params.set('search', search.trim())
+    if (sellerRating !== 'all') params.set('sellerRating', sellerRating)
+    if (!storeTypeOfficial) params.set('storeTypeOfficial', 'false')
+    if (!storeTypePersonal) params.set('storeTypePersonal', 'false')
+    if (sortBy !== 'popular') params.set('sortBy', sortBy)
+    setSearchParams(params)
+  }, [search, sellerRating, storeTypeOfficial, storeTypePersonal, sortBy, setSearchParams])
 
   const { data, isLoading } = useBrowseSellers({ 
     pageNumber: page, 
@@ -171,13 +183,28 @@ export default function BrowseSellersPage() {
                   options={[
                     { value: 'popular', label: t('browse.sortPopular') },
                     { value: 'newest', label: t('browse.sortNewest') },
-                    { value: 'items_desc', label: t('browse.sortItemsCount') },
+                    { value: 'items_desc', label: t('browse.sortItemsDesc') },
                   ]}
                   size="large"
                   variant="filled"
                 />
               </div>
             </FilterWidget>
+
+            <Button
+              type="text"
+              icon={<ClearOutlined />}
+              onClick={() => {
+                setSellerRating('all')
+                setStoreTypeOfficial(true)
+                setStoreTypePersonal(true)
+                setSortBy('popular')
+                setPage(1)
+              }}
+              style={{ width: '100%', marginBottom: 20, color: 'var(--color-text-secondary)' }}
+            >
+              {tc('action.clearFilters')}
+            </Button>
           </div>
         )}
 

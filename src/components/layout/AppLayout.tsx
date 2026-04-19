@@ -193,7 +193,7 @@ export function AppLayout() {
         }}
       >
         {/* Left: Hamburger (mobile/tablet) + Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, flex: 1, minWidth: 0 }}>
           {isNarrow && (
             <Button
               type="text"
@@ -225,9 +225,8 @@ export function AppLayout() {
             style={{
               display: 'flex',
               gap: isTablet ? 20 : 32,
-              position: 'absolute',
-              left: '50%',
-              transform: 'translateX(-50%)',
+              justifyContent: 'center',
+              flexShrink: 0,
             }}
           >
             {navLinks.map((link) => (
@@ -251,7 +250,7 @@ export function AppLayout() {
         )}
 
         {/* Right: Actions */}
-        <Space size={isMobile ? 4 : 'middle'} style={{ flexShrink: 0 }}>
+        <Space className="hide-scrollbar" size={isMobile ? 4 : 'middle'} style={{ flex: 1, minWidth: 0, justifyContent: 'flex-end', flexWrap: 'nowrap', overflowX: 'auto' }}>
           {/* Search bar (desktop only) */}
           {!isNarrow && (
             <div style={{

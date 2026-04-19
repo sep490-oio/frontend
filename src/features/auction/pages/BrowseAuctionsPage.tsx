@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Input, Select, Pagination, Flex, Row, Col, InputNumber, Drawer, Button, AutoComplete } from 'antd'
-import { SearchOutlined, FilterOutlined, AppstoreOutlined, SortAscendingOutlined, TagOutlined, CheckCircleOutlined } from '@ant-design/icons'
+import { SearchOutlined, FilterOutlined, AppstoreOutlined, SortAscendingOutlined, TagOutlined, CheckCircleOutlined, ClearOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
@@ -28,6 +28,10 @@ interface SearchAuctionParams {
   desc?: boolean
   category?: string  // category name, not ID
   status?: string
+  auction_type?: string
+  condition?: string
+  min_price?: number
+  max_price?: number
 }
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
@@ -50,15 +54,18 @@ function useSearchAuctions(params: SearchAuctionParams, enabled: boolean) {
   })
 }
 
-// ─── Helper: split legacy "Field Dir" sort string ────────────────────────────
-
-function parseSortString(sortBy: string | undefined): { sort_by?: string; desc?: boolean } {
-  if (!sortBy) return {}
-  const [field, dir] = sortBy.split(' ')
-  return { sort_by: field?.toLowerCase(), desc: dir?.toLowerCase() !== 'asc' }
-}
-
 // ─── Component ───────────────────────────────────────────────────────────────
+
+function mapSearchSortBy(sortBy: string | undefined): string | undefined {
+  switch (sortBy) {
+    case 'EndTime Asc': return 'ending_soon'
+    case 'CurrentPrice Asc': return 'price_asc'
+    case 'CurrentPrice Desc': return 'price_desc'
+    case 'BidCount Desc': return 'most_bids'
+    case 'CreatedAt Desc': return 'newest'
+    default: return 'newest'
+  }
+}
 
 export default function BrowseAuctionsPage() {
   const { t } = useTranslation('auction')
@@ -98,13 +105,22 @@ export default function BrowseAuctionsPage() {
   const validStatuses = Object.values(AuctionStatus) as string[]
   const initialStatus = rawStatus && validStatuses.includes(rawStatus) ? rawStatus : undefined
 
+  const rawAuctionType = searchParams.get('auctionType')
+  const validTypes = Object.values(AuctionType) as string[]
+  const initialAuctionType = rawAuctionType && validTypes.includes(rawAuctionType) ? rawAuctionType : undefined
+
+  const initialSortBy = searchParams.get('sortBy') ?? 'EndTime Asc'
+  const initialMinPrice = searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : null
+  const initialMaxPrice = searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : null
+
   // ── State ─────────────────────────────────────────────────────────────────
 
   const [filters, setFilters] = useState<AuctionFilterParams>({
     pageNumber: 1,
     pageSize: 12,
     status: initialStatus as AuctionStatus | undefined,
-    sortBy: 'EndTime Asc',
+    auctionType: initialAuctionType as AuctionType | undefined,
+    sortBy: initialSortBy,
   })
 
   // What the user is currently typing → drives suggest dropdown
@@ -118,8 +134,8 @@ export default function BrowseAuctionsPage() {
   const [categoryName, setCategoryName] = useState('')
 
   // Price filters (browse-mode only)
-  const [minPrice, setMinPrice] = useState<number | null>(null)
-  const [maxPrice, setMaxPrice] = useState<number | null>(null)
+  const [minPrice, setMinPrice] = useState<number | null>(initialMinPrice)
+  const [maxPrice, setMaxPrice] = useState<number | null>(initialMaxPrice)
 
   // ── Derived ───────────────────────────────────────────────────────────────
 
@@ -127,6 +143,8 @@ export default function BrowseAuctionsPage() {
 
   // Debounce input before passing to suggest hook — no manual timers needed
   const debouncedInput = useDebounce(inputValue, 300)
+  const debouncedMinPrice = useDebounce(minPrice, 600)
+  const debouncedMaxPrice = useDebounce(maxPrice, 600)
 
   // ── Data ──────────────────────────────────────────────────────────────────
 
@@ -134,21 +152,22 @@ export default function BrowseAuctionsPage() {
 
   const { data: browseData, isLoading: browseLoading } = useAuctions(
     !isSearchMode
-      ? { ...filters, categoryId: categoryId || undefined, minPrice: minPrice ?? undefined, maxPrice: maxPrice ?? undefined }
+      ? { ...filters, categoryId: categoryId || undefined, minPrice: debouncedMinPrice ?? undefined, maxPrice: debouncedMaxPrice ?? undefined }
       : undefined!,
     { refetchInterval: 30000 },
   )
 
-  const { sort_by, desc } = parseSortString(filters.sortBy)
   const { data: searchData, isLoading: searchLoading } = useSearchAuctions(
     {
-      q: committedSearch,
+      q: committedSearch || '*',
       page: filters.pageNumber,
       page_size: filters.pageSize,
-      sort_by,
-      desc,
+      sort_by: mapSearchSortBy(filters.sortBy),
       ...(categoryName ? { category: categoryName } : {}),
       ...(filters.status ? { status: filters.status } : {}),
+      ...(filters.auctionType ? { auction_type: filters.auctionType } : {}),
+      ...(debouncedMinPrice != null ? { min_price: debouncedMinPrice } : {}),
+      ...(debouncedMaxPrice != null ? { max_price: debouncedMaxPrice } : {}),
     },
     isSearchMode,
   )
@@ -169,16 +188,7 @@ export default function BrowseAuctionsPage() {
     const trimmed = value.trim()
     setCommittedSearch(trimmed)
     setFilters((prev) => ({ ...prev, pageNumber: 1 }))
-
-    // Update URL params
-    const newParams = new URLSearchParams(searchParams)
-    if (trimmed) {
-      newParams.set('search', trimmed)
-    } else {
-      newParams.delete('search')
-    }
-    setSearchParams(newParams)
-  }, [searchParams, setSearchParams])
+  }, [])
 
   const handleInputChange = useCallback((value: string) => {
     setInputValue(value)
@@ -186,12 +196,8 @@ export default function BrowseAuctionsPage() {
     if (!value.trim()) {
       setCommittedSearch('')
       setFilters((prev) => ({ ...prev, pageNumber: 1 }))
-
-      const newParams = new URLSearchParams(searchParams)
-      newParams.delete('search')
-      setSearchParams(newParams)
     }
-  }, [searchParams, setSearchParams])
+  }, [])
 
   const handleSelect = useCallback((value: string) => {
     setInputValue(value)
@@ -207,6 +213,19 @@ export default function BrowseAuctionsPage() {
     setCategoryName((categories ?? []).find((c) => c.id === value)?.name ?? '')
     setFilters((prev) => ({ ...prev, pageNumber: 1 }))
   }, [categories])
+
+  // URL Sync
+  useEffect(() => {
+    const params = new URLSearchParams()
+    if (committedSearch.trim()) params.set('search', committedSearch.trim())
+    if (categoryId) params.set('categoryId', categoryId)
+    if (filters.status) params.set('status', filters.status)
+    if (filters.auctionType) params.set('auctionType', filters.auctionType)
+    if (filters.sortBy && filters.sortBy !== 'EndTime Asc') params.set('sortBy', filters.sortBy)
+    if (debouncedMinPrice != null) params.set('minPrice', debouncedMinPrice.toString())
+    if (debouncedMaxPrice != null) params.set('maxPrice', debouncedMaxPrice.toString())
+    setSearchParams(params)
+  }, [committedSearch, categoryId, filters.status, filters.auctionType, filters.sortBy, debouncedMinPrice, debouncedMaxPrice, setSearchParams])
 
   // ── Options ───────────────────────────────────────────────────────────────
 
@@ -250,7 +269,8 @@ export default function BrowseAuctionsPage() {
           style={{ flex: 1 }}
           onChange={(val) => {
             setMinPrice(val)
-            setFilters((prev) => ({ ...prev, minPrice: val ?? undefined, pageNumber: 1 }))
+            if (maxPrice != null && val && val > maxPrice) setMinPrice(maxPrice)
+            setFilters((prev) => ({ ...prev, pageNumber: 1 }))
           }}
         />
         <InputNumber
@@ -261,7 +281,8 @@ export default function BrowseAuctionsPage() {
           style={{ flex: 1 }}
           onChange={(val) => {
             setMaxPrice(val)
-            setFilters((prev) => ({ ...prev, maxPrice: val ?? undefined, pageNumber: 1 }))
+            if (minPrice != null && val && val < minPrice) setMaxPrice(minPrice)
+            setFilters((prev) => ({ ...prev, pageNumber: 1 }))
           }}
         />
       </Flex>
@@ -313,16 +334,18 @@ export default function BrowseAuctionsPage() {
       {!isNarrow && (
         <Flex gap={32} align="flex-start" style={{ marginBottom: 32 }}>
           {/* Left Sidebar */}
-          <div style={{
-            width: 280,
-            flexShrink: 0,
-            position: 'sticky',
-            top: 100,
-            maxHeight: 'calc(100vh - 120px)',
-            overflowY: 'auto',
-            paddingRight: 8,
-            scrollbarWidth: 'thin'
-          }}>
+          <div 
+            className="hide-scrollbar"
+            style={{
+              width: 280,
+              flexShrink: 0,
+              position: 'sticky',
+              top: 100,
+              maxHeight: 'calc(100vh - 120px)',
+              overflowY: 'auto',
+              paddingRight: 8,
+            }}
+          >
             <div style={{
               marginBottom: 24,
               background: 'rgba(255, 255, 255, 0.05)',
@@ -431,6 +454,21 @@ export default function BrowseAuctionsPage() {
                 popupMatchSelectWidth={false}
               />
             </FilterWidget>
+
+            <Button
+              type="text"
+              icon={<ClearOutlined />}
+              onClick={() => {
+                setCategoryId('')
+                setCategoryName('')
+                setMinPrice(null)
+                setMaxPrice(null)
+                setFilters({ pageNumber: 1, pageSize: 12, sortBy: 'EndTime Asc' })
+              }}
+              style={{ width: '100%', marginBottom: 20, color: 'var(--color-text-secondary)' }}
+            >
+              {tc('action.clearFilters')}
+            </Button>
           </div>
 
           {/* Right Grid Content */}

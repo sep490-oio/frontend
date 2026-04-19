@@ -136,6 +136,7 @@ export function SealedBidPanel({
 
   // ── Submit form (active, not submitted) ──
   if (!isActive) return null
+  if (!canBid) return null
 
   return (
     <Card
@@ -157,52 +158,42 @@ export function SealedBidPanel({
           {t('sealedBidExplainer', 'Your bid is encrypted. No one can see your bid amount until the auction ends and all bids are revealed simultaneously.')}
         </Text>
 
-        {canBid ? (
-          <>
-            <div>
-              <Text style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 4, display: 'block' }}>
-                {t('bidAmountLabel', 'Bid Amount')}
-              </Text>
-              <InputNumber
-                style={{ width: '100%' }}
-                size="large"
-                min={minBid}
-                step={bidIncrement}
-                value={amount}
-                onChange={(v) => setAmount(v)}
-                addonAfter={currency}
-                placeholder={t('enterBidAmount', 'Enter your bid')}
-              />
-              <Text type="secondary" style={{ fontSize: 11, marginTop: 4, display: 'block' }}>
-                {t('minimumBid', 'Minimum')}: {formatCurrency(minBid, currency)}
-              </Text>
-            </div>
-
-            <Button
-              type="primary"
-              size="large"
-              block
-              icon={<LockOutlined />}
-              loading={submitSealedBid.isPending}
-              disabled={!amount || amount < minBid}
-              onClick={handleSubmit}
-              style={{
-                background: 'var(--color-accent)',
-                borderColor: 'var(--color-accent)',
-                borderRadius: 8,
-                fontWeight: 600,
-              }}
-            >
-              {t('submitSealedBidBtn', 'Submit Sealed Bid')}
-            </Button>
-          </>
-        ) : (
-          <Alert
-            type="info"
-            message={t('depositToBidSealed', 'Vui lòng đặt cọc để tham gia đấu giá kín')}
-            showIcon
+        <div>
+          <Text style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 4, display: 'block' }}>
+            {t('bidAmountLabel', 'Bid Amount')}
+          </Text>
+          <InputNumber
+            style={{ width: '100%' }}
+            size="large"
+            min={minBid}
+            step={bidIncrement}
+            value={amount}
+            onChange={(v) => setAmount(v)}
+            addonAfter={currency}
+            placeholder={t('enterBidAmount', 'Enter your bid')}
           />
-        )}
+          <Text type="secondary" style={{ fontSize: 11, marginTop: 4, display: 'block' }}>
+            {t('minimumBid', 'Minimum')}: {formatCurrency(minBid, currency)}
+          </Text>
+        </div>
+
+        <Button
+          type="primary"
+          size="large"
+          block
+          icon={<LockOutlined />}
+          loading={submitSealedBid.isPending}
+          disabled={!amount || amount < minBid}
+          onClick={handleSubmit}
+          style={{
+            background: 'var(--color-accent)',
+            borderColor: 'var(--color-accent)',
+            borderRadius: 8,
+            fontWeight: 600,
+          }}
+        >
+          {t('submitSealedBidBtn', 'Submit Sealed Bid')}
+        </Button>
 
         {sealedBidCount > 0 && (
           <Text type="secondary" style={{ fontSize: 12, textAlign: 'center' }}>

@@ -296,7 +296,7 @@ export function WarehouseStaffLayout() {
           </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 2 : 8, flexShrink: 0 }}>
+        <div className="hide-scrollbar" style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 2 : 8, flexShrink: 0, flex: 1, minWidth: 0, overflowX: 'auto', justifyContent: 'flex-end' }}>
           <button
             onClick={() => navigate('/')}
             style={{
