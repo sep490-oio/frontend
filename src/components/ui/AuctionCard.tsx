@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { HeartOutlined, HeartFilled } from '@ant-design/icons'
@@ -32,7 +32,14 @@ export function AuctionCard({ auction }: AuctionCardProps) {
   const { isMobile } = useBreakpoint()
   const watchMutation = useWatchAuction()
   const unwatchMutation = useUnwatchAuction()
-  const [watching, setWatching] = useState(false)
+  const [watching, setWatching] = useState(auction.isWatched ?? auction.hasWatched ?? false)
+
+  useEffect(() => {
+    const isWatched = auction.isWatched ?? auction.hasWatched
+    if (isWatched !== undefined) {
+      setWatching(isWatched)
+    }
+  }, [auction.isWatched, auction.hasWatched])
 
   const isActive = auction.status === AuctionStatus.Active
   const isAtStartingPrice = auction.currentPrice?.amount === auction.startingPrice?.amount

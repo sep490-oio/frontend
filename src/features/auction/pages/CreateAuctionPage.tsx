@@ -60,13 +60,13 @@ interface FormValues {
   autoExtend?: boolean
 }
 
-function SectionHeader({ number, title }: { number: number; title: string }) {
+function SectionHeader({ number, title, isMobile }: { number: number; title: string, isMobile?: boolean }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, marginBottom: 16 }}>
       <span
         style={{
-          width: 28,
-          height: 28,
+          width: isMobile ? 24 : 28,
+          height: isMobile ? 24 : 28,
           borderRadius: '50%',
           background: 'var(--color-accent)',
           color: '#fff',
@@ -74,13 +74,13 @@ function SectionHeader({ number, title }: { number: number; title: string }) {
           alignItems: 'center',
           justifyContent: 'center',
           fontWeight: 600,
-          fontSize: 13,
+          fontSize: isMobile ? 12 : 13,
           flexShrink: 0,
         }}
       >
         {number}
       </span>
-      <h3 style={{ fontFamily: SERIF_FONT, margin: 0, fontSize: 17, color: 'var(--color-text-primary)' }}>
+      <h3 style={{ fontFamily: SERIF_FONT, margin: 0, fontSize: isMobile ? 16 : 17, color: 'var(--color-text-primary)' }}>
         {title}
       </h3>
     </div>
@@ -487,7 +487,10 @@ export default function CreateAuctionPage() {
       </Typography.Title>
 
       {/* Steps Progress */}
-      <Card style={{ borderRadius: 12, border: '1px solid var(--color-border)', marginBottom: 16 }}>
+      <Card 
+        styles={{ body: { padding: isMobile ? '12px 16px' : '16px 24px' } }}
+        style={{ borderRadius: 12, border: '1px solid var(--color-border)', marginBottom: 16 }}
+      >
         <Steps
           size="small"
           items={stepsItems}
@@ -495,7 +498,8 @@ export default function CreateAuctionPage() {
           direction={isMobile && !hideItemFields ? 'vertical' : 'horizontal'}
         />
         {isSubmitting && submissionStep && stepStatusText[submissionStep] && (
-          <div style={{ textAlign: 'center', marginTop: 8, fontSize: 13, color: 'var(--color-text-secondary)' }}>
+          <div style={{ textAlign: 'center', marginTop: 12, fontSize: 13, color: 'var(--color-text-secondary)', fontWeight: 500 }}>
+            <LoadingOutlined style={{ marginRight: 8, color: 'var(--color-accent)' }} />
             {stepStatusText[submissionStep]}
           </div>
         )}
@@ -530,22 +534,20 @@ export default function CreateAuctionPage() {
 
       {/* Item Preview */}
       {(isFromItem || (isEditMode && existingItemForPreview)) && existingItemForPreview && (
-        <Card style={{ borderRadius: 12, border: '1px solid var(--color-border)', marginBottom: 16 }}>
-          <SectionHeader number={1} title={t('selectedItem', 'Selected Item')} />
-          <div style={{ display: 'flex', gap: 12, flexWrap: isMobile ? 'wrap' : undefined }}>
+        <Card 
+          styles={{ body: { padding: isMobile ? '16px' : '24px' } }}
+          style={{ borderRadius: 12, border: '1px solid var(--color-border)', marginBottom: 16 }}
+        >
+          <SectionHeader number={1} title={t('selectedItem', 'Vật phẩm đã chọn')} isMobile={isMobile} />
+          <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
             {existingItemForPreview.images && existingItemForPreview.images.length > 0 && (
-              <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                <Image.PreviewGroup>
-                  {existingItemForPreview.images.slice(0, isMobile ? 2 : 4).map((img: any) => (
-                    <Image
-                      key={img.id}
-                      src={img.thumbnailUrl ?? img.url}
-                      width={isMobile ? 56 : 64}
-                      height={isMobile ? 56 : 64}
-                      style={{ objectFit: 'cover', borderRadius: 8 }}
-                    />
-                  ))}
-                </Image.PreviewGroup>
+              <div style={{ flexShrink: 0 }}>
+                <Image
+                  src={existingItemForPreview.images[0].thumbnailUrl ?? existingItemForPreview.images[0].url}
+                  width={isMobile ? 80 : 96}
+                  height={isMobile ? 80 : 96}
+                  style={{ objectFit: 'cover', borderRadius: 8, border: '1px solid var(--color-border-light)' }}
+                />
               </div>
             )}
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -578,7 +580,11 @@ export default function CreateAuctionPage() {
       )}
 
       {/* Main Form */}
-      <Card style={{ borderRadius: 12, border: '1px solid var(--color-border)' }}>
+      <Card 
+        styles={{ body: { padding: isMobile ? '20px 16px' : '32px 24px' } }}
+        style={{ borderRadius: 12, border: '1px solid var(--color-border)' }}
+      >
+        <SectionHeader number={pricingSectionNumber} title={t('pricingAndTiming', 'Pricing & Time')} isMobile={isMobile} />
         <Form<FormValues>
           form={form}
           layout="vertical"
@@ -594,7 +600,7 @@ export default function CreateAuctionPage() {
           {/* Section 1: Item Info */}
           {!hideItemFields && (
             <>
-              <SectionHeader number={1} title={t('itemInfo', 'Item Info')} />
+              <SectionHeader number={1} title={t('itemInfo', 'Item Info')} isMobile={isMobile} />
 
               <Form.Item
                 name="title"
@@ -604,7 +610,7 @@ export default function CreateAuctionPage() {
                   { max: 255, message: t('titleMax', 'Title must not exceed 255 characters') },
                 ]}
               >
-                <Input placeholder={t('titlePlaceholder', 'Enter item title')} style={{ height: isMobile ? 44 : undefined }} />
+                <Input placeholder={t('titlePlaceholder', 'Enter item title')} style={{ height: 44, fontSize: 16 }} />
               </Form.Item>
 
               {/* Condition pills */}
@@ -649,20 +655,21 @@ export default function CreateAuctionPage() {
                   showSearch
                   optionFilterProp="label"
                   style={{ width: '100%' }}
+                  size="large"
                 />
               </Form.Item>
 
               <Form.Item name="description" label={t('description', 'Description')}>
-                <Input.TextArea rows={4} placeholder={t('descriptionPlaceholder', 'Describe your item')} />
+                <Input.TextArea rows={4} placeholder={t('descriptionPlaceholder', 'Describe your item')} style={{ fontSize: 16 }} />
               </Form.Item>
 
               <Form.Item name="quantity" label={t('quantity', 'Quantity')}>
-                <InputNumber style={{ width: '100%', height: isMobile ? 44 : undefined }} min={1} />
+                <InputNumber style={{ width: '100%', height: 44, fontSize: 16 }} min={1} />
               </Form.Item>
 
               {/* Section 2: Photos */}
               <div style={{ borderTop: '1px solid var(--color-border-light)', margin: '24px 0', paddingTop: 24 }}>
-                <SectionHeader number={2} title={t('photos', 'Photos')} />
+                <SectionHeader number={2} title={t('photos', 'Photos')} isMobile={isMobile} />
               </div>
 
               <Form.Item label={t('photos', 'Photos')} required>
@@ -673,22 +680,17 @@ export default function CreateAuctionPage() {
                   onPhotosChange={setCapturedPhotos}
                 />
               </Form.Item>
+
+              <div style={{ borderTop: '1px solid var(--color-border-light)', margin: '24px 0', paddingTop: 24 }} />
             </>
           )}
-
-          {/* Section divider before Pricing */}
-          {!hideItemFields && (
-            <div style={{ borderTop: '1px solid var(--color-border-light)', margin: '24px 0', paddingTop: 24 }} />
-          )}
-
-          <SectionHeader number={pricingSectionNumber} title={t('pricingAndTiming', 'Pricing & Time')} />
 
           <Form.Item
             name="auctionType"
             label={t('auctionType', 'Auction Type')}
             rules={[{ required: true, message: t('typeRequired', 'Please select auction type') }]}
           >
-            <Select options={AUCTION_TYPE_OPTIONS} style={{ width: '100%' }} />
+            <Select options={AUCTION_TYPE_OPTIONS} style={{ width: '100%' }} size="large" />
           </Form.Item>
 
           <Form.Item
@@ -700,7 +702,8 @@ export default function CreateAuctionPage() {
             ]}
           >
             <InputNumber
-              style={{ width: '100%' }}
+              style={{ width: '100%', fontSize: 16 }}
+              size="large"
               min={0}
               step={1000}
               addonAfter={DEFAULT_CURRENCY}
@@ -736,7 +739,8 @@ export default function CreateAuctionPage() {
 
           <Form.Item name="reservePrice" label={t('reservePrice', 'Reserve Price')}>
             <InputNumber
-              style={{ width: '100%' }}
+              style={{ width: '100%', fontSize: 16 }}
+              size="large"
               min={0}
               step={1000}
               addonAfter={DEFAULT_CURRENCY}
@@ -751,7 +755,8 @@ export default function CreateAuctionPage() {
 
           <Form.Item name="buyNowPrice" label={t('buyNowPrice', 'Buy Now Price')}>
             <InputNumber
-              style={{ width: '100%' }}
+              style={{ width: '100%', fontSize: 16 }}
+              size="large"
               min={0}
               step={1000}
               addonAfter={DEFAULT_CURRENCY}

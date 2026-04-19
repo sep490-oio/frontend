@@ -271,11 +271,13 @@ export default function AuctionDetailPage() {
     if (qualificationStatus === 'qualified' || qualificationStatus === 'waived') {
       localStorage.setItem(storageKey, 'true')
       setIsQualified(true)
-    } else {
-      // For any other status (none, pending, rejected, expired), clear the optimistic flag
+    } else if (qualificationStatus === 'rejected' || qualificationStatus === 'expired') {
+      // Only forcefully clear the optimistic flag if definitively rejected/expired
       localStorage.removeItem(storageKey)
       setIsQualified(false)
     }
+    // We intentionally ignore 'pending' or 'none' to avoid wiping out the optimistic
+    // flag during webhook/cache latency windows right after a successful deposit.
   }, [data, id, storageKey, isAuthenticated, isLoading])
 
   // Sync isWatching from API response
@@ -392,10 +394,20 @@ export default function AuctionDetailPage() {
 
   // Push each bid event into the aggregator
   useEffect(() => {
-    if (hub.lastBid && aggregatorRef.current) {
-      aggregatorRef.current.push(hub.lastBid)
+    if (hub.lastBid) {
+      // Special treatment for the current user's own auto-bid
+      if (currentUser?.id && hub.lastBid.bidderId === currentUser.id && hub.lastBid.isAutoBid) {
+        message.success({
+          content: `🤖 ${t('yourAutoBidPlaced', 'Your auto-bid placed')}: ${formatCurrency(hub.lastBid.amount, currency)}`,
+          duration: 4,
+        })
+        return
+      }
+      if (aggregatorRef.current) {
+        aggregatorRef.current.push(hub.lastBid)
+      }
     }
-  }, [hub.lastBid])
+  }, [hub.lastBid, currentUser?.id, currency, message, t])
 
   useEffect(() => {
     if (hub.outbid) {
@@ -492,6 +504,10 @@ export default function AuctionDetailPage() {
     // 2. If the server provides an explicit status for the current user, use it as the source of truth
     if (isAuthenticated && serverQualStatus) {
       if (serverQualStatus === 'qualified' || serverQualStatus === 'waived') return 'qualified' as QualificationState
+      
+      // Trust the optimistic flag to mask caching/webhook delays right after deposit
+      if (isQualified) return 'qualified' as QualificationState
+
       // If server says they are clearly not qualified (pending, rejected, etc.), return a boundary state
       if (
         (serverQualStatus as any) === 'rejected' ||

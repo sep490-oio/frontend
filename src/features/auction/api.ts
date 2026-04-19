@@ -68,7 +68,7 @@ export function useAuctionBids(auctionId: string) {
   })
 }
 
-export function useMyAuctions(params?: PaginationParams & { status?: string }, options?: { refetchInterval?: number }) {
+export function useMyAuctions(params?: PaginationParams & { status?: string; sortBy?: string }, options?: { refetchInterval?: number }) {
   return useQuery({
     queryKey: queryKeys.auctions.myAuctions(params),
     queryFn: async () => {
@@ -293,6 +293,8 @@ export function useConfigureAutoBid() {
     },
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.auctions.myAutoBid(variables.auctionId) })
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.detail(variables.auctionId) })
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.myBids() })
     },
   })
 }
