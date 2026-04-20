@@ -21,7 +21,6 @@ import { ArrowLeftOutlined, FlagOutlined } from '@ant-design/icons'
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useTermsGate } from '@/features/user/hooks/useTermsGate'
-import { TermsAcceptanceModal } from '@/components/terms/TermsAcceptanceModal'
 import { useSellerById } from '@/features/seller/api'
 import {
   useAuctionDetail,
@@ -132,7 +131,7 @@ export default function AuctionDetailPage() {
   // AuctionSoldEvent handler creating the Order). Capped at ~12s.
   const [orderPollAttempts, setOrderPollAttempts] = useState(0)
   const [pollingForOrder, setPollingForOrder] = useState(false)
-  const { data, isLoading, refetch } = useAuctionDetail(
+  const { data, isLoading, isFetching, refetch } = useAuctionDetail(
     id ?? '',
     detailUserScope,
     { refetchInterval: pollingForOrder ? 2000 : false },
@@ -151,13 +150,38 @@ export default function AuctionDetailPage() {
   const hub = useAuctionHub(id ?? '', data?.item?.id, currentUser?.id)
   useUserHub(id ?? '', currentUser?.id ?? null)
 
+  const auction = data?.auction
+  const item = data?.item
+  const sellerId = auction?.sellerId ?? item?.sellerId
+
+  const isScheduled = auction?.status === AuctionStatus.Scheduled
+  // Terminal states: auction detail becomes a public read-only results page.
+  const isTerminal =
+    auction?.status === AuctionStatus.Ended ||
+    auction?.status === AuctionStatus.Sold ||
+    auction?.status === AuctionStatus.Failed ||
+    auction?.status === AuctionStatus.Cancelled ||
+    auction?.status === AuctionStatus.Terminated
+
+  const isSeller = Boolean(isAuthenticated && currentUser?.id && sellerId && sellerId === currentUser.id)
+  const currentPrice = auction?.currentPrice?.amount ?? 0
+  const currency = auction?.currency ?? DEFAULT_CURRENCY
+  const minBid = auction?.minimumBidAmount?.amount ?? (currentPrice + (auction?.bidIncrement?.amount ?? 0))
+  const bidCount = auction?.bidCount ?? 0
+  const watchCount = auction?.watchCount ?? 0
+  const viewCount = auction?.viewCount ?? 0
+  const walletBalance = walletData?.availableBalance ?? 0
+  const insufficientBalance = walletBalance < minBid
+  const bidInc = auction?.bidIncrement?.amount ?? 50000
+
   // Winner Pay Now CTA — prefer server-authoritative CurrentBuyerOrder from
   // AuctionDetailDto. It is populated when the current user is the auction
   // winner (or buy-now reservation holder) and reflects the real order state.
   const winnerPayNowOrderId = useMemo(() => {
+    if (isSeller) return null
     const cbo = data?.currentBuyerOrder
     return cbo?.canPayNow && cbo.orderId ? cbo.orderId : null
-  }, [data?.currentBuyerOrder])
+  }, [data?.currentBuyerOrder, isSeller])
 
   const placeBidMutation = usePlaceBid()
   const watchMutation = useWatchAuction()
@@ -213,6 +237,7 @@ export default function AuctionDetailPage() {
   })
   const [submitPendingTiming, setSubmitPendingTiming] = useState(false)
   const [pendingActivation, setPendingActivation] = useState(false)
+  const hasJustDeposited = useRef(false)
   // Report/dispute modal uses CreateDisputeModal — no inline hook needed
 
   // Qualification status — check localStorage + URL param after VnPay return
@@ -244,23 +269,33 @@ export default function AuctionDetailPage() {
   // If returning from VnPay deposit with success flag, mark qualified
   useEffect(() => {
     if (depositedParam && id && storageKey) {
+      const now = Date.now().toString()
       localStorage.setItem(storageKey, 'true')
+      localStorage.setItem(`${storageKey}_ts`, now)
       setIsQualified(true)
+      // Force a refetch to try and get the updated participant status from server
+      refetch()
       // Clean URL params
       const url = new URL(window.location.href)
       url.searchParams.delete('deposited')
       window.history.replaceState({}, '', url.pathname)
     }
-  }, [depositedParam, id, storageKey])
+  }, [depositedParam, id, storageKey, refetch])
 
   // Sync qualification status with server data
   useEffect(() => {
     if (!id || !storageKey || !isAuthenticated) return
 
-    // Special case: if data is loaded but user has no participant record, they are not qualified.
+    // Special case: if data is loaded but user has no participant record, they might not be qualified.
     // Important: we must ensure data is actually loaded (not currently fetching for the first time).
-    if (data && !isLoading && !data.currentUserParticipant) {
+    // Also, we PROTECT the local qualification flag if we just deposited, as the server might be lagging.
+    // We check both the ref and localStorage timestamp for persistence across F5.
+    const lastDepositTs = parseInt(localStorage.getItem(`${storageKey}_ts`) || '0', 10)
+    const isRecentlyDeposited = (Date.now() - lastDepositTs) < 30000 || hasJustDeposited.current
+
+    if (data && !isLoading && !isFetching && !data.currentUserParticipant && !isRecentlyDeposited) {
       localStorage.removeItem(storageKey)
+      localStorage.removeItem(`${storageKey}_ts`)
       setIsQualified(false)
       return
     }
@@ -271,14 +306,15 @@ export default function AuctionDetailPage() {
     if (qualificationStatus === 'qualified' || qualificationStatus === 'waived') {
       localStorage.setItem(storageKey, 'true')
       setIsQualified(true)
+      hasJustDeposited.current = false
+      localStorage.removeItem(`${storageKey}_ts`) // Server caught up, clear timer
     } else if (qualificationStatus === 'rejected' || qualificationStatus === 'expired') {
-      // Only forcefully clear the optimistic flag if definitively rejected/expired
       localStorage.removeItem(storageKey)
+      localStorage.removeItem(`${storageKey}_ts`)
       setIsQualified(false)
+      hasJustDeposited.current = false
     }
-    // We intentionally ignore 'pending' or 'none' to avoid wiping out the optimistic
-    // flag during webhook/cache latency windows right after a successful deposit.
-  }, [data, id, storageKey, isAuthenticated, isLoading])
+  }, [data, id, storageKey, isAuthenticated, isLoading, isFetching])
 
   // Sync isWatching from API response
   useEffect(() => {
@@ -325,36 +361,12 @@ export default function AuctionDetailPage() {
   }, [data])
 
   // ── Derived auction state ──────────────────────────────────────────
-  const auction = data?.auction
-  const item = data?.item
-  const sellerId = item?.sellerId ?? auction?.sellerId
   const { data: sellerProfile } = useSellerById(sellerId ?? '')
   // Use data.recentBids as the canonical source (realtime-patched by useAuctionHub).
   // The public /auctions/{id} endpoint already embeds recentBids, and the protected
   // /auctions/{id}/bids endpoint is not needed on this page.
   const recentBids = data?.recentBids ?? []
   const isActive = auction?.status === AuctionStatus.Active
-  const isScheduled = auction?.status === AuctionStatus.Scheduled
-  // Terminal states: auction detail becomes a public read-only results page.
-  // All interactive panels (BidForm, EligibilityPanel, Buy Now, mobile sticky bar)
-  // must be hidden. Product info + bid history remain visible from the embedded DTO.
-  const isTerminal =
-    auction?.status === AuctionStatus.Ended ||
-    auction?.status === AuctionStatus.Sold ||
-    auction?.status === AuctionStatus.Failed ||
-    auction?.status === AuctionStatus.Cancelled ||
-    auction?.status === AuctionStatus.Terminated
-  const currentPrice = auction?.currentPrice?.amount ?? 0
-  const currency = auction?.currency ?? DEFAULT_CURRENCY
-  const minBid = auction?.minimumBidAmount?.amount ?? (currentPrice + (auction?.bidIncrement?.amount ?? 0))
-  const bidCount = auction?.bidCount ?? 0
-  const watchCount = auction?.watchCount ?? 0
-  const viewCount = auction?.viewCount ?? 0
-  const walletBalance = walletData?.availableBalance ?? 0
-  const insufficientBalance = walletBalance < minBid
-  const bidInc = auction?.bidIncrement?.amount ?? 50000
-  const isSeller = currentUser?.id === auction?.sellerId || currentUser?.id === item?.sellerId
-
   // ── Record view (once per page visit, skip for seller) ────────────
   const recordView = useRecordAuctionView()
   const viewRecorded = useRef(false)
@@ -504,7 +516,7 @@ export default function AuctionDetailPage() {
     // 2. If the server provides an explicit status for the current user, use it as the source of truth
     if (isAuthenticated && serverQualStatus) {
       if (serverQualStatus === 'qualified' || serverQualStatus === 'waived') return 'qualified' as QualificationState
-      
+
       // Trust the optimistic flag to mask caching/webhook delays right after deposit
       if (isQualified) return 'qualified' as QualificationState
 
@@ -546,10 +558,26 @@ export default function AuctionDetailPage() {
     sellerId,
   ])
 
+  const ensureTermsAccepted = useCallback(() => {
+    if (bidderTerms.hasPending) {
+      Modal.confirm({
+        title: t('termsRequiredTitle', 'Chấp nhận điều khoản'),
+        content: t('termsRequiredDesc', 'Bạn cần chấp nhận điều khoản người tham gia đấu giá trước khi thực hiện hành động này. Bạn có muốn chuyển sang trang điều khoản ngay bây giờ không?'),
+        okText: t('goToTerms', 'Chuyển sang trang điều khoản'),
+        cancelText: t('cancel', 'Hủy'),
+        onOk: () => {
+          bidderTerms.redirect()
+        },
+      })
+      return false
+    }
+    return true
+  }, [bidderTerms, t])
+
   // ── Handlers ────────────────────────────────────────────────────
 
   const handlePlaceBid = async () => {
-    if (bidderTerms.hasPending) { bidderTerms.openModal(); return }
+    if (!ensureTermsAccepted()) return
     if (isSeller) return
     if (!id || !bidAmount) return
     const rawBid = bidAmount
@@ -645,6 +673,7 @@ export default function AuctionDetailPage() {
   }
 
   const handleAutoBid = async () => {
+    if (!ensureTermsAccepted()) return
     if (!id || !autoBidMax) return
     try {
       await autoBidMutation.mutateAsync({ auctionId: id, maxAmount: autoBidMax, currency, incrementAmount: autoBidIncrement ?? undefined })
@@ -656,6 +685,7 @@ export default function AuctionDetailPage() {
   }
 
   const handleBuyNow = useCallback(async () => {
+    if (!ensureTermsAccepted()) return
     if (!id) return
     try {
       const result = await buyNowMutation.mutateAsync(id)
@@ -668,7 +698,7 @@ export default function AuctionDetailPage() {
   }, [id, buyNowMutation, message, t, navigate])
 
   const handleDeposit = async () => {
-    if (bidderTerms.hasPending) { bidderTerms.openModal(); return }
+    if (!ensureTermsAccepted()) return
     if (!id || !auction) return
     try {
       const depositAmount = auction.startingPrice?.amount ?? 0
@@ -709,8 +739,13 @@ export default function AuctionDetailPage() {
       onOk: async () => {
         try {
           await walletDepositMutation.mutateAsync({ auctionId: id, amount: depositAmount, currency })
-          localStorage.setItem(storageKey, 'true')
-          setIsQualified(true)
+          if (storageKey) {
+            const now = Date.now().toString()
+            hasJustDeposited.current = true
+            localStorage.setItem(storageKey, 'true')
+            localStorage.setItem(`${storageKey}_ts`, now)
+            setIsQualified(true)
+          }
           message.success(t('depositSuccess', 'Deposit successful — you are now qualified to bid!'))
           queryClient.invalidateQueries({ queryKey: queryKeys.auctions.detail(id) })
         } catch (err) {
@@ -1045,7 +1080,7 @@ export default function AuctionDetailPage() {
             depositStatus={data?.currentUserParticipant?.depositStatus}
             depositAmount={data?.currentUserParticipant?.depositAmount ?? auction.startingPrice?.amount}
             onDeposit={() => {
-              if (bidderTerms.hasPending) { bidderTerms.openModal(); return }
+              if (!ensureTermsAccepted()) return
               setDepositModalOpen(true)
             }}
             depositLoading={walletDepositMutation.isPending || depositMutation.isPending}
@@ -1254,6 +1289,15 @@ export default function AuctionDetailPage() {
         <AuctionDepositModal
           open={depositModalOpen}
           onClose={() => setDepositModalOpen(false)}
+          onSuccess={() => {
+            if (storageKey) {
+              const now = Date.now().toString()
+              hasJustDeposited.current = true
+              localStorage.setItem(storageKey, 'true')
+              localStorage.setItem(`${storageKey}_ts`, now)
+              setIsQualified(true)
+            }
+          }}
           auctionId={id}
           requiredDepositAmount={auction.startingPrice?.amount ?? 0}
           currency={currency}
@@ -1461,14 +1505,7 @@ export default function AuctionDetailPage() {
         )}
       </Modal>
 
-      <TermsAcceptanceModal
-        open={bidderTerms.modalOpen}
-        onClose={bidderTerms.closeModal}
-        termType="bidder"
-        onAccepted={() => {
-          message.success(t('termsAcceptedToast', 'Terms accepted. You can place your bid now.'))
-        }}
-      />
+
     </div>
   )
 }

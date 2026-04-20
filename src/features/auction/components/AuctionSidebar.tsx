@@ -352,9 +352,9 @@ export function AuctionSidebar({
     ? (() => {
       const position = currentUserBidState?.position
       const finalPriceAmount = auctionEnded?.finalPrice ?? currentPrice
-      const isUserWinner = position === 'won' || auctionAction.type === 'won'
+      const isUserWinner = !isSeller && (position === 'won' || auctionAction.type === 'won')
       const isUserLoser =
-        position === 'lost' || position === 'outbid' || auctionAction.type === 'lost'
+        !isSeller && (position === 'lost' || position === 'outbid' || auctionAction.type === 'lost')
       const isCancelled =
         auctionAction.type === 'cancelled' ||
         auction.status === 'cancelled' ||
@@ -494,7 +494,7 @@ export function AuctionSidebar({
   // ── Live action cards (non-terminal, from SignalR) ────────────────
   const liveActionCards = !isTerminal && (
     <>
-      {auctionAction.type === 'won' && (
+      {auctionAction.type === 'won' && !isSeller && (
         <Card
           style={{ marginTop: 16, borderColor: 'var(--color-success)', background: 'rgba(74, 124, 89, 0.06)' }}
         >
@@ -518,7 +518,7 @@ export function AuctionSidebar({
         </Card>
       )}
 
-      {auctionAction.type === 'lost' && (
+      {auctionAction.type === 'lost' && !isSeller && (
         <Card
           style={{ marginTop: 16, borderColor: 'var(--color-border)', background: 'var(--color-bg-surface)' }}
         >
