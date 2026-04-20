@@ -40,6 +40,7 @@ const NEW_CARD_VALUE = '__vnpay_new__'
 interface Props {
   open: boolean
   onClose: () => void
+  onSuccess?: () => void
   auctionId: string
   requiredDepositAmount: number
   currency: string
@@ -48,6 +49,7 @@ interface Props {
 export function AuctionDepositModal({
   open,
   onClose,
+  onSuccess,
   auctionId,
   requiredDepositAmount,
   currency,
@@ -98,6 +100,7 @@ export function AuctionDepositModal({
         message.success(t('depositSuccess', 'Đặt cọc thành công — bạn đã đủ điều kiện đặt giá!'))
         queryClient.invalidateQueries({ queryKey: queryKeys.auctions.detail(auctionId) })
         queryClient.invalidateQueries({ queryKey: queryKeys.wallet.all })
+        onSuccess?.()
         handleClose()
       } catch (err) {
         const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data

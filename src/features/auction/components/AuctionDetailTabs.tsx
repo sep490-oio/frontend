@@ -530,29 +530,7 @@ export function AuctionDetailTabs({
                   {/* Review-owner row hidden: DTO exposes only the admin's UUID, not a display name.
                       Showing the raw UUID to public viewers is not useful. Restore once BE adds
                       an `assignedAdminDisplayName` field to AuctionDto. */}
-                  {auction.reservePrice && (
-                    <div style={{ marginTop: 4 }}>
-                      {t('reservePrice', 'Giá bảo lưu')}:{' '}
-                      <strong style={{ color: 'var(--color-text-primary)' }}>
-                        {formatCurrency(
-                          auction.reservePrice.amount,
-                          auction.reservePrice.currency ?? currency,
-                        )}
-                      </strong>
-                      {' • '}
-                      <span
-                        style={{
-                          color: auction.isReserveMet
-                            ? 'var(--color-success)'
-                            : 'var(--color-text-secondary)',
-                        }}
-                      >
-                        {auction.isReserveMet
-                          ? t('reserveMet', 'Đã đạt giá bảo lưu')
-                          : t('reserveNotMet', 'Chưa đạt giá bảo lưu')}
-                      </span>
-                    </div>
-                  )}
+
                 </div>
               </div>
 
