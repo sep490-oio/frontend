@@ -190,3 +190,16 @@ export function useDeleteVerificationDocument() {
     },
   })
 }
+export function useBrowseSellers(params?: PaginationParams & { 
+  search?: string;
+  rating?: string;
+  sortBy?: string;
+}) {
+  return useQuery({
+    queryKey: [...queryKeys.seller.all, 'browse', params],
+    queryFn: async () => {
+      const res = await apiClient.get<PagedList<SellerProfileDto>>('/sellers', { params })
+      return res.data
+    },
+  })
+}

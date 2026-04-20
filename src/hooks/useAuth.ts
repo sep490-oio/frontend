@@ -10,6 +10,14 @@ export function useAuth() {
 
   const handleLogout = async () => {
     dispatch(logout())
+
+    // Clear all auction qualification status from localStorage to prevent leaking between accounts
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith('oio_qualified_')) {
+        localStorage.removeItem(key)
+      }
+    })
+
     queryClient.clear()
     await stopAllConnections()
   }

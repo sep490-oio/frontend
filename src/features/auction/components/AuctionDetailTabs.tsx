@@ -48,6 +48,7 @@ export interface AuctionDetailTabsProps {
   categoryName?: string
   qaConnected?: boolean
   qaLastSyncedAt?: number | null
+  currentUserId?: string
 }
 
 function SellerIdentity({
@@ -169,6 +170,7 @@ export function AuctionDetailTabs({
   categoryName,
   qaConnected = false,
   qaLastSyncedAt = null,
+  currentUserId,
 }: AuctionDetailTabsProps) {
   const { t } = useTranslation('auction')
   const { t: tc } = useTranslation('common')
@@ -361,17 +363,34 @@ export function AuctionDetailTabs({
                 {recentBids.map((bid, index) => (
                   <div
                     key={bid.id ?? `${bid.bidderId}-${index}`}
-                    style={{
-                      borderBottom:
-                        index < recentBids.length - 1
-                          ? '1px solid var(--color-border-light)'
-                          : undefined,
-                      padding: '10px 0',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      gap: 8,
-                    }}
+                    style={
+                      currentUserId && bid.bidderId === currentUserId
+                        ? {
+                            padding: '12px',
+                            margin: '6px -12px',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'flex-start',
+                            gap: 8,
+                            borderRadius: 8,
+                            backgroundColor: 'var(--color-accent-light, rgba(255, 255, 255, 0.1))',
+                            border: '1px solid var(--color-accent)',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                          }
+                        : {
+                            borderBottom:
+                              index < recentBids.length - 1
+                                ? '1px solid var(--color-border-light)'
+                                : undefined,
+                            padding: '10px 12px',
+                            margin: '0 -12px',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'flex-start',
+                            gap: 8,
+                            borderRadius: 6,
+                          }
+                    }
                   >
                     {/* Left: amount + badges */}
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 8px', alignItems: 'center', minWidth: 0 }}>
@@ -388,8 +407,13 @@ export function AuctionDetailTabs({
                       {bid.isAutoBid && <StatusBadge status="auto" size="small" />}
                       {bid.status && <StatusBadge status={bid.status} size="small" />}
                       {(bid.bidderDisplayName || bid.bidderId) && (
-                        <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                          {bid.bidderDisplayName ?? bid.bidderId?.slice(0, 8)}
+                        <Typography.Text type="secondary" style={{
+                          fontSize: 12,
+                          ...(currentUserId && bid.bidderId === currentUserId ? { fontWeight: 600, color: 'var(--color-accent)' } : {})
+                        }}>
+                          {currentUserId && bid.bidderId === currentUserId
+                            ? t('you', 'You')
+                            : (bid.bidderDisplayName ?? bid.bidderId?.slice(0, 8))}
                         </Typography.Text>
                       )}
                     </div>

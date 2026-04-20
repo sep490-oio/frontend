@@ -1,14 +1,15 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Input, Select, Pagination, Flex, Row, Col, InputNumber, Drawer, Button, AutoComplete } from 'antd'
-import { SearchOutlined, FilterOutlined } from '@ant-design/icons'
+import { SearchOutlined, FilterOutlined, AppstoreOutlined, SortAscendingOutlined, TagOutlined, CheckCircleOutlined, ClearOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
-import { useAuctions } from '@/features/auction/api'
+import { useAuctions, useSuggestAuctions } from '@/features/auction/api'
 import { useCategories } from '@/features/item/api'
 import apiClient from '@/lib/axios'
 import { AuctionCard } from '@/components/ui/AuctionCard'
 import { EmptyState } from '@/components/ui/EmptyState'
+import FilterWidget from '@/components/ui/FilterWidget'
 import { AuctionStatus, AuctionType } from '@/types/enums'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -16,7 +17,6 @@ import type { AuctionFilterParams, PagedList, AuctionListItemDto } from '@/types
 import { SERIF_FONT } from '@/styles/tokens'
 
 const SERIF = SERIF_FONT
-const SUGGEST_MIN_LENGTH = 2
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -28,6 +28,10 @@ interface SearchAuctionParams {
   desc?: boolean
   category?: string  // category name, not ID
   status?: string
+  auction_type?: string
+  condition?: string
+  min_price?: number
+  max_price?: number
 }
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
@@ -50,61 +54,24 @@ function useSearchAuctions(params: SearchAuctionParams, enabled: boolean) {
   })
 }
 
-/**
- * Auto-complete suggestions.
- * Receives already-debounced `q` from call site via useDebounce.
- * Only fires when q.length >= SUGGEST_MIN_LENGTH.
- * Stale in-flight requests are cancelled automatically via AbortController signal.
- */
-function useSuggestAuctions(q: string) {
-  return useQuery({
-    queryKey: ['auctions', 'suggest', q],
-    queryFn: async ({ signal }) => {
-      const res = await apiClient.get<string[]>('/search/auctions/suggest', { params: { q }, signal })
-      return res.data
-    },
-    enabled: q.trim().length >= SUGGEST_MIN_LENGTH,
-    staleTime: 10_000,
-  })
-}
-
-// ─── Helper: split legacy "Field Dir" sort string ────────────────────────────
-
-function parseSortString(sortBy: string | undefined): { sort_by?: string; desc?: boolean } {
-  if (!sortBy) return {}
-  const [field, dir] = sortBy.split(' ')
-  return { sort_by: field?.toLowerCase(), desc: dir?.toLowerCase() !== 'asc' }
-}
-
-// ─── Pill styles (mirror AuctionListPage) ────────────────────────────────────
-
-const pillBase: React.CSSProperties = {
-  padding: '10px 24px',
-  borderRadius: 100,
-  fontSize: 14,
-  fontWeight: 600,
-  cursor: 'pointer',
-  transition: 'all 200ms ease',
-  border: '1px solid var(--color-border, rgba(255,255,255,0.1))',
-  background: 'var(--color-bg-surface, rgba(255,255,255,0.05))',
-  color: 'var(--color-text-primary, #e5e7eb)',
-  whiteSpace: 'nowrap',
-}
-
-const pillActive: React.CSSProperties = {
-  ...pillBase,
-  background: 'var(--color-accent, #3b82f6)',
-  borderColor: 'var(--color-accent, #3b82f6)',
-  color: '#fff',
-}
-
 // ─── Component ───────────────────────────────────────────────────────────────
+
+function mapSearchSortBy(sortBy: string | undefined): string | undefined {
+  switch (sortBy) {
+    case 'EndTime Asc': return 'ending_soon'
+    case 'CurrentPrice Asc': return 'price_asc'
+    case 'CurrentPrice Desc': return 'price_desc'
+    case 'BidCount Desc': return 'most_bids'
+    case 'CreatedAt Desc': return 'newest'
+    default: return 'newest'
+  }
+}
 
 export default function BrowseAuctionsPage() {
   const { t } = useTranslation('auction')
   const { t: tc } = useTranslation('common')
   const { isMobile, isTablet } = useBreakpoint()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false)
 
   const isNarrow = isMobile || isTablet
@@ -138,12 +105,22 @@ export default function BrowseAuctionsPage() {
   const validStatuses = Object.values(AuctionStatus) as string[]
   const initialStatus = rawStatus && validStatuses.includes(rawStatus) ? rawStatus : undefined
 
+  const rawAuctionType = searchParams.get('auctionType')
+  const validTypes = Object.values(AuctionType) as string[]
+  const initialAuctionType = rawAuctionType && validTypes.includes(rawAuctionType) ? rawAuctionType : undefined
+
+  const initialSortBy = searchParams.get('sortBy') ?? 'EndTime Asc'
+  const initialMinPrice = searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : null
+  const initialMaxPrice = searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : null
+
   // ── State ─────────────────────────────────────────────────────────────────
 
   const [filters, setFilters] = useState<AuctionFilterParams>({
     pageNumber: 1,
     pageSize: 12,
     status: initialStatus as AuctionStatus | undefined,
+    auctionType: initialAuctionType as AuctionType | undefined,
+    sortBy: initialSortBy,
   })
 
   // What the user is currently typing → drives suggest dropdown
@@ -157,8 +134,8 @@ export default function BrowseAuctionsPage() {
   const [categoryName, setCategoryName] = useState('')
 
   // Price filters (browse-mode only)
-  const [minPrice, setMinPrice] = useState<number | null>(null)
-  const [maxPrice, setMaxPrice] = useState<number | null>(null)
+  const [minPrice, setMinPrice] = useState<number | null>(initialMinPrice)
+  const [maxPrice, setMaxPrice] = useState<number | null>(initialMaxPrice)
 
   // ── Derived ───────────────────────────────────────────────────────────────
 
@@ -166,6 +143,8 @@ export default function BrowseAuctionsPage() {
 
   // Debounce input before passing to suggest hook — no manual timers needed
   const debouncedInput = useDebounce(inputValue, 300)
+  const debouncedMinPrice = useDebounce(minPrice, 600)
+  const debouncedMaxPrice = useDebounce(maxPrice, 600)
 
   // ── Data ──────────────────────────────────────────────────────────────────
 
@@ -173,21 +152,22 @@ export default function BrowseAuctionsPage() {
 
   const { data: browseData, isLoading: browseLoading } = useAuctions(
     !isSearchMode
-      ? { ...filters, categoryId: categoryId || undefined, minPrice: minPrice ?? undefined, maxPrice: maxPrice ?? undefined }
+      ? { ...filters, categoryId: categoryId || undefined, minPrice: debouncedMinPrice ?? undefined, maxPrice: debouncedMaxPrice ?? undefined }
       : undefined!,
     { refetchInterval: 30000 },
   )
 
-  const { sort_by, desc } = parseSortString(filters.sortBy)
   const { data: searchData, isLoading: searchLoading } = useSearchAuctions(
     {
-      q: committedSearch,
+      q: committedSearch || '*',
       page: filters.pageNumber,
       page_size: filters.pageSize,
-      sort_by,
-      desc,
+      sort_by: mapSearchSortBy(filters.sortBy),
       ...(categoryName ? { category: categoryName } : {}),
       ...(filters.status ? { status: filters.status } : {}),
+      ...(filters.auctionType ? { auction_type: filters.auctionType } : {}),
+      ...(debouncedMinPrice != null ? { min_price: debouncedMinPrice } : {}),
+      ...(debouncedMaxPrice != null ? { max_price: debouncedMaxPrice } : {}),
     },
     isSearchMode,
   )
@@ -205,7 +185,8 @@ export default function BrowseAuctionsPage() {
   }, [])
 
   const commitSearch = useCallback((value: string) => {
-    setCommittedSearch(value.trim())
+    const trimmed = value.trim()
+    setCommittedSearch(trimmed)
     setFilters((prev) => ({ ...prev, pageNumber: 1 }))
   }, [])
 
@@ -232,6 +213,19 @@ export default function BrowseAuctionsPage() {
     setCategoryName((categories ?? []).find((c) => c.id === value)?.name ?? '')
     setFilters((prev) => ({ ...prev, pageNumber: 1 }))
   }, [categories])
+
+  // URL Sync
+  useEffect(() => {
+    const params = new URLSearchParams()
+    if (committedSearch.trim()) params.set('search', committedSearch.trim())
+    if (categoryId) params.set('categoryId', categoryId)
+    if (filters.status) params.set('status', filters.status)
+    if (filters.auctionType) params.set('auctionType', filters.auctionType)
+    if (filters.sortBy && filters.sortBy !== 'EndTime Asc') params.set('sortBy', filters.sortBy)
+    if (debouncedMinPrice != null) params.set('minPrice', debouncedMinPrice.toString())
+    if (debouncedMaxPrice != null) params.set('maxPrice', debouncedMaxPrice.toString())
+    setSearchParams(params)
+  }, [committedSearch, categoryId, filters.status, filters.auctionType, filters.sortBy, debouncedMinPrice, debouncedMaxPrice, setSearchParams])
 
   // ── Options ───────────────────────────────────────────────────────────────
 
@@ -275,7 +269,8 @@ export default function BrowseAuctionsPage() {
           style={{ flex: 1 }}
           onChange={(val) => {
             setMinPrice(val)
-            setFilters((prev) => ({ ...prev, minPrice: val ?? undefined, pageNumber: 1 }))
+            if (maxPrice != null && val && val > maxPrice) setMinPrice(maxPrice)
+            setFilters((prev) => ({ ...prev, pageNumber: 1 }))
           }}
         />
         <InputNumber
@@ -286,7 +281,8 @@ export default function BrowseAuctionsPage() {
           style={{ flex: 1 }}
           onChange={(val) => {
             setMaxPrice(val)
-            setFilters((prev) => ({ ...prev, maxPrice: val ?? undefined, pageNumber: 1 }))
+            if (minPrice != null && val && val < minPrice) setMaxPrice(minPrice)
+            setFilters((prev) => ({ ...prev, pageNumber: 1 }))
           }}
         />
       </Flex>
@@ -298,9 +294,8 @@ export default function BrowseAuctionsPage() {
   return (
     <div
       style={{
-        maxWidth: isNarrow ? 1200 : 1440,
-        margin: '0 auto',
-        padding: isMobile ? '16px 12px 64px' : isTablet ? '24px 16px 64px' : '40px 24px 80px',
+        width: '100%',
+        padding: isMobile ? '16px 12px 64px' : isTablet ? '24px 16px 64px' : '40px 48px 80px',
       }}
     >
       {/* ── Header ── */}
@@ -329,85 +324,189 @@ export default function BrowseAuctionsPage() {
             {t('browse.subtitle')}
           </p>
         </div>
-        {!isMobile && (
-           <a href="#" style={{ color: 'var(--color-accent, #3b82f6)', fontWeight: 500, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
-              {t('viewAll', 'Xem tất cả')}
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 16, height: 16 }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
-           </a>
-        )}
+
       </div>
 
       {/* ════════════════════════════════════════════════════════════════════
           DESKTOP LAYOUT
-          Single filter bar: [status pills ····] [category] [type] [sort] [search]
+          Sidebar: [Search Widget] [Category Widget] [Status Widget] [Sort Widget]
           ════════════════════════════════════════════════════════════════════ */}
       {!isNarrow && (
-        <Flex wrap="wrap" justify="space-between" gap={16} align="center" style={{ marginBottom: 32 }}>
-          {/* Status pills - will auto grow to push right side, or stack cleanly if wrapped */}
-          <Flex gap={8} wrap="wrap" style={{ flex: '1 1 auto' }}>
-            {STATUS_PILLS.map((pill) => (
-              <button
-                key={pill.value}
-                type="button"
-                style={activeStatus === pill.value ? pillActive : pillBase}
-                onClick={() => updateFilter('status', pill.value)}
+        <Flex gap={32} align="flex-start" style={{ marginBottom: 32 }}>
+          {/* Left Sidebar */}
+          <div 
+            className="hide-scrollbar"
+            style={{
+              width: 280,
+              flexShrink: 0,
+              position: 'sticky',
+              top: 100,
+              maxHeight: 'calc(100vh - 120px)',
+              overflowY: 'auto',
+              paddingRight: 8,
+            }}
+          >
+            <div style={{
+              marginBottom: 24,
+              background: 'rgba(255, 255, 255, 0.05)',
+              borderRadius: 100,
+              border: '1px solid var(--color-border-light)',
+              overflow: 'hidden',
+              transition: 'all 0.3s ease',
+            }}>
+              <AutoComplete
+                options={suggestOptions}
+                value={inputValue}
+                onChange={handleInputChange}
+                onSelect={handleSelect}
+                style={{ width: '100%' }}
+                popupMatchSelectWidth={false}
               >
-                {pill.label}
-              </button>
-            ))}
-          </Flex>
+                <Input
+                  prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)', marginRight: 8 }} />}
+                  placeholder={t('searchPlaceholder')}
+                  onPressEnter={handlePressEnter}
+                  allowClear
+                  onClear={() => handleInputChange('')}
+                  size="large"
+                  variant="borderless"
+                  style={{
+                    height: 52,
+                    fontSize: 15,
+                    background: 'transparent',
+                  }}
+                />
+              </AutoComplete>
+            </div>
 
-          {/* Right Side: Selects + Search */}
-          <Flex gap={12} align="center" wrap="wrap">
-            {/* Category */}
-            <Select
-              style={{ minWidth: 160 }}
-              options={categoryOptions}
-              value={categoryId}
-              onChange={handleCategoryChange}
-              variant="borderless"
-              popupMatchSelectWidth={false}
-            />
-
-            {/* Auction type */}
-            <Select
-              style={{ minWidth: 130 }}
-              options={AUCTION_TYPE_OPTIONS}
-              value={filters.auctionType ?? ''}
-              onChange={(v) => updateFilter('auctionType', v)}
-              variant="borderless"
-              popupMatchSelectWidth={false}
-            />
-
-            {/* Sort */}
-            <Select
-              style={{ minWidth: 160 }}
-              options={SORT_OPTIONS}
-              value={filters.sortBy ?? 'EndTime Asc'}
-              onChange={(v) => updateFilter('sortBy', v)}
-              variant="borderless"
-              popupMatchSelectWidth={false}
-            />
-
-            {/* Search with autocomplete */}
-            <AutoComplete
-              options={suggestOptions}
-              value={inputValue}
-              onChange={handleInputChange}
-              onSelect={handleSelect}
-              style={{ width: 220, borderRadius: 100, overflow: 'hidden' }}
-              popupMatchSelectWidth={false}
-            >
-              <Input
-                prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
-                placeholder={t('searchPlaceholder')}
-                onPressEnter={handlePressEnter}
-                allowClear
-                onClear={() => handleInputChange('')}
-                style={{ borderRadius: 100, height: 40, borderColor: 'var(--color-border)' }}
+            <FilterWidget title={t('browse.allCategories', 'Danh mục')} icon={<AppstoreOutlined />}>
+              <Select
+                style={{ width: '100%' }}
+                options={categoryOptions}
+                value={categoryId}
+                onChange={handleCategoryChange}
+                size="large"
+                variant="filled"
+                popupMatchSelectWidth={false}
               />
-            </AutoComplete>
-          </Flex>
+            </FilterWidget>
+
+            <FilterWidget title={t('browse.filterState', 'Trạng thái')} icon={<CheckCircleOutlined />} noPadding>
+              <Flex vertical>
+                {STATUS_PILLS.map((pill, idx) => {
+                  const isActive = activeStatus === pill.value;
+                  return (
+                    <div
+                      key={pill.value}
+                      onClick={() => updateFilter('status', pill.value)}
+                      style={{
+                        padding: '14px 20px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                        borderBottom: idx < STATUS_PILLS.length - 1 ? '1px solid var(--color-border)' : 'none',
+                        background: isActive ? 'var(--color-accent-light)' : 'transparent',
+                        transition: 'background 0.2s',
+                      }}
+                    >
+                      <div style={{
+                        width: 18, height: 18,
+                        borderRadius: '50%',
+                        border: `2px solid ${isActive ? 'var(--color-accent)' : 'var(--color-border)'}`,
+                        display: 'flex', justifyContent: 'center', alignItems: 'center'
+                      }}>
+                        {isActive && <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--color-accent)' }} />}
+                      </div>
+                      <span style={{
+                        fontSize: 14,
+                        fontWeight: isActive ? 600 : 500,
+                        color: isActive ? 'var(--color-accent)' : 'var(--color-text-primary)'
+                      }}>
+                        {pill.label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </Flex>
+            </FilterWidget>
+
+            <FilterWidget title={t('browse.filterType', 'Hình thức')} icon={<TagOutlined />}>
+              <Select
+                style={{ width: '100%' }}
+                options={AUCTION_TYPE_OPTIONS}
+                value={filters.auctionType ?? ''}
+                onChange={(v) => updateFilter('auctionType', v)}
+                size="large"
+                variant="filled"
+                popupMatchSelectWidth={false}
+              />
+            </FilterWidget>
+
+            <FilterWidget title={t('browse.filterSort', 'Sắp xếp')} icon={<SortAscendingOutlined />}>
+              <Select
+                style={{ width: '100%' }}
+                options={SORT_OPTIONS}
+                value={filters.sortBy ?? 'EndTime Asc'}
+                onChange={(v) => updateFilter('sortBy', v)}
+                size="large"
+                variant="filled"
+                popupMatchSelectWidth={false}
+              />
+            </FilterWidget>
+
+            <Button
+              type="text"
+              icon={<ClearOutlined />}
+              onClick={() => {
+                setCategoryId('')
+                setCategoryName('')
+                setMinPrice(null)
+                setMaxPrice(null)
+                setFilters({ pageNumber: 1, pageSize: 12, sortBy: 'EndTime Asc' })
+              }}
+              style={{ width: '100%', marginBottom: 20, color: 'var(--color-text-secondary)' }}
+            >
+              {tc('action.clearFilters')}
+            </Button>
+          </div>
+
+          {/* Right Grid Content */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {isLoading ? (
+              <Row gutter={[16, 16]}>
+                {[...Array(6)].map((_, i) => (
+                  <Col key={i} xs={24} sm={12} md={12} xl={8}>
+                    <div className="oio-skeleton" style={{ aspectRatio: '3/4', borderRadius: 8 }} />
+                  </Col>
+                ))}
+              </Row>
+            ) : !data?.items?.length ? (
+              <EmptyState title={t('noAuctions')} />
+            ) : (
+              <>
+                <div
+                  className="oio-stagger"
+                  style={{ display: 'grid', gridTemplateColumns: isTablet ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 24 }}
+                >
+                  {data.items.map((auction: AuctionListItemDto) => (
+                    <AuctionCard key={auction.id} auction={auction} />
+                  ))}
+                </div>
+
+                <Flex justify="center" style={{ marginTop: 64 }}>
+                  <Pagination
+                    current={data.metadata.currentPage}
+                    pageSize={data.metadata.pageSize}
+                    total={data.metadata.totalCount}
+                    showSizeChanger={true}
+                    showTotal={(total) => tc('pagination.total', { total })}
+                    onChange={(p, ps) => setFilters((prev) => ({ ...prev, pageNumber: p, pageSize: ps }))}
+                  />
+                </Flex>
+              </>
+            )}
+          </div>
         </Flex>
       )}
 
@@ -512,51 +611,41 @@ export default function BrowseAuctionsPage() {
         </>
       )}
 
-      {/* ── Grid ── */}
-      {isLoading ? (
-        <Row gutter={[16, 16]}>
-          {[...Array(isMobile ? 4 : 8)].map((_, i) => (
-            <Col key={i} xs={12} sm={12} md={8} xl={6}>
-              <div className="oio-skeleton" style={{ aspectRatio: '3/4', borderRadius: 8 }} />
-            </Col>
-          ))}
-        </Row>
-      ) : !data?.items?.length ? (
-        <EmptyState title={t('noAuctions')} />
-      ) : (
-        <>
-          {!isNarrow ? (
-            <div
-              className="oio-stagger"
-              style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 32 }}
-            >
-              {data.items.map((auction) => (
-                <AuctionCard key={auction.id} auction={auction} />
-              ))}
-            </div>
-          ) : (
+      {/* ── Grid Mobile ── */}
+      {isNarrow && (
+        isLoading ? (
+          <Row gutter={[16, 16]}>
+            {[...Array(isMobile ? 4 : 8)].map((_, i) => (
+              <Col key={i} xs={12} sm={12} md={8} xl={6}>
+                <div className="oio-skeleton" style={{ aspectRatio: '3/4', borderRadius: 8 }} />
+              </Col>
+            ))}
+          </Row>
+        ) : !data?.items?.length ? (
+          <EmptyState title={t('noAuctions')} />
+        ) : (
+          <>
             <Row className="oio-stagger" gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]}>
-              {data.items.map((auction) => (
+              {data.items.map((auction: AuctionListItemDto) => (
                 <Col key={auction.id} xs={24} sm={12} md={8} xl={6}>
                   <AuctionCard auction={auction} />
                 </Col>
               ))}
             </Row>
-          )}
-
-          {/* Pagination */}
-          <Flex justify="center" style={{ marginTop: isNarrow ? (isMobile ? 28 : 48) : 64 }}>
-            <Pagination
-              current={data.metadata.currentPage}
-              pageSize={data.metadata.pageSize}
-              total={data.metadata.totalCount}
-              showSizeChanger={!isMobile}
-              showTotal={isMobile ? undefined : (total) => tc('pagination.total', { total })}
-              onChange={(p, ps) => setFilters((prev) => ({ ...prev, pageNumber: p, pageSize: ps }))}
-              size={isMobile ? 'small' : undefined}
-          />
-          </Flex>
-        </>
+            {/* Pagination */}
+            <Flex justify="center" style={{ marginTop: isMobile ? 28 : 48 }}>
+              <Pagination
+                current={data.metadata.currentPage}
+                pageSize={data.metadata.pageSize}
+                total={data.metadata.totalCount}
+                showSizeChanger={!isMobile}
+                showTotal={isMobile ? undefined : (total) => tc('pagination.total', { total })}
+                onChange={(p, ps) => setFilters((prev) => ({ ...prev, pageNumber: p, pageSize: ps }))}
+                size={isMobile ? 'small' : undefined}
+              />
+            </Flex>
+          </>
+        )
       )}
     </div>
   )

@@ -23,6 +23,7 @@ import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/queryClient'
 import apiClient from '@/lib/axios'
+import { useAppSelector } from '@/app/store'
 import type { TermsDocumentDto } from '@/types'
 
 // ── Types ──────────────────────────────────────────────────────────────
@@ -95,8 +96,28 @@ export default function TermsPage() {
   const { t } = useTranslation('common')
   const { isMobile } = useBreakpoint()
   const { message } = App.useApp()
+  const accessToken = useAppSelector((state) => state.auth.accessToken)
 
-  const { data: activeTerms, isLoading: termsLoading } = useActiveTerms()
+  const roles = useMemo(() => {
+    if (!accessToken) return []
+    try {
+      const payload = JSON.parse(atob(accessToken.split('.')[1]))
+      const r: string[] = Array.isArray(payload.role) ? payload.role : payload.role ? [payload.role] : []
+      return r.map((role) => role.toLowerCase())
+    } catch {
+      return []
+    }
+  }, [accessToken])
+
+  const { data: activeTermsRaw, isLoading: termsLoading } = useActiveTerms()
+  
+  const activeTerms = useMemo(() => {
+    if (!activeTermsRaw) return []
+    const universalTypes = new Set(['platform', 'bidder', 'privacy', 'other'])
+    const userRoles = new Set(roles)
+    return activeTermsRaw.filter(t => universalTypes.has(t.type) || userRoles.has(t.type))
+  }, [activeTermsRaw, roles])
+
   const { data: acceptedTerms, isLoading: acceptedLoading } = useMyAcceptedTerms()
   const acceptMutation = useAcceptTerms()
 

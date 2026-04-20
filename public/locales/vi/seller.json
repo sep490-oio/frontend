@@ -126,7 +126,18 @@
     "searchPlaceholder": "Tìm kiếm người bán...",
     "noResults": "Không tìm thấy người bán",
     "trust": "Uy tín",
-    "sales": "đã bán"
+    "sales": "đã bán",
+    "filterRating": "Đánh giá cửa hàng",
+    "ratingAll": "Tất cả đánh giá",
+    "rating4Plus": "Từ 4 sao trở lên",
+    "rating5Star": "5 sao (Uy tín)",
+    "filterType": "Loại hình Cửa hàng",
+    "typeOfficial": "Cửa hàng chính hãng",
+    "typePersonal": "Cá nhân",
+    "filterSort": "Sắp xếp",
+    "sortPopular": "Nổi bật nhất",
+    "sortNewest": "Tham gia gần đây",
+    "sortItemsDesc": "Nhiều sản phẩm nhất"
   },
   "public": {
     "verified": "Đã xác minh",

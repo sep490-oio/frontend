@@ -17,6 +17,7 @@ interface SealedBidPanelProps {
   isTerminal: boolean
   sealedBidInfo?: SealedBidInfoDto | null
   isSeller: boolean
+  canBid?: boolean
 }
 
 export function SealedBidPanel({
@@ -28,6 +29,7 @@ export function SealedBidPanel({
   isTerminal,
   sealedBidInfo,
   isSeller,
+  canBid = false,
 }: SealedBidPanelProps) {
   const { t } = useTranslation('auction')
   const [amount, setAmount] = useState<number | null>(null)
@@ -134,6 +136,7 @@ export function SealedBidPanel({
 
   // ── Submit form (active, not submitted) ──
   if (!isActive) return null
+  if (!canBid) return null
 
   return (
     <Card

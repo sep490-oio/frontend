@@ -204,7 +204,10 @@ export function TopUpWalletModal({ open, onClose, currency = 'VND' }: Props) {
             addonAfter={currency}
             placeholder={t('topupAmountPlaceholder', '100,000')}
             formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
-            parser={(v) => Number((v ?? '').replace(/,/g, ''))}
+            parser={(v) => {
+              const parsed = (v ?? '').replace(/\$\s?|(,*)/g, '')
+              return parsed ? Number(parsed) : null as any
+            }}
           />
           {/* Quick-pick chips */}
           <Flex gap={8} wrap="wrap" style={{ marginTop: 10 }}>

@@ -154,36 +154,52 @@ export default function WatchlistPage() {
             {sortedItems.map((item) => (
               <Col xs={12} sm={12} md={8} lg={6} key={item.auctionId}>
                 <div
+                  className="oio-press group"
+                  onClick={() => navigate(`/auctions/${item.auctionId}`)}
                   style={{
-                    background: 'var(--color-bg-card)',
-                    borderRadius: 8,
-                    border: '1px solid var(--color-border-light)',
-                    overflow: 'hidden',
-                    height: '100%',
+                    cursor: 'pointer',
+                    background: 'var(--color-bg-card, #11141b)',
+                    border: '1px solid var(--color-border, rgba(255,255,255,0.05))',
+                    borderRadius: isMobile ? 16 : 24,
+                    padding: isMobile ? 10 : 16,
+                    transition: 'all 0.3s ease',
+                    outline: 'none',
                     display: 'flex',
                     flexDirection: 'column',
-                    transition: 'transform 200ms ease, box-shadow 200ms ease',
+                    height: '100%',
                   }}
-                  className="oio-card-hover"
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--color-accent, rgba(59, 130, 246, 0.5))';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--color-border, rgba(255,255,255,0.05))';
+                  }}
                 >
                   {/* Image */}
                   <div
-                    onClick={() => navigate(`/auctions/${item.auctionId}`)}
                     style={{
-                      cursor: 'pointer',
                       position: 'relative',
-                      aspectRatio: '4/5',
+                      borderRadius: isMobile ? 12 : 16,
                       overflow: 'hidden',
-                      background: 'var(--color-bg-surface)',
+                      aspectRatio: isMobile ? '16/10' : '4/5',
+                      marginBottom: isMobile ? 16 : 24,
+                      background: 'var(--color-bg-surface, #1f2937)',
                       flexShrink: 0,
                     }}
-                    className="oio-image-zoom"
                   >
                     {item.primaryImageUrl ? (
                       <img
                         alt={item.itemTitle}
                         src={item.primaryImageUrl}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          display: 'block',
+                          transition: 'transform 0.5s ease',
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                       />
                     ) : (
                       <div
@@ -206,83 +222,85 @@ export default function WatchlistPage() {
                       onClick={(e) => { e.stopPropagation(); handleUnwatch(item.auctionId) }}
                       style={{
                         position: 'absolute',
-                        top: 8,
-                        right: 8,
-                        zIndex: 10,
+                        top: 12,
+                        right: 12,
                         width: 32,
                         height: 32,
                         borderRadius: '50%',
-                        border: 'none',
-                        background: 'rgba(255,255,255,0.9)',
-                        backdropFilter: 'blur(4px)',
-                        cursor: 'pointer',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        background: 'rgba(0, 0, 0, 0.4)',
+                        color: '#ef4444',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        boxShadow: '0 1px 4px rgba(0,0,0,0.12)',
+                        cursor: 'pointer',
+                        fontSize: 16,
+                        transition: 'all 200ms ease',
+                        backdropFilter: 'blur(8px)',
+                        zIndex: 10,
                       }}
                       title={t('removeFromWatchlist', 'Remove')}
                     >
-                      <HeartFilled style={{ color: 'var(--color-danger)', fontSize: 14 }} />
+                      <HeartFilled />
                     </button>
 
-                    {/* Status badge */}
-                    <div style={{ position: 'absolute', top: 8, left: 8 }}>
-                      <StatusBadge status={item.auctionStatus} size="small" />
+                    {/* Status badge & Timer */}
+                    <div style={{ position: 'absolute', bottom: 12, left: 12, right: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', zIndex: 10 }}>
+                      <div style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', padding: '2px 8px', borderRadius: 100, border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center' }}>
+                        <StatusBadge status={item.auctionStatus} size="small" />
+                      </div>
+                      {item.endTime && (
+                        <div style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', padding: '4px 10px', borderRadius: 100, border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center' }}>
+                          <CountdownTimer endTime={item.endTime} size="small" />
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   {/* Info */}
-                  <div style={{ padding: isMobile ? '10px 10px 8px' : 12, flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <div
+                  <div onClick={(e) => e.stopPropagation()} style={{ padding: '0 8px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+                    <h3
                       onClick={() => navigate(`/auctions/${item.auctionId}`)}
                       style={{
-                        cursor: 'pointer',
-                        fontSize: isMobile ? 12 : 14,
-                        fontWeight: 500,
-                        color: 'var(--color-text-primary)',
-                        lineHeight: 1.35,
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
+                        fontWeight: 700,
+                        fontSize: isMobile ? 14 : 18,
+                        marginBottom: 16,
+                        color: 'var(--color-text-primary, #f3f4f6)',
+                        whiteSpace: 'nowrap',
                         overflow: 'hidden',
-                        flex: 1,
+                        textOverflow: 'ellipsis',
+                        cursor: 'pointer',
+                        margin: 0,
                       }}
                     >
                       {item.itemTitle}
-                    </div>
+                    </h3>
 
-                    <div
-                      style={{
-                        fontFamily: MONO_FONT,
-                        fontSize: isMobile ? 14 : 16,
-                        fontWeight: 600,
-                        color: 'var(--color-accent)',
-                      }}
-                    >
-                      {formatCurrency(item.currentPrice?.amount ?? 0, item.currency)}
-                    </div>
-
-                    {item.endTime && (
-                      <div style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
-                        <CountdownTimer endTime={item.endTime} size="small" />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto', paddingTop: 0 }}>
+                      <div>
+                        <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
+                          {t('currentPrice', 'Current Price')}
+                        </div>
+                        <div className="oio-price" style={{ fontSize: 16, color: 'var(--color-accent, #3494f8)', fontWeight: 700, fontFamily: MONO_FONT }}>
+                          {formatCurrency(item.currentPrice?.amount ?? 0, item.currency)}
+                        </div>
                       </div>
-                    )}
+                    </div>
 
                     {/* Notification prefs */}
                     <div
                       style={{
                         display: 'flex',
                         gap: isMobile ? 8 : 12,
-                        borderTop: '1px solid var(--color-border-light)',
-                        paddingTop: 8,
-                        marginTop: 4,
+                        borderTop: '1px solid var(--color-border, rgba(255,255,255,0.05))',
+                        paddingTop: 16,
+                        marginTop: 16,
                         flexWrap: 'wrap',
                       }}
                     >
                       <Tooltip title={t('notifyOnBid', 'Notify on new bids')}>
-                        <Space size={4} style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
-                          <BellOutlined style={{ fontSize: 11 }} />
+                        <div style={{ gap: 6, display: 'flex', alignItems: 'center', fontSize: 12, color: 'var(--color-text-secondary)' }}>
+                          <BellOutlined style={{ fontSize: 12 }} />
                           <span>{t('bids', 'Bids')}</span>
                           <Switch
                             size="small"
@@ -290,11 +308,11 @@ export default function WatchlistPage() {
                             onChange={(v) => handleToggleNotify(item, 'notifyOnBid', v)}
                             loading={prefsMutation.isPending}
                           />
-                        </Space>
+                        </div>
                       </Tooltip>
                       <Tooltip title={t('notifyOnEnd', 'Notify when auction ends')}>
-                        <Space size={4} style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
-                          <BellOutlined style={{ fontSize: 11 }} />
+                        <div style={{ gap: 6, display: 'flex', alignItems: 'center', fontSize: 12, color: 'var(--color-text-secondary)' }}>
+                          <BellOutlined style={{ fontSize: 12 }} />
                           <span>{t('endTime', 'End')}</span>
                           <Switch
                             size="small"
@@ -302,7 +320,7 @@ export default function WatchlistPage() {
                             onChange={(v) => handleToggleNotify(item, 'notifyOnEnd', v)}
                             loading={prefsMutation.isPending}
                           />
-                        </Space>
+                        </div>
                       </Tooltip>
                     </div>
                   </div>

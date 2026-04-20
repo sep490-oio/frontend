@@ -13,7 +13,6 @@ import {
   Form,
   Breadcrumb,
   Input,
-  Popconfirm,
   DatePicker,
   Flex,
 } from 'antd'
@@ -219,16 +218,32 @@ export default function AuctionDetailPage() {
   // Qualification status — check localStorage + URL param after VnPay return
   const [searchParams] = useSearchParams()
   const depositedParam = searchParams.get('deposited') === 'true'
-  const storageKey = id ? `oio_qualified_${id}` : ''
+
+  // User-scoped storage key prevents leaked qualification state between accounts on the same machine.
+  // When no user is logged in, we use a guest-scoped key.
+  const storageKey = useMemo(() => {
+    if (!id) return ''
+    const userId = currentUser?.id ?? 'guest'
+    return `oio_qualified_${userId}_${id}`
+  }, [id, currentUser?.id])
 
   const [isQualified, setIsQualified] = useState(() => {
-    if (!id) return false
+    if (!storageKey) return false
     return localStorage.getItem(storageKey) === 'true'
   })
 
+  // Re-read qualification from storage when the user context changes
+  useEffect(() => {
+    if (storageKey) {
+      setIsQualified(localStorage.getItem(storageKey) === 'true')
+    } else {
+      setIsQualified(false)
+    }
+  }, [storageKey])
+
   // If returning from VnPay deposit with success flag, mark qualified
   useEffect(() => {
-    if (depositedParam && id) {
+    if (depositedParam && id && storageKey) {
       localStorage.setItem(storageKey, 'true')
       setIsQualified(true)
       // Clean URL params
@@ -238,21 +253,32 @@ export default function AuctionDetailPage() {
     }
   }, [depositedParam, id, storageKey])
 
+  // Sync qualification status with server data
   useEffect(() => {
-    if (!id || !data?.currentUserParticipant?.qualificationStatus) return
+    if (!id || !storageKey || !isAuthenticated) return
 
-    const qualificationStatus = data.currentUserParticipant.qualificationStatus
-    if (qualificationStatus === 'qualified' || qualificationStatus === 'waived') {
-      localStorage.setItem(storageKey, 'true')
-      setIsQualified(true)
+    // Special case: if data is loaded but user has no participant record, they are not qualified.
+    // Important: we must ensure data is actually loaded (not currently fetching for the first time).
+    if (data && !isLoading && !data.currentUserParticipant) {
+      localStorage.removeItem(storageKey)
+      setIsQualified(false)
       return
     }
 
-    if (qualificationStatus === 'rejected' || qualificationStatus === 'expired') {
+    const qualificationStatus = data?.currentUserParticipant?.qualificationStatus
+    if (!qualificationStatus) return
+
+    if (qualificationStatus === 'qualified' || qualificationStatus === 'waived') {
+      localStorage.setItem(storageKey, 'true')
+      setIsQualified(true)
+    } else if (qualificationStatus === 'rejected' || qualificationStatus === 'expired') {
+      // Only forcefully clear the optimistic flag if definitively rejected/expired
       localStorage.removeItem(storageKey)
       setIsQualified(false)
     }
-  }, [data?.currentUserParticipant?.qualificationStatus, id, storageKey])
+    // We intentionally ignore 'pending' or 'none' to avoid wiping out the optimistic
+    // flag during webhook/cache latency windows right after a successful deposit.
+  }, [data, id, storageKey, isAuthenticated, isLoading])
 
   // Sync isWatching from API response
   useEffect(() => {
@@ -368,10 +394,20 @@ export default function AuctionDetailPage() {
 
   // Push each bid event into the aggregator
   useEffect(() => {
-    if (hub.lastBid && aggregatorRef.current) {
-      aggregatorRef.current.push(hub.lastBid)
+    if (hub.lastBid) {
+      // Special treatment for the current user's own auto-bid
+      if (currentUser?.id && hub.lastBid.bidderId === currentUser.id && hub.lastBid.isAutoBid) {
+        message.success({
+          content: `🤖 ${t('yourAutoBidPlaced', 'Your auto-bid placed')}: ${formatCurrency(hub.lastBid.amount, currency)}`,
+          duration: 4,
+        })
+        return
+      }
+      if (aggregatorRef.current) {
+        aggregatorRef.current.push(hub.lastBid)
+      }
     }
-  }, [hub.lastBid])
+  }, [hub.lastBid, currentUser?.id, currency, message, t])
 
   useEffect(() => {
     if (hub.outbid) {
@@ -459,27 +495,56 @@ export default function AuctionDetailPage() {
     return () => window.clearTimeout(timeout)
   }, [auction, auction?.qualificationEndAt, auction?.qualificationStartAt, qualificationBoundaryTick])
 
-  // Prefer server-sourced qualification status over localStorage
+  // Prefer server-sourced qualification status over localStorage when available
   const serverQualStatus = data?.currentUserParticipant?.qualificationStatus
-  const qualState = useMemo(
-    () => {
-      // If server provides qualification status, use it directly
-      if (serverQualStatus === 'qualified' || serverQualStatus === 'waived') return 'qualified' as QualificationState
-      if (serverQualStatus === 'rejected') return 'window_closed' as QualificationState
-      if (serverQualStatus === 'expired') return 'window_closed' as QualificationState
+  const qualState = useMemo(() => {
+    // 1. If we are the seller, we are never "qualified" in the bidding sense
+    if (isAuthenticated && currentUser?.id === sellerId) return 'is_seller' as QualificationState
 
-      // Otherwise fall back to client-side computation (for backward compatibility until BE is updated)
-      return auction
-        ? computeQualificationState(
-          { ...auction, sellerId: item?.sellerId ?? auction.sellerId ?? '' },
-          currentUser?.id,
-          isQualified,
-        )
-        : ('before_window' as QualificationState)
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [auction, item, currentUser?.id, isQualified, qualificationBoundaryTick, serverQualStatus],
-  )
+    // 2. If the server provides an explicit status for the current user, use it as the source of truth
+    if (isAuthenticated && serverQualStatus) {
+      if (serverQualStatus === 'qualified' || serverQualStatus === 'waived') return 'qualified' as QualificationState
+      
+      // Trust the optimistic flag to mask caching/webhook delays right after deposit
+      if (isQualified) return 'qualified' as QualificationState
+
+      // If server says they are clearly not qualified (pending, rejected, etc.), return a boundary state
+      if (
+        (serverQualStatus as any) === 'rejected' ||
+        (serverQualStatus as any) === 'expired' ||
+        (serverQualStatus as any) === 'none' ||
+        (serverQualStatus as any) === 'pending'
+      ) {
+        // Fall back to window calculation but NOT to 'qualified'
+        const base = auction
+          ? computeQualificationState(
+            { ...auction, sellerId: item?.sellerId ?? auction.sellerId ?? '' },
+            currentUser?.id,
+            false, // Don't use local storage qualified flag if server has a participant record
+          )
+          : 'before_window'
+        return base === 'qualified' ? 'window_open' : base // Ensure we don't return 'qualified'
+      }
+    }
+
+    // 3. Fallback for guests or initial loads: trust localStorage ONLY for guests or very early loads
+    return auction
+      ? computeQualificationState(
+        { ...auction, sellerId: item?.sellerId ?? auction.sellerId ?? '' },
+        currentUser?.id,
+        isQualified,
+      )
+      : ('before_window' as QualificationState)
+  }, [
+    auction,
+    item,
+    currentUser?.id,
+    isQualified,
+    qualificationBoundaryTick,
+    serverQualStatus,
+    isAuthenticated,
+    sellerId,
+  ])
 
   // ── Handlers ────────────────────────────────────────────────────
 
@@ -520,6 +585,14 @@ export default function AuctionDetailPage() {
             ...old.auction,
             currentPrice: { ...old.auction.currentPrice, amount: effectiveAmount },
             bidCount: (old.auction.bidCount ?? 0) + 1,
+          },
+          currentUserBidState: {
+            ...old.currentUserBidState,
+            position: result.wasImmediatelyOutbid ? 'outbid' : 'leading',
+            isCurrentWinner: !result.wasImmediatelyOutbid,
+            latestBidAmount: effectiveAmount,
+            latestBidAt: new Date().toISOString(),
+            hasAutoBid: old.currentUserBidState?.hasAutoBid ?? false,
           },
         } : old,
       )
@@ -901,6 +974,7 @@ export default function AuctionDetailPage() {
               sellerUsername={sellerProfile?.storeName}
               qaConnected={hub.connected}
               qaLastSyncedAt={hub.lastSyncedAt}
+              currentUserId={currentUser?.id}
             />
           </div>
         </Col>
@@ -982,6 +1056,7 @@ export default function AuctionDetailPage() {
                 ? () => navigate(`/checkout/${winnerPayNowOrderId}`)
                 : undefined
             }
+            canBid={isActive && isAuthenticated && qualState === 'qualified' && !isSeller}
             currentBuyerOrder={data?.currentBuyerOrder}
             onViewOrderClick={(orderId) => navigate(`/me/orders/${orderId}`)}
             isOrderProvisioning={pollingForOrder}
@@ -1020,72 +1095,6 @@ export default function AuctionDetailPage() {
         </Col>
       </Row>
 
-      {/* Sticky mobile bid bar */}
-      {!isDesktop && isActive && qualState === 'qualified' && (
-        <div
-          style={{
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            zIndex: 100,
-            background: 'var(--color-bg-card)',
-            borderTop: '1px solid var(--color-border)',
-            padding: '12px 16px',
-            paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
-          }}
-        >
-          {data?.currentUserBidState?.position === 'outbid' && (
-            <div style={{ marginBottom: 8, textAlign: 'center' }}>
-              <Typography.Text style={{ color: 'var(--color-danger)', fontWeight: 600, fontSize: 13 }}>
-                {t('positionOutbid', 'You have been outbid')}
-              </Typography.Text>
-            </div>
-          )}
-          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 8 }}>
-            <InputNumber
-              style={{ flex: 1, width: '100%', height: 44 }}
-              size="large"
-              min={minBid}
-              step={auction?.bidIncrement?.amount ?? 10000}
-              value={bidAmount}
-              onChange={(v) => setBidAmount(v)}
-              placeholder={formatCurrency(minBid, currency)}
-              addonAfter={currency}
-              status={bidAmount != null && bidAmount < minBid ? 'error' : undefined}
-            />
-            <Popconfirm
-              title={t('confirmBidTitle', 'Confirm your bid')}
-              description={`${t('bidAmount', 'Bid')}: ${formatCurrency(bidAmount ?? 0, currency)}`}
-              onConfirm={handlePlaceBid}
-              okText={t('confirmBid', 'Confirm')}
-              cancelText={t('cancel', 'Cancel')}
-              okButtonProps={{ loading: placeBidMutation.isPending }}
-              disabled={!bidAmount || bidAmount < minBid || placeBidMutation.isPending}
-            >
-              <Button
-                type="primary"
-                block={isMobile}
-                loading={placeBidMutation.isPending}
-                disabled={!bidAmount || bidAmount < minBid}
-                style={{
-                  height: 44,
-                  padding: isMobile ? undefined : '0 32px',
-                  fontWeight: 500,
-                  background: 'var(--color-accent)',
-                  borderColor: 'var(--color-accent)',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {t('bid', 'Bid')}
-              </Button>
-            </Popconfirm>
-          </div>
-          <Typography.Text style={{ fontSize: 11, color: 'var(--color-text-secondary)', display: 'block', marginTop: 4, textAlign: 'center' }}>
-            {t('minimumBid', 'Min')}: {formatCurrency(minBid, currency)}
-          </Typography.Text>
-        </div>
-      )}
 
       {/* Buy-Now Cap Modal — shown when a bid crossed the buy-now ceiling and was capped to buyNowPrice */}
       <Modal

@@ -112,8 +112,8 @@
     "title": "Explore Auctions",
     "subtitle": "Search and filter auctions by category, status, and price",
     "allTypes": "All types",
-    "typeRegular": "Regular",
-    "typeSealed": "Sealed",
+    "typeRegular": "Regular Auction",
+    "typeSealed": "Sealed Auction",
     "sortEndingSoon": "Ending soon",
     "sortPriceLowHigh": "Price: Low to High",
     "sortPriceHighLow": "Price: High to Low",
@@ -126,7 +126,10 @@
     "allCategories": "All categories",
     "filterDrawerTitle": "Filters",
     "applyFilters": "Apply",
-    "filters": "Filters"
+    "filters": "Filters",
+    "filterState": "Status",
+    "filterType": "Auction Type",
+    "filterSort": "Sort By"
   },
   "heroTitle": "Own a masterpiece —",
   "heroHighlight": "Professionally verified",
@@ -492,5 +495,6 @@
   "removedFromWatchlist": "Removed from watchlist",
   "removeFromWatchlist": "Remove",
   "notifyOnBid": "Notify on new bids",
-  "notifyOnEnd": "Notify when auction ends"
+  "notifyOnEnd": "Notify when auction ends",
+  "you": "You"
 }

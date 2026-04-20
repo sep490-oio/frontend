@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Outlet, useNavigate, useLocation, Link } from 'react-router'
-import { Layout, Avatar, Dropdown, Button, Space, Drawer, Input } from 'antd'
+import { Layout, Avatar, Dropdown, Button, Space, Drawer, Input, AutoComplete } from 'antd'
 import {
   UserOutlined,
   LogoutOutlined,
@@ -26,6 +26,7 @@ import { useAppSelector } from '@/app/store'
 import { NotificationDropdown } from '@/features/notification/components/NotificationDropdown'
 import { TermsAcceptanceModal } from '@/components/terms/TermsAcceptanceModal'
 import { useActiveTermsByType, useAcceptedTerms, useCurrentUser } from '@/features/user/api'
+import { useSuggestAuctions } from '@/features/auction/api'
 import { SERIF_FONT, SANS_FONT } from '@/styles/tokens'
 
 function getRolesFromToken(token: string | null): string[] {
@@ -57,11 +58,16 @@ export function AppLayout() {
 
   const isNarrow = isMobile || isTablet
 
-  useEffect(() => {
-    if (debouncedSearch.trim()) {
-      navigate('/auctions?search=' + encodeURIComponent(debouncedSearch.trim()))
+  const { data: suggestions } = useSuggestAuctions(debouncedSearch)
+  const suggestOptions = (suggestions ?? []).map((s: string) => ({ value: s, label: s }))
+
+  const handleSearchSelect = (val: string) => {
+    setSearchQuery(val)
+    if (val.trim()) {
+      setMobileMenuOpen(false)
+      navigate('/auctions?search=' + encodeURIComponent(val.trim()))
     }
-  }, [debouncedSearch, navigate])
+  }
 
   // Platform terms — preview-first modal (no route redirect). The user can
   // dismiss the modal and keep browsing; gated actions still require acceptance
@@ -187,7 +193,7 @@ export function AppLayout() {
         }}
       >
         {/* Left: Hamburger (mobile/tablet) + Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, flex: 1, minWidth: 0 }}>
           {isNarrow && (
             <Button
               type="text"
@@ -219,9 +225,8 @@ export function AppLayout() {
             style={{
               display: 'flex',
               gap: isTablet ? 20 : 32,
-              position: 'absolute',
-              left: '50%',
-              transform: 'translateX(-50%)',
+              justifyContent: 'center',
+              flexShrink: 0,
             }}
           >
             {navLinks.map((link) => (
@@ -245,27 +250,43 @@ export function AppLayout() {
         )}
 
         {/* Right: Actions */}
-        <Space size={isMobile ? 4 : 'middle'} style={{ flexShrink: 0 }}>
+        <Space className="hide-scrollbar" size={isMobile ? 4 : 'middle'} style={{ flex: 1, minWidth: 0, justifyContent: 'flex-end', flexWrap: 'nowrap', overflowX: 'auto' }}>
           {/* Search bar (desktop only) */}
           {!isNarrow && (
-            <Input
-              prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
-              placeholder={t('common:action.search', 'Search...')}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onPressEnter={() => {
-                if (searchQuery.trim()) {
-                  navigate('/auctions?search=' + encodeURIComponent(searchQuery.trim()))
-                }
-              }}
-              style={{
-                width: isTablet ? 140 : 180,
-                borderRadius: 100,
-                height: 32,
-                borderColor: 'var(--color-border)',
-                background: 'transparent',
-              }}
-            />
+            <div style={{
+              lineHeight: '36px',
+              height: 36,
+              background: 'rgba(255, 255, 255, 0.04)',
+              borderRadius: 100,
+              border: '1px solid var(--color-border-light)',
+              overflow: 'hidden',
+              display: 'flex',
+              alignItems: 'center',
+              width: isTablet ? 180 : 240,
+              transition: 'all 0.3s ease',
+            }}>
+              <AutoComplete
+                options={suggestOptions}
+                value={searchQuery}
+                onChange={setSearchQuery}
+                onSelect={handleSearchSelect}
+                popupMatchSelectWidth={false}
+                style={{ width: '100%' }}
+              >
+                <Input
+                  prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)', marginLeft: 8 }} />}
+                  placeholder={t('common:action.search', 'Search actions...')}
+                  onPressEnter={() => handleSearchSelect(searchQuery)}
+                  allowClear
+                  variant="borderless"
+                  style={{
+                    height: 34,
+                    fontSize: 13,
+                    background: 'transparent',
+                  }}
+                />
+              </AutoComplete>
+            </div>
           )}
 
           {/* Language toggle — hidden on mobile */}
@@ -368,19 +389,37 @@ export function AppLayout() {
       >
         {/* Drawer search */}
         <div style={{ padding: '12px 16px 8px' }}>
-          <Input
-            prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
-            placeholder={t('common:action.search', 'Search auctions...')}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onPressEnter={() => {
-              if (searchQuery.trim()) {
-                setMobileMenuOpen(false)
-                navigate('/auctions?search=' + encodeURIComponent(searchQuery.trim()))
-              }
-            }}
-            style={{ borderRadius: 100, height: 40, borderColor: 'var(--color-border)' }}
-          />
+          <div style={{
+            height: 40,
+            background: 'rgba(255, 255, 255, 0.05)',
+            borderRadius: 100,
+            border: '1px solid var(--color-border-light)',
+            overflow: 'hidden',
+            display: 'flex',
+            alignItems: 'center',
+          }}>
+            <AutoComplete
+              options={suggestOptions}
+              value={searchQuery}
+              onChange={setSearchQuery}
+              onSelect={handleSearchSelect}
+              popupMatchSelectWidth={false}
+              style={{ width: '100%' }}
+            >
+              <Input
+                prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)', marginLeft: 8 }} />}
+                placeholder={t('common:action.search', 'Search auctions...')}
+                onPressEnter={() => handleSearchSelect(searchQuery)}
+                allowClear
+                variant="borderless"
+                style={{
+                  height: 38,
+                  fontSize: 14,
+                  background: 'transparent',
+                }}
+              />
+            </AutoComplete>
+          </div>
         </div>
 
         {/* Drawer nav links */}
@@ -448,7 +487,7 @@ export function AppLayout() {
         style={{
           marginTop: 64,
           width: '100%',
-          maxWidth: 1440,
+          maxWidth: 1600,
           marginLeft: 'auto',
           marginRight: 'auto',
           padding: isMobile ? '0 12px' : isTablet ? '0 24px' : '0 48px',
@@ -470,7 +509,7 @@ export function AppLayout() {
       >
         <div
           style={{
-            maxWidth: 1440,
+            maxWidth: 1600,
             margin: '0 auto',
             display: 'grid',
             gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
@@ -549,7 +588,7 @@ export function AppLayout() {
         {/* Copyright */}
         <div
           style={{
-            maxWidth: 1440,
+            maxWidth: 1600,
             margin: '0 auto',
             paddingTop: 32,
             marginTop: 48,

@@ -116,13 +116,33 @@ export function useConfirmInspectedCondition() {
 
 // ── Public Items ────────────────────────────────────────────────────
 
-export function usePublicItems(params?: PaginationParams & { categoryId?: string; search?: string }) {
+export function usePublicItems(
+  params?: PaginationParams & { 
+    categoryId?: string; 
+    search?: string;
+    condition?: string;
+    status?: string;
+    sortBy?: string;
+  }
+) {
   return useQuery({
     queryKey: [...queryKeys.items.list(params), 'public'],
     queryFn: async () => {
       const res = await apiClient.get<PagedList<ItemDto>>('/items/public', { params })
       return res.data
     },
+  })
+}
+
+export function useSuggestItems(q: string) {
+  return useQuery({
+    queryKey: ['items', 'suggest', q],
+    queryFn: async ({ signal }) => {
+      const res = await apiClient.get<string[]>('/search/items/suggest', { params: { q }, signal })
+      return res.data
+    },
+    enabled: q.trim().length >= 2,
+    staleTime: 10_000,
   })
 }
 

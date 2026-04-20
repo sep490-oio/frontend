@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { HeartOutlined, HeartFilled } from '@ant-design/icons'
@@ -32,7 +32,14 @@ export function AuctionCard({ auction }: AuctionCardProps) {
   const { isMobile } = useBreakpoint()
   const watchMutation = useWatchAuction()
   const unwatchMutation = useUnwatchAuction()
-  const [watching, setWatching] = useState(false)
+  const [watching, setWatching] = useState(auction.isWatched ?? auction.hasWatched ?? false)
+
+  useEffect(() => {
+    const isWatched = auction.isWatched ?? auction.hasWatched
+    if (isWatched !== undefined) {
+      setWatching(isWatched)
+    }
+  }, [auction.isWatched, auction.hasWatched])
 
   const isActive = auction.status === AuctionStatus.Active
   const isAtStartingPrice = auction.currentPrice?.amount === auction.startingPrice?.amount
@@ -78,7 +85,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
           position: 'relative',
           borderRadius: isMobile ? 12 : 16,
           overflow: 'hidden',
-          aspectRatio: '4/5',
+          aspectRatio: isMobile ? '16/10' : '4/5',
           marginBottom: isMobile ? 16 : 24,
           background: 'var(--color-bg-surface, #1f2937)',
         }}
@@ -159,7 +166,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
           )}
           <span
             style={{
-              background: auction.auctionType === 'sealed' ? '#c026d3' : 'var(--color-accent, #3b82f6)',
+              background: auction.auctionType?.toLowerCase() === 'sealed' ? '#c026d3' : 'var(--color-accent, #3b82f6)',
               color: '#ffffff',
               fontSize: 11,
               fontWeight: 700,
@@ -170,7 +177,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
               boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
             }}
           >
-            {auction.auctionType === 'sealed' ? t('browse.typeSealed') : t('browse.typeRegular')}
+            {auction.auctionType?.toLowerCase() === 'sealed' ? t('browse.typeSealed', 'Kín') : t('browse.typeRegular', 'Thường')}
           </span>
         </div>
 
@@ -234,7 +241,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
         <h3
           style={{
             fontWeight: 700,
-            fontSize: isMobile ? 14 : 18,
+            fontSize: 18,
             marginBottom: 4,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
@@ -272,10 +279,10 @@ export function AuctionCard({ auction }: AuctionCardProps) {
             width: '100%',
             background: isActive ? 'var(--color-accent, #3b82f6)' : 'rgba(255,255,255,0.05)',
             color: isActive ? '#fff' : 'var(--color-text-secondary, #9ca3af)',
-            padding: isMobile ? '8px 0' : '12px 0',
-            borderRadius: isMobile ? 8 : 12,
+            padding: '12px 0',
+            borderRadius: 12,
             fontWeight: 700,
-            fontSize: isMobile ? 12 : 14,
+            fontSize: 14,
             border: `1px solid ${isActive ? 'var(--color-accent, #3b82f6)' : 'var(--color-border, rgba(255,255,255,0.1))'}`,
             transition: 'all 0.3s ease',
             cursor: isActive || auction.status === AuctionStatus.Scheduled ? 'pointer' : 'not-allowed',

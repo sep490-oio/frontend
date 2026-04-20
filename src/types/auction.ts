@@ -123,6 +123,8 @@ export interface AuctionListItemDto {
   isEndingSoon: boolean
   isFeatured: boolean
   sellerId: string
+  isWatched?: boolean
+  hasWatched?: boolean
 }
 
 export interface BidDto {

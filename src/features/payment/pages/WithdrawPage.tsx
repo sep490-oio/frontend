@@ -191,7 +191,10 @@ export default function WithdrawPage() {
                   min={1}
                   max={wallet?.availableBalance ?? 0}
                   formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                  parser={(value) => Number(value?.replace(/,/g, '') ?? 0)}
+                  parser={(value) => {
+                    const parsed = (value ?? '').replace(/\$\s?|(,*)/g, '')
+                    return parsed ? Number(parsed) : null as any
+                  }}
                   addonAfter="VND"
                 />
               )}

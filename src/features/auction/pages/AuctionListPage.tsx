@@ -1,6 +1,6 @@
 import { Input, Flex, Button, Row, Col, Skeleton, Empty } from 'antd'
 import { SafetyCertificateOutlined, LockOutlined, ThunderboltOutlined, ArrowRightOutlined } from '@ant-design/icons'
-import { Link, useNavigate } from 'react-router'
+import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useAuctions } from '@/features/auction/api'
 import { useCategories } from '@/features/item/api'
@@ -34,12 +34,14 @@ export default function AuctionListPage() {
   const sectionPadding = isMobile ? '32px 16px' : isTablet ? '48px 20px' : '64px 24px'
 
   return (
-    <div style={{ overflowX: 'hidden' }}>
+    <div>
       {/* ── SECTION 1: HERO ── */}
       <section
         style={{
+          width: '100vw',
+          marginLeft: 'calc(50% - 50vw)',
           padding: isMobile ? '36px 16px 28px' : isTablet ? '48px 20px' : '64px 24px',
-          background: isDark 
+          background: isDark
             ? 'linear-gradient(135deg, #05070a 0%, #0a0e17 50%, #0d1629 100%)'
             : 'linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 50%, #DBEAFE 100%)',
         }}
@@ -196,7 +198,7 @@ export default function AuctionListPage() {
       </section>
 
       {/* ── SECTION 1B: NEWLY LISTED ── */}
-      <section style={{ padding: isMobile ? '28px 16px' : isTablet ? '36px 20px' : '48px 24px' }}>
+      <section style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)', padding: isMobile ? '28px 16px' : isTablet ? '36px 20px' : '48px 24px' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <Flex justify="space-between" align="center" style={{ marginBottom: isMobile ? 16 : 24 }}>
             <h2
@@ -210,21 +212,7 @@ export default function AuctionListPage() {
             >
               {t('newlyListed')}
             </h2>
-            <Link
-              to="/auctions?sortBy=CreatedAt+Desc"
-              style={{
-                fontSize: 13,
-                fontWeight: 500,
-                color: 'var(--color-accent)',
-                textDecoration: 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {t('viewAll')} <ArrowRightOutlined />
-            </Link>
+
           </Flex>
 
           {newLoading ? (
@@ -241,7 +229,7 @@ export default function AuctionListPage() {
           ) : (
             <Row gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]}>
               {newAuctions.items.map((auction) => (
-                <Col xs={12} sm={12} md={8} xl={8} key={auction.id}>
+                <Col xs={24} sm={12} md={8} xl={8} key={auction.id}>
                   <AuctionCard auction={auction} />
                 </Col>
               ))}
@@ -252,7 +240,7 @@ export default function AuctionListPage() {
 
       {/* ── SECTION: TRENDING ── */}
       {trendingAuctions?.items?.length ? (
-        <section style={{ padding: isMobile ? '0 16px 28px' : isTablet ? '0 20px 36px' : '0 24px 48px' }}>
+        <section style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)', padding: isMobile ? '0 16px 28px' : isTablet ? '0 20px 36px' : '0 24px 48px' }}>
           <div style={{ maxWidth: 1200, margin: '0 auto' }}>
             <Flex justify="space-between" align="center" style={{ marginBottom: isMobile ? 16 : 24 }}>
               <h2
@@ -266,21 +254,7 @@ export default function AuctionListPage() {
               >
                 {t('trending')}
               </h2>
-              <Link
-                to="/auctions?sortBy=ViewCount+Desc"
-                style={{
-                  fontSize: 13,
-                  fontWeight: 500,
-                  color: 'var(--color-accent)',
-                  textDecoration: 'none',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {t('viewAll')} <ArrowRightOutlined />
-              </Link>
+
             </Flex>
             {trendingLoading ? (
               <Row gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]}>
@@ -294,7 +268,7 @@ export default function AuctionListPage() {
             ) : (
               <Row gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]}>
                 {trendingAuctions.items.map((auction) => (
-                  <Col xs={12} sm={12} md={8} xl={8} key={auction.id}>
+                  <Col xs={24} sm={12} md={8} xl={8} key={auction.id}>
                     <AuctionCard auction={auction} />
                   </Col>
                 ))}
@@ -305,7 +279,7 @@ export default function AuctionListPage() {
       ) : null}
 
       {/* ── SECTION 2: CATEGORIES ── */}
-      <section style={{ padding: sectionPadding, background: 'var(--color-bg-surface)' }}>
+      <section style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)', padding: sectionPadding, background: 'var(--color-bg-surface)' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: isMobile ? 24 : 40 }}>
             <div
@@ -380,7 +354,7 @@ export default function AuctionListPage() {
       </section>
 
       {/* ── SECTION 3: TRUST & SECURITY ── */}
-      <section style={{ padding: sectionPadding }}>
+      <section style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)', padding: sectionPadding }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', textAlign: 'center' }}>
           <div
             style={{
@@ -438,7 +412,7 @@ export default function AuctionListPage() {
       </section>
 
       {/* ── SECTION 4: FEATURED AUCTIONS ── */}
-      <section style={{ padding: isMobile ? '28px 16px' : isTablet ? '36px 20px' : '48px 24px' }}>
+      <section style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)', padding: isMobile ? '28px 16px' : isTablet ? '36px 20px' : '48px 24px' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <Flex justify="space-between" align="center" style={{ marginBottom: isMobile ? 16 : 24 }}>
             <h2
@@ -452,25 +426,11 @@ export default function AuctionListPage() {
             >
               {t('featuredSection')}
             </h2>
-            <a
-              href="/auctions"
-              style={{
-                fontSize: 13,
-                fontWeight: 500,
-                color: 'var(--color-accent)',
-                textDecoration: 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {t('viewAll')} <ArrowRightOutlined />
-            </a>
+
           </Flex>
           <Row className="oio-stagger" gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]}>
             {featured.map((auction) => (
-              <Col key={auction.id} xs={12} sm={12} md={8} xl={8}>
+              <Col key={auction.id} xs={24} sm={12} md={8} xl={8}>
                 <AuctionCard auction={auction} />
               </Col>
             ))}
@@ -479,7 +439,7 @@ export default function AuctionListPage() {
       </section>
 
       {/* ── SECTION 5: CTA BANNER ── */}
-      <section style={{ padding: isMobile ? '0 16px 64px' : isTablet ? '0 20px 64px' : '0 24px 80px' }}>
+      <section style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)', padding: isMobile ? '0 16px 64px' : isTablet ? '0 20px 64px' : '0 24px 80px' }}>
         <div
           style={{
             maxWidth: 800,

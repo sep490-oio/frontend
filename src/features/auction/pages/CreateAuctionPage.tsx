@@ -60,13 +60,13 @@ interface FormValues {
   autoExtend?: boolean
 }
 
-function SectionHeader({ number, title }: { number: number; title: string }) {
+function SectionHeader({ number, title, isMobile }: { number: number; title: string, isMobile?: boolean }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, marginBottom: 16 }}>
       <span
         style={{
-          width: 28,
-          height: 28,
+          width: isMobile ? 24 : 28,
+          height: isMobile ? 24 : 28,
           borderRadius: '50%',
           background: 'var(--color-accent)',
           color: '#fff',
@@ -74,13 +74,13 @@ function SectionHeader({ number, title }: { number: number; title: string }) {
           alignItems: 'center',
           justifyContent: 'center',
           fontWeight: 600,
-          fontSize: 13,
+          fontSize: isMobile ? 12 : 13,
           flexShrink: 0,
         }}
       >
         {number}
       </span>
-      <h3 style={{ fontFamily: SERIF_FONT, margin: 0, fontSize: 17, color: 'var(--color-text-primary)' }}>
+      <h3 style={{ fontFamily: SERIF_FONT, margin: 0, fontSize: isMobile ? 16 : 17, color: 'var(--color-text-primary)' }}>
         {title}
       </h3>
     </div>
@@ -155,7 +155,7 @@ export default function CreateAuctionPage() {
       endTime: values.endTime,
       qualificationStartAt: values.qualificationStartAt,
       qualificationEndAt: values.qualificationEndAt,
-      autoExtend: values.autoExtend ?? false,
+      autoExtend: values.auctionType === AuctionType.Sealed ? false : (values.autoExtend ?? false),
       extensionMinutes: values.extensionMinutes ?? 5,
     })
   }
@@ -179,7 +179,7 @@ export default function CreateAuctionPage() {
     bidIncrement: values.bidIncrement,
     reservePrice: values.reservePrice,
     buyNowPrice: values.buyNowPrice,
-    extensionMinutes: values.extensionMinutes,
+    extensionMinutes: values.auctionType === AuctionType.Sealed ? undefined : values.extensionMinutes,
     currency: values.currency,
     images: uploadedImages?.map((img, i) => ({ mediaUploadId: img.mediaUploadId, isPrimary: i === 0, sortOrder: i })),
     verifyByPlatform: requireVerification,
@@ -196,7 +196,7 @@ export default function CreateAuctionPage() {
           bidIncrement: values.bidIncrement,
           reservePrice: values.reservePrice,
           buyNowPrice: values.buyNowPrice,
-          extensionMinutes: values.extensionMinutes,
+          extensionMinutes: values.auctionType === AuctionType.Sealed ? undefined : values.extensionMinutes,
           currency: values.currency,
           auctionType: values.auctionType,
         }
@@ -212,7 +212,7 @@ export default function CreateAuctionPage() {
             bidIncrement: values.bidIncrement,
             reservePrice: values.reservePrice,
             buyNowPrice: values.buyNowPrice,
-            extensionMinutes: values.extensionMinutes,
+            extensionMinutes: values.auctionType === AuctionType.Sealed ? undefined : values.extensionMinutes,
             currency: values.currency,
             auctionType: values.auctionType,
           })
@@ -223,8 +223,10 @@ export default function CreateAuctionPage() {
         if (hasTimingValues(values)) {
           try {
             await applyTiming(result.id, values)
-          } catch {
-            message.warning(t('draftSavedTimingFailed', 'Draft saved but timing not set. You can configure timing later.'))
+          } catch (err: any) {
+            const detail = err?.response?.data?.detail
+            const msg = t('draftSavedTimingFailed', 'Draft saved but timing not set. You can configure timing later.')
+            message.warning(detail ? `${msg} - ${detail}` : msg)
             navigate(`${prefix}/auctions`)
             return
           }
@@ -232,9 +234,9 @@ export default function CreateAuctionPage() {
         message.success(t('draftSaved', 'Draft saved successfully'))
         navigate(`${prefix}/auctions`)
       }
-    } catch (err) {
+    } catch (err: any) {
       if (err && typeof err === 'object' && 'errorFields' in err) return
-      message.error(t('createError', 'Failed to save draft'))
+      message.error(err?.response?.data?.detail || t('createError', 'Failed to save draft'))
     } finally {
       setSavingDraft(false)
     }
@@ -260,8 +262,10 @@ export default function CreateAuctionPage() {
         setSubmissionStep(null)
         navigate(`${prefix}/auctions`)
       }
-    } catch {
-      setSubmissionError(t('retryFailed', 'Retry failed. Please try again or go to My Auctions.'))
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail
+      const msg = t('retryFailed', 'Retry failed. Please try again or go to My Auctions.')
+      setSubmissionError(detail ? `${msg} - ${detail}` : msg)
     }
   }
 
@@ -284,7 +288,7 @@ export default function CreateAuctionPage() {
           bidIncrement: values.bidIncrement,
           reservePrice: values.reservePrice,
           buyNowPrice: values.buyNowPrice,
-          extensionMinutes: values.extensionMinutes,
+          extensionMinutes: values.auctionType === AuctionType.Sealed ? undefined : values.extensionMinutes,
           currency: values.currency,
           auctionType: values.auctionType,
         }
@@ -293,9 +297,11 @@ export default function CreateAuctionPage() {
           setSubmissionStep('timing')
           try {
             await applyTiming(editId!, values)
-          } catch {
+          } catch (err: any) {
             setSubmissionStep(null)
-            setSubmissionError(t('updatedTimingFailed', 'Auction updated but timing not set. You can configure timing later.'))
+            const detail = err?.response?.data?.detail
+            const msg = t('updatedTimingFailed', 'Auction updated but timing not set. You can configure timing later.')
+            setSubmissionError(detail ? `${msg} - ${detail}` : msg)
             setPartialAuctionId(editId!)
             return
           }
@@ -305,9 +311,11 @@ export default function CreateAuctionPage() {
           await submitAuction.mutateAsync(editId!)
           message.success(t('auctionUpdatedAndSubmitted', 'Auction updated and submitted successfully!'))
           setSubmissionStep(null)
-        } catch {
+        } catch (err: any) {
           setSubmissionStep(null)
-          setSubmissionError(t('updatedSubmitFailed', 'Auction updated but submission failed. Submit from My Auctions.'))
+          const detail = err?.response?.data?.detail
+          const msg = t('updatedSubmitFailed', 'Auction updated but submission failed. Submit from My Auctions.')
+          setSubmissionError(detail ? `${msg} - ${detail}` : msg)
           setPartialAuctionId(editId!)
           return
         }
@@ -319,7 +327,7 @@ export default function CreateAuctionPage() {
           bidIncrement: values.bidIncrement,
           reservePrice: values.reservePrice,
           buyNowPrice: values.buyNowPrice,
-          extensionMinutes: values.extensionMinutes,
+          extensionMinutes: values.auctionType === AuctionType.Sealed ? undefined : values.extensionMinutes,
           currency: values.currency,
           auctionType: values.auctionType,
         })
@@ -328,9 +336,11 @@ export default function CreateAuctionPage() {
           setSubmissionStep('timing')
           try {
             await applyTiming(result.id, values)
-          } catch {
+          } catch (err: any) {
             setSubmissionStep(null)
-            setSubmissionError(t('createdTimingFailed', 'Auction created but timing not set. Configure timing in My Auctions.'))
+            const detail = err?.response?.data?.detail
+            const msg = t('createdTimingFailed', 'Auction created but timing not set. Configure timing in My Auctions.')
+            setSubmissionError(detail ? `${msg} - ${detail}` : msg)
             return
           }
           setSubmissionStep('submitting')
@@ -338,9 +348,11 @@ export default function CreateAuctionPage() {
             await submitAuction.mutateAsync(result.id)
             message.success(t('auctionScheduled', 'Auction scheduled successfully!'))
             setSubmissionStep(null)
-          } catch {
+          } catch (err: any) {
             setSubmissionStep(null)
-            setSubmissionError(t('timingSetSubmitFailed', 'Auction created with timing but submission failed. Submit from My Auctions.'))
+            const detail = err?.response?.data?.detail
+            const msg = t('timingSetSubmitFailed', 'Auction created with timing but submission failed. Submit from My Auctions.')
+            setSubmissionError(detail ? `${msg} - ${detail}` : msg)
             return
           }
         } else {
@@ -362,16 +374,19 @@ export default function CreateAuctionPage() {
           })
           message.success(t('itemSubmitted', 'Auction created and item submitted for review'))
           setSubmissionStep(null)
-        } catch {
+        } catch (err: any) {
           setSubmissionStep(null)
-          setSubmissionError(t('draftSavedSubmitFailed', 'Draft saved but item submission failed. You can submit from My Auctions.'))
+          const detail = err?.response?.data?.detail
+          const msg = t('draftSavedSubmitFailed', 'Draft saved but item submission failed. You can submit from My Auctions.')
+          setSubmissionError(detail ? `${msg} - ${detail}` : msg)
           return
         }
       }
       navigate(`${prefix}/auctions`)
-    } catch {
+    } catch (err: any) {
       setSubmissionStep(null)
-      message.error(t('createError', 'Failed to create auction'))
+      const detail = err?.response?.data?.detail
+      message.error(detail || t('createError', 'Failed to create auction'))
     }
   }
 
@@ -472,7 +487,10 @@ export default function CreateAuctionPage() {
       </Typography.Title>
 
       {/* Steps Progress */}
-      <Card style={{ borderRadius: 12, border: '1px solid var(--color-border)', marginBottom: 16 }}>
+      <Card 
+        styles={{ body: { padding: isMobile ? '12px 16px' : '16px 24px' } }}
+        style={{ borderRadius: 12, border: '1px solid var(--color-border)', marginBottom: 16 }}
+      >
         <Steps
           size="small"
           items={stepsItems}
@@ -480,7 +498,8 @@ export default function CreateAuctionPage() {
           direction={isMobile && !hideItemFields ? 'vertical' : 'horizontal'}
         />
         {isSubmitting && submissionStep && stepStatusText[submissionStep] && (
-          <div style={{ textAlign: 'center', marginTop: 8, fontSize: 13, color: 'var(--color-text-secondary)' }}>
+          <div style={{ textAlign: 'center', marginTop: 12, fontSize: 13, color: 'var(--color-text-secondary)', fontWeight: 500 }}>
+            <LoadingOutlined style={{ marginRight: 8, color: 'var(--color-accent)' }} />
             {stepStatusText[submissionStep]}
           </div>
         )}
@@ -515,22 +534,20 @@ export default function CreateAuctionPage() {
 
       {/* Item Preview */}
       {(isFromItem || (isEditMode && existingItemForPreview)) && existingItemForPreview && (
-        <Card style={{ borderRadius: 12, border: '1px solid var(--color-border)', marginBottom: 16 }}>
-          <SectionHeader number={1} title={t('selectedItem', 'Selected Item')} />
-          <div style={{ display: 'flex', gap: 12, flexWrap: isMobile ? 'wrap' : undefined }}>
+        <Card 
+          styles={{ body: { padding: isMobile ? '16px' : '24px' } }}
+          style={{ borderRadius: 12, border: '1px solid var(--color-border)', marginBottom: 16 }}
+        >
+          <SectionHeader number={1} title={t('selectedItem', 'Vật phẩm đã chọn')} isMobile={isMobile} />
+          <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
             {existingItemForPreview.images && existingItemForPreview.images.length > 0 && (
-              <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                <Image.PreviewGroup>
-                  {existingItemForPreview.images.slice(0, isMobile ? 2 : 4).map((img: any) => (
-                    <Image
-                      key={img.id}
-                      src={img.thumbnailUrl ?? img.url}
-                      width={isMobile ? 56 : 64}
-                      height={isMobile ? 56 : 64}
-                      style={{ objectFit: 'cover', borderRadius: 8 }}
-                    />
-                  ))}
-                </Image.PreviewGroup>
+              <div style={{ flexShrink: 0 }}>
+                <Image
+                  src={existingItemForPreview.images[0].thumbnailUrl ?? existingItemForPreview.images[0].url}
+                  width={isMobile ? 80 : 96}
+                  height={isMobile ? 80 : 96}
+                  style={{ objectFit: 'cover', borderRadius: 8, border: '1px solid var(--color-border-light)' }}
+                />
               </div>
             )}
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -563,7 +580,11 @@ export default function CreateAuctionPage() {
       )}
 
       {/* Main Form */}
-      <Card style={{ borderRadius: 12, border: '1px solid var(--color-border)' }}>
+      <Card 
+        styles={{ body: { padding: isMobile ? '20px 16px' : '32px 24px' } }}
+        style={{ borderRadius: 12, border: '1px solid var(--color-border)' }}
+      >
+        <SectionHeader number={pricingSectionNumber} title={t('pricingAndTiming', 'Pricing & Time')} isMobile={isMobile} />
         <Form<FormValues>
           form={form}
           layout="vertical"
@@ -579,7 +600,7 @@ export default function CreateAuctionPage() {
           {/* Section 1: Item Info */}
           {!hideItemFields && (
             <>
-              <SectionHeader number={1} title={t('itemInfo', 'Item Info')} />
+              <SectionHeader number={1} title={t('itemInfo', 'Item Info')} isMobile={isMobile} />
 
               <Form.Item
                 name="title"
@@ -589,7 +610,7 @@ export default function CreateAuctionPage() {
                   { max: 255, message: t('titleMax', 'Title must not exceed 255 characters') },
                 ]}
               >
-                <Input placeholder={t('titlePlaceholder', 'Enter item title')} style={{ height: isMobile ? 44 : undefined }} />
+                <Input placeholder={t('titlePlaceholder', 'Enter item title')} style={{ height: 44, fontSize: 16 }} />
               </Form.Item>
 
               {/* Condition pills */}
@@ -634,20 +655,21 @@ export default function CreateAuctionPage() {
                   showSearch
                   optionFilterProp="label"
                   style={{ width: '100%' }}
+                  size="large"
                 />
               </Form.Item>
 
               <Form.Item name="description" label={t('description', 'Description')}>
-                <Input.TextArea rows={4} placeholder={t('descriptionPlaceholder', 'Describe your item')} />
+                <Input.TextArea rows={4} placeholder={t('descriptionPlaceholder', 'Describe your item')} style={{ fontSize: 16 }} />
               </Form.Item>
 
               <Form.Item name="quantity" label={t('quantity', 'Quantity')}>
-                <InputNumber style={{ width: '100%', height: isMobile ? 44 : undefined }} min={1} />
+                <InputNumber style={{ width: '100%', height: 44, fontSize: 16 }} min={1} />
               </Form.Item>
 
               {/* Section 2: Photos */}
               <div style={{ borderTop: '1px solid var(--color-border-light)', margin: '24px 0', paddingTop: 24 }}>
-                <SectionHeader number={2} title={t('photos', 'Photos')} />
+                <SectionHeader number={2} title={t('photos', 'Photos')} isMobile={isMobile} />
               </div>
 
               <Form.Item label={t('photos', 'Photos')} required>
@@ -658,22 +680,17 @@ export default function CreateAuctionPage() {
                   onPhotosChange={setCapturedPhotos}
                 />
               </Form.Item>
+
+              <div style={{ borderTop: '1px solid var(--color-border-light)', margin: '24px 0', paddingTop: 24 }} />
             </>
           )}
-
-          {/* Section divider before Pricing */}
-          {!hideItemFields && (
-            <div style={{ borderTop: '1px solid var(--color-border-light)', margin: '24px 0', paddingTop: 24 }} />
-          )}
-
-          <SectionHeader number={pricingSectionNumber} title={t('pricingAndTiming', 'Pricing & Time')} />
 
           <Form.Item
             name="auctionType"
             label={t('auctionType', 'Auction Type')}
             rules={[{ required: true, message: t('typeRequired', 'Please select auction type') }]}
           >
-            <Select options={AUCTION_TYPE_OPTIONS} style={{ width: '100%' }} />
+            <Select options={AUCTION_TYPE_OPTIONS} style={{ width: '100%' }} size="large" />
           </Form.Item>
 
           <Form.Item
@@ -684,7 +701,19 @@ export default function CreateAuctionPage() {
               { type: 'number', min: 0, message: t('startingPriceMin', 'Starting price must be >= 0') },
             ]}
           >
-            <InputNumber style={{ width: '100%' }} min={0} step={1000} addonAfter={DEFAULT_CURRENCY} placeholder="0" />
+            <InputNumber
+              style={{ width: '100%', fontSize: 16 }}
+              size="large"
+              min={0}
+              step={1000}
+              addonAfter={DEFAULT_CURRENCY}
+              placeholder="0"
+              formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+              parser={(v) => {
+                const parsed = (v ?? '').replace(/\$\s?|(,*)/g, '')
+                return parsed ? Number(parsed) : null as any
+              }}
+            />
           </Form.Item>
 
           <Form.Item
@@ -695,26 +724,48 @@ export default function CreateAuctionPage() {
               { type: 'number', min: 1, message: t('bidIncrementMin', 'Bid increment must be > 0') },
             ]}
           >
-            <InputNumber style={{ width: '100%' }} min={1000} step={1000} addonAfter={DEFAULT_CURRENCY} />
+            <InputNumber
+              style={{ width: '100%' }}
+              min={1000}
+              step={1000}
+              addonAfter={DEFAULT_CURRENCY}
+              formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+              parser={(v) => {
+                const parsed = (v ?? '').replace(/\$\s?|(,*)/g, '')
+                return parsed ? Number(parsed) : null as any
+              }}
+            />
           </Form.Item>
 
           <Form.Item name="reservePrice" label={t('reservePrice', 'Reserve Price')}>
             <InputNumber
-              style={{ width: '100%' }}
+              style={{ width: '100%', fontSize: 16 }}
+              size="large"
               min={0}
               step={1000}
               addonAfter={DEFAULT_CURRENCY}
               placeholder={t('reservePricePlaceholder', 'Optional - minimum price to sell')}
+              formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+              parser={(v) => {
+                const parsed = (v ?? '').replace(/\$\s?|(,*)/g, '')
+                return parsed ? Number(parsed) : null as any
+              }}
             />
           </Form.Item>
 
           <Form.Item name="buyNowPrice" label={t('buyNowPrice', 'Buy Now Price')}>
             <InputNumber
-              style={{ width: '100%' }}
+              style={{ width: '100%', fontSize: 16 }}
+              size="large"
               min={0}
               step={1000}
               addonAfter={DEFAULT_CURRENCY}
               placeholder={t('buyNowPricePlaceholder', 'Optional - instant purchase price')}
+              formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+              parser={(v) => {
+                const parsed = (v ?? '').replace(/\$\s?|(,*)/g, '')
+                return parsed ? Number(parsed) : null as any
+              }}
             />
           </Form.Item>
 

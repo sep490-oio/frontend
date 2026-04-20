@@ -74,6 +74,7 @@ export default function MyAuctionsPage() {
   const params = {
     pageNumber: page,
     pageSize,
+    sortBy: 'CreatedAt Desc',
     ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
   }
 
