@@ -75,7 +75,7 @@ export default function AdminDisputeDetailPage() {
   // Local state
   const [assignUserId, setAssignUserId] = useState<string | undefined>(undefined)
   const [evidenceModalOpen, setEvidenceModalOpen] = useState(false)
-  const [evidenceRequestMsg, setEvidenceRequestMsg] = useState('Please provide evidence related to this dispute.')
+  const [evidenceRequestMsg, setEvidenceRequestMsg] = useState(t('evidenceRequestDefault'))
   const [findingModalOpen, setFindingModalOpen] = useState(false)
   const [findingDomain, setFindingDomain] = useState('')
   const [findingRecommendation, setFindingRecommendation] = useState('')
@@ -115,6 +115,22 @@ export default function AdminDisputeDetailPage() {
     }
   }, [dispute?.contextSnapshotJson])
 
+  const formatContextValue = (key: string, value: unknown): string => {
+    if (value === null || value === undefined || value === '') return t('contextValue.empty', '—')
+    const raw = String(value)
+    if (key.endsWith('At')) {
+      const d = dayjs(raw)
+      if (d.isValid()) return d.format('DD/MM/YYYY HH:mm')
+      return raw
+    }
+    if (key === 'auctionStatus' || key === 'orderStatus') return t(`contextValue.${key}.${raw}`, raw)
+    if (key === 'totalAmount' || key === 'amount') {
+      const n = Number(value)
+      if (!isNaN(n)) return new Intl.NumberFormat().format(n)
+    }
+    return raw
+  }
+
   // Split messages
   const externalMessages = useMemo(
     () => (dispute?.messages ?? []).filter((m) => m.visibility === 'external'),
@@ -136,12 +152,12 @@ export default function AdminDisputeDetailPage() {
     if (!dispute) return []
     const opts: { value: string; label: string; type: string; secureUrl?: string; resourceType?: string }[] = []
     for (const ev of dispute.evidence ?? []) {
-      opts.push({ value: ev.id, label: ev.fileName || 'Evidence', type: 'evidence', secureUrl: ev.secureUrl, resourceType: ev.resourceType })
+      opts.push({ value: ev.id, label: ev.fileName || t('evidenceDefaultLabel'), type: 'evidence', secureUrl: ev.secureUrl, resourceType: ev.resourceType })
     }
     for (const m of dispute.messages ?? []) {
       for (const att of m.attachments ?? []) {
         if (att.secureUrl) {
-          opts.push({ value: att.id, label: att.fileName || 'Attachment', type: 'attachment', secureUrl: att.secureUrl, resourceType: att.resourceType })
+          opts.push({ value: att.id, label: att.fileName || t('attachmentDefaultLabel'), type: 'attachment', secureUrl: att.secureUrl, resourceType: att.resourceType })
         }
       }
       if (m.content) {
@@ -149,7 +165,7 @@ export default function AdminDisputeDetailPage() {
       }
     }
     return opts
-  }, [dispute])
+  }, [dispute, t])
 
   // Latest finding recommendation
   const latestFinding = useMemo(() => {
@@ -166,26 +182,26 @@ export default function AdminDisputeDetailPage() {
   }
 
   if (!dispute) {
-    return <Empty description={t('notFound', 'Dispute not found')} />
+    return <Empty description={t('notFound')} />
   }
 
   const handleAssign = async () => {
     if (!assignUserId) return
     try {
       await assignMutation.mutateAsync({ id: disputeId, assignedToUserId: assignUserId })
-      msg.success(t('disputeAssigned', 'Dispute assigned'))
+      msg.success(t('toastDisputeAssigned'))
       setAssignUserId(undefined)
     } catch {
-      msg.error(t('error', 'Error'))
+      msg.error(t('toastError'))
     }
   }
 
   const handleTransitionTo = async (targetStatus: string) => {
     try {
       await transitionMutation.mutateAsync({ id: disputeId, status: targetStatus })
-      msg.success(t('statusTransitioned', 'Status updated'))
+      msg.success(t('toastStatusTransitioned'))
     } catch {
-      msg.error(t('error', 'Error'))
+      msg.error(t('toastError'))
     }
   }
 
@@ -193,11 +209,11 @@ export default function AdminDisputeDetailPage() {
     if (!evidenceRequestMsg.trim()) return
     try {
       await requestEvidenceMutation.mutateAsync({ id: disputeId, message: evidenceRequestMsg.trim() })
-      msg.success(t('evidenceRequested', 'Evidence requested'))
+      msg.success(t('toastEvidenceRequested'))
       setEvidenceModalOpen(false)
-      setEvidenceRequestMsg('Please provide evidence related to this dispute.')
+      setEvidenceRequestMsg(t('evidenceRequestDefault'))
     } catch {
-      msg.error(t('error', 'Error'))
+      msg.error(t('toastError'))
     }
   }
 
@@ -214,7 +230,7 @@ export default function AdminDisputeDetailPage() {
           ? findingSelectedRefs.map((r) => ({ referenceType: r.referenceType, targetId: r.targetId }))
           : undefined,
       })
-      msg.success(t('findingAdded', 'Finding added'))
+      msg.success(t('toastFindingAdded'))
       setFindingModalOpen(false)
       setFindingDomain('')
       setFindingRecommendation('')
@@ -222,7 +238,7 @@ export default function AdminDisputeDetailPage() {
       setFindingSelectedRefs([])
       setFindingNote('')
     } catch {
-      msg.error(t('error', 'Error'))
+      msg.error(t('toastError'))
     }
   }
 
@@ -237,10 +253,10 @@ export default function AdminDisputeDetailPage() {
         reason: resolveReason,
         actionSet: hasActions ? resolveActionSet : undefined,
       })
-      msg.success(t('disputeResolved', 'Dispute resolved'))
+      msg.success(t('toastDisputeResolved'))
       setResolveDrawerOpen(false)
     } catch {
-      msg.error(t('error', 'Error'))
+      msg.error(t('toastError'))
     }
   }
 
@@ -248,10 +264,10 @@ export default function AdminDisputeDetailPage() {
     if (!rejectReason.trim()) return
     try {
       await rejectMutation.mutateAsync({ id: disputeId, reason: rejectReason })
-      msg.success(t('disputeRejected', 'Dispute rejected'))
+      msg.success(t('toastDisputeRejected'))
       setRejectReason('')
     } catch {
-      msg.error(t('error', 'Error'))
+      msg.error(t('toastError'))
     }
   }
 
@@ -263,10 +279,10 @@ export default function AdminDisputeDetailPage() {
         content: externalMessageText.trim(),
         visibility: 'external',
       })
-      msg.success(t('messageSent', 'Message sent'))
+      msg.success(t('toastMessageSent'))
       setExternalMessageText('')
     } catch {
-      msg.error(t('error', 'Error'))
+      msg.error(t('toastError'))
     }
   }
 
@@ -278,16 +294,16 @@ export default function AdminDisputeDetailPage() {
         content: internalMessageText.trim(),
         visibility: 'internal',
       })
-      msg.success(t('messageSent', 'Message sent'))
+      msg.success(t('toastMessageSent'))
       setInternalMessageText('')
     } catch {
-      msg.error(t('error', 'Error'))
+      msg.error(t('toastError'))
     }
   }
 
   const copyDisputeNumber = () => {
     navigator.clipboard.writeText(dispute.disputeNumber)
-    msg.success(t('copied', 'Copied'))
+    msg.success(t('toastCopied'))
   }
 
   const renderMessage = (m: DisputeMessageV2Dto, borderColor: string) => (
@@ -321,8 +337,8 @@ export default function AdminDisputeDetailPage() {
     <Card key={f.id} size="small" style={{ marginBottom: 8 }}>
       <Space size={4} wrap style={{ marginBottom: 4 }}>
         <Tag><UserOutlined style={{ marginRight: 2 }} />{f.authorDisplayName}</Tag>
-        <Tag color="purple">{f.domain}</Tag>
-        {f.verdictRecommendation && <Tag color="blue">{f.verdictRecommendation}</Tag>}
+        <Tag color="purple">{t(`domainLabel.${f.domain}`, f.domain)}</Tag>
+        {f.verdictRecommendation && <Tag color="blue">{ta(`disputeDetail.outcomeOption.${f.verdictRecommendation}`, f.verdictRecommendation)}</Tag>}
       </Space>
       <Typography.Paragraph style={{ marginBottom: 4, fontSize: 13 }}>
         {f.summary}
@@ -349,7 +365,7 @@ export default function AdminDisputeDetailPage() {
       )}
       {f.findingNote && (
         <Typography.Text type="secondary" style={{ fontSize: 11, display: 'block', marginBottom: 2 }}>
-          {t('findingNote', 'Note')}: {f.findingNote}
+          {t('findingNote')}: {f.findingNote}
         </Typography.Text>
       )}
       <div>
@@ -362,7 +378,7 @@ export default function AdminDisputeDetailPage() {
 
   const isAwaitingEvidence = dispute.status === DisputeStatus.AwaitingEvidence && !!dispute.requestedEvidenceAt
 
-  const hasNewEvidence = dispute.status === 'awaiting_evidence' && !!dispute.requestedEvidenceAt &&
+  const hasNewEvidence = dispute.status === DisputeStatus.AwaitingEvidence && !!dispute.requestedEvidenceAt &&
     (dispute.messages ?? []).some(
       (m) => m.visibility === 'external' &&
         new Date(m.createdAt) > new Date(dispute.requestedEvidenceAt!) &&
@@ -376,13 +392,13 @@ export default function AdminDisputeDetailPage() {
       {dispute.canAssign && (
         <div>
           <Typography.Text strong style={{ display: 'block', marginBottom: 4 }}>
-            {t('assign', 'Assign')}
+            {t('assign')}
           </Typography.Text>
           <Space wrap>
             <Select
               value={assignUserId}
               onChange={setAssignUserId}
-              placeholder={t('selectAssignee', 'Select assignee')}
+              placeholder={t('selectAssignee')}
               style={{ width: 280 }}
               options={(assignableUsers ?? []).map((u) => ({
                 value: u.userId,
@@ -398,65 +414,65 @@ export default function AdminDisputeDetailPage() {
               }))}
             />
             <Button onClick={handleAssign} loading={assignMutation.isPending} disabled={!assignUserId}>
-              {t('assignBtn', 'Assign')}
+              {t('assign')}
             </Button>
           </Space>
         </div>
       )}
 
       {/* State-aware action buttons */}
-      {dispute.status === 'open' && (
+      {dispute.status === DisputeStatus.Open && (
         <Space wrap>
           <Button
             type="primary"
             onClick={() => handleTransitionTo('under_review')}
             loading={transitionMutation.isPending}
           >
-            {t('startReview', 'Start Review')}
+            {t('startReview')}
           </Button>
           {dispute.canRequestEvidence && (
             <Button icon={<ExclamationCircleOutlined />} onClick={() => setEvidenceModalOpen(true)}>
-              {t('requestEvidenceFromParties', 'Request Evidence from Parties')}
+              {t('requestEvidenceFromParties')}
             </Button>
           )}
           <Popconfirm
-            title={t('cancelCaseConfirm', 'Cancel this case?')}
+            title={t('cancelCaseConfirm')}
             onConfirm={() => handleTransitionTo('cancelled')}
             okButtonProps={{ loading: transitionMutation.isPending, danger: true }}
           >
-            <Button danger>{t('cancelCase', 'Cancel Case')}</Button>
+            <Button danger>{t('cancelCase')}</Button>
           </Popconfirm>
         </Space>
       )}
 
-      {dispute.status === 'awaiting_respondent' && (
+      {dispute.status === DisputeStatus.AwaitingRespondent && (
         <Space wrap>
           <Button
             type="primary"
             onClick={() => handleTransitionTo('under_review')}
             loading={transitionMutation.isPending}
           >
-            {t('startReview', 'Start Review')}
+            {t('startReview')}
           </Button>
           <Popconfirm
-            title={t('cancelCaseConfirm', 'Cancel this case?')}
+            title={t('cancelCaseConfirm')}
             onConfirm={() => handleTransitionTo('cancelled')}
             okButtonProps={{ loading: transitionMutation.isPending, danger: true }}
           >
-            <Button danger>{t('cancelCase', 'Cancel Case')}</Button>
+            <Button danger>{t('cancelCase')}</Button>
           </Popconfirm>
         </Space>
       )}
 
-      {dispute.status === 'awaiting_evidence' && (
+      {dispute.status === DisputeStatus.AwaitingEvidence && (
         <Space direction="vertical" style={{ width: '100%' }} size="small">
           <Alert
             type="info"
             showIcon
-            message={t('awaitingEvidenceInfo', 'Waiting for buyer/seller to provide additional evidence. Once enough evidence is available, resume review.')}
+            message={t('awaitingEvidenceInfo')}
           />
           {hasNewEvidence && (
-            <Tag color="success" style={{ marginBottom: 4 }}>{t('newEvidenceReceived', 'New evidence received')}</Tag>
+            <Tag color="success" style={{ marginBottom: 4 }}>{t('newEvidenceReceived')}</Tag>
           )}
           <Space wrap>
             <Button
@@ -464,22 +480,22 @@ export default function AdminDisputeDetailPage() {
               onClick={() => handleTransitionTo('under_review')}
               loading={transitionMutation.isPending}
             >
-              {t('resumeReview', 'Resume Review')}
+              {t('resumeReview')}
             </Button>
             <Button onClick={() => handleTransitionTo('awaiting_internal_review')} loading={transitionMutation.isPending}>
-              {t('moveToInternalReview', 'Move to Internal Review')}
+              {t('moveToInternalReview')}
             </Button>
             {dispute.canRequestEvidence && (
               <Button icon={<ExclamationCircleOutlined />} onClick={() => setEvidenceModalOpen(true)}>
-                {t('requestMoreEvidence', 'Request More Evidence')}
+                {t('requestMoreEvidence')}
               </Button>
             )}
             <Popconfirm
-              title={t('cancelCaseConfirm', 'Cancel this case?')}
+              title={t('cancelCaseConfirm')}
               onConfirm={() => handleTransitionTo('cancelled')}
               okButtonProps={{ loading: transitionMutation.isPending, danger: true }}
             >
-              <Button danger>{t('cancelCase', 'Cancel Case')}</Button>
+              <Button danger>{t('cancelCase')}</Button>
             </Popconfirm>
           </Space>
         </Space>
@@ -489,11 +505,11 @@ export default function AdminDisputeDetailPage() {
         <Space wrap>
           {dispute.canRequestEvidence && (
             <Button icon={<ExclamationCircleOutlined />} onClick={() => setEvidenceModalOpen(true)}>
-              {t('requestEvidenceFromParties', 'Request Evidence from Parties')}
+              {t('requestEvidenceFromParties')}
             </Button>
           )}
           <Button onClick={() => handleTransitionTo('awaiting_internal_review')} loading={transitionMutation.isPending}>
-            {t('moveToInternalReview', 'Move to Internal Review')}
+            {t('moveToInternalReview')}
           </Button>
           {dispute.canAddFinding && (
             <Button
@@ -503,38 +519,38 @@ export default function AdminDisputeDetailPage() {
                 setFindingModalOpen(true)
               }}
             >
-              {t('addInternalFinding', 'Add Internal Finding')}
+              {t('addInternalFinding')}
             </Button>
           )}
           {dispute.canResolve && (
             <Button type="primary" icon={<CheckCircleOutlined />} onClick={() => setResolveDrawerOpen(true)}>
-              {t('resolveCase', 'Resolve Case')}
+              {t('resolveCase')}
             </Button>
           )}
           {dispute.canReject && (
             <Popconfirm
-              title={t('rejectDisputeConfirm', 'Reject this dispute?')}
+              title={t('rejectDisputeConfirm')}
               description={
                 <Input.TextArea
                   rows={2}
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
-                  placeholder={t('rejectReason', 'Reason...')}
+                  placeholder={t('rejectReason')}
                 />
               }
               onConfirm={handleReject}
               okButtonProps={{ loading: rejectMutation.isPending, disabled: !rejectReason.trim(), danger: true }}
             >
-              <Button danger icon={<CloseCircleOutlined />}>{t('rejectCase', 'Reject Case')}</Button>
+              <Button danger icon={<CloseCircleOutlined />}>{t('rejectCase')}</Button>
             </Popconfirm>
           )}
         </Space>
       )}
 
-      {dispute.status === 'awaiting_internal_review' && (
+      {dispute.status === DisputeStatus.AwaitingInternalReview && (
         <Space wrap>
           <Button onClick={() => handleTransitionTo('under_review')} loading={transitionMutation.isPending}>
-            {t('returnToReview', 'Return to Review')}
+            {t('returnToReview')}
           </Button>
           {dispute.canAddFinding && (
             <Button
@@ -544,56 +560,56 @@ export default function AdminDisputeDetailPage() {
                 setFindingModalOpen(true)
               }}
             >
-              {t('addInternalFinding', 'Add Internal Finding')}
+              {t('addInternalFinding')}
             </Button>
           )}
           {dispute.canResolve && (
             <Button type="primary" icon={<CheckCircleOutlined />} onClick={() => setResolveDrawerOpen(true)}>
-              {t('resolveCase', 'Resolve Case')}
+              {t('resolveCase')}
             </Button>
           )}
           {dispute.canReject && (
             <Popconfirm
-              title={t('rejectDisputeConfirm', 'Reject this dispute?')}
+              title={t('rejectDisputeConfirm')}
               description={
                 <Input.TextArea
                   rows={2}
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
-                  placeholder={t('rejectReason', 'Reason...')}
+                  placeholder={t('rejectReason')}
                 />
               }
               onConfirm={handleReject}
               okButtonProps={{ loading: rejectMutation.isPending, disabled: !rejectReason.trim(), danger: true }}
             >
-              <Button danger icon={<CloseCircleOutlined />}>{t('rejectCase', 'Reject Case')}</Button>
+              <Button danger icon={<CloseCircleOutlined />}>{t('rejectCase')}</Button>
             </Popconfirm>
           )}
         </Space>
       )}
 
-      {dispute.status === 'awaiting_resolution_approval' && (
+      {dispute.status === DisputeStatus.AwaitingResolutionApproval && (
         <Space wrap>
           {dispute.canResolve && (
             <Button type="primary" icon={<CheckCircleOutlined />} onClick={() => setResolveDrawerOpen(true)}>
-              {t('resolveCase', 'Resolve Case')}
+              {t('resolveCase')}
             </Button>
           )}
           {dispute.canReject && (
             <Popconfirm
-              title={t('rejectDisputeConfirm', 'Reject this dispute?')}
+              title={t('rejectDisputeConfirm')}
               description={
                 <Input.TextArea
                   rows={2}
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
-                  placeholder={t('rejectReason', 'Reason...')}
+                  placeholder={t('rejectReason')}
                 />
               }
               onConfirm={handleReject}
               okButtonProps={{ loading: rejectMutation.isPending, disabled: !rejectReason.trim(), danger: true }}
             >
-              <Button danger icon={<CloseCircleOutlined />}>{t('rejectCase', 'Reject Case')}</Button>
+              <Button danger icon={<CloseCircleOutlined />}>{t('rejectCase')}</Button>
             </Popconfirm>
           )}
         </Space>
@@ -601,16 +617,16 @@ export default function AdminDisputeDetailPage() {
 
       {/* Fallback for other non-terminal statuses: legacy request-evidence + add-finding + resolve + reject */}
       {!isTerminal &&
-        dispute.status !== 'open' &&
-        dispute.status !== 'awaiting_respondent' &&
-        dispute.status !== 'awaiting_evidence' &&
+        dispute.status !== DisputeStatus.Open &&
+        dispute.status !== DisputeStatus.AwaitingRespondent &&
+        dispute.status !== DisputeStatus.AwaitingEvidence &&
         dispute.status !== DisputeStatus.UnderReview &&
-        dispute.status !== 'awaiting_internal_review' &&
-        dispute.status !== 'awaiting_resolution_approval' && (
+        dispute.status !== DisputeStatus.AwaitingInternalReview &&
+        dispute.status !== DisputeStatus.AwaitingResolutionApproval && (
         <Space wrap>
           {dispute.canRequestEvidence && (
             <Button icon={<ExclamationCircleOutlined />} onClick={() => setEvidenceModalOpen(true)}>
-              {t('requestEvidenceFromParties', 'Request Evidence from Parties')}
+              {t('requestEvidenceFromParties')}
             </Button>
           )}
           {dispute.canAddFinding && (
@@ -621,29 +637,29 @@ export default function AdminDisputeDetailPage() {
                 setFindingModalOpen(true)
               }}
             >
-              {t('addInternalFinding', 'Add Internal Finding')}
+              {t('addInternalFinding')}
             </Button>
           )}
           {dispute.canResolve && (
             <Button type="primary" icon={<CheckCircleOutlined />} onClick={() => setResolveDrawerOpen(true)}>
-              {t('resolveCase', 'Resolve Case')}
+              {t('resolveCase')}
             </Button>
           )}
           {dispute.canReject && (
             <Popconfirm
-              title={t('rejectDisputeConfirm', 'Reject this dispute?')}
+              title={t('rejectDisputeConfirm')}
               description={
                 <Input.TextArea
                   rows={2}
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
-                  placeholder={t('rejectReason', 'Reason...')}
+                  placeholder={t('rejectReason')}
                 />
               }
               onConfirm={handleReject}
               okButtonProps={{ loading: rejectMutation.isPending, disabled: !rejectReason.trim(), danger: true }}
             >
-              <Button danger icon={<CloseCircleOutlined />}>{t('rejectCase', 'Reject Case')}</Button>
+              <Button danger icon={<CloseCircleOutlined />}>{t('rejectCase')}</Button>
             </Popconfirm>
           )}
         </Space>
@@ -657,15 +673,15 @@ export default function AdminDisputeDetailPage() {
       {dispute.resolvedAt && (
         <Result
           status="success"
-          title={t('caseResolved', 'Case Resolved')}
+          title={t('caseResolved')}
           subTitle={dispute.resolutionReason}
           style={{ marginBottom: 16, padding: '16px 24px' }}
           extra={
             <Space direction="vertical" size={4} style={{ textAlign: 'center' }}>
-              {dispute.resolutionOutcome && <Tag color="green" style={{ fontSize: 14 }}>{dispute.resolutionOutcome}</Tag>}
+              {dispute.resolutionOutcome && <Tag color="green" style={{ fontSize: 14 }}>{ta(`disputeDetail.outcomeOption.${dispute.resolutionOutcome}`, dispute.resolutionOutcome)}</Tag>}
               {dispute.resolvedByDisplayName && (
                 <Typography.Text type="secondary">
-                  {t('resolvedBy', 'Resolved by')}: {dispute.resolvedByDisplayName} - {dayjs(dispute.resolvedAt).format('DD/MM/YYYY HH:mm')}
+                  {t('resolvedBy')}: {dispute.resolvedByDisplayName} - {dayjs(dispute.resolvedAt).format('DD/MM/YYYY HH:mm')}
                 </Typography.Text>
               )}
             </Space>
@@ -683,18 +699,18 @@ export default function AdminDisputeDetailPage() {
             <Button type="text" size="small" icon={<CopyOutlined />} onClick={copyDisputeNumber} />
           </Space>
           <StatusBadge status={dispute.status} />
-          {dispute.domain && <Tag color="geekblue">{dispute.domain}</Tag>}
-          {dispute.caseType && <Tag color="cyan">{dispute.caseType}</Tag>}
+          {dispute.domain && <Tag color="geekblue">{t(`domainLabel.${dispute.domain}`, dispute.domain)}</Tag>}
+          {dispute.caseType && <Tag color="cyan">{t(`caseTypeLabel.${dispute.caseType}`, dispute.caseType)}</Tag>}
           {dispute.assignedToDisplayName ? (
             <Tag icon={<TeamOutlined />} color="processing">
-              {t('assignedTo', 'Assigned to')} {dispute.assignedToDisplayName}
+              {t('assignedTo')} {dispute.assignedToDisplayName}
             </Tag>
           ) : (
-            <Tag>{t('unassigned', 'Unassigned')}</Tag>
+            <Tag>{t('unassigned')}</Tag>
           )}
           {isAwaitingEvidence && (
             <Tag color="warning">
-              {t('awaitingEvidenceSince', 'Awaiting evidence since')} {dayjs(dispute.requestedEvidenceAt).format('DD/MM/YYYY HH:mm')}
+              {t('awaitingEvidenceSince')} {dayjs(dispute.requestedEvidenceAt).format('DD/MM/YYYY HH:mm')}
             </Tag>
           )}
         </Space>
@@ -715,13 +731,13 @@ export default function AdminDisputeDetailPage() {
         <Collapse
           items={[{
             key: 'context',
-            label: t('caseContext', 'Case Context'),
+            label: t('caseContext'),
             children: (
               <div>
                 {Object.entries(contextSnapshot).map(([key, value]) => (
                   <div key={key} style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
-                    <Typography.Text strong style={{ minWidth: 120, fontSize: 12 }}>{key}:</Typography.Text>
-                    <Typography.Text style={{ fontSize: 12 }}>{String(value)}</Typography.Text>
+                    <Typography.Text strong style={{ minWidth: 160, fontSize: 12 }}>{t(`contextField.${key}`, key)}:</Typography.Text>
+                    <Typography.Text style={{ fontSize: 12 }}>{formatContextValue(key, value)}</Typography.Text>
                   </div>
                 ))}
               </div>
@@ -740,9 +756,9 @@ export default function AdminDisputeDetailPage() {
             size="small"
             title={
               <Space>
-                <span>{t('externalThread', 'External Thread')}</span>
+                <span>{t('externalThread')}</span>
                 <Typography.Text type="secondary" style={{ fontSize: 11, fontWeight: 'normal' }}>
-                  {t('visibleToBuyerSeller', 'Visible to buyer/seller')}
+                  {t('visibleToBuyerSeller')}
                 </Typography.Text>
               </Space>
             }
@@ -751,7 +767,7 @@ export default function AdminDisputeDetailPage() {
           >
             <div style={{ flex: 1, maxHeight: 400, overflow: 'auto', marginBottom: 12 }}>
               {externalMessages.length === 0 ? (
-                <Empty description={t('noMessages', 'No messages')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
+                <Empty description={t('noMessages')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
               ) : (
                 externalMessages.map((m) => renderMessage(m, 'var(--color-accent, #1677ff)'))
               )}
@@ -761,7 +777,7 @@ export default function AdminDisputeDetailPage() {
                 <Input.TextArea
                   value={externalMessageText}
                   onChange={(e) => setExternalMessageText(e.target.value)}
-                  placeholder={t('typeExternalMessage', 'Message visible to buyer/seller...')}
+                  placeholder={t('typeExternalMessage')}
                   autoSize={{ minRows: 1, maxRows: 3 }}
                   style={{ flex: 1 }}
                   onKeyDown={(e) => {
@@ -778,7 +794,7 @@ export default function AdminDisputeDetailPage() {
                   loading={addMessageMutation.isPending}
                   disabled={!externalMessageText.trim()}
                 >
-                  {t('send', 'Send')}
+                  {t('send')}
                 </Button>
               </Space.Compact>
             )}
@@ -798,12 +814,12 @@ export default function AdminDisputeDetailPage() {
               items={[
                 {
                   key: 'notes',
-                  label: t('internalNotes', 'Internal Notes'),
+                  label: t('internalNotes'),
                   children: (
                     <div style={{ padding: '0 0 12px' }}>
                       <div style={{ maxHeight: 400, overflow: 'auto', marginBottom: 12 }}>
                         {internalMessages.length === 0 ? (
-                          <Empty description={t('noInternalNotes', 'No internal notes')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
+                          <Empty description={t('noInternalNotes')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
                         ) : (
                           internalMessages.map((m) => renderMessage(m, 'var(--color-warning, orange)'))
                         )}
@@ -814,7 +830,7 @@ export default function AdminDisputeDetailPage() {
                             <Input.TextArea
                               value={internalMessageText}
                               onChange={(e) => setInternalMessageText(e.target.value)}
-                              placeholder={t('typeInternalNote', 'Internal note...')}
+                              placeholder={t('typeInternalNote')}
                               autoSize={{ minRows: 1, maxRows: 3 }}
                               style={{ flex: 1 }}
                               onKeyDown={(e) => {
@@ -831,11 +847,11 @@ export default function AdminDisputeDetailPage() {
                               loading={addMessageMutation.isPending}
                               disabled={!internalMessageText.trim()}
                             >
-                              {t('send', 'Send')}
+                              {t('send')}
                             </Button>
                           </Space.Compact>
                           <Typography.Text type="secondary" style={{ fontSize: 11, marginTop: 4, display: 'block' }}>
-                            {t('internalOnly', 'Only visible to internal reviewers.')}
+                            {t('internalOnly')}
                           </Typography.Text>
                         </>
                       )}
@@ -844,11 +860,11 @@ export default function AdminDisputeDetailPage() {
                 },
                 {
                   key: 'findings',
-                  label: t('findings', 'Findings'),
+                  label: t('findings'),
                   children: (
                     <div style={{ maxHeight: 500, overflow: 'auto', padding: '0 0 12px' }}>
                       {(dispute.findings ?? []).length === 0 ? (
-                        <Empty description={t('noFindings', 'No findings yet.')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
+                        <Empty description={t('noFindings')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
                       ) : (
                         dispute.findings.map(renderFinding)
                       )}
@@ -868,11 +884,11 @@ export default function AdminDisputeDetailPage() {
             <>
               <div style={{ position: 'sticky', bottom: 0, padding: '12px 0', background: 'var(--color-bg-primary)', zIndex: 10, borderTop: '1px solid var(--color-border)' }}>
                 <Button type="primary" block onClick={() => setMobileActionsOpen(true)}>
-                  {t('actions', 'Actions')}
+                  {t('actions')}
                 </Button>
               </div>
               <Drawer
-                title={t('caseActions', 'Case Actions')}
+                title={t('caseActions')}
                 placement="bottom"
                 open={mobileActionsOpen}
                 onClose={() => setMobileActionsOpen(false)}
@@ -882,7 +898,7 @@ export default function AdminDisputeDetailPage() {
               </Drawer>
             </>
           ) : (
-            <Card size="small" title={t('caseActions', 'Case Actions')} style={{ marginBottom: 16 }}>
+            <Card size="small" title={t('caseActions')} style={{ marginBottom: 16 }}>
               {renderCaseActions()}
             </Card>
           )}
@@ -894,7 +910,7 @@ export default function AdminDisputeDetailPage() {
         <Collapse
           items={[{
             key: 'evidence',
-            label: t('allEvidence', 'All Evidence'),
+            label: t('allEvidence'),
             children: (
               <Image.PreviewGroup>
                 <Space wrap>
@@ -920,25 +936,25 @@ export default function AdminDisputeDetailPage() {
 
       {/* Request Evidence Modal */}
       <Modal
-        title={t('requestEvidence', 'Request Evidence')}
+        title={t('requestEvidence')}
         open={evidenceModalOpen}
         onOk={handleRequestEvidence}
         onCancel={() => setEvidenceModalOpen(false)}
         confirmLoading={requestEvidenceMutation.isPending}
         okButtonProps={{ disabled: !evidenceRequestMsg.trim() }}
       >
-        <div style={{ marginBottom: 4 }}>{t('messageToParties', 'Message to parties')}</div>
+        <div style={{ marginBottom: 4 }}>{t('messageToParties')}</div>
         <Input.TextArea
           rows={3}
           value={evidenceRequestMsg}
           onChange={(e) => setEvidenceRequestMsg(e.target.value)}
-          placeholder={t('evidenceRequestMessage', 'Describe what evidence is needed...')}
+          placeholder={t('evidenceRequestMessage')}
         />
       </Modal>
 
       {/* Add Finding Modal */}
       <Modal
-        title={t('addFinding', 'Add Finding')}
+        title={t('addFinding')}
         open={findingModalOpen}
         onOk={handleAddFinding}
         onCancel={() => setFindingModalOpen(false)}
@@ -947,12 +963,12 @@ export default function AdminDisputeDetailPage() {
       >
         <Space direction="vertical" style={{ width: '100%' }} size="middle">
           <div>
-            <div style={{ marginBottom: 4 }}>{t('domain', 'Domain')}</div>
+            <div style={{ marginBottom: 4 }}>{t('domain')}</div>
             <Select
               value={findingDomain || undefined}
               onChange={setFindingDomain}
               style={{ width: '100%' }}
-              placeholder={t('selectDomain', 'Select domain')}
+              placeholder={t('selectDomain')}
               options={[
                 { value: 'order', label: ta('disputeDetail.domainOption.order') },
                 { value: 'payment', label: ta('disputeDetail.domainOption.payment') },
@@ -966,28 +982,28 @@ export default function AdminDisputeDetailPage() {
             />
           </div>
           <div>
-            <div style={{ marginBottom: 4 }}>{t('findingSummary', 'Finding summary')} *</div>
-            <Input.TextArea rows={3} value={findingSummary} onChange={(e) => setFindingSummary(e.target.value)} placeholder={t('describeFinding', 'Describe the finding...')} />
+            <div style={{ marginBottom: 4 }}>{t('findingSummary')} *</div>
+            <Input.TextArea rows={3} value={findingSummary} onChange={(e) => setFindingSummary(e.target.value)} placeholder={t('describeFinding')} />
           </div>
           <div>
-            <div style={{ marginBottom: 4 }}>{t('recommendation', 'Recommendation')}</div>
+            <div style={{ marginBottom: 4 }}>{t('recommendation')}</div>
             <Select
               value={findingRecommendation || undefined}
               onChange={setFindingRecommendation}
               style={{ width: '100%' }}
-              placeholder={t('selectRecommendation', 'Select recommendation')}
+              placeholder={t('selectRecommendation')}
               options={RECOMMENDATION_OPTIONS}
               allowClear
             />
           </div>
           <div>
-            <div style={{ marginBottom: 4 }}>{t('referencedEvidence', 'Referenced evidence')}</div>
+            <div style={{ marginBottom: 4 }}>{t('referencedEvidence')}</div>
             <Select
               mode="multiple"
               showSearch
               optionFilterProp="label"
               style={{ width: '100%' }}
-              placeholder={t('selectEvidenceRefs', 'Select messages or attachments...')}
+              placeholder={t('selectEvidenceRefs')}
               value={findingSelectedRefs.map((r) => r.targetId)}
               onChange={(vals: string[]) => {
                 setFindingSelectedRefs(
@@ -1007,13 +1023,13 @@ export default function AdminDisputeDetailPage() {
             />
           </div>
           <div>
-            <div style={{ marginBottom: 4 }}>{t('referenceNote', 'Reference note (optional)')}</div>
+            <div style={{ marginBottom: 4 }}>{t('referenceNote')}</div>
             <Input.TextArea
               rows={2}
               maxLength={500}
               value={findingNote}
               onChange={(e) => setFindingNote(e.target.value)}
-              placeholder={t('referenceNotePlaceholder', 'Optional note about the references...')}
+              placeholder={t('referenceNotePlaceholder')}
               showCount
             />
           </div>
@@ -1022,7 +1038,7 @@ export default function AdminDisputeDetailPage() {
 
       {/* Resolve Drawer */}
       <Drawer
-        title={t('resolveCase', 'Resolve Case')}
+        title={t('resolveCase')}
         open={resolveDrawerOpen}
         onClose={() => setResolveDrawerOpen(false)}
         width={520}
@@ -1033,7 +1049,7 @@ export default function AdminDisputeDetailPage() {
             loading={resolveMutation.isPending}
             disabled={!resolveOutcome || !resolveReason.trim() || actionSetValidation.errors.length > 0}
           >
-            {t('confirm', 'Confirm')}
+            {t('confirm')}
           </Button>
         }
       >
@@ -1041,27 +1057,27 @@ export default function AdminDisputeDetailPage() {
           {latestFinding?.verdictRecommendation && (
             <div>
               <Typography.Text type="secondary" style={{ fontSize: 11 }}>
-                {t('latestFindingRecommendation', 'Latest finding recommendation')}:
+                {t('latestFindingRecommendation')}:
               </Typography.Text>
-              <div><Tag color="blue" style={{ marginTop: 4 }}>{latestFinding.verdictRecommendation}</Tag></div>
+              <div><Tag color="blue" style={{ marginTop: 4 }}>{ta(`disputeDetail.outcomeOption.${latestFinding.verdictRecommendation}`, latestFinding.verdictRecommendation)}</Tag></div>
             </div>
           )}
           <div>
-            <div style={{ marginBottom: 4 }}>{t('outcome', 'Outcome')} *</div>
+            <div style={{ marginBottom: 4 }}>{t('outcome')} *</div>
             <Select
               value={resolveOutcome || undefined}
               onChange={setResolveOutcome}
               options={OUTCOME_OPTIONS}
               style={{ width: '100%' }}
-              placeholder={t('selectOutcome', 'Select outcome')}
+              placeholder={t('selectOutcome')}
             />
           </div>
           <div>
-            <div style={{ marginBottom: 4 }}>{t('reason', 'Reason')} *</div>
-            <Input.TextArea rows={3} value={resolveReason} onChange={(e) => setResolveReason(e.target.value)} placeholder={t('resolutionReason', 'Explain the resolution...')} />
+            <div style={{ marginBottom: 4 }}>{t('reason')} *</div>
+            <Input.TextArea rows={3} value={resolveReason} onChange={(e) => setResolveReason(e.target.value)} placeholder={t('resolutionReason')} />
           </div>
           <div>
-            <div style={{ marginBottom: 4 }}>{t('resolutionActions', 'Resolution Actions')}</div>
+            <div style={{ marginBottom: 4 }}>{t('resolutionActions')}</div>
             <ResolutionActionBuilder
               value={resolveActionSet}
               onChange={setResolveActionSet}

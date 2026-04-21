@@ -110,7 +110,7 @@ export default function MyDisputeDetailPage() {
             {dispute.disputeNumber}
           </Typography.Title>
           <Tag color={STATUS_COLOR_MAP[dispute.status] ?? 'default'}>{t(`statusLabel.${dispute.status}`, dispute.status)}</Tag>
-          {dispute.domain && <Tag>{dispute.domain}</Tag>}
+          {dispute.domain && <Tag>{t(`domainLabel.${dispute.domain}`, dispute.domain)}</Tag>}
         </Space>
         {dispute.title && (
           <Typography.Paragraph style={{ marginTop: 8, marginBottom: 0 }}>

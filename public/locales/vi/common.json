@@ -331,5 +331,12 @@
     "very_good": "Rất tốt",
     "good": "Tốt",
     "acceptable": "Có thể chấp nhận"
+  },
+  "dispute": {
+    "activeBanner": {
+      "message": "Đang có tranh chấp mở cho đơn hàng này.",
+      "number": "Tranh chấp",
+      "view": "Xem tranh chấp"
+    }
   }
 }

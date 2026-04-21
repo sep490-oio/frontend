@@ -143,7 +143,13 @@
       "conditionNotes": "Condition Notes",
       "submit": "Submit Proof of Delivery",
       "photos": "Delivery Photos",
-      "chooseCondition": "Choose package condition"
+      "chooseCondition": "Choose package condition",
+      "blocked": {
+        "terminal": "Order completed or disputed",
+        "notReady": "Shipment not ready for receipt confirmation",
+        "terminalDesc": "Cannot submit proof of delivery for a shipment in this state.",
+        "notReadyDesc": "Seller has not confirmed handoff to carrier. Please wait for shipment dispatch."
+      }
     },
     "conditions": {
       "sealed_intact": "Sealed & Intact",
@@ -172,6 +178,18 @@
   "carrierPlaceholder": "GHTK / Viettel Post / ...",
   "weightPlaceholder": "500",
   "shippingMethodPlaceholder": "standard / express",
+  "openDispute": "Report Issue / Open Dispute",
+  "disputeDomain": "Domain",
+  "selectDomain": "Select domain",
+  "disputeCaseType": "Case Type",
+  "selectCaseType": "Select case type",
+  "disputeTitle": "Title",
+  "disputeTitlePlaceholder": "Brief summary of the issue",
+  "disputeDescription": "Description",
+  "disputeDescriptionPlaceholder": "Describe the issue in detail (min. 20 characters)...",
+  "disputeDescriptionMinLength": "Please enter at least 20 characters",
+  "disputeCreated": "Dispute created successfully",
+  "disputeError": "Failed to create dispute",
   "sellerOrders": "Seller Orders",
   "shipmentFeed": {
     "title": "My Shipments",
@@ -232,7 +250,12 @@
     "confirmNo": "Cancel",
     "acceptRelease": "Accept & Release Funds",
     "raiseDispute": "Raise Dispute",
-    "estimatedPayout": "Estimated payout"
+    "estimatedPayout": "Estimated payout",
+    "decisionPrompt": "You have {{hours}} hours to accept or raise a dispute",
+    "autoReleaseHint": "After the window closes, funds will be automatically released to the seller."
+  },
+  "buyerOutboundReceive": {
+    "activeDispute": "A dispute is already open for this order"
   },
   "fulfillmentActions": "Fulfillment Actions",
   "confirmOrder": "Confirm Order",

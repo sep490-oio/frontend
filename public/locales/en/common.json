@@ -305,5 +305,12 @@
     "very_good": "Very Good",
     "good": "Good",
     "acceptable": "Acceptable"
+  },
+  "dispute": {
+    "activeBanner": {
+      "message": "An active dispute is open for this {{context}}.",
+      "number": "Dispute",
+      "view": "View dispute"
+    }
   }
 }
