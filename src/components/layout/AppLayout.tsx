@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { Outlet, useNavigate, useLocation, Link } from 'react-router'
-import { Layout, Avatar, Dropdown, Button, Space, Drawer, Input, AutoComplete } from 'antd'
+import { Layout, Avatar, Dropdown, Button, Space, Drawer, Input, AutoComplete, Alert } from 'antd'
+import { FileProtectOutlined } from '@ant-design/icons'
 import {
   UserOutlined,
   LogoutOutlined,
@@ -10,6 +11,7 @@ import {
   MoonOutlined,
   HeartOutlined,
   WalletOutlined,
+  CreditCardOutlined,
   ShoppingOutlined,
   CommentOutlined,
   SafetyCertificateOutlined,
@@ -80,7 +82,6 @@ export function AppLayout() {
   const { data: activePlatformTerm } = useActiveTermsByType('platform')
   const { data: acceptedTermsList } = useAcceptedTerms({ enabled: isAuthenticated })
   const [platformTermsModalOpen, setPlatformTermsModalOpen] = useState(false)
-  const [platformTermsAutoShown, setPlatformTermsAutoShown] = useState(false)
 
   const platformTermNeedsAcceptance = useMemo(() => {
     if (!activePlatformTerm || !acceptedTermsList) return false
@@ -90,13 +91,6 @@ export function AppLayout() {
     return !acceptedDocIds.has(activePlatformTerm.id)
   }, [activePlatformTerm, acceptedTermsList])
 
-  useEffect(() => {
-    if (isAuthenticated && platformTermNeedsAcceptance && !platformTermsAutoShown) {
-      setPlatformTermsModalOpen(true)
-      setPlatformTermsAutoShown(true)
-    }
-  }, [isAuthenticated, platformTermNeedsAcceptance, platformTermsAutoShown])
-
   const userMenuItems = [
     { key: 'dashboard', icon: <UserOutlined />, label: t('common:menu.home', 'Dashboard') },
     { key: 'profile', icon: <UserOutlined />, label: t('common:menu.profile', 'Profile') },
@@ -105,6 +99,7 @@ export function AppLayout() {
     { key: 'orders', icon: <ShoppingOutlined />, label: t('common:menu.myOrders', 'Orders') },
     { key: 'shipments', icon: <ShoppingOutlined />, label: t('common:menu.myShipments', 'My Shipments') },
     { key: 'wallet', icon: <WalletOutlined />, label: t('common:menu.wallet', 'Wallet') },
+    { key: 'paymentMethods', icon: <CreditCardOutlined />, label: t('common:menu.paymentMethods', 'Payment Methods') },
     { key: 'disputes', icon: <CommentOutlined />, label: t('common:menu.disputes', 'Disputes') },
     { type: 'divider' as const },
     { key: 'verification', icon: <SafetyCertificateOutlined />, label: t('common:menu.verification', 'Verification') },
@@ -122,6 +117,7 @@ export function AppLayout() {
       case 'orders': navigate('/me/orders'); break
       case 'shipments': navigate('/me/shipments'); break
       case 'wallet': navigate('/me/wallet'); break
+      case 'paymentMethods': navigate('/me/payment-methods'); break
       case 'disputes': navigate('/me/disputes'); break
       case 'security': navigate('/me/security'); break
       case 'verification': navigate('/me/verification'); break
@@ -495,6 +491,26 @@ export function AppLayout() {
         }}
       >
         <div key={location.pathname} className="oio-page-enter">
+          {isAuthenticated && platformTermNeedsAcceptance && (
+            <Alert
+              type="warning"
+              showIcon
+              icon={<FileProtectOutlined />}
+              style={{ marginTop: 16, marginBottom: 8 }}
+              message={t('common:terms.pendingBannerTitle', 'Action required: review updated Platform Terms', { type: t('common:terms.type.platform', 'Platform Terms') })}
+              description={t('common:terms.pendingBannerDesc', 'You need to review and accept the current version before your account can perform gated actions.')}
+              action={
+                <Button
+                  type="primary"
+                  size="small"
+                  onClick={() => setPlatformTermsModalOpen(true)}
+                  style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
+                >
+                  {t('common:terms.reviewAndAccept', 'Review & Accept')}
+                </Button>
+              }
+            />
+          )}
           <Outlet />
         </div>
       </Content>

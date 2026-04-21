@@ -39,6 +39,7 @@ import {
   useRelistAuction,
   useSubmitAuction,
   useCancelAuction,
+  useAdminRejectAuction,
   useSetAuctionTiming,
 } from '@/features/auction/api'
 import { useWallet, useCreateDepositPayment, useDepositFromWallet } from '@/features/payment/api'
@@ -49,7 +50,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useCurrentUser } from '@/features/user/api'
 import { ImageGallery } from '@/components/ui/ImageGallery'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { useCategories } from '@/features/item/api'
+import { useCategories, useAdminRemoveItem } from '@/features/item/api'
 import ShippingDetailsForm from '@/components/ui/ShippingDetailsForm'
 import type { ShippingDetailsFormValues } from '@/components/ui/ShippingDetailsForm'
 import { AuctionStatus } from '@/types/enums'
@@ -198,6 +199,8 @@ export default function AuctionDetailPage() {
   const relistAuction = useRelistAuction()
   const submitAuctionMutation = useSubmitAuction()
   const cancelAuctionMutation = useCancelAuction()
+  const adminRejectMutation = useAdminRejectAuction()
+  const adminRemoveItemMutation = useAdminRemoveItem()
   const setAuctionTimingMutation = useSetAuctionTiming()
   const [shippingForm] = Form.useForm<ShippingDetailsFormValues>()
 
@@ -220,6 +223,10 @@ export default function AuctionDetailPage() {
   const [cancelModalOpen, setCancelModalOpen] = useState(false)
   const [chartModalOpen, setChartModalOpen] = useState(false)
   const [cancelReason, setCancelReason] = useState('')
+  const [adminRejectModalOpen, setAdminRejectModalOpen] = useState(false)
+  const [adminRejectReason, setAdminRejectReason] = useState('')
+  const [adminRemoveItemModalOpen, setAdminRemoveItemModalOpen] = useState(false)
+  const [adminRemoveItemReason, setAdminRemoveItemReason] = useState('')
   const [timingModalOpen, setTimingModalOpen] = useState(false)
   const [buyNowCapModal, setBuyNowCapModal] = useState<{
     open: boolean
@@ -801,6 +808,73 @@ export default function AuctionDetailPage() {
         message.success(t('cancelSuccess', 'Auction cancelled'))
         setCancelModalOpen(false)
       },
+      onError: (err: unknown) => {
+        const apiErr = err as { response?: { data?: { code?: string; detail?: string } } }
+        const code = apiErr?.response?.data?.code
+        if (code === 'Auction.CancelBlocked.ActiveBids') {
+          message.warning(
+            t(
+              'cancelBlockedActiveBids',
+              'Không thể hủy phiên đấu giá khi đã có người đặt giá. Vui lòng liên hệ admin nếu cần xử lý khẩn cấp.',
+            ),
+          )
+          return
+        }
+        // fallback to BE detail or generic message — let global error handler log the rest
+        const detail = apiErr?.response?.data?.detail
+        if (detail) message.error(detail)
+      },
+    })
+  }
+
+  // Admin role detection — parses JWT's `role` claim (same pattern as RoleGuard).
+  const isAdminUser = (() => {
+    try {
+      const token = localStorage.getItem('oio_access_token')
+      if (!token) return false
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      const roles = payload.role ?? payload.roles ?? []
+      const rolesArr = Array.isArray(roles) ? roles : [roles]
+      return rolesArr.some((r: string) => typeof r === 'string' && r.toLowerCase() === 'admin')
+    } catch { return false }
+  })()
+
+  // Admin reject is allowed on pre-bidding statuses (pending/approved/scheduled).
+  const canAdminReject = isAdminUser && auction && ['pending', 'approved', 'scheduled'].includes(auction.status)
+
+  const handleAdminRejectConfirm = () => {
+    if (!id || !adminRejectReason.trim()) return
+    adminRejectMutation.mutate({ auctionId: id, reason: adminRejectReason.trim() }, {
+      onSuccess: () => {
+        message.success(t('adminRejectSuccess', 'Auction flagged for seller review'))
+        setAdminRejectModalOpen(false)
+        setAdminRejectReason('')
+      },
+      onError: (err: unknown) => {
+        const apiErr = err as { response?: { data?: { detail?: string } } }
+        const detail = apiErr?.response?.data?.detail
+        if (detail) message.error(detail)
+      },
+    })
+  }
+
+  // Bug #11 fix: admin can mark the physical item as Removed in any state
+  // (including InAuction). Typical use: physical item destroyed/lost/counterfeit.
+  // Admin should normally terminate the auction via emergency first — but not enforced here.
+  const canAdminRemoveItem = isAdminUser && !!item?.id
+  const handleAdminRemoveItemConfirm = () => {
+    if (!item?.id || !adminRemoveItemReason.trim()) return
+    adminRemoveItemMutation.mutate({ id: item.id, reason: adminRemoveItemReason.trim() }, {
+      onSuccess: () => {
+        message.success(t('adminRemoveItemSuccess', 'Item marked as removed'))
+        setAdminRemoveItemModalOpen(false)
+        setAdminRemoveItemReason('')
+      },
+      onError: (err: unknown) => {
+        const apiErr = err as { response?: { data?: { detail?: string } } }
+        const detail = apiErr?.response?.data?.detail
+        if (detail) message.error(detail)
+      },
     })
   }
 
@@ -917,6 +991,32 @@ export default function AuctionDetailPage() {
           onClick={() => setReportModalOpen(true)}
         >
           {td('reportAuction', 'Report')}
+        </Button>
+      )}
+
+      {/* Admin Reject button — Bug #1 fix (visible only for admin + pre-bidding status) */}
+      {canAdminReject && (
+        <Button
+          size="small"
+          icon={<FlagOutlined />}
+          danger
+          style={{ marginBottom: isMobile ? 16 : 32, marginLeft: 12 }}
+          onClick={() => { setAdminRejectReason(''); setAdminRejectModalOpen(true) }}
+        >
+          {t('adminReject', 'Admin Reject')}
+        </Button>
+      )}
+
+      {/* Admin Remove Item button — Bug #11 fix (for destroyed / counterfeit / lost items) */}
+      {canAdminRemoveItem && (
+        <Button
+          size="small"
+          icon={<FlagOutlined />}
+          danger
+          style={{ marginBottom: isMobile ? 16 : 32, marginLeft: 12 }}
+          onClick={() => { setAdminRemoveItemReason(''); setAdminRemoveItemModalOpen(true) }}
+        >
+          {t('adminRemoveItem', 'Admin: Remove Item')}
         </Button>
       )}
 
@@ -1413,6 +1513,60 @@ export default function AuctionDetailPage() {
           onChange={(e) => setCancelReason(e.target.value)}
           rows={3}
           placeholder={t('cancelReasonPlaceholder', 'Reason for cancellation...')}
+        />
+      </Modal>
+
+      {/* Admin Reject Auction Modal — Bug #1 fix */}
+      <Modal
+        open={adminRejectModalOpen}
+        title={t('adminRejectTitle', 'Admin: Reject Auction')}
+        onCancel={() => setAdminRejectModalOpen(false)}
+        onOk={handleAdminRejectConfirm}
+        okText={t('confirm', 'Confirm')}
+        okButtonProps={{
+          danger: true,
+          disabled: !adminRejectReason.trim(),
+          loading: adminRejectMutation.isPending,
+        }}
+      >
+        <Typography.Text style={{ display: 'block', marginBottom: 8 }}>
+          {t(
+            'adminRejectExplain',
+            'Ghi chú: thao tác này KHÔNG hủy phiên. Nó chỉ tăng RejectionCount và thông báo cho seller sửa lại. Dùng Terminate cho các trường hợp khẩn cấp.',
+          )}
+        </Typography.Text>
+        <Input.TextArea
+          value={adminRejectReason}
+          onChange={(e) => setAdminRejectReason(e.target.value)}
+          rows={3}
+          placeholder={t('adminRejectReasonPlaceholder', 'Lý do từ chối (ví dụ: hình ảnh sai, thông tin thiếu, nghi ngờ counterfeit)...')}
+        />
+      </Modal>
+
+      {/* Admin Remove Item Modal — Bug #11 fix */}
+      <Modal
+        open={adminRemoveItemModalOpen}
+        title={t('adminRemoveItemTitle', 'Admin: Remove Physical Item')}
+        onCancel={() => setAdminRemoveItemModalOpen(false)}
+        onOk={handleAdminRemoveItemConfirm}
+        okText={t('confirm', 'Confirm')}
+        okButtonProps={{
+          danger: true,
+          disabled: !adminRemoveItemReason.trim(),
+          loading: adminRemoveItemMutation.isPending,
+        }}
+      >
+        <Typography.Text style={{ display: 'block', marginBottom: 8 }}>
+          {t(
+            'adminRemoveItemExplain',
+            'Cảnh báo: thao tác này đánh dấu Item là Removed (không hoàn tác). Dùng khi vật phẩm bị mất/hỏng/xác nhận counterfeit. Lưu ý: nếu phiên đang Active, hãy Terminate phiên trước qua Emergency.',
+          )}
+        </Typography.Text>
+        <Input.TextArea
+          value={adminRemoveItemReason}
+          onChange={(e) => setAdminRemoveItemReason(e.target.value)}
+          rows={3}
+          placeholder={t('adminRemoveItemReasonPlaceholder', 'Lý do xóa (destroyed/lost/counterfeit...)')}
         />
       </Modal>
 

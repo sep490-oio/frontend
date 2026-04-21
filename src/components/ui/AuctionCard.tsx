@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import { HeartOutlined, HeartFilled } from '@ant-design/icons'
 import { CountdownTimer } from './CountdownTimer'
 import { PriceDisplay } from './PriceDisplay'
@@ -15,15 +16,62 @@ interface AuctionCardProps {
   auction: AuctionListItemDto
 }
 
-// function getQualificationLabel(
-//   auction: AuctionListItemDto,
-// ): string | null {
-//   const status = auction.status
-//   if (status === AuctionStatus.Active) return 'Dang dien ra'
-//   if (status === AuctionStatus.Scheduled) return 'Dang ky mo'
-//   if (status === AuctionStatus.Ended || status === AuctionStatus.Sold) return 'Da ket thuc'
-//   return null
-// }
+/** Colour families used by the terminal chip — mirrors StatusBadge variants. */
+type TerminalChipVariant = 'solid-success' | 'solid-neutral' | 'solid-danger' | 'solid-warning'
+
+interface TerminalChip {
+  label: string
+  variant: TerminalChipVariant
+  /** When true, the card should render the final sale price prominently. */
+  showFinalPrice: boolean
+}
+
+/**
+ * Route terminal-state card chips by the auction's real status.
+ * Replaces the old 5-way "ENDED" conflation on the CTA button.
+ *
+ * Exhaustive against `AuctionStatus`: adding a new member without handling
+ * it here triggers a TS error at the `never` check below.
+ */
+function getTerminalChip(
+  status: AuctionStatus,
+  t: TFunction,
+): TerminalChip | null {
+  switch (status) {
+    case AuctionStatus.Sold:
+    case AuctionStatus.Completed:
+      return { label: t('card.chipSold', 'Đã bán'), variant: 'solid-success', showFinalPrice: true }
+    case AuctionStatus.Failed:
+      return { label: t('card.chipFailed', 'Không bán được'), variant: 'solid-neutral', showFinalPrice: false }
+    case AuctionStatus.Cancelled:
+      return { label: t('card.chipCancelled', 'Đã hủy'), variant: 'solid-neutral', showFinalPrice: false }
+    case AuctionStatus.Terminated:
+      return { label: t('card.chipTerminated', 'Đã chấm dứt'), variant: 'solid-danger', showFinalPrice: false }
+    case AuctionStatus.PaymentDefaulted:
+      return { label: t('card.chipPaymentDefaulted', 'Người thắng không thanh toán'), variant: 'solid-warning', showFinalPrice: false }
+    // Non-terminal / non-chip states — handled by other card UI (timer, CTA).
+    case AuctionStatus.Draft:
+    case AuctionStatus.Pending:
+    case AuctionStatus.Approved:
+    case AuctionStatus.Scheduled:
+    case AuctionStatus.Active:
+    case AuctionStatus.Ended:
+      return null
+    default: {
+      // Exhaustiveness guard — adding a new AuctionStatus must be handled above.
+      const _exhaustive: never = status
+      void _exhaustive
+      return null
+    }
+  }
+}
+
+const CHIP_STYLE: Record<TerminalChipVariant, { bg: string; color: string; border: string }> = {
+  'solid-success': { bg: 'var(--color-success)', color: '#fff', border: 'var(--color-success)' },
+  'solid-neutral': { bg: '#4b5563', color: '#fff', border: '#4b5563' },
+  'solid-danger':  { bg: 'var(--color-danger)', color: '#fff', border: 'var(--color-danger)' },
+  'solid-warning': { bg: '#f59e0b', color: '#fff', border: '#f59e0b' },
+}
 
 export function AuctionCard({ auction }: AuctionCardProps) {
   const { t } = useTranslation('auction')
@@ -42,6 +90,8 @@ export function AuctionCard({ auction }: AuctionCardProps) {
   }, [auction.isWatched, auction.hasWatched])
 
   const isActive = auction.status === AuctionStatus.Active
+  const isScheduled = auction.status === AuctionStatus.Scheduled
+  const terminalChip = getTerminalChip(auction.status, t)
   const isAtStartingPrice = auction.currentPrice?.amount === auction.startingPrice?.amount
 
   const handleWatchToggle = (e: React.MouseEvent) => {
@@ -143,7 +193,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
               {t('statusTab.active')}
             </span>
           )}
-          {auction.status === AuctionStatus.Scheduled && (
+          {isScheduled && (
             <span
               style={{
                 background: '#f97316',
@@ -162,6 +212,28 @@ export function AuctionCard({ auction }: AuctionCardProps) {
             >
               <span style={{ width: 6, height: 6, background: '#ffffff', borderRadius: '50%' }} />
               {t('statusTab.scheduled')}
+            </span>
+          )}
+          {terminalChip && (
+            <span
+              data-testid={`card-chip-${auction.status}`}
+              style={{
+                background: CHIP_STYLE[terminalChip.variant].bg,
+                color: CHIP_STYLE[terminalChip.variant].color,
+                border: `1px solid ${CHIP_STYLE[terminalChip.variant].border}`,
+                fontSize: 11,
+                fontWeight: 700,
+                padding: '5px 12px',
+                borderRadius: 100,
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+            >
+              {terminalChip.label}
             </span>
           )}
           <span
@@ -258,9 +330,19 @@ export function AuctionCard({ auction }: AuctionCardProps) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <div>
             <p style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--color-text-secondary, #6b7280)', margin: '0 0 2px 0' }}>
-              {isAtStartingPrice ? t('startingAt') : t('currentBid')}
+              {terminalChip?.showFinalPrice
+                ? t('card.finalPrice', 'Giá chốt')
+                : isAtStartingPrice ? t('startingAt') : t('currentBid')}
             </p>
-            <div style={{ fontWeight: 700, color: 'var(--color-text-primary, #f3f4f6)' }}>
+            <div
+              data-testid={terminalChip?.showFinalPrice ? 'card-final-price' : undefined}
+              style={{
+                fontWeight: 700,
+                color: terminalChip?.showFinalPrice
+                  ? 'var(--color-success)'
+                  : 'var(--color-text-primary, #f3f4f6)',
+              }}
+            >
               <PriceDisplay price={auction.currentPrice} />
             </div>
           </div>
@@ -303,7 +385,11 @@ export function AuctionCard({ auction }: AuctionCardProps) {
             }
           }}
         >
-          {isActive ? t('bidNow').toUpperCase() : auction.status === AuctionStatus.Scheduled ? t('viewAuction').toUpperCase() : t('ended').toUpperCase()}
+          {isActive
+            ? t('bidNow').toUpperCase()
+            : isScheduled
+              ? t('viewAuction').toUpperCase()
+              : (terminalChip?.label ?? t('ended')).toUpperCase()}
         </button>
       </div>
     </div>

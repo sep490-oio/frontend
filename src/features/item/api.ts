@@ -177,6 +177,21 @@ export function useCreateAuctionFromItem() {
   })
 }
 
+// ── Admin ────────────────────────────────────────────────────────────
+
+export function useAdminRemoveItem() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
+      await apiClient.post(`/items/${id}/admin-remove`, { reason })
+    },
+    onSuccess: (_data, { id }) => {
+      qc.invalidateQueries({ queryKey: queryKeys.items.detail(id) })
+      qc.invalidateQueries({ queryKey: queryKeys.items.all })
+    },
+  })
+}
+
 // ── Categories ───────────────────────────────────────────────────────
 
 export function useCategories() {

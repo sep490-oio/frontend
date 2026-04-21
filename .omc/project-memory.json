@@ -1,0 +1,471 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1776752080998,
+  "projectRoot": "D:\\HocTrenTruong\\Ky9\\Project\\Prompt\\OIO-FE",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      },
+      {
+        "name": "TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "tsconfig.json"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "react",
+        "version": "19.2.4",
+        "category": "frontend"
+      },
+      {
+        "name": "react-dom",
+        "version": "19.2.4",
+        "category": "frontend"
+      },
+      {
+        "name": "vite",
+        "version": "8.0.1",
+        "category": "build"
+      }
+    ],
+    "packageManager": "npm",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": "npm run build",
+    "testCommand": null,
+    "lintCommand": "npm run lint",
+    "devCommand": "npm run dev",
+    "scripts": {
+      "dev": "vite",
+      "build": "tsc -b && vite build",
+      "lint": "eslint .",
+      "preview": "vite preview"
+    }
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": "feature-based"
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "public",
+      "src"
+    ],
+    "gitBranches": {
+      "defaultBranch": "master",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "dist": {
+      "path": "dist",
+      "purpose": "Distribution/build output",
+      "fileCount": 3,
+      "lastAccessed": 1776752080978,
+      "keyFiles": [
+        "favicon.svg",
+        "icons.svg",
+        "index.html"
+      ]
+    },
+    "public": {
+      "path": "public",
+      "purpose": "Public files",
+      "fileCount": 2,
+      "lastAccessed": 1776752080978,
+      "keyFiles": [
+        "favicon.svg",
+        "icons.svg"
+      ]
+    },
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 1,
+      "lastAccessed": 1776752080984,
+      "keyFiles": [
+        "main.tsx"
+      ]
+    },
+    "dist\\assets": {
+      "path": "dist\\assets",
+      "purpose": "Static assets",
+      "fileCount": 254,
+      "lastAccessed": 1776752080985,
+      "keyFiles": [
+        "AboutPage-BFTU5fpk.js",
+        "ActionButton-BZ2HyW9E.js",
+        "AddressesPage-CuUx5pPv.js"
+      ]
+    },
+    "src\\app": {
+      "path": "src\\app",
+      "purpose": "Application code",
+      "fileCount": 5,
+      "lastAccessed": 1776752080986,
+      "keyFiles": [
+        "App.tsx",
+        "i18n.ts",
+        "providers.tsx"
+      ]
+    },
+    "src\\assets": {
+      "path": "src\\assets",
+      "purpose": "Static assets",
+      "fileCount": 2,
+      "lastAccessed": 1776752080986,
+      "keyFiles": [
+        "hero.png",
+        "vite.svg"
+      ]
+    },
+    "src\\components": {
+      "path": "src\\components",
+      "purpose": "UI components",
+      "fileCount": 0,
+      "lastAccessed": 1776752080987,
+      "keyFiles": []
+    },
+    "src\\lib": {
+      "path": "src\\lib",
+      "purpose": "Library code",
+      "fileCount": 6,
+      "lastAccessed": 1776752080987,
+      "keyFiles": [
+        "axios.ts",
+        "cloudinary.ts",
+        "mutationFreshness.ts"
+      ]
+    },
+    "src\\types": {
+      "path": "src\\types",
+      "purpose": "Type definitions",
+      "fileCount": 17,
+      "lastAccessed": 1776752080987,
+      "keyFiles": [
+        "address.ts",
+        "admin.ts",
+        "api.ts"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "src",
+      "accessCount": 67,
+      "lastAccessed": 1776770255762,
+      "type": "directory"
+    },
+    {
+      "path": "src\\features\\auction\\pages\\BrowseAuctionsPage.tsx",
+      "accessCount": 15,
+      "lastAccessed": 1776756653518,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\ui\\AuctionCard.tsx",
+      "accessCount": 10,
+      "lastAccessed": 1776756727540,
+      "type": "file"
+    },
+    {
+      "path": "public\\locales\\vi\\auction.json",
+      "accessCount": 9,
+      "lastAccessed": 1776756755966,
+      "type": "directory"
+    },
+    {
+      "path": "src\\features\\warehouse\\api.ts",
+      "accessCount": 9,
+      "lastAccessed": 1776763310441,
+      "type": "file"
+    },
+    {
+      "path": "src\\features\\admin\\api.ts",
+      "accessCount": 7,
+      "lastAccessed": 1776767242376,
+      "type": "directory"
+    },
+    {
+      "path": "src\\types",
+      "accessCount": 7,
+      "lastAccessed": 1776767280587,
+      "type": "directory"
+    },
+    {
+      "path": "public\\locales\\en\\auction.json",
+      "accessCount": 6,
+      "lastAccessed": 1776756779328,
+      "type": "directory"
+    },
+    {
+      "path": "src\\features\\user\\api.ts",
+      "accessCount": 6,
+      "lastAccessed": 1776769199466,
+      "type": "file"
+    },
+    {
+      "path": "src\\features\\order\\api.ts",
+      "accessCount": 5,
+      "lastAccessed": 1776762945319,
+      "type": "file"
+    },
+    {
+      "path": "src\\types\\enums.ts",
+      "accessCount": 5,
+      "lastAccessed": 1776763053568,
+      "type": "file"
+    },
+    {
+      "path": "public\\locales",
+      "accessCount": 5,
+      "lastAccessed": 1776763314826,
+      "type": "directory"
+    },
+    {
+      "path": "src\\features\\auction\\pages\\AuctionDetailPage.tsx",
+      "accessCount": 5,
+      "lastAccessed": 1776764992913,
+      "type": "file"
+    },
+    {
+      "path": "src\\features\\auction\\api.ts",
+      "accessCount": 4,
+      "lastAccessed": 1776762924427,
+      "type": "directory"
+    },
+    {
+      "path": "src\\lib",
+      "accessCount": 4,
+      "lastAccessed": 1776763016175,
+      "type": "directory"
+    },
+    {
+      "path": "src\\lib\\axios.ts",
+      "accessCount": 4,
+      "lastAccessed": 1776763021415,
+      "type": "file"
+    },
+    {
+      "path": "C:\\Users\\night\\.claude\\projects\\D--HocTrenTruong-Ky9-Project-Prompt\\08d39638-1305-4311-bf10-d3eff9da2b88\\tool-results\\toolu_01GGZdQjLqo9KHxAMHGuCfW9.txt",
+      "accessCount": 3,
+      "lastAccessed": 1776761673465,
+      "type": "file"
+    },
+    {
+      "path": "src\\features\\inspector\\api.ts",
+      "accessCount": 3,
+      "lastAccessed": 1776763060369,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\ui\\StatusBadge.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1776756462557,
+      "type": "file"
+    },
+    {
+      "path": "src\\types\\auction.ts",
+      "accessCount": 2,
+      "lastAccessed": 1776756535419,
+      "type": "file"
+    },
+    {
+      "path": "eslint.config.js",
+      "accessCount": 2,
+      "lastAccessed": 1776756929965,
+      "type": "file"
+    },
+    {
+      "path": "src\\utils\\constants.ts",
+      "accessCount": 2,
+      "lastAccessed": 1776759269347,
+      "type": "file"
+    },
+    {
+      "path": "src\\types\\index.ts",
+      "accessCount": 2,
+      "lastAccessed": 1776762969005,
+      "type": "directory"
+    },
+    {
+      "path": "src\\features\\item",
+      "accessCount": 2,
+      "lastAccessed": 1776762988220,
+      "type": "directory"
+    },
+    {
+      "path": "package.json",
+      "accessCount": 2,
+      "lastAccessed": 1776763010513,
+      "type": "file"
+    },
+    {
+      "path": "src\\hooks",
+      "accessCount": 2,
+      "lastAccessed": 1776763059304,
+      "type": "directory"
+    },
+    {
+      "path": "src\\components",
+      "accessCount": 2,
+      "lastAccessed": 1776763075038,
+      "type": "directory"
+    },
+    {
+      "path": "src\\features\\user",
+      "accessCount": 2,
+      "lastAccessed": 1776763095203,
+      "type": "directory"
+    },
+    {
+      "path": "src\\features\\order\\components\\CreateDisputeModal.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1776752133835,
+      "type": "file"
+    },
+    {
+      "path": "src\\features\\dispute\\api.ts",
+      "accessCount": 1,
+      "lastAccessed": 1776752134181,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\ui",
+      "accessCount": 1,
+      "lastAccessed": 1776753826544,
+      "type": "directory"
+    },
+    {
+      "path": "tsconfig.app.json",
+      "accessCount": 1,
+      "lastAccessed": 1776756478613,
+      "type": "file"
+    },
+    {
+      "path": "src\\features\\auction\\pages\\__tests__\\BrowseAuctionsPage.test.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1776756871826,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\ui\\__tests__\\AuctionCard.test.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1776756897055,
+      "type": "file"
+    },
+    {
+      "path": "src\\lib\\signalr.ts",
+      "accessCount": 1,
+      "lastAccessed": 1776759239750,
+      "type": "file"
+    },
+    {
+      "path": ".env",
+      "accessCount": 1,
+      "lastAccessed": 1776759276251,
+      "type": "file"
+    },
+    {
+      "path": ".env.example",
+      "accessCount": 1,
+      "lastAccessed": 1776759277036,
+      "type": "file"
+    },
+    {
+      "path": "src\\features\\payment\\api.ts",
+      "accessCount": 1,
+      "lastAccessed": 1776759311007,
+      "type": "directory"
+    },
+    {
+      "path": "src\\lib\\tokenRefresh.ts",
+      "accessCount": 1,
+      "lastAccessed": 1776759311224,
+      "type": "file"
+    },
+    {
+      "path": "src\\features\\seller\\api.ts",
+      "accessCount": 1,
+      "lastAccessed": 1776759318298,
+      "type": "file"
+    },
+    {
+      "path": "src\\features\\warehouse",
+      "accessCount": 1,
+      "lastAccessed": 1776761665382,
+      "type": "directory"
+    },
+    {
+      "path": "src\\features\\order",
+      "accessCount": 1,
+      "lastAccessed": 1776761666091,
+      "type": "directory"
+    },
+    {
+      "path": "src\\features\\auction",
+      "accessCount": 1,
+      "lastAccessed": 1776761675623,
+      "type": "directory"
+    },
+    {
+      "path": "src\\features\\admin",
+      "accessCount": 1,
+      "lastAccessed": 1776761677703,
+      "type": "directory"
+    },
+    {
+      "path": "src\\features\\payment",
+      "accessCount": 1,
+      "lastAccessed": 1776761686205,
+      "type": "directory"
+    },
+    {
+      "path": "src\\features\\dispute",
+      "accessCount": 1,
+      "lastAccessed": 1776761688220,
+      "type": "directory"
+    },
+    {
+      "path": "src\\features\\seller",
+      "accessCount": 1,
+      "lastAccessed": 1776761689075,
+      "type": "directory"
+    },
+    {
+      "path": "src\\features\\address",
+      "accessCount": 1,
+      "lastAccessed": 1776761689809,
+      "type": "directory"
+    },
+    {
+      "path": "src\\features\\auth",
+      "accessCount": 1,
+      "lastAccessed": 1776761696876,
+      "type": "directory"
+    },
+    {
+      "path": "src\\features\\notification",
+      "accessCount": 1,
+      "lastAccessed": 1776761697709,
+      "type": "directory"
+    }
+  ],
+  "userDirectives": []
+}

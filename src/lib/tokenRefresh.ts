@@ -6,6 +6,8 @@ let isRefreshing = false
 let refreshPromise: Promise<string> | null = null
 const REFRESH_TIMEOUT_MS = 10000
 const TOKEN_EXPIRY_BUFFER_MS = 60000 // refresh 60s before expiry
+const LOCK_NAME = 'oio-fe:refresh-token:v1'
+let warnedFallback = false
 
 /**
  * Check if the current access token is expired or near-expiry.
@@ -24,20 +26,13 @@ export function isTokenExpired(): boolean {
 }
 
 /**
- * Shared token refresh with mutex.
- * Used by both axios interceptor and SignalR.
- * Only one refresh request is in-flight at a time.
- * On failure: clears tokens and redirects to /login.
- *
- * NOTE: If auth migrates to httpOnly cookies (see axios.ts TODO),
- * this module is the single place that must change.
+ * Perform the actual refresh-token network call.
+ * Private helper extracted from refreshToken() so the Web-Locks wrapper
+ * and the fallback path can both reuse it without duplicating logic.
+ * Preserves the module-scoped mutex (isRefreshing + refreshPromise) so the
+ * fallback path retains its original in-tab de-duplication behavior.
  */
-export async function refreshToken(): Promise<string> {
-  // If already refreshing, wait for the in-flight request
-  if (isRefreshing && refreshPromise) {
-    return refreshPromise
-  }
-
+async function doRefresh(): Promise<string> {
   const refreshTokenStr = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
   if (!refreshTokenStr) {
     handleRefreshFailure()
@@ -85,6 +80,48 @@ export async function refreshToken(): Promise<string> {
   })
 
   return refreshPromise
+}
+
+/**
+ * Shared token refresh with cross-tab serialization.
+ * Used by both axios interceptor and SignalR.
+ *
+ * Uses the Web Locks API (navigator.locks) when available to serialize
+ * refresh calls across tabs on the same origin. A post-lock re-check
+ * avoids a second BE rotation when another tab already refreshed while
+ * we were waiting for the lock.
+ *
+ * Falls back to the module-scoped mutex (isRefreshing + refreshPromise)
+ * for browsers without Web Locks (Safari < 15.4) or test environments
+ * where navigator.locks is not polyfilled. Fallback behavior is
+ * identical to the pre-fix implementation.
+ *
+ * On failure: clears tokens and redirects to /login.
+ *
+ * NOTE: If auth migrates to httpOnly cookies (see axios.ts TODO),
+ * this module is the single place that must change.
+ */
+export async function refreshToken(): Promise<string> {
+  // Cross-tab serialization via Web Locks API (Chrome 69+, FF 96+, Safari 15.4+, Edge 79+)
+  if (typeof navigator !== 'undefined' && typeof navigator.locks?.request === 'function') {
+    return navigator.locks.request(LOCK_NAME, async () => {
+      // Post-lock re-check: another tab may have refreshed while we waited.
+      // If the stored access token is still valid (within the 60s buffer),
+      // use it instead of burning another BE rotation.
+      const current = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
+      if (current && !isTokenExpired()) return current
+      return doRefresh()
+    })
+  }
+
+  // Fallback for older browsers / environments without Web Locks.
+  // Preserves the original in-tab mutex (isRefreshing + refreshPromise).
+  if (!warnedFallback) {
+    console.warn('[tokenRefresh] navigator.locks unavailable — using in-tab fallback')
+    warnedFallback = true
+  }
+  if (isRefreshing && refreshPromise) return refreshPromise
+  return doRefresh()
 }
 
 /**

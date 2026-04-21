@@ -1,0 +1,683 @@
+
+> oio-fe@0.0.0 lint
+> eslint .
+
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\app\router.tsx
+   21:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+   28:10  error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+   77:80  error  Unexpected any. Specify a different type                                                                                                                             @typescript-eslint/no-explicit-any
+   86:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+   87:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+   88:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+   89:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+   90:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+   91:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+   94:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+   95:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+   96:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+   97:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+   98:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+   99:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  100:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  101:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  102:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  103:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  106:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  107:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  108:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  109:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  110:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  113:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  114:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  115:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  118:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  119:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  120:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  121:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  124:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  125:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  126:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  127:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  128:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  129:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  130:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  131:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  132:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  133:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  134:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  135:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  136:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  137:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  140:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  141:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  142:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  143:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  144:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  145:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  148:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  151:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  152:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  155:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  156:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  157:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  158:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  159:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  162:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  163:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  164:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  165:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  167:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  168:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  171:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  172:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  173:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  174:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  175:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  176:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  177:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  178:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  179:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  180:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  181:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  182:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  183:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  184:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  185:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  186:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  187:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  188:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  191:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  192:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  193:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  194:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  197:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  198:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  199:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  200:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  201:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  202:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  203:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  204:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  205:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  206:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+  207:7   error  Fast refresh only works when a file only exports components. Move your component(s) to a separate file. If all exports are HOCs, add them to the `extraHOCs` option  react-refresh/only-export-components
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\components\layout\AppLayout.tsx
+   95:7   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\components\layout\AppLayout.tsx:95:7
+  93 |   useEffect(() => {
+  94 |     if (isAuthenticated && platformTermNeedsAcceptance && !platformTermsAutoShown) {
+> 95 |       setPlatformTermsModalOpen(true)
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  96 |       setPlatformTermsAutoShown(true)
+  97 |     }
+  98 |   }, [isAuthenticated, platformTermNeedsAcceptance, platformTermsAutoShown])  react-hooks/set-state-in-effect
+  240:35  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            @typescript-eslint/no-explicit-any
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\components\ui\AuctionCard.tsx
+  40:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\components\ui\AuctionCard.tsx:40:7
+  38 |     const isWatched = auction.isWatched ?? auction.hasWatched
+  39 |     if (isWatched !== undefined) {
+> 40 |       setWatching(isWatched)
+     |       ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  41 |     }
+  42 |   }, [auction.isWatched, auction.hasWatched])
+  43 |  react-hooks/set-state-in-effect
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\components\ui\Button.tsx
+  5:18  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\components\ui\Card.tsx
+  5:18  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\components\ui\LivenessChallenge.tsx
+  89:6  warning  React Hook useCallback has a missing dependency: 'onFail'. Either include it or remove the dependency array. If 'onFail' changes too often, find the parent component that defines it and wrap that definition in useCallback  react-hooks/exhaustive-deps
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\components\ui\ResponsiveTable.tsx
+    7:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   16:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   97:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  122:75  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  168:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  216:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  235:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  275:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  282:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  282:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\components\ui\SafeHtmlRenderer.tsx
+  7:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\admin\components\MonitoringAlertDrawer.tsx
+  68:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\admin\components\MonitoringAlertDrawer.tsx:68:5
+  66 |
+  67 |   useEffect(() => {
+> 68 |     setAckNotes('')
+     |     ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  69 |     setResolveNotes('')
+  70 |     setResolveIgnored(false)
+  71 |     setShowAckInput(false)  react-hooks/set-state-in-effect
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\admin\components\ResolutionActionBuilder.tsx
+   73:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  119:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  161:76  error  '_domain' is defined but never used                                                                                             @typescript-eslint/no-unused-vars
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\admin\pages\AdminAuctionControlPage.tsx
+  51:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\admin\pages\AdminAuctionControlPage.tsx:51:7
+  49 |   useEffect(() => {
+  50 |     if (auction) {
+> 51 |       setFeatured(auction.isFeatured ?? false)
+     |       ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  52 |       setPriority(auction.priority ?? 0)
+  53 |     }
+  54 |   }, [auction])  react-hooks/set-state-in-effect
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\admin\pages\AdminDashboardPage.tsx
+  348:31  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\admin\pages\AdminDashboardPage.tsx:348:31
+  346 |               <Space direction="vertical" size={12} style={{ width: '100%' }}>
+  347 |                 {liveAuctions.items.map((auction) => {
+> 348 |                   const now = Date.now()
+      |                               ^^^^^^^^^^ Cannot call impure function
+  349 |                   const end = auction.endTime ? new Date(auction.endTime).getTime() : now
+  350 |                   const start = auction.startTime ? new Date(auction.startTime).getTime() : now
+  351 |                   const total = end - start  react-hooks/purity
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\admin\pages\AdminDisputeDetailPage.tsx
+  102:3  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\auction\api.ts
+  3:36  error  '_queryClient' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\auction\components\AuctionDetailTabs.tsx
+  578:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\auction\components\AuctionSidebar.tsx
+  303:13  error  '_isMobile' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\auction\components\AuctionTimingSection.tsx
+  675:7  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\auction\components\AuctionTimingSection.tsx:675:7
+  673 |   useEffect(() => {
+  674 |     if (!state.advancedOverride) {
+> 675 |       syncFormFromState(state)
+      |       ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  676 |     }
+  677 |
+  678 |   }, [])  react-hooks/set-state-in-effect
+  678:6  warning  React Hook useEffect has missing dependencies: 'state' and 'syncFormFromState'. Either include them or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    react-hooks/exhaustive-deps
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\auction\components\AutoBidDashboard.tsx
+  49:13  error  '_onCancel' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\auction\components\BidForm.tsx
+  194:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\auction\components\BuyNowReservationPanel.tsx
+  14:28  error  '_formatCurrency' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\auction\components\EligibilityPanel.tsx
+   8:59  error  '_DepositStatus' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+  38:34  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\auction\components\EligibilityPanel.tsx:38:34
+  36 |
+  37 |   // Hooks must be called before any early returns (React rules of hooks)
+> 38 |   const [now, setNow] = useState(Date.now())
+     |                                  ^^^^^^^^^^ Cannot call impure function
+  39 |   useEffect(() => {
+  40 |     // Use fast 1s ticks when near a qualification boundary (within 60s), otherwise 10s
+  41 |     const boundaries = [qualificationStartAt, qualificationEndAt]  react-hooks/purity
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\auction\components\SellerActionBar.tsx
+  145:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\auction\hooks\useUserHub.ts
+  48:79  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\auction\pages\AuctionDetailPage.tsx
+  335:6   warning  React Hook useMemo has a missing dependency: 'data.currentUserBidState?.position'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  525:30  error    Unexpected any. Specify a different type                                                                                             @typescript-eslint/no-explicit-any
+  526:30  error    Unexpected any. Specify a different type                                                                                             @typescript-eslint/no-explicit-any
+  527:30  error    Unexpected any. Specify a different type                                                                                             @typescript-eslint/no-explicit-any
+  528:30  error    Unexpected any. Specify a different type                                                                                             @typescript-eslint/no-explicit-any
+  550:6   warning  React Hook useMemo has an unnecessary dependency: 'qualificationBoundaryTick'. Either exclude it or remove the dependency array      react-hooks/exhaustive-deps
+  698:6   warning  React Hook useCallback has a missing dependency: 'ensureTermsAccepted'. Either include it or remove the dependency array             react-hooks/exhaustive-deps
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\auction\pages\CreateAuctionPage.tsx
+  186:9   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  226:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  237:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  265:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  300:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  314:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  339:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  351:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  377:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  386:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  562:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  714:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  735:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  751:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  767:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\auction\pages\MyAuctionsPage.tsx
+  179:43   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  248:27   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  248:59   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  257:41   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  257:73   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  257:120  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\auction\pages\MyBidsPage.tsx
+   40:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  113:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  114:28  error  '_offerId' is defined but never used      @typescript-eslint/no-unused-vars
+  119:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  129:29  error  '_offerId' is defined but never used      @typescript-eslint/no-unused-vars
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\auth\pages\ConfirmEmailPage.tsx
+  27:6  warning  React Hook useEffect has a missing dependency: 'confirmMutation'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\inspector\pages\InspectionDetailPage.tsx
+  166:9  warning  Unused eslint-disable directive (no problems were reported from 'no-console')
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\item\pages\CreateItemPage.tsx
+  150:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\item\pages\EditItemPage.tsx
+  157:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\item\pages\MyItemsPage.tsx
+   81:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\item\pages\MyItemsPage.tsx:81:5
+  79 |   // Reset to page 1 whenever the filter query changes
+  80 |   useEffect(() => {
+> 81 |     setPage(1)
+     |     ^^^^^^^ Avoid calling setState() directly within an effect
+  82 |   }, [statusFilter, verifyFilter])
+  83 |
+  84 |   const setStatusFilter = (next: string) => {  react-hooks/set-state-in-effect
+  261:46  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\notification\components\NotificationDropdown.tsx
+   49:5  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\notification\components\NotificationDropdown.tsx:49:5
+  47 |     const mq = window.matchMedia(`(max-width: ${breakpoint - 1}px)`)
+  48 |     // Sync immediately in case the initial state was wrong (e.g. SSR mismatch)
+> 49 |     setIsMobile(mq.matches)
+     |     ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  50 |     const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+  51 |     mq.addEventListener('change', handler)
+  52 |     return () => mq.removeEventListener('change', handler)  react-hooks/set-state-in-effect
+  462:5  error    Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `sharedProps`, but the source dependencies were [notifications, unreadCount, isLoading, t, navigate]. Inferred different dependency than source.
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\notification\components\NotificationDropdown.tsx:462:5
+  460 |
+  461 |   const desktopContent = useMemo(
+> 462 |     () => (
+      |     ^^^^^^^
+> 463 |       <div style={{ width: 400 }}>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 464 |         <NotificationContent {...sharedProps} isMobile={false} />
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 465 |       </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 466 |     ),
+      | ^^^^^^ Could not preserve existing manual memoization
+  467 |
+  468 |     [notifications, unreadCount, isLoading, t, navigate],
+  469 |   )                                                                                                                               react-hooks/preserve-manual-memoization
+  468:5  warning  React Hook useMemo has a missing dependency: 'sharedProps'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        react-hooks/exhaustive-deps
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\order\api.ts
+  645:16  error  '_orderId' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\order\components\EscrowTimeline.tsx
+  16:39  error  '_OrderStatus' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\order\pages\BuyerShipmentScanPage.tsx
+   52:34  error    '_' is defined but never used                                                                   @typescript-eslint/no-unused-vars
+  178:5   warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\order\pages\MyDirectShipmentsListPage.tsx
+  31:51  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\order\pages\MyDirectShipmentsListPage.tsx:31:51
+  29 |     return () => clearInterval(interval)
+  30 |   }, [endsAt])
+> 31 |   const isExpired = new Date(endsAt).getTime() <= Date.now()
+     |                                                   ^^^^^^^^^^ Cannot call impure function
+  32 |   return (
+  33 |     <Tooltip title={`Decision window ends: ${formatDateTime(endsAt)}`}>
+  34 |       <Tag icon={<ClockCircleOutlined />} color={isExpired ? 'default' : 'warning'} style={{ fontSize: 12 }}>  react-hooks/purity
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\order\pages\MyOrdersPage.tsx
+  43:51  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\order\pages\MyOrdersPage.tsx:43:51
+  41 |   }, [endsAt, expiredLabel])
+  42 |
+> 43 |   const isExpired = new Date(endsAt).getTime() <= Date.now()
+     |                                                   ^^^^^^^^^^ Cannot call impure function
+  44 |
+  45 |   return (
+  46 |     <Tooltip title={t('decisionWindowEnds', { date: formatDateTime(endsAt) })}>  react-hooks/purity
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\order\pages\OrderDetailPage.tsx
+   175:44   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   179:45   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   214:23   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   218:30   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   218:66   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   219:34   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   220:34   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   227:85   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   227:133  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   235:94   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   378:70   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   493:55   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   493:164  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   829:34   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   836:19   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   837:20   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  1138:22   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  1150:22   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\payment\components\TopUpWalletModal.tsx
+  209:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\payment\pages\CheckoutPage.tsx
+  116:55  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+  144:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\payment\pages\CheckoutPage.tsx:144:5
+  142 |     if (!autofillValues) return
+  143 |     shippingForm.setFieldsValue(autofillValues)
+> 144 |     setShippingSaved(order?.shipping?.isStructured === true)
+      |     ^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  145 |   }, [autofillValues, order?.shipping?.isStructured, shippingForm])
+  146 |
+  147 |   const checkoutMethods = (methods ?? []).filter((m: any) => m.type === 'vnpay')  react-hooks/set-state-in-effect
+  147:54  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+  343:18  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+  350:94  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\payment\pages\VnPayReturnPage.tsx
+   33:28  error    Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\payment\pages\VnPayReturnPage.tsx:33:28
+  31 |   // Capture in ref on first mount — StrictMode double-mount cleanup can delete the key early
+  32 |   const depositAuctionIdRef = useRef(localStorage.getItem('oio_deposit_auction_id'))
+> 33 |   const depositAuctionId = depositAuctionIdRef.current
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot access ref value during render
+  34 |
+  35 |   // Parse VnPay params for display
+  36 |   const transactionNo = searchParams.get('vnp_TransactionNo') ?? ''                                                                                                                                                                                                                              react-hooks/refs
+   76:6   warning  React Hook useEffect has a missing dependency: 't'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              react-hooks/exhaustive-deps
+  259:26  error    Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\payment\pages\VnPayReturnPage.tsx:259:26
+  257 |         {/* Actions */}
+  258 |         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', flexDirection: isMobile ? 'column' : 'row' }}>
+> 259 |           {isSuccess && (() => {
+      |                          ^^^^^^^
+> 260 |             const primaryBtnStyle = {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 261 |               height: 48,
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 314 |             return null
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 315 |           })()}
+      | ^^^^^^^^^^^^ This function accesses a ref value
+  316 |           {!isSuccess && (
+  317 |             <Button
+  318 |               type="primary"  react-hooks/refs
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\payment\pages\WalletPage.tsx
+  296:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\payment\pages\WithdrawPage.tsx
+  196:62  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\seller\components\VerificationDocumentSlots.tsx
+  59:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  77:18  error  '_uploadLoading' is defined but never used                                                                                      @typescript-eslint/no-unused-vars
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\seller\pages\BrowseSellersPage.tsx
+   71:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   71:86  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  322:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\seller\pages\SellerDashboardPage.tsx
+  106:22  error    Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\seller\pages\SellerDashboardPage.tsx:106:22
+  104 |   const auctionStatuses = ['draft', 'pending', 'scheduled', 'active', 'ended', 'sold', 'cancelled']
+  105 |
+> 106 |   const itemCounts = useMemo(
+      |                      ^^^^^^^^
+> 107 |     () => countByStatus(itemsData?.items, itemStatuses),
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 108 |     [itemsData?.items],
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 109 |   )
+      | ^^^^ Could not preserve existing memoization
+  110 |
+  111 |   const auctionCounts = useMemo(
+  112 |     () => countByStatus(auctionsData?.items, auctionStatuses),  react-hooks/preserve-manual-memoization
+  108:5   warning  React Hook useMemo has a missing dependency: 'itemStatuses'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             react-hooks/exhaustive-deps
+  111:25  error    Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\seller\pages\SellerDashboardPage.tsx:111:25
+  109 |   )
+  110 |
+> 111 |   const auctionCounts = useMemo(
+      |                         ^^^^^^^^
+> 112 |     () => countByStatus(auctionsData?.items, auctionStatuses),
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 113 |     [auctionsData?.items],
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 114 |   )
+      | ^^^^ Could not preserve existing memoization
+  115 |
+  116 |   const totalItems = itemsData?.metadata?.totalCount ?? 0
+  117 |   const activeAuctions = auctionCounts['active']                                                            react-hooks/preserve-manual-memoization
+  113:5   warning  React Hook useMemo has a missing dependency: 'auctionStatuses'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          react-hooks/exhaustive-deps
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\user\components\TermsAcceptanceGate.tsx
+  42:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\user\components\TermsAcceptanceGate.tsx:42:7
+  40 |   useEffect(() => {
+  41 |     if (hasPending && !autoShown) {
+> 42 |       setModalOpen(true)
+     |       ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  43 |       setAutoShown(true)
+  44 |     }
+  45 |   }, [hasPending, autoShown])  react-hooks/set-state-in-effect
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\user\contexts\UserHubContext.tsx
+  15:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\user\pages\NotificationPrefsPage.tsx
+  44:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\user\pages\NotificationPrefsPage.tsx:44:7
+  42 |   useEffect(() => {
+  43 |     if (prefs) {
+> 44 |       setIsEnabled(prefs.isEnabled)
+     |       ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  45 |       try {
+  46 |         const parsed: unknown = JSON.parse(prefs.channels)
+  47 |         setSelectedChannels(Array.isArray(parsed) ? (parsed as string[]) : [])  react-hooks/set-state-in-effect
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\user\pages\TermsPage.tsx
+  162:17  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\user\pages\TermsPage.tsx:162:17
+  160 |     if (selectedId) return
+  161 |     const target = firstPending ?? flatTerms[0] ?? null
+> 162 |     if (target) setSelectedId(target.id)
+      |                 ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  163 |   }, [firstPending, flatTerms, selectedId])
+  164 |
+  165 |   const selected = useMemo(  react-hooks/set-state-in-effect
+  174:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\user\pages\TermsPage.tsx:174:5
+  172 |   const [previewErrored, setPreviewErrored] = useState(false)
+  173 |   useEffect(() => {
+> 174 |     setPreviewErrored(false)
+      |     ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  175 |   }, [selectedId])
+  176 |
+  177 |   const handleAccept = async () => {                                        react-hooks/set-state-in-effect
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\warehouse-staff\components\OccupancyLocationMap.tsx
+  47:48  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\warehouse-staff\components\OccupancyLocationMap.tsx:47:48
+  45 |
+  46 |   useEffect(() => {
+> 47 |     if (focusZone && focusZone !== activeZone) setActiveZone(focusZone)
+     |                                                ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  48 |   }, [focusZone, activeZone])
+  49 |
+  50 |   const effectiveZone = zones.includes(activeZone) ? activeZone : (zones[0] ?? '')  react-hooks/set-state-in-effect
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\warehouse-staff\pages\ScanPage.tsx
+   74:35  error    '_' is defined but never used                                                                   @typescript-eslint/no-unused-vars
+  143:3   warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\warehouse\api.ts
+  653:23  error  '_result' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\warehouse\pages\BookInboundPage.tsx
+   98:52  error  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  146:34  error  '_omit' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  181:29  error  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\features\warehouse\pages\InboundDetailPage.tsx
+  134:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  169:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\theme\components.ts
+  16:62  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\HocTrenTruong\Ky9\Project\Prompt\OIO-FE\src\utils\itemPhotoRules.ts
+  17:35  error  '_categoryId' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 236 problems (222 errors, 14 warnings)
+  0 errors and 4 warnings potentially fixable with the `--fix` option.
+
