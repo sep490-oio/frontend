@@ -138,7 +138,13 @@
       "conditionNotes": "Ghi chú tình trạng",
       "submit": "Gửi bằng chứng nhận hàng",
       "photos": "Ảnh nhận hàng",
-      "chooseCondition": "Chọn tình trạng kiện hàng"
+      "chooseCondition": "Chọn tình trạng kiện hàng",
+      "blocked": {
+        "terminal": "Đơn hàng đã hoàn tất hoặc đang tranh chấp",
+        "notReady": "Shipment chưa sẵn sàng để xác nhận nhận hàng",
+        "terminalDesc": "Không thể gửi bằng chứng nhận hàng cho shipment ở trạng thái này.",
+        "notReadyDesc": "Người bán chưa xác nhận đã giao cho đơn vị vận chuyển. Vui lòng đợi đến khi shipment được bàn giao."
+      }
     },
     "conditions": {
       "sealed_intact": "Nguyên đai nguyên kiện",
@@ -172,6 +178,18 @@
   "carrierPlaceholder": "GHTK / Viettel Post / ...",
   "weightPlaceholder": "500",
   "shippingMethodPlaceholder": "standard / express",
+  "openDispute": "Báo cáo phiên đấu giá / Mở tranh chấp",
+  "disputeDomain": "Lĩnh vực",
+  "selectDomain": "Chọn lĩnh vực",
+  "disputeCaseType": "Loại vụ việc",
+  "selectCaseType": "Chọn loại vụ việc",
+  "disputeTitle": "Tiêu đề",
+  "disputeTitlePlaceholder": "Mô tả vắn tắt vấn đề",
+  "disputeDescription": "Mô tả",
+  "disputeDescriptionPlaceholder": "Mô tả chi tiết vấn đề (tối thiểu 20 ký tự)...",
+  "disputeDescriptionMinLength": "Vui lòng nhập ít nhất 20 ký tự",
+  "disputeCreated": "Đã tạo tranh chấp thành công",
+  "disputeError": "Không thể tạo tranh chấp",
   "disputeDomainOption": {
     "order": "Đơn hàng",
     "auction": "Phiên đấu giá",
@@ -232,7 +250,12 @@
     "confirmNo": "Hủy",
     "acceptRelease": "Xác nhận & Giải ngân",
     "raiseDispute": "Mở tranh chấp",
-    "estimatedPayout": "Dự kiến giải ngân"
+    "estimatedPayout": "Dự kiến giải ngân",
+    "decisionPrompt": "Bạn có {{hours}} giờ để chấp nhận hoặc mở tranh chấp",
+    "autoReleaseHint": "Sau khi hết thời gian, tiền sẽ được tự động chuyển cho người bán."
+  },
+  "buyerOutboundReceive": {
+    "activeDispute": "Đang có tranh chấp mở cho đơn hàng này"
   },
   "fulfillmentActions": "Hành động xử lý đơn",
   "confirmOrder": "Xác nhận đơn hàng",

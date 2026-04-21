@@ -700,3 +700,55 @@ h1.oio-serif,
   40%  { transform: scale(1);   opacity: 1; }
   100% { transform: scale(0.8); opacity: 0; }
 }
+
+/* ─── Spotlight Modal Refinements ─── */
+.spotlight-modal .ant-modal-content {
+  background: var(--color-bg-card) !important;
+  box-shadow: var(--shadow-xl) !important;
+  padding: 0 !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+  border: 1px solid var(--color-border) !important;
+}
+
+.spotlight-modal .ant-modal-body {
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+.spotlight-modal .ant-input,
+.spotlight-modal .ant-input:focus,
+.spotlight-modal .ant-input-focused,
+.spotlight-modal .ant-input:hover {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+[data-theme="dark"] .spotlight-modal .ant-modal-content {
+  background: var(--color-bg-surface) !important;
+  border-color: var(--color-border) !important;
+}
+
+/* ─── Mobile Spotlight ─── */
+@media (max-width: 768px) {
+  .spotlight-modal {
+    max-width: 100vw !important;
+    margin: 0 !important;
+    top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  .spotlight-modal .ant-modal-content {
+    border-radius: 0 !important;
+    border: none !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+  }
+
+  .spotlight-modal .ant-modal-body {
+    height: 100% !important;
+    display: flex;
+    flex-direction: column;
+  }
+}
