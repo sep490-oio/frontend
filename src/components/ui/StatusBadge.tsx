@@ -8,9 +8,9 @@ interface StatusBadgeStyle {
 
 // ── Semantic Variants ──
 
-type BadgeVariant = 
+type BadgeVariant =
   | 'solid-success' | 'solid-danger' | 'solid-accent' | 'solid-info' | 'solid-warning' | 'solid-purple' | 'solid-neutral'
-  | 'soft-success' | 'soft-danger' | 'soft-warning' | 'soft-info' | 'soft-purple'
+  | 'soft-success' | 'soft-danger' | 'soft-warning' | 'soft-info' | 'soft-purple' | 'soft-muted'
   | 'outline-success' | 'outline-info' | 'outline-warning' | 'outline-neutral' | 'outline-danger'
   | 'neutral'
 
@@ -30,6 +30,8 @@ const VARIANT_STYLES: Record<BadgeVariant, StatusBadgeStyle> = {
   'soft-warning': { bg: 'rgba(196,146,61,0.15)', color: 'var(--color-accent)', border: 'rgba(196,146,61,0.3)' },
   'soft-info': { bg: 'rgba(22,119,255,0.15)', color: '#1677ff', border: 'rgba(22,119,255,0.3)' },
   'soft-purple': { bg: 'rgba(138,43,226,0.15)', color: '#8A2BE2', border: 'rgba(138,43,226,0.3)' },
+  // Muted grey — for archived/superseded rows where the record is retained but no longer actionable.
+  'soft-muted': { bg: 'rgba(107,114,128,0.12)', color: '#6b7280', border: 'rgba(107,114,128,0.3)' },
 
   // Outline (condition tags - transparent bg)
   'outline-success': { bg: 'transparent', color: 'var(--color-success)', border: 'var(--color-success)' },
@@ -58,6 +60,9 @@ const STATUS_VARIANT_MAP: Record<string, BadgeVariant> = {
   completed: 'solid-success',
   verified: 'solid-success',
   approved: 'soft-success',
+
+  // Archived/terminal — retained but no longer actionable (e.g. superseded terms docs).
+  archived: 'soft-muted',
 
   // Pending/review states
   draft: 'neutral',

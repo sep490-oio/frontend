@@ -725,6 +725,44 @@ export function useActivateTerms() {
   })
 }
 
+export function useUpdateTerms() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, mediaUploadId }: { id: string; mediaUploadId: string }) => {
+      const res = await apiClient.put<TermsDocumentDto>(`/admin/terms/${id}`, { mediaUploadId })
+      return res.data
+    },
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.termsRoot()])
+    },
+  })
+}
+
+export function useArchiveTerms() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, reason }: { id: string; reason?: string }) => {
+      const res = await apiClient.post<TermsDocumentDto>(`/admin/terms/${id}/archive`, { reason })
+      return res.data
+    },
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.termsRoot()])
+    },
+  })
+}
+
+export function useDeleteTerms() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await apiClient.delete(`/admin/terms/${id}`)
+    },
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.termsRoot()])
+    },
+  })
+}
+
 // ── Categories (Admin) ──────────────────────────────────────────────
 
 export function useCreateCategory() {

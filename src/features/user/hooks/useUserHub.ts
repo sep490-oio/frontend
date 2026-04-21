@@ -30,6 +30,13 @@ export function useUserHub() {
       }
     }
 
+    // Terms activated — invalidate terms queries so pending banner re-evaluates within ~2s (F1)
+    const handleTermsActivated = () => {
+      qc.invalidateQueries({ queryKey: queryKeys.terms.all })
+      qc.invalidateQueries({ queryKey: ['me', 'terms'] })
+    }
+    connection.on('TermsActivated', handleTermsActivated)
+
     // Wallet events — patch cache directly
     connection.on('WalletUpdated', (data: { availableBalance: number; pendingBalance: number; totalBalance: number }) => {
       qc.setQueryData<WalletSummaryDto>(queryKeys.wallet.summary(), (old) =>
@@ -62,12 +69,18 @@ export function useUserHub() {
     })
 
     connection.onreconnecting(() => setState({ connected: false }))
-    connection.onreconnected(() => setState({ connected: true }))
+    connection.onreconnected(() => {
+      setState({ connected: true })
+      // S4 — missed TermsActivated broadcast while disconnected: re-invalidate on reconnect
+      qc.invalidateQueries({ queryKey: queryKeys.terms.all })
+      qc.invalidateQueries({ queryKey: ['me', 'terms'] })
+    })
     connection.onclose(() => setState({ connected: false }))
 
     connect()
 
     return () => {
+      connection.off('TermsActivated', handleTermsActivated)
       connection.off('WalletUpdated')
       connection.off('BidStatusChanged')
       connection.off('AuctionOutcomeForBidder')

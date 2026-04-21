@@ -82,13 +82,27 @@ export interface PaymentTransactionDto {
   createdAt: string
 }
 
+/**
+ * Lifecycle status for a terms document.
+ * One-release compat: BE continues to send `isActive` until Phase H; FE
+ * callers prefer `status` but fall back to `isActive ? 'Active' : 'Draft'`.
+ */
+export type TermsDocumentStatus = 'Draft' | 'Active' | 'Archived'
+
 export interface TermsDocumentDto {
   id: string
   type: string
   version: number
+  /** @deprecated One-release compat — read `status` where available. Removed in Phase H. */
   isActive: boolean
+  status?: TermsDocumentStatus
   publishedAt?: string
   createdAt: string
+  createdBy?: string
+  activatedBy?: string
+  archivedAt?: string
+  archivedBy?: string
+  archivedReason?: string
   contentUrl?: string
   fileName?: string
   fileSize?: number
