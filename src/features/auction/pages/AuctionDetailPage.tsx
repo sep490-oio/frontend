@@ -64,6 +64,7 @@ import { AuctionDepositModal } from '@/features/auction/components/AuctionDeposi
 import { PriceHistoryChart } from '@/features/auction/components/PriceHistoryChart'
 import { SellerActionBar } from '@/features/auction/components/SellerActionBar'
 import { CreateDisputeModal } from '@/features/order/components/CreateDisputeModal'
+import { addSpotlightRecent } from '@/components/layout/SpotlightSearchModal'
 
 // ── Qualification state helper ──────────────────────────────────────
 
@@ -383,6 +384,19 @@ export default function AuctionDetailPage() {
       recordView.mutate(id)
     }
   }, [id, isSeller]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Add to spotlight recent history
+  useEffect(() => {
+    if (id && item?.title) {
+      addSpotlightRecent(currentUser?.id ?? null, {
+        id: `auction-${id}`,
+        type: 'dynamic',
+        path: `/auctions/${id}`,
+        title: item.title,
+        desc: 'Auction Item'
+      })
+    }
+  }, [id, item?.title, currentUser?.id])
 
   // ── SignalR bid notifications (aggregated) ────────────────────────
   const aggregatorRef = useRef<NotificationAggregator | null>(null)

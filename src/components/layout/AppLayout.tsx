@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Outlet, useNavigate, useLocation, Link } from 'react-router'
-import { Layout, Avatar, Dropdown, Button, Space, Drawer, Input, AutoComplete, Alert } from 'antd'
+import { Layout, Avatar, Dropdown, Button, Space, Drawer, Alert } from 'antd'
 import { FileProtectOutlined } from '@ant-design/icons'
 import {
   UserOutlined,
@@ -19,7 +19,6 @@ import {
   CloseOutlined,
   SearchOutlined,
 } from '@ant-design/icons'
-import { useDebounce } from '@/hooks/useDebounce'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/hooks/useTheme'
@@ -27,9 +26,9 @@ import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useAppSelector } from '@/app/store'
 import { NotificationDropdown } from '@/features/notification/components/NotificationDropdown'
 import { TermsAcceptanceModal } from '@/components/terms/TermsAcceptanceModal'
+import { SpotlightSearchModal } from '@/components/layout/SpotlightSearchModal'
 import { TermsGateProvider } from '@/features/user/components/TermsGateProvider'
 import { useActiveTermsByType, useAcceptedTerms, useCurrentUser } from '@/features/user/api'
-import { useSuggestAuctions } from '@/features/auction/api'
 import { SERIF_FONT, SANS_FONT } from '@/styles/tokens'
 
 function getRolesFromToken(token: string | null): string[] {
@@ -55,22 +54,9 @@ export function AppLayout() {
   const accessToken = useAppSelector((state) => state.auth.accessToken)
   const roles = getRolesFromToken(accessToken)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const debouncedSearch = useDebounce(searchQuery, 500)
   const { isMobile, isTablet } = useBreakpoint()
 
   const isNarrow = isMobile || isTablet
-
-  const { data: suggestions } = useSuggestAuctions(debouncedSearch)
-  const suggestOptions = (suggestions ?? []).map((s: string) => ({ value: s, label: s }))
-
-  const handleSearchSelect = (val: string) => {
-    setSearchQuery(val)
-    if (val.trim()) {
-      setMobileMenuOpen(false)
-      navigate('/auctions?search=' + encodeURIComponent(val.trim()))
-    }
-  }
 
   // Platform terms — preview-first modal (no route redirect). The user can
   // dismiss the modal and keep browsing; gated actions still require acceptance
@@ -263,27 +249,24 @@ export function AppLayout() {
               width: isTablet ? 180 : 240,
               transition: 'all 0.3s ease',
             }}>
-              <AutoComplete
-                options={suggestOptions}
-                value={searchQuery}
-                onChange={setSearchQuery}
-                onSelect={handleSearchSelect}
-                popupMatchSelectWidth={false}
-                style={{ width: '100%' }}
+              <div 
+                style={{ width: '100%', cursor: 'text' }}
+                onClick={() => window.dispatchEvent(new Event('open-spotlight'))}
               >
-                <Input
-                  prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)', marginLeft: 8 }} />}
-                  placeholder={t('common:action.search', 'Search actions...')}
-                  onPressEnter={() => handleSearchSelect(searchQuery)}
-                  allowClear
-                  variant="borderless"
-                  style={{
-                    height: 34,
-                    fontSize: 13,
-                    background: 'transparent',
-                  }}
-                />
-              </AutoComplete>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  height: 36,
+                  padding: '0 12px',
+                  background: 'transparent',
+                  color: 'var(--color-text-secondary)',
+                  fontSize: 13
+                }}>
+                  <SearchOutlined style={{ marginRight: 8 }} />
+                  <span>{t('common:action.search', 'Search...')}</span>
+                  <div style={{ marginLeft: 'auto', background: 'rgba(0,0,0,0.05)', padding: '2px 6px', borderRadius: 4, fontSize: 11, fontFamily: 'var(--font-mono)' }}>Ctrl Space</div>
+                </div>
+              </div>
             </div>
           )}
 
@@ -396,27 +379,26 @@ export function AppLayout() {
             display: 'flex',
             alignItems: 'center',
           }}>
-            <AutoComplete
-              options={suggestOptions}
-              value={searchQuery}
-              onChange={setSearchQuery}
-              onSelect={handleSearchSelect}
-              popupMatchSelectWidth={false}
-              style={{ width: '100%' }}
+            <div 
+              style={{ width: '100%', cursor: 'text' }}
+              onClick={() => {
+                setMobileMenuOpen(false)
+                window.dispatchEvent(new Event('open-spotlight'))
+              }}
             >
-              <Input
-                prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)', marginLeft: 8 }} />}
-                placeholder={t('common:action.search', 'Search auctions...')}
-                onPressEnter={() => handleSearchSelect(searchQuery)}
-                allowClear
-                variant="borderless"
-                style={{
-                  height: 38,
-                  fontSize: 14,
-                  background: 'transparent',
-                }}
-              />
-            </AutoComplete>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                height: 40,
+                padding: '0 16px',
+                background: 'transparent',
+                color: 'var(--color-text-secondary)',
+                fontSize: 14
+              }}>
+                <SearchOutlined style={{ marginRight: 8 }} />
+                <span>{t('common:action.search', 'Search...')}</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -620,6 +602,9 @@ export function AppLayout() {
           &copy; {new Date().getFullYear()} OIO. All rights reserved.
         </div>
       </Footer>
+      
+      {/* ─── Spotlight Search ─── */}
+      <SpotlightSearchModal />
     </Layout>
     </TermsGateProvider>
   )
