@@ -729,3 +729,26 @@ h1.oio-serif,
   background: var(--color-bg-surface) !important;
   border-color: var(--color-border) !important;
 }
+
+/* ─── Mobile Spotlight ─── */
+@media (max-width: 768px) {
+  .spotlight-modal {
+    max-width: 100vw !important;
+    margin: 0 !important;
+    top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  .spotlight-modal .ant-modal-content {
+    border-radius: 0 !important;
+    border: none !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+  }
+
+  .spotlight-modal .ant-modal-body {
+    height: 100% !important;
+    display: flex;
+    flex-direction: column;
+  }
+}

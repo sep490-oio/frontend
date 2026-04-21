@@ -480,30 +480,38 @@ export const SpotlightSearchModal: React.FC = () => {
       onCancel={() => setIsOpen(false)}
       closable={false}
       footer={null}
-      width={600}
+      width={isMobile ? '100%' : 600}
       className="spotlight-modal"
-      maskStyle={{ backdropFilter: 'blur(4px)', background: 'rgba(0, 0, 0, 0.45)' }}
+      centered={!isMobile}
       styles={{
-        content: { padding: 0, borderRadius: 12, overflow: 'hidden', boxShadow: 'var(--shadow-xl)' },
+        mask: { backdropFilter: 'blur(4px)', background: 'rgba(0, 0, 0, 0.45)' },
         body: { padding: 0, overflow: 'hidden' }
       }}
       destroyOnClose
     >
       <div style={{ display: 'flex', flexDirection: 'column' }} onKeyDown={handleModalKeyDown}>
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center' }}>
-          <SearchOutlined style={{ fontSize: 20, color: 'var(--color-text-secondary)', marginRight: 12 }} />
+        <div style={{ padding: isMobile ? '12px 16px' : '16px 20px', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: 12 }}>
+          {!isMobile && <SearchOutlined style={{ fontSize: 20, color: 'var(--color-text-secondary)' }} />}
           <Input 
             ref={inputRef}
             variant="borderless"
             placeholder={t('common:spotlight.placeholder', 'What are you looking for? (Ctrl + Space)...')}
             value={query}
             onChange={e => setQuery(e.target.value)}
-            style={{ fontSize: 18, padding: 0 }}
+            style={{ fontSize: isMobile ? 16 : 18, padding: 0, flex: 1 }}
             autoFocus
           />
+          {isMobile && (
+            <div 
+              onClick={() => setIsOpen(false)}
+              style={{ color: 'var(--color-accent)', fontWeight: 500, fontSize: 14, cursor: 'pointer', padding: '4px 0 4px 8px' }}
+            >
+              {t('common:cancel', 'Cancel')}
+            </div>
+          )}
         </div>
 
-        <div ref={listRef} style={{ maxHeight: '60vh', overflowY: 'auto' }} className="hide-scrollbar">
+        <div ref={listRef} style={{ flex: 1, maxHeight: isMobile ? 'calc(100vh - 60px)' : '60vh', overflowY: 'auto' }} className="hide-scrollbar">
           {query && results.length > 0 && (
             <div style={{ padding: '12px 20px 4px', fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               {t('common:spotlight.navigation', 'Navigation')}
