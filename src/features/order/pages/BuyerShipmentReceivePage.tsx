@@ -111,21 +111,21 @@ export default function BuyerShipmentReceivePage() {
           style={{ marginBottom: 16 }}
           message={
             shipmentTerminal
-              ? t('directShipment.receive.blocked.terminal', 'Đơn hàng đã hoàn tất hoặc đang tranh chấp')
+              ? t('directShipment.receive.blocked.terminal', 'Order completed or disputed')
               : t(
                   'directShipment.receive.blocked.notReady',
-                  'Shipment chưa sẵn sàng để xác nhận nhận hàng',
+                  'Shipment not ready for receipt confirmation',
                 )
           }
           description={
             shipmentTerminal
               ? t(
                   'directShipment.receive.blocked.terminalDesc',
-                  'Không thể gửi bằng chứng nhận hàng cho shipment ở trạng thái này.',
+                  'Cannot submit proof of delivery for a shipment in this state.',
                 )
               : t(
                   'directShipment.receive.blocked.notReadyDesc',
-                  'Người bán chưa xác nhận đã giao cho đơn vị vận chuyển. Vui lòng đợi đến khi shipment được bàn giao.',
+                  'Seller has not confirmed handoff to carrier. Please wait for shipment dispatch.',
                 )
           }
         />

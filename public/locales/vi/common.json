@@ -332,6 +332,13 @@
     "good": "Tốt",
     "acceptable": "Có thể chấp nhận"
   },
+  "dispute": {
+    "activeBanner": {
+      "message": "Đang có tranh chấp mở cho đơn hàng này.",
+      "number": "Tranh chấp",
+      "view": "Xem tranh chấp"
+    }
+  },
   "spotlight": {
     "placeholder": "Bạn muốn tìm gì? (Ctrl + Space)...",
     "recent": "Vừa xem",
