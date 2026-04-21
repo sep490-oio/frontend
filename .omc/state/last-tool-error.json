@@ -1,0 +1,7 @@
+{
+  "tool_name": "mcp__chrome-devtools__evaluate_script",
+  "tool_input_preview": "{\"function\":\"() => {\\n  const objs = document.querySelectorAll('object[type=\\\"application/pdf\\\"]');\\n  return Array.from(objs).map(o => o.getAttribute('data'));\\n}\"}",
+  "error": "The selected page has been closed. Call list_pages to see open pages.",
+  "timestamp": "2026-04-21T11:07:29.689Z",
+  "retry_count": 1
+}

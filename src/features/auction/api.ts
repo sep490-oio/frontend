@@ -347,6 +347,21 @@ export function useCancelAuction() {
   })
 }
 
+// Admin soft-reject auction (flags for seller attention; status unchanged).
+// Allowed when Status is Pending/Approved/Scheduled. Increments RejectionCount.
+export function useAdminRejectAuction() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ auctionId, reason }: { auctionId: string; reason: string }) => {
+      await apiClient.post(`/auctions/${auctionId}/admin-reject`, { reason })
+    },
+    onSuccess: (_, { auctionId }) => {
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.detail(auctionId) })
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.all })
+    },
+  })
+}
+
 // Set auction timing
 export function useSetAuctionTiming() {
   const qc = useQueryClient()

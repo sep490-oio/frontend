@@ -101,6 +101,46 @@ export function useInspectItem() {
   })
 }
 
+/**
+ * Multipart variant of useInspectItem. Posts the inspection form directly as
+ * `multipart/form-data` to `/warehouse/inbound-shipments/{id}/inspect/multipart`,
+ * bypassing the separate media-upload step. Prefer this when file uploads are
+ * part of the submission — callers pass raw `File` blobs instead of
+ * pre-confirmed `mediaUploadId`s.
+ *
+ * Mirrors the pattern used by {@link file://./../warehouse/api.ts#useReceiveInboundPackage}.
+ */
+export function useInspectItemMultipart() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: {
+      shipmentId: string
+      condition: string
+      inspectionNotes?: string
+      inspectionPhotos?: File[]
+    }) => {
+      const { shipmentId, condition, inspectionNotes, inspectionPhotos } = data
+      const form = new FormData()
+      form.append('condition', condition)
+      if (inspectionNotes) form.append('inspectionNotes', inspectionNotes)
+      if (inspectionPhotos) {
+        for (const file of inspectionPhotos) {
+          form.append('inspectionPhotos', file)
+        }
+      }
+      const res = await apiClient.post<WarehouseInspectionDto>(
+        `/warehouse/inbound-shipments/${shipmentId}/inspect/multipart`,
+        form,
+        { headers: { 'Content-Type': 'multipart/form-data' } },
+      )
+      return res.data
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.warehouse.all })
+    },
+  })
+}
+
 // ── Review Inspection ────────────────────────────────────────────────
 
 export function useReviewInspection() {

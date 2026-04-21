@@ -364,10 +364,23 @@ export interface BuyNowReservationDto {
 }
 
 // Filters
+export type AuctionStatusGroup = 'active' | 'scheduled' | 'sold' | 'failed' | ''
+
 export interface AuctionFilterParams {
   search?: string
   categoryId?: string
   status?: AuctionStatus
+  /**
+   * BE-side status bucket (maps to multiple underlying statuses):
+   *  - 'active'    → Active
+   *  - 'scheduled' → Scheduled
+   *  - 'sold'      → Sold | Completed
+   *  - 'failed'    → Failed | Cancelled | Terminated | PaymentDefaulted
+   *  - ''          → no filter (all)
+   * Invalid values return 400. If both `status` and `statusGroup` are sent,
+   * BE uses `statusGroup` (precedence). See plan 058 / ralplan-add-completed-status.
+   */
+  statusGroup?: AuctionStatusGroup
   auctionType?: AuctionType
   minPrice?: number
   maxPrice?: number

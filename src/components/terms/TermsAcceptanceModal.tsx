@@ -18,7 +18,7 @@ interface TermsAcceptanceModalProps {
  */
 export function TermsAcceptanceModal({ open, onClose, termType, onAccepted }: TermsAcceptanceModalProps) {
   const { t } = useTranslation('common')
-  // BE /terms/active/{type} returns a single TermsDocumentDto, or null when
+  // BE /terms/{type}/active returns a single TermsDocumentDto, or null when
   // no active document is configured (the hook maps 404 → null).
   const { data: term, isLoading, error } = useActiveTermsByType(termType)
   const acceptMutation = useAcceptTerm()
@@ -89,7 +89,7 @@ export function TermsAcceptanceModal({ open, onClose, termType, onAccepted }: Te
           </Space>
           {term.contentUrl ? (
             <object
-              data={`${term.contentUrl}#toolbar=1`}
+              data={`${term.contentUrl}#toolbar=0&navpanes=0&statusbar=0&scrollbar=1&view=FitH`}
               type="application/pdf"
               style={{ width: '100%', height: '55vh', minHeight: 400, border: '1px solid var(--color-border)', borderRadius: 6 }}
             >

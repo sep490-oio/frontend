@@ -19,7 +19,7 @@ import { CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined, WarningO
 import { useTranslation } from 'react-i18next'
 import { useParams, useNavigate } from 'react-router'
 import { useInboundShipmentById } from '@/features/warehouse/api'
-import { useInspectItem, useReviewInspection } from '@/features/inspector/api'
+import { useInspectItem, useInspectItemMultipart, useReviewInspection } from '@/features/inspector/api'
 import type { WarehouseInspectionDto } from '@/features/inspector/api'
 import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { MultiCaptureUploader } from '@/components/ui/MultiCaptureUploader'
@@ -50,8 +50,16 @@ export default function InspectionDetailPage() {
   ]
   const { data: shipment, isLoading, isError } = useInboundShipmentById(shipmentId ?? '')
   const inspectMutation = useInspectItem()
+  const inspectMultipartMutation = useInspectItemMultipart()
   const reviewMutation = useReviewInspection()
   const mediaUpload = useMediaUpload('warehouse_inspection_image')
+  /**
+   * Feature flag: once the BE multipart inspection endpoint
+   * (`POST /warehouse/inbound-shipments/{id}/inspect/multipart`) is live, flip
+   * this to `true` to submit the form in a single request. Until then the
+   * existing pre-upload + JSON flow remains the default to avoid 404s.
+   */
+  const USE_MULTIPART_INSPECTION = false
 
   const [condition, setCondition] = useState<string>('')
   const [notes, setNotes] = useState('')
@@ -109,21 +117,40 @@ export default function InspectionDetailPage() {
 
     setSubmitting(true)
     try {
-      // 1. Upload media
-      const mediaIds: string[] = []
-      for (const photo of capturedPhotos) {
-        const file = new File([photo.blob], `inspection-${Date.now()}.jpg`, { type: 'image/jpeg' })
-        const media = await mediaUpload.upload(file)
-        mediaIds.push(media.mediaUploadId)
-      }
+      // 1. Either submit as a single multipart call (file uploads + JSON in one
+      //    request) OR pre-upload each photo via the media upload endpoint and
+      //    pass back the confirmed mediaUploadIds to the legacy JSON route.
+      //
+      //    The multipart path requires the BE endpoint registered at
+      //    `/warehouse/inbound-shipments/{id}/inspect/multipart`; gated by the
+      //    `USE_MULTIPART_INSPECTION` feature flag until BE ships the handler.
+      let inspection: WarehouseInspectionDto
+      if (USE_MULTIPART_INSPECTION && capturedPhotos.length > 0) {
+        const files = capturedPhotos.map(
+          (photo, idx) =>
+            new File([photo.blob], `inspection-${Date.now()}-${idx}.jpg`, { type: 'image/jpeg' }),
+        )
+        inspection = await inspectMultipartMutation.mutateAsync({
+          shipmentId,
+          condition,
+          inspectionNotes: notes || undefined,
+          inspectionPhotos: files,
+        })
+      } else {
+        const mediaIds: string[] = []
+        for (const photo of capturedPhotos) {
+          const file = new File([photo.blob], `inspection-${Date.now()}.jpg`, { type: 'image/jpeg' })
+          const media = await mediaUpload.upload(file)
+          mediaIds.push(media.mediaUploadId)
+        }
 
-      // 2. Inspect
-      const inspection = await inspectMutation.mutateAsync({
-        shipmentId,
-        condition,
-        inspectionNotes: notes || undefined,
-        inspectionMediaUploadIds: mediaIds.length > 0 ? mediaIds : undefined,
-      })
+        inspection = await inspectMutation.mutateAsync({
+          shipmentId,
+          condition,
+          inspectionNotes: notes || undefined,
+          inspectionMediaUploadIds: mediaIds.length > 0 ? mediaIds : undefined,
+        })
+      }
       setLastInspection(inspection)
 
       // Detect condition-confirmation-required branch from inspect response.

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Typography, Row, Col, Button, Space, Select, Card } from 'antd'
-import { WalletOutlined, ArrowDownOutlined, PlusOutlined } from '@ant-design/icons'
+import { WalletOutlined, ArrowDownOutlined, PlusOutlined, CreditCardOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useWallet, useWalletTransactions } from '@/features/payment/api'
@@ -119,6 +119,14 @@ export default function BuyerWalletPage() {
           style={{ borderColor: 'var(--color-accent)', color: 'var(--color-accent)' }}
         >
           {t('withdraw', 'Withdraw')}
+        </Button>
+
+        <Button
+          icon={<CreditCardOutlined />}
+          onClick={() => navigate('/me/payment-methods')}
+          style={{ borderColor: 'var(--color-accent)', color: 'var(--color-accent)' }}
+        >
+          {t('paymentMethods', 'Payment Methods')}
         </Button>
       </Space>
 

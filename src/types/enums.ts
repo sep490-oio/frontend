@@ -7,6 +7,7 @@ export const AuctionStatus = {
   Active: 'active',
   Ended: 'ended',
   Sold: 'sold',
+  Completed: 'completed',
   PaymentDefaulted: 'payment_defaulted',
   Cancelled: 'cancelled',
   Failed: 'failed',

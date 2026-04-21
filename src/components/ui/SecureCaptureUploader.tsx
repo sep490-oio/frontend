@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { Button, Typography, Alert, Upload, Flex } from 'antd'
-import { CameraOutlined, ReloadOutlined, CheckOutlined, UploadOutlined } from '@ant-design/icons'
+import { CameraOutlined, ReloadOutlined, CheckOutlined, UploadOutlined, AimOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useCamera } from '@/hooks/useCamera'
 import { validateCaptureQuality } from '@/components/ui/CaptureQualityValidator'
@@ -49,7 +49,8 @@ export function SecureCaptureUploader({
   children,
 }: SecureCaptureUploaderProps) {
   const { t } = useTranslation('common')
-  const { videoRef, isSupported, isActive, error, startCamera, stopCamera, takeSnapshot } = useCamera()
+  const { videoRef, isSupported, isActive, error, focusSupported, startCamera, stopCamera, takeSnapshot, refocus, focusAt } = useCamera()
+  const [focusRing, setFocusRing] = useState<{ x: number; y: number; key: number } | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null)
   const [capturedMeta, setCapturedMeta] = useState<Partial<CaptureMetadata> | null>(null)
@@ -188,20 +189,47 @@ export function SecureCaptureUploader({
 
   return (
     <div style={{ position: 'relative', background: '#000', borderRadius: 8, overflow: 'hidden' }}>
-      {/* Camera viewfinder */}
+      {/* Camera viewfinder — click/tap to focus */}
       <video
         ref={videoRef}
         autoPlay
         playsInline
         muted
+        onClick={(e) => {
+          const rect = e.currentTarget.getBoundingClientRect()
+          const nx = (e.clientX - rect.left) / rect.width
+          const ny = (e.clientY - rect.top) / rect.height
+          setFocusRing({ x: e.clientX - rect.left, y: e.clientY - rect.top, key: Date.now() })
+          void focusAt(nx, ny)
+        }}
         style={{
           width: '100%',
           maxHeight: step === 'selfie' ? '70vh' : 400,
           minHeight: step === 'selfie' ? 400 : undefined,
           objectFit: 'cover',
           display: 'block',
+          cursor: focusSupported ? 'crosshair' : 'default',
         }}
       />
+
+      {/* Focus ring — briefly shown where the user tapped */}
+      {focusRing && (
+        <div
+          key={focusRing.key}
+          style={{
+            position: 'absolute',
+            top: focusRing.y - 28,
+            left: focusRing.x - 28,
+            width: 56,
+            height: 56,
+            border: '2px solid #ffd666',
+            borderRadius: '50%',
+            pointerEvents: 'none',
+            animation: 'oio-focus-ring 700ms ease-out forwards',
+          }}
+          onAnimationEnd={() => setFocusRing(null)}
+        />
+      )}
 
       {/* Overlay guide */}
       <div style={OVERLAY_STYLES[overlayType]} />
@@ -253,8 +281,25 @@ export function SecureCaptureUploader({
         <Alert type="error" message={error} style={{ position: 'absolute', top: 8, left: 8, right: 8 }} />
       )}
 
-      {/* Capture button */}
-      <div style={{ position: 'absolute', bottom: 16, left: 0, right: 0, textAlign: 'center' }}>
+      {/* Capture button + Refocus */}
+      <div style={{ position: 'absolute', bottom: 16, left: 0, right: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 24 }}>
+        {focusSupported && (
+          <Button
+            shape="circle"
+            icon={<AimOutlined style={{ fontSize: 18 }} />}
+            onClick={() => {
+              void refocus()
+            }}
+            disabled={!isActive}
+            title={t('capture.refocus', 'Re-focus camera')}
+            style={{
+              width: 44, height: 44,
+              background: 'rgba(0,0,0,0.5)',
+              borderColor: 'rgba(255,255,255,0.6)',
+              color: '#fff',
+            }}
+          />
+        )}
         <Button
           shape="circle"
           size="large"
@@ -268,7 +313,15 @@ export function SecureCaptureUploader({
             boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
           }}
         />
+        {focusSupported && <div style={{ width: 44 }} /> /* spacer to keep shutter centered */}
       </div>
+
+      {/* Tap-to-focus hint (first session only) */}
+      {focusSupported && isActive && !focusRing && (
+        <div style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 11, padding: '4px 10px', borderRadius: 12 }}>
+          {t('capture.tapToFocus', 'Tap to focus')}
+        </div>
+      )}
     </div>
   )
 }

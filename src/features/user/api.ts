@@ -250,7 +250,7 @@ export function useRegenerateRecoveryCodes() {
 
 /**
  * Fetches the single active terms document for a given type.
- * BE returns a single TermsDocumentDto for GET /terms/active/{type}, or 404
+ * BE returns a single TermsDocumentDto for GET /terms/{type}/active, or 404
  * when no active document is configured. We map 404 → null so callers treat
  * "no active term" as a non-blocking state. Genuine server errors still
  * propagate through React Query's error path.
@@ -263,7 +263,7 @@ export function useActiveTermsByType(termType: string) {
     queryKey: [...queryKeys.terms.all, 'active', termType],
     queryFn: async () => {
       try {
-        const res = await apiClient.get<{ id: string; type: string; version: number; isActive: boolean; contentUrl?: string; fileName?: string }>(`/terms/active/${termType}`)
+        const res = await apiClient.get<{ id: string; type: string; version: number; isActive: boolean; contentUrl?: string; fileName?: string }>(`/terms/${termType}/active`)
         return res.data
       } catch (err: unknown) {
         const status = (err as { response?: { status?: number } })?.response?.status

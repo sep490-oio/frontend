@@ -38,8 +38,9 @@ export default function SellerOutboundShipmentsListPage() {
     return (
       <Card
         key={shipment.shipmentId}
-        style={{ borderRadius: 10, marginBottom: 12 }}
+        style={{ borderRadius: 10, marginBottom: 12, cursor: 'pointer' }}
         styles={{ body: { padding: 16 } }}
+        onClick={() => navigate(`/seller/warehouse/outbound/${shipment.shipmentId}`)}
       >
         <Flex vertical gap={12}>
           {/* Product */}

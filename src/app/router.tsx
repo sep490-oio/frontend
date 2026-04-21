@@ -69,8 +69,12 @@ function RouteErrorBoundary() {
   )
 }
 
-function lazyPage(factory: () => Promise<{ default: React.ComponentType }>) {
-  const Component = lazy(factory)
+/**
+ * Wraps a module-scope React.lazy component in the per-route Suspense boundary.
+ * See .omc/specs/deep-dive-confirm-email-stuck-loading.md for the bug that motivated this pattern.
+ * DO NOT call React.lazy() inside a render function — that was the original bug.
+ */
+function withSuspense(Component: React.LazyExoticComponent<React.ComponentType<any>>) {
   return (
     <Suspense fallback={<PageLoader />}>
       <Component />
@@ -79,130 +83,128 @@ function lazyPage(factory: () => Promise<{ default: React.ComponentType }>) {
 }
 
 // Auth pages
-const LoginPage = () => lazyPage(() => import('@/features/auth/pages/LoginPage'))
-const RegisterPage = () => lazyPage(() => import('@/features/auth/pages/RegisterPage'))
-const TwoFactorPage = () => lazyPage(() => import('@/features/auth/pages/TwoFactorPage'))
-const ForgotPasswordPage = () => lazyPage(() => import('@/features/auth/pages/ForgotPasswordPage'))
-const ResetPasswordPage = () => lazyPage(() => import('@/features/auth/pages/ResetPasswordPage'))
-const ConfirmEmailPage = () => lazyPage(() => import('@/features/auth/pages/ConfirmEmailPage'))
+const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'))
+const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage'))
+const TwoFactorPage = lazy(() => import('@/features/auth/pages/TwoFactorPage'))
+const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswordPage'))
+const ResetPasswordPage = lazy(() => import('@/features/auth/pages/ResetPasswordPage'))
+const ConfirmEmailPage = lazy(() => import('@/features/auth/pages/ConfirmEmailPage'))
 
 // Public pages
-const AuctionListPage = () => lazyPage(() => import('@/features/auction/pages/AuctionListPage'))
-const AuctionDetailPage = () => lazyPage(() => import('@/features/auction/pages/AuctionDetailPage'))
-const ItemDetailPage = () => lazyPage(() => import('@/features/item/pages/ItemDetailPage'))
-const PublicSellerPage = () => lazyPage(() => import('@/features/seller/pages/PublicSellerPage'))
-const AboutPage = () => lazyPage(() => import('@/features/public/pages/AboutPage'))
-const CategoriesPage = () => lazyPage(() => import('@/features/public/pages/CategoriesPage'))
-const HelpPage = () => lazyPage(() => import('@/features/public/pages/HelpPage'))
-const BrowseAuctionsPage = () => lazyPage(() => import('@/features/auction/pages/BrowseAuctionsPage'))
-const BrowseSellersPage = () => lazyPage(() => import('@/features/seller/pages/BrowseSellersPage'))
-const BrowseItemsPage = () => lazyPage(() => import('@/features/item/pages/BrowseItemsPage'))
+const AuctionListPage = lazy(() => import('@/features/auction/pages/AuctionListPage'))
+const AuctionDetailPage = lazy(() => import('@/features/auction/pages/AuctionDetailPage'))
+const ItemDetailPage = lazy(() => import('@/features/item/pages/ItemDetailPage'))
+const PublicSellerPage = lazy(() => import('@/features/seller/pages/PublicSellerPage'))
+const AboutPage = lazy(() => import('@/features/public/pages/AboutPage'))
+const CategoriesPage = lazy(() => import('@/features/public/pages/CategoriesPage'))
+const HelpPage = lazy(() => import('@/features/public/pages/HelpPage'))
+const BrowseAuctionsPage = lazy(() => import('@/features/auction/pages/BrowseAuctionsPage'))
+const BrowseSellersPage = lazy(() => import('@/features/seller/pages/BrowseSellersPage'))
+const BrowseItemsPage = lazy(() => import('@/features/item/pages/BrowseItemsPage'))
 
 // User pages (auth required)
-const ProfilePage = () => lazyPage(() => import('@/features/user/pages/ProfilePage'))
-const AddressesPage = () => lazyPage(() => import('@/features/user/pages/AddressesPage'))
-const SecurityPage = () => lazyPage(() => import('@/features/user/pages/SecurityPage'))
-const NotificationPrefsPage = () => lazyPage(() => import('@/features/user/pages/NotificationPrefsPage'))
-const TermsPage = () => lazyPage(() => import('@/features/user/pages/TermsPage'))
+const ProfilePage = lazy(() => import('@/features/user/pages/ProfilePage'))
+const AddressesPage = lazy(() => import('@/features/user/pages/AddressesPage'))
+const SecurityPage = lazy(() => import('@/features/user/pages/SecurityPage'))
+const NotificationPrefsPage = lazy(() => import('@/features/user/pages/NotificationPrefsPage'))
+const TermsPage = lazy(() => import('@/features/user/pages/TermsPage'))
 
 // Item pages
-const MyItemsPage = () => lazyPage(() => import('@/features/item/pages/MyItemsPage'))
-const CreateItemPage = () => lazyPage(() => import('@/features/item/pages/CreateItemPage'))
-const EditItemPage = () => lazyPage(() => import('@/features/item/pages/EditItemPage'))
+const MyItemsPage = lazy(() => import('@/features/item/pages/MyItemsPage'))
+const CreateItemPage = lazy(() => import('@/features/item/pages/CreateItemPage'))
+const EditItemPage = lazy(() => import('@/features/item/pages/EditItemPage'))
 
 // Auction pages
-const CreateAuctionPage = () => lazyPage(() => import('@/features/auction/pages/CreateAuctionPage'))
-const MyAuctionsPage = () => lazyPage(() => import('@/features/auction/pages/MyAuctionsPage'))
-const WatchlistPage = () => lazyPage(() => import('@/features/auction/pages/WatchlistPage'))
-const MyBidsPage = () => lazyPage(() => import('@/features/auction/pages/MyBidsPage'))
+const CreateAuctionPage = lazy(() => import('@/features/auction/pages/CreateAuctionPage'))
+const MyAuctionsPage = lazy(() => import('@/features/auction/pages/MyAuctionsPage'))
+const WatchlistPage = lazy(() => import('@/features/auction/pages/WatchlistPage'))
+const MyBidsPage = lazy(() => import('@/features/auction/pages/MyBidsPage'))
 
 // Order pages
-const MyOrdersPage = () => lazyPage(() => import('@/features/order/pages/MyOrdersPage'))
-const SellerOrdersPage = () => lazyPage(() => import('@/features/order/pages/SellerOrdersPage'))
-const SellerOutboundShipmentDetailPage = () => lazyPage(() => import('@/features/order/pages/SellerOutboundShipmentDetailPage'))
-const SellerOutboundShipmentsListPage = () => lazyPage(() => import('@/features/order/pages/SellerOutboundShipmentsListPage'))
-const SellerDirectShipmentDetailPage = () => lazyPage(() => import('@/features/order/pages/SellerDirectShipmentDetailPage'))
-const SellerDirectShipmentsListPage = () => lazyPage(() => import('@/features/order/pages/SellerDirectShipmentsListPage'))
-const OrderDetailPage = () => lazyPage(() => import('@/features/order/pages/OrderDetailPage'))
-const MyDirectShipmentDetailPage = () => lazyPage(() => import('@/features/order/pages/MyDirectShipmentDetailPage'))
-const MyDirectShipmentsListPage = () => lazyPage(() => import('@/features/order/pages/MyDirectShipmentsListPage'))
-const BuyerShipmentScanPage = () => lazyPage(() => import('@/features/order/pages/BuyerShipmentScanPage'))
-const BuyerShipmentReceivePage = () => lazyPage(() => import('@/features/order/pages/BuyerShipmentReceivePage'))
-const BuyerOutboundReceivePage = () => lazyPage(() => import('@/features/order/pages/BuyerOutboundReceivePage'))
-const BuyerOutboundShipmentPage = () => lazyPage(() => import('@/features/order/pages/BuyerOutboundShipmentPage'))
-const OrderReturnPage = () => lazyPage(() => import('@/features/order/pages/OrderReturnPage'))
+const MyOrdersPage = lazy(() => import('@/features/order/pages/MyOrdersPage'))
+const SellerOrdersPage = lazy(() => import('@/features/order/pages/SellerOrdersPage'))
+const SellerOutboundShipmentDetailPage = lazy(() => import('@/features/order/pages/SellerOutboundShipmentDetailPage'))
+const SellerOutboundShipmentsListPage = lazy(() => import('@/features/order/pages/SellerOutboundShipmentsListPage'))
+const SellerDirectShipmentDetailPage = lazy(() => import('@/features/order/pages/SellerDirectShipmentDetailPage'))
+const SellerDirectShipmentsListPage = lazy(() => import('@/features/order/pages/SellerDirectShipmentsListPage'))
+const OrderDetailPage = lazy(() => import('@/features/order/pages/OrderDetailPage'))
+const MyDirectShipmentDetailPage = lazy(() => import('@/features/order/pages/MyDirectShipmentDetailPage'))
+const MyDirectShipmentsListPage = lazy(() => import('@/features/order/pages/MyDirectShipmentsListPage'))
+const BuyerShipmentScanPage = lazy(() => import('@/features/order/pages/BuyerShipmentScanPage'))
+const BuyerShipmentReceivePage = lazy(() => import('@/features/order/pages/BuyerShipmentReceivePage'))
+const BuyerOutboundReceivePage = lazy(() => import('@/features/order/pages/BuyerOutboundReceivePage'))
+const BuyerOutboundShipmentPage = lazy(() => import('@/features/order/pages/BuyerOutboundShipmentPage'))
+const OrderReturnPage = lazy(() => import('@/features/order/pages/OrderReturnPage'))
 
 // Payment pages
-const BuyerWalletPage = () => lazyPage(() => import('@/features/payment/pages/BuyerWalletPage'))
-const SellerWalletPage = () => lazyPage(() => import('@/features/payment/pages/SellerWalletPage'))
-const PaymentMethodsPage = () => lazyPage(() => import('@/features/payment/pages/PaymentMethodsPage'))
-const CheckoutPage = () => lazyPage(() => import('@/features/payment/pages/CheckoutPage'))
-const VnPayReturnPage = () => lazyPage(() => import('@/features/payment/pages/VnPayReturnPage'))
-const WithdrawPage = () => lazyPage(() => import('@/features/payment/pages/WithdrawPage'))
+const BuyerWalletPage = lazy(() => import('@/features/payment/pages/BuyerWalletPage'))
+const SellerWalletPage = lazy(() => import('@/features/payment/pages/SellerWalletPage'))
+const PaymentMethodsPage = lazy(() => import('@/features/payment/pages/PaymentMethodsPage'))
+const CheckoutPage = lazy(() => import('@/features/payment/pages/CheckoutPage'))
+const VnPayReturnPage = lazy(() => import('@/features/payment/pages/VnPayReturnPage'))
+const WithdrawPage = lazy(() => import('@/features/payment/pages/WithdrawPage'))
 
 // Notification page
-const NotificationsPage = () => lazyPage(() => import('@/features/notification/pages/NotificationsPage'))
+const NotificationsPage = lazy(() => import('@/features/notification/pages/NotificationsPage'))
 
 // Dispute pages
-const MyDisputesPage = () => lazyPage(() => import('@/features/dispute/pages/MyDisputesPage'))
-const BuyerDisputeThreadPage = () => lazyPage(() => import('@/features/dispute/pages/BuyerDisputeThreadPage'))
+const MyDisputesPage = lazy(() => import('@/features/dispute/pages/MyDisputesPage'))
+const BuyerDisputeThreadPage = lazy(() => import('@/features/dispute/pages/BuyerDisputeThreadPage'))
 
 // Seller pages
-const UserDashboardPage = () => lazyPage(() => import('@/features/user/pages/DashboardPage'))
-const SellerDashboardPage = () => lazyPage(() => import('@/features/seller/pages/SellerDashboardPage'))
-const CreateSellerProfilePage = () => lazyPage(() => import('@/features/seller/pages/CreateSellerProfilePage'))
-const SellerProfilePage = () => lazyPage(() => import('@/features/seller/pages/SellerProfilePage'))
-const VerificationPage = () => lazyPage(() => import('@/features/seller/pages/VerificationPage'))
+const UserDashboardPage = lazy(() => import('@/features/user/pages/DashboardPage'))
+const SellerDashboardPage = lazy(() => import('@/features/seller/pages/SellerDashboardPage'))
+const CreateSellerProfilePage = lazy(() => import('@/features/seller/pages/CreateSellerProfilePage'))
+const SellerProfilePage = lazy(() => import('@/features/seller/pages/SellerProfilePage'))
+const VerificationPage = lazy(() => import('@/features/seller/pages/VerificationPage'))
 
 // Warehouse pages
-const InboundShipmentsPage = () => lazyPage(() => import('@/features/warehouse/pages/InboundShipmentsPage'))
-const BookInboundPage = () => lazyPage(() => import('@/features/warehouse/pages/BookInboundPage'))
-const InboundDetailPage = () => lazyPage(() => import('@/features/warehouse/pages/InboundDetailPage'))
-const SellerInboundPackageDetailPage = () =>
-  lazyPage(() => import('@/features/warehouse/pages/SellerInboundPackageDetailPage'))
+const InboundShipmentsPage = lazy(() => import('@/features/warehouse/pages/InboundShipmentsPage'))
+const BookInboundPage = lazy(() => import('@/features/warehouse/pages/BookInboundPage'))
+const InboundDetailPage = lazy(() => import('@/features/warehouse/pages/InboundDetailPage'))
+const SellerInboundPackageDetailPage = lazy(() => import('@/features/warehouse/pages/SellerInboundPackageDetailPage'))
 
-const WarehouseItemsPage = () => lazyPage(() => import('@/features/warehouse/pages/WarehouseItemsPage'))
-const SellerWarehouseItemDetailPage = () =>
-  lazyPage(() => import('@/features/warehouse/pages/SellerWarehouseItemDetailPage'))
+const WarehouseItemsPage = lazy(() => import('@/features/warehouse/pages/WarehouseItemsPage'))
+const SellerWarehouseItemDetailPage = lazy(() => import('@/features/warehouse/pages/SellerWarehouseItemDetailPage'))
 
 // Admin pages
-const AdminDashboardPage = () => lazyPage(() => import('@/features/admin/pages/AdminDashboardPage'))
-const AdminUsersPage = () => lazyPage(() => import('@/features/admin/pages/AdminUsersPage'))
-const AdminUserDetailPage = () => lazyPage(() => import('@/features/admin/pages/AdminUserDetailPage'))
-const AdminVerificationsPage = () => lazyPage(() => import('@/features/admin/pages/AdminVerificationsPage'))
-const AdminVerificationDetailPage = () => lazyPage(() => import('@/features/admin/pages/AdminVerificationDetailPage'))
-const AdminSellerProfilesPage = () => lazyPage(() => import('@/features/admin/pages/AdminSellerProfilesPage'))
-const AdminReviewQueuePage = () => lazyPage(() => import('@/features/admin/pages/AdminReviewQueuePage'))
-const AdminItemDetailPage = () => lazyPage(() => import('@/features/admin/pages/AdminItemDetailPage'))
-const AdminAuctionControlPage = () => lazyPage(() => import('@/features/admin/pages/AdminAuctionControlPage'))
-const AdminMonitoringPage = () => lazyPage(() => import('@/features/admin/pages/AdminMonitoringPage'))
-const AdminModerationPage = () => lazyPage(() => import('@/features/admin/pages/AdminModerationPage'))
-const AdminPaymentsPage = () => lazyPage(() => import('@/features/admin/pages/AdminPaymentsPage'))
-const AdminTermsPage = () => lazyPage(() => import('@/features/admin/pages/AdminTermsPage'))
-const AdminRolesPage = () => lazyPage(() => import('@/features/admin/pages/AdminRolesPage'))
-const AdminCompletedAuctionsPage = () => lazyPage(() => import('@/features/admin/pages/AdminCompletedAuctionsPage'))
-const AdminCompletedAuctionDetailPage = () => lazyPage(() => import('@/features/admin/pages/AdminCompletedAuctionDetailPage'))
-const AdminDisputeListPage = () => lazyPage(() => import('@/features/admin/pages/AdminDisputeListPage'))
-const AdminDisputeDetailPage = () => lazyPage(() => import('@/features/admin/pages/AdminDisputeDetailPage'))
+const AdminDashboardPage = lazy(() => import('@/features/admin/pages/AdminDashboardPage'))
+const AdminUsersPage = lazy(() => import('@/features/admin/pages/AdminUsersPage'))
+const AdminUserDetailPage = lazy(() => import('@/features/admin/pages/AdminUserDetailPage'))
+const AdminVerificationsPage = lazy(() => import('@/features/admin/pages/AdminVerificationsPage'))
+const AdminVerificationDetailPage = lazy(() => import('@/features/admin/pages/AdminVerificationDetailPage'))
+const AdminSellerProfilesPage = lazy(() => import('@/features/admin/pages/AdminSellerProfilesPage'))
+const AdminReviewQueuePage = lazy(() => import('@/features/admin/pages/AdminReviewQueuePage'))
+const AdminItemDetailPage = lazy(() => import('@/features/admin/pages/AdminItemDetailPage'))
+const AdminAuctionControlPage = lazy(() => import('@/features/admin/pages/AdminAuctionControlPage'))
+const AdminMonitoringPage = lazy(() => import('@/features/admin/pages/AdminMonitoringPage'))
+const AdminModerationPage = lazy(() => import('@/features/admin/pages/AdminModerationPage'))
+const AdminPaymentsPage = lazy(() => import('@/features/admin/pages/AdminPaymentsPage'))
+const AdminTermsPage = lazy(() => import('@/features/admin/pages/AdminTermsPage'))
+const AdminRolesPage = lazy(() => import('@/features/admin/pages/AdminRolesPage'))
+const AdminCompletedAuctionsPage = lazy(() => import('@/features/admin/pages/AdminCompletedAuctionsPage'))
+const AdminCompletedAuctionDetailPage = lazy(() => import('@/features/admin/pages/AdminCompletedAuctionDetailPage'))
+const AdminDisputeListPage = lazy(() => import('@/features/admin/pages/AdminDisputeListPage'))
+const AdminDisputeDetailPage = lazy(() => import('@/features/admin/pages/AdminDisputeDetailPage'))
 
 // Inspector pages
-const InspectorDashboardPage = () => lazyPage(() => import('@/features/inspector/pages/InspectorDashboardPage'))
-const InspectionQueuePage = () => lazyPage(() => import('@/features/inspector/pages/InspectionQueuePage'))
-const InspectionDetailPage = () => lazyPage(() => import('@/features/inspector/pages/InspectionDetailPage'))
-const InspectionReviewPage = () => lazyPage(() => import('@/features/inspector/pages/InspectionReviewPage'))
+const InspectorDashboardPage = lazy(() => import('@/features/inspector/pages/InspectorDashboardPage'))
+const InspectionQueuePage = lazy(() => import('@/features/inspector/pages/InspectionQueuePage'))
+const InspectionDetailPage = lazy(() => import('@/features/inspector/pages/InspectionDetailPage'))
+const InspectionReviewPage = lazy(() => import('@/features/inspector/pages/InspectionReviewPage'))
 
 // Warehouse Staff pages
-const WarehouseStaffDashboardPage = () => lazyPage(() => import('@/features/warehouse-staff/pages/WarehouseStaffDashboardPage'))
-const ReceivingPage = () => lazyPage(() => import('@/features/warehouse-staff/pages/ReceivingPage'))
-const ScanPage = () => lazyPage(() => import('@/features/warehouse-staff/pages/ScanPage'))
-const StaffShipmentDetailPage = () => lazyPage(() => import('@/features/warehouse-staff/pages/StaffShipmentDetailPage'))
-const ReceivePackagePage = () => lazyPage(() => import('@/features/warehouse-staff/pages/ReceivePackagePage'))
-const StaffLocationsPage = () => lazyPage(() => import('@/features/warehouse-staff/pages/StaffLocationsPage'))
-const StoredItemsPage = () => lazyPage(() => import('@/features/warehouse-staff/pages/StoredItemsPage'))
-const WarehouseItemDetailPage = () => lazyPage(() => import('@/features/warehouse-staff/pages/WarehouseItemDetailPage'))
-const OutboundQueuePage = () => lazyPage(() => import('@/features/warehouse-staff/pages/OutboundQueuePage'))
-const OutboundDetailPage = () => lazyPage(() => import('@/features/warehouse-staff/pages/OutboundDetailPage'))
-const OutboundShipmentDetailPage = () => lazyPage(() => import('@/features/warehouse-staff/pages/OutboundShipmentDetailPage'))
+const WarehouseStaffDashboardPage = lazy(() => import('@/features/warehouse-staff/pages/WarehouseStaffDashboardPage'))
+const ReceivingPage = lazy(() => import('@/features/warehouse-staff/pages/ReceivingPage'))
+const ScanPage = lazy(() => import('@/features/warehouse-staff/pages/ScanPage'))
+const StaffShipmentDetailPage = lazy(() => import('@/features/warehouse-staff/pages/StaffShipmentDetailPage'))
+const ReceivePackagePage = lazy(() => import('@/features/warehouse-staff/pages/ReceivePackagePage'))
+const StaffLocationsPage = lazy(() => import('@/features/warehouse-staff/pages/StaffLocationsPage'))
+const StoredItemsPage = lazy(() => import('@/features/warehouse-staff/pages/StoredItemsPage'))
+const WarehouseItemDetailPage = lazy(() => import('@/features/warehouse-staff/pages/WarehouseItemDetailPage'))
+const OutboundQueuePage = lazy(() => import('@/features/warehouse-staff/pages/OutboundQueuePage'))
+const OutboundDetailPage = lazy(() => import('@/features/warehouse-staff/pages/OutboundDetailPage'))
+const OutboundShipmentDetailPage = lazy(() => import('@/features/warehouse-staff/pages/OutboundShipmentDetailPage'))
 
 export const router = createBrowserRouter([
   // Auth routes (guest only)
@@ -213,11 +215,11 @@ export const router = createBrowserRouter([
       {
         element: <AuthLayout />,
         children: [
-          { path: '/login', element: <LoginPage /> },
-          { path: '/register', element: <RegisterPage /> },
-          { path: '/2fa', element: <TwoFactorPage /> },
-          { path: '/forgot-password', element: <ForgotPasswordPage /> },
-          { path: '/reset-password', element: <ResetPasswordPage /> },
+          { path: '/login', element: withSuspense(LoginPage) },
+          { path: '/register', element: withSuspense(RegisterPage) },
+          { path: '/2fa', element: withSuspense(TwoFactorPage) },
+          { path: '/forgot-password', element: withSuspense(ForgotPasswordPage) },
+          { path: '/reset-password', element: withSuspense(ResetPasswordPage) },
         ],
       },
     ],
@@ -226,71 +228,70 @@ export const router = createBrowserRouter([
   {
     element: <AuthLayout />,
     children: [
-      { path: '/confirm-email', element: <ConfirmEmailPage /> },
+      { path: '/confirm-email', element: withSuspense(ConfirmEmailPage) },
     ],
   },
   // VnPay return (no layout needed)
-  { path: '/payments/vnpay/return', element: <VnPayReturnPage />, errorElement: <RouteErrorBoundary /> },
+  { path: '/payments/vnpay/return', element: withSuspense(VnPayReturnPage), errorElement: <RouteErrorBoundary /> },
   // Main app routes
   {
     errorElement: <RouteErrorBoundary />,
     element: <AppLayout />,
     children: [
       // Public routes
-      { index: true, element: <AuctionListPage /> },
+      { index: true, element: withSuspense(AuctionListPage) },
       { path: '/terms', element: <Navigate to="/me/terms" replace /> },
-      { path: '/auctions', element: <BrowseAuctionsPage /> },
-      { path: '/auctions/:id', element: <AuctionDetailPage /> },
-      { path: '/items', element: <BrowseItemsPage /> },
-      { path: '/items/:id', element: <ItemDetailPage /> },
-      { path: '/sellers', element: <BrowseSellersPage /> },
-      { path: '/sellers/:id', element: <PublicSellerPage /> },
-      { path: '/about', element: <AboutPage /> },
-      { path: '/categories', element: <CategoriesPage /> },
-      { path: '/help', element: <HelpPage /> },
+      { path: '/auctions', element: withSuspense(BrowseAuctionsPage) },
+      { path: '/auctions/:id', element: withSuspense(AuctionDetailPage) },
+      { path: '/items', element: withSuspense(BrowseItemsPage) },
+      { path: '/items/:id', element: withSuspense(ItemDetailPage) },
+      { path: '/sellers', element: withSuspense(BrowseSellersPage) },
+      { path: '/sellers/:id', element: withSuspense(PublicSellerPage) },
+      { path: '/about', element: withSuspense(AboutPage) },
+      { path: '/categories', element: withSuspense(CategoriesPage) },
+      { path: '/help', element: withSuspense(HelpPage) },
       // Auth-required routes
       {
         element: <AuthGuard />,
         children: [
           // User
-          { path: '/me/dashboard', element: <UserDashboardPage /> },
-          { path: '/me/profile', element: <ProfilePage /> },
-          { path: '/me/addresses', element: <AddressesPage /> },
-          { path: '/me/security', element: <SecurityPage /> },
-          { path: '/me/notifications', element: <NotificationsPage /> },
-          { path: '/me/notifications/settings', element: <NotificationPrefsPage /> },
-          { path: '/me/terms', element: <TermsPage /> },
-          { path: '/me/verification', element: <VerificationPage /> },
+          { path: '/me/dashboard', element: withSuspense(UserDashboardPage) },
+          { path: '/me/profile', element: withSuspense(ProfilePage) },
+          { path: '/me/addresses', element: withSuspense(AddressesPage) },
+          { path: '/me/security', element: withSuspense(SecurityPage) },
+          { path: '/me/notifications', element: withSuspense(NotificationsPage) },
+          { path: '/me/notifications/settings', element: withSuspense(NotificationPrefsPage) },
+          { path: '/me/terms', element: withSuspense(TermsPage) },
+          { path: '/me/verification', element: withSuspense(VerificationPage) },
           // Items
-          { path: '/me/items', element: <MyItemsPage /> },
-          { path: '/me/items/create', element: <CreateItemPage /> },
-          { path: '/me/items/:id/edit', element: <EditItemPage /> },
+          { path: '/me/items', element: withSuspense(MyItemsPage) },
+          { path: '/me/items/create', element: withSuspense(CreateItemPage) },
           // Auctions
-          { path: '/me/auctions', element: <MyAuctionsPage /> },
-          { path: '/me/auctions/create', element: <CreateAuctionPage /> },
-          { path: '/me/auctions/:id/edit', element: <CreateAuctionPage /> },
-          { path: '/me/watchlist', element: <WatchlistPage /> },
-          { path: '/me/bids', element: <MyBidsPage /> },
+          { path: '/me/auctions', element: withSuspense(MyAuctionsPage) },
+          { path: '/me/auctions/create', element: withSuspense(CreateAuctionPage) },
+          { path: '/me/auctions/:id/edit', element: withSuspense(CreateAuctionPage) },
+          { path: '/me/watchlist', element: withSuspense(WatchlistPage) },
+          { path: '/me/bids', element: withSuspense(MyBidsPage) },
           // Orders
-          { path: '/me/orders', element: <MyOrdersPage /> },
-          { path: '/me/orders/:id', element: <OrderDetailPage /> },
-          { path: '/me/orders/:id/return', element: <OrderReturnPage /> },
-          { path: '/me/outbound-shipments/:shipmentId', element: <BuyerOutboundShipmentPage /> },
-          { path: '/orders/:orderId/outbound-shipment/receive', element: <BuyerOutboundReceivePage /> },
-          { path: '/me/shipments', element: <MyDirectShipmentsListPage /> },
-          { path: '/me/shipments/scan', element: <BuyerShipmentScanPage /> },
-          { path: '/me/shipments/:shipmentId/receive', element: <BuyerShipmentReceivePage /> },
-          { path: '/me/shipments/:shipmentId', element: <MyDirectShipmentDetailPage /> },
+          { path: '/me/orders', element: withSuspense(MyOrdersPage) },
+          { path: '/me/orders/:id', element: withSuspense(OrderDetailPage) },
+          { path: '/me/orders/:id/return', element: withSuspense(OrderReturnPage) },
+          { path: '/me/outbound-shipments/:shipmentId', element: withSuspense(BuyerOutboundShipmentPage) },
+          { path: '/orders/:orderId/outbound-shipment/receive', element: withSuspense(BuyerOutboundReceivePage) },
+          { path: '/me/shipments', element: withSuspense(MyDirectShipmentsListPage) },
+          { path: '/me/shipments/scan', element: withSuspense(BuyerShipmentScanPage) },
+          { path: '/me/shipments/:shipmentId/receive', element: withSuspense(BuyerShipmentReceivePage) },
+          { path: '/me/shipments/:shipmentId', element: withSuspense(MyDirectShipmentDetailPage) },
           // Payment
-          { path: '/me/wallet', element: <BuyerWalletPage /> },
-          { path: '/me/wallet/withdraw', element: <WithdrawPage /> },
-          { path: '/me/payment-methods', element: <PaymentMethodsPage /> },
-          { path: '/checkout/:orderId', element: <CheckoutPage /> },
+          { path: '/me/wallet', element: withSuspense(BuyerWalletPage) },
+          { path: '/me/wallet/withdraw', element: withSuspense(WithdrawPage) },
+          { path: '/me/payment-methods', element: withSuspense(PaymentMethodsPage) },
+          { path: '/checkout/:orderId', element: withSuspense(CheckoutPage) },
           // Disputes
-          { path: '/me/disputes', element: <MyDisputesPage /> },
-          { path: '/me/disputes/:id', element: <BuyerDisputeThreadPage /> },
+          { path: '/me/disputes', element: withSuspense(MyDisputesPage) },
+          { path: '/me/disputes/:id', element: withSuspense(BuyerDisputeThreadPage) },
           // Seller registration (outside SellerGuard to avoid redirect loop)
-          { path: '/seller/register', element: <CreateSellerProfilePage /> },
+          { path: '/seller/register', element: withSuspense(CreateSellerProfilePage) },
         ],
       },
     ],
@@ -303,35 +304,35 @@ export const router = createBrowserRouter([
       {
         element: <SellerLayout />,
         children: [
-          { path: '/seller', element: <SellerDashboardPage /> },
+          { path: '/seller', element: withSuspense(SellerDashboardPage) },
           // Items
-          { path: '/seller/items', element: <MyItemsPage /> },
-          { path: '/seller/items/create', element: <CreateItemPage /> },
-          { path: '/seller/items/:id/edit', element: <EditItemPage /> },
+          { path: '/seller/items', element: withSuspense(MyItemsPage) },
+          { path: '/seller/items/create', element: withSuspense(CreateItemPage) },
+          { path: '/seller/items/:id/edit', element: withSuspense(EditItemPage) },
           // Auctions
-          { path: '/seller/auctions', element: <MyAuctionsPage /> },
-          { path: '/seller/auctions/create', element: <CreateAuctionPage /> },
-          { path: '/seller/auctions/:id/edit', element: <CreateAuctionPage /> },
+          { path: '/seller/auctions', element: withSuspense(MyAuctionsPage) },
+          { path: '/seller/auctions/create', element: withSuspense(CreateAuctionPage) },
+          { path: '/seller/auctions/:id/edit', element: withSuspense(CreateAuctionPage) },
           // Business
-          { path: '/seller/orders', element: <SellerOrdersPage /> },
-          { path: '/seller/orders/:id', element: <OrderDetailPage /> },
-          { path: '/seller/orders/:id/return', element: <OrderReturnPage /> },
-          { path: '/seller/wallet', element: <SellerWalletPage /> },
-          { path: '/seller/wallet/withdraw', element: <WithdrawPage /> },
+          { path: '/seller/orders', element: withSuspense(SellerOrdersPage) },
+          { path: '/seller/orders/:id', element: withSuspense(OrderDetailPage) },
+          { path: '/seller/orders/:id/return', element: withSuspense(OrderReturnPage) },
+          { path: '/seller/wallet', element: withSuspense(SellerWalletPage) },
+          { path: '/seller/wallet/withdraw', element: withSuspense(WithdrawPage) },
           // Warehouse
-          { path: '/seller/warehouse/inbound', element: <InboundShipmentsPage /> },
-          { path: '/seller/warehouse/inbound/book', element: <BookInboundPage /> },
-          { path: '/seller/warehouse/inbound/:id', element: <InboundDetailPage /> },
-          { path: '/seller/warehouse/inbound/packages/:clientOrderCode', element: <SellerInboundPackageDetailPage /> },
-          { path: '/seller/warehouse/outbound', element: <SellerOutboundShipmentsListPage /> },
-          { path: '/seller/warehouse/outbound/:id', element: <SellerOutboundShipmentDetailPage /> },
-          { path: '/seller/shipments', element: <SellerDirectShipmentsListPage /> },
-          { path: '/seller/shipments/:shipmentId', element: <SellerDirectShipmentDetailPage /> },
-          { path: '/seller/warehouse/items', element: <WarehouseItemsPage /> },
-          { path: '/seller/warehouse/items/:warehouseItemId', element: <SellerWarehouseItemDetailPage /> },
+          { path: '/seller/warehouse/inbound', element: withSuspense(InboundShipmentsPage) },
+          { path: '/seller/warehouse/inbound/book', element: withSuspense(BookInboundPage) },
+          { path: '/seller/warehouse/inbound/:id', element: withSuspense(InboundDetailPage) },
+          { path: '/seller/warehouse/inbound/packages/:clientOrderCode', element: withSuspense(SellerInboundPackageDetailPage) },
+          { path: '/seller/warehouse/outbound', element: withSuspense(SellerOutboundShipmentsListPage) },
+          { path: '/seller/warehouse/outbound/:id', element: withSuspense(SellerOutboundShipmentDetailPage) },
+          { path: '/seller/shipments', element: withSuspense(SellerDirectShipmentsListPage) },
+          { path: '/seller/shipments/:shipmentId', element: withSuspense(SellerDirectShipmentDetailPage) },
+          { path: '/seller/warehouse/items', element: withSuspense(WarehouseItemsPage) },
+          { path: '/seller/warehouse/items/:warehouseItemId', element: withSuspense(SellerWarehouseItemDetailPage) },
           // Settings
-          { path: '/seller/profile', element: <SellerProfilePage /> },
-          { path: '/seller/verification', element: <VerificationPage /> },
+          { path: '/seller/profile', element: withSuspense(SellerProfilePage) },
+          { path: '/seller/verification', element: withSuspense(VerificationPage) },
         ],
       },
     ],
@@ -344,25 +345,25 @@ export const router = createBrowserRouter([
       {
         element: <AdminLayout />,
         children: [
-          { path: '/admin', element: <AdminDashboardPage /> },
-          { path: '/admin/users', element: <AdminUsersPage /> },
-          { path: '/admin/users/:id', element: <AdminUserDetailPage /> },
-          { path: '/admin/verifications', element: <AdminVerificationsPage /> },
-          { path: '/admin/verifications/:id', element: <AdminVerificationDetailPage /> },
-          { path: '/admin/sellers', element: <AdminSellerProfilesPage /> },
-          { path: '/admin/items/review', element: <AdminReviewQueuePage /> },
-          { path: '/admin/items/:id', element: <AdminItemDetailPage /> },
-          { path: '/admin/auctions/completed', element: <AdminCompletedAuctionsPage /> },
-          { path: '/admin/auctions/completed/:auctionId', element: <AdminCompletedAuctionDetailPage /> },
-          { path: '/admin/auctions/:id', element: <AdminAuctionControlPage /> },
-          { path: '/admin/moderation', element: <AdminModerationPage /> },
+          { path: '/admin', element: withSuspense(AdminDashboardPage) },
+          { path: '/admin/users', element: withSuspense(AdminUsersPage) },
+          { path: '/admin/users/:id', element: withSuspense(AdminUserDetailPage) },
+          { path: '/admin/verifications', element: withSuspense(AdminVerificationsPage) },
+          { path: '/admin/verifications/:id', element: withSuspense(AdminVerificationDetailPage) },
+          { path: '/admin/sellers', element: withSuspense(AdminSellerProfilesPage) },
+          { path: '/admin/items/review', element: withSuspense(AdminReviewQueuePage) },
+          { path: '/admin/items/:id', element: withSuspense(AdminItemDetailPage) },
+          { path: '/admin/auctions/completed', element: withSuspense(AdminCompletedAuctionsPage) },
+          { path: '/admin/auctions/completed/:auctionId', element: withSuspense(AdminCompletedAuctionDetailPage) },
+          { path: '/admin/auctions/:id', element: withSuspense(AdminAuctionControlPage) },
+          { path: '/admin/moderation', element: withSuspense(AdminModerationPage) },
           { path: '/admin/reports', element: <Navigate to="/admin/moderation" replace /> },
-          { path: '/admin/monitoring', element: <AdminMonitoringPage /> },
-          { path: '/admin/disputes', element: <AdminDisputeListPage /> },
-          { path: '/admin/disputes/:id', element: <AdminDisputeDetailPage /> },
-          { path: '/admin/payments', element: <AdminPaymentsPage /> },
-          { path: '/admin/terms', element: <AdminTermsPage /> },
-          { path: '/admin/roles', element: <AdminRolesPage /> },
+          { path: '/admin/monitoring', element: withSuspense(AdminMonitoringPage) },
+          { path: '/admin/disputes', element: withSuspense(AdminDisputeListPage) },
+          { path: '/admin/disputes/:id', element: withSuspense(AdminDisputeDetailPage) },
+          { path: '/admin/payments', element: withSuspense(AdminPaymentsPage) },
+          { path: '/admin/terms', element: withSuspense(AdminTermsPage) },
+          { path: '/admin/roles', element: withSuspense(AdminRolesPage) },
         ],
       },
     ],
@@ -375,10 +376,10 @@ export const router = createBrowserRouter([
       {
         element: <InspectorLayout />,
         children: [
-          { path: '/inspector', element: <InspectorDashboardPage /> },
-          { path: '/inspector/queue', element: <InspectionQueuePage /> },
-          { path: '/inspector/inspections/:shipmentId', element: <InspectionDetailPage /> },
-          { path: '/inspector/reviews', element: <InspectionReviewPage /> },
+          { path: '/inspector', element: withSuspense(InspectorDashboardPage) },
+          { path: '/inspector/queue', element: withSuspense(InspectionQueuePage) },
+          { path: '/inspector/inspections/:shipmentId', element: withSuspense(InspectionDetailPage) },
+          { path: '/inspector/reviews', element: withSuspense(InspectionReviewPage) },
         ],
       },
     ],
@@ -390,17 +391,17 @@ export const router = createBrowserRouter([
     children: [{
       element: <WarehouseStaffLayout />,
       children: [
-        { path: '/warehouse-staff', element: <WarehouseStaffDashboardPage /> },
-        { path: '/warehouse-staff/receiving', element: <ReceivingPage /> },
-        { path: '/warehouse-staff/receiving/packages/:clientOrderCode', element: <ReceivePackagePage /> },
-        { path: '/warehouse-staff/scan', element: <ScanPage /> },
-        { path: '/warehouse-staff/shipments/:id', element: <StaffShipmentDetailPage /> },
-        { path: '/warehouse-staff/items', element: <StoredItemsPage /> },
-        { path: '/warehouse-staff/items/:warehouseItemId', element: <WarehouseItemDetailPage /> },
-        { path: '/warehouse-staff/locations', element: <StaffLocationsPage /> },
-        { path: '/warehouse-staff/outbound', element: <OutboundQueuePage /> },
-        { path: '/warehouse-staff/outbound/shipments/:shipmentId', element: <OutboundShipmentDetailPage /> },
-        { path: '/warehouse-staff/outbound/:orderId', element: <OutboundDetailPage /> },
+        { path: '/warehouse-staff', element: withSuspense(WarehouseStaffDashboardPage) },
+        { path: '/warehouse-staff/receiving', element: withSuspense(ReceivingPage) },
+        { path: '/warehouse-staff/receiving/packages/:clientOrderCode', element: withSuspense(ReceivePackagePage) },
+        { path: '/warehouse-staff/scan', element: withSuspense(ScanPage) },
+        { path: '/warehouse-staff/shipments/:id', element: withSuspense(StaffShipmentDetailPage) },
+        { path: '/warehouse-staff/items', element: withSuspense(StoredItemsPage) },
+        { path: '/warehouse-staff/items/:warehouseItemId', element: withSuspense(WarehouseItemDetailPage) },
+        { path: '/warehouse-staff/locations', element: withSuspense(StaffLocationsPage) },
+        { path: '/warehouse-staff/outbound', element: withSuspense(OutboundQueuePage) },
+        { path: '/warehouse-staff/outbound/shipments/:shipmentId', element: withSuspense(OutboundShipmentDetailPage) },
+        { path: '/warehouse-staff/outbound/:orderId', element: withSuspense(OutboundDetailPage) },
       ],
     }],
   },

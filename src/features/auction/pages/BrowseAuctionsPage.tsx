@@ -13,7 +13,7 @@ import FilterWidget from '@/components/ui/FilterWidget'
 import { AuctionStatus, AuctionType } from '@/types/enums'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useDebounce } from '@/hooks/useDebounce'
-import type { AuctionFilterParams, PagedList, AuctionListItemDto } from '@/types'
+import type { AuctionFilterParams, AuctionStatusGroup, PagedList, AuctionListItemDto } from '@/types'
 import { SERIF_FONT } from '@/styles/tokens'
 
 const SERIF = SERIF_FONT
@@ -90,20 +90,48 @@ export default function BrowseAuctionsPage() {
     { value: 'CreatedAt Desc', label: t('browse.sortNewest') },
   ]
 
-  const STATUS_PILLS = [
-    { value: '', label: t('browse.statusAll') },
-    { value: AuctionStatus.Active, label: t('browse.statusActive') },
-    { value: AuctionStatus.Scheduled, label: t('browse.statusScheduled') },
-    { value: AuctionStatus.Ended, label: t('browse.statusEnded') },
+  // ORDER MATTERS — left-to-right nav: ongoing → upcoming → sold → failed → all
+  // Each pill carries a semantic `statusGroup` value (not a raw status).
+  // The Sold pill additionally dual-writes the legacy `status=sold` for the
+  // FE-first compat window (see plan 058 / change #4).
+  const STATUS_PILLS: { value: AuctionStatusGroup; label: string }[] = [
+    { value: 'active',    label: t('browse.statusActive') },
+    { value: 'scheduled', label: t('browse.statusScheduled') },
+    { value: 'sold',      label: t('browse.statusSold') },
+    { value: 'failed',    label: t('browse.statusFailed') },
+    { value: '',          label: t('browse.statusAll') },
   ]
+  const VALID_STATUS_GROUPS: AuctionStatusGroup[] = ['active', 'scheduled', 'sold', 'failed', '']
 
   // ── URL param initialisation ──────────────────────────────────────────────
 
   const initialCategoryId = searchParams.get('categoryId') ?? ''
   const initialSearch = searchParams.get('search') ?? ''
-  const rawStatus = searchParams.get('status')
-  const validStatuses = Object.values(AuctionStatus) as string[]
-  const initialStatus = rawStatus && validStatuses.includes(rawStatus) ? rawStatus : undefined
+
+  // Primary param: `statusGroup`. Fallback: legacy `status` (graceful
+  // degrade for stale bookmarks/links). Default selected pill is based on
+  // `statusGroup` first — never `status`.
+  const rawStatusGroup = searchParams.get('statusGroup')
+  const rawLegacyStatus = searchParams.get('status')
+  const initialStatusGroup: AuctionStatusGroup | undefined = (() => {
+    if (rawStatusGroup !== null && VALID_STATUS_GROUPS.includes(rawStatusGroup as AuctionStatusGroup)) {
+      return rawStatusGroup as AuctionStatusGroup
+    }
+    // Legacy back-compat: map the handful of status values a stale URL may carry
+    // to the closest status group. Only mirror values the new UI can represent.
+    if (rawLegacyStatus === AuctionStatus.Active) return 'active'
+    if (rawLegacyStatus === AuctionStatus.Scheduled) return 'scheduled'
+    if (rawLegacyStatus === AuctionStatus.Sold || rawLegacyStatus === AuctionStatus.Completed) return 'sold'
+    if (
+      rawLegacyStatus === AuctionStatus.Failed ||
+      rawLegacyStatus === AuctionStatus.Cancelled ||
+      rawLegacyStatus === AuctionStatus.Terminated ||
+      rawLegacyStatus === AuctionStatus.PaymentDefaulted
+    ) {
+      return 'failed'
+    }
+    return undefined
+  })()
 
   const rawAuctionType = searchParams.get('auctionType')
   const validTypes = Object.values(AuctionType) as string[]
@@ -118,7 +146,7 @@ export default function BrowseAuctionsPage() {
   const [filters, setFilters] = useState<AuctionFilterParams>({
     pageNumber: 1,
     pageSize: 12,
-    status: initialStatus as AuctionStatus | undefined,
+    statusGroup: initialStatusGroup,
     auctionType: initialAuctionType as AuctionType | undefined,
     sortBy: initialSortBy,
   })
@@ -150,13 +178,39 @@ export default function BrowseAuctionsPage() {
 
   const { data: categories } = useCategories()
 
+  // Dual-write on the Sold pill ONLY: send both `statusGroup='sold'` AND
+  // legacy `status='sold'` so stale browser tabs / the BE compat branch
+  // remain consistent. BE prefers `statusGroup` silently when both are
+  // present. Non-Sold pills send ONLY `statusGroup`.
+  const browseParams: AuctionFilterParams | undefined = !isSearchMode
+    ? {
+        ...filters,
+        // Never propagate a stray `status` from state to the BE except via
+        // the explicit dual-write branch below.
+        status: undefined,
+        ...(filters.statusGroup === 'sold' ? { status: AuctionStatus.Sold } : {}),
+        categoryId: categoryId || undefined,
+        minPrice: debouncedMinPrice ?? undefined,
+        maxPrice: debouncedMaxPrice ?? undefined,
+      }
+    : undefined
   const { data: browseData, isLoading: browseLoading } = useAuctions(
-    !isSearchMode
-      ? { ...filters, categoryId: categoryId || undefined, minPrice: debouncedMinPrice ?? undefined, maxPrice: debouncedMaxPrice ?? undefined }
-      : undefined!,
+    browseParams as AuctionFilterParams,
     { refetchInterval: 30000 },
   )
 
+  // ES search path unchanged (spec Non-Goals). Legacy `status` value is
+  // derived from the active statusGroup for best-effort filtering on the
+  // ES endpoint, which still speaks the old vocabulary.
+  const esStatus: string | undefined = (() => {
+    switch (filters.statusGroup) {
+      case 'active':    return AuctionStatus.Active
+      case 'scheduled': return AuctionStatus.Scheduled
+      case 'sold':      return AuctionStatus.Sold
+      case 'failed':    return AuctionStatus.Failed
+      default:          return undefined
+    }
+  })()
   const { data: searchData, isLoading: searchLoading } = useSearchAuctions(
     {
       q: committedSearch || '*',
@@ -164,7 +218,7 @@ export default function BrowseAuctionsPage() {
       page_size: filters.pageSize,
       sort_by: mapSearchSortBy(filters.sortBy),
       ...(categoryName ? { category: categoryName } : {}),
-      ...(filters.status ? { status: filters.status } : {}),
+      ...(esStatus ? { status: esStatus } : {}),
       ...(filters.auctionType ? { auction_type: filters.auctionType } : {}),
       ...(debouncedMinPrice != null ? { min_price: debouncedMinPrice } : {}),
       ...(debouncedMaxPrice != null ? { max_price: debouncedMaxPrice } : {}),
@@ -214,18 +268,23 @@ export default function BrowseAuctionsPage() {
     setFilters((prev) => ({ ...prev, pageNumber: 1 }))
   }, [categories])
 
-  // URL Sync
+  // URL Sync — primary param is `statusGroup`; legacy `status` is only
+  // mirrored on the Sold pill to preserve the dual-write contract for any
+  // stale tab that still sends the old param.
   useEffect(() => {
     const params = new URLSearchParams()
     if (committedSearch.trim()) params.set('search', committedSearch.trim())
     if (categoryId) params.set('categoryId', categoryId)
-    if (filters.status) params.set('status', filters.status)
+    if (filters.statusGroup) {
+      params.set('statusGroup', filters.statusGroup)
+      if (filters.statusGroup === 'sold') params.set('status', AuctionStatus.Sold)
+    }
     if (filters.auctionType) params.set('auctionType', filters.auctionType)
     if (filters.sortBy && filters.sortBy !== 'EndTime Asc') params.set('sortBy', filters.sortBy)
     if (debouncedMinPrice != null) params.set('minPrice', debouncedMinPrice.toString())
     if (debouncedMaxPrice != null) params.set('maxPrice', debouncedMaxPrice.toString())
     setSearchParams(params)
-  }, [committedSearch, categoryId, filters.status, filters.auctionType, filters.sortBy, debouncedMinPrice, debouncedMaxPrice, setSearchParams])
+  }, [committedSearch, categoryId, filters.statusGroup, filters.auctionType, filters.sortBy, debouncedMinPrice, debouncedMaxPrice, setSearchParams])
 
   // ── Options ───────────────────────────────────────────────────────────────
 
@@ -236,7 +295,21 @@ export default function BrowseAuctionsPage() {
 
   const suggestOptions = (suggestions ?? []).map((s) => ({ value: s, label: s }))
 
-  const activeStatus = filters.status ?? ''
+  // Active pill value — compared against `STATUS_PILLS[i].value` (which are
+  // `AuctionStatusGroup` strings). An undefined statusGroup falls back to
+  // the "All" pill (value = '').
+  const activeStatusGroup: AuctionStatusGroup = filters.statusGroup ?? ''
+
+  const handleSelectStatusGroup = useCallback((value: AuctionStatusGroup) => {
+    setFilters((prev) => ({
+      ...prev,
+      statusGroup: value === '' ? undefined : value,
+      // Never persist a raw status on state — the dual-write for 'sold' is
+      // handled at the request layer. Keeping state clean prevents leaks.
+      status: undefined,
+      pageNumber: 1,
+    }))
+  }, [])
 
   // ── Mobile/Tablet filter controls (drawer) ────────────────────────────────
 
@@ -394,11 +467,12 @@ export default function BrowseAuctionsPage() {
             <FilterWidget title={t('browse.filterState', 'Trạng thái')} icon={<CheckCircleOutlined />} noPadding>
               <Flex vertical>
                 {STATUS_PILLS.map((pill, idx) => {
-                  const isActive = activeStatus === pill.value;
+                  const isActive = activeStatusGroup === pill.value;
                   return (
                     <div
-                      key={pill.value}
-                      onClick={() => updateFilter('status', pill.value)}
+                      key={pill.value || 'all'}
+                      data-testid={`status-pill-${pill.value || 'all'}`}
+                      onClick={() => handleSelectStatusGroup(pill.value)}
                       style={{
                         padding: '14px 20px',
                         cursor: 'pointer',
@@ -555,9 +629,10 @@ export default function BrowseAuctionsPage() {
           >
             {STATUS_PILLS.map((pill) => (
               <button
-                key={pill.value}
+                key={pill.value || 'all'}
+                data-testid={`status-pill-mobile-${pill.value || 'all'}`}
                 type="button"
-                onClick={() => updateFilter('status', pill.value)}
+                onClick={() => handleSelectStatusGroup(pill.value)}
                 style={{
                   padding: isMobile ? '6px 14px' : '7px 18px',
                   borderRadius: 100,
@@ -566,9 +641,9 @@ export default function BrowseAuctionsPage() {
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
                   minHeight: 36,
-                  border: `1px solid ${activeStatus === pill.value ? 'var(--color-accent)' : 'var(--color-border)'}`,
-                  background: activeStatus === pill.value ? 'var(--color-accent)' : 'transparent',
-                  color: activeStatus === pill.value ? '#fff' : 'var(--color-text-secondary)',
+                  border: `1px solid ${activeStatusGroup === pill.value ? 'var(--color-accent)' : 'var(--color-border)'}`,
+                  background: activeStatusGroup === pill.value ? 'var(--color-accent)' : 'transparent',
+                  color: activeStatusGroup === pill.value ? '#fff' : 'var(--color-text-secondary)',
                   transition: 'all 200ms ease',
                   flexShrink: 0,
                 }}

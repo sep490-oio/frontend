@@ -7,13 +7,14 @@ function createHubConnection(hubPath: string): signalR.HubConnection {
     .withUrl(`${SIGNALR_URL}${hubPath}`, {
       accessTokenFactory: async () => {
         if (isTokenExpired()) {
-          try {
-            return await refreshToken()
-          } catch {
-            return localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN) ?? ''
-          }
+          // Let refresh errors propagate. SignalR will surface them as a
+          // connection failure; onclose will see an error and run the
+          // recovery path below (guarded by terminallyStopped).
+          return await refreshToken()
         }
-        return localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN) ?? ''
+        const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
+        if (!token) throw new Error('No access token available')
+        return token
       },
     })
     .withAutomaticReconnect({
@@ -27,10 +28,20 @@ function createHubConnection(hubPath: string): signalR.HubConnection {
 
   // When connection closes with error (e.g. token expired),
   // refresh token and restart after a short delay.
+  // Skip the recovery path entirely once the connection is flagged as
+  // terminally stopped — otherwise we loop 401 -> onclose -> refresh-fail
+  // -> setTimeout -> startConnection -> 401 indefinitely.
   connection.onclose(async (error) => {
+    if (terminallyStopped.get(connection)) return
     if (error) {
-      try { await refreshToken() } catch { /* handleRefreshFailure already called */ }
-      setTimeout(() => void startConnection(connection), 3000)
+      try {
+        await refreshToken()
+        setTimeout(() => void startConnection(connection), 3000)
+      } catch {
+        // handleRefreshFailure already cleared tokens + redirected to /login.
+        // Do NOT reconnect — it would loop through 401 -> onclose -> here.
+        terminallyStopped.set(connection, true)
+      }
     }
   })
 
@@ -38,6 +49,12 @@ function createHubConnection(hubPath: string): signalR.HubConnection {
 }
 
 const retryTimeouts = new Map<signalR.HubConnection, ReturnType<typeof setTimeout>>()
+
+// Per-connection terminal flag. Set when a refresh attempt permanently fails
+// (handleRefreshFailure has already redirected to /login). Prevents the
+// onclose -> refresh-fail -> setTimeout -> startConnection -> 401 -> onclose
+// loop. Per-connection (not module-global) because 4 hubs run independently.
+const terminallyStopped = new Map<signalR.HubConnection, boolean>()
 
 // Lazy-initialized hub connections
 let auctionHub: signalR.HubConnection | null = null
@@ -108,6 +125,10 @@ export async function startConnection(connection: signalR.HubConnection): Promis
 
   try {
     await connection.start()
+    // Reversibility: a successful start clears any terminal flag so a hub
+    // that was marked dead due to a transient failure (which later self-
+    // healed, e.g. user re-authenticated in another tab) can come back.
+    terminallyStopped.delete(connection)
     return true
   } catch (err) {
     console.error('SignalR connection error:', err)
@@ -131,11 +152,13 @@ export async function stopConnection(connection: signalR.HubConnection): Promise
   if (connection.state !== signalR.HubConnectionState.Disconnected) {
     await connection.stop()
   }
+  terminallyStopped.delete(connection)
 }
 
 export async function stopAllConnections(): Promise<void> {
   const hubs = [auctionHub, disputeHub, notificationHub, userHub]
   await Promise.all(hubs.filter(Boolean).map((hub) => stopConnection(hub!)))
+  terminallyStopped.clear()
   auctionHub = null
   disputeHub = null
   notificationHub = null
