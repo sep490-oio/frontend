@@ -62,9 +62,15 @@ export function TermsAcceptanceGate({
     'You need to review and accept the current version before you can continue here.',
   )
 
+  // AppLayout renders the global Platform Terms banner for every authenticated
+  // route. Skip the page-level banner here to avoid duplicate notifications on
+  // pages like /me/verification that gate their own action on `platform`. The
+  // onPendingChange callback still fires so the caller can disable the action.
+  const showBanner = hasPending && termType !== 'platform'
+
   return (
     <>
-      {hasPending && (
+      {showBanner && (
         <Alert
           type="warning"
           showIcon

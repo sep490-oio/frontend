@@ -27,6 +27,7 @@ import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useAppSelector } from '@/app/store'
 import { NotificationDropdown } from '@/features/notification/components/NotificationDropdown'
 import { TermsAcceptanceModal } from '@/components/terms/TermsAcceptanceModal'
+import { TermsGateProvider } from '@/features/user/components/TermsGateProvider'
 import { useActiveTermsByType, useAcceptedTerms, useCurrentUser } from '@/features/user/api'
 import { useSuggestAuctions } from '@/features/auction/api'
 import { SERIF_FONT, SANS_FONT } from '@/styles/tokens'
@@ -146,6 +147,7 @@ export function AppLayout() {
   ]
 
   return (
+    <TermsGateProvider>
     <Layout style={{ minHeight: '100vh', background: 'var(--color-bg-primary)' }}>
       <a
         href="#main-content"
@@ -619,5 +621,6 @@ export function AppLayout() {
         </div>
       </Footer>
     </Layout>
+    </TermsGateProvider>
   )
 }

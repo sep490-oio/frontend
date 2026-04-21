@@ -2,6 +2,30 @@ import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { API_URL, STORAGE_KEYS, uuid } from '@/utils/constants'
 import { refreshToken } from '@/lib/tokenRefresh'
 
+// ── Terms-gate 409 interceptor ────────────────────────────────────────────────
+// When BE returns 409 with code "Terms.PendingAcceptance", the interceptor calls
+// the registered handler which opens TermsAcceptanceModal, waits for acceptance,
+// then retries the original request preserving the full payload (§4.3 Scenario 2).
+//
+// The handler is registered by TermsGateProvider (mounted in AppLayout) so it is
+// available for the lifetime of an authenticated session. Until registration the
+// interceptor passes 409-Terms errors through as normal rejections (graceful
+// degradation: BE gate still fires; user sees a toast).
+
+type TermsGateHandler = (
+  originalRequest: InternalAxiosRequestConfig & { _termsRetry?: boolean },
+) => Promise<boolean>
+
+let _termsGateHandler: TermsGateHandler | null = null
+
+export function registerTermsGateHandler(handler: TermsGateHandler) {
+  _termsGateHandler = handler
+}
+
+export function unregisterTermsGateHandler() {
+  _termsGateHandler = null
+}
+
 const apiClient = axios.create({
   baseURL: API_URL,
   headers: { 'Content-Type': 'application/json' },
@@ -43,11 +67,34 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   return config
 })
 
-// Response interceptor — silent JWT refresh + queue
+// Response interceptor — silent JWT refresh + queue + Terms-gate 409 recovery
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean
+      _termsRetry?: boolean
+    }
+
+    // ── 409 Terms.PendingAcceptance recovery ─────────────────────────────────
+    // Only intercept once per request (_termsRetry guard) and only when a
+    // handler is registered (TermsGateProvider is mounted).
+    if (
+      error.response?.status === 409 &&
+      !originalRequest._termsRetry &&
+      _termsGateHandler
+    ) {
+      const responseData = error.response.data as { code?: string } | undefined
+      if (responseData?.code === 'Terms.PendingAcceptance') {
+        originalRequest._termsRetry = true
+        const accepted = await _termsGateHandler(originalRequest)
+        if (accepted) {
+          return apiClient(originalRequest)
+        }
+        // User cancelled — propagate original error
+        return Promise.reject(error)
+      }
+    }
 
     if (error.response?.status !== 401 || originalRequest._retry) {
       return Promise.reject(error)
