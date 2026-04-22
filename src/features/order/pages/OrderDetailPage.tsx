@@ -477,7 +477,7 @@ export default function OrderDetailPage() {
                       icon={<WarningOutlined />}
                       onClick={handleOpenDispute}
                     >
-                      {t('directShipment.openDispute', 'Có vấn đề / mở dispute')}
+                      {t('directShipment.openDispute', 'Issue / Open Dispute')}
                     </Button>
                   </OrderActionRow>
                 )}
@@ -511,7 +511,7 @@ export default function OrderDetailPage() {
               </Button>
             </Popconfirm>
             <Button danger size="middle" icon={<WarningOutlined />} onClick={handleOpenDispute}>
-              {t('directShipment.openDispute', 'Có vấn đề / mở dispute')}
+              {t('directShipment.openDispute', 'Issue / Open Dispute')}
             </Button>
           </OrderActionRow>
         </Card>

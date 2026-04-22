@@ -237,12 +237,10 @@ export function EscrowTimeline({ order, isSeller, onAcceptRelease, onDispute, hi
           <Alert
             type="warning"
             showIcon
-            message={
-              t(
-                'escrow.decisionPrompt',
-                { hours: getRemainingHours(order.decisionWindowEndsAt) },
-              ) || `You have ${getRemainingHours(order.decisionWindowEndsAt)} hours to accept or raise a dispute`
-            }
+            message={t('escrow.decisionPrompt', {
+              hours: getRemainingHours(order.decisionWindowEndsAt),
+              defaultValue: 'You have {{hours}} hours to accept or raise a dispute',
+            })}
             description={t(
               'escrow.autoReleaseHint',
               'After the window closes, funds will be automatically released to the seller.',

@@ -98,7 +98,7 @@ export default function AdminDisputeListPage() {
       key: 'status',
       width: 140,
       render: (status: string) => (
-        <Tag color={STATUS_COLOR_MAP[status] ?? 'default'}>{status}</Tag>
+        <Tag color={STATUS_COLOR_MAP[status] ?? 'default'}>{t(`statusLabel.${status}`, status)}</Tag>
       ),
     },
     {
@@ -107,7 +107,7 @@ export default function AdminDisputeListPage() {
       key: 'domain',
       width: 120,
       render: (domain: string) =>
-        domain ? <Tag color={DOMAIN_COLOR_MAP[domain] ?? 'default'}>{domain}</Tag> : '-',
+        domain ? <Tag color={DOMAIN_COLOR_MAP[domain] ?? 'default'}>{t(`domainLabel.${domain}`, domain)}</Tag> : '-',
     },
     {
       title: t('caseType', 'Case Type'),
@@ -115,7 +115,7 @@ export default function AdminDisputeListPage() {
       key: 'caseType',
       width: 140,
       ellipsis: true,
-      render: (v: string) => v ?? '-',
+      render: (v: string) => (v ? t(`caseTypeLabel.${v}`, v) : '-'),
     },
     {
       title: t('title', 'Title'),

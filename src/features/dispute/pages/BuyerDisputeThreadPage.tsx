@@ -189,8 +189,8 @@ export default function BuyerDisputeThreadPage() {
           <Tag color={STATUS_COLOR_MAP[currentStatus ?? ''] ?? 'default'}>
             {t(`statusLabel.${currentStatus}`, currentStatus ?? '')}
           </Tag>
-          {meta.domain && <Tag>{meta.domain}</Tag>}
-          {meta.caseType && <Tag>{meta.caseType}</Tag>}
+          {meta.domain && <Tag>{t(`domainLabel.${meta.domain}`, meta.domain)}</Tag>}
+          {meta.caseType && <Tag>{t(`caseTypeLabel.${meta.caseType}`, meta.caseType)}</Tag>}
         </Space>
         {meta.title && (
           <Typography.Paragraph style={{ marginTop: 8, marginBottom: 0 }}>
