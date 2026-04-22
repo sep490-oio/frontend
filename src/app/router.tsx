@@ -107,6 +107,7 @@ const ProfilePage = lazy(() => import('@/features/user/pages/ProfilePage'))
 const AddressesPage = lazy(() => import('@/features/user/pages/AddressesPage'))
 const SecurityPage = lazy(() => import('@/features/user/pages/SecurityPage'))
 const NotificationPrefsPage = lazy(() => import('@/features/user/pages/NotificationPrefsPage'))
+const SettingsPage = lazy(() => import('@/features/user/pages/SettingsPage'))
 const TermsPage = lazy(() => import('@/features/user/pages/TermsPage'))
 
 // Item pages
@@ -259,6 +260,7 @@ export const router = createBrowserRouter([
           { path: '/me/profile', element: withSuspense(ProfilePage) },
           { path: '/me/addresses', element: withSuspense(AddressesPage) },
           { path: '/me/security', element: withSuspense(SecurityPage) },
+          { path: '/me/settings', element: withSuspense(SettingsPage) },
           { path: '/me/notifications', element: withSuspense(NotificationsPage) },
           { path: '/me/notifications/settings', element: withSuspense(NotificationPrefsPage) },
           { path: '/me/terms', element: withSuspense(TermsPage) },

@@ -91,6 +91,7 @@ export function AppLayout() {
     { type: 'divider' as const },
     { key: 'verification', icon: <SafetyCertificateOutlined />, label: t('common:menu.verification', 'Verification') },
     { key: 'security', icon: <SettingOutlined />, label: t('common:menu.security', 'Security') },
+    { key: 'settings', icon: <SettingOutlined />, label: t('common:menu.settings', 'Settings') },
     { type: 'divider' as const },
     { key: 'logout', icon: <LogoutOutlined />, label: t('common:menu.logout', 'Sign Out'), danger: true },
   ]
@@ -107,6 +108,7 @@ export function AppLayout() {
       case 'paymentMethods': navigate('/me/payment-methods'); break
       case 'disputes': navigate('/me/disputes'); break
       case 'security': navigate('/me/security'); break
+      case 'settings': navigate('/me/settings'); break
       case 'verification': navigate('/me/verification'); break
       case 'logout': handleLogout().then(() => navigate('/')); break
     }

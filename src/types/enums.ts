@@ -250,6 +250,12 @@ export const NotificationStatus = {
 } as const
 export type NotificationStatus = (typeof NotificationStatus)[keyof typeof NotificationStatus]
 
+export const NotificationChannel = {
+  SignalR: 'SignalR',  // in-platform (baseline)
+  Email: 'Email',
+} as const
+export type NotificationChannel = (typeof NotificationChannel)[keyof typeof NotificationChannel]
+
 // Warehouse
 export const ShipmentStatus = {
   AwaitingPickup: 'awaiting_pickup',

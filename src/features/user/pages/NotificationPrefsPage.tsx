@@ -5,17 +5,18 @@ import {
   Spin,
   Space,
   Button,
+  Alert,
   App,
 } from 'antd'
 import {
   MailOutlined,
   BellOutlined,
-  MessageOutlined,
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useNotificationPreferences, useUpdateNotificationPreferences } from '../api'
 import { useState, useEffect } from 'react'
+import { NotificationChannel } from '@/types/enums'
 
 const { Title, Text } = Typography
 
@@ -34,9 +35,18 @@ export default function NotificationPrefsPage() {
   const [dirty, setDirty] = useState(false)
 
   const channels = [
-    { key: 'email', label: t('notificationPrefs.channelEmailLabel'), icon: <MailOutlined />, description: t('notificationPrefs.channelEmail') },
-    { key: 'push', label: t('notificationPrefs.channelPushLabel'), icon: <BellOutlined />, description: t('notificationPrefs.channelPush') },
-    { key: 'sms', label: t('notificationPrefs.channelSmsLabel'), icon: <MessageOutlined />, description: t('notificationPrefs.channelSms') },
+    {
+      key: NotificationChannel.SignalR,
+      label: t('notificationPrefs.channelInPlatformLabel', 'In-platform notifications'),
+      icon: <BellOutlined />,
+      description: t('notificationPrefs.channelInPlatform', 'Receive real-time notifications on the platform (bell icon, toasts)'),
+    },
+    {
+      key: NotificationChannel.Email,
+      label: t('notificationPrefs.channelEmailLabel', 'Email notifications'),
+      icon: <MailOutlined />,
+      description: t('notificationPrefs.channelEmail', 'Receive important updates by email'),
+    },
   ]
 
   useEffect(() => {
@@ -61,6 +71,8 @@ export default function NotificationPrefsPage() {
     setIsEnabled(checked)
     setDirty(true)
   }
+
+  const hasNoChannels = isEnabled && selectedChannels.length === 0
 
   const onSave = async () => {
     if (!prefs) return
@@ -89,7 +101,7 @@ export default function NotificationPrefsPage() {
     <div style={{ maxWidth: 700, margin: '0 auto', padding: isMobile ? '0 12px' : undefined }}>
       <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', gap: isMobile ? 12 : 0, marginBottom: 24 }}>
         <Title level={2} style={{ margin: 0 }}>{t('notificationPrefs.title')}</Title>
-        <Button type="primary" onClick={onSave} loading={updatePrefs.isPending} disabled={!dirty}>
+        <Button type="primary" onClick={onSave} loading={updatePrefs.isPending} disabled={!dirty || hasNoChannels}>
           {t('notificationPrefs.save')}
         </Button>
       </div>
@@ -131,6 +143,15 @@ export default function NotificationPrefsPage() {
           ))}
         </Space>
       </Card>
+
+      {hasNoChannels && (
+        <Alert
+          type="warning"
+          showIcon
+          style={{ marginTop: 16 }}
+          message={t('notificationPrefs.atLeastOneChannel', 'At least one channel is required. Use the master toggle above to disable all notifications.')}
+        />
+      )}
     </div>
   )
 }
