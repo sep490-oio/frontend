@@ -44,7 +44,6 @@ import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useSearchAuctions } from '@/features/auction/api'
 import { AuctionStatus } from '@/types/enums'
-import { formatCurrency } from '@/utils/format'
 
 export type RecentItemV2 = {
   id: string
@@ -551,9 +550,7 @@ export const SpotlightSearchModal: React.FC = () => {
     }
   }, [])
 
-  const addRecent = (id: string, path: string) => {
-    addSpotlightRecent(currentUserId, { id, type: 'static', path })
-  }
+
 
   const handleNavigate = (path: string, id: string) => {
     // If it's a dynamic id, it might already be saved when visited
