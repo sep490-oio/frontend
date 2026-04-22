@@ -99,6 +99,7 @@ function computeQualificationState(
 
 export default function AuctionDetailPage() {
   const { t } = useTranslation('auction')
+  const { t: tc } = useTranslation('common')
   const { t: td } = useTranslation('dispute')
   const navigate = useNavigate()
   const { message, modal } = App.useApp()
@@ -146,8 +147,9 @@ export default function AuctionDetailPage() {
   const categoryName = useMemo(() => {
     if (!categories || !data?.item?.categoryId) return data?.item?.categoryId
     const found = categories.find((c: { id: string; name: string }) => c.id === data?.item?.categoryId)
-    return found?.name ?? data?.item?.categoryId
-  }, [categories, data?.item?.categoryId])
+    const name = found?.name ?? data?.item?.categoryId
+    return tc(`categories.items.${name}`, name)
+  }, [categories, data?.item?.categoryId, tc])
 
   const hub = useAuctionHub(id ?? '', data?.item?.id, currentUser?.id)
   useUserHub(id ?? '', currentUser?.id ?? null)

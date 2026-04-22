@@ -290,7 +290,10 @@ export default function BrowseAuctionsPage() {
 
   const categoryOptions = [
     { value: '', label: t('browse.allCategories') },
-    ...(categories ?? []).map((cat) => ({ value: cat.id, label: cat.name })),
+    ...(categories ?? []).map((cat) => ({
+      value: cat.id,
+      label: tc(`categories.items.${cat.name}`, cat.name),
+    })),
   ]
 
   const suggestOptions = (suggestions ?? []).map((s) => ({ value: s, label: s }))

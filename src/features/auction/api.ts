@@ -116,6 +116,23 @@ export function useSuggestAuctions(q: string) {
   })
 }
 
+export function useSearchAuctions(params: { q: string; page?: number; pageSize?: number }, enabled: boolean) {
+  return useQuery({
+    queryKey: ['auctions', 'search', params],
+    queryFn: async ({ signal }) => {
+      // Backend expects page_size, frontend uses pageSize
+      const { pageSize, ...rest } = params
+      const res = await apiClient.get<PagedList<AuctionListItemDto>>('/search/auctions', { 
+        params: { ...rest, page_size: pageSize }, 
+        signal 
+      })
+      return res.data
+    },
+    enabled,
+    staleTime: 10_000,
+  })
+}
+
 // ── My Bids ─────────────────────────────────────────────────────────
 
 export interface MyBidDto {
