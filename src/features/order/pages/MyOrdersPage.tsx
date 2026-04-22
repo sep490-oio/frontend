@@ -10,7 +10,7 @@ import { useMyOrders } from '@/features/order/api'
 import { OrderItemSummary } from '@/features/order/components/OrderItemSummary'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { PriceDisplay } from '@/components/ui/PriceDisplay'
-import { OrderStatus } from '@/types/enums'
+import { OrderStatus, OrderReturnStatus } from '@/types/enums'
 import { formatDateTime } from '@/utils/format'
 import type { OrderDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
@@ -69,6 +69,10 @@ export default function MyOrdersPage() {
   const { t } = useTranslation('order')
   const { t: tc } = useTranslation('common')
 
+  // Synthetic tab keys beyond OrderStatus: "returns" = client-side filter that
+  // shows only orders with an active (non-terminal) OrderReturn.
+  const RETURNS_TAB_KEY = 'returns'
+
   const STATUS_TABS = [
     { key: 'all', label: 'all' },
     { key: OrderStatus.PendingPayment, label: 'pendingPayment' },
@@ -79,6 +83,7 @@ export default function MyOrdersPage() {
     { key: OrderStatus.Cancelled, label: 'cancelled' },
     { key: OrderStatus.Refunded, label: 'Refunded' },
     { key: OrderStatus.Disputed, label: 'Disputed' },
+    { key: RETURNS_TAB_KEY, label: 'returns' },
   ]
   const navigate = useNavigate()
   const prefix = useRoutePrefix()
@@ -88,13 +93,31 @@ export default function MyOrdersPage() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
 
-  const params = {
-    pageNumber: page,
-    pageSize,
-    ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
-  }
+  // The "Returns" tab is a client-side filter: we pull a wider page (no BE
+  // status param) and filter by the presence of an active OrderReturn.
+  const isReturnsTab = statusFilter === RETURNS_TAB_KEY
+  const params = isReturnsTab
+    ? { pageNumber: page, pageSize: Math.max(pageSize, 50) }
+    : {
+        pageNumber: page,
+        pageSize,
+        ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
+      }
 
   const { data, isLoading } = useMyOrders(params, { refetchInterval: 30000 })
+
+  const ACTIVE_RETURN_STATUSES = new Set<string>([
+    OrderReturnStatus.Requested,
+    OrderReturnStatus.Approved,
+    OrderReturnStatus.ReturnInTransit,
+    OrderReturnStatus.SellerReceived,
+    OrderReturnStatus.BuyerFollowup,
+  ])
+
+  const rawItems = data?.items ?? []
+  const displayItems = isReturnsTab
+    ? rawItems.filter((o) => o.return && ACTIVE_RETURN_STATUSES.has(o.return.status))
+    : rawItems
 
   const columns: ColumnsType<OrderDto> = [
     {
@@ -261,7 +284,7 @@ export default function MyOrdersPage() {
       {isMobile ? (
         /* Mobile card view */
         <List
-          dataSource={data?.items ?? []}
+          dataSource={displayItems}
           loading={isLoading}
           pagination={{
             current: data?.metadata?.currentPage ?? page,
@@ -351,7 +374,7 @@ export default function MyOrdersPage() {
           mobileMode="card"
           rowKey="id"
           columns={columns}
-          dataSource={data?.items ?? []}
+          dataSource={displayItems}
           loading={isLoading}
           pagination={{
             current: data?.metadata?.currentPage ?? page,

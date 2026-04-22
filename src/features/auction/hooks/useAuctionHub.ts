@@ -381,7 +381,24 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         lastSyncedAt: Date.now(),
       }))
 
-      // Cache patching handled by AuctionStateChanged
+      // Patch the cache directly — don't rely on a paired AuctionStateChanged event.
+      qc.setQueryData(
+        queryKeys.auctions.detailFor(data.auctionId, currentUserId),
+        (current: AuctionDetailDto | undefined) => {
+          if (!current) return current
+          return {
+            ...current,
+            auction: {
+              ...current.auction,
+              status: 'cancelled',
+            },
+          }
+        },
+      )
+
+      // Belt-and-suspenders: invalidate so any other derived queries refetch.
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.detail(data.auctionId) })
+      qc.invalidateQueries({ queryKey: queryKeys.wallet.summary() })
     }
 
     const buyNowReservedHandler = (data: BuyNowReservedNotification) => {

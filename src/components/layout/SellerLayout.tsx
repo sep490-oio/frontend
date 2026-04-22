@@ -100,6 +100,7 @@ export function SellerLayout() {
       label: t('menu.groupBusiness'),
       children: [
         { key: '/seller/orders', icon: <OrderedListOutlined />, label: t('menu.orders', 'Orders') },
+        { key: '/seller/returns', icon: <OrderedListOutlined />, label: t('menu.returns', 'Returns') },
         { key: '/seller/shipments', icon: <ExportOutlined />, label: t('menu.directShipments', 'Direct Shipments') },
         { key: '/seller/wallet', icon: <WalletOutlined />, label: t('menu.wallet', 'Wallet') },
       ],

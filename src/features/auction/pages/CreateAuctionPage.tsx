@@ -121,6 +121,10 @@ export default function CreateAuctionPage() {
   const isFromItem = !!itemId && !!existingItem && !itemError
   const hideItemFields = isFromItem || isEditMode
   const existingItemForPreview = isEditMode ? editAuction?.item : existingItem
+  // Draft-edit mode: hide "Verify by platform" toggle + "Create auction" submit button.
+  // Drafts can't configure timing, so the submit-for-review flow doesn't apply here —
+  // sellers should only save-draft or cancel.
+  const isDraftEdit = isEditMode && editAuction?.auction?.status === 'draft'
 
   useEffect(() => {
     if (isEditMode && editAuction?.auction) {
@@ -788,7 +792,7 @@ export default function CreateAuctionPage() {
           />
 
           {/* Verification Toggle */}
-          {!isFromItem && (
+          {!isFromItem && !isDraftEdit && (
             <div style={{ borderTop: '1px solid var(--color-border-light)', margin: '24px 0 20px', paddingTop: 24 }}>
               <div
                 style={{
@@ -823,22 +827,24 @@ export default function CreateAuctionPage() {
             {isMobile ? (
               /* Mobile: stacked buttons */
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <Button
-                  type="primary"
-                  size="large"
-                  htmlType="submit"
-                  loading={!savingDraft && (createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending)}
-                  disabled={(!hideItemFields && capturedPhotos.length === 0) || createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending}
-                  style={{
-                    background: 'var(--color-accent)',
-                    borderColor: 'var(--color-accent)',
-                    borderRadius: 8,
-                    fontWeight: 600,
-                    height: 48,
-                  }}
-                >
-                  {t('create', 'Tạo phiên đấu giá')}
-                </Button>
+                {!isDraftEdit && (
+                  <Button
+                    type="primary"
+                    size="large"
+                    htmlType="submit"
+                    loading={!savingDraft && (createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending)}
+                    disabled={(!hideItemFields && capturedPhotos.length === 0) || createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending}
+                    style={{
+                      background: 'var(--color-accent)',
+                      borderColor: 'var(--color-accent)',
+                      borderRadius: 8,
+                      fontWeight: 600,
+                      height: 48,
+                    }}
+                  >
+                    {t('create', 'Tạo phiên đấu giá')}
+                  </Button>
+                )}
                 <div style={{ display: 'flex', gap: 10 }}>
                   <Button
                     size="large"
@@ -877,16 +883,18 @@ export default function CreateAuctionPage() {
                 >
                   {t('saveDraft', 'Lưu bản nháp')}
                 </Button>
-                <Button
-                  type="primary"
-                  size="large"
-                  htmlType="submit"
-                  loading={!savingDraft && (createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending)}
-                  disabled={(!hideItemFields && capturedPhotos.length === 0) || createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending}
-                  style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)', borderRadius: 8, fontWeight: 600 }}
-                >
-                  {t('create', 'Tạo phiên đấu giá')}
-                </Button>
+                {!isDraftEdit && (
+                  <Button
+                    type="primary"
+                    size="large"
+                    htmlType="submit"
+                    loading={!savingDraft && (createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending)}
+                    disabled={(!hideItemFields && capturedPhotos.length === 0) || createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending}
+                    style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)', borderRadius: 8, fontWeight: 600 }}
+                  >
+                    {t('create', 'Tạo phiên đấu giá')}
+                  </Button>
+                )}
               </div>
             )}
           </Form.Item>

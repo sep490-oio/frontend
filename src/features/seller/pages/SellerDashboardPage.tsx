@@ -16,10 +16,13 @@ import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useMemo } from 'react'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
-import { useMySellerProfile } from '@/features/seller/api'
+import { useMySellerProfile, useSellerWarehouseReturns } from '@/features/seller/api'
 import { useMyAuctions } from '@/features/auction/api'
 import { useMyItems } from '@/features/item/api'
 import { useWallet } from '@/features/payment/api'
+import { useMyOrders } from '@/features/order/api'
+import { WarehouseToSellerShipmentStatus, OrderReturnStatus } from '@/types/enums'
+import { RollbackOutlined } from '@ant-design/icons'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatCurrency, formatDateTime } from '@/utils/format'
 import { SellerProfileStatus } from '@/types/enums'
@@ -87,6 +90,26 @@ export default function SellerDashboardPage() {
   const { data: itemsData } = useMyItems({ pageNumber: 1, pageSize: 200 })
   // Fetch all auctions
   const { data: auctionsData, isLoading: auctionsLoading } = useMyAuctions({ pageNumber: 1, pageSize: 200 })
+
+  // Returns widgets — active warehouse-returns coming back from inspection-reject,
+  // and buyer-initiated order-returns currently in flight.
+  const { data: warehouseReturnsAll } = useSellerWarehouseReturns({ status: 'all' })
+  const activeWarehouseReturnCount = (warehouseReturnsAll ?? []).filter(
+    (r) =>
+      r.status === WarehouseToSellerShipmentStatus.Pending ||
+      r.status === WarehouseToSellerShipmentStatus.InTransit ||
+      r.status === WarehouseToSellerShipmentStatus.Delivered,
+  ).length
+
+  // Seller-visible orders include the 1:1 OrderReturn nav; filter for active.
+  const { data: ordersForReturns } = useMyOrders({ pageNumber: 1, pageSize: 100 })
+  const activeOrderReturnCount = (ordersForReturns?.items ?? []).filter(
+    (o) =>
+      o.return &&
+      (o.return.status === OrderReturnStatus.Approved ||
+        o.return.status === OrderReturnStatus.ReturnInTransit ||
+        o.return.status === OrderReturnStatus.SellerReceived),
+  ).length
 
   /* ── Derived data ────────────────────────────────────────────────── */
 
@@ -272,6 +295,46 @@ export default function SellerDashboardPage() {
             </Card>
           </Col>
         ))}
+      </Row>
+
+      {/* ── Returns Widgets (warehouse + order) ────────────────────── */}
+      <Row gutter={[isMobile ? 12 : 16, isMobile ? 12 : 16]} style={{ marginBottom: isMobile ? 20 : 24 }}>
+        <Col xs={24} sm={12}>
+          <Card
+            hoverable
+            onClick={() => navigate('/seller/returns?tab=warehouse')}
+            style={{ ...statCardStyle, cursor: 'pointer' }}
+            styles={{ body: { padding: isMobile ? '12px 14px' : '20px 24px' } }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <RollbackOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />
+              <span style={{ color: 'var(--color-text-secondary)', fontSize: isMobile ? 11 : 13, lineHeight: 1.3 }}>
+                {t('dashboard.warehouseReturns', 'Items being returned by warehouse')}
+              </span>
+            </div>
+            <div style={{ fontFamily: monoFont, fontSize: isMobile ? 20 : 24, fontWeight: 500, color: 'var(--color-text-primary)' }}>
+              {activeWarehouseReturnCount}
+            </div>
+          </Card>
+        </Col>
+        <Col xs={24} sm={12}>
+          <Card
+            hoverable
+            onClick={() => navigate('/seller/returns?tab=order')}
+            style={{ ...statCardStyle, cursor: 'pointer' }}
+            styles={{ body: { padding: isMobile ? '12px 14px' : '20px 24px' } }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <RollbackOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />
+              <span style={{ color: 'var(--color-text-secondary)', fontSize: isMobile ? 11 : 13, lineHeight: 1.3 }}>
+                {t('dashboard.orderReturns', 'Items buyer is returning after dispute')}
+              </span>
+            </div>
+            <div style={{ fontFamily: monoFont, fontSize: isMobile ? 20 : 24, fontWeight: 500, color: 'var(--color-text-primary)' }}>
+              {activeOrderReturnCount}
+            </div>
+          </Card>
+        </Col>
       </Row>
 
       {/* ── Item Status Overview ───────────────────────────────────── */}

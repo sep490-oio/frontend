@@ -269,6 +269,49 @@ export const ShipmentStatus = {
 } as const
 export type ShipmentStatus = (typeof ShipmentStatus)[keyof typeof ShipmentStatus]
 
+// Warehouse -> Seller return shipment (post-inspection-reject flow)
+export const WarehouseToSellerShipmentStatus = {
+  Pending: 'pending',
+  InTransit: 'in_transit',
+  Delivered: 'delivered',
+  ReturnedToWarehouse: 'returned_to_warehouse',
+  Closed: 'closed',
+} as const
+export type WarehouseToSellerShipmentStatus = (typeof WarehouseToSellerShipmentStatus)[keyof typeof WarehouseToSellerShipmentStatus]
+
+// Return shipping fee payer (dispute resolution)
+export const ShippingFeePayer = {
+  Buyer: 'buyer',
+  Seller: 'seller',
+  Platform: 'platform',
+} as const
+export type ShippingFeePayer = (typeof ShippingFeePayer)[keyof typeof ShippingFeePayer]
+
+// Deferred refund intent — recorded on OrderReturn when admin resolves a
+// dispute with `open_return` shipment action. Refund fires at seller-confirm.
+export const DeferredRefundIntent = {
+  Full: 'full',
+  Partial: 'partial',
+  None: 'none',
+} as const
+export type DeferredRefundIntent = (typeof DeferredRefundIntent)[keyof typeof DeferredRefundIntent]
+
+// OrderReturn evidence categories — mirror BE `OrderReturnEvidenceCategory`.
+export const OrderReturnEvidenceCategory = {
+  PickupByBuyer: 'pickup_by_buyer',
+  ReceiptBySeller: 'receipt_by_seller',
+} as const
+export type OrderReturnEvidenceCategory =
+  (typeof OrderReturnEvidenceCategory)[keyof typeof OrderReturnEvidenceCategory]
+
+// WarehouseToSellerShipment evidence categories — mirror BE `WarehouseReturnEvidenceCategory`.
+export const WarehouseReturnEvidenceCategory = {
+  PickupByWarehouseStaff: 'pickup_by_warehouse_staff',
+  ReceiptBySeller: 'receipt_by_seller',
+} as const
+export type WarehouseReturnEvidenceCategory =
+  (typeof WarehouseReturnEvidenceCategory)[keyof typeof WarehouseReturnEvidenceCategory]
+
 // Address
 export const AddressType = {
   Home: 'home',

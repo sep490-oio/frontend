@@ -1,9 +1,25 @@
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
+import utc from 'dayjs/plugin/utc'
+import timezone from 'dayjs/plugin/timezone'
 import 'dayjs/locale/vi'
 
 dayjs.extend(relativeTime)
+dayjs.extend(utc)
+dayjs.extend(timezone)
 dayjs.locale('vi')
+
+// Default display timezone for all user-facing datetimes (LOW #3 from the
+// i18n improvement plan).
+export const VN_TIMEZONE = 'Asia/Ho_Chi_Minh'
+
+/**
+ * Format a datetime in Vietnam timezone (Asia/Ho_Chi_Minh). Accepts any
+ * input dayjs would accept; returns the formatted string per `fmt`.
+ */
+export function formatDateTimeVn(date: string | Date, fmt = 'DD MMM YYYY HH:mm'): string {
+  return dayjs(date).tz(VN_TIMEZONE).format(fmt)
+}
 
 export function formatCurrency(amount: number, currency = 'VND'): string {
   return new Intl.NumberFormat('vi-VN', {

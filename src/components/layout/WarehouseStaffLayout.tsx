@@ -67,6 +67,7 @@ export function WarehouseStaffLayout() {
     { key: '/warehouse-staff/items', icon: <AppstoreOutlined />, label: t('menu.storedItems', 'Stored Items') },
     { key: '/warehouse-staff/locations', icon: <DatabaseOutlined />, label: t('menu.locations', 'Locations') },
     { key: '/warehouse-staff/outbound', icon: <ExportOutlined />, label: t('menu.outboundOrders', 'Outbound Orders') },
+    { key: '/warehouse-staff/returns', icon: <ExportOutlined />, label: t('menu.pendingReturns', 'Pending Returns') },
   ]
 
   const isActive = (key: string) => {

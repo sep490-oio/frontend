@@ -1,12 +1,12 @@
 import { useParams, useNavigate } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
-import { Typography, Card, Button, Form, Input, Select, Space, App } from 'antd'
+import { Typography, Card, Button, Form, Input, Select, Space, App, Alert } from 'antd'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useCreateReturn } from '@/features/order/api'
+import { useCreateReturn, useOrderById } from '@/features/order/api'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 
 const RETURN_REASONS = [
@@ -35,6 +35,10 @@ export default function OrderReturnPage() {
 
   const { isMobile } = useBreakpoint()
   const createReturn = useCreateReturn()
+  // Used only to surface the shippingFeePayer on an active return — the
+  // form itself stays focused on creating a new return.
+  const { data: order } = useOrderById(orderId)
+  const feePayer = order?.return?.shippingFeePayer ?? null
 
   const {
     control,
@@ -74,6 +78,22 @@ export default function OrderReturnPage() {
       <Typography.Title level={isMobile ? 3 : 2} style={{ marginBottom: isMobile ? 16 : 24 }}>
         {t('requestReturn', 'Request Return')}
       </Typography.Title>
+
+      {feePayer && (
+        <Alert
+          type={feePayer === 'buyer' ? 'info' : 'success'}
+          showIcon
+          style={{ marginBottom: 16, maxWidth: isMobile ? '100%' : 600 }}
+          message={
+            feePayer === 'buyer'
+              ? t('returnFeePayer.buyer', 'Return shipping cost: your responsibility')
+              : t(
+                  'returnFeePayer.reimbursed',
+                  'Return shipping cost: will be reimbursed upon seller confirmation',
+                )
+          }
+        />
+      )}
 
       <Card style={{ maxWidth: isMobile ? '100%' : 600 }}>
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>

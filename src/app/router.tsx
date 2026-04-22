@@ -158,6 +158,7 @@ const SellerDashboardPage = lazy(() => import('@/features/seller/pages/SellerDas
 const CreateSellerProfilePage = lazy(() => import('@/features/seller/pages/CreateSellerProfilePage'))
 const SellerProfilePage = lazy(() => import('@/features/seller/pages/SellerProfilePage'))
 const VerificationPage = lazy(() => import('@/features/seller/pages/VerificationPage'))
+const SellerReturnsPage = lazy(() => import('@/features/seller/pages/SellerReturnsPage'))
 
 // Warehouse pages
 const InboundShipmentsPage = lazy(() => import('@/features/warehouse/pages/InboundShipmentsPage'))
@@ -206,6 +207,7 @@ const WarehouseItemDetailPage = lazy(() => import('@/features/warehouse-staff/pa
 const OutboundQueuePage = lazy(() => import('@/features/warehouse-staff/pages/OutboundQueuePage'))
 const OutboundDetailPage = lazy(() => import('@/features/warehouse-staff/pages/OutboundDetailPage'))
 const OutboundShipmentDetailPage = lazy(() => import('@/features/warehouse-staff/pages/OutboundShipmentDetailPage'))
+const PendingReturnsPage = lazy(() => import('@/features/warehouse-staff/pages/PendingReturnsPage'))
 
 export const router = createBrowserRouter([
   // Auth routes (guest only)
@@ -319,6 +321,7 @@ export const router = createBrowserRouter([
           { path: '/seller/orders', element: withSuspense(SellerOrdersPage) },
           { path: '/seller/orders/:id', element: withSuspense(OrderDetailPage) },
           { path: '/seller/orders/:id/return', element: withSuspense(OrderReturnPage) },
+          { path: '/seller/returns', element: withSuspense(SellerReturnsPage) },
           { path: '/seller/wallet', element: withSuspense(SellerWalletPage) },
           { path: '/seller/wallet/withdraw', element: withSuspense(WithdrawPage) },
           // Warehouse
@@ -404,6 +407,7 @@ export const router = createBrowserRouter([
         { path: '/warehouse-staff/outbound', element: withSuspense(OutboundQueuePage) },
         { path: '/warehouse-staff/outbound/shipments/:shipmentId', element: withSuspense(OutboundShipmentDetailPage) },
         { path: '/warehouse-staff/outbound/:orderId', element: withSuspense(OutboundDetailPage) },
+        { path: '/warehouse-staff/returns', element: withSuspense(PendingReturnsPage) },
       ],
     }],
   },

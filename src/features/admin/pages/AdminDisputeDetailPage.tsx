@@ -12,7 +12,7 @@ import {
 import DisputeAttachmentRenderer from '@/components/ui/DisputeAttachmentRenderer'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { useTranslation } from 'react-i18next'
-import { useParams } from 'react-router'
+import { useParams, Link } from 'react-router'
 import {
   useAdminDisputeDetail,
   useDisputeAssignableUsers,
@@ -129,6 +129,83 @@ export default function AdminDisputeDetailPage() {
       if (!isNaN(n)) return new Intl.NumberFormat().format(n)
     }
     return raw
+  }
+
+  // Map an id-shaped key to the admin detail route for its resource.
+  // Returns null when no dedicated detail page exists (falls back to copy-only display).
+  const getContextLinkPath = (key: string, id: string): string | null => {
+    switch (key) {
+      case 'buyerId':
+      case 'sellerId':
+      case 'winnerId':
+      case 'userId':
+        return `/admin/users/${id}`
+      case 'itemId':
+        return `/admin/items/${id}`
+      case 'auctionId':
+        return `/admin/auctions/${id}`
+      default:
+        return null
+    }
+  }
+
+  const shortId = (id: string): string => (id.length > 12 ? `…${id.slice(-8)}` : id)
+
+  const renderContextFieldValue = (key: string, value: unknown) => {
+    if (value === null || value === undefined || value === '')
+      return <Typography.Text style={{ fontSize: 12 }}>{t('contextValue.empty', '—')}</Typography.Text>
+
+    // Id-shaped keys get link + monospace short form + full-id tooltip + copy button.
+    const isIdKey = key.endsWith('Id') && typeof value === 'string'
+    if (isIdKey) {
+      const id = String(value)
+      const linkTo = getContextLinkPath(key, id)
+      const display = (
+        <Typography.Text code style={{ fontSize: 12 }}>
+          {shortId(id)}
+        </Typography.Text>
+      )
+      return (
+        <Space size={4}>
+          <Tooltip title={id}>
+            {linkTo ? (
+              <Link to={linkTo} style={{ color: 'var(--color-accent, #1677ff)' }}>
+                {display}
+              </Link>
+            ) : (
+              display
+            )}
+          </Tooltip>
+          <Tooltip title={t('copyId', 'Copy ID')}>
+            <Button
+              type="text"
+              size="small"
+              icon={<CopyOutlined />}
+              onClick={() => {
+                void navigator.clipboard.writeText(id)
+                msg.success(t('copied', 'Copied'))
+              }}
+            />
+          </Tooltip>
+        </Space>
+      )
+    }
+
+    // orderNumber / transactionNumber — human-readable identifiers, no link but monospace.
+    if (key === 'orderNumber' || key === 'transactionNumber' || key === 'carrierTrackingNumber' || key === 'gatewayTransactionId') {
+      return (
+        <Typography.Text code style={{ fontSize: 12 }}>
+          {String(value)}
+        </Typography.Text>
+      )
+    }
+
+    // Status keys render as a small badge.
+    if (key === 'auctionStatus' || key === 'orderStatus' || key === 'status') {
+      return <StatusBadge status={String(value)} size="small" />
+    }
+
+    return <Typography.Text style={{ fontSize: 12 }}>{formatContextValue(key, value)}</Typography.Text>
   }
 
   // Split messages
@@ -735,9 +812,9 @@ export default function AdminDisputeDetailPage() {
             children: (
               <div>
                 {Object.entries(contextSnapshot).map(([key, value]) => (
-                  <div key={key} style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
+                  <div key={key} style={{ display: 'flex', gap: 8, marginBottom: 4, alignItems: 'center' }}>
                     <Typography.Text strong style={{ minWidth: 160, fontSize: 12 }}>{t(`contextField.${key}`, key)}:</Typography.Text>
-                    <Typography.Text style={{ fontSize: 12 }}>{formatContextValue(key, value)}</Typography.Text>
+                    {renderContextFieldValue(key, value)}
                   </div>
                 ))}
               </div>

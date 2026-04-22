@@ -211,6 +211,7 @@ export interface AuctionSidebarProps {
 
   onBuyNowClick: () => void
   isBuyNowLoading: boolean
+  canBuyNow?: boolean
 
   onCheckoutClick?: () => void
 
@@ -291,6 +292,7 @@ export function AuctionSidebar({
   depositLoading,
   onBuyNowClick,
   isBuyNowLoading,
+  canBuyNow = false,
   onCheckoutClick,
   currentBuyerOrder,
   onViewOrderClick,
@@ -337,7 +339,7 @@ export function AuctionSidebar({
     !isTerminal &&
     auction.buyNowPrice != null &&
     !auction.isBuyNowReserved &&
-    canBid &&
+    canBuyNow &&
     (isActive || (isScheduled && (qualState === 'window_open' || qualState === 'qualified')))
 
   const showBuyNowReserved =

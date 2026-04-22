@@ -1206,6 +1206,7 @@ export default function AuctionDetailPage() {
                 : undefined
             }
             canBid={isActive && isAuthenticated && qualState === 'qualified' && !isSeller}
+            canBuyNow={isAuthenticated && !isSeller && !isTerminal}
             currentBuyerOrder={data?.currentBuyerOrder}
             onViewOrderClick={(orderId) => navigate(`/me/orders/${orderId}`)}
             isOrderProvisioning={pollingForOrder}

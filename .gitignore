@@ -150,4 +150,4 @@ figma-reference/
 # Internal FE docs (AI reference only)
 docs/
 
-.omc/
+.omc/*

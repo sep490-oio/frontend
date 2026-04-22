@@ -1,4 +1,8 @@
-import type { ShipmentStatus } from './enums'
+import type {
+  ShipmentStatus,
+  WarehouseReturnEvidenceCategory,
+  WarehouseToSellerShipmentStatus,
+} from './enums'
 
 export type PackageState = 'pending_arrival' | 'received' | 'stored' | 'inspected'
 
@@ -383,6 +387,67 @@ export interface EvidencePhotoDto {
   id: string
   url: string
   createdAt: string
+}
+
+/**
+ * Warehouse -> Seller return shipment (created when a warehouse inspector
+ * rejects an item and the platform routes it back to the seller).
+ * Mirrors `WarehouseToSellerShipmentDto` on the BE.
+ *
+ * `sellerAddressSnapshot` is a JSON string captured from the seller's
+ * default UserAddress at creation time; FE renders it as-is or parses it
+ * when needed.
+ */
+/**
+ * Nested media info on a WarehouseToSellerShipmentEvidence row. Mirrors
+ * the BE `MediaUploadDto` projection inside `WarehouseToSellerShipmentEvidenceDto`.
+ */
+export interface WarehouseToSellerShipmentEvidenceMediaDto {
+  id: string
+  secureUrl: string
+  publicId?: string | null
+  resourceType?: string | null
+  fileName?: string | null
+}
+
+/**
+ * Chain-of-custody photo attached to a warehouse->seller return shipment.
+ * Category discriminates staff-uploaded pickup shots vs seller-uploaded
+ * receipt shots.
+ */
+export interface WarehouseToSellerShipmentEvidenceDto {
+  id: string
+  shipmentId: string
+  category: WarehouseReturnEvidenceCategory
+  mediaUpload: WarehouseToSellerShipmentEvidenceMediaDto
+  createdAt: string
+  createdBy: string
+}
+
+export interface WarehouseToSellerShipmentDto {
+  id: string
+  warehouseItemId: string
+  warehouseInspectionId: string
+  sellerId: string
+  sellerAddressSnapshot: string
+  rejectionReason: string
+  providerCode?: string | null
+  trackingNumber?: string | null
+  shippedAt?: string | null
+  deliveredAt?: string | null
+  sellerConfirmedAt?: string | null
+  status: WarehouseToSellerShipmentStatus
+  createdAt: string
+  modifiedAt?: string | null
+  /** Optional item summary projected by BE for list views. */
+  itemTitle?: string | null
+  itemImageUrl?: string | null
+  /** Optional seller display name projected by BE for staff-side lists. */
+  sellerDisplayName?: string | null
+  /** Signed QR token — stamped on MarkShipped. Present once in transit+. */
+  qrToken?: string | null
+  /** Chain-of-custody photos attached to this shipment. */
+  evidence?: WarehouseToSellerShipmentEvidenceDto[]
 }
 
 export interface BuyerOutboundShipmentDetailDto {

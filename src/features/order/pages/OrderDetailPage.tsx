@@ -26,7 +26,12 @@ import {
   useShipReturn,
   useConfirmReturnReceived,
   useCreateSellerReview,
+  useAddOrderReturnEvidence,
+  useAddOrderReturnEvidenceSeller,
 } from '@/features/order/api'
+import { ReturnEvidenceUploader } from '@/features/order/components/ReturnEvidenceUploader'
+import { ReturnQrDisplayModal } from '@/features/order/components/ReturnQrDisplayModal'
+import { OrderReturnEvidenceCategory } from '@/types/enums'
 import { CreateDisputeModal } from '@/features/order/components/CreateDisputeModal'
 import { ActiveDisputeBanner } from '@/components/dispute/ActiveDisputeBanner'
 // useAcknowledgeReceivedOutboundShipment removed — actions moved to shipment page
@@ -56,7 +61,7 @@ import { OrderActionRow } from '@/features/order/components/OrderActionRow'
 import { WarrantyNotice } from '@/features/order/components/WarrantyNotice'
 import { OrderStatus, OrderReturnStatus } from '@/types/enums'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
-import { formatDateTime, formatCurrency } from '@/utils/format'
+import { formatDateTime, formatCurrency, formatDateTimeVn } from '@/utils/format'
 
 const RETURN_ELIGIBLE_STATUSES = new Set<string>([
   OrderStatus.Delivered,
@@ -109,6 +114,14 @@ export default function OrderDetailPage() {
   const [shipModalOpen, setShipModalOpen] = useState(false)
   const [shipProviderCode, setShipProviderCode] = useState('')
   const [shipTrackingNumber, setShipTrackingNumber] = useState('')
+
+  // Return QR display modal state — shown to the buyer after MarkShipped
+  // succeeds, and reopened on demand via the persistent QR card below.
+  const [returnQrModalOpen, setReturnQrModalOpen] = useState(false)
+
+  // Evidence mutations for the return flow.
+  const addBuyerEvidence = useAddOrderReturnEvidence()
+  const addSellerEvidence = useAddOrderReturnEvidenceSeller()
 
   // Dispute modal state
   const [disputeModalOpen, setDisputeModalOpen] = useState(false)
@@ -180,6 +193,19 @@ export default function OrderDetailPage() {
   const decisionWindowOpen =
     !decisionWindowEndsAtStr || new Date(decisionWindowEndsAtStr) > new Date()
 
+  // Bug 3 guard: if an OrderReturn already exists and is in a non-terminal
+  // state (buyer is actively returning the goods), the "Inspected and Accept
+  // Item" CTA must NOT render — the buyer already rejected the delivery by
+  // opening the return. Terminal states re-enable the CTA because a rejected
+  // / cancelled / resolved return is effectively closed.
+  const RETURN_TERMINAL_STATUSES = new Set<string>([
+    OrderReturnStatus.Resolved,
+    OrderReturnStatus.Cancelled,
+    OrderReturnStatus.Rejected,
+  ])
+  const hasActiveReturn =
+    !!order.return && !RETURN_TERMINAL_STATUSES.has(order.return.status)
+
   // Shared buyer decision handlers. Passed to both the direct-shipment panel
   // and EscrowTimeline so every surfaced CTA points at the same mutation.
   const handleAcceptRelease = async () => {
@@ -220,6 +246,78 @@ export default function OrderDetailPage() {
         disputeStatus={(order as any).activeDispute?.status}
         context={t('order', 'order')}
       />
+
+      {/* Dispute-triggered return banner — buyer must ship item back by
+          the deadline set by dispute resolution. Shown only when the return
+          was auto-approved (via dispute) and the buyer hasn't shipped yet. */}
+      {isBuyer &&
+        order.return &&
+        order.return.status === OrderReturnStatus.Approved &&
+        !order.return.shippedAt &&
+        (() => {
+          const r = order.return!
+          const dueAt = r.buyerDecisionDueAt
+          const feePayer = r.shippingFeePayer ?? 'buyer'
+          const now = dayjs()
+          const due = dueAt ? dayjs(dueAt) : null
+          const daysRemaining = due ? due.diff(now, 'day') : null
+          const isNearDeadline = due ? due.diff(now) < 3 * 24 * 60 * 60 * 1000 : false
+
+          const dueText = dueAt
+            ? formatDateTimeVn(dueAt, 'DD MMM YYYY HH:mm')
+            : t('returnBanner.deadlineUnset', 'soon')
+
+          const feePayerLabel =
+            feePayer === 'buyer'
+              ? t('returnBanner.feePayer.buyer', 'buyer')
+              : feePayer === 'seller'
+              ? t('returnBanner.feePayer.seller', 'seller')
+              : t('returnBanner.feePayer.platform', 'platform')
+
+          return (
+            <Alert
+              type={isNearDeadline ? 'error' : 'warning'}
+              showIcon
+              style={{ marginBottom: 16, borderRadius: 8 }}
+              message={t('returnBanner.title', 'Action required: ship the item back')}
+              description={
+                <div>
+                  <div>
+                    {t(
+                      'returnBanner.description',
+                      'Ship the item back by {{dueAt}}. Reason: {{reason}}. Return shipping paid by {{feePayer}}.',
+                      {
+                        dueAt: dueText,
+                        reason: r.reasonCode,
+                        feePayer: feePayerLabel,
+                      },
+                    )}
+                  </div>
+                  {daysRemaining !== null && daysRemaining >= 0 && (
+                    <div style={{ marginTop: 4 }}>
+                      <strong>
+                        {t('returnBanner.daysRemaining', '{{count}} days remaining', { count: daysRemaining })}
+                      </strong>
+                    </div>
+                  )}
+                </div>
+              }
+              action={
+                <Button
+                  type="primary"
+                  size="small"
+                  onClick={() => {
+                    document
+                      .getElementById('return-ship-section')
+                      ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                  }}
+                >
+                  {t('returnBanner.action', 'Enter tracking details')}
+                </Button>
+              }
+            />
+          )
+        })()}
 
       {/* Escrow decision window banner — suppressed when the direct-shipment
           panel owns the delivered-state CTAs, and for sellers (seller view
@@ -262,8 +360,8 @@ export default function OrderDetailPage() {
       <EscrowTimeline
         order={order}
         isSeller={isSeller}
-        hideBuyerDecisionActions={hideLegacyDelivered}
-        onAcceptRelease={isBuyer ? handleAcceptRelease : undefined}
+        hideBuyerDecisionActions={hideLegacyDelivered || hasActiveReturn}
+        onAcceptRelease={isBuyer && !hasActiveReturn ? handleAcceptRelease : undefined}
         onDispute={isBuyer && order.status !== OrderStatus.Completed ? handleOpenDispute : undefined}
       />
 
@@ -353,7 +451,7 @@ export default function OrderDetailPage() {
             )}
             {ws.hasBuyerReceiptProof && (
               <OrderActionRow style={{ marginTop: 16 }}>
-                {ws.canAccept && (
+                {ws.canAccept && !hasActiveReturn && (
                   <Button type="primary" size="middle" onClick={handleAcceptRelease} loading={confirmOrderReceipt.isPending}>
                     {t('warehouseOutbound.acceptItem', 'Inspected and Accept Item')}
                   </Button>
@@ -380,7 +478,8 @@ export default function OrderDetailPage() {
             isDelivered &&
             order.status !== OrderStatus.Completed &&
             !isDisputed &&
-            decisionWindowOpen
+            decisionWindowOpen &&
+            !hasActiveReturn
           return (
             <Card
               title={t('directShipment.shipmentDetail', 'Shipment Detail')}
@@ -499,17 +598,19 @@ export default function OrderDetailPage() {
             <Button size="small" icon={<QrcodeOutlined />} onClick={() => navigate('/me/shipments/scan')}>
               {t('directShipment.scanParcelQr', 'Scan Parcel QR')}
             </Button>
-            <Popconfirm
-              title={t(
-                'directShipment.confirmAndAcceptConfirm',
-                'Xác nhận đã kiểm tra và chấp nhận hàng? Tiền sẽ được giải ngân cho người bán.',
-              )}
-              onConfirm={handleAcceptRelease}
-            >
-              <Button type="primary" size="middle" loading={confirmOrderReceipt.isPending}>
-                {t('directShipment.confirmAndAccept', 'Đã kiểm tra và chấp nhận hàng')}
-              </Button>
-            </Popconfirm>
+            {!hasActiveReturn && (
+              <Popconfirm
+                title={t(
+                  'directShipment.confirmAndAcceptConfirm',
+                  'Xác nhận đã kiểm tra và chấp nhận hàng? Tiền sẽ được giải ngân cho người bán.',
+                )}
+                onConfirm={handleAcceptRelease}
+              >
+                <Button type="primary" size="middle" loading={confirmOrderReceipt.isPending}>
+                  {t('directShipment.confirmAndAccept', 'Đã kiểm tra và chấp nhận hàng')}
+                </Button>
+              </Popconfirm>
+            )}
             <Button danger size="middle" icon={<WarningOutlined />} onClick={handleOpenDispute}>
               {t('directShipment.openDispute', 'Issue / Open Dispute')}
             </Button>
@@ -1030,7 +1131,7 @@ export default function OrderDetailPage() {
       )}
 
       {/* Return section */}
-      <Card title={t('returnSection', 'Return')} style={{ marginBottom: isMobile ? 16 : 24 }}>
+      <Card id="return-ship-section" title={t('returnSection', 'Return')} style={{ marginBottom: isMobile ? 16 : 24 }}>
         {order.return ? (
           <>
             <Descriptions column={isMobile ? 1 : { xs: 1, sm: 2 }} bordered size="small">
@@ -1055,7 +1156,103 @@ export default function OrderDetailPage() {
               )}
             </Descriptions>
 
+            {/* Return QR label — surfaced UPFRONT at Approved time so the
+                 buyer can print the label and attach it to the parcel BEFORE
+                 booking the courier. Backed by BE `OrderReturn.QrToken` which
+                 is now stamped at Approve time (dispute + buyer-initiated
+                 approval paths). Persistent across subsequent states too. */}
+            {isBuyer && order.return.qrToken && (
+              order.return.status === OrderReturnStatus.Approved ||
+              order.return.status === OrderReturnStatus.ReturnInTransit ||
+              order.return.status === OrderReturnStatus.SellerReceived
+            ) && (
+              <>
+                <Divider style={{ margin: '16px 0' }} />
+                <Alert
+                  type="info"
+                  showIcon
+                  style={{ marginBottom: 12 }}
+                  message={t('returnQrCard.title', 'Return QR label')}
+                  description={t(
+                    'returnQrCard.beforeShipHint',
+                    'Print this QR label and attach it to your parcel BEFORE shipping. The seller scans it on arrival.',
+                  )}
+                  action={
+                    <Button
+                      type="primary"
+                      icon={<QrcodeOutlined />}
+                      onClick={() => setReturnQrModalOpen(true)}
+                    >
+                      {t('returnQrCard.open', 'Show QR / Print label')}
+                    </Button>
+                  }
+                />
+              </>
+            )}
+
             {/* Return action buttons */}
+            {/* ── Chain-of-custody evidence ──────────────────────────
+                 Buyer uploads pickup photos while the return is Approved
+                 (required before MarkShipped). Seller uploads receipt photos
+                 while the return is ReturnInTransit/SellerReceived (required
+                 before ConfirmReceived). Mirrors the outbound proof-of-delivery
+                 pattern. */}
+            {isBuyer && order.return.status === OrderReturnStatus.Approved && (
+              <>
+                <Divider style={{ margin: '16px 0' }} />
+                <ReturnEvidenceUploader
+                  existingEvidence={(order.return.evidence ?? [])
+                    .filter((e) => e.category === OrderReturnEvidenceCategory.PickupByBuyer)
+                    .map((e) => ({
+                      id: e.id,
+                      mediaUpload: { secureUrl: e.mediaUpload.secureUrl },
+                    }))}
+                  category={OrderReturnEvidenceCategory.PickupByBuyer}
+                  minRequired={1}
+                  maxPhotos={5}
+                  disabled={addBuyerEvidence.isPending || shipReturn.isPending}
+                  onUpload={async (mediaUploadId) => {
+                    await addBuyerEvidence.mutateAsync({
+                      orderId: order.id,
+                      returnId: order.return!.id,
+                      mediaUploadId,
+                      category: OrderReturnEvidenceCategory.PickupByBuyer,
+                    })
+                  }}
+                />
+              </>
+            )}
+
+            {isSeller &&
+              (order.return.status === OrderReturnStatus.ReturnInTransit ||
+                order.return.status === OrderReturnStatus.SellerReceived) && (
+                <>
+                  <Divider style={{ margin: '16px 0' }} />
+                  <ReturnEvidenceUploader
+                    existingEvidence={(order.return.evidence ?? [])
+                      .filter(
+                        (e) => e.category === OrderReturnEvidenceCategory.ReceiptBySeller,
+                      )
+                      .map((e) => ({
+                        id: e.id,
+                        mediaUpload: { secureUrl: e.mediaUpload.secureUrl },
+                      }))}
+                    category={OrderReturnEvidenceCategory.ReceiptBySeller}
+                    minRequired={1}
+                    maxPhotos={5}
+                    disabled={addSellerEvidence.isPending || confirmReturnReceived.isPending}
+                    onUpload={async (mediaUploadId) => {
+                      await addSellerEvidence.mutateAsync({
+                        orderId: order.id,
+                        returnId: order.return!.id,
+                        mediaUploadId,
+                        category: OrderReturnEvidenceCategory.ReceiptBySeller,
+                      })
+                    }}
+                  />
+                </>
+              )}
+
             <Divider style={{ margin: '16px 0' }} />
             <Space wrap>
               {/* Seller: Approve/Reject when requested */}
@@ -1082,29 +1279,93 @@ export default function OrderDetailPage() {
                 </>
               )}
 
-              {/* Buyer: Ship return after approval */}
-              {isBuyer && order.return.status === OrderReturnStatus.Approved && (
-                <Button type="primary" icon={<SendOutlined />} loading={shipReturn.isPending}
-                  onClick={() => { setShipProviderCode(''); setShipTrackingNumber(''); setShipModalOpen(true) }}>
-                  {t('shipReturn', 'Ship Return')}
-                </Button>
-              )}
+              {/* Buyer: Ship return after approval — gated on pickup evidence. */}
+              {isBuyer && order.return.status === OrderReturnStatus.Approved && (() => {
+                const pickupCount = (order.return.evidence ?? []).filter(
+                  (e) => e.category === OrderReturnEvidenceCategory.PickupByBuyer,
+                ).length
+                const canShip = pickupCount >= 1
+                return (
+                  <Space direction="vertical" size={4}>
+                    <Button
+                      type="primary"
+                      icon={<SendOutlined />}
+                      loading={shipReturn.isPending}
+                      disabled={!canShip}
+                      onClick={() => {
+                        setShipProviderCode('')
+                        setShipTrackingNumber('')
+                        setShipModalOpen(true)
+                      }}
+                    >
+                      {t('shipReturn', 'Ship Return')}
+                    </Button>
+                    {!canShip && (
+                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                        {t(
+                          'shipReturnGate',
+                          'Upload at least one pickup photo to enable shipping.',
+                        )}
+                      </Typography.Text>
+                    )}
+                  </Space>
+                )
+              })()}
 
-              {/* Seller: Confirm received after shipped */}
+              {/* Seller: Confirm received — only after scan (SellerReceived) +
+                  at least one ReceiptBySeller photo uploaded. Scan step flips
+                  status without requiring photos. */}
+              {isSeller && order.return.status === OrderReturnStatus.SellerReceived && (() => {
+                const receiptCount = (order.return.evidence ?? []).filter(
+                  (e) => e.category === OrderReturnEvidenceCategory.ReceiptBySeller,
+                ).length
+                const canConfirm = receiptCount >= 1
+                return (
+                  <Space direction="vertical" size={4}>
+                    <Popconfirm
+                      title={t('confirmReceivedConfirm', 'Confirm you received the returned item?')}
+                      disabled={!canConfirm}
+                      onConfirm={async () => {
+                        try {
+                          await confirmReturnReceived.mutateAsync({ orderId: order.id, returnId: order.return!.id })
+                          message.success(t('returnReceived', 'Return received confirmed'))
+                        } catch { message.error(t('returnError', 'Action failed')) }
+                      }}
+                    >
+                      <Button
+                        type="primary"
+                        icon={<CheckOutlined />}
+                        loading={confirmReturnReceived.isPending}
+                        disabled={!canConfirm}
+                      >
+                        {t('confirmReceived', 'Confirm Received')}
+                      </Button>
+                    </Popconfirm>
+                    {!canConfirm && (
+                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                        {t(
+                          'confirmReceivedGate',
+                          'Upload at least one receipt photo before confirming.',
+                        )}
+                      </Typography.Text>
+                    )}
+                  </Space>
+                )
+              })()}
+
+              {/* Seller: while return is in transit, direct-confirm is NOT
+                  available — the seller must scan the buyer's QR first to
+                  flip the status to SellerReceived. Scan action lives on the
+                  SellerReturnsPage listing. */}
               {isSeller && order.return.status === OrderReturnStatus.ReturnInTransit && (
-                <Popconfirm
-                  title={t('confirmReceivedConfirm', 'Confirm you received the returned item?')}
-                  onConfirm={async () => {
-                    try {
-                      await confirmReturnReceived.mutateAsync({ orderId: order.id, returnId: order.return!.id })
-                      message.success(t('returnReceived', 'Return received confirmed'))
-                    } catch { message.error(t('returnError', 'Action failed')) }
-                  }}
-                >
-                  <Button type="primary" icon={<CheckOutlined />} loading={confirmReturnReceived.isPending}>
-                    {t('confirmReceived', 'Confirm Received')}
-                  </Button>
-                </Popconfirm>
+                <Alert
+                  type="info"
+                  showIcon
+                  message={t(
+                    'scanReturnHint',
+                    'Scan the buyer’s return QR from the Returns page to mark this shipment received.',
+                  )}
+                />
               )}
             </Space>
           </>
@@ -1196,7 +1457,7 @@ export default function OrderDetailPage() {
         onOk={async () => {
           if (!shipProviderCode.trim() || !shipTrackingNumber.trim()) return
           try {
-            await shipReturn.mutateAsync({
+            const updated = await shipReturn.mutateAsync({
               orderId: order.id,
               returnId: order.return!.id,
               providerCode: shipProviderCode.trim(),
@@ -1204,6 +1465,11 @@ export default function OrderDetailPage() {
             })
             message.success(t('returnShipped', 'Return marked as shipped'))
             setShipModalOpen(false)
+            // BE issues the signed QR on MarkShipped — surface it so the buyer
+            // can attach the label to the parcel.
+            if (updated?.qrToken) {
+              setReturnQrModalOpen(true)
+            }
           } catch { message.error(t('returnError', 'Action failed')) }
         }}
         okText={tc('action.confirm', 'Confirm')}
@@ -1236,6 +1502,31 @@ export default function OrderDetailPage() {
         open={disputeModalOpen}
         onClose={() => setDisputeModalOpen(false)}
       />
+
+      {/* Return QR display — shown after MarkShipped success and reopenable
+          via the persistent QR card on the return section above. */}
+      {order.return?.qrToken && (
+        <ReturnQrDisplayModal
+          open={returnQrModalOpen}
+          onClose={() => setReturnQrModalOpen(false)}
+          qrToken={order.return.qrToken}
+          title={t('returnQrCard.title', 'Return QR label')}
+          subtitle={t(
+            'returnQrCard.subtitle',
+            'Attach this label to the parcel before handing it to the carrier.',
+          )}
+          lines={
+            order.return.trackingNumber
+              ? [
+                  {
+                    label: t('trackingCode', 'Tracking Number'),
+                    value: order.return.trackingNumber,
+                  },
+                ]
+              : []
+          }
+        />
+      )}
     </div>
   )
 }

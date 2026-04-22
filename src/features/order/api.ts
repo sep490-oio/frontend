@@ -2,7 +2,8 @@ import apiClient from '@/lib/axios'
 import { queryKeys } from '@/lib/queryClient'
 import { invalidateAndRefetchActive } from '@/lib/mutationFreshness'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import type { OrderDto, OrderReturnDto, CreateReturnRequest, PagedList, PaginationParams, UpdateOrderShippingRequest, SellerDirectShipmentDto, PackageCondition, SellerDirectShipmentListItem, MyDirectShipmentListItem, BuyerShipmentListItemDto } from '@/types'
+import type { OrderDto, OrderReturnDto, OrderReturnEvidenceDto, CreateReturnRequest, PagedList, PaginationParams, UpdateOrderShippingRequest, SellerDirectShipmentDto, PackageCondition, SellerDirectShipmentListItem, MyDirectShipmentListItem, BuyerShipmentListItemDto } from '@/types'
+import type { OrderReturnEvidenceCategory } from '@/types/enums'
 
 // ── Queries ──────────────────────────────────────────────────────────
 
@@ -704,6 +705,108 @@ export function useValidateDirectShipmentScan() {
         { token },
       )
       return res.data
+    },
+  })
+}
+
+// ── OrderReturn Evidence + Scan (chain-of-custody) ───────────────────
+
+/**
+ * Buyer uploads a PickupByBuyer photo on an OrderReturn. Required before
+ * `POST /returns/{id}/ship` will succeed — BE enforces the guard.
+ */
+export function useAddOrderReturnEvidence() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({
+      orderId,
+      returnId,
+      mediaUploadId,
+      category,
+    }: {
+      orderId: string
+      returnId: string
+      mediaUploadId: string
+      category: OrderReturnEvidenceCategory
+    }) => {
+      const res = await apiClient.post<OrderReturnEvidenceDto>(
+        `/me/orders/${orderId}/returns/${returnId}/evidence`,
+        { mediaUploadId, category },
+      )
+      return res.data
+    },
+    onSuccess: async (_data, variables) => {
+      await invalidateAndRefetchActive(qc, [
+        queryKeys.orders.detail(variables.orderId),
+        queryKeys.orders.all,
+      ])
+    },
+  })
+}
+
+/**
+ * Seller uploads a ReceiptBySeller photo on an OrderReturn. Required
+ * before `POST /returns/{id}/confirm-received` will succeed — BE guards
+ * at Resolve() time.
+ */
+export function useAddOrderReturnEvidenceSeller() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({
+      orderId,
+      returnId,
+      mediaUploadId,
+      category,
+    }: {
+      orderId: string
+      returnId: string
+      mediaUploadId: string
+      category: OrderReturnEvidenceCategory
+    }) => {
+      const res = await apiClient.post<OrderReturnEvidenceDto>(
+        `/seller/orders/${orderId}/returns/${returnId}/evidence`,
+        { mediaUploadId, category },
+      )
+      return res.data
+    },
+    onSuccess: async (_data, variables) => {
+      await invalidateAndRefetchActive(qc, [
+        queryKeys.orders.detail(variables.orderId),
+        queryKeys.orders.all,
+      ])
+    },
+  })
+}
+
+/**
+ * Seller scans the return-shipment QR token. Server asserts the return
+ * is in `ReturnInTransit` status and flips it to `SellerReceived` with
+ * NO photo requirement — scan is identity-proof only. Photo gate lives
+ * on the subsequent confirm-received call.
+ */
+export function useScanOrderReturn() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({
+      orderId,
+      returnId,
+      qrToken,
+    }: {
+      orderId: string
+      returnId: string
+      qrToken: string
+    }) => {
+      const res = await apiClient.post<OrderReturnDto>(
+        `/seller/orders/${orderId}/returns/${returnId}/scan`,
+        { qrToken },
+      )
+      return res.data
+    },
+    onSuccess: async (_data, variables) => {
+      await invalidateAndRefetchActive(qc, [
+        queryKeys.orders.detail(variables.orderId),
+        queryKeys.orders.all,
+      ])
     },
   })
 }

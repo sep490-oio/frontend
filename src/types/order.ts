@@ -1,4 +1,11 @@
-import type { EscrowStatus, OrderReturnStatus, OrderStatus } from './enums'
+import type {
+  DeferredRefundIntent,
+  EscrowStatus,
+  OrderReturnEvidenceCategory,
+  OrderReturnStatus,
+  OrderStatus,
+  ShippingFeePayer,
+} from './enums'
 import type { GhnMetadata } from './address'
 
 export interface ShipmentEvidenceDto {
@@ -299,6 +306,31 @@ export interface UpdateOrderShippingRequest {
   recipientMetadata?: GhnMetadata
 }
 
+/**
+ * Nested media info on an OrderReturn evidence row. Mirrors the BE's
+ * `MediaUploadDto` shape projected inside `OrderReturnEvidenceDto`.
+ */
+export interface OrderReturnEvidenceMediaDto {
+  id: string
+  secureUrl: string
+  publicId?: string | null
+  resourceType?: string | null
+  fileName?: string | null
+}
+
+/**
+ * Chain-of-custody photo attached to an OrderReturn. Category discriminates
+ * buyer-uploaded pickup shots vs seller-uploaded receipt shots.
+ */
+export interface OrderReturnEvidenceDto {
+  id: string
+  orderReturnId: string
+  category: OrderReturnEvidenceCategory
+  mediaUpload: OrderReturnEvidenceMediaDto
+  createdAt: string
+  createdBy: string
+}
+
 export interface OrderReturnDto {
   id: string
   status: OrderReturnStatus
@@ -313,6 +345,18 @@ export interface OrderReturnDto {
   shippedAt?: string
   sellerReceivedAt?: string
   buyerDecisionDueAt?: string
+  /** Who pays for the return shipping — dispute resolution sets this. */
+  shippingFeePayer?: ShippingFeePayer | null
+  /** When the last buyer reminder was sent (reminder job anti-spam). */
+  lastReminderSentAt?: string | null
+  /** Deferred refund intent recorded at dispute-resolve; fires at seller-confirm. */
+  deferredRefundIntent?: DeferredRefundIntent | null
+  /** Partial refund amount; set only when deferredRefundIntent === 'partial'. */
+  deferredRefundAmount?: number | null
+  /** Signed QR token — stamped on MarkShipped. Present only for in-transit+ returns. */
+  qrToken?: string | null
+  /** Chain-of-custody photos attached to this return. */
+  evidence?: OrderReturnEvidenceDto[]
 }
 
 export interface CreateReturnRequest {

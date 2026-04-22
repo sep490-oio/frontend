@@ -33,7 +33,10 @@ export default function AdminVerificationsPage() {
       title: t('verifications.user', 'User'),
       dataIndex: 'userId',
       key: 'userId',
-      render: (v: string) => <Typography.Text copyable={{ text: v }}>{v.slice(0, 8)}…</Typography.Text>,
+      render: (v: string | undefined) => {
+        if (!v) return <Typography.Text type="secondary">—</Typography.Text>
+        return <Typography.Text copyable={{ text: v }}>{v.slice(0, 8)}…</Typography.Text>
+      },
     },
     {
       title: t('verifications.type', 'Type'),

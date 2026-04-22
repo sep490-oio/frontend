@@ -11,7 +11,20 @@ import type {
   PublicSellerItemDto,
   PagedList,
   PaginationParams,
+  WarehouseToSellerShipmentDto,
+  WarehouseToSellerShipmentEvidenceDto,
 } from '@/types'
+import type { WarehouseReturnEvidenceCategory } from '@/types/enums'
+
+// ── Query key root used across warehouse-return hooks (seller + staff). ──
+const warehouseReturnsQueryKey = ['warehouse-returns'] as const
+
+export type WarehouseReturnStatusFilter =
+  | 'pending'
+  | 'in_transit'
+  | 'delivered'
+  | 'closed'
+  | 'all'
 
 // ── Seller Profile ──────────────────────────────────────────────────
 
@@ -190,7 +203,7 @@ export function useDeleteVerificationDocument() {
     },
   })
 }
-export function useBrowseSellers(params?: PaginationParams & { 
+export function useBrowseSellers(params?: PaginationParams & {
   search?: string;
   rating?: string;
   sortBy?: string;
@@ -200,6 +213,102 @@ export function useBrowseSellers(params?: PaginationParams & {
     queryFn: async () => {
       const res = await apiClient.get<PagedList<SellerProfileDto>>('/sellers', { params })
       return res.data
+    },
+  })
+}
+
+// ── Warehouse -> Seller return shipments ──────────────────────────────
+//
+// Backed by:
+//   GET  /api/seller/warehouse-returns
+//   POST /api/seller/warehouse-returns/:id/confirm-receipt
+//
+// BE returns a raw array (not a paged envelope) per the ralplan contract,
+// so the hooks project to `WarehouseToSellerShipmentDto[]`.
+
+/**
+ * Seller's inbound-return shipments from the warehouse.
+ * Optional `status` filter mirrors the BE query string ('pending' | 'in_transit'
+ * | 'delivered' | 'closed' | 'all'). Defaults to `'all'`.
+ */
+export function useSellerWarehouseReturns(options?: { status?: WarehouseReturnStatusFilter }) {
+  const status = options?.status ?? 'all'
+  return useQuery({
+    queryKey: [...warehouseReturnsQueryKey, 'seller', status] as const,
+    queryFn: async () => {
+      const res = await apiClient.get<WarehouseToSellerShipmentDto[]>('/seller/warehouse-returns', {
+        params: { status },
+      })
+      return extractArray<WarehouseToSellerShipmentDto>(res.data)
+    },
+  })
+}
+
+/**
+ * Seller confirms receipt of a warehouse-return shipment. BE flips status
+ * to `Closed` and records `sellerConfirmedAt`. Invalidates the seller list.
+ */
+export function useConfirmWarehouseReturnReceipt() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id }: { id: string }) => {
+      const res = await apiClient.post<WarehouseToSellerShipmentDto>(
+        `/seller/warehouse-returns/${id}/confirm-receipt`,
+      )
+      return res.data
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [...warehouseReturnsQueryKey, 'seller'] })
+    },
+  })
+}
+
+/**
+ * Seller uploads a ReceiptBySeller photo on a warehouse->seller return
+ * shipment. Required before confirm-receipt will succeed — BE guards
+ * at ConfirmBySeller.
+ */
+export function useAddWarehouseReturnEvidenceSeller() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({
+      id,
+      mediaUploadId,
+      category,
+    }: {
+      id: string
+      mediaUploadId: string
+      category: WarehouseReturnEvidenceCategory
+    }) => {
+      const res = await apiClient.post<WarehouseToSellerShipmentEvidenceDto>(
+        `/seller/warehouse-returns/${id}/evidence`,
+        { mediaUploadId, category },
+      )
+      return res.data
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: warehouseReturnsQueryKey })
+    },
+  })
+}
+
+/**
+ * Seller scans a warehouse-return QR token. Server asserts the shipment
+ * is in `InTransit` status and flips it to `Delivered` — no photo gate
+ * (scan is identity-proof only; photo gate lives on confirm-receipt).
+ */
+export function useScanWarehouseReturn() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, qrToken }: { id: string; qrToken: string }) => {
+      const res = await apiClient.post<WarehouseToSellerShipmentDto>(
+        `/seller/warehouse-returns/${id}/scan`,
+        { qrToken },
+      )
+      return res.data
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: warehouseReturnsQueryKey })
     },
   })
 }
