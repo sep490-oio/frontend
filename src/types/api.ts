@@ -32,6 +32,7 @@ export interface ApiError {
   errors?: Record<string, string[]>
   requestId?: string
   traceId?: string
+  metadata?: Record<string, unknown>
 }
 
 export interface HubCommandResult<T> {

@@ -63,11 +63,16 @@ export function useWalletTransactionById(id: string) {
 
 // ── Payment Methods ──────────────────────────────────────────────────
 
-export function usePaymentMethods() {
+export type PaymentMethodStatusFilter = 'active' | 'disabled' | 'all'
+
+export function usePaymentMethods(options?: { status?: PaymentMethodStatusFilter }) {
+  const status = options?.status
   return useQuery({
-    queryKey: queryKeys.paymentMethods.list(),
+    queryKey: [...queryKeys.paymentMethods.list(), { status: status ?? 'active' }],
     queryFn: async () => {
-      const res = await apiClient.get('/payments/methods')
+      const res = await apiClient.get('/payments/methods', {
+        params: status ? { status } : undefined,
+      })
       return extractArray<PaymentMethodDto>(res.data)
     },
   })
@@ -96,6 +101,44 @@ export function useDeletePaymentMethod() {
       await invalidateAndRefetchActive(qc, [queryKeys.paymentMethods.all])
     },
   })
+}
+
+export function useHardDeletePaymentMethod() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await apiClient.delete(`/payments/methods/${id}/hard`)
+    },
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.paymentMethods.all])
+    },
+  })
+}
+
+export function useReactivatePaymentMethod() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await apiClient.post(`/payments/methods/${id}/reactivate`)
+    },
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.paymentMethods.all])
+    },
+  })
+}
+
+export interface DuplicatePaymentMethodError {
+  code: 'PaymentMethod.Duplicate'
+  description: string
+  metadata?: {
+    conflictingMethodId?: string
+    existingIsActive?: boolean
+  }
+}
+
+export function isDuplicatePaymentMethodError(err: unknown): err is { response: { data: DuplicatePaymentMethodError } } {
+  const resp = (err as any)?.response?.data
+  return resp?.code === 'PaymentMethod.Duplicate'
 }
 
 export function useSetDefaultPaymentMethod() {

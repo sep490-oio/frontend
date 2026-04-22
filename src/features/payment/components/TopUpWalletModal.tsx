@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Modal,
   InputNumber,
@@ -55,6 +55,18 @@ export function TopUpWalletModal({ open, onClose, currency = 'VND' }: Props) {
     (m: PaymentMethodDto) => m.type === PaymentMethodType.VnPay,
   )
   const provider: TopUpProvider = { kind: 'vnpay', savedCards: vnpaySavedCards }
+
+  // Auto-select the default card when the modal opens (or whenever the card
+  // list changes after a SetDefault). Falls back to the first card, then to
+  // "new card" if no saved VnPay cards exist.
+  useEffect(() => {
+    if (!open) return
+    if (selectedCardId) return
+    const defaultCard = vnpaySavedCards.find((c) => c.isDefault)
+    if (defaultCard) { setSelectedCardId(defaultCard.id); return }
+    if (vnpaySavedCards.length > 0) { setSelectedCardId(vnpaySavedCards[0].id); return }
+    setSelectedCardId(NEW_CARD_VALUE)
+  }, [open, vnpaySavedCards, selectedCardId])
 
   const isNewCard = selectedCardId === NEW_CARD_VALUE
   const canSubmit = !!amount && amount > 0 && !!selectedCardId
