@@ -43,6 +43,8 @@ import { useAppSelector } from '@/app/store'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useSearchAuctions } from '@/features/auction/api'
+import { AuctionStatus } from '@/types/enums'
+import { formatCurrency } from '@/utils/format'
 
 export type RecentItemV2 = {
   id: string
@@ -50,6 +52,9 @@ export type RecentItemV2 = {
   path: string
   title?: string
   desc?: string
+  status?: string
+  price?: number
+  currency?: string
 }
 
 export const addSpotlightRecent = (userId: string | null, item: RecentItemV2) => {
@@ -87,7 +92,7 @@ function getRolesFromToken(token: string | null): string[] {
 }
 
 export const SpotlightSearchModal: React.FC = () => {
-  const { t, i18n } = useTranslation()
+  const { t, i18n } = useTranslation(['common', 'auction'])
   const navigate = useNavigate()
   const { isMobile } = useBreakpoint()
   
@@ -114,6 +119,9 @@ export const SpotlightSearchModal: React.FC = () => {
     auth: string[]
     isRecent?: boolean
     isDynamic?: boolean
+    status?: string
+    price?: number
+    currency?: string
   }
 
   const SPOTLIGHT_DATA: SpotlightItem[] = useMemo(() => [
@@ -417,7 +425,10 @@ export const SpotlightSearchModal: React.FC = () => {
       desc: t('common:statusLabel.in_auction', 'Auction'),
       keywords: [auction.itemTitle],
       auth: ['user', 'admin', 'seller'],
-      isDynamic: true
+      isDynamic: true,
+      status: auction.status,
+      price: auction.currentPrice.amount,
+      currency: auction.currency
     }))
   }, [auctionData, t])
 
@@ -454,7 +465,10 @@ export const SpotlightSearchModal: React.FC = () => {
              keywords: [],
              auth: [],
              isRecent: true,
-             isDynamic: true
+             isDynamic: true,
+             status: r.status,
+             price: r.price,
+             currency: r.currency
           })) as SpotlightItem[]
         
         if (dynamicRecents.length > 0) {
@@ -545,9 +559,9 @@ export const SpotlightSearchModal: React.FC = () => {
     // If it's a dynamic id, it might already be saved when visited
     // But we still track clicks
     if (id.startsWith('auction-')) {
-       // Find the item to save its title & desc
+       // Find the item to save its title, desc, status & price
        const found = results.find(r => r.id === id)
-       addSpotlightRecent(currentUserId, { id, type: 'dynamic', path, title: found?.title, desc: found?.desc })
+       addSpotlightRecent(currentUserId, { id, type: 'dynamic', path, title: found?.title, desc: found?.desc, status: found?.status, price: found?.price, currency: found?.currency })
     }
     navigate(path)
     setIsOpen(false)
@@ -585,6 +599,25 @@ export const SpotlightSearchModal: React.FC = () => {
         regex.test(part) ? <span key={i} style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{part}</span> : part
       )
     ) : text
+  }
+
+  const getAuctionStatusInfo = (status?: string) => {
+    if (!status) return null
+    switch (status) {
+      case AuctionStatus.Active:
+        return { label: t('auction:statusTab.active', 'Active'), color: 'var(--color-success)', bg: 'rgba(34, 197, 94, 0.1)' }
+      case AuctionStatus.Scheduled:
+        return { label: t('auction:statusTab.scheduled', 'Scheduled'), color: '#f97316', bg: 'rgba(249, 115, 22, 0.1)' }
+      case AuctionStatus.Sold:
+      case AuctionStatus.Completed:
+        return { label: t('auction:statusTab.sold', 'Sold'), color: 'var(--color-accent)', bg: 'rgba(59, 130, 246, 0.1)' }
+      case AuctionStatus.Ended:
+        return { label: t('auction:statusTab.ended', 'Ended'), color: 'var(--color-text-secondary)', bg: 'var(--color-bg-surface)' }
+      case AuctionStatus.Cancelled:
+        return { label: t('auction:statusTab.cancelled', 'Cancelled'), color: 'var(--color-danger)', bg: 'rgba(239, 68, 68, 0.1)' }
+      default:
+        return { label: status.toUpperCase(), color: 'var(--color-text-secondary)', bg: 'var(--color-bg-surface)' }
+    }
   }
 
   return (
@@ -693,12 +726,40 @@ export const SpotlightSearchModal: React.FC = () => {
                         fontSize: 15, 
                         fontWeight: item.isRecent ? 600 : 500, 
                         color: isActive && !item.isRecent ? 'var(--color-accent)' : 'var(--color-text-primary)', 
-                        marginBottom: 2 
+                        marginBottom: 2,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8
                       }}>
-                        {highlightMatch(item.title, query)}
+                        <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {highlightMatch(item.title, query)}
+                        </span>
+                        {item.isDynamic && item.status && (
+                          (() => {
+                            const info = getAuctionStatusInfo(item.status)
+                            if (!info) return null
+                            return (
+                              <span style={{ 
+                                fontSize: 10, 
+                                fontWeight: 700, 
+                                padding: '1px 6px', 
+                                borderRadius: 4, 
+                                background: info.bg,
+                                color: info.color,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.02em',
+                                whiteSpace: 'nowrap',
+                                border: `1px solid ${info.color}33`
+                              }}>
+                                {info.label}
+                              </span>
+                            )
+                          })()
+                        )}
                       </div>
                       <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {highlightMatch(item.desc, query)}
+
                         {!item.isDynamic && (
                           <>
                             <span style={{ margin: '0 8px', opacity: 0.5 }}>•</span>
