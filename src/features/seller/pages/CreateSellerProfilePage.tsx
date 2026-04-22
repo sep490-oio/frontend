@@ -9,6 +9,7 @@ import { useCreateSellerProfile, useMySellerProfile } from '@/features/seller/ap
 import { TermsAcceptanceGate } from '@/features/user/components/TermsAcceptanceGate'
 import { useEffect } from 'react'
 import type { CreateSellerProfileRequest } from '@/types'
+import { SellerProfileStatus } from '@/types/enums'
 
 export default function CreateSellerProfilePage() {
   const { t } = useTranslation('seller')
@@ -25,7 +26,11 @@ export default function CreateSellerProfilePage() {
   // Redirect if already has profile
   useEffect(() => {
     if (existingProfile) {
-      navigate('/seller', { replace: true })
+      if (existingProfile.status === SellerProfileStatus.Verified) {
+        navigate('/seller', { replace: true })
+      } else {
+        navigate('/seller/verification', { replace: true })
+      }
     }
   }, [existingProfile, navigate])
 
@@ -33,7 +38,7 @@ export default function CreateSellerProfilePage() {
     try {
       await createProfile.mutateAsync(values)
       message.success(t('createSuccess', 'Seller profile created successfully'))
-      navigate('/seller')
+      navigate('/seller/verification')
     } catch {
       message.error(t('createError', 'Failed to create seller profile'))
     }

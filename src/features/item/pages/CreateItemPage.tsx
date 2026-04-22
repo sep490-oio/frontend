@@ -51,7 +51,7 @@ export default function CreateItemPage() {
   const [verifyByPlatform, setVerifyByPlatform] = useState(false)
 
   const categoryOptions = (categories ?? []).map((cat) => ({
-    label: cat.name,
+    label: tc(`categories.items.${cat.name}`, cat.name),
     value: cat.id,
   }))
 

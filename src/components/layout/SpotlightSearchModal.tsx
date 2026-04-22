@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
-import { Modal, Input } from 'antd'
+import { Modal, Input, Spin } from 'antd'
 import { 
   SearchOutlined, 
   HistoryOutlined, 
@@ -22,12 +22,28 @@ import {
   TagsOutlined,
   TeamOutlined,
   FileTextOutlined,
-  DollarOutlined
+  DollarOutlined,
+  EnvironmentOutlined,
+  BellOutlined,
+  PlusCircleOutlined,
+  OrderedListOutlined,
+  ExportOutlined,
+  ImportOutlined,
+  DatabaseOutlined,
+  AuditOutlined,
+  AlertOutlined,
+  ExceptionOutlined,
+  TrophyOutlined,
+  MonitorOutlined,
+  LockOutlined
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useAppSelector } from '@/app/store'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { useDebounce } from '@/hooks/useDebounce'
+import { useSearchAuctions } from '@/features/auction/api'
+import { AuctionStatus } from '@/types/enums'
 
 export type RecentItemV2 = {
   id: string
@@ -35,6 +51,9 @@ export type RecentItemV2 = {
   path: string
   title?: string
   desc?: string
+  status?: string
+  price?: number
+  currency?: string
 }
 
 export const addSpotlightRecent = (userId: string | null, item: RecentItemV2) => {
@@ -42,7 +61,7 @@ export const addSpotlightRecent = (userId: string | null, item: RecentItemV2) =>
     const storageKey = `spotlight_recents_v2_${userId || 'guest'}`
     const existing = localStorage.getItem(storageKey)
     let recents: RecentItemV2[] = existing ? JSON.parse(existing) : []
-    recents = [item, ...recents.filter(x => x.id !== item.id)].slice(0, 5)
+    recents = [item, ...recents.filter(x => x.id !== item.id)].slice(0, 3)
     localStorage.setItem(storageKey, JSON.stringify(recents))
     window.dispatchEvent(new Event('spotlight-recents-updated'))
   } catch (e) {
@@ -72,7 +91,7 @@ function getRolesFromToken(token: string | null): string[] {
 }
 
 export const SpotlightSearchModal: React.FC = () => {
-  const { t, i18n } = useTranslation()
+  const { t, i18n } = useTranslation(['common', 'auction'])
   const navigate = useNavigate()
   const { isMobile } = useBreakpoint()
   
@@ -98,6 +117,10 @@ export const SpotlightSearchModal: React.FC = () => {
     keywords: string[]
     auth: string[]
     isRecent?: boolean
+    isDynamic?: boolean
+    status?: string
+    price?: number
+    currency?: string
   }
 
   const SPOTLIGHT_DATA: SpotlightItem[] = useMemo(() => [
@@ -171,6 +194,24 @@ export const SpotlightSearchModal: React.FC = () => {
       keywords: ['security', 'bảo mật', 'password', 'mật khẩu', '2fa'], auth: ['user']
     },
     {
+      id: 'addresses', path: '/me/addresses', icon: <EnvironmentOutlined />,
+      title: t('common:spotlight.title.addresses', 'Shipping Addresses'),
+      desc: t('common:spotlight.desc.addresses', 'Manage your delivery addresses'),
+      keywords: ['address', 'địa chỉ', 'shipping', 'delivery', 'giao hàng'], auth: ['user']
+    },
+    {
+      id: 'notifications', path: '/me/notifications', icon: <BellOutlined />,
+      title: t('common:spotlight.title.notifications', 'My Notifications'),
+      desc: t('common:spotlight.desc.notifications', 'View your system notifications'),
+      keywords: ['notifications', 'thông báo', 'alerts', 'tin nhắn'], auth: ['user']
+    },
+    {
+      id: 'settings', path: '/me/settings', icon: <SettingOutlined />,
+      title: t('common:spotlight.title.settings', 'Account Settings'),
+      desc: t('common:spotlight.desc.settings', 'Configure your account preferences'),
+      keywords: ['settings', 'cài đặt', 'preferences', 'tùy chỉnh'], auth: ['user']
+    },
+    {
       id: 'bids', path: '/me/bids', icon: <BookOutlined />,
       title: t('common:spotlight.title.myBids', 'My Bids'),
       desc: t('common:spotlight.desc.myBids', 'Track your participating auctions'),
@@ -232,6 +273,48 @@ export const SpotlightSearchModal: React.FC = () => {
       desc: t('common:spotlight.desc.sellerProfile', 'Update store information'),
       keywords: ['profile', 'cửa hàng', 'thông tin', 'gian hàng'], auth: ['seller']
     },
+    {
+      id: 'seller_create_item', path: '/seller/items/create', icon: <PlusCircleOutlined />,
+      title: t('common:spotlight.title.sellerCreateItem', 'Post New Item'),
+      desc: t('common:spotlight.desc.sellerCreateItem', 'Start the item listing process'),
+      keywords: ['create', 'đăng', 'sản phẩm', 'mới', 'listing', 'post'], auth: ['seller']
+    },
+    {
+      id: 'seller_orders', path: '/seller/orders', icon: <OrderedListOutlined />,
+      title: t('common:spotlight.title.sellerOrders', 'Manage Orders'),
+      desc: t('common:spotlight.desc.sellerOrders', 'Track and fulfill customer orders'),
+      keywords: ['orders', 'đơn hàng', 'bán hàng', 'fulfillment', 'xử lý'], auth: ['seller']
+    },
+    {
+      id: 'seller_returns', path: '/seller/returns', icon: <OrderedListOutlined />,
+      title: t('common:spotlight.title.sellerReturns', 'Manage Returns'),
+      desc: t('common:spotlight.desc.sellerReturns', 'Handle customer return requests'),
+      keywords: ['returns', 'trả hàng', 'refund', 'hoàn tiền', 'khiếu nại'], auth: ['seller']
+    },
+    {
+      id: 'seller_shipments', path: '/seller/shipments', icon: <ExportOutlined />,
+      title: t('common:spotlight.title.sellerShipments', 'Direct Shipments'),
+      desc: t('common:spotlight.desc.sellerShipments', 'Manage direct shipping labels'),
+      keywords: ['shipments', 'vận chuyển', 'giao hàng', 'delivery', 'shipping'], auth: ['seller']
+    },
+    {
+      id: 'seller_inbound', path: '/seller/warehouse/inbound', icon: <ImportOutlined />,
+      title: t('common:spotlight.title.sellerInbound', 'Inbound Shipments'),
+      desc: t('common:spotlight.desc.sellerInbound', 'Manage shipments to OIO warehouse'),
+      keywords: ['inbound', 'nhập kho', 'gửi hàng', 'warehouse', 'lưu kho'], auth: ['seller']
+    },
+    {
+      id: 'seller_outbound', path: '/seller/warehouse/outbound', icon: <ExportOutlined />,
+      title: t('common:spotlight.title.sellerOutbound', 'Outbound Shipments'),
+      desc: t('common:spotlight.desc.sellerOutbound', 'Manage shipments from OIO warehouse'),
+      keywords: ['outbound', 'xuất kho', 'lấy hàng', 'warehouse', 'giao đi'], auth: ['seller']
+    },
+    {
+      id: 'seller_warehouse_items', path: '/seller/warehouse/items', icon: <DatabaseOutlined />,
+      title: t('common:spotlight.title.sellerWarehouseItems', 'Warehouse Items'),
+      desc: t('common:spotlight.desc.sellerWarehouseItems', 'Track items stored at OIO warehouse'),
+      keywords: ['warehouse', 'items', 'kho', 'hàng hóa', 'tồn kho', 'lưu kho'], auth: ['seller']
+    },
 
     // --- ADMIN ---
     {
@@ -247,7 +330,7 @@ export const SpotlightSearchModal: React.FC = () => {
       keywords: ['users', 'người dùng', 'ban', 'tài khoản'], auth: ['admin']
     },
     {
-      id: 'admin_roles', path: '/admin/roles', icon: <SafetyCertificateOutlined />,
+      id: 'admin_roles', path: '/admin/roles', icon: <LockOutlined />,
       title: t('common:spotlight.title.adminRoles', 'Manage Roles'),
       desc: t('common:spotlight.desc.adminRoles', 'Configure moderator permissions'),
       keywords: ['roles', 'quyền', 'permission', 'phân quyền'], auth: ['admin']
@@ -265,22 +348,40 @@ export const SpotlightSearchModal: React.FC = () => {
       keywords: ['terms', 'chính sách', 'điều khoản', 'policy', 'tos'], auth: ['admin']
     },
     {
-      id: 'admin_auctions', path: '/admin/auctions', icon: <BookOutlined />,
-      title: t('common:spotlight.title.adminAuctions', 'Manage Auctions'),
-      desc: t('common:spotlight.desc.adminAuctions', 'Intervene in violation auctions'),
-      keywords: ['auctions', 'phiên', 'đấu giá', 'violation', 'vi phạm'], auth: ['admin']
+      id: 'admin_auctions', path: '/admin/auctions/completed', icon: <TrophyOutlined />,
+      title: t('common:spotlight.title.adminAuctions', 'Completed Auctions'),
+      desc: t('common:spotlight.desc.adminAuctions', 'View and manage finished auction records'),
+      keywords: ['auctions', 'phiên', 'đấu giá', 'completed', 'đã kết thúc'], auth: ['admin']
     },
     {
-      id: 'admin_items', path: '/admin/items', icon: <AppstoreOutlined />,
-      title: t('common:spotlight.title.adminItems', 'Manage Items'),
-      desc: t('common:spotlight.desc.adminItems', 'Control flagged items'),
-      keywords: ['items', 'sản phẩm', 'kiểm duyệt', 'flagged'], auth: ['admin']
+      id: 'admin_items', path: '/admin/items/review', icon: <AuditOutlined />,
+      title: t('common:spotlight.title.adminItems', 'Item Review Queue'),
+      desc: t('common:spotlight.desc.adminItems', 'Approve or reject newly submitted items'),
+      keywords: ['items', 'sản phẩm', 'kiểm duyệt', 'review', 'duyệt'], auth: ['admin']
     },
     {
-      id: 'admin_disputes', path: '/admin/disputes', icon: <CommentOutlined />,
+      id: 'admin_disputes', path: '/admin/disputes', icon: <ExceptionOutlined />,
       title: t('common:spotlight.title.adminDisputes', 'Resolve Disputes'),
       desc: t('common:spotlight.desc.adminDisputes', 'Handle escalated complaints'),
       keywords: ['disputes', 'tranh chấp', 'khiếu nại', 'escalated', 'cấp cao'], auth: ['admin']
+    },
+    {
+      id: 'admin_sellers', path: '/admin/sellers', icon: <ShopOutlined />,
+      title: t('common:spotlight.title.adminSellers', 'Manage Sellers'),
+      desc: t('common:spotlight.desc.adminSellers', 'Manage and approve seller profiles'),
+      keywords: ['sellers', 'người bán', 'gian hàng', 'doanh nghiệp'], auth: ['admin']
+    },
+    {
+      id: 'admin_moderation', path: '/admin/moderation', icon: <AlertOutlined />,
+      title: t('common:spotlight.title.adminModeration', 'Content Moderation'),
+      desc: t('common:spotlight.desc.adminModeration', 'Handle content violation reports'),
+      keywords: ['moderation', 'kiểm duyệt', 'báo cáo', 'report', 'vi phạm'], auth: ['admin']
+    },
+    {
+      id: 'admin_monitoring', path: '/admin/monitoring', icon: <MonitorOutlined />,
+      title: t('common:spotlight.title.adminMonitoring', 'System Monitoring'),
+      desc: t('common:spotlight.desc.adminMonitoring', 'Real-time system health tracking'),
+      keywords: ['monitoring', 'giám sát', 'hệ thống', 'logs', 'health'], auth: ['admin']
     },
     {
       id: 'admin_payments', path: '/admin/payments', icon: <DollarOutlined />,
@@ -306,6 +407,30 @@ export const SpotlightSearchModal: React.FC = () => {
     }
   ], [i18n.language, t])
 
+  // ─── Dynamic Search (Auctions) ───
+  const debouncedQuery = useDebounce(query, 300)
+  const { data: auctionData, isLoading: isSearchingAuctions } = useSearchAuctions(
+    { q: debouncedQuery ? `${debouncedQuery.trim()}*` : '', pageSize: 6 },
+    isOpen && debouncedQuery.trim().length >= 2
+  )
+
+  const dynamicAuctionItems = useMemo((): SpotlightItem[] => {
+    if (!auctionData?.items) return []
+    return auctionData.items.map(auction => ({
+      id: `auction-${auction.id}`,
+      path: `/auctions/${auction.id}`,
+      icon: <TagsOutlined />,
+      title: auction.itemTitle,
+      desc: t('common:statusLabel.in_auction', 'Auction'),
+      keywords: [auction.itemTitle],
+      auth: ['user', 'admin', 'seller'],
+      isDynamic: true,
+      status: auction.status,
+      price: auction.currentPrice.amount,
+      currency: auction.currency
+    }))
+  }, [auctionData, t])
+
   const results = useMemo(() => {
     // 1. RBAC Filter
     let items = SPOTLIGHT_DATA.filter(item => {
@@ -328,23 +453,22 @@ export const SpotlightSearchModal: React.FC = () => {
       if (recentStorage) {
         const recentData = JSON.parse(recentStorage) as RecentItemV2[]
         
-        const dynamicRecents = recentData.map(r => {
-           if (r.type === 'static') {
-              const found = items.find(i => i.id === r.id)
-              return found ? { ...found, isRecent: true } : null
-           } else {
-              return {
-                 id: r.id,
-                 path: r.path,
-                 title: r.title || 'Dynamic Item',
-                 desc: r.desc || '',
-                 icon: <HistoryOutlined />,
-                 keywords: [],
-                 auth: [],
-                 isRecent: true
-              }
-           }
-        }).filter(Boolean) as SpotlightItem[]
+        const dynamicRecents = recentData
+          .filter(r => r.type === 'dynamic')
+          .map(r => ({
+             id: r.id,
+             path: r.path,
+             title: r.title || 'Auction',
+             desc: r.desc || '',
+             icon: <HistoryOutlined />,
+             keywords: [],
+             auth: [],
+             isRecent: true,
+             isDynamic: true,
+             status: r.status,
+             price: r.price,
+             currency: r.currency
+          })) as SpotlightItem[]
         
         if (dynamicRecents.length > 0) {
           resultRecents = dynamicRecents
@@ -370,13 +494,17 @@ export const SpotlightSearchModal: React.FC = () => {
     const purelyDynamicRecents = resultRecents.filter(r => !items.some(i => i.id === r.id))
     const searchableItems = [...purelyDynamicRecents, ...items]
 
-    return searchableItems.filter(item => {
+    const filteredStatic = searchableItems.filter(item => {
       return regex.test(item.title) || 
              regex.test(item.desc) || 
              regex.test(item.path) ||
              item.keywords.some(k => regex.test(k))
     })
-  }, [query, SPOTLIGHT_DATA, roles, currentUserId, isOpen, accessToken, recentsTick])
+
+    // Merge static and dynamic auction results
+    // We put static first, then auctions
+    return [...filteredStatic, ...dynamicAuctionItems]
+  }, [query, SPOTLIGHT_DATA, roles, currentUserId, isOpen, accessToken, recentsTick, dynamicAuctionItems])
 
   useEffect(() => {
     setSelectedIndex(0)
@@ -422,19 +550,15 @@ export const SpotlightSearchModal: React.FC = () => {
     }
   }, [])
 
-  const addRecent = (id: string, path: string) => {
-    addSpotlightRecent(currentUserId, { id, type: 'static', path })
-  }
+
 
   const handleNavigate = (path: string, id: string) => {
     // If it's a dynamic id, it might already be saved when visited
     // But we still track clicks
     if (id.startsWith('auction-')) {
-       // Find the item to save its title & desc
+       // Find the item to save its title, desc, status & price
        const found = results.find(r => r.id === id)
-       addSpotlightRecent(currentUserId, { id, type: 'dynamic', path, title: found?.title, desc: found?.desc })
-    } else {
-       addRecent(id, path)
+       addSpotlightRecent(currentUserId, { id, type: 'dynamic', path, title: found?.title, desc: found?.desc, status: found?.status, price: found?.price, currency: found?.currency })
     }
     navigate(path)
     setIsOpen(false)
@@ -474,6 +598,25 @@ export const SpotlightSearchModal: React.FC = () => {
     ) : text
   }
 
+  const getAuctionStatusInfo = (status?: string) => {
+    if (!status) return null
+    switch (status) {
+      case AuctionStatus.Active:
+        return { label: t('auction:statusTab.active', 'Active'), color: 'var(--color-success)', bg: 'rgba(34, 197, 94, 0.1)' }
+      case AuctionStatus.Scheduled:
+        return { label: t('auction:statusTab.scheduled', 'Scheduled'), color: '#f97316', bg: 'rgba(249, 115, 22, 0.1)' }
+      case AuctionStatus.Sold:
+      case AuctionStatus.Completed:
+        return { label: t('auction:statusTab.sold', 'Sold'), color: 'var(--color-accent)', bg: 'rgba(59, 130, 246, 0.1)' }
+      case AuctionStatus.Ended:
+        return { label: t('auction:statusTab.ended', 'Ended'), color: 'var(--color-text-secondary)', bg: 'var(--color-bg-surface)' }
+      case AuctionStatus.Cancelled:
+        return { label: t('auction:statusTab.cancelled', 'Cancelled'), color: 'var(--color-danger)', bg: 'rgba(239, 68, 68, 0.1)' }
+      default:
+        return { label: status.toUpperCase(), color: 'var(--color-text-secondary)', bg: 'var(--color-bg-surface)' }
+    }
+  }
+
   return (
     <Modal
       open={isOpen}
@@ -501,6 +644,7 @@ export const SpotlightSearchModal: React.FC = () => {
             style={{ fontSize: isMobile ? 16 : 18, padding: 0, flex: 1 }}
             autoFocus
           />
+          {isSearchingAuctions && <Spin size="small" style={{ marginLeft: 8 }} />}
           {isMobile && (
             <div 
               onClick={() => setIsOpen(false)}
@@ -538,7 +682,12 @@ export const SpotlightSearchModal: React.FC = () => {
                     )}
                     {isFirstNonRecent && (
                       <div style={{ padding: index === 0 ? '4px 12px 8px' : '16px 12px 8px', fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        {t('common:spotlight.navigation', 'Navigation')}
+                        {query ? t('common:spotlight.navigation', 'Navigation') : t('common:spotlight.navigation', 'Navigation')}
+                      </div>
+                    )}
+                    {(item as any).isDynamic && (index === 0 || !(results[index - 1] as any).isDynamic) && (
+                      <div style={{ padding: '16px 12px 8px', fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        {t('common:menu.auctions', 'Auctions')}
                       </div>
                     )}
                     <div
@@ -574,14 +723,46 @@ export const SpotlightSearchModal: React.FC = () => {
                         fontSize: 15, 
                         fontWeight: item.isRecent ? 600 : 500, 
                         color: isActive && !item.isRecent ? 'var(--color-accent)' : 'var(--color-text-primary)', 
-                        marginBottom: 2 
+                        marginBottom: 2,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8
                       }}>
-                        {highlightMatch(item.title, query)}
+                        <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {highlightMatch(item.title, query)}
+                        </span>
+                        {item.isDynamic && item.status && (
+                          (() => {
+                            const info = getAuctionStatusInfo(item.status)
+                            if (!info) return null
+                            return (
+                              <span style={{ 
+                                fontSize: 10, 
+                                fontWeight: 700, 
+                                padding: '1px 6px', 
+                                borderRadius: 4, 
+                                background: info.bg,
+                                color: info.color,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.02em',
+                                whiteSpace: 'nowrap',
+                                border: `1px solid ${info.color}33`
+                              }}>
+                                {info.label}
+                              </span>
+                            )
+                          })()
+                        )}
                       </div>
                       <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {highlightMatch(item.desc, query)}
-                        <span style={{ margin: '0 8px', opacity: 0.5 }}>•</span>
-                        <span style={{ fontSize: 12, fontFamily: 'var(--font-mono)' }}>{item.path}</span>
+
+                        {!item.isDynamic && (
+                          <>
+                            <span style={{ margin: '0 8px', opacity: 0.5 }}>•</span>
+                            <span style={{ fontSize: 12, fontFamily: 'var(--font-mono)' }}>{item.path}</span>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>

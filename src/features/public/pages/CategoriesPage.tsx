@@ -130,7 +130,7 @@ export default function CategoriesPage() {
                   lineHeight: 1.3,
                 }}
               >
-                {category.name}
+                {t(`categories.items.${category.name}`, category.name)}
               </h3>
               {category.description && (
                 <p

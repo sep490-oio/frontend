@@ -42,7 +42,8 @@ export default function ItemDetailPage() {
 
   const isSeller = currentUser?.id === item?.sellerId
 
-  const categoryName = categories?.find((c) => c.id === item?.categoryId)?.name ?? item?.categoryId
+  const category = categories?.find((c) => c.id === item?.categoryId)
+  const categoryName = category ? tc(`categories.items.${category.name}`, category.name) : item?.categoryId
 
   if (isLoading) {
     return (

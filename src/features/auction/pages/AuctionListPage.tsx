@@ -343,7 +343,7 @@ export default function AuctionListPage() {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {cat.name}
+                      {tc(`categories.items.${cat.name}`, cat.name)}
                     </div>
                   </div>
                 </Col>

@@ -142,7 +142,10 @@ export default function CreateAuctionPage() {
     }
   }, [isEditMode, editAuction, form])
 
-  const categoryOptions = (categories ?? []).map((cat) => ({ label: cat.name, value: cat.id }))
+  const categoryOptions = (categories ?? []).map((cat) => ({
+    label: tc(`categories.items.${cat.name}`, cat.name),
+    value: cat.id,
+  }))
   const submitItemMutation = useSubmitItem()
   const updateAuction = useUpdateAuction()
   const submitAuction = useSubmitAuction()
