@@ -215,15 +215,15 @@ export default function AuctionDetailPage() {
   const [optimisticIsWatching, setOptimisticIsWatching] = useState<boolean | null>(null)
   const isWatching = optimisticIsWatching !== null
     ? optimisticIsWatching
-    : (data?.isWatched ?? (data as any)?.hasWatched ?? data?.auction?.isWatched ?? (data?.auction as any)?.hasWatched ?? false)
+    : (data?.isWatched ?? (data as any)?.hasWatched ?? (data?.auction as any)?.isWatched ?? (data?.auction as any)?.hasWatched ?? false)
 
   // Reset optimistic state when data syncs
   useEffect(() => {
-    const serverWatched = data?.isWatched ?? (data as any)?.hasWatched ?? data?.auction?.isWatched ?? (data?.auction as any)?.hasWatched
+    const serverWatched = data?.isWatched ?? (data as any)?.hasWatched ?? (data?.auction as any)?.isWatched ?? (data?.auction as any)?.hasWatched
     if (optimisticIsWatching !== null && serverWatched === optimisticIsWatching) {
       setOptimisticIsWatching(null)
     }
-  }, [data?.isWatched, (data as any)?.hasWatched, data?.auction?.isWatched, (data?.auction as any)?.hasWatched, optimisticIsWatching])
+  }, [data?.isWatched, (data as any)?.hasWatched, (data?.auction as any)?.isWatched, (data?.auction as any)?.hasWatched, optimisticIsWatching])
   const [autoBidMax, setAutoBidMax] = useState<number | null>(null)
   const [autoBidIncrement, setAutoBidIncrement] = useState<number | null>(null)
   const [buyNowConfirmOpen, setBuyNowConfirmOpen] = useState(false)
