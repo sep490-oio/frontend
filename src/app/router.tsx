@@ -56,7 +56,12 @@ function RouteErrorBoundary() {
       <Flex gap={12}>
         <Button
           type="primary"
-          onClick={() => window.location.reload()}
+          onClick={() => {
+            // Hard reload by navigating to the current path with a cache-busting timestamp
+            const url = new URL(window.location.href)
+            url.searchParams.set('t', Date.now().toString())
+            window.location.href = url.toString()
+          }}
           style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
         >
           {t('reloadPage', 'Reload page')}
