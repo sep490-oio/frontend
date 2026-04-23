@@ -142,13 +142,16 @@ export default function AuctionDetailPage() {
     detailUserScope,
     {
       refetchInterval: pollingForOrder ? 2000 : false,
-      // If we are logged in (have a user ID), always enable. Otherwise, enable for anonymous.
-      enabled: true,
+      // If authenticated, we MUST wait for currentUser?.id to ensure the query 
+      // uses the correct user-scoped cache key from the start.
+      enabled: isAuthenticated ? !!currentUser?.id : true,
     },
   )
 
-  // Only show skeleton if we have NO data at all and are currently loading the main auction detail.
-  const isPageLoading = isLoading && !data
+  // Loading state: if authenticated, wait for both user profile and auction data.
+  // This prevents flickering between 'guest' and 'user' states on first load.
+  const isPageLoading = (isLoading && !data) || (isAuthenticated && !currentUser)
+
 
 
   // Only fetch authenticated-user data when logged in (this is a public page)
@@ -342,7 +345,7 @@ export default function AuctionDetailPage() {
       localStorage.setItem(storageKey, 'true')
       setIsQualified(true)
       hasJustDeposited.current = false
-      localStorage.removeItem(`${storageKey}_ts`) 
+      localStorage.removeItem(`${storageKey}_ts`)
     } else if (qualificationStatus === 'rejected' || qualificationStatus === 'expired') {
       localStorage.removeItem(storageKey)
       localStorage.removeItem(`${storageKey}_ts`)
