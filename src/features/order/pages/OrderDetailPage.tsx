@@ -1387,7 +1387,7 @@ export default function OrderDetailPage() {
 
       {/* Action buttons */}
       <OrderActionRow>
-        {order.status === OrderStatus.PendingPayment && (
+        {isBuyer && order.status === OrderStatus.PendingPayment && (
           <Button type="primary" size="middle" onClick={() => navigate(`/checkout/${order.id}`)}>
             {t('payNow', 'Pay Now')}
           </Button>

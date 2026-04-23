@@ -281,6 +281,22 @@ export default function CheckoutPage() {
     return <Alert type="error" message={t('orderNotFound', 'Order not found')} showIcon />
   }
 
+  // Guard: Only the buyer can access the checkout page for this order.
+  if (currentUser && order.buyerId !== currentUser.id) {
+    return (
+      <Result
+        status="error"
+        title={t('checkoutForbidden', 'You are not authorized to pay for this order')}
+        subTitle={t('checkoutForbiddenSub', 'Only the winning bidder can access the checkout.')}
+        extra={
+          <Button type="primary" onClick={() => navigate(`/seller/orders/${order.id}`)}>
+            {t('viewSellerOrder', 'View as Seller')}
+          </Button>
+        }
+      />
+    )
+  }
+
   if (order.status !== 'pending_payment') {
     if (order.status === 'paid') {
       return (

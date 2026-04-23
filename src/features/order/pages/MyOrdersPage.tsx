@@ -11,6 +11,7 @@ import { OrderItemSummary } from '@/features/order/components/OrderItemSummary'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { PriceDisplay } from '@/components/ui/PriceDisplay'
 import { OrderStatus, OrderReturnStatus } from '@/types/enums'
+import { useAuth } from '@/hooks/useAuth'
 import { formatDateTime } from '@/utils/format'
 import type { OrderDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
@@ -87,6 +88,7 @@ export default function MyOrdersPage() {
   ]
   const navigate = useNavigate()
   const prefix = useRoutePrefix()
+  const { user } = useAuth()
   const { isMobile } = useBreakpoint()
 
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -114,10 +116,11 @@ export default function MyOrdersPage() {
     OrderReturnStatus.BuyerFollowup,
   ])
 
-  const rawItems = data?.items ?? []
+  // Filter out orders that the user is selling (outbound). /me/orders should strictly be for purchases.
+  const items = (data?.items ?? []).filter((order: OrderDto) => order.buyerId === user?.id)
   const displayItems = isReturnsTab
-    ? rawItems.filter((o) => o.return && ACTIVE_RETURN_STATUSES.has(o.return.status))
-    : rawItems
+    ? items.filter((o) => o.return && ACTIVE_RETURN_STATUSES.has(o.return.status))
+    : items
 
   const columns: ColumnsType<OrderDto> = [
     {
@@ -204,7 +207,7 @@ export default function MyOrdersPage() {
       key: 'actions',
       width: 140,
       render: (_: unknown, record: OrderDto) =>
-        record.status === OrderStatus.PendingPayment ? (
+        record.status === OrderStatus.PendingPayment && record.buyerId === user?.id ? (
           <Button
             type="primary"
             size="small"
@@ -344,7 +347,7 @@ export default function MyOrdersPage() {
                     <span style={{ color: 'var(--color-text-secondary)', fontSize: 12 }}>
                       {formatDateTime(record.createdAt)}
                     </span>
-                    {record.status === OrderStatus.PendingPayment ? (
+                    {record.status === OrderStatus.PendingPayment && record.buyerId === user?.id ? (
                       <Button
                         type="primary"
                         size="small"
