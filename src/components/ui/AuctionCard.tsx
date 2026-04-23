@@ -139,6 +139,10 @@ export function AuctionCard({ auction }: AuctionCardProps) {
         padding: isMobile ? 10 : 16,
         transition: 'all 0.3s ease',
         outline: 'none',
+        height: '100%',
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.borderColor = 'var(--color-accent, rgba(59, 130, 246, 0.5))';
@@ -153,40 +157,45 @@ export function AuctionCard({ auction }: AuctionCardProps) {
           position: 'relative',
           borderRadius: isMobile ? 12 : 16,
           overflow: 'hidden',
-          aspectRatio: isMobile ? '16/10' : '4/5',
+          aspectRatio: '1/1',
+          width: '100%',
           marginBottom: isMobile ? 16 : 24,
           background: 'var(--color-bg-surface, #1f2937)',
+          flexShrink: 0,
         }}
       >
-        {auction.primaryImageUrl ? (
-          <img
-            alt={auction.itemTitle}
-            src={auction.primaryImageUrl}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              display: 'block',
-              transition: 'transform 0.5s ease',
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-          />
-        ) : (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '100%',
-              height: '100%',
-              color: 'var(--color-text-secondary)',
-              fontSize: 13,
-            }}
-          >
-            {t('noImage')}
-          </div>
-        )}
+        <div style={{ position: 'absolute', inset: 0 }}>
+          {auction.primaryImageUrl ? (
+            <img
+              alt={auction.itemTitle}
+              src={auction.primaryImageUrl}
+              loading="lazy"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                display: 'block',
+                transition: 'transform 0.5s ease',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            />
+          ) : (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
+                height: '100%',
+                color: 'var(--color-text-secondary)',
+                fontSize: 13,
+              }}
+            >
+              {t('noImage')}
+            </div>
+          )}
+        </div>
 
         {/* Top Badges */}
         <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 6, zIndex: 10 }}>
@@ -327,7 +336,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
       </div>
 
       {/* Details Block */}
-      <div style={{ padding: '0 8px' }}>
+      <div style={{ padding: '0 8px', flex: 1, display: 'flex', flexDirection: 'column' }}>
         <h3
           style={{
             fontWeight: 700,
@@ -380,6 +389,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
             background: isActive ? 'var(--color-accent, #3b82f6)' : 'rgba(255,255,255,0.05)',
             color: isActive ? '#fff' : 'var(--color-text-secondary, #9ca3af)',
             padding: '12px 0',
+            marginTop: 'auto',
             borderRadius: 12,
             fontWeight: 700,
             fontSize: 14,

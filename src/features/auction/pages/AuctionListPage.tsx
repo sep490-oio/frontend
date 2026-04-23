@@ -219,8 +219,8 @@ export default function AuctionListPage() {
             <Row gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]}>
               {Array.from({ length: 3 }).map((_, i) => (
                 <Col xs={12} sm={12} md={8} xl={8} key={i}>
-                  <Skeleton.Image active style={{ width: '100%', height: isMobile ? 180 : 240 }} />
-                  <Skeleton active paragraph={{ rows: 2 }} style={{ marginTop: 8 }} />
+                  <div className="oio-skeleton" style={{ width: '100%', aspectRatio: '1/1', borderRadius: 12, marginBottom: 16 }} />
+                  <Skeleton active paragraph={{ rows: 2 }} />
                 </Col>
               ))}
             </Row>
@@ -260,8 +260,8 @@ export default function AuctionListPage() {
               <Row gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]}>
                 {Array.from({ length: 3 }).map((_, i) => (
                   <Col xs={12} sm={12} md={8} xl={8} key={i}>
-                    <Skeleton.Image active style={{ width: '100%', height: isMobile ? 180 : 240 }} />
-                    <Skeleton active paragraph={{ rows: 2 }} style={{ marginTop: 8 }} />
+                    <div className="oio-skeleton" style={{ width: '100%', aspectRatio: '1/1', borderRadius: 12, marginBottom: 16 }} />
+                    <Skeleton active paragraph={{ rows: 2 }} />
                   </Col>
                 ))}
               </Row>

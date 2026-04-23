@@ -554,7 +554,10 @@ export default function BrowseAuctionsPage() {
               <Row gutter={[16, 16]}>
                 {[...Array(6)].map((_, i) => (
                   <Col key={i} xs={24} sm={12} md={12} xl={8}>
-                    <div className="oio-skeleton" style={{ aspectRatio: '3/4', borderRadius: 8 }} />
+                    <div className="oio-skeleton" style={{ aspectRatio: '1/1', borderRadius: 16, marginBottom: 16 }} />
+                    <div className="oio-skeleton" style={{ height: 24, width: '80%', marginBottom: 8 }} />
+                    <div className="oio-skeleton" style={{ height: 16, width: '40%', marginBottom: 24 }} />
+                    <div className="oio-skeleton" style={{ height: 48, borderRadius: 12 }} />
                   </Col>
                 ))}
               </Row>
@@ -564,7 +567,12 @@ export default function BrowseAuctionsPage() {
               <>
                 <div
                   className="oio-stagger"
-                  style={{ display: 'grid', gridTemplateColumns: isTablet ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 24 }}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: isTablet ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))',
+                    gap: 24,
+                    alignItems: 'stretch'
+                  }}
                 >
                   {data.items.map((auction: AuctionListItemDto) => (
                     <AuctionCard key={auction.id} auction={auction} />
@@ -695,7 +703,9 @@ export default function BrowseAuctionsPage() {
           <Row gutter={[16, 16]}>
             {[...Array(isMobile ? 4 : 8)].map((_, i) => (
               <Col key={i} xs={12} sm={12} md={8} xl={6}>
-                <div className="oio-skeleton" style={{ aspectRatio: '3/4', borderRadius: 8 }} />
+                <div className="oio-skeleton" style={{ aspectRatio: '1/1', borderRadius: 12, marginBottom: 12 }} />
+                <div className="oio-skeleton" style={{ height: 20, width: '70%', marginBottom: 6 }} />
+                <div className="oio-skeleton" style={{ height: 40, borderRadius: 10 }} />
               </Col>
             ))}
           </Row>
