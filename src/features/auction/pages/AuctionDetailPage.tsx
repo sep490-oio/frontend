@@ -128,7 +128,10 @@ export default function AuctionDetailPage() {
   // or `useCurrentUser` resolves, `userScope` changes and React Query refetches
   // so `currentUserBidState` is always based on the real identity — never on
   // a stale anonymous response.
-  const detailUserScope = isAuthenticated ? (currentUser?.id ?? null) : null
+  // Scope the detail query by user ID. If we have a currentUser, we must use their ID
+  // to ensure we get participant-specific data (qualification, bid status).
+  const detailUserScope = currentUser?.id ?? null
+
   // Short-term polling enabled when user is the winner but currentBuyerOrder
   // hasn't materialized yet (race between PlaceBid sweep-to-buy-now and the
   // AuctionSoldEvent handler creating the Order). Capped at ~12s.
@@ -139,9 +142,15 @@ export default function AuctionDetailPage() {
     detailUserScope,
     {
       refetchInterval: pollingForOrder ? 2000 : false,
-      enabled: isAuthenticated ? !!currentUser?.id : true,
+      // If we are logged in (have a user ID), always enable. Otherwise, enable for anonymous.
+      enabled: true,
     },
   )
+
+  // Only show skeleton if we have NO data at all and are currently loading the main auction detail.
+  const isPageLoading = isLoading && !data
+
+
   // Only fetch authenticated-user data when logged in (this is a public page)
   const { data: myAutoBid } = useMyAutoBid(isAuthenticated ? (id ?? '') : '')
 
@@ -272,23 +281,28 @@ export default function AuctionDetailPage() {
   // When no user is logged in, we use a guest-scoped key.
   const storageKey = useMemo(() => {
     if (!id) return ''
+    // If we are authenticated but the user profile isn't loaded yet,
+    // we return null to signify we don't have a valid key yet.
+    if (isAuthenticated && !currentUser?.id) return null
     const userId = currentUser?.id ?? 'guest'
     return `oio_qualified_${userId}_${id}`
-  }, [id, currentUser?.id])
+  }, [id, currentUser?.id, isAuthenticated])
 
-  const [isQualified, setIsQualified] = useState(() => {
+
+  // Immediate qualification check from storage (reactive to storageKey)
+  const isQualifiedInStorage = useMemo(() => {
     if (!storageKey) return false
     return localStorage.getItem(storageKey) === 'true'
-  })
-
-  // Re-read qualification from storage when the user context changes
-  useEffect(() => {
-    if (storageKey) {
-      setIsQualified(localStorage.getItem(storageKey) === 'true')
-    } else {
-      setIsQualified(false)
-    }
   }, [storageKey])
+
+  // We still keep isQualified state to allow manual updates (like right after deposit success)
+  const [isQualified, setIsQualified] = useState(isQualifiedInStorage)
+
+  // Sync state with storage when key changes
+  useEffect(() => {
+    setIsQualified(isQualifiedInStorage)
+  }, [isQualifiedInStorage])
+
 
   // If returning from VnPay deposit with success flag, mark qualified
   useEffect(() => {
@@ -297,7 +311,7 @@ export default function AuctionDetailPage() {
       localStorage.setItem(storageKey, 'true')
       localStorage.setItem(`${storageKey}_ts`, now)
       setIsQualified(true)
-      // Force a refetch to try and get the updated participant status from server
+      // Force an immediate refetch
       refetch()
       // Clean URL params
       const url = new URL(window.location.href)
@@ -310,14 +324,11 @@ export default function AuctionDetailPage() {
   useEffect(() => {
     if (!id || !storageKey || !isAuthenticated) return
 
-    // Special case: if data is loaded but user has no participant record, they might not be qualified.
-    // Important: we must ensure data is actually loaded (not currently fetching for the first time).
-    // Also, we PROTECT the local qualification flag if we just deposited, as the server might be lagging.
-    // We check both the ref and localStorage timestamp for persistence across F5.
+    const isDataForCurrentUser = data && detailUserScope === currentUser?.id
     const lastDepositTs = parseInt(localStorage.getItem(`${storageKey}_ts`) || '0', 10)
     const isRecentlyDeposited = (Date.now() - lastDepositTs) < 30000 || hasJustDeposited.current
 
-    if (data && !isLoading && !isFetching && !data.currentUserParticipant && !isRecentlyDeposited) {
+    if (isDataForCurrentUser && !isLoading && !isFetching && !data.currentUserParticipant && !isRecentlyDeposited) {
       localStorage.removeItem(storageKey)
       localStorage.removeItem(`${storageKey}_ts`)
       setIsQualified(false)
@@ -325,20 +336,43 @@ export default function AuctionDetailPage() {
     }
 
     const qualificationStatus = data?.currentUserParticipant?.qualificationStatus
-    if (!qualificationStatus) return
+    if (!qualificationStatus || !isDataForCurrentUser) return
 
     if (qualificationStatus === 'qualified' || qualificationStatus === 'waived') {
       localStorage.setItem(storageKey, 'true')
       setIsQualified(true)
       hasJustDeposited.current = false
-      localStorage.removeItem(`${storageKey}_ts`) // Server caught up, clear timer
+      localStorage.removeItem(`${storageKey}_ts`) 
     } else if (qualificationStatus === 'rejected' || qualificationStatus === 'expired') {
       localStorage.removeItem(storageKey)
       localStorage.removeItem(`${storageKey}_ts`)
       setIsQualified(false)
       hasJustDeposited.current = false
     }
-  }, [data, id, storageKey, isAuthenticated, isLoading, isFetching])
+  }, [data, id, storageKey, isAuthenticated, isLoading, isFetching, detailUserScope, currentUser?.id])
+
+  // ── Polling logic ───────────────────────────────────────────────
+  // If the user has a local qualification flag but the server doesn't know
+  // yet, poll every 3 seconds for up to 30 seconds.
+  useEffect(() => {
+    if (!id || !storageKey || !isAuthenticated || !isQualified) return
+    const serverStatus = data?.currentUserParticipant?.qualificationStatus
+    const isQualifiedOnServer = serverStatus === 'qualified' || serverStatus === 'waived'
+
+    if (!isQualifiedOnServer && !isLoading) {
+      const lastDepositTs = parseInt(localStorage.getItem(`${storageKey}_ts`) || '0', 10)
+      const recentlyDeposited = (Date.now() - lastDepositTs) < 30000
+
+      if (recentlyDeposited) {
+        const timer = setInterval(() => {
+          refetch()
+        }, 3000)
+        return () => clearInterval(timer)
+      }
+    }
+  }, [id, storageKey, isAuthenticated, isQualified, data?.currentUserParticipant?.qualificationStatus, isLoading, refetch])
+
+
 
   // Winner-order polling: when current user is the winner but the Order has
   // not yet been provisioned (transient race window), poll the auction detail
@@ -546,14 +580,15 @@ export default function AuctionDetailPage() {
   const serverQualStatus = data?.currentUserParticipant?.qualificationStatus
   const qualState = useMemo(() => {
     // 1. If we are the seller, we are never "qualified" in the bidding sense
-    if (isAuthenticated && currentUser?.id === sellerId) return 'is_seller' as QualificationState
+    if (currentUser?.id && currentUser.id === sellerId) return 'is_seller' as QualificationState
 
-    // 2. If the server provides an explicit status for the current user, use it as the source of truth
-    if (isAuthenticated && serverQualStatus) {
+    // 2. If the server provides an explicit status, use it as the source of truth.
+    // We check for serverQualStatus even if Redux says !isAuthenticated, as the session might be active.
+    if (serverQualStatus) {
       if (serverQualStatus === 'qualified' || serverQualStatus === 'waived') return 'qualified' as QualificationState
 
       // Trust the optimistic flag to mask caching/webhook delays right after deposit
-      if (isQualified) return 'qualified' as QualificationState
+      if (isQualifiedInStorage) return 'qualified' as QualificationState
 
       // If server says they are clearly not qualified (pending, rejected, etc.), return a boundary state
       if (
@@ -579,21 +614,12 @@ export default function AuctionDetailPage() {
       ? computeQualificationState(
         { ...auction, sellerId: item?.sellerId ?? auction.sellerId ?? '' },
         currentUser?.id,
-        isQualified,
+        isQualifiedInStorage,
       )
       : ('before_window' as QualificationState)
-  }, [
-    auction,
-    item,
-    currentUser?.id,
-    isQualified,
-    qualificationBoundaryTick,
-    serverQualStatus,
-    isAuthenticated,
-    sellerId,
-  ])
-
+  }, [data, isAuthenticated, currentUser?.id, sellerId, isQualifiedInStorage, auction, item?.sellerId, qualificationBoundaryTick])
   const ensureTermsAccepted = useCallback(() => {
+
     if (bidderTerms.hasPending) {
       Modal.confirm({
         title: t('termsRequiredTitle', 'Chấp nhận điều khoản'),
@@ -806,11 +832,14 @@ export default function AuctionDetailPage() {
     const depositAmount = auction.startingPrice?.amount ?? 0
     try {
       await walletDepositMutation.mutateAsync({ auctionId: id, amount: depositAmount, currency })
-      localStorage.setItem(storageKey, 'true')
+      if (storageKey) {
+        localStorage.setItem(storageKey, 'true')
+      }
       setIsQualified(true)
       message.success(t('depositSuccess', 'Deposit successful — you are now qualified to bid!'))
       queryClient.invalidateQueries({ queryKey: queryKeys.auctions.detail(id) })
     } catch (err) {
+
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
       message.error(detail ?? t('depositError', 'Deposit failed'))
     }
@@ -962,7 +991,8 @@ export default function AuctionDetailPage() {
 
   // ── Loading / empty states ──────────────────────────────────────
 
-  if (isLoading) {
+  if (isPageLoading) {
+
     return (
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px 12px 100px' : isTablet ? '20px 16px 80px' : '24px 24px 80px' }}>
         <Skeleton active paragraph={{ rows: 0 }} style={{ marginBottom: isMobile ? 16 : 32 }} />
