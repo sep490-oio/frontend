@@ -404,10 +404,13 @@ export default function AuctionDetailPage() {
         type: 'dynamic',
         path: `/auctions/${id}`,
         title: item.title,
-        desc: 'Auction Item'
+        desc: tc('statusLabel.in_auction', 'Auction'),
+        status: auction?.status,
+        price: auction?.currentPrice?.amount,
+        currency: auction?.currency
       })
     }
-  }, [id, item?.title, currentUser?.id])
+  }, [id, item?.title, currentUser?.id, auction?.status, auction?.currentPrice?.amount])
 
   // ── SignalR bid notifications (aggregated) ────────────────────────
   const aggregatorRef = useRef<NotificationAggregator | null>(null)
