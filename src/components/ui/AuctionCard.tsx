@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { App } from 'antd'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
@@ -80,6 +81,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
   const { isMobile } = useBreakpoint()
   const watchMutation = useWatchAuction()
   const unwatchMutation = useUnwatchAuction()
+  const { message } = App.useApp()
   const [watching, setWatching] = useState(auction.isWatched ?? auction.hasWatched ?? false)
 
   useEffect(() => {
@@ -94,14 +96,30 @@ export function AuctionCard({ auction }: AuctionCardProps) {
   const terminalChip = getTerminalChip(auction.status, t)
   const isAtStartingPrice = auction.currentPrice?.amount === auction.startingPrice?.amount
 
-  const handleWatchToggle = (e: React.MouseEvent) => {
+  const handleWatchToggle = async (e: React.MouseEvent) => {
     e.stopPropagation()
     if (watching) {
       setWatching(false)
-      unwatchMutation.mutate(auction.id)
+      unwatchMutation.mutate(auction.id, {
+        onSuccess: () => message.success(t('removedFromWatchlist', 'Removed from watchlist')),
+        onError: (err) => {
+          setWatching(true)
+          const data = (err as { response?: { data?: any } })?.response?.data
+          const detail = data?.detail ?? data?.title ?? data?.message ?? (err as Error)?.message
+          message.error(detail ?? t('watchError', 'Failed to update watchlist'))
+        }
+      })
     } else {
       setWatching(true)
-      watchMutation.mutate({ auctionId: auction.id })
+      watchMutation.mutate({ auctionId: auction.id }, {
+        onSuccess: () => message.success(t('addedToWatchlist', 'Added to watchlist')),
+        onError: (err) => {
+          setWatching(false)
+          const data = (err as { response?: { data?: any } })?.response?.data
+          const detail = data?.detail ?? data?.title ?? data?.message ?? (err as Error)?.message
+          message.error(detail ?? t('watchError', 'Failed to update watchlist'))
+        }
+      })
     }
   }
 

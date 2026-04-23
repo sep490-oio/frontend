@@ -44,16 +44,17 @@ export function useAuctions(params?: AuctionFilterParams, options?: { refetchInt
 export function useAuctionDetail(
   id: string,
   userScope?: string | null,
-  options?: { refetchInterval?: number | false },
+  options?: { refetchInterval?: number | false; enabled?: boolean },
 ) {
   return useQuery({
     queryKey: queryKeys.auctions.detailFor(id, userScope),
     queryFn: async () => {
-      const res = await apiClient.get<AuctionDetailDto>(`/auctions/${id}`)
+      const res = await apiClient.get<AuctionDetailDto>(`/auctions/${id}`, { params: { _t: Date.now() } })
       return res.data
     },
-    enabled: !!id,
+    enabled: !!id && (options?.enabled ?? true),
     refetchInterval: options?.refetchInterval,
+    staleTime: 0,
   })
 }
 
@@ -61,10 +62,11 @@ export function useAuctionBids(auctionId: string) {
   return useQuery({
     queryKey: queryKeys.auctions.bids(auctionId),
     queryFn: async () => {
-      const res = await apiClient.get<PagedList<BidDto>>(`/auctions/${auctionId}/bids`)
+      const res = await apiClient.get<PagedList<BidDto>>(`/auctions/${auctionId}/bids`, { params: { _t: Date.now() } })
       return res.data
     },
     enabled: !!auctionId,
+    staleTime: 0,
   })
 }
 
@@ -122,9 +124,9 @@ export function useSearchAuctions(params: { q: string; page?: number; pageSize?:
     queryFn: async ({ signal }) => {
       // Backend expects page_size, frontend uses pageSize
       const { pageSize, ...rest } = params
-      const res = await apiClient.get<PagedList<AuctionListItemDto>>('/search/auctions', { 
-        params: { ...rest, page_size: pageSize }, 
-        signal 
+      const res = await apiClient.get<PagedList<AuctionListItemDto>>('/search/auctions', {
+        params: { ...rest, page_size: pageSize },
+        signal
       })
       return res.data
     },
@@ -248,8 +250,10 @@ export function useWatchAuction() {
       await apiClient.post(`/auctions/${auctionId}/watch`, { notifyOnBid, notifyOnEnd })
     },
     onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.auctions.watchlist() })
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.watchlistRoot() })
       qc.invalidateQueries({ queryKey: queryKeys.auctions.detail(variables.auctionId) })
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.listRoot() })
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.myAuctionsRoot() })
     },
   })
 }
@@ -261,7 +265,7 @@ export function useUpdateWatcherPreferences() {
       await apiClient.patch(`/auctions/${auctionId}/watch/preferences`, { notifyOnBid, notifyOnEnd })
     },
     onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.auctions.watchlist() })
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.watchlistRoot() })
       qc.invalidateQueries({ queryKey: queryKeys.auctions.detail(variables.auctionId) })
     },
   })
@@ -285,8 +289,10 @@ export function useUnwatchAuction() {
       return auctionId
     },
     onSuccess: (auctionId) => {
-      qc.invalidateQueries({ queryKey: queryKeys.auctions.watchlist() })
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.watchlistRoot() })
       qc.invalidateQueries({ queryKey: queryKeys.auctions.detail(auctionId) })
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.listRoot() })
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.myAuctionsRoot() })
     },
   })
 }
@@ -320,10 +326,11 @@ export function useMyAutoBid(auctionId: string) {
   return useQuery({
     queryKey: queryKeys.auctions.myAutoBid(auctionId),
     queryFn: async () => {
-      const res = await apiClient.get<AutoBidDto>(`/auctions/${auctionId}/auto-bid/my`)
+      const res = await apiClient.get<AutoBidDto>(`/auctions/${auctionId}/auto-bid/my`, { params: { _t: Date.now() } })
       return res.data
     },
     enabled: !!auctionId,
+    staleTime: 0,
   })
 }
 

@@ -137,7 +137,10 @@ export default function AuctionDetailPage() {
   const { data, isLoading, isFetching, refetch } = useAuctionDetail(
     id ?? '',
     detailUserScope,
-    { refetchInterval: pollingForOrder ? 2000 : false },
+    {
+      refetchInterval: pollingForOrder ? 2000 : false,
+      enabled: isAuthenticated ? !!currentUser?.id : true,
+    },
   )
   // Only fetch authenticated-user data when logged in (this is a public page)
   const { data: myAutoBid } = useMyAutoBid(isAuthenticated ? (id ?? '') : '')
@@ -208,8 +211,19 @@ export default function AuctionDetailPage() {
   const [shippingForm] = Form.useForm<ShippingDetailsFormValues>()
 
   const [bidAmount, setBidAmount] = useState<number | null>(null)
-  const [isWatching, setIsWatching] = useState(false)
   const [autoBidModalOpen, setAutoBidModalOpen] = useState(false)
+  const [optimisticIsWatching, setOptimisticIsWatching] = useState<boolean | null>(null)
+  const isWatching = optimisticIsWatching !== null
+    ? optimisticIsWatching
+    : (data?.isWatched ?? (data as any)?.hasWatched ?? data?.auction?.isWatched ?? (data?.auction as any)?.hasWatched ?? false)
+
+  // Reset optimistic state when data syncs
+  useEffect(() => {
+    const serverWatched = data?.isWatched ?? (data as any)?.hasWatched ?? data?.auction?.isWatched ?? (data?.auction as any)?.hasWatched
+    if (optimisticIsWatching !== null && serverWatched === optimisticIsWatching) {
+      setOptimisticIsWatching(null)
+    }
+  }, [data?.isWatched, (data as any)?.hasWatched, data?.auction?.isWatched, (data?.auction as any)?.hasWatched, optimisticIsWatching])
   const [autoBidMax, setAutoBidMax] = useState<number | null>(null)
   const [autoBidIncrement, setAutoBidIncrement] = useState<number | null>(null)
   const [buyNowConfirmOpen, setBuyNowConfirmOpen] = useState(false)
@@ -325,11 +339,6 @@ export default function AuctionDetailPage() {
       hasJustDeposited.current = false
     }
   }, [data, id, storageKey, isAuthenticated, isLoading, isFetching])
-
-  // Sync isWatching from API response
-  useEffect(() => {
-    if (data?.isWatched != null) setIsWatching(data.isWatched)
-  }, [data?.isWatched])
 
   // Winner-order polling: when current user is the winner but the Order has
   // not yet been provisioned (transient race window), poll the auction detail
@@ -621,32 +630,37 @@ export default function AuctionDetailPage() {
       }
 
       const triggeredBuyNowCap = result.triggeredBuyNowCap === true
-      // When capped, the canonical settled price is finalPrice (= buyNowPrice),
-      // NOT the raw bid the buyer typed.
-      const effectiveAmount = triggeredBuyNowCap && typeof result.finalPrice === 'number'
+      // When capped or immediately outbid by an auto-bid, the canonical settled price 
+      // is finalPrice, NOT the raw bid the buyer typed.
+      const effectiveAmount = (triggeredBuyNowCap || result.wasImmediatelyOutbid) && typeof result.finalPrice === 'number'
         ? result.finalPrice
         : rawBid
 
-      // Optimistic update — will be corrected by SignalR broadcast
-      queryClient.setQueryData(
-        queryKeys.auctions.detailFor(id, detailUserScope),
-        (old: import('@/types').AuctionDetailDto | undefined) => old ? {
-          ...old,
-          auction: {
-            ...old.auction,
-            currentPrice: { ...old.auction.currentPrice, amount: effectiveAmount },
-            bidCount: (old.auction.bidCount ?? 0) + 1,
-          },
-          currentUserBidState: {
-            ...old.currentUserBidState,
-            position: result.wasImmediatelyOutbid ? 'outbid' : 'leading',
-            isCurrentWinner: !result.wasImmediatelyOutbid,
-            latestBidAmount: effectiveAmount,
-            latestBidAt: new Date().toISOString(),
-            hasAutoBid: old.currentUserBidState?.hasAutoBid ?? false,
-          },
-        } : old,
-      )
+      // If connected to SignalR, the server has already broadcasted AuctionStateChanged 
+      // and AuctionPositionChanged events which precisely patch the cache (including history).
+      // Applying a manual patch here would overwrite those real-time updates with potentially stale 
+      // or incomplete data (e.g., missing priceHistory updates).
+      if (!hub.connected) {
+        queryClient.setQueryData(
+          queryKeys.auctions.detailFor(id, detailUserScope),
+          (old: import('@/types').AuctionDetailDto | undefined) => old ? {
+            ...old,
+            auction: {
+              ...old.auction,
+              currentPrice: { ...old.auction.currentPrice, amount: effectiveAmount },
+              bidCount: (old.auction.bidCount ?? 0) + 1,
+            },
+            currentUserBidState: {
+              ...old.currentUserBidState,
+              position: result.wasImmediatelyOutbid ? 'outbid' : 'leading',
+              isCurrentWinner: !result.wasImmediatelyOutbid,
+              latestBidAmount: effectiveAmount,
+              latestBidAt: new Date().toISOString(),
+              hasAutoBid: old.currentUserBidState?.hasAutoBid ?? false,
+            },
+          } : old,
+        )
+      }
 
       if (triggeredBuyNowCap) {
         // Capped sale: show dedicated modal explaining the buy-now ceiling and
@@ -684,14 +698,18 @@ export default function AuctionDetailPage() {
     if (!id) return
     try {
       if (isWatching) {
+        setOptimisticIsWatching(false)
         await unwatchMutation.mutateAsync(id)
-        setIsWatching(false)
       } else {
+        setOptimisticIsWatching(true)
         await watchMutation.mutateAsync({ auctionId: id })
-        setIsWatching(true)
       }
-    } catch {
-      message.error(t('watchError', 'Failed to update watchlist'))
+    } catch (err) {
+      // Revert optimistic update on error
+      setOptimisticIsWatching(null)
+      const data = (err as { response?: { data?: any } })?.response?.data
+      const detail = data?.detail ?? data?.title ?? data?.message ?? (err as Error)?.message
+      message.error(detail ?? t('watchError', 'Failed to update watchlist'))
     }
   }
 

@@ -59,7 +59,7 @@ export function useUserHub() {
 
     connection.on('AuctionOutcomeForBidder', () => {
       qc.invalidateQueries({ queryKey: queryKeys.auctions.myBids() })
-      qc.invalidateQueries({ queryKey: queryKeys.auctions.watchlist() })
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.watchlistRoot() })
     })
 
     // Order events — invalidate to trigger refetch
