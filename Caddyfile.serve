@@ -4,7 +4,16 @@
 #   - gzip compression
 :80 {
 	root * /srv
+	encode gzip
+
+	# Prevent caching for index.html to ensure users always get the latest version
+	header /index.html Cache-Control "no-cache, no-store, must-revalidate"
+
+	# Cache hashed assets for a long time (1 year)
+	header /assets/* Cache-Control "public, max-age=31536000, immutable"
+
+	# Client-side routing
 	try_files {path} /index.html
 	file_server
-	encode gzip
 }
+
