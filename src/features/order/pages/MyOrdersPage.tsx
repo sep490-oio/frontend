@@ -102,10 +102,10 @@ export default function MyOrdersPage() {
   const params = isReturnsTab
     ? { pageNumber: page, pageSize: Math.max(pageSize, 50) }
     : {
-        pageNumber: page,
-        pageSize,
-        ...(statusFilter !== 'all' && !isGroupedTab ? { status: statusFilter } : {}),
-      }
+      pageNumber: page,
+      pageSize,
+      ...(statusFilter !== 'all' && !isGroupedTab ? { status: statusFilter } : {}),
+    }
 
   const { data, isLoading } = useMyOrders(params, { refetchInterval: 30000 })
 
@@ -117,8 +117,8 @@ export default function MyOrdersPage() {
     OrderReturnStatus.BuyerFollowup,
   ])
 
-  const ON_DELIVERING_GROUP = new Set([OrderStatus.OnDelivering, OrderStatus.Shipped, OrderStatus.PickedUp])
-  const PAID_GROUP = new Set([OrderStatus.Paid, OrderStatus.Processing])
+  const ON_DELIVERING_GROUP = new Set<string>([OrderStatus.OnDelivering, OrderStatus.Shipped, OrderStatus.PickedUp])
+  const PAID_GROUP = new Set<string>([OrderStatus.Paid, OrderStatus.Processing])
 
   const matchesTab = (orderStatus: string, tabKey: string) => {
     if (tabKey === 'all') return true
@@ -281,13 +281,13 @@ export default function MyOrdersPage() {
                 transition: 'all 200ms ease',
                 ...(statusFilter === tab.key
                   ? {
-                      background: 'var(--color-accent)',
-                      color: '#fff',
-                    }
+                    background: 'var(--color-accent)',
+                    color: '#fff',
+                  }
                   : {
-                      background: 'transparent',
-                      color: 'var(--color-text-secondary)',
-                    }),
+                    background: 'transparent',
+                    color: 'var(--color-text-secondary)',
+                  }),
               }}
             >
               {t(`statusTab.${tab.label}`, tab.label)}

@@ -10,7 +10,7 @@
 
 **Lưu ý demo:** Chuẩn bị 2 tab (2 tài khoản khác nhau) để minh họa rằng khi một tài khoản đặt bid xong, tài khoản kia nhận được thông báo tương ứng. Cần chuẩn bị demo kỹ hơn.
 
----
+--- done
 
 ## 2. Nghiệp vụ "Mua ngay" (Buy Now) – Trạng thái hiển thị sai
 
@@ -18,7 +18,7 @@
 
 **Yêu cầu:** Rà soát và cập nhật lại các trạng thái (status) liên quan đến luồng mua ngay trên giao diện.
 
----
+--- done
 
 ## 3. Auto Bid – Thiếu ràng buộc thời gian và xử lý xung đột
 

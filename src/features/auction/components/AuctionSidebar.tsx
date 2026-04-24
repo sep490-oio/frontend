@@ -326,13 +326,11 @@ export function AuctionSidebar({
 
   const showBidForm =
     auction.auctionType?.toLowerCase() !== 'sealed' &&
-    (isActive || isTerminal) &&
-    (isDesktop || isMobileScreen)
+    (isActive || isTerminal || isScheduled)
 
   const showSealedPanel =
     auction.auctionType?.toLowerCase() === 'sealed' &&
-    (isActive || isTerminal) &&
-    (isDesktop || isMobileScreen) &&
+    (isActive || isTerminal || isScheduled) &&
     !!auctionId
 
   const showBuyNow =
