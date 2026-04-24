@@ -311,6 +311,16 @@ export function AppLayout() {
                 placement="bottomRight"
               >
                 <Space style={{ cursor: 'pointer' }}>
+                  {!isMobile && (
+                    <span style={{ 
+                      fontSize: 14, 
+                      fontWeight: 500, 
+                      color: 'var(--color-text-primary)',
+                      fontFamily: SANS_FONT
+                    }}>
+                      {currentUserData?.profile?.displayName ?? currentUserData?.userName}
+                    </span>
+                  )}
                   <Avatar
                     size={32}
                     src={currentUserData?.profile?.avatarUrl}

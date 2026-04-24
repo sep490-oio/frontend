@@ -37,7 +37,7 @@
     "all": "Tất cả",
     "pendingPayment": "Chờ thanh toán",
     "paid": "Đã thanh toán",
-    "shipped": "Đang giao",
+    "on_delivering": "Đang giao",
     "delivered": "Đã giao",
     "completed": "Hoàn thành",
     "cancelled": "Đã hủy",

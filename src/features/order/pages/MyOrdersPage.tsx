@@ -78,7 +78,7 @@ export default function MyOrdersPage() {
     { key: 'all', label: 'all' },
     { key: OrderStatus.PendingPayment, label: 'pendingPayment' },
     { key: OrderStatus.Paid, label: 'paid' },
-    { key: OrderStatus.Shipped, label: 'shipped' },
+    { key: OrderStatus.OnDelivering, label: 'on_delivering' },
     { key: OrderStatus.Delivered, label: 'delivered' },
     { key: OrderStatus.Completed, label: 'completed' },
     { key: OrderStatus.Cancelled, label: 'cancelled' },

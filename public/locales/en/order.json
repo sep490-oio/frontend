@@ -37,7 +37,7 @@
     "all": "All",
     "pendingPayment": "Pending Payment",
     "paid": "Paid",
-    "shipped": "Shipped",
+    "on_delivering": "On Delivering",
     "delivered": "Delivered",
     "completed": "Completed",
     "cancelled": "Cancelled",

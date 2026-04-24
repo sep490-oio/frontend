@@ -590,9 +590,6 @@ export default function AuctionDetailPage() {
     if (serverQualStatus) {
       if (serverQualStatus === 'qualified' || serverQualStatus === 'waived') return 'qualified' as QualificationState
 
-      // Trust the optimistic flag to mask caching/webhook delays right after deposit
-      if (isQualifiedInStorage) return 'qualified' as QualificationState
-
       // If server says they are clearly not qualified (pending, rejected, etc.), return a boundary state
       if (
         (serverQualStatus as any) === 'rejected' ||
@@ -610,6 +607,9 @@ export default function AuctionDetailPage() {
           : 'before_window'
         return base === 'qualified' ? 'window_open' : base // Ensure we don't return 'qualified'
       }
+      
+      // Trust the optimistic flag to mask caching/webhook delays right after deposit
+      if (isQualifiedInStorage) return 'qualified' as QualificationState
     }
 
     // 3. Fallback for guests or initial loads: trust localStorage ONLY for guests or very early loads
@@ -1262,7 +1262,7 @@ export default function AuctionDetailPage() {
                 : undefined
             }
             canBid={isActive && isAuthenticated && qualState === 'qualified' && !isSeller}
-            canBuyNow={isAuthenticated && !isSeller && !isTerminal}
+            canBuyNow={isAuthenticated && !isSeller && !isTerminal && qualState === 'qualified'}
             currentBuyerOrder={data?.currentBuyerOrder}
             onViewOrderClick={(orderId) => navigate(`/me/orders/${orderId}`)}
             isOrderProvisioning={pollingForOrder}
