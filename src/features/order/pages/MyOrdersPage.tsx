@@ -97,13 +97,14 @@ export default function MyOrdersPage() {
 
   // The "Returns" tab is a client-side filter: we pull a wider page (no BE
   // status param) and filter by the presence of an active OrderReturn.
+  const isGroupedTab = statusFilter === OrderStatus.OnDelivering || statusFilter === OrderStatus.Paid
   const isReturnsTab = statusFilter === RETURNS_TAB_KEY
   const params = isReturnsTab
     ? { pageNumber: page, pageSize: Math.max(pageSize, 50) }
     : {
         pageNumber: page,
         pageSize,
-        ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
+        ...(statusFilter !== 'all' && !isGroupedTab ? { status: statusFilter } : {}),
       }
 
   const { data, isLoading } = useMyOrders(params, { refetchInterval: 30000 })
@@ -116,11 +117,23 @@ export default function MyOrdersPage() {
     OrderReturnStatus.BuyerFollowup,
   ])
 
+  const ON_DELIVERING_GROUP = new Set([OrderStatus.OnDelivering, OrderStatus.Shipped, OrderStatus.PickedUp])
+  const PAID_GROUP = new Set([OrderStatus.Paid, OrderStatus.Processing])
+
+  const matchesTab = (orderStatus: string, tabKey: string) => {
+    if (tabKey === 'all') return true
+    if (tabKey === OrderStatus.OnDelivering) return ON_DELIVERING_GROUP.has(orderStatus as OrderStatus)
+    if (tabKey === OrderStatus.Paid) return PAID_GROUP.has(orderStatus as OrderStatus)
+    return orderStatus === tabKey
+  }
+
   // Filter out orders that the user is selling (outbound). /me/orders should strictly be for purchases.
-  const items = (data?.items ?? []).filter((order: OrderDto) => order.buyerId === user?.id)
+  // We relax the filter if user.id is not yet synced to prevent empty lists on first load.
+  const items = (data?.items ?? []).filter((order: OrderDto) => !user?.id || order.buyerId === user.id)
+
   const displayItems = isReturnsTab
     ? items.filter((o) => o.return && ACTIVE_RETURN_STATUSES.has(o.return.status))
-    : items
+    : items.filter((o) => matchesTab(o.status, statusFilter))
 
   const columns: ColumnsType<OrderDto> = [
     {

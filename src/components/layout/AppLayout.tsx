@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Outlet, useNavigate, useLocation, Link } from 'react-router'
 import { Layout, Avatar, Dropdown, Button, Space, Drawer, Alert } from 'antd'
 import { FileProtectOutlined } from '@ant-design/icons'
@@ -23,7 +23,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/hooks/useTheme'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
-import { useAppSelector } from '@/app/store'
+import { useAppSelector, useAppDispatch, setUser } from '@/app/store'
 import { NotificationDropdown } from '@/features/notification/components/NotificationDropdown'
 import { TermsAcceptanceModal } from '@/components/terms/TermsAcceptanceModal'
 import { SpotlightSearchModal } from '@/components/layout/SpotlightSearchModal'
@@ -57,6 +57,14 @@ export function AppLayout() {
   const { isMobile, isTablet } = useBreakpoint()
 
   const isNarrow = isMobile || isTablet
+  const dispatch = useAppDispatch()
+
+  // Sync user data to redux store for global access (e.g. ownership checks)
+  useEffect(() => {
+    if (currentUserData) {
+      dispatch(setUser(currentUserData))
+    }
+  }, [currentUserData, dispatch])
 
   // Platform terms — preview-first modal (no route redirect). The user can
   // dismiss the modal and keep browsing; gated actions still require acceptance
