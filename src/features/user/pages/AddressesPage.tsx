@@ -5,7 +5,6 @@ import {
   Button,
   Input,
   Select,
-  Space,
   Spin,
   Tag,
   Modal,
@@ -14,7 +13,8 @@ import {
   Empty,
   Popconfirm,
   App,
-  Form
+  Form,
+  Flex
 } from 'antd'
 import {
   PlusOutlined,
@@ -24,6 +24,7 @@ import {
   StarFilled,
   HomeOutlined,
   BankOutlined,
+  EnvironmentOutlined,
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
@@ -37,6 +38,7 @@ import {
 import type { UserAddressDto, GhnMetadata } from '@/types'
 import type { AddressType } from '@/types/enums'
 import GhnAddressSelect from '@/components/ui/GhnAddressSelect'
+import { MONO_FONT, SANS_FONT } from '@/styles/tokens'
 
 const { Title, Text } = Typography
 
@@ -134,42 +136,95 @@ export default function AddressesPage() {
 
   if (isLoading) {
     return (
-      <div style={{ textAlign: 'center', padding: 48 }}>
+      <div style={{ textAlign: 'center', padding: 80 }}>
         <Spin size="large" />
       </div>
     )
   }
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: isMobile ? '0 12px' : undefined }}>
-      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', gap: isMobile ? 12 : 0, marginBottom: 24 }}>
-        <Title level={2} style={{ margin: 0 }}>{t('addresses.title')}</Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openAddModal}>
+    <div style={{ maxWidth: 1400, margin: '0 auto', padding: isMobile ? '12px 16px 80px' : '0 24px 80px' }}>
+      {/* Header */}
+      <Flex
+        justify="space-between"
+        align={isMobile ? 'stretch' : 'flex-end'}
+        vertical={isMobile}
+        gap={isMobile ? 20 : 0}
+        style={{ marginBottom: 32 }}
+      >
+        <div>
+          <Title
+            level={2}
+            style={{
+              fontFamily: SANS_FONT,
+              fontWeight: 600,
+              fontSize: isMobile ? 24 : 32,
+              color: 'var(--color-text-primary)',
+              margin: 0,
+            }}
+          >
+            <EnvironmentOutlined style={{ marginRight: 12, color: 'var(--color-accent)' }} />
+            {t('addresses.title')}
+          </Title>
+          <Text style={{ fontSize: 16, color: 'var(--color-text-secondary)' }}>
+            {t('addresses.subtitle', 'Manage your shipping and billing locations')}
+          </Text>
+        </div>
+
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          size="large"
+          onClick={openAddModal}
+          block={isMobile}
+          style={{
+            background: 'var(--color-accent)',
+            fontWeight: 600,
+            height: 48,
+            borderRadius: 12,
+            padding: '0 32px'
+          }}
+        >
           {t('addresses.addAddress')}
         </Button>
-      </div>
+      </Flex>
 
       {!addresses?.length ? (
-        <Empty description={t('addresses.empty')} />
+        <Empty
+          description={t('addresses.empty')}
+          style={{ padding: '80px 0', background: 'var(--color-bg-card)', borderRadius: 24, border: '1px solid var(--color-border)' }}
+        >
+          <Button type="primary" ghost icon={<PlusOutlined />} onClick={openAddModal} style={{ borderRadius: 12 }}>
+            {t('addresses.addNew', 'Add your first address')}
+          </Button>
+        </Empty>
       ) : (
-        <Row gutter={[16, 16]}>
+        <Row gutter={[24, 24]}>
           {addresses.map((addr) => (
-            <Col xs={24} sm={12} key={addr.id}>
+            <Col xs={24} md={12} xl={8} key={addr.id}>
               <Card
-                style={{ height: '100%' }}
+                style={{
+                  height: '100%',
+                  background: 'var(--color-bg-card)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 24,
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  boxShadow: 'var(--shadow-sm)',
+                }}
+                styles={{ body: { padding: isMobile ? '20px' : '24px' } }}
                 actions={[
                   <Button
                     key="edit"
                     type="text"
                     icon={<EditOutlined />}
                     onClick={() => openEditModal(addr)}
+                    style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}
                   >
                     {t('addresses.edit')}
                   </Button>,
                   <Popconfirm
                     key="delete"
                     title={t('addresses.deleteConfirm')}
-                    description={t('addresses.deleteDesc')}
                     onConfirm={() => onDelete(addr.id)}
                     okText={t('addresses.deleteOk')}
                     cancelText={t('addresses.deleteCancel')}
@@ -179,14 +234,15 @@ export default function AddressesPage() {
                       danger
                       icon={<DeleteOutlined />}
                       loading={removeAddress.isPending}
+                      style={{ fontWeight: 600 }}
                     >
                       {t('addresses.delete')}
                     </Button>
                   </Popconfirm>,
                   addr.isDefault ? (
-                    <Button key="default" type="text" disabled icon={<StarFilled style={{ color: '#faad14' }} />}>
-                      {t('addresses.isDefault')}
-                    </Button>
+                    <div key="default" style={{ color: '#faad14', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                      <StarFilled /> {t('addresses.isDefault').toUpperCase()}
+                    </div>
                   ) : (
                     <Button
                       key="default"
@@ -194,27 +250,44 @@ export default function AddressesPage() {
                       icon={<StarOutlined />}
                       onClick={() => onSetDefault(addr.id)}
                       loading={setDefault.isPending}
+                      style={{ fontWeight: 600 }}
                     >
                       {t('addresses.setDefault')}
                     </Button>
                   ),
                 ]}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--color-accent)'
+                  e.currentTarget.style.boxShadow = 'var(--shadow-md)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--color-border)'
+                  e.currentTarget.style.boxShadow = 'var(--shadow-sm)'
+                }}
               >
-                <Space direction="vertical" style={{ width: '100%' }}>
-                  <Space>
+                <Flex vertical gap={20}>
+                  <Flex justify="space-between" align="center">
                     <Tag
                       icon={addr.type === 'home' ? <HomeOutlined /> : <BankOutlined />}
-                      color={addr.type === 'home' ? 'blue' : 'green'}
+                      color={addr.type === 'home' ? 'blue' : 'purple'}
+                      style={{ borderRadius: 8, padding: '4px 12px', textTransform: 'uppercase', fontWeight: 700, fontSize: 11 }}
                     >
                       {addr.type === 'home' ? t('addresses.typeHome') : t('addresses.typeWork')}
                     </Tag>
-                    {addr.isDefault && <Tag color="gold">{t('addresses.isDefault')}</Tag>}
-                  </Space>
-                  <Text strong>{addr.recipientName} - {addr.phoneNumber}</Text>
-                  <Text strong>{addr.street}</Text>
-                  <Text>{`${addr.ward}, ${addr.district}`}</Text>
-                  <Text>{`${addr.city}${addr.postalCode ? `, ${addr.postalCode}` : ''}`}</Text>
-                </Space>
+                    {addr.isDefault && <Tag color="gold" style={{ borderRadius: 8, fontWeight: 700, fontSize: 11, padding: '4px 12px' }}>DEFAULT</Tag>}
+                  </Flex>
+                  
+                  <div>
+                    <Title level={5} style={{ margin: '0 0 4px 0', fontFamily: SANS_FONT, fontWeight: 600 }}>{addr.recipientName}</Title>
+                    <Text type="secondary" style={{ fontFamily: MONO_FONT, fontSize: 14 }}>{addr.phoneNumber}</Text>
+                  </div>
+
+                  <div style={{ padding: '16px', background: 'var(--color-bg-surface)', borderRadius: 16, border: '1px solid var(--color-border)' }}>
+                    <Text strong style={{ display: 'block', fontSize: 14, marginBottom: 4, color: 'var(--color-text-primary)' }}>{addr.street}</Text>
+                    <Text type="secondary" style={{ display: 'block', fontSize: 13 }}>{`${addr.ward}, ${addr.district}`}</Text>
+                    <Text type="secondary" style={{ display: 'block', fontSize: 13 }}>{`${addr.city}${addr.postalCode ? ` (${addr.postalCode})` : ''}`}</Text>
+                  </div>
+                </Flex>
               </Card>
             </Col>
           ))}
@@ -223,20 +296,27 @@ export default function AddressesPage() {
 
       {/* Add/Edit Modal */}
       <Modal
-        title={editingAddress ? t('addresses.editAddress') : t('addresses.addNew')}
+        title={
+          <span style={{ fontFamily: SANS_FONT, fontWeight: 600 }}>
+            {editingAddress ? t('addresses.editAddress') : t('addresses.addNew')}
+          </span>
+        }
         open={modalOpen}
         onCancel={() => setModalOpen(false)}
         onOk={onSubmit}
         confirmLoading={addAddress.isPending || updateAddress.isPending}
         okText={editingAddress ? t('addresses.update') : t('addresses.add')}
         cancelText={t('addresses.cancel')}
-        width={800}
+        width={isMobile ? '95%' : 720}
+        centered
+        styles={{ body: { padding: '8px 0' } }}
       >
         <Form
           form={form}
           layout="vertical"
           style={{ marginTop: 24 }}
           initialValues={{ type: 'home' }}
+          requiredMark="optional"
         >
           <Row gutter={16}>
             <Col xs={24} sm={12}>
@@ -245,7 +325,7 @@ export default function AddressesPage() {
                 label={t('addresses.recipientName')}
                 rules={[{ required: true, message: t('addresses.validation.recipientRequired') }]}
               >
-                <Input placeholder={t('addresses.recipientNamePlaceholder')} />
+                <Input placeholder={t('addresses.recipientNamePlaceholder')} style={{ height: 48, borderRadius: 12 }} />
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>
@@ -254,7 +334,7 @@ export default function AddressesPage() {
                 label={t('addresses.phoneNumber')}
                 rules={[{ required: true, message: t('addresses.validation.phoneRequired') }]}
               >
-                <Input placeholder={t('addresses.phoneNumberPlaceholder')} />
+                <Input placeholder={t('addresses.phoneNumberPlaceholder')} style={{ height: 48, borderRadius: 12 }} />
               </Form.Item>
             </Col>
           </Row>
@@ -264,7 +344,7 @@ export default function AddressesPage() {
             label={t('addresses.street')}
             rules={[{ required: true, message: t('addresses.validation.streetRequired') }]}
           >
-            <Input placeholder={t('addresses.streetPlaceholder')} />
+            <Input placeholder={t('addresses.streetPlaceholder')} style={{ height: 48, borderRadius: 12 }} />
           </Form.Item>
 
           <GhnAddressSelect
@@ -281,7 +361,7 @@ export default function AddressesPage() {
                 name="postalCode"
                 label={t('addresses.postalCode')}
               >
-                <Input placeholder={t('addresses.postalCodePlaceholder')} />
+                <Input placeholder={t('addresses.postalCodePlaceholder')} style={{ height: 48, borderRadius: 12 }} />
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>
@@ -291,6 +371,8 @@ export default function AddressesPage() {
                 rules={[{ required: true, message: t('addresses.validation.typeRequired') }]}
               >
                 <Select
+                  style={{ height: 48 }}
+                  className="oio-select"
                   options={[
                     { value: 'home', label: t('addresses.typeHome') },
                     { value: 'work', label: t('addresses.typeWork') },

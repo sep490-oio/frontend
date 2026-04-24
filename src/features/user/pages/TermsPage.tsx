@@ -11,6 +11,7 @@ import {
   Flex,
   Row,
   Col,
+  Empty,
 } from 'antd'
 import {
   CheckCircleOutlined,
@@ -18,6 +19,7 @@ import {
   FilePdfOutlined,
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
+import { SANS_FONT } from '@/styles/tokens'
 import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -194,59 +196,61 @@ export default function TermsPage() {
 
   // ── Left pane: grouped list ────────────────────────────────────────
   const leftPane = (
-    <Space direction="vertical" style={{ width: '100%' }} size={16}>
+    <Space direction="vertical" style={{ width: '100%' }} size={24}>
       {grouped.length === 0 && (
         <Alert
           type="info"
           showIcon
           message={t('terms.noTerms', 'No terms available')}
           description={t('terms.noTermsDesc', 'There are currently no terms to review.')}
+          style={{ borderRadius: 16 }}
         />
       )}
       {grouped.map(([groupKey, list]) => (
         <section key={groupKey}>
-          <Typography.Title level={5} style={{ marginBottom: 8 }}>
+          <Typography.Title level={5} style={{ marginBottom: 12, fontFamily: SANS_FONT, fontWeight: 600, textTransform: 'uppercase', fontSize: 12, letterSpacing: '0.05em', color: 'var(--color-text-secondary)' }}>
             {groupLabel(groupKey, t)}
           </Typography.Title>
-          <Space direction="vertical" style={{ width: '100%' }} size={8}>
+          <Space direction="vertical" style={{ width: '100%' }} size={12}>
             {list.map((term) => {
               const accepted = acceptedMap.has(term.id)
               const isSelected = term.id === selectedId
               return (
                 <Card
                   key={term.id}
-                  size="small"
                   hoverable
                   onClick={() => setSelectedId(term.id)}
                   style={{
-                    borderColor: isSelected ? 'var(--color-accent)' : undefined,
-                    background: isSelected ? 'rgba(196, 146, 61, 0.05)' : undefined,
+                    borderColor: isSelected ? 'var(--color-accent)' : 'var(--color-border)',
+                    background: isSelected ? 'var(--color-accent-light)' : 'var(--color-bg-card)',
                     cursor: 'pointer',
+                    borderRadius: 16,
+                    transition: 'all 0.3s ease',
+                    boxShadow: isSelected ? 'var(--shadow-md)' : 'var(--shadow-sm)',
                   }}
+                  styles={{ body: { padding: 16 } }}
                 >
-                  <Flex justify="space-between" align="center" gap={8}>
+                  <Flex justify="space-between" align="center" gap={12}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <Flex align="center" gap={6} style={{ marginBottom: 4 }}>
-                        <FilePdfOutlined style={{ color: 'var(--color-accent)' }} />
-                        <Typography.Text strong ellipsis>
+                      <Flex align="center" gap={8} style={{ marginBottom: 4 }}>
+                        <FilePdfOutlined style={{ color: 'var(--color-accent)', fontSize: 18 }} />
+                        <Typography.Text strong ellipsis style={{ fontSize: 15, color: isSelected ? 'var(--color-accent)' : 'var(--color-text-primary)' }}>
                           {term.fileName ?? groupLabel(groupKey, t)}
                         </Typography.Text>
-                        <Tag color="blue">v{term.version}</Tag>
                       </Flex>
-                      <Typography.Text type="secondary" style={{ fontSize: 11 }}>
-                        {term.publishedAt
-                          ? `${t('terms.published', 'Published')}: ${dayjs(term.publishedAt).format('DD/MM/YYYY')}`
-                          : `${t('terms.created', 'Created')}: ${dayjs(term.createdAt).format('DD/MM/YYYY')}`}
-                      </Typography.Text>
+                      <Flex align="center" gap={8}>
+                        <Tag color="blue" style={{ borderRadius: 6, margin: 0 }}>v{term.version}</Tag>
+                        <Typography.Text type="secondary" style={{ fontSize: 11 }}>
+                          {term.publishedAt
+                            ? `${dayjs(term.publishedAt).format('DD/MM/YYYY')}`
+                            : `${dayjs(term.createdAt).format('DD/MM/YYYY')}`}
+                        </Typography.Text>
+                      </Flex>
                     </div>
                     {accepted ? (
-                      <Tag icon={<CheckCircleOutlined />} color="success">
-                        {t('terms.accepted', 'Accepted')}
-                      </Tag>
+                      <CheckCircleOutlined style={{ color: 'var(--color-success)', fontSize: 20 }} />
                     ) : (
-                      <Tag icon={<ClockCircleOutlined />} color="warning">
-                        {t('terms.pending', 'Pending')}
-                      </Tag>
+                      <ClockCircleOutlined style={{ color: 'var(--color-warning)', fontSize: 20 }} />
                     )}
                   </Flex>
                 </Card>
@@ -260,59 +264,70 @@ export default function TermsPage() {
 
   // ── Right pane: preview + actions ──────────────────────────────────
   const rightPane = selected ? (
-    <Card>
-      <Space direction="vertical" style={{ width: '100%' }} size={12}>
-        <Flex justify="space-between" align="flex-start" wrap="wrap" gap={8}>
+    <Card 
+      style={{ 
+        background: 'var(--color-bg-card)', 
+        border: '1px solid var(--color-border)', 
+        borderRadius: 24,
+        boxShadow: 'var(--shadow-sm)'
+      }}
+      styles={{ body: { padding: isMobile ? '20px' : '32px' } }}
+    >
+      <Space direction="vertical" style={{ width: '100%' }} size={24}>
+        <Flex justify="space-between" align="flex-start" wrap="wrap" gap={16}>
           <div>
-            <Typography.Title level={4} style={{ margin: 0 }}>
+            <Typography.Title level={3} style={{ margin: 0, fontFamily: SANS_FONT, fontWeight: 600 }}>
               {selected.fileName ?? groupLabel(selected.type, t)}
             </Typography.Title>
-            <Space size={6} wrap style={{ marginTop: 4 }}>
-              <Tag>{groupLabel(selected.type, t)}</Tag>
-              <Tag color="blue">v{selected.version}</Tag>
+            <Space size={12} wrap style={{ marginTop: 8 }}>
+              <Tag color="blue" style={{ borderRadius: 8, padding: '4px 12px' }}>v{selected.version}</Tag>
               {selected.publishedAt && (
-                <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                <Typography.Text type="secondary" style={{ fontSize: 14 }}>
                   {t('terms.published', 'Published')}: {dayjs(selected.publishedAt).format('DD/MM/YYYY')}
                 </Typography.Text>
               )}
             </Space>
           </div>
           {selectedAccepted ? (
-            <Tag icon={<CheckCircleOutlined />} color="success">
+            <Tag icon={<CheckCircleOutlined />} color="success" style={{ borderRadius: 10, padding: '6px 16px', fontSize: 12 }}>
               {t('terms.accepted', 'Accepted')}
               {selectedAcceptedAt ? ` · ${dayjs(selectedAcceptedAt).format('DD/MM/YYYY')}` : ''}
             </Tag>
           ) : (
-            <Tag icon={<ClockCircleOutlined />} color="warning">
+            <Tag icon={<ClockCircleOutlined />} color="warning" style={{ borderRadius: 10, padding: '6px 16px', fontSize: 12 }}>
               {t('terms.pending', 'Pending')}
             </Tag>
           )}
         </Flex>
 
         {selected.contentUrl && !previewErrored ? (
-          <object
-            data={`${selected.contentUrl}#toolbar=1`}
-            type="application/pdf"
-            onError={() => setPreviewErrored(true)}
-            style={{
-              width: '100%',
-              height: '70vh',
-              minHeight: 480,
-              border: '1px solid var(--color-border)',
-              borderRadius: 6,
-            }}
-          >
-            <Alert
-              type="info"
-              showIcon
-              message={t('terms.previewUnavailable', 'Preview unavailable')}
-              description={t('terms.useActionsBelow', 'Use the actions below to open or download the document.')}
-            />
-          </object>
+          <div style={{ position: 'relative', borderRadius: 16, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
+            <object
+              data={`${selected.contentUrl}#toolbar=1`}
+              type="application/pdf"
+              onError={() => setPreviewErrored(true)}
+              style={{
+                width: '100%',
+                height: isMobile ? '50vh' : '70vh',
+                minHeight: isMobile ? 400 : 600,
+                display: 'block'
+              }}
+            >
+              <div style={{ padding: 40, textAlign: 'center', background: 'var(--color-bg-surface)' }}>
+                <Alert
+                  type="info"
+                  showIcon
+                  message={t('terms.previewUnavailable', 'Preview unavailable')}
+                  description={t('terms.useActionsBelow', 'Use the actions below to open or download the document.')}
+                />
+              </div>
+            </object>
+          </div>
         ) : (
           <Alert
             type="warning"
             showIcon
+            style={{ borderRadius: 16, padding: 16 }}
             message={t('terms.previewUnavailable', 'Preview unavailable')}
             description={
               selected.contentUrl
@@ -322,25 +337,30 @@ export default function TermsPage() {
           />
         )}
 
-        <Flex gap={8} wrap="wrap">
+        <Flex gap={12} wrap="wrap" justify={isMobile ? 'stretch' : 'flex-start'}>
           {selected.contentUrl && (
             <>
               <Button
+                size="large"
+                block={isMobile}
                 onClick={() => window.open(selected.contentUrl, '_blank', 'noopener,noreferrer')}
+                style={{ borderRadius: 12, fontWeight: 600 }}
               >
                 {t('terms.openInNewTab', 'Open in new tab')}
               </Button>
-              <a href={selected.contentUrl} download>
-                <Button>{t('terms.download', 'Download')}</Button>
+              <a href={selected.contentUrl} download style={{ display: isMobile ? 'block' : 'inline-block', width: isMobile ? '100%' : 'auto' }}>
+                <Button size="large" block={isMobile} style={{ borderRadius: 12, fontWeight: 600, width: '100%' }}>{t('terms.download', 'Download')}</Button>
               </a>
             </>
           )}
           {!selectedAccepted && (
             <Button
               type="primary"
+              size="large"
+              block={isMobile}
               loading={acceptMutation.isPending}
               onClick={handleAccept}
-              style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
+              style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)', borderRadius: 12, fontWeight: 600, padding: '0 40px' }}
             >
               {t('terms.accept', 'Accept')}
             </Button>
@@ -349,27 +369,27 @@ export default function TermsPage() {
       </Space>
     </Card>
   ) : (
-    <Alert
-      type="info"
-      showIcon
-      message={t('terms.selectToPreview', 'Select a document to preview')}
-    />
+    <Card style={{ borderRadius: 24, textAlign: 'center', padding: 80, background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
+      <Empty description={t('terms.selectToPreview', 'Select a document to preview')} />
+    </Card>
   )
 
   return (
-    <div style={{ maxWidth: 1280, margin: '0 auto', padding: isMobile ? '0 12px' : '0 24px' }}>
-      <Typography.Title level={2} style={{ marginBottom: 4 }}>
-        {t('terms.pageTitle', 'Terms & Conditions')}
-      </Typography.Title>
-      <Typography.Paragraph type="secondary" style={{ marginBottom: 24 }}>
-        {t('terms.pageSubtitle', 'Review and accept the terms that apply to your use of the platform.')}
-      </Typography.Paragraph>
+    <div style={{ maxWidth: 1280, margin: '0 auto', padding: isMobile ? '12px 16px 80px' : '0 24px 80px' }}>
+      <div style={{ marginBottom: 32 }}>
+        <Typography.Title level={2} style={{ marginBottom: 4, fontFamily: SANS_FONT, fontWeight: 600, fontSize: isMobile ? 24 : 32 }}>
+          {t('terms.pageTitle', 'Terms & Conditions')}
+        </Typography.Title>
+        <Typography.Paragraph type="secondary" style={{ fontSize: 16, margin: 0 }}>
+          {t('terms.pageSubtitle', 'Review and accept the terms that apply to your use of the platform.')}
+        </Typography.Paragraph>
+      </div>
 
-      <Row gutter={[16, 16]}>
-        <Col xs={24} md={9}>
+      <Row gutter={[32, 32]}>
+        <Col xs={24} lg={8}>
           {leftPane}
         </Col>
-        <Col xs={24} md={15}>
+        <Col xs={24} lg={16}>
           {rightPane}
         </Col>
       </Row>

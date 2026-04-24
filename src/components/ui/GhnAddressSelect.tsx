@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import type { CSSProperties } from 'react'
 import { Form, Select, Row, Col, Input } from 'antd'
 import type { FormInstance } from 'antd'
 import { useProvinces, useDistricts, useWards } from '@/features/address/api'
@@ -11,6 +12,7 @@ interface GhnAddressSelectProps {
   wardName?: string | string[]
   metadataName?: string | string[]
   layout?: 'vertical' | 'horizontal'
+  style?: CSSProperties
 }
 
 export default function GhnAddressSelect({
@@ -19,6 +21,7 @@ export default function GhnAddressSelect({
   districtName = 'senderDistrict',
   wardName = 'senderWard',
   metadataName = 'senderMetadata',
+  style,
 }: GhnAddressSelectProps) {
   const { t } = useTranslation('warehouse')
 
@@ -81,7 +84,7 @@ export default function GhnAddressSelect({
   // We'll trust exact match for now as long as we use this picker everywhere.
 
   return (
-    <Row gutter={12}>
+    <Row gutter={12} style={style}>
       <Col span={8}>
         <Form.Item
           name={provinceName}

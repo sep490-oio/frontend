@@ -1,10 +1,12 @@
-import { Card, Row, Col, Button, Space, Steps, Empty } from 'antd'
+import { Card, Row, Col, Button, Steps, Empty, Typography, Flex } from 'antd'
 import {
   WalletOutlined,
   ShoppingOutlined,
   ThunderboltOutlined,
   CommentOutlined,
   ShopOutlined,
+  DashboardOutlined,
+  RightOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -15,7 +17,9 @@ import { useMyOrders } from '@/features/order/api'
 import { useDisputes } from '@/features/dispute/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatCurrency, formatDateTime } from '@/utils/format'
-import { SERIF_FONT, MONO_FONT } from '@/styles/tokens'
+import { MONO_FONT, SANS_FONT } from '@/styles/tokens'
+
+const { Title, Text } = Typography
 
 export default function DashboardPage() {
   const { t } = useTranslation('user')
@@ -32,124 +36,183 @@ export default function DashboardPage() {
   const disputes = disputesData?.items ?? []
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px 12px 60px' : '24px 24px 80px' }}>
-      {/* Welcome */}
-      <h1
-        style={{
-          fontFamily: SERIF_FONT,
-          fontWeight: 400,
-          fontSize: isMobile ? 22 : 28,
-          color: 'var(--color-text-primary)',
-          marginBottom: 4,
-        }}
-      >
-        {t('dashboard.title')}
-      </h1>
-      <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, marginBottom: 24 }}>
-        {t('dashboard.subtitle')}
-      </p>
+    <div style={{ maxWidth: 1400, margin: '0 auto', padding: isMobile ? '12px 16px 80px' : '0 24px 80px' }}>
+      {/* Header */}
+      <div style={{ marginBottom: isMobile ? 24 : 40 }}>
+        <Title
+          level={2}
+          style={{
+            fontFamily: SANS_FONT,
+            fontWeight: 600,
+            color: 'var(--color-text-primary)',
+            marginBottom: 4,
+            fontSize: isMobile ? 24 : 32,
+          }}
+        >
+          <DashboardOutlined style={{ marginRight: 12, color: 'var(--color-accent)' }} />
+          {t('dashboard.title', 'User Dashboard')}
+        </Title>
+        <Text style={{ color: 'var(--color-text-secondary)', fontSize: 16 }}>
+          {t('dashboard.subtitle', 'Welcome back! Here is what is happening with your account.')}
+        </Text>
+      </div>
 
-      {/* Stats Row */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={12} sm={6}>
-          <Card style={{ background: 'var(--color-accent-light)', borderColor: 'var(--color-border)', borderRadius: 12, cursor: 'pointer' }} onClick={() => navigate('/me/wallet')}>
-            <WalletOutlined style={{ color: 'var(--color-accent)', fontSize: 20, marginBottom: 8 }} />
-            <div style={{ color: 'var(--color-text-secondary)', fontSize: 12, marginBottom: 4 }}>
-              {t('dashboard.wallet')}
+      {/* Stats Row - Premium Glassy Cards */}
+      <Row gutter={isMobile ? [12, 12] : [20, 20]} style={{ marginBottom: isMobile ? 32 : 48 }}>
+        {[
+          { label: t('dashboard.wallet', 'Wallet'), value: wallet ? formatCurrency(wallet.availableBalance, wallet.currency) : '--', icon: <WalletOutlined />, path: '/me/wallet', color: 'var(--color-success)' },
+          { label: t('dashboard.activeBids', 'Active Bids'), value: activeBids.length, icon: <ThunderboltOutlined />, path: '/me/bids', color: 'var(--color-accent)' },
+          { label: t('dashboard.orders', 'Orders'), value: recentOrders.length, icon: <ShoppingOutlined />, path: '/me/orders', color: 'var(--color-warning)' },
+          { label: t('dashboard.disputes', 'Disputes'), value: disputes.length, icon: <CommentOutlined />, path: '/me/disputes', color: 'var(--color-danger)' },
+        ].map((stat, idx) => (
+          <Col xs={24} sm={12} lg={6} key={idx}>
+            <div
+              className="oio-press"
+              onClick={() => navigate(stat.path)}
+              style={{
+                background: 'var(--color-bg-card)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 24,
+                padding: '24px',
+                cursor: 'pointer',
+                height: '100%',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                boxShadow: 'var(--shadow-sm)',
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              <Flex align="center" gap={16}>
+                <div style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: 16,
+                  background: 'var(--color-bg-surface)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 24,
+                  color: stat.color,
+                  boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.05)'
+                }}>
+                  {stat.icon}
+                </div>
+                <div>
+                  <Text style={{ fontSize: 11, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
+                    {stat.label}
+                  </Text>
+                  <div style={{ fontFamily: MONO_FONT, fontSize: isMobile ? 22 : 26, fontWeight: 700, color: 'var(--color-text-primary)', marginTop: 2 }}>
+                    {stat.value}
+                  </div>
+                </div>
+              </Flex>
             </div>
-            <div style={{ fontFamily: MONO_FONT, fontSize: 22, fontWeight: 600, color: 'var(--color-text-primary)' }}>
-              {wallet ? formatCurrency(wallet.availableBalance, wallet.currency) : '--'}
-            </div>
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card style={{ background: 'var(--color-accent-light)', borderColor: 'var(--color-border)', borderRadius: 12, cursor: 'pointer' }} onClick={() => navigate('/me/bids')}>
-            <ThunderboltOutlined style={{ color: 'var(--color-accent)', fontSize: 20, marginBottom: 8 }} />
-            <div style={{ color: 'var(--color-text-secondary)', fontSize: 12, marginBottom: 4 }}>
-              {t('dashboard.activeBids')}
-            </div>
-            <div style={{ fontFamily: MONO_FONT, fontSize: 22, fontWeight: 600, color: 'var(--color-text-primary)' }}>
-              {activeBids.length}
-            </div>
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card style={{ background: 'var(--color-accent-light)', borderColor: 'var(--color-border)', borderRadius: 12, cursor: 'pointer' }} onClick={() => navigate('/me/orders')}>
-            <ShoppingOutlined style={{ color: 'var(--color-accent)', fontSize: 20, marginBottom: 8 }} />
-            <div style={{ color: 'var(--color-text-secondary)', fontSize: 12, marginBottom: 4 }}>
-              {t('dashboard.orders')}
-            </div>
-            <div style={{ fontFamily: MONO_FONT, fontSize: 22, fontWeight: 600, color: 'var(--color-text-primary)' }}>
-              {recentOrders.length}
-            </div>
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card style={{ background: 'var(--color-accent-light)', borderColor: 'var(--color-border)', borderRadius: 12, cursor: 'pointer' }} onClick={() => navigate('/me/disputes')}>
-            <CommentOutlined style={{ color: 'var(--color-accent)', fontSize: 20, marginBottom: 8 }} />
-            <div style={{ color: 'var(--color-text-secondary)', fontSize: 12, marginBottom: 4 }}>
-              {t('dashboard.disputes')}
-            </div>
-            <div style={{ fontFamily: MONO_FONT, fontSize: 22, fontWeight: 600, color: 'var(--color-text-primary)' }}>
-              {disputes.length}
-            </div>
-          </Card>
-        </Col>
+          </Col>
+        ))}
       </Row>
 
-      <Row gutter={[24, 24]}>
-        {/* Active Bids */}
+      <Row gutter={isMobile ? [24, 24] : [32, 32]}>
+        {/* Main Content Area */}
         <Col xs={24} lg={16}>
-          <Card
-            title={<span style={{ fontFamily: SERIF_FONT, fontWeight: 400 }}>{t('dashboard.activeBidsTitle')}</span>}
-            extra={<Button type="link" onClick={() => navigate('/me/bids')} style={{ color: 'var(--color-accent)' }}>{t('dashboard.viewAll')}</Button>}
-            style={{ borderRadius: 12, marginBottom: 24 }}
-          >
+          {/* Active Bids Section */}
+          <div style={{ marginBottom: 40 }}>
+            <Flex justify="space-between" align="center" style={{ marginBottom: 20 }}>
+              <Title level={4} style={{ margin: 0, fontFamily: SANS_FONT, fontWeight: 600, fontSize: 18 }}>
+                {t('dashboard.activeBidsTitle', 'Active Bids')}
+              </Title>
+              <Button type="link" onClick={() => navigate('/me/bids')} style={{ color: 'var(--color-accent)', fontWeight: 600, paddingRight: 0 }}>
+                {t('dashboard.viewAll', 'View All')} <RightOutlined style={{ fontSize: 10 }} />
+              </Button>
+            </Flex>
+
             {activeBids.length > 0 ? (
-              <Row gutter={[16, 16]}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {activeBids.map((bid) => (
-                  <Col xs={24} sm={12} md={8} key={bid.auctionId}>
-                    <Card
-                      size="small"
-                      hoverable
-                      onClick={() => navigate(`/auctions/${bid.auctionId}`)}
-                      style={{ borderRadius: 8 }}
-                    >
-                      <div style={{ fontWeight: 500, fontSize: 13, marginBottom: 4 }}>{bid.itemTitle ?? bid.auctionId?.slice(0, 12)}</div>
-                      <div style={{ fontFamily: MONO_FONT, fontSize: 16, color: 'var(--color-accent)', fontWeight: 600 }}>
+                  <div
+                    key={bid.auctionId}
+                    onClick={() => navigate(`/auctions/${bid.auctionId}`)}
+                    className="oio-press"
+                    style={{
+                      background: 'var(--color-bg-card)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 20,
+                      padding: '16px 20px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: isMobile ? 'flex-start' : 'center',
+                      flexDirection: isMobile ? 'column' : 'row',
+                      justifyContent: 'space-between',
+                      transition: 'all 0.2s ease',
+                      gap: isMobile ? 12 : 16,
+                      boxShadow: 'var(--shadow-sm)'
+                    }}
+                  >
+                    <Flex align="center" gap={16} style={{ flex: 1, minWidth: 0, width: '100%' }}>
+                      <div style={{ 
+                        width: 44, 
+                        height: 44, 
+                        borderRadius: 10, 
+                        background: 'var(--color-bg-surface)', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        flexShrink: 0
+                      }}>
+                        <ThunderboltOutlined style={{ color: 'var(--color-accent)' }} />
+                      </div>
+                      <div style={{ fontWeight: 600, color: 'var(--color-text-primary)', fontSize: 15, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                        {bid.itemTitle}
+                      </div>
+                      <StatusBadge status={bid.position} size="small" />
+                    </Flex>
+                    <div style={{ textAlign: isMobile ? 'left' : 'right', minWidth: isMobile ? undefined : 120 }}>
+                      <div style={{ fontFamily: MONO_FONT, color: 'var(--color-accent)', fontWeight: 700, fontSize: 18 }}>
                         {formatCurrency(bid.myLatestBidAmount?.amount ?? 0, bid.myLatestBidAmount?.currency)}
                       </div>
-                      <div style={{ marginTop: 4 }}>
-                        <StatusBadge status={bid.position} size="small" />
-                      </div>
-                    </Card>
-                  </Col>
-                ))}
-              </Row>
-            ) : (
-              <Empty description={t('dashboard.noBids')} />
-            )}
-          </Card>
-
-          {/* Shipment Tracking */}
-          <Card
-            title={<span style={{ fontFamily: SERIF_FONT, fontWeight: 400 }}>{t('dashboard.shipmentTracking')}</span>}
-            style={{ borderRadius: 12 }}
-          >
-            {recentOrders.length > 0 ? (
-              <Space direction="vertical" size={16} style={{ width: '100%' }}>
-                {recentOrders.map((order) => (
-                  <div
-                    key={order.id}
-                    style={{ padding: 16, borderRadius: 8, border: '1px solid var(--color-border-light)', cursor: 'pointer' }}
-                    onClick={() => navigate(`/me/orders/${order.id}`)}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                      <span style={{ fontWeight: 500 }}>#{order.orderNumber}</span>
-                      <StatusBadge status={order.status} size="small" />
+                      <div style={{ fontSize: 10, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>{t('dashboard.myBid', 'My Bid')}</div>
                     </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Empty 
+                description={t('dashboard.noBids', 'No active bids found')} 
+                style={{ padding: 60, background: 'var(--color-bg-card)', borderRadius: 24, border: '1px solid var(--color-border)' }} 
+              />
+            )}
+          </div>
+
+          {/* Shipment Tracking Section */}
+          <div>
+            <Title level={4} style={{ marginBottom: 20, fontFamily: SANS_FONT, fontWeight: 600, fontSize: 18 }}>
+              {t('dashboard.shipmentTracking', 'Order Status')}
+            </Title>
+            {recentOrders.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {recentOrders.map((order) => (
+                  <Card
+                    key={order.id}
+                    onClick={() => navigate(`/me/orders/${order.id}`)}
+                    className="oio-press"
+                    style={{
+                      background: 'var(--color-bg-card)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 24,
+                      cursor: 'pointer',
+                      boxShadow: 'var(--shadow-sm)'
+                    }}
+                    styles={{ body: { padding: isMobile ? '20px' : '24px' } }}
+                  >
+                    <Flex justify="space-between" align="center" style={{ marginBottom: 24 }}>
+                      <div>
+                        <Text strong style={{ fontSize: 15, fontFamily: MONO_FONT, color: 'var(--color-accent)' }}>#{order.orderNumber}</Text>
+                        <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)', marginTop: 2 }}>{formatDateTime(order.createdAt)}</div>
+                      </div>
+                      <StatusBadge status={order.status} />
+                    </Flex>
                     <Steps
                       size="small"
+                      direction={isMobile ? 'vertical' : 'horizontal'}
                       current={
                         order.status === 'delivered' ? 3
                           : order.status === 'shipped' ? 2
@@ -157,71 +220,113 @@ export default function DashboardPage() {
                           : 0
                       }
                       items={[
-                        { title: t('dashboard.stepPayment') },
-                        { title: t('dashboard.stepShipping') },
-                        { title: t('dashboard.stepReceived') },
-                        { title: t('dashboard.stepCompleted') },
+                        { title: t('dashboard.stepPayment', 'Payment') },
+                        { title: t('dashboard.stepShipping', 'Shipping') },
+                        { title: t('dashboard.stepReceived', 'Delivery') },
+                        { title: t('dashboard.stepCompleted', 'Done') },
                       ]}
                     />
-                  </div>
+                  </Card>
                 ))}
-              </Space>
+              </div>
             ) : (
-              <Empty description={t('dashboard.noShipments')} />
+              <Empty 
+                description={t('dashboard.noShipments', 'No active shipments found')} 
+                style={{ padding: 60, background: 'var(--color-bg-card)', borderRadius: 24, border: '1px solid var(--color-border)' }} 
+              />
             )}
-          </Card>
+          </div>
         </Col>
 
-        {/* Right sidebar */}
+        {/* Sidebar Content */}
         <Col xs={24} lg={8}>
-          {/* Disputes */}
-          <Card
-            title={<span style={{ fontFamily: SERIF_FONT, fontWeight: 400 }}>{t('dashboard.disputesTitle')}</span>}
-            extra={<Button type="link" onClick={() => navigate('/me/disputes')} style={{ color: 'var(--color-accent)' }}>{t('dashboard.viewAll')}</Button>}
-            style={{ borderRadius: 12, marginBottom: 24 }}
-          >
+          {/* Recent Disputes */}
+          <div style={{ marginBottom: 40 }}>
+            <Flex justify="space-between" align="center" style={{ marginBottom: 20 }}>
+              <Title level={4} style={{ margin: 0, fontFamily: SANS_FONT, fontWeight: 600, fontSize: 18 }}>
+                {t('dashboard.disputesTitle', 'Recent Disputes')}
+              </Title>
+              <Button type="link" onClick={() => navigate('/me/disputes')} style={{ color: 'var(--color-accent)', fontWeight: 600, paddingRight: 0 }}>
+                {t('dashboard.viewAll', 'View All')}
+              </Button>
+            </Flex>
+
             {disputes.length > 0 ? (
-              <Space direction="vertical" size={12} style={{ width: '100%' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {disputes.map((d) => (
                   <div
                     key={d.id}
-                    style={{ padding: 12, borderRadius: 8, background: 'var(--color-accent-light)', cursor: 'pointer' }}
                     onClick={() => navigate(`/me/disputes/${d.id}`)}
+                    className="oio-press"
+                    style={{
+                      padding: 16,
+                      borderRadius: 16,
+                      background: 'var(--color-bg-card)',
+                      border: '1px solid var(--color-border)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      boxShadow: 'var(--shadow-sm)'
+                    }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <Flex justify="space-between" align="center" style={{ marginBottom: 8 }}>
                       <StatusBadge status={d.status} size="small" />
-                      <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
-                        {formatDateTime(d.createdAt)}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-text-primary)' }}>
+                      <Text style={{ fontSize: 11, color: 'var(--color-text-tertiary)' }}>{formatDateTime(d.createdAt)}</Text>
+                    </Flex>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>
                       {d.title ?? `Dispute #${d.disputeNumber ?? d.id.slice(0, 8)}`}
                     </div>
                   </div>
                 ))}
-              </Space>
+              </div>
             ) : (
-              <Empty description={t('dashboard.noDisputes')} />
+              <Empty 
+                description={t('dashboard.noDisputes', 'No active disputes found')} 
+                style={{ padding: 32, background: 'var(--color-bg-card)', borderRadius: 24, border: '1px solid var(--color-border)' }} 
+              />
             )}
-          </Card>
+          </div>
 
-          {/* Become Seller CTA */}
-          <Card style={{ borderRadius: 12, background: 'var(--color-accent-light)', textAlign: 'center', padding: '8px 0' }}>
-            <ShopOutlined style={{ fontSize: 32, color: 'var(--color-accent)', marginBottom: 8 }} />
-            <div style={{ fontFamily: SERIF_FONT, fontSize: 16, color: 'var(--color-text-primary)', marginBottom: 8 }}>
-              {t('dashboard.becomeSellerTitle')}
-            </div>
-            <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 16, maxWidth: 240, margin: '0 auto 16px' }}>
-              {t('dashboard.becomeSellerDesc')}
-            </div>
-            <Button
-              type="primary"
-              onClick={() => navigate('/seller/register')}
-              style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)', fontWeight: 500 }}
-            >
-              {t('dashboard.becomeSellerBtn')}
-            </Button>
-          </Card>
+          {/* Become Seller Banner */}
+          <div style={{
+            borderRadius: 32,
+            background: 'linear-gradient(135deg, var(--color-accent) 0%, #0c5299 100%)',
+            padding: isMobile ? 32 : 40,
+            textAlign: 'center',
+            position: 'relative',
+            overflow: 'hidden',
+            boxShadow: '0 20px 40px rgba(59, 130, 246, 0.25)'
+          }}>
+             <div style={{ position: 'absolute', top: -30, right: -30, fontSize: 160, opacity: 0.1, color: '#fff', transform: 'rotate(-15deg)' }}>
+                <ShopOutlined />
+             </div>
+             <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ width: 64, height: 64, borderRadius: 20, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', backdropFilter: 'blur(10px)' }}>
+                  <ShopOutlined style={{ fontSize: 32, color: '#fff' }} />
+                </div>
+                <Title level={3} style={{ color: '#fff', margin: '0 0 12px 0', fontFamily: SANS_FONT, fontWeight: 700 }}>
+                    {t('dashboard.becomeSellerTitle', 'Start Selling on OIO')}
+                </Title>
+                <Text style={{ color: 'rgba(255,255,255,0.9)', display: 'block', marginBottom: 32, fontSize: 15, lineHeight: 1.6 }}>
+                    {t('dashboard.becomeSellerDesc', 'Turn your items into profit. Join our professional seller community today.')}
+                </Text>
+                <Button
+                    size="large"
+                    onClick={() => navigate('/seller/register')}
+                    style={{
+                      background: '#fff',
+                      color: 'var(--color-accent)',
+                      border: 'none',
+                      fontWeight: 700,
+                      borderRadius: 14,
+                      height: 52,
+                      width: '100%',
+                      boxShadow: '0 10px 20px rgba(0,0,0,0.1)'
+                    }}
+                >
+                    {t('dashboard.becomeSellerBtn', 'Become a Seller')}
+                </Button>
+             </div>
+          </div>
         </Col>
       </Row>
     </div>

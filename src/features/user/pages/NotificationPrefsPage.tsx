@@ -7,11 +7,13 @@ import {
   Button,
   Alert,
   App,
+  Flex,
 } from 'antd'
 import {
   MailOutlined,
   BellOutlined,
 } from '@ant-design/icons'
+import { SANS_FONT } from '@/styles/tokens'
 import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useNotificationPreferences, useUpdateNotificationPreferences } from '../api'
@@ -38,13 +40,13 @@ export default function NotificationPrefsPage() {
     {
       key: NotificationChannel.SignalR,
       label: t('notificationPrefs.channelInPlatformLabel', 'In-platform notifications'),
-      icon: <BellOutlined />,
+      icon: <BellOutlined style={{ color: 'var(--color-accent)' }} />,
       description: t('notificationPrefs.channelInPlatform', 'Receive real-time notifications on the platform (bell icon, toasts)'),
     },
     {
       key: NotificationChannel.Email,
       label: t('notificationPrefs.channelEmailLabel', 'Email notifications'),
-      icon: <MailOutlined />,
+      icon: <MailOutlined style={{ color: 'var(--color-accent)' }} />,
       description: t('notificationPrefs.channelEmail', 'Receive important updates by email'),
     },
   ]
@@ -91,67 +93,128 @@ export default function NotificationPrefsPage() {
 
   if (isLoading) {
     return (
-      <div style={{ textAlign: 'center', padding: 48 }}>
+      <div style={{ textAlign: 'center', padding: 80 }}>
         <Spin size="large" />
       </div>
     )
   }
 
   return (
-    <div style={{ maxWidth: 700, margin: '0 auto', padding: isMobile ? '0 12px' : undefined }}>
-      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', gap: isMobile ? 12 : 0, marginBottom: 24 }}>
-        <Title level={2} style={{ margin: 0 }}>{t('notificationPrefs.title')}</Title>
-        <Button type="primary" onClick={onSave} loading={updatePrefs.isPending} disabled={!dirty || hasNoChannels}>
+    <div style={{ maxWidth: 800, margin: '0 auto', padding: isMobile ? '12px 16px 80px' : '0 24px 80px' }}>
+      {/* Header */}
+      <Flex 
+        justify="space-between" 
+        align={isMobile ? 'stretch' : 'center'} 
+        vertical={isMobile}
+        gap={isMobile ? 20 : 0} 
+        style={{ marginBottom: 32 }}
+      >
+        <div>
+          <Title 
+            level={2} 
+            style={{ 
+              margin: 0, 
+              fontFamily: SANS_FONT, 
+              fontWeight: 600,
+              fontSize: isMobile ? 24 : 32,
+              color: 'var(--color-text-primary)'
+            }}
+          >
+            <BellOutlined style={{ marginRight: 12, color: 'var(--color-accent)' }} />
+            {t('notificationPrefs.title')}
+          </Title>
+          <Text style={{ color: 'var(--color-text-secondary)', fontSize: 16 }}>
+            {t('notificationPrefs.subtitle', 'Choose how you want to be notified')}
+          </Text>
+        </div>
+        <Button 
+          type="primary" 
+          onClick={onSave} 
+          loading={updatePrefs.isPending} 
+          disabled={!dirty || hasNoChannels}
+          size="large"
+          style={{ height: 48, borderRadius: 12, fontWeight: 600, padding: '0 32px' }}
+        >
           {t('notificationPrefs.save')}
         </Button>
-      </div>
+      </Flex>
 
-      {/* Master toggle */}
-      <Card title={t('notificationPrefs.masterToggle')} style={{ marginBottom: 24 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <Text strong>{t('notificationPrefs.enableNotifications')}</Text>
-            <br />
-            <Text type="secondary" style={{ fontSize: 12 }}>{t('notificationPrefs.enableDesc')}</Text>
-          </div>
-          <Switch checked={isEnabled} onChange={toggleEnabled} />
-        </div>
-      </Card>
-
-      {/* Notification Channels */}
-      <Card title={t('notificationPrefs.channels')}>
-        <Space direction="vertical" style={{ width: '100%' }} size="middle">
-          {channels.map((ch) => (
-            <div
-              key={ch.key}
-              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-            >
-              <Space>
-                {ch.icon}
-                <div>
-                  <Text strong>{ch.label}</Text>
-                  <br />
-                  <Text type="secondary" style={{ fontSize: 12 }}>{ch.description}</Text>
-                </div>
-              </Space>
-              <Switch
-                checked={selectedChannels.includes(ch.key)}
-                onChange={(checked) => toggleChannel(ch.key, checked)}
-                disabled={!isEnabled}
-              />
+      <Space direction="vertical" style={{ width: '100%' }} size={24}>
+        {/* Master toggle */}
+        <Card 
+          style={{ 
+            background: 'var(--color-bg-card)', 
+            border: '1px solid var(--color-border)', 
+            borderRadius: 24,
+            boxShadow: 'var(--shadow-sm)'
+          }}
+          styles={{ body: { padding: isMobile ? '24px 20px' : '32px' } }}
+        >
+          <Flex justify="space-between" align="center">
+            <div>
+              <Text strong style={{ fontSize: 16, color: 'var(--color-text-primary)', display: 'block', marginBottom: 4 }}>
+                {t('notificationPrefs.masterToggle')}
+              </Text>
+              <Text type="secondary" style={{ fontSize: 14 }}>{t('notificationPrefs.enableDesc')}</Text>
             </div>
-          ))}
-        </Space>
-      </Card>
+            <Switch checked={isEnabled} onChange={toggleEnabled} size={isMobile ? 'small' : 'default'} />
+          </Flex>
+        </Card>
 
-      {hasNoChannels && (
-        <Alert
-          type="warning"
-          showIcon
-          style={{ marginTop: 16 }}
-          message={t('notificationPrefs.atLeastOneChannel', 'At least one channel is required. Use the master toggle above to disable all notifications.')}
-        />
-      )}
+        {/* Notification Channels */}
+        <Card 
+          title={<span style={{ fontFamily: SANS_FONT, fontWeight: 600 }}>{t('notificationPrefs.channels')}</span>}
+          style={{ 
+            background: 'var(--color-bg-card)', 
+            border: '1px solid var(--color-border)', 
+            borderRadius: 24,
+            boxShadow: 'var(--shadow-sm)'
+          }}
+          styles={{ body: { padding: isMobile ? '8px 20px' : '16px 32px' } }}
+        >
+          <Space direction="vertical" style={{ width: '100%' }} size={0} split={<div style={{ height: 1, background: 'var(--color-border)', margin: '0 -32px' }} />}>
+            {channels.map((ch) => (
+              <div
+                key={ch.key}
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 0' }}
+              >
+                <Flex gap={20} align="center">
+                  <div style={{ 
+                    width: 48, 
+                    height: 48, 
+                    borderRadius: 12, 
+                    background: 'var(--color-bg-surface)', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    fontSize: 24
+                  }}>
+                    {ch.icon}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <Text strong style={{ fontSize: 16, color: 'var(--color-text-primary)', display: 'block', marginBottom: 4 }}>{ch.label}</Text>
+                    <Text type="secondary" style={{ fontSize: 13, maxWidth: 400, display: 'block' }}>{ch.description}</Text>
+                  </div>
+                </Flex>
+                <Switch
+                  checked={selectedChannels.includes(ch.key)}
+                  onChange={(checked) => toggleChannel(ch.key, checked)}
+                  disabled={!isEnabled}
+                />
+              </div>
+            ))}
+          </Space>
+        </Card>
+
+        {hasNoChannels && (
+          <Alert
+            type="warning"
+            showIcon
+            style={{ borderRadius: 16, padding: 16 }}
+            message={t('notificationPrefs.atLeastOneChannel', 'At least one channel is required. Use the master toggle above to disable all notifications.')}
+          />
+        )}
+      </Space>
     </div>
   )
 }

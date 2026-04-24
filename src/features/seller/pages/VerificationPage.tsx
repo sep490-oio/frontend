@@ -11,7 +11,7 @@ import {
   Alert,
   Timeline,
 } from 'antd'
-import { ArrowLeftOutlined, FileOutlined } from '@ant-design/icons'
+import { ArrowLeftOutlined, FileOutlined, LockOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import {
@@ -32,6 +32,9 @@ import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/queryClient'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { formatDateTime } from '@/utils/format'
+import { SANS_FONT } from '@/styles/tokens'
+
+const { Text } = Typography
 
 export default function VerificationPage() {
   const { t } = useTranslation('seller')
@@ -91,20 +94,32 @@ export default function VerificationPage() {
   }
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: isMobile ? '0 12px 48px' : '0 0 48px' }}>
+    <div style={{ maxWidth: 800, margin: '0 auto', padding: isMobile ? '12px 16px 48px' : '0 24px 48px' }}>
       {/* ── Header ──────────────────────────────────────────────────── */}
-      <div style={{ marginBottom: isMobile ? 16 : 24 }}>
+      <div style={{ marginBottom: isMobile ? 24 : 32 }}>
         <Button
           type="text"
           icon={<ArrowLeftOutlined />}
           onClick={() => navigate('/seller')}
-          style={{ marginBottom: 12, minHeight: 44, paddingLeft: 0 }}
+          style={{ marginBottom: 16, minHeight: 40, paddingLeft: 0, color: 'var(--color-text-secondary)' }}
         >
-          {tc('action.back', 'Back')}
+          {tc('action.back', 'Back to Seller Center')}
         </Button>
-        <Typography.Title level={isMobile ? 3 : 2} style={{ margin: 0 }}>
+        <Typography.Title 
+          level={2} 
+          style={{ 
+            margin: 0, 
+            fontFamily: SANS_FONT, 
+            fontWeight: 600,
+            fontSize: isMobile ? 24 : 32,
+            color: 'var(--color-text-primary)'
+          }}
+        >
           {t('verification', 'Identity Verification')}
         </Typography.Title>
+        <Typography.Text style={{ color: 'var(--color-text-secondary)', fontSize: 16, marginTop: 4, display: 'block' }}>
+          {t('verificationSubtitle', 'Verify your identity to unlock selling features')}
+        </Typography.Text>
       </div>
 
       <TermsAcceptanceGate
@@ -153,7 +168,7 @@ export default function VerificationPage() {
                     {tc('action.retry', 'Retry')}
                   </Button>
                 }
-                style={{ marginTop: 16 }}
+                style={{ marginTop: 16, borderRadius: 12 }}
               />
             )}
 
@@ -161,9 +176,9 @@ export default function VerificationPage() {
             {activeVerification && activeVerification.status === IdentityVerificationStatus.Pending && (
               <>
                 <Card
-                  title={t('documents', 'Upload Documents')}
-                  style={{ marginTop: 16 }}
-                  styles={{ body: { padding: isMobile ? '12px 16px' : '20px 24px' } }}
+                  title={<span style={{ fontFamily: SANS_FONT, fontWeight: 600 }}>{t('documents', 'Upload Documents')}</span>}
+                  style={{ marginTop: 24, borderRadius: 24, border: '1px solid var(--color-border)', background: 'var(--color-bg-card)' }}
+                  styles={{ body: { padding: isMobile ? '16px' : '24px' } }}
                 >
                   <VerificationDocumentSlots
                     verificationType={activeVerification.verificationType}
@@ -182,7 +197,7 @@ export default function VerificationPage() {
                   const allFilled = missingSlots.length === 0
 
                   return (
-                    <div style={{ marginTop: 16 }}>
+                    <div style={{ marginTop: 24 }}>
                       <Button
                         type="primary"
                         icon={<SendOutlined />}
@@ -191,12 +206,20 @@ export default function VerificationPage() {
                         onClick={() => handleSubmit(activeVerification.id)}
                         loading={submitVerification.isPending}
                         disabled={!allFilled}
-                        style={{ height: 48, background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
+                        style={{ 
+                          height: 52, 
+                          background: 'var(--color-accent)', 
+                          borderColor: 'var(--color-accent)',
+                          borderRadius: 12,
+                          fontWeight: 600,
+                          fontSize: 16
+                        }}
                       >
                         {t('submitVerification', 'Submit for Review')}
                       </Button>
                       {!allFilled && (
-                        <Typography.Text type="secondary" style={{ display: 'block', textAlign: 'center', marginTop: 8, fontSize: 12 }}>
+                        <Typography.Text type="secondary" style={{ display: 'block', textAlign: 'center', marginTop: 12, fontSize: 13 }}>
+                          <LockOutlined style={{ marginRight: 6 }} />
                           {t('missingDocuments', 'Missing required documents')}: {missingSlots.join(', ')}
                         </Typography.Text>
                       )}
@@ -208,74 +231,77 @@ export default function VerificationPage() {
 
             {/* Read-only detail card for non-pending verifications */}
             {activeVerification && activeVerification.status !== IdentityVerificationStatus.Pending && currentStatus !== 'none' && (
-              <Card style={{ marginTop: 16 }} styles={{ body: { padding: isMobile ? '16px' : '20px 24px' } }}>
+              <Card 
+                style={{ marginTop: 24, borderRadius: 24, border: '1px solid var(--color-border)', background: 'var(--color-bg-card)' }} 
+                styles={{ body: { padding: isMobile ? '16px' : '24px' } }}
+              >
                 {activeVerification.document && (
                   <>
-                    <Typography.Title level={5} style={{ fontSize: isMobile ? 14 : 16 }}>
+                    <Typography.Title level={5} style={{ fontSize: 16, fontFamily: SANS_FONT, fontWeight: 600, marginBottom: 16 }}>
                       {t('documentInfo', 'Document Information')}
                     </Typography.Title>
                     {isMobile ? (
                       // Mobile: stacked rows
-                      <div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                         {[
                           { label: t('idType', 'ID Type'), value: activeVerification.document.idType },
                           { label: t('idNumber', 'ID Number'), value: activeVerification.document.idNumber },
                         ].map((item) => (
-                          <div key={item.label} style={{ marginBottom: 12 }}>
-                            <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 2 }}>{item.label}</div>
-                            <div style={{ fontSize: 14 }}>{item.value}</div>
+                          <div key={item.label}>
+                            <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>{item.label}</div>
+                            <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--color-text-primary)' }}>{item.value}</div>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <Descriptions column={{ xs: 1, sm: 2 }} size="small">
-                        <Descriptions.Item label={t('idType', 'ID Type')}>
-                          {activeVerification.document.idType}
+                      <Descriptions column={2} size="small" layout="vertical">
+                        <Descriptions.Item label={<span style={{ color: 'var(--color-text-tertiary)', textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.05em' }}>{t('idType', 'ID Type')}</span>}>
+                          <span style={{ fontSize: 15, fontWeight: 500 }}>{activeVerification.document.idType}</span>
                         </Descriptions.Item>
-                        <Descriptions.Item label={t('idNumber', 'ID Number')}>
-                          {activeVerification.document.idNumber}
+                        <Descriptions.Item label={<span style={{ color: 'var(--color-text-tertiary)', textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.05em' }}>{t('idNumber', 'ID Number')}</span>}>
+                          <span style={{ fontSize: 15, fontWeight: 500 }}>{activeVerification.document.idNumber}</span>
                         </Descriptions.Item>
                       </Descriptions>
                     )}
-                    <Divider style={{ margin: isMobile ? '12px 0' : '16px 0' }} />
+                    <Divider style={{ margin: '20px 0' }} />
                   </>
                 )}
 
                 {activeVerification.documents && activeVerification.documents.length > 0 && (
                   <>
-                    <Typography.Title level={5} style={{ fontSize: isMobile ? 14 : 16 }}>
+                    <Typography.Title level={5} style={{ fontSize: 16, fontFamily: SANS_FONT, fontWeight: 600, marginBottom: 16 }}>
                       {t('documents', 'Documents')}
                     </Typography.Title>
                     <List
                       size="small"
                       dataSource={activeVerification.documents}
                       renderItem={(doc) => (
-                        <List.Item style={{ padding: isMobile ? '10px 0' : undefined }}>
+                        <List.Item style={{ padding: '12px 0', borderBottom: '1px solid var(--color-border-light)' }}>
                           <List.Item.Meta
-                            avatar={<FileOutlined style={{ fontSize: isMobile ? 16 : 18 }} />}
+                            avatar={<div style={{ width: 40, height: 40, borderRadius: 8, background: 'var(--color-bg-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FileOutlined style={{ fontSize: 18, color: 'var(--color-accent)' }} /></div>}
                             title={
-                              <a href={doc.secureUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: isMobile ? 12 : 13 }}>
+                              <a href={doc.secureUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-accent)' }}>
                                 {doc.documentType}
                               </a>
                             }
-                            description={<span style={{ fontSize: 12 }}>{formatDateTime(doc.uploadedAt)}</span>}
+                            description={<span style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>{formatDateTime(doc.uploadedAt)}</span>}
                           />
                         </List.Item>
                       )}
                     />
-                    <Divider style={{ margin: isMobile ? '12px 0' : '16px 0' }} />
+                    <Divider style={{ margin: '20px 0' }} />
                   </>
                 )}
 
-                <Typography.Title level={5} style={{ fontSize: isMobile ? 14 : 16 }}>
+                <Typography.Title level={5} style={{ fontSize: 16, fontFamily: SANS_FONT, fontWeight: 600, marginBottom: 20 }}>
                   {t('timeline', 'Timeline')}
                 </Typography.Title>
                 <Timeline
                   items={[
-                    { color: 'green', children: `${t('created', 'Created')} — ${formatDateTime(activeVerification.createdAt)}` },
-                    ...(activeVerification.submittedAt ? [{ color: 'blue' as const, children: `${t('submitted', 'Submitted')} — ${formatDateTime(activeVerification.submittedAt)}` }] : []),
-                    ...(activeVerification.verifiedAt ? [{ color: 'green' as const, children: `${t('verified', 'Verified')} — ${formatDateTime(activeVerification.verifiedAt)}` }] : []),
-                    ...(activeVerification.rejectionReason ? [{ color: 'red' as const, children: `${t('rejected', 'Rejected')} — ${activeVerification.rejectionReason}` }] : []),
+                    { color: 'green', children: <div style={{ fontSize: 13 }}><Text strong>{t('created', 'Created')}</Text> — <Text type="secondary">{formatDateTime(activeVerification.createdAt)}</Text></div> },
+                    ...(activeVerification.submittedAt ? [{ color: 'blue' as const, children: <div style={{ fontSize: 13 }}><Text strong>{t('submitted', 'Submitted')}</Text> — <Text type="secondary">{formatDateTime(activeVerification.submittedAt)}</Text></div> }] : []),
+                    ...(activeVerification.verifiedAt ? [{ color: 'green' as const, children: <div style={{ fontSize: 13 }}><Text strong>{t('verified', 'Verified')}</Text> — <Text type="secondary">{formatDateTime(activeVerification.verifiedAt)}</Text></div> }] : []),
+                    ...(activeVerification.rejectionReason ? [{ color: 'red' as const, children: <div style={{ fontSize: 13 }}><Text strong style={{ color: 'var(--color-danger)' }}>{t('rejected', 'Rejected')}</Text> — <Text type="danger">{activeVerification.rejectionReason}</Text></div> }] : []),
                   ]}
                 />
               </Card>

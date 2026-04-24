@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Typography, Row, Col, Card, Button, Select, Spin, Empty, Flex, Pagination } from 'antd'
-import { HistoryOutlined, ThunderboltOutlined, TrophyOutlined, LineChartOutlined, ClockCircleOutlined } from '@ant-design/icons'
+import { Typography, Select, Spin, Empty, Flex, Pagination, Button, Tag } from 'antd'
+import { HistoryOutlined, ThunderboltOutlined, TrophyOutlined, LineChartOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useMyBids, useMyPendingWinnerOffers, useRespondRunnerUpOffer, useAuctionDetail } from '@/features/auction/api'
@@ -19,6 +19,8 @@ import { useAuctionHub } from '@/features/auction/hooks/useAuctionHub'
 import { useCurrentUser } from '@/features/user/api'
 import { MONO_FONT, SANS_FONT } from '@/styles/tokens'
 
+const { Title, Text } = Typography
+
 interface StatusPill {
   value: string
   label: string
@@ -27,7 +29,7 @@ interface StatusPill {
 function AuctionCell({ bid }: { bid: MyBidDto }) {
   const { t } = useTranslation('auction')
   const navigate = useNavigate()
-  const { isMobile } = useBreakpoint()
+  const { isMobile, isTablet } = useBreakpoint()
   
   const { data: currentUser } = useCurrentUser()
   const userId = currentUser?.id
@@ -41,14 +43,13 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
   const bidState = detailData?.currentUserBidState
   
   // Prefer real-time patched data from the cache, fallback to the initial list data
-  const currentPriceAmount = auction?.currentPrice?.amount ?? bid.currentPrice.amount
-  const currentPriceCurrency = auction?.currentPrice?.currency ?? bid.currentPrice.currency
+  const currentPriceAmount = auction?.currentPrice?.amount ?? bid.currentPrice?.amount
+  const currentPriceCurrency = auction?.currentPrice?.currency ?? bid.currentPrice?.currency
   const position = bidState?.position ?? bid.position
-  const auctionStatus = auction?.status ?? bid.auctionStatus
-  const myLatestBidAmount = bidState?.latestBidAmount ?? bid.myLatestBidAmount.amount
-  const myLatestBidCurrency = bid.myLatestBidAmount.currency
+  const auctionStatus = (auction?.status ?? bid.auctionStatus) as AuctionStatus
+  const myLatestBidAmount = bidState?.latestBidAmount ?? bid.myLatestBidAmount?.amount
+  const myLatestBidCurrency = bid.myLatestBidAmount?.currency
   const lastBidAt = bidState?.latestBidAt ?? bid.lastBidAt
-  const bidCountForUser = bidState?.position ? Math.max(bid.bidCountForUser, bidState.position ? bid.bidCountForUser + (bidState.latestBidAt !== bid.lastBidAt ? 1 : 0) : bid.bidCountForUser) : bid.bidCountForUser
   const totalBidCount = auction?.bidCount ?? 0
   
   const isActive = auctionStatus === AuctionStatus.Active
@@ -67,36 +68,31 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
       tabIndex={0}
       role="link"
       style={{ 
-        background: 'var(--color-bg-card, #11141b)',
-        border: '1px solid var(--color-border, rgba(255,255,255,0.05))',
+        background: 'var(--color-bg-card)',
+        border: '1px solid var(--color-border)',
         marginBottom: 16, 
-        borderRadius: isMobile ? 16 : 24, 
+        borderRadius: 24, 
         overflow: 'hidden', 
-        padding: isMobile ? 10 : 16,
+        padding: isMobile ? 12 : 20,
         display: 'flex',
-        flexDirection: isMobile ? 'column' : 'row',
+        flexDirection: isMobile || isTablet ? 'column' : 'row',
         gap: isMobile ? 16 : 24,
         transition: 'all 0.3s ease',
         cursor: 'pointer',
         outline: 'none',
-        width: '100%'
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = 'var(--color-accent, rgba(59, 130, 246, 0.5))';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = 'var(--color-border, rgba(255,255,255,0.05))';
+        width: '100%',
+        boxShadow: 'var(--shadow-sm)'
       }}
     >
       {/* Left: Image Block */}
       <div style={{
         position: 'relative',
-        width: isMobile ? '100%' : 240,
-        height: isMobile ? 240 : 'auto',
-        minHeight: 200,
-        borderRadius: isMobile ? 12 : 16,
+        width: isMobile || isTablet ? '100%' : 240,
+        height: isMobile ? 240 : isTablet ? 300 : 'auto',
+        minHeight: isMobile ? 200 : 240,
+        borderRadius: 16,
         overflow: 'hidden',
-        background: 'var(--color-bg-surface, #1f2937)',
+        background: 'var(--color-bg-surface)',
         flexShrink: 0
       }}>
         <div style={{ position: 'absolute', inset: 0 }}>
@@ -104,9 +100,7 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
             <img 
               src={bid.primaryImageUrl} 
               alt={bid.itemTitle} 
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.5s ease' }} 
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} 
             />
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', color: 'var(--color-text-secondary)', fontSize: 13 }}>{t('noImage')}</div>
@@ -140,11 +134,11 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
         </div>
 
         <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}>
-          <StatusBadge status={auctionStatus as AuctionStatus} />
+          <StatusBadge status={auctionStatus} size="small" />
         </div>
         
         {/* Timer Float */}
-        {((isActive && auction?.endTime) || (auctionStatus === AuctionStatus.Scheduled && auction?.startTime)) && (
+        {((isActive && (auction?.endTime || bid.auctionStatus)) || (auctionStatus === AuctionStatus.Scheduled && (auction?.startTime || bid.auctionStatus))) && (
           <div
             style={{
               position: 'absolute',
@@ -162,66 +156,67 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
             <p style={{ fontSize: 10, textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)', letterSpacing: '0.1em', margin: '0 0 4px 0' }}>
               {isActive ? t('timeRemaining') : t('startsIn')}
             </p>
-            <div style={{ color: isActive ? 'var(--color-accent, #3b82f6)' : '#fb923c', fontFamily: MONO_FONT, fontWeight: 700 }}>
-              <CountdownTimer endTime={isActive ? auction.endTime! : auction.startTime!} size="small" />
+            <div style={{ color: isActive ? 'var(--color-accent)' : '#fb923c', fontFamily: MONO_FONT, fontWeight: 700 }}>
+              <CountdownTimer endTime={isActive ? (auction?.endTime ?? '') : (auction?.startTime ?? '')} size="small" />
             </div>
           </div>
         )}
       </div>
 
       {/* Middle: Details */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, padding: isMobile ? '0 8px' : '8px 0' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, padding: isMobile ? '0 4px' : '4px 0' }}>
         <h3
           style={{
             fontWeight: 700,
-            fontSize: 20,
+            fontSize: isMobile ? 18 : 22,
             marginBottom: 4,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
-            color: 'var(--color-text-primary, #f3f4f6)',
+            color: 'var(--color-text-primary)',
+            fontFamily: SANS_FONT
           }}
         >
           {bid.itemTitle}
         </h3>
-        <p style={{ color: 'var(--color-text-secondary, #6b7280)', fontSize: 12, marginBottom: 24 }}>
-          {t('itemCode')}: #{bid.auctionId.slice(0, 6)}
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: 12, marginBottom: isMobile ? 16 : 24 }}>
+          {t('itemCode')}: <span style={{ fontFamily: MONO_FONT }}>#{bid.auctionId.slice(0, 6)}</span>
         </p>
 
-        <Flex gap={32} wrap="wrap" style={{ marginBottom: 24, flex: 1 }}>
+        <Flex gap={isMobile ? 24 : 32} wrap="wrap" style={{ marginBottom: isMobile ? 24 : 32, flex: 1 }}>
           <div>
-            <p style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--color-text-secondary, #6b7280)', margin: '0 0 2px 0' }}>
+            <p style={{ fontSize: 11, textTransform: 'uppercase', color: 'var(--color-text-tertiary)', margin: '0 0 4px 0', letterSpacing: '0.05em' }}>
               {t('currentPrice', 'Current Price')}
             </p>
-            <div style={{ fontFamily: MONO_FONT, fontSize: 24, fontWeight: 700, color: 'var(--color-text-primary)' }}>
-              <PriceDisplay amount={currentPriceAmount} currency={currentPriceCurrency} />
+            <div style={{ fontFamily: MONO_FONT, fontSize: isMobile ? 22 : 26, fontWeight: 700, color: 'var(--color-text-primary)' }}>
+              <PriceDisplay amount={currentPriceAmount ?? 0} currency={currentPriceCurrency ?? 'VND'} />
             </div>
           </div>
           
           <div>
-            <p style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--color-text-secondary, #6b7280)', margin: '0 0 2px 0' }}>
+            <p style={{ fontSize: 11, textTransform: 'uppercase', color: 'var(--color-text-tertiary)', margin: '0 0 4px 0', letterSpacing: '0.05em' }}>
               {t('myLatestBid', 'My Bid')}
             </p>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
-              <div style={{ fontFamily: MONO_FONT, fontSize: 20, fontWeight: 700, color: 'var(--color-accent, #3b82f6)' }}>
-                <PriceDisplay amount={myLatestBidAmount} currency={myLatestBidCurrency} />
+              <div style={{ fontFamily: MONO_FONT, fontSize: isMobile ? 18 : 22, fontWeight: 700, color: 'var(--color-accent)' }}>
+                <PriceDisplay amount={myLatestBidAmount ?? 0} currency={myLatestBidCurrency ?? 'VND'} />
               </div>
               {isActive && (position === 'leading' || position === 'outbid') && (
                 <span style={{ 
-                  fontSize: 11, 
+                  fontSize: 10, 
                   fontWeight: 800, 
                   textTransform: 'uppercase', 
                   color: position === 'leading' ? 'var(--color-success)' : 'var(--color-danger)',
                   background: position === 'leading' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                  padding: '2px 8px',
-                  borderRadius: 4,
-                  letterSpacing: '0.02em'
+                  padding: '2px 10px',
+                  borderRadius: 6,
+                  letterSpacing: '0.05em'
                 }}>
                   {position === 'leading' ? t('bidStatusLeading', 'Leading') : t('bidStatusOutbid', 'Outbid')}
                 </span>
               )}
             </div>
-            <p style={{ fontSize: 11, color: 'var(--color-text-tertiary, #9ca3af)', marginTop: 4, margin: 0 }}>
+            <p style={{ fontSize: 11, color: 'var(--color-text-tertiary)', marginTop: 4, margin: 0 }}>
               {formatDateTime(lastBidAt)}
             </p>
           </div>
@@ -229,139 +224,108 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
 
         <div style={{ marginTop: 'auto', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             {isWon && bid.canPayNow && bid.orderId ? (
-              <button 
-                onClick={(e) => { e.stopPropagation(); navigate(`/checkout/${bid.orderId}`) }}
+              <Button 
+                type="primary"
+                size="large"
+                block={isMobile}
+                icon={<ThunderboltOutlined />}
+                onClick={(e: React.MouseEvent) => { e.stopPropagation(); navigate(`/checkout/${bid.orderId}`) }}
                 style={{
-                  flex: 1,
-                  background: '#B8860B',
-                  color: '#fff',
-                  padding: '12px 24px',
+                  background: 'var(--color-accent)',
+                  borderColor: 'var(--color-accent)',
                   borderRadius: 12,
-                  fontWeight: 700,
-                  fontSize: 14,
-                  border: '1px solid #B8860B',
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer',
-                  boxShadow: '0 10px 15px -3px rgba(184, 134, 11, 0.2)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8
+                  fontWeight: 600,
+                  height: 48,
+                  padding: '0 32px'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
-                onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
               >
-                <ThunderboltOutlined />
                 {t('payNow', 'Pay Now')}
-              </button>
+              </Button>
             ) : isWon && bid.orderId ? (
-              <button 
-                onClick={(e) => { e.stopPropagation(); navigate(`/me/orders/${bid.orderId}`) }}
+              <Button 
+                size="large"
+                block={isMobile}
+                onClick={(e: React.MouseEvent) => { e.stopPropagation(); navigate(`/me/orders/${bid.orderId}`) }}
                 style={{
-                  flex: 1,
-                  background: 'rgba(255,255,255,0.05)',
-                  color: '#fff',
-                  padding: '12px 24px',
                   borderRadius: 12,
-                  fontWeight: 700,
-                  fontSize: 14,
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer'
+                  fontWeight: 600,
+                  height: 48,
+                  padding: '0 32px'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--color-border-light)'}
-                onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'}
               >
                 {t('viewOrder', 'View Order')}
-              </button>
+              </Button>
             ) : isActive ? (
-              <button 
-                onClick={(e) => { e.stopPropagation(); navigate(`/auctions/${bid.auctionId}`, { state: navState }) }}
+              <Button 
+                type="primary"
+                size="large"
+                block={isMobile}
+                icon={<ThunderboltOutlined />}
+                onClick={(e: React.MouseEvent) => { e.stopPropagation(); navigate(`/auctions/${bid.auctionId}`, { state: navState }) }}
                 style={{
-                  flex: 1,
-                  background: 'var(--color-accent, #3b82f6)',
-                  color: '#fff',
-                  padding: '12px 24px',
+                  background: 'var(--color-accent)',
+                  borderColor: 'var(--color-accent)',
                   borderRadius: 12,
-                  fontWeight: 700,
-                  fontSize: 14,
-                  border: '1px solid var(--color-accent, #3b82f6)',
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer',
-                  boxShadow: '0 10px 15px -3px rgba(59, 130, 246, 0.2)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8
+                  fontWeight: 600,
+                  height: 48,
+                  padding: '0 32px'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
-                onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
               >
-                <ThunderboltOutlined />
-                {t('quickBid', 'Quick Bid').toUpperCase()}
-              </button>
+                {t('quickBid', 'Quick Bid')}
+              </Button>
             ) : null}
-            <button 
-              onClick={(e) => { e.stopPropagation(); navigate(`/auctions/${bid.auctionId}`, { state: navState }) }}
+            <Button 
+              size="large"
+              block={isMobile && !(isWon && bid.canPayNow)}
+              onClick={(e: React.MouseEvent) => { e.stopPropagation(); navigate(`/auctions/${bid.auctionId}`, { state: navState }) }}
               style={{
-                flex: isActive || (isWon && bid.canPayNow) ? 'none' : 1,
-                padding: '12px 24px',
-                background: 'transparent',
-                color: 'var(--color-text-secondary, #9ca3af)',
                 borderRadius: 12,
-                fontWeight: 700,
-                fontSize: 14,
-                border: '1px solid rgba(255,255,255,0.1)',
-                transition: 'all 0.3s ease',
-                cursor: 'pointer',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'var(--color-border-light)';
-                e.currentTarget.style.color = 'var(--color-text-primary)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-                e.currentTarget.style.color = 'var(--color-text-secondary, #9ca3af)';
+                fontWeight: 600,
+                height: 48,
+                padding: '0 32px',
+                color: 'var(--color-text-secondary)'
               }}
             >
-              {t('viewDetails', 'View Details').toUpperCase()}
-            </button>
+              {t('viewDetails', 'View Details')}
+            </Button>
         </div>
       </div>
 
       {/* Right: Chart */}
-      <div style={{ 
-        flex: isMobile ? 'none' : 1.5,
-        width: isMobile ? '100%' : 'auto', 
-        borderLeft: isMobile ? 'none' : '1px solid var(--color-border, rgba(255,255,255,0.05))', 
-        borderTop: isMobile ? '1px solid var(--color-border, rgba(255,255,255,0.05))' : 'none',
-        padding: isMobile ? '16px 8px 0' : '8px 0 8px 24px',
-        display: 'flex',
-        flexDirection: 'column',
-        minWidth: isMobile ? 0 : 400
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-          <span style={{ fontFamily: SANS_FONT, fontWeight: 600, color: 'var(--color-text-secondary, #9ca3af)', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            <LineChartOutlined style={{ marginRight: 8 }} />
-            {t('priceHistory', 'Price History')}
-          </span>
-          <span style={{ fontFamily: SANS_FONT, fontSize: 11, color: 'var(--color-text-tertiary, #6b7280)', textTransform: 'uppercase', fontWeight: 600 }}>
-            {totalBidCount > 1 ? `${totalBidCount} ${t('bidsLabel', 'bids')}` : `${totalBidCount} ${t('bidLabel', 'bid')}`}
-          </span>
+      {!isMobile && (
+        <div style={{ 
+          flex: isTablet ? 'none' : 1.5,
+          width: isTablet ? '100%' : 'auto', 
+          borderLeft: isTablet ? 'none' : '1px solid var(--color-border)', 
+          borderTop: isTablet ? '1px solid var(--color-border)' : 'none',
+          padding: isTablet ? '20px 0 0' : '8px 0 8px 32px',
+          display: 'flex',
+          flexDirection: 'column',
+          minWidth: isTablet ? 0 : 400
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+            <span style={{ fontFamily: SANS_FONT, fontWeight: 600, color: 'var(--color-text-tertiary)', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              <LineChartOutlined style={{ marginRight: 8, color: 'var(--color-accent)' }} />
+              {t('priceHistory', 'Price History')}
+            </span>
+            <Tag style={{ borderRadius: 6, margin: 0, fontWeight: 600, background: 'var(--color-bg-surface)' }}>
+              {totalBidCount} {t(totalBidCount > 1 ? 'bidsLabel' : 'bidLabel', 'bids')}
+            </Tag>
+          </div>
+          
+          <div style={{ flex: 1, minHeight: 160, position: 'relative' }}>
+            {isLoading ? (
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Spin /></div>
+            ) : priceHistory.length > 0 ? (
+              <PriceHistoryChart priceHistory={priceHistory} currency={currentPriceCurrency} mode="inline" />
+            ) : (
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-tertiary)', fontSize: 13 }}>
+                {t('noPriceHistory', 'No price history available')}
+              </div>
+            )}
+          </div>
         </div>
-        
-        <div style={{ flex: 1, minHeight: 140, position: 'relative' }}>
-          {isLoading ? (
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Spin /></div>
-          ) : priceHistory.length > 0 ? (
-            <PriceHistoryChart priceHistory={priceHistory} currency={currentPriceCurrency} mode="inline" />
-          ) : (
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-tertiary, #6b7280)', fontSize: 13 }}>
-              {t('noPriceHistory', 'No price history available')}
-            </div>
-          )}
-        </div>
-      </div>
+      )}
     </div>
   )
 }
@@ -370,7 +334,7 @@ export default function MyBidsPage() {
   const { t } = useTranslation('auction')
   const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
-  const { isMobile, isTablet } = useBreakpoint()
+  const { isMobile } = useBreakpoint()
 
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
@@ -406,20 +370,19 @@ export default function MyBidsPage() {
     : items
 
   const totalCount = data?.metadata?.totalCount ?? 0
-  const isNarrow = isMobile || isTablet
 
   return (
     <div
       style={{
         maxWidth: 1400,
         margin: '0 auto',
-        padding: isMobile ? '0 0 80px' : isTablet ? '0 0 64px' : '0 24px 80px',
+        padding: isMobile ? '12px 16px 80px' : '0 24px 80px',
       }}
     >
       {/* Header */}
-      <div style={{ marginBottom: isMobile ? 20 : 32 }}>
-        <Typography.Title
-          level={isMobile ? 3 : 2}
+      <div style={{ marginBottom: isMobile ? 24 : 40 }}>
+        <Title
+          level={2}
           style={{
             fontFamily: SANS_FONT,
             fontWeight: 600,
@@ -430,35 +393,28 @@ export default function MyBidsPage() {
         >
           <HistoryOutlined style={{ marginRight: 12, color: 'var(--color-accent)' }} />
           {t('myBids', 'My Bids')}
-        </Typography.Title>
-        <p
-          style={{
-            fontFamily: SANS_FONT,
-            fontSize: isMobile ? 14 : 15,
-            color: 'var(--color-text-secondary)',
-            margin: 0,
-          }}
-        >
+        </Title>
+        <Text style={{ fontSize: 16, color: 'var(--color-text-secondary)' }}>
           {t('myBidsSubtitle', 'Track and manage your auction participation and performance')}
-        </p>
+        </Text>
       </div>
 
       {/* Pending Offers */}
       {pendingOffers && pendingOffers.length > 0 && (
-        <div style={{ marginBottom: isMobile ? 20 : 28 }}>
-          <Typography.Title
+        <div style={{ marginBottom: 32 }}>
+          <Title
             level={4}
             style={{
               fontFamily: SANS_FONT,
               fontWeight: 600,
               color: 'var(--color-text-primary)',
-              marginBottom: 12,
-              fontSize: isMobile ? 15 : undefined,
+              marginBottom: 16,
+              fontSize: 18,
             }}
           >
             <TrophyOutlined style={{ marginRight: 8, color: 'var(--color-accent)' }} />
             {t('pendingOffers', 'Pending Offers')}
-          </Typography.Title>
+          </Title>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {pendingOffers.map((offer) => (
               <WinnerOfferPanel
@@ -490,21 +446,20 @@ export default function MyBidsPage() {
 
       {/* Filter pills + sort */}
       <Flex
-        align={isMobile ? 'flex-start' : 'center'}
+        align={isMobile ? 'stretch' : 'center'}
         justify="space-between"
         vertical={isMobile}
-        gap={isMobile ? 12 : 8}
-        wrap={isNarrow ? undefined : 'wrap'}
-        style={{ marginBottom: 20 }}
+        gap={isMobile ? 16 : 12}
+        style={{ marginBottom: 24 }}
       >
         <div
           style={{
             display: 'flex',
             gap: 8,
-            flexWrap: 'wrap',
-            overflowX: isMobile ? 'auto' : undefined,
+            overflowX: 'auto',
             scrollbarWidth: 'none',
-            paddingBottom: isMobile ? 2 : 0,
+            paddingBottom: isMobile ? 4 : 0,
+            msOverflowStyle: 'none'
           }}
         >
           {STATUS_PILLS.map((pill) => {
@@ -518,18 +473,18 @@ export default function MyBidsPage() {
                   setPage(1)
                 }}
                 style={{
-                  padding: isMobile ? '6px 14px' : '6px 18px',
+                  padding: '8px 20px',
                   borderRadius: 100,
                   fontSize: 13,
-                  fontWeight: 500,
+                  fontWeight: 600,
                   fontFamily: SANS_FONT,
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
-                  minHeight: 34,
+                  minHeight: 38,
                   border: isActive ? '1px solid var(--color-accent)' : '1px solid var(--color-border)',
-                  background: isActive ? 'var(--color-accent)' : 'var(--color-bg-container)',
+                  background: isActive ? 'var(--color-accent)' : 'var(--color-bg-card)',
                   color: isActive ? '#fff' : 'var(--color-text-secondary)',
-                  transition: 'all 200ms ease',
+                  transition: 'all 0.2s ease',
                   flexShrink: 0,
                 }}
               >
@@ -542,7 +497,8 @@ export default function MyBidsPage() {
         <Select
           value={sortBy}
           onChange={(v) => { setSortBy(v); setPage(1) }}
-          style={{ width: isMobile ? '100%' : 180, flexShrink: 0 }}
+          style={{ width: isMobile ? '100%' : 220, height: 40 }}
+          className="oio-select"
           options={[
             { value: 'LastBidAt Desc', label: t('sortNewest', 'Newest First') },
             { value: 'LastBidAt Asc', label: t('sortOldest', 'Oldest First') },
@@ -554,13 +510,13 @@ export default function MyBidsPage() {
 
       {/* Content List */}
       {isLoading ? (
-        <div style={{ textAlign: 'center', padding: isMobile ? 48 : 80 }}>
+        <div style={{ textAlign: 'center', padding: 80 }}>
           <Spin size="large" />
         </div>
       ) : displayItems.length === 0 ? (
         <Empty
           description={t('noBidsYet', 'You have not participated in any auctions yet')}
-          style={{ padding: isMobile ? '40px 0' : '60px 0' }}
+          style={{ padding: 80, background: 'var(--color-bg-card)', borderRadius: 24, border: '1px solid var(--color-border)' }}
         />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -571,7 +527,7 @@ export default function MyBidsPage() {
       )}
       
       {displayItems.length > 0 && (
-        <Flex justify="center" style={{ marginTop: 32 }}>
+        <Flex justify="center" style={{ marginTop: 40 }}>
           <Pagination
             current={data?.metadata?.currentPage ?? page}
             pageSize={data?.metadata?.pageSize ?? pageSize}

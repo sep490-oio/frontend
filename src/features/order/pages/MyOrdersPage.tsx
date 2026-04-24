@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Button, Tabs, Tag, Tooltip, Card, List, Flex } from 'antd'
-import { EyeOutlined, ClockCircleOutlined, DollarOutlined } from '@ant-design/icons'
+import { Button, Tag, Tooltip, Card, Flex, Typography, Spin, Empty, Pagination } from 'antd'
+import { EyeOutlined, ClockCircleOutlined, DollarOutlined, ShoppingOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
@@ -15,7 +15,9 @@ import { useAuth } from '@/hooks/useAuth'
 import { formatDateTime } from '@/utils/format'
 import type { OrderDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
-import { SERIF_FONT } from '@/styles/tokens'
+import { MONO_FONT, SANS_FONT } from '@/styles/tokens'
+
+const { Title, Text } = Typography
 
 function formatCountdown(targetDate: string, expiredLabel: string): string {
   const diff = new Date(targetDate).getTime() - Date.now()
@@ -48,7 +50,7 @@ function DecisionCountdown({ endsAt }: { endsAt: string }) {
       <Tag
         icon={<ClockCircleOutlined />}
         color={isExpired ? 'default' : 'warning'}
-        style={{ fontSize: 12 }}
+        style={{ fontSize: 12, borderRadius: 6 }}
       >
         {display}
       </Tag>
@@ -56,22 +58,10 @@ function DecisionCountdown({ endsAt }: { endsAt: string }) {
   )
 }
 
-const RETURN_STATUS_COLORS: Record<string, string> = {
-  requested: 'orange',
-  approved: 'blue',
-  rejected: 'red',
-  shipped: 'cyan',
-  received: 'geekblue',
-  completed: 'green',
-  cancelled: 'default',
-}
-
 export default function MyOrdersPage() {
   const { t } = useTranslation('order')
   const { t: tc } = useTranslation('common')
 
-  // Synthetic tab keys beyond OrderStatus: "returns" = client-side filter that
-  // shows only orders with an active (non-terminal) OrderReturn.
   const RETURNS_TAB_KEY = 'returns'
 
   const STATUS_TABS = [
@@ -95,8 +85,6 @@ export default function MyOrdersPage() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
 
-  // The "Returns" tab is a client-side filter: we pull a wider page (no BE
-  // status param) and filter by the presence of an active OrderReturn.
   const isGroupedTab = statusFilter === OrderStatus.OnDelivering || statusFilter === OrderStatus.Paid
   const isReturnsTab = statusFilter === RETURNS_TAB_KEY
   const params = isReturnsTab
@@ -127,8 +115,6 @@ export default function MyOrdersPage() {
     return orderStatus === tabKey
   }
 
-  // Filter out orders that the user is selling (outbound). /me/orders should strictly be for purchases.
-  // We relax the filter if user.id is not yet synced to prevent empty lists on first load.
   const items = (data?.items ?? []).filter((order: OrderDto) => !user?.id || order.buyerId === user.id)
 
   const displayItems = isReturnsTab
@@ -157,13 +143,13 @@ export default function MyOrdersPage() {
           onClick={() => navigate(`${prefix}/orders/${record.id}`)}
           style={{
             padding: 0,
-            fontFamily: "var(--font-mono)",
-            fontWeight: 500,
-            fontSize: 13,
-            letterSpacing: '-0.01em',
+            fontFamily: MONO_FONT,
+            fontWeight: 600,
+            fontSize: 14,
+            color: 'var(--color-accent)'
           }}
         >
-          {orderNumber}
+          #{orderNumber}
         </Button>
       ),
     },
@@ -173,7 +159,9 @@ export default function MyOrdersPage() {
       key: 'totalAmount',
       width: 160,
       render: (amount: number, record) => (
-        <PriceDisplay amount={amount} currency={record.currency} size="small" />
+        <div style={{ fontFamily: MONO_FONT, fontWeight: 700, fontSize: 15 }}>
+          <PriceDisplay amount={amount} currency={record.currency} />
+        </div>
       ),
     },
     {
@@ -182,228 +170,205 @@ export default function MyOrdersPage() {
       key: 'status',
       width: 140,
       render: (status: string, record) => (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <StatusBadge status={status} />
+        <Flex vertical gap={4} align="flex-start">
+          <StatusBadge status={status} size="small" />
           {record.decisionWindowEndsAt && status === OrderStatus.Delivered && (
             <DecisionCountdown endsAt={record.decisionWindowEndsAt} />
           )}
-        </div>
-      ),
-    },
-    {
-      title: t('returnStatus', 'Return'),
-      key: 'return',
-      width: 120,
-      render: (_: unknown, record: OrderDto) => {
-        if (!record.return) return null
-        const color = RETURN_STATUS_COLORS[record.return.status] ?? 'default'
-        return (
-          <Tag color={color} style={{ fontSize: 12 }}>
-            {t(`returnStatus.${record.return.status}`, record.return.status)}
-          </Tag>
-        )
-      },
-    },
-    {
-      title: t('createdAt', 'Created'),
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      width: 160,
-      render: (date: string) => (
-        <span style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
-          {formatDateTime(date)}
-        </span>
+        </Flex>
       ),
     },
     {
       title: tc('action.view', 'Actions'),
       key: 'actions',
-      width: 140,
+      width: 120,
       render: (_: unknown, record: OrderDto) =>
         record.status === OrderStatus.PendingPayment && record.buyerId === user?.id ? (
           <Button
             type="primary"
-            size="small"
+            size="middle"
             icon={<DollarOutlined />}
             onClick={() => navigate(`/checkout/${record.id}`)}
+            style={{ borderRadius: 10, fontWeight: 600, background: 'var(--color-accent)', border: 'none', height: 38 }}
           >
-            {t('payNow', 'Pay Now')}
+            {t('payNow', 'Pay')}
           </Button>
         ) : (
           <Button
-            type="default"
-            size="small"
+            size="middle"
             icon={<EyeOutlined />}
             onClick={() => navigate(`/me/orders/${record.id}`)}
-            style={{ transition: 'color 200ms ease' }}
+            style={{ borderRadius: 10, fontWeight: 600, height: 38 }}
           >
-            {t('viewDetail', 'View Detail')}
+            {t('viewDetail', 'View')}
           </Button>
         ),
     },
   ]
 
   return (
-    <div>
-      {/* Serif heading */}
-      <h1
+    <div style={{ maxWidth: 1400, margin: '0 auto', padding: isMobile ? '12px 16px 80px' : '0 24px 80px' }}>
+      {/* Header */}
+      <div style={{ marginBottom: isMobile ? 24 : 40 }}>
+        <Title
+          level={2}
+          style={{
+            fontFamily: SANS_FONT,
+            fontWeight: 600,
+            color: 'var(--color-text-primary)',
+            marginBottom: 4,
+            fontSize: isMobile ? 24 : 32,
+          }}
+        >
+          <ShoppingOutlined style={{ marginRight: 12, color: 'var(--color-accent)' }} />
+          {t('myOrders', 'My Orders')}
+        </Title>
+        <Text style={{ color: 'var(--color-text-secondary)', fontSize: 16 }}>
+          {t('myOrdersSubtitle', 'Track and manage your purchases')}
+        </Text>
+      </div>
+
+      {/* Pill Filters */}
+      <div
         style={{
-          fontFamily: SERIF_FONT,
-          fontWeight: 400,
-          fontSize: 28,
-          color: 'var(--color-text-primary)',
-          marginBottom: 4,
-          letterSpacing: '-0.01em',
+          display: 'flex',
+          gap: 8,
+          marginBottom: 24,
+          overflowX: 'auto',
+          scrollbarWidth: 'none',
+          paddingBottom: isMobile ? 4 : 0,
+          msOverflowStyle: 'none'
         }}
       >
-        {t('myOrders', 'My Orders')}
-      </h1>
-      <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, marginBottom: 24 }}>
-        {t('myOrdersSubtitle', 'Track and manage your purchases')}
-      </p>
-
-      {/* Status tabs styled as pills */}
-      <Tabs
-        activeKey={statusFilter}
-        onChange={(key) => {
-          setStatusFilter(key)
-          setPage(1)
-        }}
-        items={STATUS_TABS.map((tab) => ({
-          key: tab.key,
-          label: (
-            <span
+        {STATUS_TABS.map((tab) => {
+          const isActive = statusFilter === tab.key
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => {
+                setStatusFilter(tab.key)
+                setPage(1)
+              }}
               style={{
-                padding: '4px 14px',
+                padding: '8px 20px',
                 borderRadius: 100,
                 fontSize: 13,
-                fontWeight: 500,
-                transition: 'all 200ms ease',
-                ...(statusFilter === tab.key
-                  ? {
-                    background: 'var(--color-accent)',
-                    color: '#fff',
-                  }
-                  : {
-                    background: 'transparent',
-                    color: 'var(--color-text-secondary)',
-                  }),
+                fontWeight: 600,
+                fontFamily: SANS_FONT,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                minHeight: 38,
+                border: isActive ? '1px solid var(--color-accent)' : '1px solid var(--color-border)',
+                background: isActive ? 'var(--color-accent)' : 'var(--color-bg-card)',
+                color: isActive ? '#fff' : 'var(--color-text-secondary)',
+                transition: 'all 0.2s ease',
+                flexShrink: 0
               }}
             >
               {t(`statusTab.${tab.label}`, tab.label)}
-            </span>
-          ),
-        }))}
-        style={{ marginBottom: 16 }}
-      />
+            </button>
+          )
+        })}
+      </div>
 
-      {isMobile ? (
-        /* Mobile card view */
-        <List
-          dataSource={displayItems}
-          loading={isLoading}
-          pagination={{
-            current: data?.metadata?.currentPage ?? page,
-            pageSize: data?.metadata?.pageSize ?? pageSize,
-            total: data?.metadata?.totalCount ?? 0,
-            onChange: (p, ps) => {
-              setPage(p)
-              setPageSize(ps)
-            },
-          }}
-          renderItem={(record: OrderDto) => (
-            <List.Item style={{ padding: '8px 0', border: 'none' }}>
-              <Card
-                size="small"
-                style={{ width: '100%', borderRadius: 10 }}
-                styles={{ body: { padding: '12px 16px' } }}
-              >
-                <Flex vertical gap={8}>
-                  {record.item && <OrderItemSummary item={record.item} variant="row" />}
-                  <Flex justify="space-between" align="center">
-                    <Button
-                      type="link"
-                      style={{
-                        padding: 0,
-                        fontFamily: 'var(--font-mono)',
-                        fontWeight: 500,
-                        fontSize: 13,
-                      }}
-                      onClick={() => navigate(`${prefix}/orders/${record.id}`)}
-                    >
-                      {record.orderNumber}
-                    </Button>
-                    <Flex gap={4} align="center">
-                      <StatusBadge status={record.status} />
-                      {record.decisionWindowEndsAt && record.status === OrderStatus.Delivered && (
-                        <DecisionCountdown endsAt={record.decisionWindowEndsAt} />
-                      )}
-                    </Flex>
-                  </Flex>
-                  <Flex justify="space-between" align="center">
-                    <span style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
-                      {t('totalAmount', 'Total Amount')}
-                    </span>
-                    <PriceDisplay amount={record.totalAmount} currency={record.currency} size="small" />
-                  </Flex>
-                  {record.return && (
-                    <Flex justify="space-between" align="center">
-                      <span style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
-                        {t('returnStatus', 'Return')}
-                      </span>
-                      <Tag color={RETURN_STATUS_COLORS[record.return.status] ?? 'default'} style={{ fontSize: 12 }}>
-                        {t(`returnStatus.${record.return.status}`, record.return.status)}
-                      </Tag>
-                    </Flex>
-                  )}
-                  <Flex justify="space-between" align="center">
-                    <span style={{ color: 'var(--color-text-secondary)', fontSize: 12 }}>
-                      {formatDateTime(record.createdAt)}
-                    </span>
-                    {record.status === OrderStatus.PendingPayment && record.buyerId === user?.id ? (
+      {isLoading ? (
+        <div style={{ textAlign: 'center', padding: 80 }}><Spin size="large" /></div>
+      ) : displayItems.length === 0 ? (
+        <Empty
+          description={t('noOrdersYet', 'You have no orders yet')}
+          style={{ padding: 80, background: 'var(--color-bg-card)', borderRadius: 24, border: '1px solid var(--color-border)' }}
+        />
+      ) : isMobile ? (
+        /* Mobile Card View */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {displayItems.map((record: OrderDto) => (
+             <div
+                key={record.id}
+                onClick={() => navigate(`${prefix}/orders/${record.id}`)}
+                className="oio-press"
+                style={{
+                   background: 'var(--color-bg-card)',
+                   border: '1px solid var(--color-border)',
+                   borderRadius: 24,
+                   padding: 16,
+                   cursor: 'pointer',
+                   boxShadow: 'var(--shadow-sm)'
+                }}
+             >
+                <Flex vertical gap={16}>
+                   {record.item && <OrderItemSummary item={record.item} variant="row" />}
+                   
+                   <Flex justify="space-between" align="center" style={{ borderTop: '1px solid var(--color-border-light)', paddingTop: 12 }}>
+                      <Text style={{ fontFamily: MONO_FONT, fontWeight: 700, color: 'var(--color-accent)', fontSize: 13 }}>#{record.orderNumber}</Text>
+                      <StatusBadge status={record.status} size="small" />
+                   </Flex>
+
+                   <Flex justify="space-between" align="baseline">
+                      <div style={{ fontFamily: MONO_FONT, fontWeight: 700, fontSize: 18, color: 'var(--color-text-primary)' }}>
+                         <PriceDisplay amount={record.totalAmount} currency={record.currency} />
+                      </div>
+                      <Text style={{ fontSize: 11, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        {formatDateTime(record.createdAt)}
+                      </Text>
+                   </Flex>
+
+                   {record.status === OrderStatus.PendingPayment && record.buyerId === user?.id && (
                       <Button
                         type="primary"
-                        size="small"
+                        block
                         icon={<DollarOutlined />}
-                        onClick={() => navigate(`/checkout/${record.id}`)}
+                        onClick={(e) => { e.stopPropagation(); navigate(`/checkout/${record.id}`) }}
+                        style={{ background: 'var(--color-accent)', fontWeight: 700, height: 44, borderRadius: 12, marginTop: 4 }}
                       >
                         {t('payNow', 'Pay Now')}
                       </Button>
-                    ) : (
-                      <Button
-                        type="default"
-                        size="small"
-                        icon={<EyeOutlined />}
-                        onClick={() => navigate(`/me/orders/${record.id}`)}
-                      >
-                        {t('viewDetail', 'View Detail')}
-                      </Button>
-                    )}
-                  </Flex>
+                   )}
                 </Flex>
-              </Card>
-            </List.Item>
-          )}
-        />
+             </div>
+          ))}
+          <Flex justify="center" style={{ marginTop: 32 }}>
+             <Pagination
+                current={page}
+                pageSize={pageSize}
+                total={data?.metadata?.totalCount ?? 0}
+                size="small"
+                onChange={(p) => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+             />
+          </Flex>
+        </div>
       ) : (
-        <ResponsiveTable<OrderDto>
-          mobileMode="card"
-          rowKey="id"
-          columns={columns}
-          dataSource={displayItems}
-          loading={isLoading}
-          pagination={{
-            current: data?.metadata?.currentPage ?? page,
-            pageSize: data?.metadata?.pageSize ?? pageSize,
-            total: data?.metadata?.totalCount ?? 0,
-            showSizeChanger: true,
-            showTotal: (total) => tc('pagination.total', { total }),
-            onChange: (p, ps) => {
-              setPage(p)
-              setPageSize(ps)
-            },
+        /* Desktop Table View */
+        <Card
+          styles={{ body: { padding: 0 } }}
+          style={{
+            background: 'var(--color-bg-card)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 24,
+            overflow: 'hidden',
+            boxShadow: 'var(--shadow-sm)'
           }}
-        />
+        >
+          <ResponsiveTable<OrderDto>
+            mobileMode="card"
+            rowKey="id"
+            columns={columns}
+            dataSource={displayItems}
+            pagination={{
+              current: data?.metadata?.currentPage ?? page,
+              pageSize: data?.metadata?.pageSize ?? pageSize,
+              total: data?.metadata?.totalCount ?? 0,
+              showSizeChanger: !isMobile,
+              showTotal: (total) => tc('pagination.total', { total }),
+              size: isMobile ? 'small' : undefined,
+              onChange: (p, ps) => {
+                setPage(p)
+                setPageSize(ps)
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+              },
+            }}
+          />
+        </Card>
       )}
     </div>
   )
