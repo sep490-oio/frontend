@@ -375,7 +375,7 @@ export default function TermsPage() {
   )
 
   return (
-    <div style={{ maxWidth: 1280, margin: '0 auto', padding: isMobile ? '12px 16px 80px' : '0 24px 80px' }}>
+    <div style={{ maxWidth: 1280, margin: '0 auto', padding: isMobile ? '24px 16px 80px' : '32px 24px 80px' }}>
       <div style={{ marginBottom: 32 }}>
         <Typography.Title level={2} style={{ marginBottom: 4, fontFamily: SANS_FONT, fontWeight: 600, fontSize: isMobile ? 24 : 32 }}>
           {t('terms.pageTitle', 'Terms & Conditions')}

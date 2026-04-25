@@ -3,7 +3,6 @@ import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/queryClient'
 import {
   Typography,
-  Card,
   Button,
   Input,
   DatePicker,
@@ -192,7 +191,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div style={{ maxWidth: 1000, margin: '0 auto', padding: isMobile ? '12px 16px 80px' : '0 24px 80px' }}>
+    <div style={{ maxWidth: 1400, margin: '0 auto', padding: isMobile ? '24px 16px 80px' : '48px 24px 80px' }}>
       {/* Header */}
       <div style={{ marginBottom: isMobile ? 24 : 40 }}>
         <Title
@@ -245,17 +244,17 @@ export default function ProfilePage() {
       <Row gutter={isMobile ? [24, 24] : [32, 32]}>
         {/* Left Col: Avatar & Status */}
         <Col xs={24} lg={8}>
-          <Card
+          <div
             style={{
               background: 'var(--color-bg-card)',
               border: '1px solid var(--color-border)',
-              borderRadius: 32,
+              borderRadius: 24,
               textAlign: 'center',
               boxShadow: 'var(--shadow-sm)',
               position: 'sticky',
-              top: 24
+              top: 24,
+              padding: isMobile ? '40px 24px' : '48px 32px'
             }}
-            styles={{ body: { padding: isMobile ? '40px 24px' : '48px 32px' } }}
           >
             <div
               style={{ position: 'relative', width: 140, height: 140, margin: '0 auto 24px' }}
@@ -337,22 +336,24 @@ export default function ProfilePage() {
                 {t('profile.changeAvatar', 'Change Avatar')}
               </Button>
             </Upload>
-          </Card>
+          </div>
         </Col>
 
         {/* Right Col: Forms */}
         <Col xs={24} lg={16}>
           {/* Personal Info Form */}
-          <Card
-            title={<span style={sectionHeadingStyle}>{t('profile.personalInfo', 'Personal Information')}</span>}
+          <div style={{ marginBottom: 20 }}>
+            <span style={sectionHeadingStyle}>{t('profile.personalInfo', 'Personal Information')}</span>
+          </div>
+          <div
             style={{
               background: 'var(--color-bg-card)',
               border: '1px solid var(--color-border)',
-              borderRadius: 32,
+              borderRadius: 24,
               marginBottom: 32,
               boxShadow: 'var(--shadow-sm)',
+              padding: isMobile ? '24px 20px' : '40px'
             }}
-            styles={{ body: { padding: isMobile ? '24px 20px' : '40px' } }}
           >
             <form onSubmit={onProfileSave}>
               <Row gutter={24}>
@@ -470,18 +471,20 @@ export default function ProfilePage() {
                 {t('profile.saveChanges', 'Update Profile')}
               </Button>
             </form>
-          </Card>
+          </div>
 
           {/* Phone Number Section */}
-          <Card
-            title={<span style={sectionHeadingStyle}>{t('profile.phoneNumber', 'Security Contact')}</span>}
+          <div style={{ marginBottom: 20 }}>
+            <span style={sectionHeadingStyle}>{t('profile.phoneNumber', 'Security Contact')}</span>
+          </div>
+          <div
             style={{
               background: 'var(--color-bg-card)',
               border: '1px solid var(--color-border)',
-              borderRadius: 32,
+              borderRadius: 24,
               boxShadow: 'var(--shadow-sm)',
+              padding: isMobile ? '24px 20px' : '40px'
             }}
-            styles={{ body: { padding: isMobile ? '24px 20px' : '40px' } }}
           >
             {user?.phoneNumberConfirmed ? (
               <Alert
@@ -597,7 +600,7 @@ export default function ProfilePage() {
                 )}
               </>
             )}
-          </Card>
+          </div>
         </Col>
       </Row>
     </div>

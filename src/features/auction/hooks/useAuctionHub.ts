@@ -12,6 +12,7 @@ import type {
   AuctionStartedNotification,
   AuctionEndedNotification,
   AuctionExtendedNotification,
+  AuctionPositionChangedNotification,
   AuctionStateChangedNotification,
   AuctionCancelledNotification,
   BidDto,
@@ -185,6 +186,30 @@ function applyAuctionRealtimePatch(
       upsertBidPage(current, bid, data.bidCount),
     )
   }
+}
+
+function applyAuctionPositionPatch(
+  qc: Pick<QueryClient, 'setQueryData'>,
+  data: AuctionPositionChangedNotification,
+  userScope: string | null | undefined,
+) {
+  qc.setQueryData(queryKeys.auctions.detailFor(data.auctionId, userScope), (current: AuctionDetailDto | undefined) => {
+    if (!current) return current
+
+    // If the notification carries a newer price than what we have, we could patch it here too,
+    // but AuctionStateChanged usually handles that. The primary goal here is the position.
+    return {
+      ...current,
+      currentUserBidState: {
+        ...current.currentUserBidState,
+        position: data.position,
+        isCurrentWinner: data.isCurrentWinner,
+        latestBidId: data.latestBidId ?? current.currentUserBidState?.latestBidId,
+        latestBidAmount: data.latestBidAmount ?? current.currentUserBidState?.latestBidAmount,
+        latestBidAt: data.timestamp ?? current.currentUserBidState?.latestBidAt,
+      } as any,
+    }
+  })
 }
 
 export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId?: string) {
@@ -514,7 +539,15 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
       qc.invalidateQueries({ queryKey: queryKeys.items.questionsRoot(data.itemId) })
     }
 
+    const auctionPositionChangedHandler = (data: AuctionPositionChangedNotification) => {
+      if (auctionId && data.auctionId !== auctionId) {
+        return
+      }
+      applyAuctionPositionPatch(qc, data, currentUserId)
+    }
+
     connection.on('AuctionStateChanged', auctionStateChangedHandler)
+    connection.on('AuctionPositionChanged', auctionPositionChangedHandler)
     connection.on('BidPlaced', bidPlacedHandler)
     connection.on('Outbid', outbidHandler)
     connection.on('AuctionStarted', auctionStartedHandler)
@@ -562,6 +595,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
       }
 
       connection.off('AuctionStateChanged', auctionStateChangedHandler)
+      connection.off('AuctionPositionChanged', auctionPositionChangedHandler)
       connection.off('BidPlaced', bidPlacedHandler)
       connection.off('Outbid', outbidHandler)
       connection.off('AuctionStarted', auctionStartedHandler)

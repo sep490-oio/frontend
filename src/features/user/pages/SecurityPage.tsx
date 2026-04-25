@@ -101,14 +101,14 @@ function ChangePasswordSection() {
   })
 
   return (
-    <Card 
+    <div 
       style={{ 
         background: 'var(--color-bg-card)', 
         border: '1px solid var(--color-border)', 
         borderRadius: 24,
-        boxShadow: 'var(--shadow-sm)'
+        boxShadow: 'var(--shadow-sm)',
+        padding: isMobile ? '24px 20px' : '32px'
       }}
-      styles={{ body: { padding: isMobile ? '24px 20px' : '32px' } }}
     >
       <Title level={4} style={{ marginBottom: 24, fontFamily: SANS_FONT, fontWeight: 600 }}>
         {t('security.tabs.password')}
@@ -185,7 +185,7 @@ function ChangePasswordSection() {
           {t('security.changePassword.submit')}
         </Button>
       </form>
-    </Card>
+    </div>
   )
 }
 
@@ -284,14 +284,14 @@ function TwoFactorSection() {
   const is2FAEnabled = user?.twoFactorEnabled
 
   return (
-    <Card
+    <div
       style={{ 
         background: 'var(--color-bg-card)', 
         border: '1px solid var(--color-border)', 
         borderRadius: 24,
-        boxShadow: 'var(--shadow-sm)'
+        boxShadow: 'var(--shadow-sm)',
+        padding: isMobile ? '24px 20px' : '32px'
       }}
-      styles={{ body: { padding: isMobile ? '24px 20px' : '32px' } }}
     >
       <Space direction="vertical" style={{ width: '100%' }} size={32}>
         <div>
@@ -506,7 +506,7 @@ function TwoFactorSection() {
           </>
         )}
       </Space>
-    </Card>
+    </div>
   )
 }
 
@@ -555,14 +555,14 @@ function SessionsSection() {
   ]
 
   return (
-    <Card 
+    <div 
       style={{ 
         background: 'var(--color-bg-card)', 
         border: '1px solid var(--color-border)', 
         borderRadius: 24,
-        boxShadow: 'var(--shadow-sm)'
+        boxShadow: 'var(--shadow-sm)',
+        padding: isMobile ? '12px' : '24px'
       }}
-      styles={{ body: { padding: isMobile ? '12px' : '24px' } }}
     >
       <ResponsiveTable<UserSessionDto>
         mobileMode="list"
@@ -573,7 +573,7 @@ function SessionsSection() {
         pagination={false}
         locale={{ emptyText: t('security.sessions.empty') }}
       />
-    </Card>
+    </div>
   )
 }
 
@@ -624,14 +624,14 @@ function LoginHistorySection() {
   ]
 
   return (
-    <Card 
+    <div 
       style={{ 
         background: 'var(--color-bg-card)', 
         border: '1px solid var(--color-border)', 
         borderRadius: 24,
-        boxShadow: 'var(--shadow-sm)'
+        boxShadow: 'var(--shadow-sm)',
+        padding: isMobile ? '12px' : '24px'
       }}
-      styles={{ body: { padding: isMobile ? '12px' : '24px' } }}
     >
       <ResponsiveTable<LoginHistoryDto>
         mobileMode="list"
@@ -649,7 +649,7 @@ function LoginHistorySection() {
         }}
         locale={{ emptyText: t('security.loginHistory.empty') }}
       />
-    </Card>
+    </div>
   )
 }
 
@@ -699,7 +699,7 @@ export default function SecurityPage() {
   ]
 
   return (
-    <div style={{ maxWidth: 1000, margin: '0 auto', padding: isMobile ? '12px 16px 80px' : '0 24px 80px' }}>
+    <div style={{ maxWidth: 1400, margin: '0 auto', padding: isMobile ? '24px 16px 80px' : '48px 24px 80px' }}>
       {/* Header */}
       <div style={{ marginBottom: isMobile ? 24 : 40 }}>
         <Title

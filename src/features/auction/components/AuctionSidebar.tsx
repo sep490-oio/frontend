@@ -338,7 +338,7 @@ export function AuctionSidebar({
     auction.buyNowPrice != null &&
     !auction.isBuyNowReserved &&
     canBuyNow &&
-    (isActive || (isScheduled && (qualState === 'window_open' || qualState === 'qualified')))
+    (isActive || isScheduled)
 
 
   // ── Terminal outcome block (IIFE) ────────────────────────────────

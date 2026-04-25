@@ -25,13 +25,13 @@
 - [done] **Log & Lịch sử cọc:**
 - [done] Hệ thống phải có log ghi nhận việc trả cọc cho bidder thua[cite: 16].
 - [done] Lịch sử ví của user phải chia rõ thông tin hoàn cọc theo từng phiên đấu giá[cite: 17].
-- [ ] **Thông tin chi tiết:** Bổ sung thông tin trả cọc và chi tiết các phiên đấu giá đang theo dõi trên màn hình cá nhân[cite: 17].
+- [done] **Thông tin chi tiết:** Bổ sung thông tin trả cọc và chi tiết các phiên đấu giá đang theo dõi trên màn hình cá nhân[cite: 17].
 - [done] **Góc độ Seller:** Bổ sung đầy đủ thông tin chi tiết về các phiên đấu giá và tiền cọc cho người bán[cite: 17].
 - [ ] **Dòng tiền:** Xây dựng cơ chế dòng tiền giữa người bán và sàn (hiện tại chưa có)[cite: 21].
 
 ## 4. Quản lý Đơn hàng & Hệ thống
 - [done] **Lỗi Trang Order:** Sửa lỗi trang quản lý đơn hàng của bidder[cite: 17].
-- [ ]    **Giao hàng:** Tích hợp quản lý trạng thái đơn hàng từ bên thứ 3[cite: 18].
+- [ ]**Giao hàng:** Tích hợp quản lý trạng thái đơn hàng từ bên thứ 3[cite: 18].
 - [ ] **Lịch sử đấu giá:** Sửa lỗi hiển thị lịch sử đơn hàng thay vì lịch sử đấu giá[cite: 18].
 - [ ] **Quản lý trạng thái:** Bổ sung cách phân biệt đơn hàng đang tham gia và đã hoàn thành; thêm màn hình xem các đấu giá đang tham gia[cite: 20].
 - [done] **Phân quyền Admin:** Hạn chế quyền admin theo đúng nghiệp vụ quản trị, không được có quyền bid, nạp/dùng ví của user[cite: 5, 6].

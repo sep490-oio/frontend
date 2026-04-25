@@ -7,11 +7,13 @@ import {
   Form,
   Input,
   InputNumber,
-  Statistic,
   Popconfirm,
   App,
 } from 'antd'
-import { ArrowLeftOutlined, DeleteOutlined } from '@ant-design/icons'
+const { Text } = Typography
+import { ArrowLeftOutlined, DeleteOutlined, BankOutlined } from '@ant-design/icons'
+import { SANS_FONT, MONO_FONT } from '@/styles/tokens'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useNavigate } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
 import { useTranslation } from 'react-i18next'
@@ -150,131 +152,207 @@ export default function WithdrawPage() {
     },
   ]
 
+  const { isMobile } = useBreakpoint()
+
   return (
-    <div>
-      <Space style={{ marginBottom: 16 }}>
-        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(`${prefix}/wallet`)}>
+    <div style={{ maxWidth: 1400, margin: '0 auto', padding: isMobile ? '24px 16px 80px' : '32px 24px 80px' }}>
+      <Space style={{ marginBottom: 24 }}>
+        <Button 
+          icon={<ArrowLeftOutlined />} 
+          onClick={() => navigate(`${prefix}/wallet`)}
+          style={{ borderRadius: 10, fontWeight: 600 }}
+        >
           {tc('action.back', 'Back')}
         </Button>
       </Space>
 
-      <Typography.Title level={2} style={{ marginBottom: 24 }}>
-        {t('withdraw', 'Withdraw')}
-      </Typography.Title>
+      <div style={{ marginBottom: isMobile ? 24 : 40 }}>
+        <h1
+          style={{
+            fontFamily: SANS_FONT,
+            fontWeight: 600,
+            fontSize: isMobile ? 24 : 32,
+            color: 'var(--color-text-primary)',
+            marginBottom: 4,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+          }}
+        >
+          <BankOutlined style={{ fontSize: isMobile ? 24 : 28, color: 'var(--color-accent)' }} />
+          {t('withdraw', 'Withdraw Funds')}
+        </h1>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: 16, margin: 0 }}>
+          {t('withdrawSubtitle', 'Request a withdrawal to your bank account')}
+        </p>
+      </div>
 
       {/* Balance display */}
-      <Card style={{ marginBottom: 24 }}>
-        <Statistic
-          title={t('availableBalance', 'Available Balance')}
-          value={wallet?.availableBalance ?? 0}
-          formatter={(val) => formatCurrency(val as number, wallet?.currency)}
-          valueStyle={{ color: '#3f8600' }}
-        />
+      <Card 
+        style={{ 
+          marginBottom: 32,
+          background: 'var(--color-bg-card)',
+          border: '1px solid var(--color-border)',
+          borderRadius: 24,
+          boxShadow: 'var(--shadow-sm)',
+          maxWidth: 400
+        }}
+        styles={{ body: { padding: 24 } }}
+      >
+        <Text style={{ fontSize: 11, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
+          {t('availableBalance', 'Available Balance')}
+        </Text>
+        <div style={{ fontFamily: MONO_FONT, fontSize: isMobile ? 24 : 30, fontWeight: 700, color: 'var(--color-success)', marginTop: 4 }}>
+           {wallet ? formatCurrency(wallet.availableBalance, wallet.currency) : '--'}
+        </div>
       </Card>
 
-      {/* Withdraw form */}
-      <Card title={t('withdrawForm', 'Withdrawal Request')} style={{ marginBottom: 24, maxWidth: 600 }}>
-        <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-          <Form.Item
-            label={t('amount', 'Amount')}
-            validateStatus={errors.amount ? 'error' : undefined}
-            help={errors.amount?.message}
-            required
-          >
-            <Controller
-              name="amount"
-              control={control}
-              render={({ field }) => (
-                <InputNumber
-                  {...field}
-                  style={{ width: '100%' }}
-                  min={1}
-                  max={wallet?.availableBalance ?? 0}
-                  formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                  parser={(value) => {
-                    const parsed = (value ?? '').replace(/\$\s?|(,*)/g, '')
-                    return parsed ? Number(parsed) : null as any
-                  }}
-                  addonAfter="VND"
-                />
-              )}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label={t('bankName', 'Bank Name')}
-            validateStatus={errors.bankName ? 'error' : undefined}
-            help={errors.bankName?.message}
-            required
-          >
-            <Controller
-              name="bankName"
-              control={control}
-              render={({ field }) => (
-                <Input {...field} placeholder={t('bankNamePlaceholder', 'e.g. Vietcombank, Techcombank')} />
-              )}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label={t('accountNumber', 'Account Number')}
-            validateStatus={errors.accountNumber ? 'error' : undefined}
-            help={errors.accountNumber?.message}
-            required
-          >
-            <Controller
-              name="accountNumber"
-              control={control}
-              render={({ field }) => (
-                <Input {...field} placeholder={t('accountNumberPlaceholder', 'Enter your bank account number')} />
-              )}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label={t('accountHolder', 'Account Holder')}
-            validateStatus={errors.accountHolder ? 'error' : undefined}
-            help={errors.accountHolder?.message}
-            required
-          >
-            <Controller
-              name="accountHolder"
-              control={control}
-              render={({ field }) => (
-                <Input {...field} placeholder={t('accountHolderPlaceholder', 'Full name on bank account')} />
-              )}
-            />
-          </Form.Item>
-
-          <Form.Item>
-            <Button type="primary" htmlType="submit" loading={createWithdrawal.isPending}>
-              {tc('action.submit', 'Submit')}
-            </Button>
-          </Form.Item>
-        </Form>
-      </Card>
-
-      {/* Recent withdrawals */}
-      <Card title={t('recentWithdrawals', 'Recent Withdrawals')}>
-        <ResponsiveTable<WithdrawalRequestDto>
-          mobileMode="list"
-          rowKey="id"
-          columns={columns}
-          dataSource={withdrawals?.items ?? []}
-          loading={wdLoading}
-          pagination={{
-            current: withdrawals?.metadata?.currentPage ?? page,
-            pageSize: withdrawals?.metadata?.pageSize ?? pageSize,
-            total: withdrawals?.metadata?.totalCount ?? 0,
-            showSizeChanger: true,
-            showTotal: (total) => tc('pagination.total', { total }),
-            onChange: (p, ps) => {
-              setPage(p)
-              setPageSize(ps)
-            },
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 32, alignItems: 'start' }}>
+        {/* Withdraw form */}
+        <Card 
+          title={<span style={{ fontFamily: SANS_FONT, fontWeight: 600 }}>{t('withdrawForm', 'Withdrawal Request')}</span>}
+          style={{ 
+            background: 'var(--color-bg-card)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 24,
+            boxShadow: 'var(--shadow-sm)',
           }}
-        />
-      </Card>
+          styles={{ 
+            header: { borderBottom: '1px solid var(--color-border)', padding: '16px 24px' },
+            body: { padding: 24 }
+          }}
+        >
+          <Form layout="vertical" onFinish={handleSubmit(onSubmit)} requiredMark="optional">
+            <Form.Item
+              label={<span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase' }}>{t('amount', 'Amount')}</span>}
+              validateStatus={errors.amount ? 'error' : undefined}
+              help={errors.amount?.message}
+            >
+              <Controller
+                name="amount"
+                control={control}
+                render={({ field }) => (
+                  <InputNumber
+                    {...field}
+                    style={{ width: '100%', height: 48, borderRadius: 12, display: 'flex', alignItems: 'center' }}
+                    size="large"
+                    min={1}
+                    max={wallet?.availableBalance ?? 0}
+                    formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                    parser={(value) => {
+                      const parsed = (value ?? '').replace(/\$\s?|(,*)/g, '')
+                      return parsed ? Number(parsed) : null as any
+                    }}
+                    addonAfter={wallet?.currency ?? 'VND'}
+                  />
+                )}
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={<span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase' }}>{t('bankName', 'Bank Name')}</span>}
+              validateStatus={errors.bankName ? 'error' : undefined}
+              help={errors.bankName?.message}
+            >
+              <Controller
+                name="bankName"
+                control={control}
+                render={({ field }) => (
+                  <Input 
+                    {...field} 
+                    placeholder={t('bankNamePlaceholder', 'e.g. Vietcombank, Techcombank')} 
+                    style={{ height: 48, borderRadius: 12 }}
+                  />
+                )}
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={<span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase' }}>{t('accountNumber', 'Account Number')}</span>}
+              validateStatus={errors.accountNumber ? 'error' : undefined}
+              help={errors.accountNumber?.message}
+            >
+              <Controller
+                name="accountNumber"
+                control={control}
+                render={({ field }) => (
+                  <Input 
+                    {...field} 
+                    placeholder={t('accountNumberPlaceholder', 'Enter your bank account number')} 
+                    style={{ height: 48, borderRadius: 12, fontFamily: MONO_FONT }}
+                  />
+                )}
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={<span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase' }}>{t('accountHolder', 'Account Holder')}</span>}
+              validateStatus={errors.accountHolder ? 'error' : undefined}
+              help={errors.accountHolder?.message}
+            >
+              <Controller
+                name="accountHolder"
+                control={control}
+                render={({ field }) => (
+                  <Input 
+                    {...field} 
+                    placeholder={t('accountHolderPlaceholder', 'Full name on bank account')} 
+                    style={{ height: 48, borderRadius: 12, textTransform: 'uppercase' }}
+                  />
+                )}
+              />
+            </Form.Item>
+
+            <Form.Item style={{ marginBottom: 0 }}>
+              <Button 
+                type="primary" 
+                htmlType="submit" 
+                loading={createWithdrawal.isPending}
+                size="large"
+                block
+                style={{ height: 52, borderRadius: 12, fontWeight: 700, background: 'var(--color-accent)', border: 'none' }}
+              >
+                {tc('action.submit', 'Submit Request')}
+              </Button>
+            </Form.Item>
+          </Form>
+        </Card>
+
+        {/* Recent withdrawals */}
+        <Card 
+          title={<span style={{ fontFamily: SANS_FONT, fontWeight: 600 }}>{t('recentWithdrawals', 'Recent Withdrawals')}</span>}
+          style={{ 
+            background: 'var(--color-bg-card)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 24,
+            boxShadow: 'var(--shadow-sm)',
+          }}
+          styles={{ 
+            header: { borderBottom: '1px solid var(--color-border)', padding: '16px 24px' },
+            body: { padding: 0 }
+          }}
+        >
+          <ResponsiveTable<WithdrawalRequestDto>
+            mobileMode="list"
+            rowKey="id"
+            columns={columns}
+            dataSource={withdrawals?.items ?? []}
+            loading={wdLoading}
+            pagination={{
+              current: withdrawals?.metadata?.currentPage ?? page,
+              pageSize: withdrawals?.metadata?.pageSize ?? pageSize,
+              total: withdrawals?.metadata?.totalCount ?? 0,
+              showSizeChanger: true,
+              showTotal: isMobile ? undefined : (total) => tc('pagination.total', { total }),
+              size: 'small',
+              onChange: (p, ps) => {
+                setPage(p)
+                setPageSize(ps)
+              },
+            }}
+          />
+        </Card>
+      </div>
     </div>
   )
 }

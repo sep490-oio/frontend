@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { formatCurrency, formatDateTime } from '@/utils/format'
 import apiClient from '@/lib/axios'
-import { SERIF_FONT, MONO_FONT } from '@/styles/tokens'
+import { SANS_FONT, MONO_FONT } from '@/styles/tokens'
 
 interface VnPayCallbackResponse {
   transactionRef: string
@@ -84,7 +84,7 @@ export default function VnPayReturnPage() {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          minHeight: '100vh',
+          minHeight: 'calc(100vh - 64px)',
           background: 'var(--color-bg-primary)',
           gap: 16,
         }}
@@ -119,7 +119,7 @@ export default function VnPayReturnPage() {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        minHeight: '100vh',
+        minHeight: 'calc(100vh - 64px)',
         background: 'var(--color-bg-primary)',
         padding: 24,
       }}
@@ -127,12 +127,14 @@ export default function VnPayReturnPage() {
       <div
         style={{
           width: '100%',
-          maxWidth: 520,
+          maxWidth: 560,
           background: 'var(--color-bg-card)',
           border: '1px solid var(--color-border)',
-          borderRadius: 4,
-          padding: isMobile ? '32px 16px' : '48px 40px',
+          borderRadius: 32,
+          padding: isMobile ? '40px 24px' : '56px 48px',
           textAlign: 'center',
+          boxShadow: 'var(--shadow-md)',
+          backdropFilter: 'blur(20px)',
         }}
       >
         {/* Icon */}
@@ -162,11 +164,12 @@ export default function VnPayReturnPage() {
         {/* Title */}
         <h1
           style={{
-            fontFamily: SERIF_FONT,
-            fontWeight: 400,
-            fontSize: isMobile ? 22 : 28,
+            fontFamily: SANS_FONT,
+            fontWeight: 700,
+            fontSize: isMobile ? 24 : 30,
             color: 'var(--color-text-primary)',
-            margin: '0 0 8px',
+            margin: '0 0 12px',
+            letterSpacing: '-0.02em'
           }}
         >
           {isSuccess
@@ -209,12 +212,12 @@ export default function VnPayReturnPage() {
         )}
 
         {/* Transaction details */}
-        <div style={{ textAlign: 'left', marginBottom: 32 }}>
+        <div style={{ textAlign: 'left', marginBottom: 40, padding: 24, background: 'var(--color-bg-surface)', borderRadius: 20, border: '1px solid var(--color-border)' }}>
           <Descriptions
             column={1}
             size="small"
-            labelStyle={{ color: 'var(--color-text-secondary)', fontSize: 13, width: isMobile ? 100 : 140 }}
-            contentStyle={{ fontFamily: MONO_FONT, fontSize: 13 }}
+            labelStyle={{ color: 'var(--color-text-tertiary)', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', width: isMobile ? 110 : 150 }}
+            contentStyle={{ fontFamily: MONO_FONT, fontSize: 14, color: 'var(--color-text-primary)', fontWeight: 600 }}
           >
             {txnRef && (
               <Descriptions.Item label={t('payment:vnpayReturn.transactionRef', 'Transaction Ref')}>
@@ -238,12 +241,12 @@ export default function VnPayReturnPage() {
             )}
             {formattedPayDate && (
               <Descriptions.Item label={t('payment:vnpayReturn.time', 'Time')}>
-                <span style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>{formattedPayDate}</span>
+                <span style={{ fontFamily: SANS_FONT }}>{formattedPayDate}</span>
               </Descriptions.Item>
             )}
             {orderInfo && (
               <Descriptions.Item label={t('payment:vnpayReturn.content', 'Content')}>
-                <span style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>{orderInfo}</span>
+                <span style={{ fontFamily: SANS_FONT }}>{orderInfo}</span>
               </Descriptions.Item>
             )}
             {!isSuccess && result?.responseCode && (
@@ -258,11 +261,12 @@ export default function VnPayReturnPage() {
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', flexDirection: isMobile ? 'column' : 'row' }}>
           {isSuccess && (() => {
             const primaryBtnStyle = {
-              height: 48,
-              padding: '0 32px',
-              fontWeight: 500,
+              height: 52,
+              padding: '0 40px',
+              fontWeight: 700,
               background: 'var(--color-accent)',
               borderColor: 'var(--color-accent)',
+              borderRadius: 14,
             }
             const go = (path: string) => {
               localStorage.removeItem('oio_deposit_auction_id')
@@ -319,11 +323,12 @@ export default function VnPayReturnPage() {
               size="large"
               onClick={() => navigate(-1)}
               style={{
-                height: 48,
-                padding: '0 32px',
-                fontWeight: 500,
+                height: 52,
+                padding: '0 40px',
+                fontWeight: 700,
                 background: 'var(--color-accent)',
                 borderColor: 'var(--color-accent)',
+                borderRadius: 14,
               }}
             >
               {t('payment:vnpayReturn.retry', 'Try Again')}
@@ -335,7 +340,7 @@ export default function VnPayReturnPage() {
               localStorage.removeItem('oio_deposit_auction_id')
               navigate('/')
             }}
-            style={{ height: 48, padding: '0 32px', borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
+            style={{ height: 52, padding: '0 40px', borderRadius: 14, fontWeight: 600, borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
           >
             {t('payment:vnpayReturn.backToHome', 'Back to Home')}
           </Button>

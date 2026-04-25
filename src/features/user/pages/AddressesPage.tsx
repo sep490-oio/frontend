@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import {
   Typography,
-  Card,
   Button,
   Input,
   Select,
@@ -143,7 +142,7 @@ export default function AddressesPage() {
   }
 
   return (
-    <div style={{ maxWidth: 1400, margin: '0 auto', padding: isMobile ? '12px 16px 80px' : '0 24px 80px' }}>
+    <div style={{ maxWidth: 1400, margin: '0 auto', padding: isMobile ? '24px 16px 80px' : '48px 24px 80px' }}>
       {/* Header */}
       <Flex
         justify="space-between"
@@ -202,7 +201,7 @@ export default function AddressesPage() {
         <Row gutter={[24, 24]}>
           {addresses.map((addr) => (
             <Col xs={24} md={12} xl={8} key={addr.id}>
-              <Card
+              <div
                 style={{
                   height: '100%',
                   background: 'var(--color-bg-card)',
@@ -210,52 +209,10 @@ export default function AddressesPage() {
                   borderRadius: 24,
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   boxShadow: 'var(--shadow-sm)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  overflow: 'hidden'
                 }}
-                styles={{ body: { padding: isMobile ? '20px' : '24px' } }}
-                actions={[
-                  <Button
-                    key="edit"
-                    type="text"
-                    icon={<EditOutlined />}
-                    onClick={() => openEditModal(addr)}
-                    style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}
-                  >
-                    {t('addresses.edit')}
-                  </Button>,
-                  <Popconfirm
-                    key="delete"
-                    title={t('addresses.deleteConfirm')}
-                    onConfirm={() => onDelete(addr.id)}
-                    okText={t('addresses.deleteOk')}
-                    cancelText={t('addresses.deleteCancel')}
-                  >
-                    <Button
-                      type="text"
-                      danger
-                      icon={<DeleteOutlined />}
-                      loading={removeAddress.isPending}
-                      style={{ fontWeight: 600 }}
-                    >
-                      {t('addresses.delete')}
-                    </Button>
-                  </Popconfirm>,
-                  addr.isDefault ? (
-                    <div key="default" style={{ color: '#faad14', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                      <StarFilled /> {t('addresses.isDefault').toUpperCase()}
-                    </div>
-                  ) : (
-                    <Button
-                      key="default"
-                      type="text"
-                      icon={<StarOutlined />}
-                      onClick={() => onSetDefault(addr.id)}
-                      loading={setDefault.isPending}
-                      style={{ fontWeight: 600 }}
-                    >
-                      {t('addresses.setDefault')}
-                    </Button>
-                  ),
-                ]}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.borderColor = 'var(--color-accent)'
                   e.currentTarget.style.boxShadow = 'var(--shadow-md)'
@@ -265,6 +222,7 @@ export default function AddressesPage() {
                   e.currentTarget.style.boxShadow = 'var(--shadow-sm)'
                 }}
               >
+                <div style={{ padding: isMobile ? '20px' : '24px', flex: 1 }}>
                 <Flex vertical gap={20}>
                   <Flex justify="space-between" align="center">
                     <Tag
@@ -288,7 +246,50 @@ export default function AddressesPage() {
                     <Text type="secondary" style={{ display: 'block', fontSize: 13 }}>{`${addr.city}${addr.postalCode ? ` (${addr.postalCode})` : ''}`}</Text>
                   </div>
                 </Flex>
-              </Card>
+                </div>
+                {/* Actions Bar */}
+                <div style={{ display: 'flex', borderTop: '1px solid var(--color-border)', background: 'var(--color-bg-surface)' }}>
+                  <Button
+                    type="text"
+                    icon={<EditOutlined />}
+                    onClick={() => openEditModal(addr)}
+                    style={{ flex: 1, borderRadius: 0, height: 48, fontWeight: 600, color: 'var(--color-text-primary)', borderRight: '1px solid var(--color-border)' }}
+                  >
+                    {t('addresses.edit')}
+                  </Button>
+                  <Popconfirm
+                    title={t('addresses.deleteConfirm')}
+                    onConfirm={() => onDelete(addr.id)}
+                    okText={t('addresses.deleteOk')}
+                    cancelText={t('addresses.deleteCancel')}
+                  >
+                    <Button
+                      type="text"
+                      danger
+                      icon={<DeleteOutlined />}
+                      loading={removeAddress.isPending}
+                      style={{ flex: 1, borderRadius: 0, height: 48, fontWeight: 600, borderRight: '1px solid var(--color-border)' }}
+                    >
+                      {t('addresses.delete')}
+                    </Button>
+                  </Popconfirm>
+                  {addr.isDefault ? (
+                    <div style={{ flex: 1, color: '#faad14', fontWeight: 700, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, height: 48 }}>
+                      <StarFilled /> {t('addresses.isDefault').toUpperCase()}
+                    </div>
+                  ) : (
+                    <Button
+                      type="text"
+                      icon={<StarOutlined />}
+                      onClick={() => onSetDefault(addr.id)}
+                      loading={setDefault.isPending}
+                      style={{ flex: 1, borderRadius: 0, height: 48, fontWeight: 600 }}
+                    >
+                      {t('addresses.setDefault')}
+                    </Button>
+                  )}
+                </div>
+              </div>
             </Col>
           ))}
         </Row>
