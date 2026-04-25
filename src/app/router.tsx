@@ -164,6 +164,7 @@ const CreateSellerProfilePage = lazy(() => import('@/features/seller/pages/Creat
 const SellerProfilePage = lazy(() => import('@/features/seller/pages/SellerProfilePage'))
 const VerificationPage = lazy(() => import('@/features/seller/pages/VerificationPage'))
 const SellerReturnsPage = lazy(() => import('@/features/seller/pages/SellerReturnsPage'))
+const SellerAuctionDashboardPage = lazy(() => import('@/features/seller/pages/SellerAuctionDashboardPage'))
 
 // Warehouse pages
 const InboundShipmentsPage = lazy(() => import('@/features/warehouse/pages/InboundShipmentsPage'))
@@ -320,6 +321,7 @@ export const router = createBrowserRouter([
           { path: '/seller/items/:id/edit', element: withSuspense(EditItemPage) },
           // Auctions
           { path: '/seller/auctions', element: withSuspense(MyAuctionsPage) },
+          { path: '/seller/auctions/:id/dashboard', element: withSuspense(SellerAuctionDashboardPage) },
           { path: '/seller/auctions/create', element: withSuspense(CreateAuctionPage) },
           { path: '/seller/auctions/:id/edit', element: withSuspense(CreateAuctionPage) },
           // Business

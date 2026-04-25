@@ -26,7 +26,7 @@
 - [done] Hệ thống phải có log ghi nhận việc trả cọc cho bidder thua[cite: 16].
 - [done] Lịch sử ví của user phải chia rõ thông tin hoàn cọc theo từng phiên đấu giá[cite: 17].
 - [ ] **Thông tin chi tiết:** Bổ sung thông tin trả cọc và chi tiết các phiên đấu giá đang theo dõi trên màn hình cá nhân[cite: 17].
-- [ ] **Góc độ Seller:** Bổ sung đầy đủ thông tin chi tiết về các phiên đấu giá và tiền cọc cho người bán[cite: 17].
+- [done] **Góc độ Seller:** Bổ sung đầy đủ thông tin chi tiết về các phiên đấu giá và tiền cọc cho người bán[cite: 17].
 - [ ] **Dòng tiền:** Xây dựng cơ chế dòng tiền giữa người bán và sàn (hiện tại chưa có)[cite: 21].
 
 ## 4. Quản lý Đơn hàng & Hệ thống

@@ -9,6 +9,7 @@ import {
   ClockCircleOutlined,
   ReloadOutlined,
   UserSwitchOutlined,
+  DashboardOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
@@ -275,6 +276,9 @@ export default function MyAuctionsPage() {
         )}
         {s === AuctionStatus.Scheduled && (
           <>
+            <Tooltip title={t('dashboard', 'Dashboard')}>
+              <Button type="text" size="small" icon={<DashboardOutlined />} onClick={() => navigate(`/seller/auctions/${record.id}/dashboard`)} />
+            </Tooltip>
             <Tooltip title={t('viewDetail', 'View Detail')}>
               <Button type="text" size="small" icon={<EyeOutlined />} onClick={() => navigate(`/auctions/${record.id}`)} />
             </Tooltip>
@@ -285,6 +289,9 @@ export default function MyAuctionsPage() {
         )}
         {s === AuctionStatus.Active && (
           <>
+            <Tooltip title={t('dashboard', 'Dashboard')}>
+              <Button type="text" size="small" icon={<DashboardOutlined />} onClick={() => navigate(`/seller/auctions/${record.id}/dashboard`)} />
+            </Tooltip>
             <Tooltip title={t('viewDetail', 'View Detail')}>
               <Button type="text" size="small" icon={<EyeOutlined />} onClick={() => navigate(`/auctions/${record.id}`)} />
             </Tooltip>
@@ -294,17 +301,30 @@ export default function MyAuctionsPage() {
           </>
         )}
         {s === AuctionStatus.Ended && (
-          <Tooltip title={t('viewDetail', 'View Detail')}>
-            <Button type="text" size="small" icon={<EyeOutlined />} onClick={() => navigate(`/auctions/${record.id}`)} />
-          </Tooltip>
+          <Space size="small">
+            <Tooltip title={t('dashboard', 'Dashboard')}>
+              <Button type="text" size="small" icon={<DashboardOutlined />} onClick={() => navigate(`/seller/auctions/${record.id}/dashboard`)} />
+            </Tooltip>
+            <Tooltip title={t('viewDetail', 'View Detail')}>
+              <Button type="text" size="small" icon={<EyeOutlined />} onClick={() => navigate(`/auctions/${record.id}`)} />
+            </Tooltip>
+          </Space>
         )}
         {s === AuctionStatus.Sold && (
-          <Tooltip title={t('viewOrder', 'View Order')}>
-            <Button type="text" size="small" icon={<EyeOutlined />} onClick={() => navigate(`/auctions/${record.id}`)} />
-          </Tooltip>
+          <Space size="small">
+            <Tooltip title={t('dashboard', 'Dashboard')}>
+              <Button type="text" size="small" icon={<DashboardOutlined />} onClick={() => navigate(`/seller/auctions/${record.id}/dashboard`)} />
+            </Tooltip>
+            <Tooltip title={t('viewOrder', 'View Order')}>
+              <Button type="text" size="small" icon={<EyeOutlined />} onClick={() => navigate(`/auctions/${record.id}`)} />
+            </Tooltip>
+          </Space>
         )}
         {s === AuctionStatus.PaymentDefaulted && (
           <>
+            <Tooltip title={t('dashboard', 'Dashboard')}>
+              <Button type="text" size="small" icon={<DashboardOutlined />} onClick={() => navigate(`/seller/auctions/${record.id}/dashboard`)} />
+            </Tooltip>
             <Tooltip title={t('relist', 'Relist')}>
               <Button type="text" size="small" icon={<ReloadOutlined />} loading={relistAuction.isPending} onClick={() => openRelistModal(record.id)} />
             </Tooltip>
