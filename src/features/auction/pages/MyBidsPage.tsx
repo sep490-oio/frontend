@@ -169,7 +169,7 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
       </div>
 
       {/* Middle: Details */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, padding: isMobile ? '0 4px' : '4px 0' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 200, padding: isMobile ? '0 4px' : '4px 0' }}>
         <h3
           style={{
             fontWeight: 700,
@@ -226,14 +226,14 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
       {/* Right: Chart */}
       {!isMobile && (
         <div style={{
-          flex: isTablet ? 'none' : 1.5,
+          flex: isTablet ? 'none' : 1,
           width: isTablet ? '100%' : 'auto',
           borderLeft: isTablet ? 'none' : '1px solid var(--color-border)',
           borderTop: isTablet ? '1px solid var(--color-border)' : 'none',
           padding: isTablet ? '20px 0 0' : '8px 0 8px 32px',
           display: 'flex',
           flexDirection: 'column',
-          minWidth: isTablet ? 0 : 400
+          minWidth: isTablet ? 0 : 300
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
             <span style={{ fontFamily: SANS_FONT, fontWeight: 600, color: 'var(--color-text-tertiary)', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
@@ -427,7 +427,7 @@ function RecentActivityLog({ localActivities = [] }: { localActivities?: any[] }
       top: 96,
       boxShadow: 'var(--shadow-sm)'
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
         <Title level={4} style={{ margin: 0, fontFamily: SANS_FONT, fontSize: 18, fontWeight: 700 }}>
           <ClockCircleOutlined style={{ marginRight: 8, color: 'var(--color-accent)', fontSize: 16 }} />
           {t('auction:activityLog', 'Recent Activity')}
@@ -695,7 +695,7 @@ export default function MyBidsPage() {
         justify="space-between"
         vertical={isMobile}
         gap={isMobile ? 16 : 12}
-        style={{ marginBottom: 24 }}
+        style={{ marginBottom: 24, flexWrap: 'wrap' }}
       >
         <div
           style={{

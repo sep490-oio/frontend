@@ -1,6 +1,6 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { API_URL, STORAGE_KEYS, uuid } from '@/utils/constants'
-import { refreshToken } from '@/lib/tokenRefresh'
+import { refreshToken, isTokenExpired } from '@/lib/tokenRefresh'
 
 // ── Terms-gate 409 interceptor ────────────────────────────────────────────────
 // When BE returns 409 with code "Terms.PendingAcceptance", the interceptor calls
@@ -50,17 +50,27 @@ function processQueue(error: unknown, token: string | null = null) {
 }
 
 // Request interceptor — attach token + correlation ID
-apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+apiClient.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   // For 2FA verify endpoint, use the separate 2FA temp token
   if (config.url?.includes('/auth/two-factor')) {
     const twoFaToken = localStorage.getItem(STORAGE_KEYS.TWO_FA_TOKEN)
     if (twoFaToken) {
       config.headers.Authorization = `Bearer ${twoFaToken}`
     }
-  } else {
-    const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
+  } else if (!config.url?.includes('/auth/login') && !config.url?.includes('/auth/refresh')) {
+    let token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+      if (isTokenExpired()) {
+        try {
+          token = await refreshToken()
+        } catch (error) {
+          // If proactive refresh fails, proceed with the expired token.
+          // The response interceptor will catch the 401 or handleRefreshFailure will redirect.
+        }
+      }
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`
+      }
     }
   }
   config.headers['X-Correlation-Id'] = uuid()
