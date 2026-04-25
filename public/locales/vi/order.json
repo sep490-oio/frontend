@@ -36,20 +36,21 @@
   "statusTab": {
     "all": "Tất cả",
     "pendingPayment": "Chờ thanh toán",
-    "paid": "Đã thanh toán",
+    "paid": "Chờ lấy hàng",
     "on_delivering": "Đang giao",
     "delivered": "Đã giao",
     "completed": "Hoàn thành",
     "cancelled": "Đã hủy",
     "Refunded": "Đã hoàn tiền",
-    "Disputed": "Đang tranh chấp"
+    "Disputed": "Đang tranh chấp",
+    "returns": "Trả hàng"
   },
   "expired": "Hết hạn",
   "decisionWindowEnds": "Thời hạn quyết định: {{date}}",
   "status": {
     "pending_payment": "Chờ thanh toán",
-    "paid": "Đã thanh toán",
-    "processing": "Đang xử lý",
+    "paid": "Chờ lấy hàng",
+    "processing": "Chờ lấy hàng",
     "picked_up": "Đã lấy hàng",
     "on_delivering": "Đang giao",
     "shipped": "Đang giao",
@@ -57,7 +58,8 @@
     "completed": "Hoàn thành",
     "cancelled": "Đã hủy",
     "refunded": "Đã hoàn tiền",
-    "disputed": "Đang tranh chấp"
+    "disputed": "Đang tranh chấp",
+    "returns": "Trả hàng"
   },
   "sellerActions": {
     "confirmOrder": "Xác nhận đơn",
@@ -269,8 +271,8 @@
   "district": "Quận/Huyện",
   "cityProvince": "Tỉnh/Thành phố",
   "postalCode": "Mã bưu chính",
-  "statusPaid": "Đã thanh toán",
-  "statusProcessing": "Đang xử lý",
+  "statusPaid": "Chờ lấy hàng",
+  "statusProcessing": "Chờ lấy hàng",
   "statusPickedUp": "Đã lấy hàng",
   "statusOnDelivering": "Đang giao",
   "carrierName": "Tên nhà vận chuyển",

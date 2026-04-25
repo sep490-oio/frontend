@@ -58,6 +58,8 @@
   "verification.typePassport.description": "Trang thông tin hộ chiếu và ảnh chân dung",
   "verification.typeBusinessOwner.title": "Chủ doanh nghiệp",
   "verification.typeBusinessOwner.description": "Giấy phép kinh doanh và mặt trước CMND/CCCD",
+  "verification.typeManual.title": "Xác minh tại cửa hàng",
+  "verification.typeManual.description": "Mang theo giấy tờ tùy thân đến cửa hàng OIO gần nhất để nhân viên hỗ trợ xác minh trực tiếp.",
   "noVerification": "Chưa có yêu cầu xác minh",
   "startVerification": "Bắt đầu xác minh",
   "newVerification": "Yêu cầu xác minh mới",
@@ -99,6 +101,7 @@
     "myAuctions": "Phiên đấu giá",
     "groupBusiness": "Kinh doanh",
     "orders": "Đơn hàng",
+    "returns": "Trả hàng",
     "wallet": "Ví tiền",
     "groupWarehouse": "Kho hàng",
     "inbound": "Hàng nhập kho",
@@ -197,5 +200,6 @@
   "storeDescriptionRequired": "Vui lòng mô tả cửa hàng của bạn",
   "identityVerified": "Đã xác minh danh tính",
   "verifyIdentity": "Xác minh danh tính của bạn",
-  "verifiedDesc": "Danh tính của bạn đã được xác minh. Bạn có thể tạo hồ sơ người bán và tham gia tất cả các phiên đấu giá."
+  "verifiedDesc": "Danh tính của bạn đã được xác minh. Bạn có thể tạo hồ sơ người bán và tham gia tất cả các phiên đấu giá.",
+  "reVerifyAtStore": "Yêu cầu xác minh lại"
 }

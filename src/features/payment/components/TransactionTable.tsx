@@ -144,6 +144,13 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
         const isDeduction = record.type === WalletTransactionType.Debit || record.type === WalletTransactionType.Hold;
         const color = isDeduction ? 'var(--color-danger)' : 'var(--color-success)';
         const sign = isDeduction ? '-' : '+';
+        
+        let typeLabel = t(`txTypeLabel.${record.type}`, record.type);
+        if (record.type === WalletTransactionType.Release) {
+           if (record.referenceType === 'deposit') typeLabel = t('refType.depositRefund', 'Hoàn tiền cọc');
+           else if (record.referenceType === 'order') typeLabel = t('refType.orderRefund', 'Hoàn tiền đơn hàng');
+        }
+
         return (
           <Space direction="vertical" size={0}>
             <span
@@ -157,7 +164,7 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
               {sign}{formatCurrency(amount, record.currency)}
             </span>
             <Typography.Text type="secondary" style={{ fontSize: 11 }}>
-              {t(`txTypeLabel.${record.type}`, record.type)}
+              {typeLabel}
             </Typography.Text>
           </Space>
         )

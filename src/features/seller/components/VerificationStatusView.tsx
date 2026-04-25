@@ -157,6 +157,15 @@ export function VerificationStatusView({
                   {t('requestCorrection', 'Request Correction')}
                 </Button>
               )}
+              {verification?.verificationType === 'manual' && (
+                <Button
+                  size="small"
+                  onClick={onResubmit}
+                  style={{ marginLeft: verification?.autoVerified ? 8 : 0 }}
+                >
+                  {t('reVerifyAtStore', 'Request Re-verification')}
+                </Button>
+              )}
             </Flex>
           }
         />

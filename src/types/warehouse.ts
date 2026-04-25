@@ -251,16 +251,36 @@ export interface StorageLocationDto {
 }
 
 export interface ShipmentTrackingEventDto {
-  timestamp: string
-  status: string
+  id?: string
+  providerCode?: string
+  carrierStatusRaw?: string
+  carrierStatusDesc?: string
+  normalizedStatus?: string
   location?: string
+  reasonCode?: string
+  reasonDescription?: string
+  eventTime?: string
+  createdAt?: string
+  // Legacy fields for backward compatibility
+  timestamp?: string
+  status?: string
   notes?: string
 }
 
 export interface TrackingEventDto {
-  timestamp: string
-  status: string
+  id?: string
+  providerCode?: string
+  carrierStatusRaw?: string
+  carrierStatusDesc?: string
+  normalizedStatus?: string
   location?: string
+  reasonCode?: string
+  reasonDescription?: string
+  eventTime?: string
+  createdAt?: string
+  // Legacy fields for backward compatibility
+  timestamp?: string
+  status?: string
   notes?: string
 }
 
@@ -424,6 +444,14 @@ export interface WarehouseToSellerShipmentEvidenceDto {
   createdBy: string
 }
 
+export interface WarehouseToSellerShipmentItemSummaryDto {
+  warehouseItemId: string
+  itemId: string
+  itemTitle?: string
+  primaryImageUrl?: string
+  warehouseItemStatus?: string
+}
+
 export interface WarehouseToSellerShipmentDto {
   id: string
   warehouseItemId: string
@@ -436,12 +464,14 @@ export interface WarehouseToSellerShipmentDto {
   shippedAt?: string | null
   deliveredAt?: string | null
   sellerConfirmedAt?: string | null
+  deliveryFailureReason?: string | null
   status: WarehouseToSellerShipmentStatus
   createdAt: string
   modifiedAt?: string | null
   /** Optional item summary projected by BE for list views. */
   itemTitle?: string | null
   itemImageUrl?: string | null
+  item?: WarehouseToSellerShipmentItemSummaryDto
   /** Optional seller display name projected by BE for staff-side lists. */
   sellerDisplayName?: string | null
   /** Signed QR token — stamped on MarkShipped. Present once in transit+. */

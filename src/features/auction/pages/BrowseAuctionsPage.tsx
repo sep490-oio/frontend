@@ -137,7 +137,7 @@ export default function BrowseAuctionsPage() {
   const validTypes = Object.values(AuctionType) as string[]
   const initialAuctionType = rawAuctionType && validTypes.includes(rawAuctionType) ? rawAuctionType : undefined
 
-  const initialSortBy = searchParams.get('sortBy') ?? 'EndTime Asc'
+  const initialSortBy = searchParams.get('sortBy') ?? 'CreatedAt Desc'
   const initialMinPrice = searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : null
   const initialMaxPrice = searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : null
 
@@ -280,7 +280,7 @@ export default function BrowseAuctionsPage() {
       if (filters.statusGroup === 'sold') params.set('status', AuctionStatus.Sold)
     }
     if (filters.auctionType) params.set('auctionType', filters.auctionType)
-    if (filters.sortBy && filters.sortBy !== 'EndTime Asc') params.set('sortBy', filters.sortBy)
+    if (filters.sortBy && filters.sortBy !== 'CreatedAt Desc') params.set('sortBy', filters.sortBy)
     if (debouncedMinPrice != null) params.set('minPrice', debouncedMinPrice.toString())
     if (debouncedMaxPrice != null) params.set('maxPrice', debouncedMaxPrice.toString())
     setSearchParams(params)
@@ -327,7 +327,7 @@ export default function BrowseAuctionsPage() {
       <Select
         style={{ width: '100%' }}
         options={SORT_OPTIONS}
-        value={filters.sortBy ?? 'EndTime Asc'}
+        value={filters.sortBy ?? 'CreatedAt Desc'}
         onChange={(v) => updateFilter('sortBy', v)}
       />
       <Select
@@ -524,7 +524,7 @@ export default function BrowseAuctionsPage() {
               <Select
                 style={{ width: '100%' }}
                 options={SORT_OPTIONS}
-                value={filters.sortBy ?? 'EndTime Asc'}
+                value={filters.sortBy ?? 'CreatedAt Desc'}
                 onChange={(v) => updateFilter('sortBy', v)}
                 size="large"
                 variant="filled"
@@ -540,7 +540,7 @@ export default function BrowseAuctionsPage() {
                 setCategoryName('')
                 setMinPrice(null)
                 setMaxPrice(null)
-                setFilters({ pageNumber: 1, pageSize: 12, sortBy: 'EndTime Asc' })
+                setFilters({ pageNumber: 1, pageSize: 12, sortBy: 'CreatedAt Desc' })
               }}
               style={{ width: '100%', marginBottom: 20, color: 'var(--color-text-secondary)' }}
             >

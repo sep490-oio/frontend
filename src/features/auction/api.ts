@@ -15,8 +15,11 @@ import type {
   AuctionFilterParams,
   PagedList,
   PaginationParams,
-  MoneyDto,
+  MyBidDto,
+  MyAuctionWatchlistDto as WatchlistItemDto,
 } from '@/types'
+
+export type { MyBidDto, WatchlistItemDto }
 
 // ── Auctions ─────────────────────────────────────────────────────────
 
@@ -81,20 +84,6 @@ export function useMyAuctions(params?: PaginationParams & { status?: string; sor
   })
 }
 
-export interface WatchlistItemDto {
-  auctionId: string
-  itemTitle: string
-  primaryImageUrl?: string
-  currentPrice: MoneyDto
-  currency: string
-  auctionStatus: string
-  bidCount: number
-  endTime?: string
-  remainingTime?: string
-  notifyOnBid: boolean
-  notifyOnEnd: boolean
-  watchedAt: string
-}
 
 export function useWatchlist(params?: PaginationParams) {
   return useQuery({
@@ -135,27 +124,6 @@ export function useSearchAuctions(params: { q: string; page?: number; pageSize?:
   })
 }
 
-// ── My Bids ─────────────────────────────────────────────────────────
-
-export interface MyBidDto {
-  auctionId: string
-  itemId: string
-  itemTitle: string
-  primaryImageUrl?: string
-  auctionStatus: string
-  currentPrice: MoneyDto
-  myLatestBidAmount: MoneyDto
-  position: string
-  wonAt?: string
-  lastBidAt: string
-  bidCountForUser: number
-  /** Present when the winning bid has a matching order (won flow). */
-  orderId?: string | null
-  /** Order status string (e.g. "pending_payment", "paid", "completed"). */
-  orderStatus?: string | null
-  /** True only when the order is in pending_payment — FE routes to /checkout. */
-  canPayNow?: boolean
-}
 
 export function useMyBids(params?: PaginationParams & { status?: string; sortBy?: string }) {
   return useQuery({

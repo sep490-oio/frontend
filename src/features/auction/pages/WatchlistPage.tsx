@@ -269,23 +269,19 @@ export default function WatchlistPage() {
                        </div>
                     </div>
 
-                    {/* Settings Divider */}
-                    <div style={{ borderTop: '1px solid var(--color-border)', marginTop: 16, paddingTop: 12 }}>
-                       <Flex gap={16}>
-                          <Tooltip title={t('notifyOnBid', 'Notify on bids')}>
-                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-                                <BellOutlined style={{ fontSize: 14, color: item.notifyOnBid ? 'var(--color-accent)' : 'var(--color-text-tertiary)' }} />
-                                <Switch size="small" checked={item.notifyOnBid} onChange={(v) => handleToggleNotify(item, 'notifyOnBid', v)} />
-                             </div>
-                          </Tooltip>
-                          <Tooltip title={t('notifyOnEnd', 'Notify on end')}>
-                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-                                <span style={{ fontSize: 10, fontWeight: 700, color: item.notifyOnEnd ? 'var(--color-accent)' : 'var(--color-text-tertiary)' }}>END</span>
-                                <Switch size="small" checked={item.notifyOnEnd} onChange={(v) => handleToggleNotify(item, 'notifyOnEnd', v)} />
-                             </div>
-                          </Tooltip>
-                       </Flex>
-                    </div>
+                    {/* Settings Divider — Only for active/scheduled */}
+                    {!(item.auctionStatus === 'Ended' || item.auctionStatus === 'Sold' || item.auctionStatus === 'Failed' || item.auctionStatus === 'Cancelled' || item.auctionStatus === 'Terminated') && (
+                      <div style={{ borderTop: '1px solid var(--color-border)', marginTop: 16, paddingTop: 12 }}>
+                         <Flex gap={16}>
+                            <Tooltip title={t('notifyOnBid', 'Notify on bids')}>
+                               <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                                  <BellOutlined style={{ fontSize: 14, color: item.notifyOnBid ? 'var(--color-accent)' : 'var(--color-text-tertiary)' }} />
+                                  <Switch size="small" checked={item.notifyOnBid} onChange={(v) => handleToggleNotify(item, 'notifyOnBid', v)} />
+                               </div>
+                            </Tooltip>
+                         </Flex>
+                      </div>
+                    )}
                   </div>
                 </div>
               </Col>

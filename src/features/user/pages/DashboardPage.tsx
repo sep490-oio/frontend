@@ -16,6 +16,7 @@ import { useMyBids } from '@/features/auction/api'
 import { useMyOrders } from '@/features/order/api'
 import { useDisputes } from '@/features/dispute/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
+import { OrderItemSummary } from '@/features/order/components/OrderItemSummary'
 import { formatCurrency, formatDateTime } from '@/utils/format'
 import { MONO_FONT, SANS_FONT } from '@/styles/tokens'
 
@@ -203,14 +204,22 @@ export default function DashboardPage() {
                     }}
                     styles={{ body: { padding: isMobile ? '20px' : '24px' } }}
                   >
-                    <Flex justify="space-between" align="center" style={{ marginBottom: 24 }}>
-                      <div>
-                        <Text strong style={{ fontSize: 15, fontFamily: MONO_FONT, color: 'var(--color-accent)' }}>#{order.orderNumber}</Text>
-                        <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)', marginTop: 2 }}>{formatDateTime(order.createdAt)}</div>
-                      </div>
-                      <StatusBadge status={order.status} />
-                    </Flex>
-                    <Steps
+                    <Flex vertical gap={16}>
+                      <Flex justify="space-between" align="center">
+                        <div>
+                          <Text strong style={{ fontSize: 15, fontFamily: MONO_FONT, color: 'var(--color-accent)' }}>#{order.orderNumber}</Text>
+                          <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)', marginTop: 2 }}>{formatDateTime(order.createdAt)}</div>
+                        </div>
+                        <StatusBadge status={order.status} />
+                      </Flex>
+
+                      {order.item && (
+                        <div style={{ padding: '12px', background: 'var(--color-bg-surface)', borderRadius: 16, border: '1px solid var(--color-border-light)' }}>
+                          <OrderItemSummary item={order.item} variant="row" />
+                        </div>
+                      )}
+
+                      <Steps
                       size="small"
                       direction={isMobile ? 'vertical' : 'horizontal'}
                       current={
@@ -226,6 +235,7 @@ export default function DashboardPage() {
                         { title: t('dashboard.stepCompleted', 'Done') },
                       ]}
                     />
+                    </Flex>
                   </Card>
                 ))}
               </div>

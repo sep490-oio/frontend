@@ -418,7 +418,8 @@
     "previewTitle": "Xem trước",
     "statusDraft": "Nháp",
     "statusActive": "Đang hoạt động",
-    "statusArchived": "Đã lưu trữ"
+    "statusArchived": "Đã lưu trữ",
+    "selectTypeAndPdf": "Vui lòng chọn loại điều khoản và tải lên tài liệu PDF"
   },
   "roles": {
     "title": "Quản lý vai trò & quyền",

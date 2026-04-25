@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Typography, Row, Col, Button, Card, Flex } from 'antd'
 import {
   WalletOutlined,
@@ -42,6 +42,17 @@ export default function BuyerWalletPage() {
   const [pageSize, setPageSize] = useState(10)
   const [typeFilter, setTypeFilter] = useState<string>('')
   const [topupModalOpen, setTopupModalOpen] = useState(false)
+
+  const userRoles = useMemo(() => {
+    try {
+      const token = localStorage.getItem('oio_access_token')
+      if (!token) return []
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      const roles = payload.role ?? payload.roles ?? []
+      return (Array.isArray(roles) ? roles : [roles]).map((r: string) => r.toLowerCase())
+    } catch { return [] }
+  }, [])
+  const isAdmin = userRoles.includes('admin')
 
   const { data: wallet, isLoading: walletLoading } = useWallet({ refetchInterval: 30000 })
   const { data: transactions, isLoading: txLoading } = useWalletTransactions(
@@ -128,63 +139,65 @@ export default function BuyerWalletPage() {
             helpText={t('totalBalanceHelpShort', 'Your combined wallet balance.')}
           />
         </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card
-            styles={{ body: { padding: isMobile ? '20px' : '24px' } }}
-            style={{
-              height: '100%',
-              borderRadius: 24,
-              border: '1px solid var(--color-border)',
-              background: 'var(--color-bg-card)',
-              boxShadow: 'var(--shadow-sm)',
-            }}
-          >
-            <Flex vertical gap={12}>
-              <Text strong style={{ fontSize: 11, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: 8 }}>
-                 {t('quickActions', 'Actions')}
-              </Text>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => setTopupModalOpen(true)}
-                size="large"
-                style={{
-                  background: 'var(--color-accent)',
-                  borderColor: 'var(--color-accent)',
-                  fontWeight: 600,
-                  height: 44,
-                  borderRadius: 12
-                }}
-                block
-              >
-                {t('topup', 'Top Up')}
-              </Button>
-              <Button
-                icon={<ArrowDownOutlined />}
-                onClick={() => navigate('/me/wallet/withdraw')}
-                size="large"
-                style={{
-                  borderColor: 'var(--color-accent)',
-                  color: 'var(--color-accent)',
-                  fontWeight: 600,
-                  height: 44,
-                  borderRadius: 12
-                }}
-                block
-              >
-                {t('withdraw', 'Withdraw')}
-              </Button>
-              <Button
-                type="link"
-                icon={<CreditCardOutlined />}
-                onClick={() => navigate('/me/payment-methods')}
-                style={{ padding: 0, height: 'auto', fontSize: 13, color: 'var(--color-accent)', textAlign: 'left', fontWeight: 600, marginTop: 4 }}
-              >
-                {t('paymentMethods', 'Manage Cards')}
-              </Button>
-            </Flex>
-          </Card>
-        </Col>
+        {!isAdmin && (
+          <Col xs={24} sm={12} lg={6}>
+            <Card
+              styles={{ body: { padding: isMobile ? '20px' : '24px' } }}
+              style={{
+                height: '100%',
+                borderRadius: 24,
+                border: '1px solid var(--color-border)',
+                background: 'var(--color-bg-card)',
+                boxShadow: 'var(--shadow-sm)',
+              }}
+            >
+              <Flex vertical gap={12}>
+                <Text strong style={{ fontSize: 11, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: 8 }}>
+                   {t('quickActions', 'Actions')}
+                </Text>
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => setTopupModalOpen(true)}
+                  size="large"
+                  style={{
+                    background: 'var(--color-accent)',
+                    borderColor: 'var(--color-accent)',
+                    fontWeight: 600,
+                    height: 44,
+                    borderRadius: 12
+                  }}
+                  block
+                >
+                  {t('topup', 'Top Up')}
+                </Button>
+                <Button
+                  icon={<ArrowDownOutlined />}
+                  onClick={() => navigate('/me/wallet/withdraw')}
+                  size="large"
+                  style={{
+                    borderColor: 'var(--color-accent)',
+                    color: 'var(--color-accent)',
+                    fontWeight: 600,
+                    height: 44,
+                    borderRadius: 12
+                  }}
+                  block
+                >
+                  {t('withdraw', 'Withdraw')}
+                </Button>
+                <Button
+                  type="link"
+                  icon={<CreditCardOutlined />}
+                  onClick={() => navigate('/me/payment-methods')}
+                  style={{ padding: 0, height: 'auto', fontSize: 13, color: 'var(--color-accent)', textAlign: 'left', fontWeight: 600, marginTop: 4 }}
+                >
+                  {t('paymentMethods', 'Manage Cards')}
+                </Button>
+              </Flex>
+            </Card>
+          </Col>
+        )}
       </Row>
 
       {/* Transaction History Section */}

@@ -42,7 +42,8 @@
     "completed": "Completed",
     "cancelled": "Cancelled",
     "Refunded": "Refunded",
-    "Disputed": "Disputed"
+    "Disputed": "Disputed",
+    "returns": "Returns"
   },
   "expired": "Expired",
   "decisionWindowEnds": "Decision window ends: {{date}}",
@@ -57,7 +58,8 @@
     "completed": "Completed",
     "cancelled": "Cancelled",
     "refunded": "Refunded",
-    "disputed": "Disputed"
+    "disputed": "Disputed",
+    "returns": "Returns"
   },
   "sellerActions": {
     "confirmOrder": "Confirm Order",

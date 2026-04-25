@@ -327,6 +327,9 @@ export function AppLayout() {
                       fontFamily: SANS_FONT
                     }}>
                       {currentUserData?.profile?.displayName ?? currentUserData?.userName}
+                      <span style={{ marginLeft: 6, opacity: 0.6, fontSize: 12, fontWeight: 400 }}>
+                        (@{currentUserData?.userName})
+                      </span>
                     </span>
                   )}
                   <Avatar

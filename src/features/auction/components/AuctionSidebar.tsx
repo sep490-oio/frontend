@@ -340,12 +340,6 @@ export function AuctionSidebar({
     canBuyNow &&
     (isActive || (isScheduled && (qualState === 'window_open' || qualState === 'qualified')))
 
-  const showBuyNowReserved =
-    !isTerminal &&
-    !isSeller &&
-    (isScheduled || isActive) &&
-    auction.buyNowPrice != null &&
-    auction.isBuyNowReserved
 
   // ── Terminal outcome block (IIFE) ────────────────────────────────
   const terminalBlock = isTerminal
@@ -654,7 +648,7 @@ export function AuctionSidebar({
         </div>
       )}
 
-      {/* 4. Buy Now */}
+      {/* 4. Buy Now / Reserved State */}
       {showBuyNow && (
         <>
           <div style={{ height: 1, background: 'var(--color-border-light)', margin: '12px 0' }} />
@@ -669,7 +663,8 @@ export function AuctionSidebar({
               borderRadius: 8,
               borderColor: 'var(--color-accent)',
               color: 'var(--color-accent)',
-              fontWeight: 500,
+              fontWeight: 600,
+              fontSize: 15,
             }}
           >
             {`${t('buyNow', 'Mua ngay')} — ${formatCurrency(auction.buyNowPrice?.amount ?? 0, currency)}`}
@@ -677,20 +672,44 @@ export function AuctionSidebar({
         </>
       )}
 
-      {showBuyNowReserved && (
-        <>
-          <div style={{ height: 1, background: 'var(--color-border-light)', margin: '12px 0' }} />
-          <Button block disabled style={{ height: 44, borderRadius: 8 }}>
-            {t('buyNowReserved', 'Mua ngay đã được đặt trước')}
-          </Button>
-          {auction.buyNowReservedUntil && (
-            <Typography.Text
-              style={{ display: 'block', marginTop: 4, fontSize: 12, color: 'var(--color-text-secondary)' }}
-            >
-              {t('buyNowReservedUntil', 'Đặt trước đến')}: {formatDateTime(auction.buyNowReservedUntil)}
+      {!isTerminal && auction.isBuyNowReserved && (
+        <Card
+          style={{
+            marginTop: 16,
+            borderColor: 'var(--color-warning)',
+            background: 'rgba(196, 147, 61, 0.04)',
+          }}
+        >
+          <Flex vertical gap={12} align="center">
+            <ThunderboltOutlined style={{ fontSize: 24, color: 'var(--color-warning)' }} />
+            <Typography.Text strong style={{ textAlign: 'center', color: 'var(--color-warning)' }}>
+              {currentBuyerOrder ? t('reservedForYou', 'Bạn đang mua ngay vật phẩm này') : t('buyNowReserved', 'Mua ngay đã được đặt trước')}
             </Typography.Text>
-          )}
-        </>
+            
+            {currentBuyerOrder?.canPayNow && onCheckoutClick && (
+              <Button
+                type="primary"
+                block
+                onClick={onCheckoutClick}
+                style={{
+                  height: 48,
+                  borderRadius: 8,
+                  fontWeight: 600,
+                  background: 'var(--color-warning)',
+                  borderColor: 'var(--color-warning)',
+                }}
+              >
+                {t('completePayment', 'Hoàn tất thanh toán')}
+              </Button>
+            )}
+
+            {auction.buyNowReservedUntil && (
+              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                {t('reservationExpires', 'Hết hạn giữ chỗ')}: {formatDateTime(auction.buyNowReservedUntil)}
+              </Typography.Text>
+            )}
+          </Flex>
+        </Card>
       )}
 
       {/* 5. Outbid warning banner */}

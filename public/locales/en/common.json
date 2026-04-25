@@ -266,6 +266,38 @@
     "browseSellers": "Browse sellers",
     "signIn": "Sign in"
   },
+  "terms": {
+    "pageTitle": "Terms & Conditions",
+    "pageSubtitle": "Review and accept the terms that apply to your use of the platform.",
+    "type": {
+      "platform": "Platform Terms",
+      "bidder": "Bidder Terms",
+      "seller": "Seller Agreement",
+      "privacy": "Privacy Policy",
+      "other": "Other"
+    },
+    "acceptSuccess": "Terms accepted successfully",
+    "acceptError": "Failed to accept terms. Please try again.",
+    "noTerms": "No terms available",
+    "noTermsDesc": "There are currently no terms to review.",
+    "published": "Published",
+    "created": "Created",
+    "accepted": "Accepted",
+    "pending": "Pending",
+    "previewUnavailable": "Preview unavailable",
+    "useActionsBelow": "Use the actions below to open or download the document.",
+    "noDocument": "Document not available",
+    "openInNewTab": "Open in new tab",
+    "download": "Download",
+    "accept": "Accept",
+    "selectToPreview": "Select a document to preview",
+    "pendingBannerTitle": "Action required: review updated {{type}}",
+    "pendingBannerDesc": "You need to review and accept the current version before you can continue here.",
+    "reviewAndAccept": "Review & Accept",
+    "notAvailable": "Terms document is temporarily unavailable.",
+    "tryAgain": "Please try again in a moment.",
+    "none": "No terms require your acceptance right now."
+  },
   "categories": {
     "label": "OIO Categories",
     "title": "Categories",

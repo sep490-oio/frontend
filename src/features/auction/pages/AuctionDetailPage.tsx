@@ -183,6 +183,17 @@ export default function AuctionDetailPage() {
     auction?.status === AuctionStatus.Terminated
 
   const isSeller = Boolean(isAuthenticated && currentUser?.id && sellerId && sellerId === currentUser.id)
+  
+  const userRoles = useMemo(() => {
+    try {
+      const token = localStorage.getItem('oio_access_token')
+      if (!token) return []
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      const roles = payload.role ?? payload.roles ?? []
+      return (Array.isArray(roles) ? roles : [roles]).map((r: string) => r.toLowerCase())
+    } catch { return [] }
+  }, [isAuthenticated])
+  const isAdmin = userRoles.includes('admin')
   const currentPrice = auction?.currentPrice?.amount ?? 0
   const currency = auction?.currency ?? DEFAULT_CURRENCY
   const minBid = auction?.minimumBidAmount?.amount ?? (currentPrice + (auction?.bidIncrement?.amount ?? 0))
@@ -1261,8 +1272,8 @@ export default function AuctionDetailPage() {
                 ? () => navigate(`/checkout/${winnerPayNowOrderId}`)
                 : undefined
             }
-            canBid={isActive && isAuthenticated && qualState === 'qualified' && !isSeller}
-            canBuyNow={isAuthenticated && !isSeller && !isTerminal && qualState === 'qualified'}
+            canBid={isActive && isAuthenticated && qualState === 'qualified' && !isSeller && !isAdmin}
+            canBuyNow={isAuthenticated && !isSeller && !isAdmin && !isTerminal && qualState === 'qualified'}
             currentBuyerOrder={data?.currentBuyerOrder}
             onViewOrderClick={(orderId) => navigate(`/me/orders/${orderId}`)}
             isOrderProvisioning={pollingForOrder}

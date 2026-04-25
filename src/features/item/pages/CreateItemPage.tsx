@@ -363,6 +363,7 @@ export default function CreateItemPage() {
                   <Form.Item
                     name="reservePrice"
                     label={ta('reservePrice', 'Reserve Price')}
+                    help={ta('reservePriceHelp', 'Auction only succeeds if this price is met.')}
                   >
                     <InputNumber
                       size="large"
@@ -378,6 +379,7 @@ export default function CreateItemPage() {
                   <Form.Item
                     name="buyNowPrice"
                     label={ta('buyNowPrice', 'Buy Now Price')}
+                    help={ta('buyNowPriceHelp', 'Allows buyers to purchase instantly and end the auction.')}
                   >
                     <InputNumber
                       size="large"

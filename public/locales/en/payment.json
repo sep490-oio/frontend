@@ -155,7 +155,9 @@
     "withdrawal": "Withdrawal",
     "escrow": "Escrow",
     "transaction": "Transaction",
-    "auction": "Auction"
+    "auction": "Auction",
+    "depositRefund": "Deposit Refund",
+    "orderRefund": "Order Refund"
   },
   "statusCompleted": "Completed",
   "statusPending": "Pending",
@@ -167,7 +169,6 @@
   "buyerProtectionTitle": "Buyer Protection Active",
   "escrowNotice": "Your payment will be held in escrow securely until you confirm successful delivery.",
   "balance": "Balance",
-  "otherMethods": "Alternative Methods",
   "payWithNewCard": "Pay with any VNPay-supported card",
   "saveCardForFuture": "Securely save this card for later",
   "paymentSummary": "Payment Summary",

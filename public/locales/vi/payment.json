@@ -155,7 +155,9 @@
     "withdrawal": "Rút tiền",
     "escrow": "Ký quỹ",
     "transaction": "Giao dịch",
-    "auction": "Đấu giá"
+    "auction": "Đấu giá",
+    "depositRefund": "Hoàn tiền cọc",
+    "orderRefund": "Hoàn tiền đơn hàng"
   },
   "statusCompleted": "Thành công",
   "statusPending": "Đang xử lý",
@@ -167,7 +169,6 @@
   "buyerProtectionTitle": "Đang bảo vệ người mua",
   "escrowNotice": "Thanh toán của bạn sẽ được giữ an toàn bởi hệ thống cho đến khi bạn xác nhận đã nhận hàng thành công.",
   "balance": "Số dư",
-  "otherMethods": "Phương thức khác",
   "payWithNewCard": "Thanh toán bằng thẻ bất kỳ qua cổng VNPay",
   "saveCardForFuture": "Lưu thẻ này an toàn để sử dụng cho lần sau",
   "paymentSummary": "Tóm tắt thanh toán",

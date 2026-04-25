@@ -106,18 +106,25 @@ export interface VnPayUrlRequest {
 }
 
 export interface PaymentSummaryDto {
-  totalRevenue: number
-  totalPayouts: number
-  pendingWithdrawals: number
-  platformBalance: number
+  completedPayments?: number
+  failedPayments?: number
+  walletTopUps?: number
+  withdrawalPendingCount?: number
+  holdingEscrowCount?: number
+  releasedEscrowTotal?: number
+  refundedEscrowTotal?: number
 }
 
 export interface EscrowDto {
   id: string
   orderId: string
+  buyerId?: string
+  sellerId?: string
   amount: number
   currency: string
   status: EscrowStatus
+  holdTransactionId?: string
   createdAt: string
   releasedAt?: string
+  refundedAt?: string
 }
