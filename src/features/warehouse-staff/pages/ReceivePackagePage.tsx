@@ -31,7 +31,7 @@ import { getProviderLabel } from '@/features/warehouse/utils/shipmentLabels'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import type { InboundPackageItemDto } from '@/types'
 
-const allowUploadFallback = import.meta.env.VITE_ALLOW_UPLOAD === 'true'
+const allowUploadFallback = String(import.meta.env.VITE_ALLOW_UPLOAD).trim() === 'true'
 
 export default function ReceivePackagePage() {
   const { clientOrderCode } = useParams<{ clientOrderCode: string }>()

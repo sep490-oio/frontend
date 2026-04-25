@@ -6,7 +6,7 @@ import { SecureCaptureUploader } from '@/components/ui/SecureCaptureUploader'
 import { LiveCapturedBadge } from '@/components/ui/LiveCapturedBadge'
 import type { CaptureMetadata, CaptureStep } from '@/types/capture'
 
-const ALLOW_UPLOAD = import.meta.env.VITE_ALLOW_UPLOAD === 'true'
+const ALLOW_UPLOAD = String(import.meta.env.VITE_ALLOW_UPLOAD).trim() === 'true'
 
 export interface CapturedPhoto {
   blob: Blob

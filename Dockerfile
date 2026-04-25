@@ -12,8 +12,10 @@ RUN npm ci
 COPY . .
 ARG VITE_API_URL=https://api.newlsun.com/api
 ARG VITE_SIGNALR_URL=https://api.newlsun.com/hubs
+ARG VITE_ALLOW_UPLOAD=true
 ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_SIGNALR_URL=$VITE_SIGNALR_URL
+ENV VITE_ALLOW_UPLOAD=$VITE_ALLOW_UPLOAD
 RUN npm run build
 
 # ── Stage 2: Serve ────────────────────────────────────────────────
