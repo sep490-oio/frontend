@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Typography, Card, Statistic, Row, Col, Button, Space, Select, Modal, InputNumber, App } from 'antd'
+import { Typography, Row, Col, Button, Select, Modal, InputNumber, App, Flex } from 'antd'
+const { Text } = Typography
 import { WalletOutlined, ArrowDownOutlined, PlusOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
@@ -12,7 +13,8 @@ import { WalletTransactionType } from '@/types/enums'
 import { formatDateTime, formatCurrency } from '@/utils/format'
 import type { WalletTransactionDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
-import { SERIF_FONT, MONO_FONT } from '@/styles/tokens'
+import { SANS_FONT, MONO_FONT } from '@/styles/tokens'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 
 const TX_TYPE_KEYS = [
   { value: '', key: 'all' },
@@ -23,8 +25,11 @@ const TX_TYPE_KEYS = [
 ] as const
 
 const balanceCardStyle: React.CSSProperties = {
-  background: 'var(--color-accent-light)',
-  borderColor: 'var(--color-border)',
+  background: 'var(--color-bg-card)',
+  border: '1px solid var(--color-border)',
+  borderRadius: 24,
+  boxShadow: 'var(--shadow-sm)',
+  height: '100%'
 }
 
 export default function WalletPage() {
@@ -32,6 +37,7 @@ export default function WalletPage() {
   const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
   const prefix = useRoutePrefix()
+  const { isMobile } = useBreakpoint()
 
   const { message } = App.useApp()
   const [page, setPage] = useState(1)
@@ -40,7 +46,7 @@ export default function WalletPage() {
   const [topupModalOpen, setTopupModalOpen] = useState(false)
   const [topupAmount, setTopupAmount] = useState<number | null>(null)
 
-  const { data: wallet, isLoading: walletLoading } = useWallet({ refetchInterval: 30000 })
+  const { data: wallet } = useWallet({ refetchInterval: 30000 })
   const topupMutation = useWalletTopup()
   const { data: transactions, isLoading: txLoading } = useWalletTransactions({
     pageNumber: page,
@@ -102,130 +108,145 @@ export default function WalletPage() {
   ]
 
   return (
-    <div>
-      {/* Serif heading */}
-      <div style={{ marginBottom: 24 }}>
+    <div style={{ maxWidth: 1400, margin: '0 auto', padding: isMobile ? '24px 16px 80px' : '32px 24px 80px' }}>
+      {/* Header */}
+      <div style={{ marginBottom: isMobile ? 24 : 40 }}>
         <h1
           style={{
-            fontFamily: SERIF_FONT,
-            fontWeight: 400,
-            fontSize: 28,
+            fontFamily: SANS_FONT,
+            fontWeight: 600,
+            fontSize: isMobile ? 24 : 32,
             color: 'var(--color-text-primary)',
             marginBottom: 4,
-            letterSpacing: '-0.01em',
             display: 'flex',
             alignItems: 'center',
             gap: 12,
           }}
         >
-          <WalletOutlined style={{ fontSize: 24 }} />
+          <WalletOutlined style={{ fontSize: isMobile ? 24 : 28, color: 'var(--color-accent)' }} />
           {t('wallet', 'Wallet')}
         </h1>
-        <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, margin: 0 }}>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: 16, margin: 0 }}>
           {t('walletSubtitle', 'Manage your balance and transactions')}
         </p>
       </div>
 
       {/* Balance summary */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={24} sm={8}>
-          <Card loading={walletLoading} style={balanceCardStyle}>
-            <Statistic
-              title={t('availableBalance', 'Available Balance')}
-              value={wallet?.availableBalance ?? 0}
-              formatter={(val) => formatCurrency(val as number, wallet?.currency)}
-              valueStyle={{
-                color: 'var(--color-success)',
-                fontFamily: MONO_FONT,
-                fontSize: 28,
-                fontWeight: 500,
-              }}
-            />
-          </Card>
+      <Row gutter={isMobile ? [12, 12] : [20, 20]} style={{ marginBottom: isMobile ? 32 : 48 }}>
+        <Col xs={24} md={8}>
+          <div style={balanceCardStyle}>
+             <div style={{ padding: 24 }}>
+                <Text style={{ fontSize: 11, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
+                  {t('availableBalance', 'Available Balance')}
+                </Text>
+                <div style={{ fontFamily: MONO_FONT, fontSize: isMobile ? 24 : 30, fontWeight: 700, color: 'var(--color-success)', marginTop: 4 }}>
+                   {wallet ? formatCurrency(wallet.availableBalance, wallet.currency) : '--'}
+                </div>
+             </div>
+          </div>
         </Col>
-        <Col xs={24} sm={8}>
-          <Card loading={walletLoading} style={balanceCardStyle}>
-            <Statistic
-              title={t('reservedFunds', 'Reserved Funds')}
-              value={wallet?.pendingBalance ?? 0}
-              formatter={(val) => formatCurrency(val as number, wallet?.currency)}
-              valueStyle={{
-                color: '#d48806',
-                fontFamily: MONO_FONT,
-                fontSize: 28,
-                fontWeight: 500,
-              }}
-            />
-            <Typography.Text type="secondary" style={{ fontSize: 12, marginTop: 8, display: 'block' }}>
-              {t('reservedFundsHelp', 'Funds held for active deposits, auto-bid reservations, and pending withdrawals.')}
-            </Typography.Text>
-          </Card>
+        <Col xs={24} md={8}>
+          <div style={balanceCardStyle}>
+             <div style={{ padding: 24 }}>
+                <Text style={{ fontSize: 11, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
+                  {t('reservedFunds', 'Reserved Funds')}
+                </Text>
+                <div style={{ fontFamily: MONO_FONT, fontSize: isMobile ? 24 : 30, fontWeight: 700, color: '#d48806', marginTop: 4 }}>
+                   {wallet ? formatCurrency(wallet.pendingBalance, wallet.currency) : '--'}
+                </div>
+                <Text type="secondary" style={{ fontSize: 11, marginTop: 8, display: 'block', lineHeight: 1.4 }}>
+                  {t('reservedFundsHelp', 'Funds held for active deposits, auto-bid reservations, and pending withdrawals.')}
+                </Text>
+             </div>
+          </div>
         </Col>
-        <Col xs={24} sm={8}>
-          <Card loading={walletLoading} style={balanceCardStyle}>
-            <Statistic
-              title={t('totalBalance', 'Total Balance')}
-              value={wallet?.totalBalance ?? 0}
-              formatter={(val) => formatCurrency(val as number, wallet?.currency)}
-              valueStyle={{
-                color: 'var(--color-text-secondary)',
-                fontFamily: MONO_FONT,
-                fontSize: 28,
-                fontWeight: 500,
-              }}
-            />
-            <Typography.Text type="secondary" style={{ fontSize: 12, marginTop: 8, display: 'block' }}>
-              {t('totalBalanceHelp', 'Available + reserved funds combined.')}
-            </Typography.Text>
-          </Card>
+        <Col xs={24} md={8}>
+          <div style={balanceCardStyle}>
+             <div style={{ padding: 24 }}>
+                <Text style={{ fontSize: 11, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
+                  {t('totalBalance', 'Total Balance')}
+                </Text>
+                <div style={{ fontFamily: MONO_FONT, fontSize: isMobile ? 24 : 30, fontWeight: 700, color: 'var(--color-text-primary)', marginTop: 4 }}>
+                   {wallet ? formatCurrency(wallet.totalBalance, wallet.currency) : '--'}
+                </div>
+                <Text type="secondary" style={{ fontSize: 11, marginTop: 8, display: 'block', lineHeight: 1.4 }}>
+                  {t('totalBalanceHelp', 'Available + reserved funds combined.')}
+                </Text>
+             </div>
+          </div>
         </Col>
       </Row>
 
       {/* Actions */}
-      <Space style={{ marginBottom: 24 }}>
+      <Flex gap={12} style={{ marginBottom: 32 }} wrap="wrap">
         <Button
           type="primary"
+          size="large"
           icon={<PlusOutlined />}
           onClick={() => setTopupModalOpen(true)}
-          style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
+          style={{ 
+            background: 'var(--color-accent)', 
+            borderColor: 'var(--color-accent)', 
+            borderRadius: 12, 
+            fontWeight: 600,
+            height: 48,
+            padding: '0 24px'
+          }}
         >
           {t('topup', 'Top Up')}
         </Button>
         <Button
+          size="large"
           icon={<ArrowDownOutlined />}
           onClick={() => navigate(`${prefix}/wallet/withdraw`)}
-          style={{ borderColor: 'var(--color-accent)', color: 'var(--color-accent)' }}
+          style={{ 
+            borderColor: 'var(--color-accent)', 
+            color: 'var(--color-accent)', 
+            borderRadius: 12, 
+            fontWeight: 600,
+            height: 48,
+            padding: '0 24px'
+          }}
         >
           {t('withdraw', 'Withdraw')}
         </Button>
-      </Space>
+      </Flex>
 
       {/* Transaction history */}
-      <Card
-        title={
-          <span style={{
-            fontFamily: SERIF_FONT,
-            fontWeight: 400,
-            fontSize: 18,
-          }}>
-            {t('transactionHistory', 'Transaction History')}
-          </span>
-        }
+      <div style={{ marginBottom: 20 }}>
+        <span style={{
+          fontFamily: SANS_FONT,
+          fontWeight: 600,
+          fontSize: 18,
+          color: 'var(--color-text-primary)'
+        }}>
+          {t('transactionHistory', 'Transaction History')}
+        </span>
+      </div>
+      <div
+        style={{
+          background: 'var(--color-bg-card)',
+          border: '1px solid var(--color-border)',
+          borderRadius: 24,
+          boxShadow: 'var(--shadow-sm)',
+          padding: isMobile ? '16px' : '24px'
+        }}
       >
-        <Space style={{ marginBottom: 16 }}>
+        <div style={{ marginBottom: 20 }}>
           <Select
             value={typeFilter}
             onChange={(val) => {
               setTypeFilter(val)
               setPage(1)
             }}
-            style={{ width: 160 }}
+            style={{ width: isMobile ? '100%' : 200, height: 40 }}
+            className="oio-select"
             options={TX_TYPE_KEYS.map((opt) => ({
               value: opt.value,
               label: t(`txTypeLabel.${opt.key}`, opt.key),
             }))}
           />
-        </Space>
+        </div>
 
         <ResponsiveTable<WalletTransactionDto>
           mobileMode="list"
@@ -238,47 +259,35 @@ export default function WalletPage() {
             pageSize: transactions?.metadata?.pageSize ?? pageSize,
             total: transactions?.metadata?.totalCount ?? 0,
             showSizeChanger: true,
-            showTotal: (total) => tc('pagination.total', { total }),
+            showTotal: isMobile ? undefined : (total) => tc('pagination.total', { total }),
             onChange: (p, ps) => {
               setPage(p)
               setPageSize(ps)
             },
           }}
         />
-      </Card>
+      </div>
 
       {/* Top-up Modal */}
       <Modal
-        title={t('topup', 'Deposit')}
+        title={
+          <span style={{ fontFamily: SANS_FONT, fontWeight: 600 }}>
+             {t('topup', 'Deposit')}
+          </span>
+        }
         open={topupModalOpen}
         onCancel={() => {
           setTopupModalOpen(false)
           setTopupAmount(null)
         }}
-        onOk={async () => {
-          if (!topupAmount || topupAmount <= 0) return
-          try {
-            const result = await topupMutation.mutateAsync({
-              amount: topupAmount,
-              currency: wallet?.currency ?? 'VND',
-              returnUrl: window.location.href,
-              clientReturnPath: '/me/wallet',
-            })
-            window.location.href = result.paymentUrl
-          } catch {
-            message.error(t('topupError', 'Deposit failed'))
-          }
-        }}
-        confirmLoading={topupMutation.isPending}
-        okButtonProps={{ disabled: !topupAmount || topupAmount <= 0 }}
-        okText={t('topupConfirm', 'Deposit')}
+        footer={null}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <Typography.Paragraph style={{ margin: 0, color: 'var(--color-text-secondary)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24, padding: '8px 0' }}>
+          <Typography.Paragraph style={{ margin: 0, color: 'var(--color-text-secondary)', fontSize: 14 }}>
             {t('topupExplain', 'Enter the amount you want to deposit into your wallet. You will be redirected to VnPay for payment.')}
           </Typography.Paragraph>
           <div>
-            <span className="oio-label" style={{ display: 'block', marginBottom: 6 }}>
+            <span style={{ display: 'block', marginBottom: 8, fontSize: 12, fontWeight: 600, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               {t('topupAmount', 'Amount')}
             </span>
             <InputNumber
@@ -297,6 +306,38 @@ export default function WalletPage() {
               }}
             />
           </div>
+
+          <Button
+            type="primary"
+            size="large"
+            block
+            loading={topupMutation.isPending}
+            disabled={!topupAmount || topupAmount <= 0}
+            onClick={async () => {
+              if (!topupAmount || topupAmount <= 0) return
+              try {
+                const result = await topupMutation.mutateAsync({
+                  amount: topupAmount,
+                  currency: wallet?.currency ?? 'VND',
+                  returnUrl: window.location.href,
+                  clientReturnPath: '/me/wallet',
+                })
+                window.location.href = result.paymentUrl
+              } catch {
+                message.error(t('topupError', 'Deposit failed'))
+              }
+            }}
+            style={{
+              background: 'var(--color-accent)',
+              borderColor: 'var(--color-accent)',
+              borderRadius: 12,
+              fontWeight: 700,
+              height: 52,
+              marginTop: 8
+            }}
+          >
+            {t('topupConfirm', 'Deposit Now')}
+          </Button>
         </div>
       </Modal>
     </div>

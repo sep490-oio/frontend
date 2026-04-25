@@ -62,6 +62,7 @@ import { WarrantyNotice } from '@/features/order/components/WarrantyNotice'
 import { OrderStatus, OrderReturnStatus } from '@/types/enums'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { formatDateTime, formatCurrency, formatDateTimeVn } from '@/utils/format'
+import { SANS_FONT, MONO_FONT } from '@/styles/tokens'
 
 const RETURN_ELIGIBLE_STATUSES = new Set<string>([
   OrderStatus.Delivered,
@@ -223,16 +224,31 @@ export default function OrderDetailPage() {
   }
 
   return (
-    <div style={{ padding: isMobile ? '0 12px' : undefined }}>
-      <Space style={{ marginBottom: 16 }}>
-        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(`${prefix}/orders`)}>
+    <div style={{ maxWidth: 1400, margin: '0 auto', padding: isMobile ? '24px 16px 80px' : '32px 24px 80px' }}>
+      <Space style={{ marginBottom: 24 }}>
+        <Button 
+          icon={<ArrowLeftOutlined />} 
+          onClick={() => navigate(`${prefix}/orders`)}
+          style={{ borderRadius: 10, fontWeight: 600 }}
+        >
           {tc('action.back', 'Back')}
         </Button>
       </Space>
 
-      <Typography.Title level={isMobile ? 3 : 2} style={{ marginBottom: isMobile ? 16 : 24 }}>
-        {t('orderDetail', 'Order Detail')} #{order.orderNumber}
-      </Typography.Title>
+      <div style={{ marginBottom: isMobile ? 24 : 32 }}>
+        <Typography.Title 
+          level={2} 
+          style={{ 
+            margin: 0,
+            fontFamily: SANS_FONT,
+            fontWeight: 600,
+            fontSize: isMobile ? 24 : 32,
+            color: 'var(--color-text-primary)'
+          }}
+        >
+          {t('orderDetail', 'Order Detail')} <span style={{ fontFamily: MONO_FONT, color: 'var(--color-accent)', opacity: 0.8 }}>#{order.orderNumber}</span>
+        </Typography.Title>
+      </div>
 
       {/* Active dispute banner */}
       <ActiveDisputeBanner
@@ -337,7 +353,16 @@ export default function OrderDetailPage() {
       )}
 
       {/* Status stepper */}
-      <Card style={{ marginBottom: 24 }}>
+      <Card 
+        style={{ 
+          marginBottom: 32,
+          background: 'var(--color-bg-card)',
+          border: '1px solid var(--color-border)',
+          borderRadius: 24,
+          boxShadow: 'var(--shadow-sm)'
+        }}
+        styles={{ body: { padding: isMobile ? 20 : 32 } }}
+      >
         <OrderStatusStepper status={order.status} />
       </Card>
 

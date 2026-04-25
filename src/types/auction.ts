@@ -40,6 +40,7 @@ export interface AuctionDto {
   verifyByPlatform: boolean
   rejectionCount: number
   createdAt: string
+  isOnWatchList?: boolean
 }
 
 export interface ParticipantInfoDto {
@@ -79,6 +80,7 @@ export interface AuctionDetailDto {
   recentBids: BidDto[]
   priceHistory: PriceHistoryPoint[]
   isWatched?: boolean
+  isOnWatchList?: boolean
   currentUserParticipant?: ParticipantInfoDto
   currentUserBidState?: CurrentUserBidStateDto
   currentBuyerOrder?: CurrentBuyerOrderDto
@@ -129,6 +131,7 @@ export interface AuctionListItemDto {
   createdAt: string
   isWatched?: boolean
   hasWatched?: boolean
+  isOnWatchList?: boolean
 }
 
 export interface BidDto {

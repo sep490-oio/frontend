@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { Typography, Select, Spin, Empty, Flex, Pagination, Button, Tag } from 'antd'
-import { HistoryOutlined, ThunderboltOutlined, TrophyOutlined, LineChartOutlined } from '@ant-design/icons'
+import { HistoryOutlined, ThunderboltOutlined, TrophyOutlined, LineChartOutlined, ClockCircleOutlined, ArrowRightOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useMyBids, useMyPendingWinnerOffers, useRespondRunnerUpOffer, useAuctionDetail } from '@/features/auction/api'
@@ -16,8 +16,12 @@ import { PriceHistoryChart } from '@/features/auction/components/PriceHistoryCha
 import { CountdownTimer } from '@/components/ui/CountdownTimer'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { useAuctionHub } from '@/features/auction/hooks/useAuctionHub'
+import { useUserHub } from '@/features/auction/hooks/useUserHub'
 import { useCurrentUser } from '@/features/user/api'
+import { useNotifications } from '@/features/notification/api'
+import { BidderPositionBlock } from '@/features/auction/components/BidderPositionBlock'
 import { MONO_FONT, SANS_FONT } from '@/styles/tokens'
+
 
 const { Title, Text } = Typography
 
@@ -30,18 +34,19 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
   const { t } = useTranslation('auction')
   const navigate = useNavigate()
   const { isMobile, isTablet } = useBreakpoint()
-  
+
   const { data: currentUser } = useCurrentUser()
   const userId = currentUser?.id
-  
+
   // Fetch detailed data and subscribe to SignalR for real-time updates
   const { data: detailData, isLoading } = useAuctionDetail(bid.auctionId, userId)
   useAuctionHub(bid.auctionId, undefined, userId)
-  
+  useUserHub(bid.auctionId, userId)
+
   const priceHistory = detailData?.priceHistory ?? []
   const auction = detailData?.auction
   const bidState = detailData?.currentUserBidState
-  
+
   // Prefer real-time patched data from the cache, fallback to the initial list data
   const currentPriceAmount = auction?.currentPrice?.amount ?? bid.currentPrice?.amount
   const currentPriceCurrency = auction?.currentPrice?.currency ?? bid.currentPrice?.currency
@@ -51,10 +56,10 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
   const myLatestBidCurrency = bid.myLatestBidAmount?.currency
   const lastBidAt = bidState?.latestBidAt ?? bid.lastBidAt
   const totalBidCount = auction?.bidCount ?? 0
-  
+
   const isActive = auctionStatus === AuctionStatus.Active
   const isWon = position === 'won'
-  
+
   const navState = {
     knownPosition: position,
     returnTo: '/me/bids',
@@ -62,17 +67,17 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
   }
 
   return (
-    <div 
+    <div
       className="oio-press group"
       onClick={() => navigate(`/auctions/${bid.auctionId}`, { state: navState })}
       tabIndex={0}
       role="link"
-      style={{ 
+      style={{
         background: 'var(--color-bg-card)',
         border: '1px solid var(--color-border)',
-        marginBottom: 16, 
-        borderRadius: 24, 
-        overflow: 'hidden', 
+        marginBottom: 16,
+        borderRadius: 24,
+        overflow: 'hidden',
         padding: isMobile ? 12 : 20,
         display: 'flex',
         flexDirection: isMobile || isTablet ? 'column' : 'row',
@@ -97,10 +102,10 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
       }}>
         <div style={{ position: 'absolute', inset: 0 }}>
           {bid.primaryImageUrl ? (
-            <img 
-              src={bid.primaryImageUrl} 
-              alt={bid.itemTitle} 
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} 
+            <img
+              src={bid.primaryImageUrl}
+              alt={bid.itemTitle}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
             />
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', color: 'var(--color-text-secondary)', fontSize: 13 }}>{t('noImage')}</div>
@@ -136,7 +141,7 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
         <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}>
           <StatusBadge status={auctionStatus} size="small" />
         </div>
-        
+
         {/* Timer Float */}
         {((isActive && (auction?.endTime || bid.auctionStatus)) || (auctionStatus === AuctionStatus.Scheduled && (auction?.startTime || bid.auctionStatus))) && (
           <div
@@ -179,9 +184,15 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
         >
           {bid.itemTitle}
         </h3>
-        <p style={{ color: 'var(--color-text-secondary)', fontSize: 12, marginBottom: isMobile ? 16 : 24 }}>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: 12, marginBottom: isMobile ? 12 : 16 }}>
           {t('itemCode')}: <span style={{ fontFamily: MONO_FONT }}>#{bid.auctionId.slice(0, 6)}</span>
         </p>
+
+        {isActive && (position === 'leading' || position === 'outbid') && (
+          <div style={{ marginBottom: 16 }}>
+            <BidderPositionBlock position={position as any} />
+          </div>
+        )}
 
         <Flex gap={isMobile ? 24 : 32} wrap="wrap" style={{ marginBottom: isMobile ? 24 : 32, flex: 1 }}>
           <div>
@@ -192,7 +203,7 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
               <PriceDisplay amount={currentPriceAmount ?? 0} currency={currentPriceCurrency ?? 'VND'} />
             </div>
           </div>
-          
+
           <div>
             <p style={{ fontSize: 11, textTransform: 'uppercase', color: 'var(--color-text-tertiary)', margin: '0 0 4px 0', letterSpacing: '0.05em' }}>
               {t('myLatestBid', 'My Bid')}
@@ -201,20 +212,6 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
               <div style={{ fontFamily: MONO_FONT, fontSize: isMobile ? 18 : 22, fontWeight: 700, color: 'var(--color-accent)' }}>
                 <PriceDisplay amount={myLatestBidAmount ?? 0} currency={myLatestBidCurrency ?? 'VND'} />
               </div>
-              {isActive && (position === 'leading' || position === 'outbid') && (
-                <span style={{ 
-                  fontSize: 10, 
-                  fontWeight: 800, 
-                  textTransform: 'uppercase', 
-                  color: position === 'leading' ? 'var(--color-success)' : 'var(--color-danger)',
-                  background: position === 'leading' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                  padding: '2px 10px',
-                  borderRadius: 6,
-                  letterSpacing: '0.05em'
-                }}>
-                  {position === 'leading' ? t('bidStatusLeading', 'Leading') : t('bidStatusOutbid', 'Outbid')}
-                </span>
-              )}
             </div>
             <p style={{ fontSize: 11, color: 'var(--color-text-tertiary)', marginTop: 4, margin: 0 }}>
               {formatDateTime(lastBidAt)}
@@ -222,81 +219,16 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
           </div>
         </Flex>
 
-        <div style={{ marginTop: 'auto', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            {isWon && bid.canPayNow && bid.orderId ? (
-              <Button 
-                type="primary"
-                size="large"
-                block={isMobile}
-                icon={<ThunderboltOutlined />}
-                onClick={(e: React.MouseEvent) => { e.stopPropagation(); navigate(`/checkout/${bid.orderId}`) }}
-                style={{
-                  background: 'var(--color-accent)',
-                  borderColor: 'var(--color-accent)',
-                  borderRadius: 12,
-                  fontWeight: 600,
-                  height: 48,
-                  padding: '0 32px'
-                }}
-              >
-                {t('payNow', 'Pay Now')}
-              </Button>
-            ) : isWon && bid.orderId ? (
-              <Button 
-                size="large"
-                block={isMobile}
-                onClick={(e: React.MouseEvent) => { e.stopPropagation(); navigate(`/me/orders/${bid.orderId}`) }}
-                style={{
-                  borderRadius: 12,
-                  fontWeight: 600,
-                  height: 48,
-                  padding: '0 32px'
-                }}
-              >
-                {t('viewOrder', 'View Order')}
-              </Button>
-            ) : isActive ? (
-              <Button 
-                type="primary"
-                size="large"
-                block={isMobile}
-                icon={<ThunderboltOutlined />}
-                onClick={(e: React.MouseEvent) => { e.stopPropagation(); navigate(`/auctions/${bid.auctionId}`, { state: navState }) }}
-                style={{
-                  background: 'var(--color-accent)',
-                  borderColor: 'var(--color-accent)',
-                  borderRadius: 12,
-                  fontWeight: 600,
-                  height: 48,
-                  padding: '0 32px'
-                }}
-              >
-                {t('quickBid', 'Quick Bid')}
-              </Button>
-            ) : null}
-            <Button 
-              size="large"
-              block={isMobile && !(isWon && bid.canPayNow)}
-              onClick={(e: React.MouseEvent) => { e.stopPropagation(); navigate(`/auctions/${bid.auctionId}`, { state: navState }) }}
-              style={{
-                borderRadius: 12,
-                fontWeight: 600,
-                height: 48,
-                padding: '0 32px',
-                color: 'var(--color-text-secondary)'
-              }}
-            >
-              {t('viewDetails', 'View Details')}
-            </Button>
-        </div>
+        {/* Spacer to push items apart if needed, or you can use justifyContent: space-between on the parent */}
+        <div style={{ flex: 1 }} />
       </div>
 
       {/* Right: Chart */}
       {!isMobile && (
-        <div style={{ 
+        <div style={{
           flex: isTablet ? 'none' : 1.5,
-          width: isTablet ? '100%' : 'auto', 
-          borderLeft: isTablet ? 'none' : '1px solid var(--color-border)', 
+          width: isTablet ? '100%' : 'auto',
+          borderLeft: isTablet ? 'none' : '1px solid var(--color-border)',
           borderTop: isTablet ? '1px solid var(--color-border)' : 'none',
           padding: isTablet ? '20px 0 0' : '8px 0 8px 32px',
           display: 'flex',
@@ -312,8 +244,8 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
               {totalBidCount} {t(totalBidCount > 1 ? 'bidsLabel' : 'bidLabel', 'bids')}
             </Tag>
           </div>
-          
-          <div style={{ flex: 1, minHeight: 160, position: 'relative' }}>
+
+          <div style={{ flex: 1, minHeight: 160, position: 'relative', marginBottom: 20 }}>
             {isLoading ? (
               <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Spin /></div>
             ) : priceHistory.length > 0 ? (
@@ -324,8 +256,269 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
               </div>
             )}
           </div>
+
+          {/* Buttons Moved Here (Desktop/Tablet) */}
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 'auto' }}>
+            {isWon && bid.canPayNow && bid.orderId ? (
+              <Button
+                type="primary"
+                size="large"
+                icon={<ThunderboltOutlined />}
+                onClick={(e: React.MouseEvent) => { e.stopPropagation(); navigate(`/checkout/${bid.orderId}`) }}
+                style={{
+                  background: 'var(--color-accent)',
+                  borderColor: 'var(--color-accent)',
+                  borderRadius: 12,
+                  fontWeight: 600,
+                  height: 44,
+                  padding: '0 24px'
+                }}
+              >
+                {t('payNow', 'Pay Now')}
+              </Button>
+            ) : isWon && bid.orderId ? (
+              <Button
+                size="large"
+                onClick={(e: React.MouseEvent) => { e.stopPropagation(); navigate(`/me/orders/${bid.orderId}`) }}
+                style={{
+                  borderRadius: 12,
+                  fontWeight: 600,
+                  height: 44,
+                  padding: '0 24px'
+                }}
+              >
+                {t('viewOrder', 'View Order')}
+              </Button>
+            ) : isActive ? (
+              <Button
+                type="primary"
+                size="large"
+                icon={<ThunderboltOutlined />}
+                onClick={(e: React.MouseEvent) => { e.stopPropagation(); navigate(`/auctions/${bid.auctionId}`, { state: navState }) }}
+                style={{
+                  background: 'var(--color-accent)',
+                  borderColor: 'var(--color-accent)',
+                  borderRadius: 12,
+                  fontWeight: 600,
+                  height: 44,
+                  padding: '0 24px'
+                }}
+              >
+                {t('quickBid', 'Quick Bid')}
+              </Button>
+            ) : null}
+            <Button
+              size="large"
+              onClick={(e: React.MouseEvent) => { e.stopPropagation(); navigate(`/auctions/${bid.auctionId}`, { state: navState }) }}
+              style={{
+                borderRadius: 12,
+                fontWeight: 600,
+                height: 44,
+                padding: '0 24px',
+                color: 'var(--color-text-secondary)'
+              }}
+            >
+              {t('viewDetails', 'View Details')}
+            </Button>
+          </div>
         </div>
       )}
+
+      {/* Buttons for Mobile Only (since chart is hidden) */}
+      {isMobile && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {isWon && bid.canPayNow && bid.orderId ? (
+            <Button
+              type="primary"
+              size="large"
+              block
+              icon={<ThunderboltOutlined />}
+              onClick={(e: React.MouseEvent) => { e.stopPropagation(); navigate(`/checkout/${bid.orderId}`) }}
+              style={{
+                background: 'var(--color-accent)',
+                borderColor: 'var(--color-accent)',
+                borderRadius: 12,
+                fontWeight: 600,
+                height: 48
+              }}
+            >
+              {t('payNow', 'Pay Now')}
+            </Button>
+          ) : isWon && bid.orderId ? (
+            <Button
+              size="large"
+              block
+              onClick={(e: React.MouseEvent) => { e.stopPropagation(); navigate(`/me/orders/${bid.orderId}`) }}
+              style={{ borderRadius: 12, fontWeight: 600, height: 48 }}
+            >
+              {t('viewOrder', 'View Order')}
+            </Button>
+          ) : isActive ? (
+            <Button
+              type="primary"
+              size="large"
+              block
+              icon={<ThunderboltOutlined />}
+              onClick={(e: React.MouseEvent) => { e.stopPropagation(); navigate(`/auctions/${bid.auctionId}`, { state: navState }) }}
+              style={{
+                background: 'var(--color-accent)',
+                borderColor: 'var(--color-accent)',
+                borderRadius: 12,
+                fontWeight: 600,
+                height: 48
+              }}
+            >
+              {t('quickBid', 'Quick Bid')}
+            </Button>
+          ) : null}
+          <Button
+            size="large"
+            block
+            onClick={(e: React.MouseEvent) => { e.stopPropagation(); navigate(`/auctions/${bid.auctionId}`, { state: navState }) }}
+            style={{ borderRadius: 12, fontWeight: 600, height: 48, color: 'var(--color-text-secondary)' }}
+          >
+            {t('viewDetails', 'View Details')}
+          </Button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function RecentActivityLog({ localActivities = [] }: { localActivities?: any[] }) {
+  const { t } = useTranslation(['auction', 'common'])
+  const { data: notificationsData, isLoading } = useNotifications({ pageSize: 15 })
+  const navigate = useNavigate()
+
+
+  const notifications = notificationsData?.items ?? []
+
+  // Merge local activities with server notifications, avoiding duplicates
+  const allActivities = useMemo(() => {
+    const merged = [...localActivities, ...notifications]
+    // Simple deduplication: if a local activity has the same entityId and approximate timestamp as a notification
+    // Or if they are identical (shouldn't happen with IDs)
+    const unique = merged.reduce((acc: any[], curr) => {
+      const exists = acc.find(a =>
+        (a.id === curr.id) ||
+        (a.entityId === curr.entityId && Math.abs(new Date(a.createdAt).getTime() - new Date(curr.createdAt).getTime()) < 5000)
+      )
+      if (!exists) acc.push(curr)
+      return acc
+    }, [])
+
+    return unique
+      .filter(n => n.entityType?.toLowerCase() === 'auction' || n.notificationType?.toLowerCase() === 'auction')
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 15)
+  }, [notifications, localActivities])
+
+  return (
+    <div style={{
+      background: 'var(--color-bg-card)',
+      border: '1px solid var(--color-border)',
+      borderRadius: 24,
+      padding: 24,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 20,
+      height: 'fit-content',
+      position: 'sticky',
+      top: 96,
+      boxShadow: 'var(--shadow-sm)'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Title level={4} style={{ margin: 0, fontFamily: SANS_FONT, fontSize: 18, fontWeight: 700 }}>
+          <ClockCircleOutlined style={{ marginRight: 8, color: 'var(--color-accent)', fontSize: 16 }} />
+          {t('auction:activityLog', 'Recent Activity')}
+        </Title>
+        <Button
+          type="text"
+          size="small"
+          onClick={() => navigate('/me/notifications')}
+          style={{ fontSize: 12, color: 'var(--color-accent)', padding: 0 }}
+        >
+          {t('common:action.viewAll')} <ArrowRightOutlined style={{ fontSize: 10 }} />
+        </Button>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {isLoading && allActivities.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '20px 0' }}><Spin size="small" /></div>
+        ) : allActivities.length === 0 ? (
+          <Text type="secondary" style={{ textAlign: 'center', padding: '20px 0', fontSize: 13 }}>
+            {t('common:notification.noNotifications')}
+          </Text>
+        ) : (
+          allActivities.map((notif) => {
+            const isOutbid = notif.eventType?.toLowerCase().includes('outbid') || notif.title.includes('vượt giá')
+            return (
+              <div
+                key={notif.id}
+                style={{
+                  display: 'flex',
+                  gap: 12,
+                  paddingBottom: 12,
+                  borderBottom: '1px solid var(--color-border-light)',
+                  cursor: notif.entityId ? 'pointer' : 'default'
+                }}
+                onClick={() => {
+                  if (notif.entityId) {
+                    navigate(`/auctions/${notif.entityId}`)
+                  }
+                }}
+              >
+                <div style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 8,
+                  background: isOutbid ? 'rgba(239, 68, 68, 0.1)' : 'var(--color-bg-surface)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  border: isOutbid ? '1px solid rgba(239, 68, 68, 0.2)' : '1px solid var(--color-border-light)'
+                }}>
+                  {isOutbid ? (
+                    <LineChartOutlined style={{ fontSize: 12, color: '#ef4444' }} />
+                  ) : (
+                    <ThunderboltOutlined style={{ fontSize: 12, color: 'var(--color-accent)' }} />
+                  )}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: 'var(--color-text-primary)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    gap: 8
+                  }}>
+                    <span style={{
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {notif.title.replace('Đặt giá thành công: ', '').replace('Bid Success: ', '').replace('Bạn đã bị vượt giá!', t('bidStatusOutbid', 'Outbid'))}
+                    </span>
+                  </div>
+                  <div style={{
+                    fontSize: 12,
+                    color: isOutbid ? '#ef4444' : 'var(--color-text-secondary)',
+                    marginTop: 2,
+                    lineHeight: 1.4
+                  }}>
+                    {notif.message}
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--color-text-tertiary)', marginTop: 4 }}>
+                    {formatDateTime(notif.createdAt)}
+                  </div>
+                </div>
+              </div>
+            )
+          })
+        )}
+      </div>
     </div>
   )
 }
@@ -334,7 +527,7 @@ export default function MyBidsPage() {
   const { t } = useTranslation('auction')
   const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
-  const { isMobile } = useBreakpoint()
+  const { isMobile, isTablet } = useBreakpoint()
 
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
@@ -342,7 +535,7 @@ export default function MyBidsPage() {
   const [sortBy, setSortBy] = useState<string>('LastBidAt Desc')
   const { connected } = useUserHubStatus()
 
-  const params = statusFilter 
+  const params = statusFilter
     ? { pageNumber: page, pageSize: Math.max(pageSize, 50), sortBy }
     : { pageNumber: page, pageSize, sortBy }
 
@@ -350,6 +543,58 @@ export default function MyBidsPage() {
     ...params,
     ...(connected ? {} : { refetchInterval: 30000 }) as any,
   })
+
+  // Real-time Activity Sync
+  const [localActivities, setLocalActivities] = useState<any[]>([])
+  const prevItemsRef = useRef<MyBidDto[]>([])
+
+  useEffect(() => {
+    const items = data?.items ?? []
+    if (items.length > 0 && prevItemsRef.current.length > 0) {
+      items.forEach(item => {
+        const prevItem = prevItemsRef.current.find(p => p.auctionId === item.auctionId)
+        if (prevItem) {
+          // Detect Bid Success (Price increased)
+          if (item.myLatestBidAmount > prevItem.myLatestBidAmount) {
+            setLocalActivities(prev => [{
+              id: `local-bid-${Date.now()}-${item.auctionId}`,
+              title: item.itemTitle,
+              message: t('bidSuccessMsg', 'Bạn đã đặt giá thành công: {{amount}}đ', { amount: item.myLatestBidAmount.toLocaleString() }),
+              createdAt: new Date().toISOString(),
+              eventType: 'AuctionBidSuccess',
+              entityType: 'Auction',
+              entityId: item.auctionId
+            }, ...prev].slice(0, 5))
+          }
+          // Detect Outbid (Position changed to outbid)
+          else if (item.position === 'outbid' && prevItem.position !== 'outbid') {
+            setLocalActivities(prev => [{
+              id: `local-outbid-${Date.now()}-${item.auctionId}`,
+              title: item.itemTitle,
+              message: t('outbidMsg', 'Bạn đã bị vượt giá!'),
+              createdAt: new Date().toISOString(),
+              eventType: 'AuctionOutbid',
+              entityType: 'Auction',
+              entityId: item.auctionId
+            }, ...prev].slice(0, 5))
+          }
+          // Detect Won (Position changed to won)
+          else if (item.position === 'won' && prevItem.position !== 'won') {
+            setLocalActivities(prev => [{
+              id: `local-won-${Date.now()}-${item.auctionId}`,
+              title: item.itemTitle,
+              message: t('wonMsg', 'Bạn đã thắng phiên đấu giá!'),
+              createdAt: new Date().toISOString(),
+              eventType: 'AuctionWon',
+              entityType: 'Auction',
+              entityId: item.auctionId
+            }, ...prev].slice(0, 5))
+          }
+        }
+      })
+    }
+    prevItemsRef.current = items
+  }, [data?.items, t])
 
   const STATUS_PILLS: StatusPill[] = [
     { value: '', label: t('bidStatusAll', 'All') },
@@ -363,7 +608,7 @@ export default function MyBidsPage() {
   const respondMutation = useRespondRunnerUpOffer()
 
   const items = data?.items ?? []
-  
+
   // Client-side filtering because backend MyBids may not support filtering by position
   const displayItems = statusFilter
     ? items.filter((bid) => bid.position === statusFilter)
@@ -374,9 +619,9 @@ export default function MyBidsPage() {
   return (
     <div
       style={{
-        maxWidth: 1400,
+        maxWidth: 1800,
         margin: '0 auto',
-        padding: isMobile ? '12px 16px 80px' : '0 24px 80px',
+        padding: isMobile ? '24px 16px 80px' : '48px 32px 80px',
       }}
     >
       {/* Header */}
@@ -508,41 +753,59 @@ export default function MyBidsPage() {
         />
       </Flex>
 
-      {/* Content List */}
-      {isLoading ? (
-        <div style={{ textAlign: 'center', padding: 80 }}>
-          <Spin size="large" />
+      {/* Main Layout Split */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile || isTablet ? 'column' : 'row',
+        gap: 32,
+        alignItems: 'flex-start'
+      }}>
+        {/* Left Column (3/4): Bids List */}
+        <div style={{ flex: 3, width: '100%', minWidth: 0 }}>
+          {isLoading ? (
+            <div style={{ textAlign: 'center', padding: 80 }}>
+              <Spin size="large" />
+            </div>
+          ) : displayItems.length === 0 ? (
+            <Empty
+              description={t('noBidsYet', 'You have not participated in any auctions yet')}
+              style={{ padding: 80, background: 'var(--color-bg-card)', borderRadius: 24, border: '1px solid var(--color-border)' }}
+            />
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {displayItems.map((bid: MyBidDto) => (
+                <AuctionCell key={bid.auctionId} bid={bid} />
+              ))}
+            </div>
+          )}
+
+          {displayItems.length > 0 && (
+            <Flex justify="center" style={{ marginTop: 40 }}>
+              <Pagination
+                current={data?.metadata?.currentPage ?? page}
+                pageSize={data?.metadata?.pageSize ?? pageSize}
+                total={totalCount}
+                showSizeChanger={!isMobile}
+                showTotal={isMobile ? undefined : (total) => tc('pagination.total', { total })}
+                size={isMobile ? 'small' : undefined}
+                onChange={(p, ps) => {
+                  setPage(p)
+                  setPageSize(ps)
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
+              />
+            </Flex>
+          )}
         </div>
-      ) : displayItems.length === 0 ? (
-        <Empty
-          description={t('noBidsYet', 'You have not participated in any auctions yet')}
-          style={{ padding: 80, background: 'var(--color-bg-card)', borderRadius: 24, border: '1px solid var(--color-border)' }}
-        />
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {displayItems.map((bid: MyBidDto) => (
-            <AuctionCell key={bid.auctionId} bid={bid} />
-          ))}
-        </div>
-      )}
-      
-      {displayItems.length > 0 && (
-        <Flex justify="center" style={{ marginTop: 40 }}>
-          <Pagination
-            current={data?.metadata?.currentPage ?? page}
-            pageSize={data?.metadata?.pageSize ?? pageSize}
-            total={totalCount}
-            showSizeChanger={!isMobile}
-            showTotal={isMobile ? undefined : (total) => tc('pagination.total', { total })}
-            size={isMobile ? 'small' : undefined}
-            onChange={(p, ps) => {
-              setPage(p)
-              setPageSize(ps)
-              window.scrollTo({ top: 0, behavior: 'smooth' })
-            }}
-          />
-        </Flex>
-      )}
+
+        {/* Right Column (1/3): Activity Log */}
+        {!isMobile && (
+          <div style={{ flex: 1, width: '100%', maxWidth: isTablet ? '100%' : 440 }}>
+            <RecentActivityLog localActivities={localActivities} />
+          </div>
+        )}
+      </div>
+
     </div>
   )
-}
+}

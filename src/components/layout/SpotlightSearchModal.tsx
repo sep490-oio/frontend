@@ -528,8 +528,8 @@ export const SpotlightSearchModal: React.FC = () => {
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === ' ' && e.ctrlKey) {
-        // Prevent opening if user is typing in form exactly
+      if (e.key === 'b' && e.ctrlKey && !e.shiftKey && !e.altKey) {
+        // Prevent opening if user is typing in a form field
         if (
           document.activeElement?.tagName === 'INPUT' ||
           document.activeElement?.tagName === 'TEXTAREA' ||

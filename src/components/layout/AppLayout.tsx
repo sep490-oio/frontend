@@ -274,7 +274,7 @@ export function AppLayout() {
                 }}>
                   <SearchOutlined style={{ marginRight: 8 }} />
                   <span>{t('common:action.search', 'Search...')}</span>
-                  <div style={{ marginLeft: 'auto', background: 'rgba(0,0,0,0.05)', padding: '2px 6px', borderRadius: 4, fontSize: 11, fontFamily: 'var(--font-mono)' }}>Ctrl Space</div>
+                  <div style={{ marginLeft: 'auto', background: 'rgba(0,0,0,0.05)', padding: '2px 6px', borderRadius: 4, fontSize: 11, fontFamily: 'var(--font-mono)' }}>Ctrl B</div>
                 </div>
               </div>
             </div>

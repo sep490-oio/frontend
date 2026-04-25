@@ -100,7 +100,7 @@ export default function NotificationPrefsPage() {
   }
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: isMobile ? '12px 16px 80px' : '0 24px 80px' }}>
+    <div style={{ maxWidth: 1400, margin: '0 auto', padding: isMobile ? '24px 16px 80px' : '32px 24px 80px' }}>
       {/* Header */}
       <Flex 
         justify="space-between" 

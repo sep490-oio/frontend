@@ -82,14 +82,14 @@ export function AuctionCard({ auction }: AuctionCardProps) {
   const watchMutation = useWatchAuction()
   const unwatchMutation = useUnwatchAuction()
   const { message } = App.useApp()
-  const [watching, setWatching] = useState(auction.isWatched ?? auction.hasWatched ?? false)
+  const [watching, setWatching] = useState(auction.isOnWatchList ?? auction.isWatched ?? auction.hasWatched ?? false)
 
   useEffect(() => {
-    const isWatched = auction.isWatched ?? auction.hasWatched
+    const isWatched = auction.isOnWatchList ?? auction.isWatched ?? auction.hasWatched
     if (isWatched !== undefined) {
       setWatching(isWatched)
     }
-  }, [auction.isWatched, auction.hasWatched])
+  }, [auction.isOnWatchList, auction.isWatched, auction.hasWatched])
 
   const isActive = auction.status === AuctionStatus.Active
   const isScheduled = auction.status === AuctionStatus.Scheduled
@@ -317,18 +317,20 @@ export function AuctionCard({ auction }: AuctionCardProps) {
               bottom: 12,
               left: 12,
               right: 12,
-              background: 'rgba(0, 0, 0, 0.4)',
-              backdropFilter: 'blur(12px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              padding: 8,
+              background: 'rgba(0, 0, 0, 0.62)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              border: '1px solid rgba(255, 255, 255, 0.18)',
+              boxShadow: '0 2px 12px rgba(0,0,0,0.25)',
+              padding: '8px 10px',
               borderRadius: 12,
               textAlign: 'center',
             }}
           >
-            <p style={{ fontSize: 10, textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)', letterSpacing: '0.1em', margin: '0 0 4px 0' }}>
+            <p style={{ fontSize: 10, textTransform: 'uppercase', color: 'rgba(255,255,255,0.75)', letterSpacing: '0.1em', margin: '0 0 4px 0' }}>
               {isActive ? t('timeRemaining') : t('startsIn')}
             </p>
-            <div style={{ color: isActive ? 'var(--color-accent, #3b82f6)' : '#fb923c', fontFamily: MONO_FONT, fontWeight: 700 }}>
+            <div style={{ color: isActive ? '#60a5fa' : '#fb923c', fontFamily: MONO_FONT, fontWeight: 700, textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
               <CountdownTimer endTime={isActive ? auction.endTime! : auction.startTime!} size="small" />
             </div>
           </div>

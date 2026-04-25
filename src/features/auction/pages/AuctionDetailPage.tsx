@@ -238,15 +238,15 @@ export default function AuctionDetailPage() {
   const [optimisticIsWatching, setOptimisticIsWatching] = useState<boolean | null>(null)
   const isWatching = optimisticIsWatching !== null
     ? optimisticIsWatching
-    : (data?.isWatched ?? (data as any)?.hasWatched ?? (data?.auction as any)?.isWatched ?? (data?.auction as any)?.hasWatched ?? false)
+    : (data?.isOnWatchList ?? data?.isWatched ?? (data as any)?.hasWatched ?? (data?.auction as any)?.isOnWatchList ?? (data?.auction as any)?.isWatched ?? (data?.auction as any)?.hasWatched ?? false)
 
   // Reset optimistic state when data syncs
   useEffect(() => {
-    const serverWatched = data?.isWatched ?? (data as any)?.hasWatched ?? (data?.auction as any)?.isWatched ?? (data?.auction as any)?.hasWatched
+    const serverWatched = data?.isOnWatchList ?? data?.isWatched ?? (data as any)?.hasWatched ?? (data?.auction as any)?.isOnWatchList ?? (data?.auction as any)?.isWatched ?? (data?.auction as any)?.hasWatched
     if (optimisticIsWatching !== null && serverWatched === optimisticIsWatching) {
       setOptimisticIsWatching(null)
     }
-  }, [data?.isWatched, (data as any)?.hasWatched, (data?.auction as any)?.isWatched, (data?.auction as any)?.hasWatched, optimisticIsWatching])
+  }, [data?.isOnWatchList, data?.isWatched, (data as any)?.hasWatched, (data?.auction as any)?.isOnWatchList, (data?.auction as any)?.isWatched, (data?.auction as any)?.hasWatched, optimisticIsWatching])
   const [autoBidMax, setAutoBidMax] = useState<number | null>(null)
   const [autoBidIncrement, setAutoBidIncrement] = useState<number | null>(null)
   const [buyNowConfirmOpen, setBuyNowConfirmOpen] = useState(false)
@@ -1273,7 +1273,7 @@ export default function AuctionDetailPage() {
                 : undefined
             }
             canBid={isActive && isAuthenticated && qualState === 'qualified' && !isSeller && !isAdmin}
-            canBuyNow={isAuthenticated && !isSeller && !isAdmin && !isTerminal && qualState === 'qualified'}
+            canBuyNow={isAuthenticated && !isSeller && !isAdmin && !isTerminal && (auction?.status !== AuctionStatus.Active || qualState === 'qualified')}
             currentBuyerOrder={data?.currentBuyerOrder}
             onViewOrderClick={(orderId) => navigate(`/me/orders/${orderId}`)}
             isOrderProvisioning={pollingForOrder}

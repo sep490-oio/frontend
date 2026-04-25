@@ -12,9 +12,9 @@ import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useWallet } from '@/features/payment/api'
-import { useMyBids } from '@/features/auction/api'
+import { useMyBids, useWatchlist } from '@/features/auction/api'
 import { useMyOrders } from '@/features/order/api'
-import { useDisputes } from '@/features/dispute/api'
+import { useMyDisputes } from '@/features/dispute/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { OrderItemSummary } from '@/features/order/components/OrderItemSummary'
 import { formatCurrency, formatDateTime } from '@/utils/format'
@@ -28,16 +28,34 @@ export default function DashboardPage() {
   const navigate = useNavigate()
 
   const { data: wallet } = useWallet()
-  const { data: bidsData } = useMyBids({ pageNumber: 1, pageSize: 3, status: 'active' })
-  const { data: ordersData } = useMyOrders({ pageNumber: 1, pageSize: 3, status: 'shipped' })
-  const { data: disputesData } = useDisputes({ pageNumber: 1, pageSize: 3 })
+  
+  // Stats queries with minimal page size just for totalCount
+  // Attempt to filter by active status using both common parameter names
+  const { data: bidsData } = useMyBids({ 
+    pageNumber: 1, 
+    pageSize: 50, // Fetch more to allow accurate client-side filtering if backend filter fails
+    status: 'active',
+    statusGroup: 'active'
+  } as any)
+  const { data: ordersData } = useMyOrders({ pageNumber: 1, pageSize: 3 }) // Removed status filter for total count
+  const { data: disputesData } = useMyDisputes({ pageNumber: 1, pageSize: 3 })
+  const { data: watchlistData } = useWatchlist({ pageNumber: 1, pageSize: 3 })
 
-  const activeBids = bidsData?.items ?? []
+  // Client-side filter to ensure only active ones are shown in the 'Recent' list and accurate count
+  const activeBidsItems = (bidsData?.items ?? []).filter(item => item.auctionStatus === 'active')
+  const activeBids = activeBidsItems.slice(0, 3)
+  
+  // Use backend totalCount if it seems to be filtered, otherwise use client-filtered length
+  const activeBidsCount = (bidsData?.metadata?.totalCount !== undefined && bidsData?.metadata?.totalCount <= activeBidsItems.length)
+    ? bidsData.metadata.totalCount
+    : activeBidsItems.length
+
+  const watchlist = watchlistData?.items ?? []
   const recentOrders = ordersData?.items ?? []
   const disputes = disputesData?.items ?? []
 
   return (
-    <div style={{ maxWidth: 1400, margin: '0 auto', padding: isMobile ? '12px 16px 80px' : '0 24px 80px' }}>
+    <div style={{ maxWidth: 1400, margin: '0 auto', padding: isMobile ? '24px 16px 80px' : '48px 24px 80px' }}>
       {/* Header */}
       <div style={{ marginBottom: isMobile ? 24 : 40 }}>
         <Title
@@ -61,10 +79,35 @@ export default function DashboardPage() {
       {/* Stats Row - Premium Glassy Cards */}
       <Row gutter={isMobile ? [12, 12] : [20, 20]} style={{ marginBottom: isMobile ? 32 : 48 }}>
         {[
-          { label: t('dashboard.wallet', 'Wallet'), value: wallet ? formatCurrency(wallet.availableBalance, wallet.currency) : '--', icon: <WalletOutlined />, path: '/me/wallet', color: 'var(--color-success)' },
-          { label: t('dashboard.activeBids', 'Active Bids'), value: activeBids.length, icon: <ThunderboltOutlined />, path: '/me/bids', color: 'var(--color-accent)' },
-          { label: t('dashboard.orders', 'Orders'), value: recentOrders.length, icon: <ShoppingOutlined />, path: '/me/orders', color: 'var(--color-warning)' },
-          { label: t('dashboard.disputes', 'Disputes'), value: disputes.length, icon: <CommentOutlined />, path: '/me/disputes', color: 'var(--color-danger)' },
+          { 
+            label: t('dashboard.wallet', 'Wallet'), 
+            value: wallet ? formatCurrency(wallet.availableBalance, wallet.currency) : '--', 
+            pending: wallet?.pendingBalance && wallet.pendingBalance > 0 ? formatCurrency(wallet.pendingBalance, wallet.currency) : null,
+            icon: <WalletOutlined />, 
+            path: '/me/wallet', 
+            color: 'var(--color-success)' 
+          },
+          { 
+            label: t('dashboard.activeBids', 'Active Bids'), 
+            value: activeBidsCount, 
+            icon: <ThunderboltOutlined />, 
+            path: '/me/bids', 
+            color: 'var(--color-accent)' 
+          },
+          { 
+            label: t('dashboard.orders', 'Orders'), 
+            value: ordersData?.metadata?.totalCount ?? 0, 
+            icon: <ShoppingOutlined />, 
+            path: '/me/orders', 
+            color: 'var(--color-warning)' 
+          },
+          { 
+            label: t('dashboard.disputes', 'Disputes'), 
+            value: disputesData?.metadata?.totalCount ?? 0, 
+            icon: <CommentOutlined />, 
+            path: '/me/disputes', 
+            color: 'var(--color-danger)' 
+          },
         ].map((stat, idx) => (
           <Col xs={24} sm={12} lg={6} key={idx}>
             <div
@@ -105,6 +148,11 @@ export default function DashboardPage() {
                   <div style={{ fontFamily: MONO_FONT, fontSize: isMobile ? 22 : 26, fontWeight: 700, color: 'var(--color-text-primary)', marginTop: 2 }}>
                     {stat.value}
                   </div>
+                  {(stat as any).pending && (
+                    <div style={{ fontSize: 11, color: 'var(--color-warning)', fontWeight: 600, marginTop: 2 }}>
+                      {t('dashboard.pendingRefund', 'Pending/Held')}: {(stat as any).pending}
+                    </div>
+                  )}
                 </div>
               </Flex>
             </div>
@@ -179,6 +227,71 @@ export default function DashboardPage() {
               <Empty 
                 description={t('dashboard.noBids', 'No active bids found')} 
                 style={{ padding: 60, background: 'var(--color-bg-card)', borderRadius: 24, border: '1px solid var(--color-border)' }} 
+              />
+            )}
+          </div>
+          
+          {/* Watchlist Section */}
+          <div style={{ marginBottom: 40 }}>
+            <Flex justify="space-between" align="center" style={{ marginBottom: 20 }}>
+              <Title level={4} style={{ margin: 0, fontFamily: SANS_FONT, fontWeight: 600, fontSize: 18 }}>
+                {t('dashboard.watchlistTitle', 'Watchlist')}
+              </Title>
+              <Button type="link" onClick={() => navigate('/me/watchlist')} style={{ color: 'var(--color-accent)', fontWeight: 600, paddingRight: 0 }}>
+                {t('dashboard.viewAll', 'View All')} <RightOutlined style={{ fontSize: 10 }} />
+              </Button>
+            </Flex>
+
+            {watchlist.length > 0 ? (
+              <Row gutter={[16, 16]}>
+                {watchlist.map((item) => (
+                  <Col xs={24} sm={12} key={item.auctionId}>
+                    <div
+                      onClick={() => navigate(`/auctions/${item.auctionId}`)}
+                      className="oio-press"
+                      style={{
+                        background: 'var(--color-bg-card)',
+                        border: '1px solid var(--color-border)',
+                        borderRadius: 20,
+                        padding: '16px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        gap: 16,
+                        transition: 'all 0.2s ease',
+                        boxShadow: 'var(--shadow-sm)',
+                        height: '100%'
+                      }}
+                    >
+                      <img 
+                        src={item.primaryImageUrl || '/placeholder-item.png'} 
+                        alt={item.itemTitle}
+                        style={{ 
+                          width: 80, 
+                          height: 80, 
+                          objectFit: 'cover', 
+                          borderRadius: 12,
+                          background: 'var(--color-bg-surface)'
+                        }}
+                      />
+                      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                        <div style={{ fontWeight: 600, color: 'var(--color-text-primary)', fontSize: 14, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {item.itemTitle}
+                        </div>
+                        <div style={{ fontFamily: MONO_FONT, color: 'var(--color-accent)', fontWeight: 700, fontSize: 15 }}>
+                          {formatCurrency(item.currentPrice.amount, item.currentPrice.currency)}
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)', marginTop: 4 }}>
+                          {item.remainingTime ? `${t('dashboard.endsIn', 'Ends in')}: ${item.remainingTime}` : t('dashboard.ended', 'Ended')}
+                        </div>
+                      </div>
+                    </div>
+                  </Col>
+                ))}
+              </Row>
+            ) : (
+              <Empty 
+                description={t('dashboard.noWatchlist', 'No watched auctions found')} 
+                style={{ padding: 40, background: 'var(--color-bg-card)', borderRadius: 24, border: '1px solid var(--color-border)' }} 
               />
             )}
           </div>

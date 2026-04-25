@@ -156,11 +156,17 @@
     "stepReceived": "Received",
     "stepCompleted": "Completed",
     "noShipments": "No orders in transit",
-    "disputesTitle": "Disputes",
-    "noDisputes": "No disputes",
-    "becomeSellerTitle": "Become a Seller",
-    "becomeSellerDesc": "Sell your items on the leading auction platform",
-    "becomeSellerBtn": "Register to Sell"
+    "disputesTitle": "Recent Disputes",
+    "noDisputes": "No active disputes found",
+    "watchlistTitle": "Your Watchlist",
+    "noWatchlist": "You haven't watched any auctions yet",
+    "pendingRefund": "Pending/Held",
+    "endsIn": "Ends in",
+    "ended": "Ended",
+    "myBid": "My Bid",
+    "becomeSellerTitle": "Start Selling on OIO",
+    "becomeSellerDesc": "Turn your items into profit. Join our professional seller community today.",
+    "becomeSellerBtn": "Become a Seller"
   },
   "profile": {
     "title": "My Profile",
