@@ -9,17 +9,27 @@ const TOKEN_EXPIRY_BUFFER_MS = 60000 // refresh 60s before expiry
 const LOCK_NAME = 'oio-fe:refresh-token:v1'
 let warnedFallback = false
 
+let cachedToken: string | null = null
+let cachedExpMs: number = 0
+
 /**
  * Check if the current access token is expired or near-expiry.
  * Returns true if token should be refreshed.
+ * Uses in-memory caching to avoid redundant JWT decoding on every request.
  */
 export function isTokenExpired(): boolean {
   const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
   if (!token) return true
+  
+  if (token === cachedToken) {
+    return Date.now() >= cachedExpMs - TOKEN_EXPIRY_BUFFER_MS
+  }
+
   try {
     const payload = JSON.parse(atob(token.split('.')[1]))
-    const expMs = payload.exp * 1000
-    return Date.now() >= expMs - TOKEN_EXPIRY_BUFFER_MS
+    cachedToken = token
+    cachedExpMs = payload.exp * 1000
+    return Date.now() >= cachedExpMs - TOKEN_EXPIRY_BUFFER_MS
   } catch {
     return true // malformed token = treat as expired
   }
