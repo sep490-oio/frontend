@@ -69,7 +69,7 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
   return (
     <div
       className="oio-press group"
-      onClick={() => navigate(`/auctions/${bid.auctionId}`, { state: navState })}
+      onClick={() => window.location.href = `/auctions/${bid.auctionId}`}
       tabIndex={0}
       role="link"
       style={{
@@ -294,7 +294,7 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
                 type="primary"
                 size="large"
                 icon={<ThunderboltOutlined />}
-                onClick={(e: React.MouseEvent) => { e.stopPropagation(); navigate(`/auctions/${bid.auctionId}`, { state: navState }) }}
+                onClick={(e: React.MouseEvent) => { e.stopPropagation(); window.location.href = `/auctions/${bid.auctionId}` }}
                 style={{
                   background: 'var(--color-accent)',
                   borderColor: 'var(--color-accent)',

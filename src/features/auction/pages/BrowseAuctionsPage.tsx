@@ -232,6 +232,10 @@ export default function BrowseAuctionsPage() {
   const data = isSearchMode ? searchData : browseData
   const isLoading = isSearchMode ? searchLoading : browseLoading
 
+  const filteredItems = data?.items?.filter(
+    (a: AuctionListItemDto) => a.status !== AuctionStatus.Cancelled && a.status !== AuctionStatus.Terminated
+  ) || []
+
   // ── Handlers ──────────────────────────────────────────────────────────────
 
   const updateFilter = useCallback((key: keyof AuctionFilterParams, value: unknown) => {
@@ -561,7 +565,7 @@ export default function BrowseAuctionsPage() {
                   </Col>
                 ))}
               </Row>
-            ) : !data?.items?.length ? (
+            ) : !filteredItems.length ? (
               <EmptyState title={t('noAuctions')} />
             ) : (
               <>
@@ -574,16 +578,16 @@ export default function BrowseAuctionsPage() {
                     alignItems: 'stretch'
                   }}
                 >
-                  {data.items.map((auction: AuctionListItemDto) => (
+                  {filteredItems.map((auction: AuctionListItemDto) => (
                     <AuctionCard key={auction.id} auction={auction} />
                   ))}
                 </div>
 
                 <Flex justify="center" style={{ marginTop: 64 }}>
                   <Pagination
-                    current={data.metadata.currentPage}
-                    pageSize={data.metadata.pageSize}
-                    total={data.metadata.totalCount}
+                    current={data?.metadata?.currentPage ?? filters.pageNumber}
+                    pageSize={data?.metadata?.pageSize ?? filters.pageSize}
+                    total={data?.metadata?.totalCount ?? 0}
                     showSizeChanger={true}
                     showTotal={(total) => tc('pagination.total', { total })}
                     onChange={(p, ps) => setFilters((prev) => ({ ...prev, pageNumber: p, pageSize: ps }))}
@@ -709,12 +713,12 @@ export default function BrowseAuctionsPage() {
               </Col>
             ))}
           </Row>
-        ) : !data?.items?.length ? (
+        ) : !filteredItems.length ? (
           <EmptyState title={t('noAuctions')} />
         ) : (
           <>
             <Row className="oio-stagger" gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]}>
-              {data.items.map((auction: AuctionListItemDto) => (
+              {filteredItems.map((auction: AuctionListItemDto) => (
                 <Col key={auction.id} xs={24} sm={12} md={8} xl={6}>
                   <AuctionCard auction={auction} />
                 </Col>
@@ -723,9 +727,9 @@ export default function BrowseAuctionsPage() {
             {/* Pagination */}
             <Flex justify="center" style={{ marginTop: isMobile ? 28 : 48 }}>
               <Pagination
-                current={data.metadata.currentPage}
-                pageSize={data.metadata.pageSize}
-                total={data.metadata.totalCount}
+                current={data?.metadata?.currentPage ?? filters.pageNumber}
+                pageSize={data?.metadata?.pageSize ?? filters.pageSize}
+                total={data?.metadata?.totalCount ?? 0}
                 showSizeChanger={!isMobile}
                 showTotal={isMobile ? undefined : (total) => tc('pagination.total', { total })}
                 onChange={(p, ps) => setFilters((prev) => ({ ...prev, pageNumber: p, pageSize: ps }))}

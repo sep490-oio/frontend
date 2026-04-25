@@ -560,7 +560,11 @@ export const SpotlightSearchModal: React.FC = () => {
        const found = results.find(r => r.id === id)
        addSpotlightRecent(currentUserId, { id, type: 'dynamic', path, title: found?.title, desc: found?.desc, status: found?.status, price: found?.price, currency: found?.currency })
     }
-    navigate(path)
+    if (path.startsWith('/auctions/') && path.length > '/auctions/'.length) {
+      window.location.href = path
+    } else {
+      navigate(path)
+    }
     setIsOpen(false)
   }
 

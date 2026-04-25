@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { App } from 'antd'
-import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { HeartOutlined, HeartFilled } from '@ant-design/icons'
@@ -70,13 +69,12 @@ function getTerminalChip(
 const CHIP_STYLE: Record<TerminalChipVariant, { bg: string; color: string; border: string }> = {
   'solid-success': { bg: 'var(--color-success)', color: '#fff', border: 'var(--color-success)' },
   'solid-neutral': { bg: '#4b5563', color: '#fff', border: '#4b5563' },
-  'solid-danger':  { bg: 'var(--color-danger)', color: '#fff', border: 'var(--color-danger)' },
+  'solid-danger': { bg: 'var(--color-danger)', color: '#fff', border: 'var(--color-danger)' },
   'solid-warning': { bg: '#f59e0b', color: '#fff', border: '#f59e0b' },
 }
 
 export function AuctionCard({ auction }: AuctionCardProps) {
   const { t } = useTranslation('auction')
-  const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
   const { isMobile } = useBreakpoint()
   const watchMutation = useWatchAuction()
@@ -126,8 +124,8 @@ export function AuctionCard({ auction }: AuctionCardProps) {
   return (
     <div
       className="oio-press group"
-      onClick={() => navigate(`/auctions/${auction.id}`)}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/auctions/${auction.id}`) } }}
+      onClick={() => window.location.href = `/auctions/${auction.id}`}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); window.location.href = `/auctions/${auction.id}` } }}
       tabIndex={0}
       role="link"
       aria-label={`${auction.itemTitle} — ${auction.status}`}
