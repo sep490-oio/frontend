@@ -41,6 +41,8 @@
   "verification.typePassport.description": "Passport information page and selfie photo",
   "verification.typeBusinessOwner.title": "Business Owner",
   "verification.typeBusinessOwner.description": "Business license and government ID front",
+  "verification.typeManual.title": "In-Person (at Shop)",
+  "verification.typeManual.description": "Visit our store with your physical documents for verification by our staff.",
   "noVerification": "No verification request yet",
   "startVerification": "Start Verification",
   "newVerification": "New Verification Request",
@@ -82,6 +84,7 @@
     "myAuctions": "My Auctions",
     "groupBusiness": "Business",
     "orders": "Orders",
+    "returns": "Returns",
     "wallet": "Wallet",
     "groupWarehouse": "Warehouse",
     "inbound": "Inbound Shipments",
@@ -197,5 +200,6 @@
   "storeDescriptionRequired": "Please describe your store",
   "identityVerified": "Identity Verified",
   "verifyIdentity": "Verify Your Identity",
-  "verifiedDesc": "Your identity has been verified. You can now create a seller profile and participate in all auctions."
+  "verifiedDesc": "Your identity has been verified. You can now create a seller profile and participate in all auctions.",
+  "reVerifyAtStore": "Request Re-verification"
 }

@@ -9,16 +9,15 @@ import {
   DatePicker,
   Select,
   Upload,
-  Space,
   Spin,
   Alert,
-  Divider,
   Avatar,
   Row,
   Col,
   App,
+  Flex,
 } from 'antd'
-import { UserOutlined, UploadOutlined, PhoneOutlined, CheckCircleOutlined, CameraOutlined } from '@ant-design/icons'
+import { UserOutlined, UploadOutlined, PhoneOutlined, CheckCircleOutlined, CameraOutlined, IdcardOutlined } from '@ant-design/icons'
 import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -29,9 +28,9 @@ import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useCurrentUser, useCurrentUserProfile, useUpdateProfile, useSetPhoneNumber, useConfirmPhoneNumber } from '../api'
 import { useResendConfirmEmail } from '@/features/auth/api'
 import type { Gender } from '@/types/enums'
-import { SERIF_FONT } from '@/styles/tokens'
+import { MONO_FONT, SANS_FONT } from '@/styles/tokens'
 
-const { Text } = Typography
+const { Title, Text } = Typography
 
 // -- Schema types (schemas created inside component to access i18n) ----------
 
@@ -55,9 +54,9 @@ type ConfirmPhoneFormValues = {
 // -- Styles --------------------------------------------------------------------
 
 const sectionHeadingStyle: React.CSSProperties = {
-  fontFamily: SERIF_FONT,
-  fontWeight: 400,
-  fontSize: 16,
+  fontFamily: SANS_FONT,
+  fontWeight: 600,
+  fontSize: 18,
   color: 'var(--color-text-primary)',
   margin: 0,
 }
@@ -65,9 +64,11 @@ const sectionHeadingStyle: React.CSSProperties = {
 const labelStyle: React.CSSProperties = {
   display: 'block',
   fontSize: 13,
-  fontWeight: 500,
+  fontWeight: 600,
   color: 'var(--color-text-secondary)',
-  marginBottom: 6,
+  marginBottom: 8,
+  textTransform: 'uppercase',
+  letterSpacing: '0.05em',
 }
 
 // -- Component -----------------------------------------------------------------
@@ -184,345 +185,421 @@ export default function ProfilePage() {
 
   if (userLoading || profileLoading) {
     return (
-      <div style={{ textAlign: 'center', padding: 48 }}>
+      <div style={{ textAlign: 'center', padding: isMobile ? 48 : 80 }}>
         <Spin size="large" />
       </div>
     )
   }
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: isMobile ? '0 12px' : undefined }}>
-      {/* Page Heading */}
-      <h1
-        style={{
-          fontFamily: SERIF_FONT,
-          fontWeight: 400,
-          fontSize: isMobile ? 22 : 28,
-          color: 'var(--color-text-primary)',
-          marginBottom: 8,
-          letterSpacing: '-0.01em',
-        }}
-      >
-        {t('profile.title', 'My Profile')}
-      </h1>
-      <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, marginBottom: isMobile ? 20 : 32 }}>
-        {t('profile.subtitle', 'Manage your account information')}
-      </p>
+    <div style={{ maxWidth: 1000, margin: '0 auto', padding: isMobile ? '12px 16px 80px' : '0 24px 80px' }}>
+      {/* Header */}
+      <div style={{ marginBottom: isMobile ? 24 : 40 }}>
+        <Title
+          level={2}
+          style={{
+            fontFamily: SANS_FONT,
+            fontWeight: 600,
+            color: 'var(--color-text-primary)',
+            marginBottom: 4,
+            fontSize: isMobile ? 24 : 32,
+          }}
+        >
+          <IdcardOutlined style={{ marginRight: 12, color: 'var(--color-accent)' }} />
+          {t('profile.title', 'My Profile')}
+        </Title>
+        <Text style={{ color: 'var(--color-text-secondary)', fontSize: 16 }}>
+          {t('profile.subtitle', 'Manage your account information and preferences')}
+        </Text>
+      </div>
 
       {/* Email not confirmed banner */}
       {user && !user.emailConfirmed && (
         <Alert
           type="warning"
           showIcon
-          style={{ marginBottom: 24, borderRadius: 8 }}
-          message={t('profile.emailNotConfirmed', 'Your email is not verified')}
-          description={t('profile.emailNotConfirmedDesc', 'Please verify your email address to access all features. Check your inbox or click the button to resend.')}
+          style={{ marginBottom: 32, borderRadius: 20, padding: 20, border: '1px solid var(--color-warning)' }}
+          message={<span style={{ fontWeight: 700, fontSize: 15 }}>{t('profile.emailNotConfirmed', 'Your email is not verified')}</span>}
+          description={<div style={{ marginTop: 4, fontSize: 14 }}>{t('profile.emailNotConfirmedDesc', 'Please verify your email address to access all features.')}</div>}
           action={
             <Button
-              size="small"
+              size="large"
               type="primary"
               loading={resendEmail.isPending}
               onClick={async () => {
                 try {
                   await resendEmail.mutateAsync({ email: user.email })
-                  message.success(t('profile.resendSuccess', 'Verification email sent! Please check your inbox.'))
+                  message.success(t('profile.resendSuccess', 'Verification email sent!'))
                 } catch {
-                  message.error(t('profile.resendError', 'Failed to send verification email. Please wait 60 seconds between attempts.'))
+                  message.error(t('profile.resendError', 'Failed to send verification email.'))
                 }
               }}
-              style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
+              style={{ background: 'var(--color-warning)', borderColor: 'var(--color-warning)', color: '#000', fontWeight: 700, borderRadius: 10, height: 44 }}
             >
-              {t('profile.resendEmail', 'Resend Verification Email')}
+              {t('profile.resendEmail', 'Resend Email')}
             </Button>
           }
         />
       )}
 
-      {/* Avatar Section */}
-      <Card style={{ marginBottom: 32 }}>
-        <Space direction="vertical" align="center" style={{ width: '100%', padding: '8px 0' }}>
-          <div
-            style={{ position: 'relative', cursor: 'pointer' }}
-            onMouseEnter={() => setAvatarHover(true)}
-            onMouseLeave={() => setAvatarHover(false)}
+      <Row gutter={isMobile ? [24, 24] : [32, 32]}>
+        {/* Left Col: Avatar & Status */}
+        <Col xs={24} lg={8}>
+          <Card
+            style={{
+              background: 'var(--color-bg-card)',
+              border: '1px solid var(--color-border)',
+              borderRadius: 32,
+              textAlign: 'center',
+              boxShadow: 'var(--shadow-sm)',
+              position: 'sticky',
+              top: 24
+            }}
+            styles={{ body: { padding: isMobile ? '40px 24px' : '48px 32px' } }}
           >
-            <Avatar
-              size={96}
-              icon={<UserOutlined />}
-              src={profile?.avatarUrl}
-              style={{
-                border: '3px solid var(--color-border)',
-                transition: 'border-color 200ms ease',
-                ...(avatarHover ? { borderColor: 'var(--color-accent)' } : {}),
-              }}
-            />
             <div
-              style={{
-                position: 'absolute',
-                inset: 0,
-                borderRadius: '50%',
-                background: 'rgba(0,0,0,0.4)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                opacity: avatarHover ? 1 : 0,
-                transition: 'opacity 200ms ease',
+              style={{ position: 'relative', width: 140, height: 140, margin: '0 auto 24px' }}
+              onMouseEnter={() => setAvatarHover(true)}
+              onMouseLeave={() => setAvatarHover(false)}
+            >
+              <Avatar
+                size={140}
+                icon={<UserOutlined />}
+                src={profile?.avatarUrl}
+                style={{
+                  border: '6px solid var(--color-border)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  background: 'var(--color-bg-surface)',
+                  boxShadow: 'var(--shadow-md)',
+                  ...(avatarHover ? { borderColor: 'var(--color-accent)', transform: 'scale(1.02)' } : {}),
+                }}
+              />
+              <Upload
+                showUploadList={false}
+                accept="image/*"
+                beforeUpload={async (file) => {
+                  try {
+                    const result = await avatarUpload.upload(file)
+                    setAvatarUploadId(result.mediaUploadId)
+                    message.success(t('profile.avatarUploaded', 'Avatar uploaded'))
+                  } catch {
+                    message.error(t('profile.avatarUploadError', 'Failed to upload avatar'))
+                  }
+                  return false
+                }}
+              >
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    borderRadius: '50%',
+                    background: 'rgba(0,0,0,0.4)',
+                    backdropFilter: 'blur(4px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: avatarHover || isMobile ? 1 : 0,
+                    transition: 'opacity 0.3s ease',
+                    cursor: 'pointer',
+                    border: '2px solid rgba(255,255,255,0.2)'
+                  }}
+                >
+                  <CameraOutlined style={{ color: '#fff', fontSize: 28 }} />
+                </div>
+              </Upload>
+            </div>
+
+            <Title level={4} style={{ margin: '0 0 4px 0', fontFamily: SANS_FONT, fontWeight: 700, fontSize: 20 }}>
+              {profile?.displayName || user?.email?.split('@')[0]}
+            </Title>
+            <Text style={{ display: 'block', marginBottom: 32, color: 'var(--color-text-tertiary)', fontSize: 14, fontFamily: MONO_FONT }}>{user?.email}</Text>
+
+            <Upload
+              showUploadList={false}
+              accept="image/*"
+              beforeUpload={async (file) => {
+                try {
+                  const result = await avatarUpload.upload(file)
+                  setAvatarUploadId(result.mediaUploadId)
+                  message.success(t('profile.avatarUploaded', 'Avatar uploaded'))
+                } catch {
+                  message.error(t('profile.avatarUploadError', 'Failed to upload avatar'))
+                }
+                return false
               }}
             >
-              <CameraOutlined style={{ color: '#fff', fontSize: 20 }} />
-            </div>
-          </div>
-          <Upload
-            showUploadList={false}
-            accept="image/*"
-            beforeUpload={async (file) => {
-              try {
-                const result = await avatarUpload.upload(file)
-                setAvatarUploadId(result.mediaUploadId)
-                message.success(t('profile.avatarUploaded', 'Avatar uploaded'))
-              } catch {
-                message.error(t('profile.avatarUploadError', 'Failed to upload avatar'))
-              }
-              return false
+              <Button
+                icon={<UploadOutlined />}
+                loading={avatarUpload.uploading}
+                block
+                style={{ borderRadius: 14, fontWeight: 700, height: 48, background: 'var(--color-bg-surface)' }}
+              >
+                {t('profile.changeAvatar', 'Change Avatar')}
+              </Button>
+            </Upload>
+          </Card>
+        </Col>
+
+        {/* Right Col: Forms */}
+        <Col xs={24} lg={16}>
+          {/* Personal Info Form */}
+          <Card
+            title={<span style={sectionHeadingStyle}>{t('profile.personalInfo', 'Personal Information')}</span>}
+            style={{
+              background: 'var(--color-bg-card)',
+              border: '1px solid var(--color-border)',
+              borderRadius: 32,
+              marginBottom: 32,
+              boxShadow: 'var(--shadow-sm)',
             }}
+            styles={{ body: { padding: isMobile ? '24px 20px' : '40px' } }}
           >
-            <Button icon={<UploadOutlined />} size="small" style={{ marginTop: 8 }} loading={avatarUpload.uploading}>
-              {t('profile.changeAvatar', 'Change Avatar')}
-            </Button>
-          </Upload>
-          <Text type="secondary" style={{ fontSize: 13 }}>{user?.email}</Text>
-        </Space>
-      </Card>
-
-      {/* Profile Form */}
-      <Card
-        style={{ marginBottom: 32 }}
-        title={<span style={sectionHeadingStyle}>{t('profile.personalInfo', 'Personal Information')}</span>}
-      >
-        <form onSubmit={onProfileSave}>
-          <Row gutter={16}>
-            <Col xs={24} sm={12}>
-              <div style={{ marginBottom: 20 }}>
-                <label style={labelStyle}>{t('profile.firstName', 'First Name')}</label>
-                <Controller
-                  name="firstName"
-                  control={profileControl}
-                  render={({ field }) => (
-                    <Input
-                      {...field}
-                      placeholder={t('profile.firstNamePlaceholder', 'Enter first name')}
-                      status={profileErrors.firstName ? 'error' : undefined}
-                      style={{ height: 42 }}
-                    />
-                  )}
-                />
-                {profileErrors.firstName && (
-                  <Text type="danger" style={{ fontSize: 12 }}>{profileErrors.firstName.message}</Text>
-                )}
-              </div>
-            </Col>
-            <Col xs={24} sm={12}>
-              <div style={{ marginBottom: 20 }}>
-                <label style={labelStyle}>{t('profile.lastName', 'Last Name')}</label>
-                <Controller
-                  name="lastName"
-                  control={profileControl}
-                  render={({ field }) => (
-                    <Input
-                      {...field}
-                      placeholder={t('profile.lastNamePlaceholder', 'Enter last name')}
-                      status={profileErrors.lastName ? 'error' : undefined}
-                      style={{ height: 42 }}
-                    />
-                  )}
-                />
-                {profileErrors.lastName && (
-                  <Text type="danger" style={{ fontSize: 12 }}>{profileErrors.lastName.message}</Text>
-                )}
-              </div>
-            </Col>
-          </Row>
-
-          <div style={{ marginBottom: 20 }}>
-            <label style={labelStyle}>{t('profile.displayName', 'Display Name')}</label>
-            <Controller
-              name="displayName"
-              control={profileControl}
-              render={({ field }) => (
-                <Input
-                  {...field}
-                  placeholder={t('profile.displayNamePlaceholder', 'Enter display name')}
-                  status={profileErrors.displayName ? 'error' : undefined}
-                  style={{ height: 42 }}
-                />
-              )}
-            />
-            {profileErrors.displayName && (
-              <Text type="danger" style={{ fontSize: 12 }}>{profileErrors.displayName.message}</Text>
-            )}
-          </div>
-
-          <Row gutter={16}>
-            <Col xs={24} sm={12}>
-              <div style={{ marginBottom: 20 }}>
-                <label style={labelStyle}>{t('profile.dateOfBirth', 'Date of Birth')}</label>
-                <Controller
-                  name="dateOfBirth"
-                  control={profileControl}
-                  render={({ field }) => (
-                    <DatePicker
-                      style={{ width: '100%', height: 42 }}
-                      value={field.value ? dayjs(field.value) : null}
-                      onChange={(date) => field.onChange(date ? date.format('YYYY-MM-DD') : '')}
-                      placeholder={t('profile.dateOfBirthPlaceholder', 'Select date of birth')}
-                      format="DD/MM/YYYY"
-                    />
-                  )}
-                />
-              </div>
-            </Col>
-            <Col xs={24} sm={12}>
-              <div style={{ marginBottom: 20 }}>
-                <label style={labelStyle}>{t('profile.gender', 'Gender')}</label>
-                <Controller
-                  name="gender"
-                  control={profileControl}
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      style={{ width: '100%' }}
-                      placeholder={t('profile.genderPlaceholder', 'Select gender')}
-                      allowClear
-                      options={[
-                        { value: 'male', label: t('profile.genderMale', 'Male') },
-                        { value: 'female', label: t('profile.genderFemale', 'Female') },
-                        { value: 'other', label: t('profile.genderOther', 'Other') },
-                      ]}
-                    />
-                  )}
-                />
-              </div>
-            </Col>
-          </Row>
-
-          <Button
-            type="primary"
-            htmlType="submit"
-            loading={updateProfile.isPending}
-            style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
-          >
-            {t('profile.saveChanges', 'Save Changes')}
-          </Button>
-        </form>
-      </Card>
-
-      {/* Phone Number Section */}
-      <Card
-        style={{ marginBottom: 32 }}
-        title={<span style={sectionHeadingStyle}>{t('profile.phoneNumber', 'Phone Number')}</span>}
-      >
-        {user?.phoneNumberConfirmed ? (
-          <Alert
-            type="success"
-            showIcon
-            icon={<CheckCircleOutlined />}
-            message={t('profile.phoneConfirmed', 'Phone number {{code}} {{number}} has been verified', { code: user.countryCode ?? '', number: user.phoneNumber ?? '' })}
-            style={{ borderRadius: 2 }}
-          />
-        ) : (
-          <>
-            <Text type="secondary" style={{ display: 'block', marginBottom: 16, fontSize: 14 }}>
-              {t('profile.addPhoneHint', 'Add a phone number for better account security.')}
-            </Text>
-            <form onSubmit={onPhoneSave}>
-              <Row gutter={8}>
-                <Col xs={8} sm={6}>
-                  <Controller
-                    name="countryCode"
-                    control={phoneControl}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        style={{ width: '100%' }}
-                        options={[
-                          { value: '+84', label: '+84 (VN)' },
-                          { value: '+1', label: '+1 (US)' },
-                          { value: '+81', label: '+81 (JP)' },
-                        ]}
-                      />
-                    )}
-                  />
-                </Col>
-                <Col xs={16} sm={12}>
-                  <Controller
-                    name="phoneNumber"
-                    control={phoneControl}
-                    render={({ field }) => (
-                      <Input
-                        {...field}
-                        prefix={<PhoneOutlined />}
-                        placeholder={t('profile.phonePlaceholder', 'Enter phone number')}
-                        status={phoneErrors.phoneNumber ? 'error' : undefined}
-                        style={{ height: 42 }}
-                      />
-                    )}
-                  />
-                  {phoneErrors.phoneNumber && (
-                    <Text type="danger" style={{ fontSize: 12 }}>{phoneErrors.phoneNumber.message}</Text>
-                  )}
-                </Col>
-                <Col xs={24} sm={6} style={{ marginTop: 'auto' }}>
-                  <Button
-                    type="primary"
-                    htmlType="submit"
-                    loading={setPhoneNumber.isPending}
-                    icon={<PhoneOutlined />}
-                    style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
-                  >
-                    {t('profile.sendCode', 'Send Code')}
-                  </Button>
-                </Col>
-              </Row>
-            </form>
-
-            {showPhoneVerify && (
-              <>
-                <Divider />
-                <form onSubmit={onConfirmPhone}>
-                  <Space>
+            <form onSubmit={onProfileSave}>
+              <Row gutter={24}>
+                <Col xs={24} sm={12}>
+                  <div style={{ marginBottom: 24 }}>
+                    <label style={labelStyle}>{t('profile.firstName', 'First Name')}</label>
                     <Controller
-                      name="code"
-                      control={confirmControl}
+                      name="firstName"
+                      control={profileControl}
                       render={({ field }) => (
                         <Input
                           {...field}
-                          placeholder={t('profile.otpPlaceholder', 'Enter 6-digit code')}
-                          maxLength={6}
-                          status={confirmErrors.code ? 'error' : undefined}
-                          style={{ height: 42, fontFamily: 'var(--font-mono)', letterSpacing: '0.15em' }}
+                          placeholder={t('profile.firstNamePlaceholder', 'First name')}
+                          status={profileErrors.firstName ? 'error' : undefined}
+                          style={{ height: 52, borderRadius: 14 }}
                         />
                       )}
                     />
-                    <Button
-                      type="primary"
-                      htmlType="submit"
-                      loading={confirmPhone.isPending}
-                      style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
-                    >
-                      {t('profile.confirm', 'Confirm')}
-                    </Button>
-                  </Space>
-                  {confirmErrors.code && (
-                    <div>
-                      <Text type="danger" style={{ fontSize: 12 }}>{confirmErrors.code.message}</Text>
-                    </div>
+                  </div>
+                </Col>
+                <Col xs={24} sm={12}>
+                  <div style={{ marginBottom: 24 }}>
+                    <label style={labelStyle}>{t('profile.lastName', 'Last Name')}</label>
+                    <Controller
+                      name="lastName"
+                      control={profileControl}
+                      render={({ field }) => (
+                        <Input
+                          {...field}
+                          placeholder={t('profile.lastNamePlaceholder', 'Last name')}
+                          status={profileErrors.lastName ? 'error' : undefined}
+                          style={{ height: 52, borderRadius: 14 }}
+                        />
+                      )}
+                    />
+                  </div>
+                </Col>
+              </Row>
+
+              <div style={{ marginBottom: 24 }}>
+                <label style={labelStyle}>{t('profile.displayName', 'Display Name')}</label>
+                <Controller
+                  name="displayName"
+                  control={profileControl}
+                  render={({ field }) => (
+                    <Input
+                      {...field}
+                      placeholder={t('profile.displayNamePlaceholder', 'Display name')}
+                      status={profileErrors.displayName ? 'error' : undefined}
+                      style={{ height: 52, borderRadius: 14 }}
+                    />
                   )}
+                />
+              </div>
+
+              <Row gutter={24}>
+                <Col xs={24} sm={12}>
+                  <div style={{ marginBottom: 32 }}>
+                    <label style={labelStyle}>{t('profile.dateOfBirth', 'Date of Birth')}</label>
+                    <Controller
+                      name="dateOfBirth"
+                      control={profileControl}
+                      render={({ field }) => (
+                        <DatePicker
+                          style={{ width: '100%', height: 52, borderRadius: 14 }}
+                          value={field.value ? dayjs(field.value) : null}
+                          onChange={(date) => field.onChange(date ? date.format('YYYY-MM-DD') : '')}
+                          placeholder={t('profile.dateOfBirthPlaceholder', 'Select date')}
+                          format="DD/MM/YYYY"
+                        />
+                      )}
+                    />
+                  </div>
+                </Col>
+                <Col xs={24} sm={12}>
+                  <div style={{ marginBottom: 32 }}>
+                    <label style={labelStyle}>{t('profile.gender', 'Gender')}</label>
+                    <Controller
+                      name="gender"
+                      control={profileControl}
+                      render={({ field }) => (
+                        <Select
+                          {...field}
+                          style={{ width: '100%', height: 52 }}
+                          placeholder={t('profile.genderPlaceholder', 'Select gender')}
+                          allowClear
+                          className="oio-select"
+                          options={[
+                            { value: 'male', label: t('profile.genderMale', 'Male') },
+                            { value: 'female', label: t('profile.genderFemale', 'Female') },
+                            { value: 'other', label: t('profile.genderOther', 'Other') },
+                          ]}
+                        />
+                      )}
+                    />
+                  </div>
+                </Col>
+              </Row>
+
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={updateProfile.isPending}
+                size="large"
+                block={isMobile}
+                style={{
+                  background: 'var(--color-accent)',
+                  borderColor: 'var(--color-accent)',
+                  fontWeight: 700,
+                  height: 52,
+                  borderRadius: 14,
+                  padding: '0 48px'
+                }}
+              >
+                {t('profile.saveChanges', 'Update Profile')}
+              </Button>
+            </form>
+          </Card>
+
+          {/* Phone Number Section */}
+          <Card
+            title={<span style={sectionHeadingStyle}>{t('profile.phoneNumber', 'Security Contact')}</span>}
+            style={{
+              background: 'var(--color-bg-card)',
+              border: '1px solid var(--color-border)',
+              borderRadius: 32,
+              boxShadow: 'var(--shadow-sm)',
+            }}
+            styles={{ body: { padding: isMobile ? '24px 20px' : '40px' } }}
+          >
+            {user?.phoneNumberConfirmed ? (
+              <Alert
+                type="success"
+                showIcon
+                icon={<CheckCircleOutlined />}
+                message={<span style={{ fontWeight: 700 }}>{t('profile.phoneConfirmed', 'Phone number verified')}</span>}
+                description={<div style={{ fontFamily: MONO_FONT, marginTop: 4 }}>{user.countryCode} {user.phoneNumber}</div>}
+                style={{ borderRadius: 20, padding: 20 }}
+              />
+            ) : (
+              <>
+                <Text style={{ display: 'block', marginBottom: 24, fontSize: 14, color: 'var(--color-text-secondary)' }}>
+                  {t('profile.addPhoneHint', 'Add a phone number for two-factor authentication and important security alerts.')}
+                </Text>
+                <form onSubmit={onPhoneSave}>
+                  <Row gutter={[12, 12]}>
+                    <Col xs={24} sm={6}>
+                       <Controller
+                          name="countryCode"
+                          control={phoneControl}
+                          render={({ field }) => (
+                             <Select
+                                {...field}
+                                style={{ width: '100%', height: 52 }}
+                                className="oio-select"
+                                options={[
+                                   { value: '+84', label: '🇻🇳 +84' },
+                                   { value: '+1', label: '🇺🇸 +1' },
+                                   { value: '+81', label: '🇯🇵 +81' },
+                                ]}
+                             />
+                          )}
+                       />
+                    </Col>
+                    <Col xs={24} sm={12}>
+                      <Controller
+                        name="phoneNumber"
+                        control={phoneControl}
+                        render={({ field }) => (
+                          <Input
+                            {...field}
+                            prefix={<PhoneOutlined style={{ color: 'var(--color-accent)' }} />}
+                            placeholder={t('profile.phonePlaceholder', 'Phone number')}
+                            status={phoneErrors.phoneNumber ? 'error' : undefined}
+                            style={{ height: 52, borderRadius: 14 }}
+                          />
+                        )}
+                      />
+                    </Col>
+                    <Col xs={24} sm={6}>
+                      <Button
+                        type="primary"
+                        htmlType="submit"
+                        loading={setPhoneNumber.isPending}
+                        block
+                        style={{ background: 'var(--color-accent)', fontWeight: 700, height: 52, borderRadius: 14 }}
+                      >
+                        {t('profile.sendCode', 'Verify')}
+                      </Button>
+                    </Col>
+                  </Row>
                 </form>
+
+                {showPhoneVerify && (
+                  <div style={{ marginTop: 24, padding: 32, background: 'var(--color-bg-surface)', borderRadius: 24, border: '1px solid var(--color-border)' }}>
+                    <form onSubmit={onConfirmPhone}>
+                      <Flex vertical gap={20}>
+                        <Text strong style={{ fontSize: 15, color: 'var(--color-text-primary)' }}>{t('profile.enterOtp', 'Enter the 6-digit code')}</Text>
+                        <Flex gap={12} vertical={isMobile}>
+                           <Controller
+                             name="code"
+                             control={confirmControl}
+                             render={({ field }) => (
+                               <Input
+                                 {...field}
+                                 placeholder="000000"
+                                 maxLength={6}
+                                 status={confirmErrors.code ? 'error' : undefined}
+                                 style={{ 
+                                   height: 52, 
+                                   borderRadius: 14, 
+                                   fontFamily: MONO_FONT, 
+                                   letterSpacing: '0.4em', 
+                                   textAlign: 'center', 
+                                   width: isMobile ? '100%' : 200,
+                                   fontSize: 20,
+                                   fontWeight: 700
+                                 }}
+                               />
+                             )}
+                           />
+                           <Button
+                             type="primary"
+                             htmlType="submit"
+                             loading={confirmPhone.isPending}
+                             block={isMobile}
+                             style={{ 
+                               height: 52, 
+                               borderRadius: 14, 
+                               fontWeight: 700, 
+                               background: 'var(--color-success)', 
+                               borderColor: 'var(--color-success)',
+                               padding: '0 40px'
+                             }}
+                           >
+                             {t('profile.confirm', 'Confirm')}
+                           </Button>
+                        </Flex>
+                      </Flex>
+                    </form>
+                  </div>
+                )}
               </>
             )}
-          </>
-        )}
-      </Card>
+          </Card>
+        </Col>
+      </Row>
     </div>
   )
 }

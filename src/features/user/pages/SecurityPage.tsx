@@ -12,6 +12,7 @@ import {
   App,
   QRCode,
   Modal,
+  Flex,
 } from 'antd'
 import {
   LockOutlined,
@@ -29,6 +30,8 @@ import dayjs from 'dayjs'
 import { useTranslation } from 'react-i18next'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { createPasswordSchema } from '@/utils/validation'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { SANS_FONT, MONO_FONT } from '@/styles/tokens'
 import {
   useCurrentUser,
   useChangePassword,
@@ -65,10 +68,11 @@ function useChangePasswordSchema() {
 
 type ChangePasswordFormValues = { currentPassword: string; newPassword: string; confirmPassword: string }
 
-// -- Change Password Tab -------------------------------------------------------
+// -- Component Sections ---------------------------------------------------------
 
 function ChangePasswordSection() {
   const { t } = useTranslation('user')
+  const { isMobile } = useBreakpoint()
   const { message } = App.useApp()
   const changePassword = useChangePassword()
   const changePasswordSchema = useChangePasswordSchema()
@@ -97,66 +101,87 @@ function ChangePasswordSection() {
   })
 
   return (
-    <Card>
-      <form onSubmit={onSubmit} style={{ maxWidth: 400 }}>
-        <div style={{ marginBottom: 16 }}>
-          <label>{t('security.changePassword.currentPassword')}</label>
+    <Card 
+      style={{ 
+        background: 'var(--color-bg-card)', 
+        border: '1px solid var(--color-border)', 
+        borderRadius: 24,
+        boxShadow: 'var(--shadow-sm)'
+      }}
+      styles={{ body: { padding: isMobile ? '24px 20px' : '32px' } }}
+    >
+      <Title level={4} style={{ marginBottom: 24, fontFamily: SANS_FONT, fontWeight: 600 }}>
+        {t('security.tabs.password')}
+      </Title>
+      <form onSubmit={onSubmit} style={{ maxWidth: 500 }}>
+        <div style={{ marginBottom: 24 }}>
+          <label style={labelStyle}>{t('security.changePassword.currentPassword')}</label>
           <Controller
             name="currentPassword"
             control={control}
             render={({ field }) => (
               <Input.Password
                 {...field}
-                prefix={<LockOutlined />}
+                prefix={<LockOutlined style={{ color: 'var(--color-accent)' }} />}
                 placeholder={t('security.changePassword.currentPasswordPlaceholder')}
                 status={errors.currentPassword ? 'error' : undefined}
+                style={{ height: 48, borderRadius: 12 }}
               />
             )}
           />
           {errors.currentPassword && (
-            <Text type="danger" style={{ fontSize: 12 }}>{errors.currentPassword.message}</Text>
+            <Text type="danger" style={{ fontSize: 12, marginTop: 4, display: 'block' }}>{errors.currentPassword.message}</Text>
           )}
         </div>
 
-        <div style={{ marginBottom: 16 }}>
-          <label>{t('security.changePassword.newPassword')}</label>
+        <div style={{ marginBottom: 24 }}>
+          <label style={labelStyle}>{t('security.changePassword.newPassword')}</label>
           <Controller
             name="newPassword"
             control={control}
             render={({ field }) => (
               <Input.Password
                 {...field}
-                prefix={<LockOutlined />}
+                prefix={<LockOutlined style={{ color: 'var(--color-accent)' }} />}
                 placeholder={t('security.changePassword.newPasswordPlaceholder')}
                 status={errors.newPassword ? 'error' : undefined}
+                style={{ height: 48, borderRadius: 12 }}
               />
             )}
           />
           {errors.newPassword && (
-            <Text type="danger" style={{ fontSize: 12 }}>{errors.newPassword.message}</Text>
+            <Text type="danger" style={{ fontSize: 12, marginTop: 4, display: 'block' }}>{errors.newPassword.message}</Text>
           )}
         </div>
 
-        <div style={{ marginBottom: 16 }}>
-          <label>{t('security.changePassword.confirmPassword')}</label>
+        <div style={{ marginBottom: 32 }}>
+          <label style={labelStyle}>{t('security.changePassword.confirmPassword')}</label>
           <Controller
             name="confirmPassword"
             control={control}
             render={({ field }) => (
               <Input.Password
                 {...field}
-                prefix={<LockOutlined />}
+                prefix={<LockOutlined style={{ color: 'var(--color-accent)' }} />}
                 placeholder={t('security.changePassword.confirmPasswordPlaceholder')}
                 status={errors.confirmPassword ? 'error' : undefined}
+                style={{ height: 48, borderRadius: 12 }}
               />
             )}
           />
           {errors.confirmPassword && (
-            <Text type="danger" style={{ fontSize: 12 }}>{errors.confirmPassword.message}</Text>
+            <Text type="danger" style={{ fontSize: 12, marginTop: 4, display: 'block' }}>{errors.confirmPassword.message}</Text>
           )}
         </div>
 
-        <Button type="primary" htmlType="submit" loading={changePassword.isPending}>
+        <Button 
+          type="primary" 
+          htmlType="submit" 
+          loading={changePassword.isPending}
+          size="large"
+          block={isMobile}
+          style={{ height: 48, borderRadius: 12, fontWeight: 600, padding: '0 40px' }}
+        >
           {t('security.changePassword.submit')}
         </Button>
       </form>
@@ -164,10 +189,9 @@ function ChangePasswordSection() {
   )
 }
 
-// -- Two-Factor Auth Tab -------------------------------------------------------
-
 function TwoFactorSection() {
   const { t } = useTranslation('user')
+  const { isMobile } = useBreakpoint()
   const { message } = App.useApp()
   const { data: user, isLoading } = useCurrentUser()
 
@@ -254,19 +278,27 @@ function TwoFactorSection() {
   }
 
   if (isLoading) {
-    return <Spin />
+    return <div style={{ textAlign: 'center', padding: 40 }}><Spin /></div>
   }
 
   const is2FAEnabled = user?.twoFactorEnabled
 
   return (
-    <Card>
-      <Space direction="vertical" style={{ width: '100%' }} size="large">
+    <Card
+      style={{ 
+        background: 'var(--color-bg-card)', 
+        border: '1px solid var(--color-border)', 
+        borderRadius: 24,
+        boxShadow: 'var(--shadow-sm)'
+      }}
+      styles={{ body: { padding: isMobile ? '24px 20px' : '32px' } }}
+    >
+      <Space direction="vertical" style={{ width: '100%' }} size={32}>
         <div>
-          <Title level={4} style={{ margin: 0 }}>
-            <SafetyOutlined /> {t('security.twoFactor.title')}
+          <Title level={4} style={{ marginBottom: 8, fontFamily: SANS_FONT, fontWeight: 600 }}>
+            <SafetyOutlined style={{ marginRight: 8, color: 'var(--color-accent)' }} /> {t('security.twoFactor.title')}
           </Title>
-          <Text type="secondary">
+          <Text type="secondary" style={{ fontSize: 15 }}>
             {t('security.twoFactor.description')}
           </Text>
         </div>
@@ -276,14 +308,19 @@ function TwoFactorSection() {
             <Alert
               type="success"
               showIcon
-              message={t('security.twoFactor.enabled')}
+              message={<span style={{ fontWeight: 600 }}>{t('security.twoFactor.enabled')}</span>}
               description={t('security.twoFactor.enabledDesc')}
+              style={{ borderRadius: 16, padding: 16 }}
             />
 
             {/* Disable 2FA */}
-            <Card size="small" title={t('security.twoFactor.disableTitle')}>
+            <Card 
+              size="small" 
+              title={<span style={{ fontFamily: SANS_FONT, fontWeight: 600 }}>{t('security.twoFactor.disableTitle')}</span>}
+              style={{ borderRadius: 16, border: '1px solid var(--color-border)' }}
+            >
               <form onSubmit={onDisable2FA}>
-                <Space>
+                <Flex gap={12} vertical={isMobile}>
                   <Controller
                     name="code"
                     control={disableControl}
@@ -293,15 +330,16 @@ function TwoFactorSection() {
                         placeholder={t('security.twoFactor.totpPlaceholder')}
                         maxLength={6}
                         status={disableErrors.code ? 'error' : undefined}
+                        style={{ height: 44, borderRadius: 10, fontFamily: MONO_FONT, letterSpacing: '0.1em', textAlign: 'center' }}
                       />
                     )}
                   />
-                  <Button danger htmlType="submit" loading={disable2FA.isPending}>
+                  <Button danger type="primary" htmlType="submit" loading={disable2FA.isPending} style={{ height: 44, borderRadius: 10, fontWeight: 600 }}>
                     {t('security.twoFactor.disableSubmit')}
                   </Button>
-                </Space>
+                </Flex>
                 {disableErrors.code && (
-                  <div>
+                  <div style={{ marginTop: 8 }}>
                     <Text type="danger" style={{ fontSize: 12 }}>{disableErrors.code.message}</Text>
                   </div>
                 )}
@@ -309,24 +347,44 @@ function TwoFactorSection() {
             </Card>
 
             {/* Regenerate Recovery Codes */}
-            <Card size="small" title={t('security.twoFactor.recoveryTitle')}>
-              <Paragraph type="secondary">
+            <Card 
+              size="small" 
+              title={<span style={{ fontFamily: SANS_FONT, fontWeight: 600 }}>{t('security.twoFactor.recoveryTitle')}</span>}
+              style={{ borderRadius: 16, border: '1px solid var(--color-border)' }}
+            >
+              <Paragraph type="secondary" style={{ marginBottom: 20 }}>
                 {t('security.twoFactor.recoveryDesc')}
               </Paragraph>
-              <Button onClick={() => { setRegenTotpCode(''); setRegenModalOpen(true) }}>
+              <Button 
+                onClick={() => { setRegenTotpCode(''); setRegenModalOpen(true) }}
+                style={{ borderRadius: 10, fontWeight: 600 }}
+              >
                 {t('security.twoFactor.regenerate')}
               </Button>
               {recoveryCodes && (
-                <div style={{ marginTop: 16, padding: 16, background: '#f5f5f5', borderRadius: 8 }}>
-                  <Paragraph strong>{t('security.twoFactor.saveCodesWarning')}</Paragraph>
-                  <div style={{ fontFamily: 'monospace', fontSize: 14 }}>
+                <div style={{ marginTop: 20, padding: 20, background: 'var(--color-bg-surface)', borderRadius: 16, border: '1px solid var(--color-border)' }}>
+                  <Paragraph strong style={{ color: 'var(--color-danger)', marginBottom: 12 }}>
+                    <CheckCircleOutlined style={{ marginRight: 8 }} />
+                    {t('security.twoFactor.saveCodesWarning')}
+                  </Paragraph>
+                  <div style={{ 
+                    fontFamily: MONO_FONT, 
+                    fontSize: 15, 
+                    background: 'rgba(0,0,0,0.05)', 
+                    padding: 16, 
+                    borderRadius: 8, 
+                    display: 'grid', 
+                    gridTemplateColumns: '1fr 1fr', 
+                    gap: 8 
+                  }}>
                     {recoveryCodes.map((code) => (
                       <div key={code}>{code}</div>
                     ))}
                   </div>
                   <Button
+                    type="primary"
                     icon={<CopyOutlined />}
-                    style={{ marginTop: 8 }}
+                    style={{ marginTop: 16, borderRadius: 10, fontWeight: 600 }}
                     onClick={() => {
                       navigator.clipboard.writeText(recoveryCodes.join('\n'))
                       message.success(t('security.twoFactor.copySuccess'))
@@ -347,16 +405,24 @@ function TwoFactorSection() {
               okText={t('security.twoFactor.confirm')}
               okButtonProps={{ loading: regenCodes.isPending, disabled: regenTotpCode.length !== 6 }}
               centered
+              width={400}
             >
-              <div style={{ marginBottom: 8 }}>
-                <Text>{t('security.twoFactor.regenerateModalDesc')}</Text>
+              <div style={{ marginBottom: 20 }}>
+                <Text type="secondary">{t('security.twoFactor.regenerateModalDesc')}</Text>
               </div>
               <Input
                 value={regenTotpCode}
                 onChange={(e) => setRegenTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder={t('security.twoFactor.regenerateModalPlaceholder')}
+                placeholder="000000"
                 maxLength={6}
-                style={{ fontSize: 18, letterSpacing: 4, textAlign: 'center' }}
+                style={{ 
+                  fontSize: 24, 
+                  letterSpacing: 8, 
+                  textAlign: 'center', 
+                  height: 60, 
+                  borderRadius: 12,
+                  fontFamily: MONO_FONT
+                }}
               />
             </Modal>
           </>
@@ -365,34 +431,44 @@ function TwoFactorSection() {
             <Alert
               type="warning"
               showIcon
-              message={t('security.twoFactor.disabled')}
+              message={<span style={{ fontWeight: 600 }}>{t('security.twoFactor.disabled')}</span>}
               description={t('security.twoFactor.disabledDesc')}
+              style={{ borderRadius: 16, padding: 16 }}
             />
 
             {!totpData ? (
-              <Button type="primary" onClick={onStartSetup} loading={enable2FA.isPending || setupTotp.isPending}>
+              <Button 
+                type="primary" 
+                size="large"
+                onClick={onStartSetup} 
+                loading={enable2FA.isPending || setupTotp.isPending}
+                style={{ height: 48, borderRadius: 12, fontWeight: 600, padding: '0 40px' }}
+              >
                 {t('security.twoFactor.enable')}
               </Button>
             ) : (
-              <Card size="small" title={t('security.twoFactor.setupTitle')}>
-                <Space direction="vertical" style={{ width: '100%' }}>
-                  <Paragraph>
+              <Card 
+                size="small" 
+                title={<span style={{ fontFamily: SANS_FONT, fontWeight: 600 }}>{t('security.twoFactor.setupTitle')}</span>}
+                style={{ borderRadius: 20, border: '1px solid var(--color-border)' }}
+              >
+                <Space direction="vertical" style={{ width: '100%' }} size={24}>
+                  <Paragraph type="secondary">
                     {t('security.twoFactor.setupDesc')}
                   </Paragraph>
 
                   {/* QR Code */}
-                  <div style={{ textAlign: 'center', padding: 16 }}>
-                    <QRCode value={totpData.qrCodeUri} size={200} />
+                  <div style={{ textAlign: 'center', padding: 24, background: '#fff', borderRadius: 16, display: 'inline-block', margin: '0 auto' }}>
+                    <QRCode value={totpData.qrCodeUri} size={200} bordered={false} />
                   </div>
 
-                  <div style={{ padding: 12, background: '#f5f5f5', borderRadius: 8, textAlign: 'center' }}>
-                    <Text type="secondary">{t('security.twoFactor.manualKey')}</Text>
-                    <br />
-                    <Text code copyable>{totpData.secret}</Text>
+                  <div style={{ padding: 16, background: 'var(--color-bg-surface)', borderRadius: 12, textAlign: 'center', border: '1px solid var(--color-border)' }}>
+                    <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 8 }}>{t('security.twoFactor.manualKey')}</Text>
+                    <Text style={{ fontFamily: MONO_FONT, fontSize: 16, fontWeight: 600 }} copyable>{totpData.secret}</Text>
                   </div>
 
                   <form onSubmit={onConfirmTotp}>
-                    <Space>
+                    <Flex gap={12} vertical={isMobile}>
                       <Controller
                         name="code"
                         control={confirmControl}
@@ -402,15 +478,24 @@ function TwoFactorSection() {
                             placeholder={t('security.twoFactor.codePlaceholder')}
                             maxLength={6}
                             status={confirmErrors.code ? 'error' : undefined}
+                            style={{ 
+                              height: 48, 
+                              borderRadius: 12, 
+                              fontFamily: MONO_FONT, 
+                              letterSpacing: '0.2em', 
+                              textAlign: 'center',
+                              fontSize: 18,
+                              flex: 1
+                            }}
                           />
                         )}
                       />
-                      <Button type="primary" htmlType="submit" loading={confirmTotp.isPending}>
+                      <Button type="primary" size="large" htmlType="submit" loading={confirmTotp.isPending} style={{ height: 48, borderRadius: 12, fontWeight: 600, padding: '0 32px' }}>
                         {t('security.twoFactor.confirm')}
                       </Button>
-                    </Space>
+                    </Flex>
                     {confirmErrors.code && (
-                      <div>
+                      <div style={{ marginTop: 8 }}>
                         <Text type="danger" style={{ fontSize: 12 }}>{confirmErrors.code.message}</Text>
                       </div>
                     )}
@@ -425,10 +510,9 @@ function TwoFactorSection() {
   )
 }
 
-// -- Sessions Tab --------------------------------------------------------------
-
 function SessionsSection() {
   const { t } = useTranslation('user')
+  const { isMobile } = useBreakpoint()
   const { data: sessions, isLoading } = useSessions()
 
   const columns: ColumnsType<UserSessionDto> = [
@@ -438,8 +522,8 @@ function SessionsSection() {
       key: 'userAgent',
       render: (text: string) => (
         <Space>
-          <DesktopOutlined />
-          <Text>{text}</Text>
+          <DesktopOutlined style={{ color: 'var(--color-accent)' }} />
+          <Text strong={!isMobile}>{text}</Text>
         </Space>
       ),
     },
@@ -447,17 +531,18 @@ function SessionsSection() {
       title: t('security.sessions.ipAddress'),
       dataIndex: 'ipAddress',
       key: 'ipAddress',
+      render: (text) => <Text style={{ fontFamily: MONO_FONT }}>{text}</Text>
     },
     {
       title: t('security.sessions.status'),
       dataIndex: 'isActive',
       key: 'isActive',
       render: (isActive: boolean, record: UserSessionDto) => (
-        <Space>
-          <Tag color={isActive ? 'green' : 'default'}>
+        <Space wrap>
+          <Tag color={isActive ? 'green' : 'default'} style={{ borderRadius: 6 }}>
             {isActive ? t('security.sessions.active') : t('security.sessions.inactive')}
           </Tag>
-          {record.isCurrentDevice && <Tag color="blue">{t('security.sessions.currentDevice')}</Tag>}
+          {record.isCurrentDevice && <Tag color="blue" style={{ borderRadius: 6 }}>{t('security.sessions.currentDevice')}</Tag>}
         </Space>
       ),
     },
@@ -465,18 +550,20 @@ function SessionsSection() {
       title: t('security.sessions.createdAt'),
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (text: string) => dayjs(text).format('DD/MM/YYYY HH:mm'),
-    },
-    {
-      title: t('security.sessions.expiresAt'),
-      dataIndex: 'absoluteExpiresAt',
-      key: 'absoluteExpiresAt',
-      render: (text: string) => dayjs(text).format('DD/MM/YYYY HH:mm'),
+      render: (text: string) => <Text type="secondary" style={{ fontSize: 13 }}>{dayjs(text).format('DD/MM/YYYY HH:mm')}</Text>,
     },
   ]
 
   return (
-    <Card>
+    <Card 
+      style={{ 
+        background: 'var(--color-bg-card)', 
+        border: '1px solid var(--color-border)', 
+        borderRadius: 24,
+        boxShadow: 'var(--shadow-sm)'
+      }}
+      styles={{ body: { padding: isMobile ? '12px' : '24px' } }}
+    >
       <ResponsiveTable<UserSessionDto>
         mobileMode="list"
         columns={columns}
@@ -490,11 +577,10 @@ function SessionsSection() {
   )
 }
 
-// -- Login History Tab ---------------------------------------------------------
-
 function LoginHistorySection() {
   const { t } = useTranslation('user')
   const { t: tc } = useTranslation('common')
+  const { isMobile } = useBreakpoint()
   const [params, setParams] = useState<PaginationParams>({
     pageNumber: 1,
     pageSize: 10,
@@ -507,7 +593,7 @@ function LoginHistorySection() {
       title: t('security.loginHistory.loginAt'),
       dataIndex: 'loginAt',
       key: 'loginAt',
-      render: (text: string) => dayjs(text).format('DD/MM/YYYY HH:mm:ss'),
+      render: (text: string) => <Text strong={!isMobile}>{dayjs(text).format('DD/MM/YYYY HH:mm:ss')}</Text>,
     },
     {
       title: t('security.loginHistory.status'),
@@ -517,6 +603,7 @@ function LoginHistorySection() {
         <Tag
           color={status === 'success' ? 'green' : 'red'}
           icon={status === 'success' ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+          style={{ borderRadius: 6 }}
         >
           {status === 'success' ? t('security.loginHistory.success') : t('security.loginHistory.failed')}
         </Tag>
@@ -526,16 +613,26 @@ function LoginHistorySection() {
       title: t('security.loginHistory.device'),
       dataIndex: 'userAgent',
       key: 'userAgent',
+      render: (text) => <Text type="secondary" style={{ fontSize: 13 }}>{text}</Text>
     },
     {
       title: t('security.loginHistory.ipAddress'),
       dataIndex: 'ipAddress',
       key: 'ipAddress',
+      render: (text) => <Text style={{ fontFamily: MONO_FONT, fontSize: 13 }}>{text}</Text>
     },
   ]
 
   return (
-    <Card>
+    <Card 
+      style={{ 
+        background: 'var(--color-bg-card)', 
+        border: '1px solid var(--color-border)', 
+        borderRadius: 24,
+        boxShadow: 'var(--shadow-sm)'
+      }}
+      styles={{ body: { padding: isMobile ? '12px' : '24px' } }}
+    >
       <ResponsiveTable<LoginHistoryDto>
         mobileMode="list"
         columns={columns}
@@ -560,12 +657,13 @@ function LoginHistorySection() {
 
 export default function SecurityPage() {
   const { t } = useTranslation('user')
+  const { isMobile } = useBreakpoint()
 
   const tabItems = [
     {
       key: 'password',
       label: (
-        <span>
+        <span style={{ fontWeight: 600 }}>
           <LockOutlined /> {t('security.tabs.password')}
         </span>
       ),
@@ -574,7 +672,7 @@ export default function SecurityPage() {
     {
       key: '2fa',
       label: (
-        <span>
+        <span style={{ fontWeight: 600 }}>
           <SafetyOutlined /> {t('security.tabs.twoFactor')}
         </span>
       ),
@@ -583,7 +681,7 @@ export default function SecurityPage() {
     {
       key: 'sessions',
       label: (
-        <span>
+        <span style={{ fontWeight: 600 }}>
           <DesktopOutlined /> {t('security.tabs.sessions')}
         </span>
       ),
@@ -592,7 +690,7 @@ export default function SecurityPage() {
     {
       key: 'history',
       label: (
-        <span>
+        <span style={{ fontWeight: 600 }}>
           <HistoryOutlined /> {t('security.tabs.history')}
         </span>
       ),
@@ -601,9 +699,43 @@ export default function SecurityPage() {
   ]
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto' }}>
-      <Title level={2}>{t('security.title')}</Title>
-      <Tabs items={tabItems} />
+    <div style={{ maxWidth: 1000, margin: '0 auto', padding: isMobile ? '12px 16px 80px' : '0 24px 80px' }}>
+      {/* Header */}
+      <div style={{ marginBottom: isMobile ? 24 : 40 }}>
+        <Title
+          level={2}
+          style={{
+            fontFamily: SANS_FONT,
+            fontWeight: 600,
+            color: 'var(--color-text-primary)',
+            marginBottom: 4,
+            fontSize: isMobile ? 24 : 32,
+          }}
+        >
+          <SafetyOutlined style={{ marginRight: 12, color: 'var(--color-accent)' }} />
+          {t('security.title')}
+        </Title>
+        <Text style={{ color: 'var(--color-text-secondary)', fontSize: 16 }}>
+          {t('security.subtitle', 'Manage your account security and sessions')}
+        </Text>
+      </div>
+
+      <Tabs 
+        items={tabItems} 
+        className="oio-tabs"
+        size={isMobile ? 'middle' : 'large'}
+        style={{ marginBottom: 40 }}
+      />
     </div>
   )
+}
+
+const labelStyle: React.CSSProperties = {
+  display: 'block',
+  fontSize: 12,
+  fontWeight: 700,
+  color: 'var(--color-text-tertiary)',
+  marginBottom: 8,
+  textTransform: 'uppercase',
+  letterSpacing: '0.08em',
 }

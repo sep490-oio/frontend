@@ -5,13 +5,21 @@ export interface SellerProfileDto {
   userId: string
   storeName: string
   description?: string
+  storeDescription?: string
   logo?: string
   rating: number
+  averageRating?: number
   reviewCount: number
+  ratingCount?: number
+  totalSalesCount: number
+  totalSalesAmount?: number
   trustScore?: number
+  trustScoreCalculatedAt?: string
   status: SellerProfileStatus
   createdAt: string
+  modifiedAt?: string
   approvedAt?: string
+  verifiedAt?: string
 }
 
 export interface CreateSellerProfileRequest {

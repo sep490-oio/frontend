@@ -25,7 +25,8 @@
     "watching": "đang theo dõi",
     "watchlist": "Theo dõi",
     "myShipments": "Vận đơn",
-    "disputes": "Tranh chấp"
+    "disputes": "Tranh chấp",
+    "paymentMethods": "Phương thức thanh toán"
   },
   "action": {
     "login": "Đăng nhập",
@@ -290,7 +291,13 @@
     "openInNewTab": "Mở trong tab mới",
     "download": "Tải xuống",
     "accept": "Chấp nhận",
-    "selectToPreview": "Chọn một tài liệu để xem trước"
+    "selectToPreview": "Chọn một tài liệu để xem trước",
+    "pendingBannerTitle": "Yêu cầu hành động: xem xét cập nhật {{type}}",
+    "pendingBannerDesc": "Bạn cần xem xét và chấp nhận phiên bản hiện tại trước khi có thể tiếp tục.",
+    "reviewAndAccept": "Xem xét & Chấp nhận",
+    "notAvailable": "Tài liệu điều khoản tạm thời không khả dụng.",
+    "tryAgain": "Vui lòng thử lại sau.",
+    "none": "Hiện không có điều khoản nào cần bạn chấp nhận."
   },
   "categories": {
     "label": "Danh mục OIO",

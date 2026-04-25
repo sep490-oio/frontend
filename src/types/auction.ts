@@ -112,17 +112,21 @@ export interface AuctionListItemDto {
   startingPrice: MoneyDto
   buyNowPrice?: MoneyDto
   isBuyNowReserved: boolean
+  buyNowReservedUntil?: string
   currency: string
   status: AuctionStatus
+  itemStatus?: string
   auctionType?: AuctionType
   bidCount: number
   watchCount: number
+  viewCount: number
   startTime?: string
   endTime?: string
   remainingTime?: string
   isEndingSoon: boolean
   isFeatured: boolean
   sellerId: string
+  createdAt: string
   isWatched?: boolean
   hasWatched?: boolean
 }
@@ -387,4 +391,36 @@ export interface AuctionFilterParams {
   sortBy?: string
   pageNumber?: number
   pageSize?: number
+}
+
+export interface MyBidDto {
+  auctionId: string
+  itemId: string
+  itemTitle: string
+  primaryImageUrl?: string
+  auctionStatus: string
+  currentPrice: MoneyDto
+  myLatestBidAmount: MoneyDto
+  position: string
+  wonAt?: string
+  lastBidAt: string
+  bidCountForUser: number
+  orderId?: string | null
+  orderStatus?: string | null
+  canPayNow?: boolean
+}
+
+export interface MyAuctionWatchlistDto {
+  auctionId: string
+  itemTitle: string
+  primaryImageUrl?: string
+  currentPrice: MoneyDto
+  currency: string
+  auctionStatus: string
+  bidCount: number
+  endTime?: string
+  remainingTime?: string
+  notifyOnBid: boolean
+  notifyOnEnd: boolean
+  watchedAt: string
 }

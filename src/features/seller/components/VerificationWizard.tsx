@@ -35,6 +35,12 @@ export function VerificationWizard({ onComplete, onCancel }: VerificationWizardP
       title: t('verification.typeBusinessOwner.title'),
       description: t('verification.typeBusinessOwner.description'),
     },
+    {
+      value: VerificationType.Manual,
+      icon: <ShopOutlined style={{ fontSize: 28 }} />,
+      title: t('verification.typeManual.title', 'In-Person (at Shop)'),
+      description: t('verification.typeManual.description', 'Visit our store for physical document verification'),
+    },
   ]
   const { message } = App.useApp()
 

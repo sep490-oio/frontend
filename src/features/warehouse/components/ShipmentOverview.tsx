@@ -7,10 +7,13 @@ import { formatCurrency, formatDateTime } from '@/utils/format'
 import { MONO_FONT } from '@/styles/tokens'
 
 interface TrackingEvent {
-  status: string
+  status?: string
   location?: string
-  timestamp: string
+  timestamp?: string
   notes?: string
+  eventTime?: string
+  normalizedStatus?: string
+  reasonDescription?: string
 }
 
 interface ItemInfo {
@@ -194,10 +197,10 @@ export function ShipmentOverview({ shipment, itemInfo, currency = 'VND' }: Shipm
             items={shipment.trackingEvents.map((event) => ({
               children: (
                 <div>
-                  <StatusBadge status={event.status} size="small" />
+                  <StatusBadge status={event.normalizedStatus ?? event.status ?? 'unknown'} size="small" />
                   {event.location && <Typography.Text type="secondary" style={{ marginLeft: 8, fontSize: 12 }}>{event.location}</Typography.Text>}
-                  <Typography.Text type="secondary" style={{ display: 'block', fontSize: 11 }}>{formatDateTime(event.timestamp)}</Typography.Text>
-                  {event.notes && <Typography.Text type="secondary" style={{ display: 'block', fontSize: 11 }}>{event.notes}</Typography.Text>}
+                  {(event.eventTime || event.timestamp) && <Typography.Text type="secondary" style={{ display: 'block', fontSize: 11 }}>{formatDateTime(event.eventTime ?? event.timestamp ?? '')}</Typography.Text>}
+                  {(event.notes || event.reasonDescription) && <Typography.Text type="secondary" style={{ display: 'block', fontSize: 11 }}>{event.notes ?? event.reasonDescription}</Typography.Text>}
                 </div>
               ),
             }))}

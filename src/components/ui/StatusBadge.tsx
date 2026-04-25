@@ -92,6 +92,15 @@ const STATUS_VARIANT_MAP: Record<string, BadgeVariant> = {
   inactive: 'neutral',
   locked: 'neutral',
 
+  // Order states
+  pending_payment: 'soft-warning',
+  paid: 'soft-success',
+  picked_up: 'soft-info',
+  on_delivering: 'soft-info',
+  shipped: 'soft-info',
+  delivered: 'soft-success',
+  disputed: 'soft-danger',
+
   // Escrow states
   holding: 'soft-warning',
   released_to_seller: 'soft-success',

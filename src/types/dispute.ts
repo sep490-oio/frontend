@@ -150,6 +150,7 @@ export interface DisputeParticipantDto {
   userId: string
   role: string
   joinedAt: string
+  lastReadAt?: string
   displayName?: string
   avatarUrl?: string
 }
@@ -200,6 +201,7 @@ export interface DisputeThreadMetaDto {
 export interface DisputeParticipantReadStateDto {
   disputeId: string
   userId: string
+  lastReadMessageId?: string
   lastReadAt: string
 }
 

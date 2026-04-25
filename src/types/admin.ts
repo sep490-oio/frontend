@@ -29,8 +29,10 @@ export interface MonitoringAlertDto {
 export interface UserRiskFlagDto {
   id: string
   userId: string
-  severity: AlertSeverity
+  flagType?: string
+  severity: AlertSeverity | string
   reason: string
+  createdBy?: string
   createdAt: string
 }
 
@@ -66,20 +68,29 @@ export interface UserListItemDto {
   id: string
   userName: string
   email: string
+  firstName?: string
+  lastName?: string
   status: string
+  emailConfirmed?: boolean
   roles: string[]
   createdAt: string
 }
 
 export interface PaymentTransactionDto {
   id: string
+  transactionNumber?: string
+  userId?: string
+  orderId?: string
   type: string
   amount: number
+  fee?: number
+  netAmount?: number
   currency: string
   status: string
-  orderId?: string
-  userId?: string
+  gatewayProvider?: string
+  description?: string
   createdAt: string
+  processedAt?: string
 }
 
 /**
@@ -135,19 +146,25 @@ export interface AdminCompletedAuctionListItemDto {
   auctionId: string
   itemTitle: string
   itemPrimaryImageUrl?: string | null
+  winnerId?: string | null
   winnerDisplayName?: string | null
+  sellerId?: string | null
   sellerDisplayName?: string | null
   finalPrice: number
+  currency?: string | null
   orderId?: string | null
   orderNumber?: string | null
   orderStatus?: string | null
   paymentStatus?: AdminAuctionPaymentStatus | null
   fulfillmentFlow?: AdminAuctionFulfillmentFlow | null
   fulfillmentStatus?: AdminAuctionFulfillmentStatus | null
+  paymentDueAt?: string | null
+  paidAt?: string | null
   shipByAt?: string | null
   isShippingOverdue?: boolean
   escalatedAt?: string | null
   escalationReason?: string | null
+  createdAt?: string | null
 }
 
 export interface AdminCompletedAuctionDetailDto {

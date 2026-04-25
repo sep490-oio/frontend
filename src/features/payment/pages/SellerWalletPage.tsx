@@ -25,7 +25,7 @@ export default function SellerWalletPage() {
     { value: WalletTransactionType.Debit, label: t('txTypeLabel.debit') },
     { value: WalletTransactionType.Hold, label: t('txTypeLabel.hold') },
     { value: WalletTransactionType.Release, label: t('txTypeLabel.release') },
-  ] as const
+  ]
   const navigate = useNavigate()
 
   const [page, setPage] = useState(1)
@@ -158,15 +158,11 @@ export default function SellerWalletPage() {
               setPage(1)
             }}
             style={{ width: 160 }}
-            options={TX_TYPE_OPTIONS.map((opt) => ({
-              value: opt.value,
-              label: t(`txTypeLabel.${opt.label.toLowerCase()}`, opt.label),
-            }))}
+            options={TX_TYPE_OPTIONS}
           />
         </Space>
 
         <TransactionTable
-          walletPrefix="/seller"
           data={transactions?.items ?? []}
           loading={txLoading}
           pagination={{

@@ -398,13 +398,13 @@ export function AdminLayout() {
                   fontSize: 13,
                   fontWeight: 500,
                   color: 'var(--color-text-primary)',
-                  maxWidth: 120,
+                  maxWidth: 200,
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
                 }}
               >
-                {displayName}
+                {displayName} <span style={{ opacity: 0.6, fontSize: 11, fontWeight: 400 }}>(@{user?.userName})</span>
               </span>
             )}
           </div>

@@ -7,6 +7,18 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
+    <script>
+      // Auto-reload on module load failure (stale cache recovery)
+      window.addEventListener('error', function(e) {
+        if (e.message && (e.message.includes('import') || e.message.includes('module'))) {
+          const url = new URL(window.location.href);
+          if (!url.searchParams.has('retry')) {
+            url.searchParams.set('retry', Date.now());
+            window.location.replace(url.toString());
+          }
+        }
+      }, true);
+    </script>
     <title>OIO - Online Auction Platform</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />

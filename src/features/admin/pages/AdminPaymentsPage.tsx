@@ -277,14 +277,48 @@ export default function AdminPaymentsPage() {
       label: t('payments.overview'),
       children: (
         <>
-          {/* Summary stat cards — 2-col on mobile, 4-col on large */}
+          {/* Escrow Statistics */}
+          <Typography.Title level={5} style={{ marginTop: 0, marginBottom: 16 }}>{t('payments.escrowStats', 'Escrow Statistics')}</Typography.Title>
+          <Row gutter={[12, 12]} style={{ marginBottom: isMobile ? 16 : 24 }}>
+            <Col xs={12} sm={12} lg={8}>
+              <Card loading={summaryLoading} styles={{ body: { padding: isMobile ? '12px' : '24px' } }}>
+                <Statistic
+                  title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('payments.releasedEscrow', 'Released Escrow')}</span>}
+                  value={summary?.releasedEscrowTotal ?? 0}
+                  formatter={(val) => formatCurrency(val as number)}
+                  valueStyle={{ color: '#3f8600', fontSize: isMobile ? 16 : 24 }}
+                />
+              </Card>
+            </Col>
+            <Col xs={12} sm={12} lg={8}>
+              <Card loading={summaryLoading} styles={{ body: { padding: isMobile ? '12px' : '24px' } }}>
+                <Statistic
+                  title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('payments.refundedEscrow', 'Refunded Escrow')}</span>}
+                  value={summary?.refundedEscrowTotal ?? 0}
+                  formatter={(val) => formatCurrency(val as number)}
+                  valueStyle={{ fontSize: isMobile ? 16 : 24 }}
+                />
+              </Card>
+            </Col>
+            <Col xs={12} sm={12} lg={8}>
+              <Card loading={summaryLoading} styles={{ body: { padding: isMobile ? '12px' : '24px' } }}>
+                <Statistic
+                  title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('payments.holdingEscrowCount', 'Holding Escrows')}</span>}
+                  value={summary?.holdingEscrowCount ?? 0}
+                  valueStyle={{ color: '#1677ff', fontSize: isMobile ? 16 : 24 }}
+                />
+              </Card>
+            </Col>
+          </Row>
+
+          {/* Activity Statistics */}
+          <Typography.Title level={5} style={{ marginBottom: 16 }}>{t('payments.activityStats', 'Activity Statistics')}</Typography.Title>
           <Row gutter={[12, 12]} style={{ marginBottom: isMobile ? 16 : 24 }}>
             <Col xs={12} sm={12} lg={6}>
               <Card loading={summaryLoading} styles={{ body: { padding: isMobile ? '12px' : '24px' } }}>
                 <Statistic
-                  title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('payments.totalRevenue')}</span>}
-                  value={summary?.totalRevenue ?? 0}
-                  formatter={(val) => formatCurrency(val as number)}
+                  title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('payments.completedPayments', 'Completed Payments')}</span>}
+                  value={summary?.completedPayments ?? 0}
                   valueStyle={{ color: '#3f8600', fontSize: isMobile ? 16 : 24 }}
                 />
               </Card>
@@ -292,9 +326,17 @@ export default function AdminPaymentsPage() {
             <Col xs={12} sm={12} lg={6}>
               <Card loading={summaryLoading} styles={{ body: { padding: isMobile ? '12px' : '24px' } }}>
                 <Statistic
-                  title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('payments.totalPayouts')}</span>}
-                  value={summary?.totalPayouts ?? 0}
-                  formatter={(val) => formatCurrency(val as number)}
+                  title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('payments.failedPayments', 'Failed Payments')}</span>}
+                  value={summary?.failedPayments ?? 0}
+                  valueStyle={{ color: '#cf1322', fontSize: isMobile ? 16 : 24 }}
+                />
+              </Card>
+            </Col>
+            <Col xs={12} sm={12} lg={6}>
+              <Card loading={summaryLoading} styles={{ body: { padding: isMobile ? '12px' : '24px' } }}>
+                <Statistic
+                  title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('payments.walletTopUps', 'Wallet Top-ups')}</span>}
+                  value={summary?.walletTopUps ?? 0}
                   valueStyle={{ fontSize: isMobile ? 16 : 24 }}
                 />
               </Card>
@@ -302,20 +344,9 @@ export default function AdminPaymentsPage() {
             <Col xs={12} sm={12} lg={6}>
               <Card loading={summaryLoading} styles={{ body: { padding: isMobile ? '12px' : '24px' } }}>
                 <Statistic
-                  title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('payments.pendingWithdrawals')}</span>}
-                  value={summary?.pendingWithdrawals ?? 0}
-                  formatter={(val) => formatCurrency(val as number)}
+                  title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('payments.pendingWithdrawals', 'Pending Withdrawals')}</span>}
+                  value={summary?.withdrawalPendingCount ?? 0}
                   valueStyle={{ color: '#faad14', fontSize: isMobile ? 16 : 24 }}
-                />
-              </Card>
-            </Col>
-            <Col xs={12} sm={12} lg={6}>
-              <Card loading={summaryLoading} styles={{ body: { padding: isMobile ? '12px' : '24px' } }}>
-                <Statistic
-                  title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('payments.platformBalance')}</span>}
-                  value={summary?.platformBalance ?? 0}
-                  formatter={(val) => formatCurrency(val as number)}
-                  valueStyle={{ color: '#1677ff', fontSize: isMobile ? 16 : 24 }}
                 />
               </Card>
             </Col>

@@ -68,7 +68,7 @@ export default function BrowseSellersPage() {
     sellers = [...sellers].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
   } else if (sortBy === 'items_desc') {
     // totalSalesCount is optional/any, so fallback to 0
-    sellers = [...sellers].sort((a, b) => ((b as any).totalSalesCount ?? 0) - ((a as any).totalSalesCount ?? 0))
+    sellers = [...sellers].sort((a, b) => (b.totalSalesCount ?? 0) - (a.totalSalesCount ?? 0))
   } else {
     sellers = [...sellers].sort((a, b) => (b.trustScore ?? 0) - (a.trustScore ?? 0))
   }
@@ -301,7 +301,7 @@ export default function BrowseSellersPage() {
                         )}
                       </h3>
                       <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 16, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                        {htmlToPlainTextExcerpt(seller.description || '') || '—'}
+                        {htmlToPlainTextExcerpt(seller.storeDescription || seller.description || '') || '—'}
                       </div>
 
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto', paddingTop: 16 }}>
@@ -319,7 +319,7 @@ export default function BrowseSellersPage() {
                             {t('browse.sales')}
                           </div>
                           <div style={{ fontSize: 16, color: 'var(--color-text-primary)', fontWeight: 700 }}>
-                            <span>{(seller as any).totalSalesCount ?? 0} {tc('common.sales')}</span>
+                            <span>{seller.totalSalesCount ?? 0}</span>
                           </div>
                         </div>
                       </div>

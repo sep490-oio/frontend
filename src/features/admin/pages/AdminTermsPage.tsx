@@ -42,10 +42,10 @@ export default function AdminTermsPage() {
   const isMobile = !screens.md
 
   const TERMS_TYPES = [
-    { value: 'platform', label: t('terms.typePlatform') },
-    { value: 'bidder', label: t('terms.typeBidder') },
-    { value: 'seller', label: t('terms.typeSeller') },
-    { value: 'privacy', label: t('terms.typePrivacy') },
+    { value: 'platform', label: t('terms.typePlatform', 'Platform Terms') },
+    { value: 'bidder', label: t('terms.typeBidder', 'Bidder Terms') },
+    { value: 'seller', label: t('terms.typeSeller', 'Seller Agreement') },
+    { value: 'privacy', label: t('terms.typePrivacy', 'Privacy Policy') },
   ]
 
   // ── Create state ──────────────────────────────────────────────────────
@@ -75,7 +75,7 @@ export default function AdminTermsPage() {
 
   const handleCreate = async () => {
     if (!newType || !uploadedMediaId) {
-      message.warning('Please select type and upload a PDF document')
+      message.warning(t('terms.selectTypeAndPdf', 'Please select type and upload a PDF document'))
       return
     }
     try {
@@ -146,9 +146,10 @@ export default function AdminTermsPage() {
       dataIndex: 'type',
       key: 'type',
       width: 120,
-      render: (type: string) => (
-        <span style={{ fontWeight: 500, textTransform: 'capitalize' }}>{type}</span>
-      ),
+      render: (type: string) => {
+        const label = TERMS_TYPES.find(opt => opt.value === type)?.label ?? type
+        return <span style={{ fontWeight: 500 }}>{label}</span>
+      },
     },
     {
       title: t('terms.version'),

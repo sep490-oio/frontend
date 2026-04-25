@@ -183,6 +183,17 @@ export default function AuctionDetailPage() {
     auction?.status === AuctionStatus.Terminated
 
   const isSeller = Boolean(isAuthenticated && currentUser?.id && sellerId && sellerId === currentUser.id)
+  
+  const userRoles = useMemo(() => {
+    try {
+      const token = localStorage.getItem('oio_access_token')
+      if (!token) return []
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      const roles = payload.role ?? payload.roles ?? []
+      return (Array.isArray(roles) ? roles : [roles]).map((r: string) => r.toLowerCase())
+    } catch { return [] }
+  }, [isAuthenticated])
+  const isAdmin = userRoles.includes('admin')
   const currentPrice = auction?.currentPrice?.amount ?? 0
   const currency = auction?.currency ?? DEFAULT_CURRENCY
   const minBid = auction?.minimumBidAmount?.amount ?? (currentPrice + (auction?.bidIncrement?.amount ?? 0))
@@ -590,9 +601,6 @@ export default function AuctionDetailPage() {
     if (serverQualStatus) {
       if (serverQualStatus === 'qualified' || serverQualStatus === 'waived') return 'qualified' as QualificationState
 
-      // Trust the optimistic flag to mask caching/webhook delays right after deposit
-      if (isQualifiedInStorage) return 'qualified' as QualificationState
-
       // If server says they are clearly not qualified (pending, rejected, etc.), return a boundary state
       if (
         (serverQualStatus as any) === 'rejected' ||
@@ -610,6 +618,9 @@ export default function AuctionDetailPage() {
           : 'before_window'
         return base === 'qualified' ? 'window_open' : base // Ensure we don't return 'qualified'
       }
+      
+      // Trust the optimistic flag to mask caching/webhook delays right after deposit
+      if (isQualifiedInStorage) return 'qualified' as QualificationState
     }
 
     // 3. Fallback for guests or initial loads: trust localStorage ONLY for guests or very early loads
@@ -1261,8 +1272,8 @@ export default function AuctionDetailPage() {
                 ? () => navigate(`/checkout/${winnerPayNowOrderId}`)
                 : undefined
             }
-            canBid={isActive && isAuthenticated && qualState === 'qualified' && !isSeller}
-            canBuyNow={isAuthenticated && !isSeller && !isTerminal}
+            canBid={isActive && isAuthenticated && qualState === 'qualified' && !isSeller && !isAdmin}
+            canBuyNow={isAuthenticated && !isSeller && !isAdmin && !isTerminal && qualState === 'qualified'}
             currentBuyerOrder={data?.currentBuyerOrder}
             onViewOrderClick={(orderId) => navigate(`/me/orders/${orderId}`)}
             isOrderProvisioning={pollingForOrder}
