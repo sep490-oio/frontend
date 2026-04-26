@@ -1410,7 +1410,7 @@ export default function AuctionDetailPage() {
             </Typography.Text>
           </div>
           {autoBidMax && autoBidMax > currentPrice && (
-            <div style={{ padding: '12px 16px', borderRadius: 8, background: 'rgba(139, 115, 85, 0.06)', border: '1px solid var(--color-border-light)' }}>
+            <div style={{ padding: '12px 16px', borderRadius: 8, background: 'var(--color-warning-soft)', border: '1px solid var(--color-warning)' }}>
               <Typography.Text style={{ fontSize: 13, fontWeight: 500, display: 'block', marginBottom: 4 }}>
                 {t('autoBidSummary', 'Summary')}
               </Typography.Text>

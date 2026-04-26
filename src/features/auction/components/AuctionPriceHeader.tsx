@@ -78,7 +78,7 @@ export const AuctionPriceHeader: React.FC<AuctionPriceHeaderProps> = ({
         <Button
           type="text"
           size="small"
-          icon={isWatching ? <HeartFilled style={{ color: '#C4513D' }} /> : <HeartOutlined />}
+          icon={isWatching ? <HeartFilled style={{ color: 'var(--color-danger)' }} /> : <HeartOutlined />}
           onClick={onWatch}
           loading={watchLoading}
           style={{
@@ -103,7 +103,7 @@ export const AuctionPriceHeader: React.FC<AuctionPriceHeaderProps> = ({
             marginBottom: 10,
             padding: '8px 12px',
             borderRadius: 6,
-            background: 'rgba(196, 81, 61, 0.08)',
+            background: 'var(--color-danger-soft)',
           }}
         >
           <span

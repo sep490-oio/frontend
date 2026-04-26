@@ -68,7 +68,7 @@ export function EligibilityPanel({
   // Qualified (by qualification status OR by deposit being held)
   if (qualificationStatus === ParticipantQualificationStatus.Qualified || isDepositHeld) {
     return (
-      <div style={{ ...panelStyle, borderColor: 'rgba(74, 124, 89, 0.2)' }}>
+      <div style={{ ...panelStyle, borderColor: 'var(--color-success)', background: 'var(--color-success-soft)' }}>
         <Flex align="center" gap={10}>
           <CheckCircleOutlined style={{ fontSize: 20, color: 'var(--color-success)' }} />
           <div>
@@ -93,7 +93,7 @@ export function EligibilityPanel({
   // Waived (admin pre-approved)
   if (qualificationStatus === ParticipantQualificationStatus.Waived) {
     return (
-      <div style={{ ...panelStyle, borderColor: 'rgba(74, 124, 89, 0.2)' }}>
+      <div style={{ ...panelStyle, borderColor: 'var(--color-success)', background: 'var(--color-success-soft)' }}>
         <Flex align="center" gap={10}>
           <CheckCircleOutlined style={{ fontSize: 20, color: 'var(--color-success)' }} />
           <div>
@@ -112,7 +112,7 @@ export function EligibilityPanel({
   // Rejected
   if (qualificationStatus === ParticipantQualificationStatus.Rejected) {
     return (
-      <div style={{ ...panelStyle, borderColor: 'rgba(196, 81, 61, 0.2)' }}>
+      <div style={{ ...panelStyle, borderColor: 'var(--color-danger)', background: 'var(--color-danger-soft)' }}>
         <Flex align="center" gap={10}>
           <CloseCircleOutlined style={{ fontSize: 20, color: 'var(--color-danger)' }} />
           <div>
@@ -131,7 +131,7 @@ export function EligibilityPanel({
   // Expired
   if (qualificationStatus === ParticipantQualificationStatus.Expired) {
     return (
-      <div style={{ ...panelStyle, borderColor: 'rgba(196, 81, 61, 0.2)' }}>
+      <div style={{ ...panelStyle, borderColor: 'var(--color-danger)', background: 'var(--color-danger-soft)' }}>
         <Flex align="center" gap={10}>
           <ClockCircleOutlined style={{ fontSize: 20, color: 'var(--color-danger)' }} />
           <div>
@@ -176,7 +176,7 @@ export function EligibilityPanel({
 
   if (isWindowClosed && qualificationStatus !== ParticipantQualificationStatus.Qualified) {
     return (
-      <div style={{ ...panelStyle, borderColor: 'rgba(196, 81, 61, 0.2)' }}>
+      <div style={{ ...panelStyle, borderColor: 'var(--color-danger)', background: 'var(--color-danger-soft)' }}>
         <Flex align="center" gap={10}>
           <CloseCircleOutlined style={{ fontSize: 20, color: 'var(--color-danger)' }} />
           <div>

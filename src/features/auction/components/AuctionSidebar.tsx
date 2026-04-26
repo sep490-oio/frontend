@@ -360,7 +360,7 @@ export function AuctionSidebar({
             style={{
               marginTop: 16,
               borderColor: 'var(--color-success)',
-              background: 'rgba(74, 124, 89, 0.06)',
+              background: 'var(--color-success-soft)',
             }}
           >
             <Flex vertical gap={12} align="center">
@@ -490,7 +490,7 @@ export function AuctionSidebar({
     <>
       {auctionAction.type === 'won' && !isSeller && (
         <Card
-          style={{ marginTop: 16, borderColor: 'var(--color-success)', background: 'rgba(74, 124, 89, 0.06)' }}
+          style={{ marginTop: 16, borderColor: 'var(--color-success)', background: 'var(--color-success-soft)' }}
         >
           <Flex vertical gap={12} align="center">
             <CheckCircleOutlined style={{ fontSize: 28, color: 'var(--color-success)' }} />
@@ -678,7 +678,7 @@ export function AuctionSidebar({
           style={{
             marginTop: 16,
             borderColor: 'var(--color-warning)',
-            background: 'rgba(196, 147, 61, 0.04)',
+            background: 'var(--color-warning-soft)',
           }}
         >
           <Flex vertical gap={12} align="center">
@@ -720,8 +720,8 @@ export function AuctionSidebar({
             marginTop: 12,
             padding: '10px 14px',
             borderRadius: 8,
-            background: 'rgba(196, 81, 61, 0.06)',
-            border: '1px solid rgba(196, 81, 61, 0.15)',
+            background: 'var(--color-danger-soft)',
+            border: '1px solid var(--color-danger)',
           }}
         >
           <Typography.Text style={{ color: 'var(--color-danger)', fontWeight: 500, fontSize: 13 }}>
@@ -745,8 +745,8 @@ export function AuctionSidebar({
             marginTop: 12,
             padding: '10px 14px',
             borderRadius: 8,
-            background: 'rgba(74, 124, 89, 0.06)',
-            border: '1px solid rgba(74, 124, 89, 0.15)',
+            background: 'var(--color-success-soft)',
+            border: '1px solid var(--color-success)',
           }}
         >
           <Typography.Text style={{ color: 'var(--color-success)', fontWeight: 500, fontSize: 13 }}>

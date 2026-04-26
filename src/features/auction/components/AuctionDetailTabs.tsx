@@ -458,12 +458,12 @@ export function AuctionDetailTabs({
               <div
                 style={{
                   background: auction.verifyByPlatform
-                    ? 'rgba(74, 124, 89, 0.06)'
-                    : 'rgba(139, 115, 85, 0.06)',
+                    ? 'var(--color-success-soft)'
+                    : 'var(--color-warning-soft)',
                   border: `1px solid ${
                     auction.verifyByPlatform
-                      ? 'rgba(74, 124, 89, 0.2)'
-                      : 'var(--color-border)'
+                      ? 'var(--color-success)'
+                      : 'var(--color-warning)'
                   }`,
                   borderRadius: 8,
                   marginBottom: 20,
