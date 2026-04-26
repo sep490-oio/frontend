@@ -38,7 +38,7 @@ export function useOrderById(id: string) {
  * and the item is not currently in the platform warehouse.
  */
 export function useSellerDirectShipOrders(
-  params?: PaginationParams,
+  params?: PaginationParams & { status?: string; escrowStatus?: string },
   options?: { refetchInterval?: number },
 ) {
   return useQuery({

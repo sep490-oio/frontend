@@ -254,7 +254,14 @@
     "raiseDispute": "Raise Dispute",
     "estimatedPayout": "Estimated payout",
     "decisionPrompt": "You have {{hours}} hours to accept or raise a dispute",
-    "autoReleaseHint": "After the window closes, funds will be automatically released to the seller."
+    "autoReleaseHint": "After the window closes, funds will be automatically released to the seller.",
+    "filterHolding": "Holding Escrow Only",
+    "status": {
+      "holding": "Holding",
+      "released_to_seller": "Released",
+      "disputed": "Disputed",
+      "refunded_to_buyer": "Refunded"
+    }
   },
   "buyerOutboundReceive": {
     "activeDispute": "A dispute is already open for this order"
@@ -275,6 +282,9 @@
   "statusProcessing": "Processing",
   "statusPickedUp": "Picked Up",
   "statusOnDelivering": "On Delivering",
+  "statusDelivered": "Delivered",
+  "statusCompleted": "Completed",
+  "statusCancelled": "Cancelled",
   "carrierName": "Carrier Name",
   "recipient": "Recipient",
   "phone": "Phone",

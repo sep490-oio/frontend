@@ -165,8 +165,10 @@ export default function InboundDetailPage() {
                     style={{ cursor: 'pointer', padding: '8px 0' }}
                     onClick={() => navigate(`${prefix}/warehouse/inbound/${s.id}`)}
                   >
-                    <Space>
-                      <Typography.Text>{(s as any).itemTitle ?? s.id.slice(0, 12)}</Typography.Text>
+                    <Space style={{ maxWidth: '100%' }}>
+                      <Typography.Text ellipsis style={{ maxWidth: isMobile ? 180 : 300 }}>
+                        {(s as any).itemTitle ?? s.id.slice(0, 12)}
+                      </Typography.Text>
                       <StatusBadge status={s.status} size="small" />
                     </Space>
                   </List.Item>

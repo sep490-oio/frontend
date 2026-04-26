@@ -57,16 +57,17 @@ export default function SellerWalletPage() {
           className="oio-serif"
           style={{
             fontWeight: 400,
-            fontSize: 32,
+            fontSize: isMobile ? 24 : 32,
             color: 'var(--color-text-primary)',
             marginBottom: 4,
             letterSpacing: '-0.01em',
             display: 'flex',
             alignItems: 'center',
             gap: 12,
+            flexWrap: 'wrap'
           }}
         >
-          <WalletOutlined style={{ fontSize: 28 }} />
+          <WalletOutlined style={{ fontSize: isMobile ? 24 : 28 }} />
           {t('sellerWallet', 'Seller Wallet')}
         </h1>
         <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, margin: 0 }}>

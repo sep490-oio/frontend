@@ -59,9 +59,15 @@ export default function WarehouseItemsPage() {
           ) : (
             <Avatar shape="square" size={44}>{(r.itemTitle ?? '?').charAt(0).toUpperCase()}</Avatar>
           )}
-          <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
-            <Button type="link" style={{ padding: 0, height: 'auto' }} onClick={() => gotoDetail(r.warehouseItemId)}>
-              {r.itemTitle ?? t('untitledItem', 'Untitled item')}
+          <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2, maxWidth: '100%', minWidth: 0 }}>
+            <Button
+              type="link"
+              style={{ padding: 0, height: 'auto', textAlign: 'left', maxWidth: '100%' }}
+              onClick={() => gotoDetail(r.warehouseItemId)}
+            >
+              <Typography.Text ellipsis style={{ maxWidth: '100%', color: 'inherit' }}>
+                {r.itemTitle ?? t('untitledItem', 'Untitled item')}
+              </Typography.Text>
             </Button>
             <Typography.Text type="secondary" style={{ fontSize: 11 }}>
               {r.itemId.slice(0, 8)}

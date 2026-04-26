@@ -48,10 +48,10 @@ function RouteErrorBoundary() {
           marginBottom: 8,
         }}
       >
-        {title}
+        <span>{title}</span>
       </h2>
       <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, maxWidth: 400, marginBottom: 24 }}>
-        {desc}
+        <span>{desc}</span>
       </p>
       <Flex gap={12}>
         <Button
@@ -64,10 +64,10 @@ function RouteErrorBoundary() {
           }}
           style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
         >
-          {t('reloadPage', 'Reload page')}
+          <span>{t('reloadPage', 'Reload page')}</span>
         </Button>
         <Link to="/">
-          <Button>{t('goToHome', 'Go to home')}</Button>
+          <Button><span>{t('goToHome', 'Go to home')}</span></Button>
         </Link>
       </Flex>
     </Flex>

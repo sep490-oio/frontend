@@ -145,7 +145,7 @@ export default function AdminTermsPage() {
       title: t('terms.type'),
       dataIndex: 'type',
       key: 'type',
-      width: 120,
+      width: 180,
       render: (type: string) => {
         const label = TERMS_TYPES.find(opt => opt.value === type)?.label ?? type
         return <span style={{ fontWeight: 500 }}>{label}</span>
@@ -155,7 +155,7 @@ export default function AdminTermsPage() {
       title: t('terms.version'),
       dataIndex: 'version',
       key: 'version',
-      width: 70,
+      width: 100,
       render: (v: number) => (
         <span style={{ fontFamily: MONO_FONT, fontSize: 13 }}>v{v}</span>
       ),
@@ -163,7 +163,7 @@ export default function AdminTermsPage() {
     {
       title: t('terms.status'),
       key: 'status',
-      width: 110,
+      width: 160,
       render: (_: unknown, record: TermsDocumentDto) => {
         const s = resolveStatus(record)
         return <StatusBadge status={s.toLowerCase()} />
@@ -198,7 +198,7 @@ export default function AdminTermsPage() {
       title: tc('tableHeader.createdAt'),
       dataIndex: 'createdAt',
       key: 'createdAt',
-      width: 150,
+      width: 180,
       responsive: ['lg'],
       render: (date: string) => (
         <span style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
@@ -209,7 +209,7 @@ export default function AdminTermsPage() {
     {
       title: tc('tableHeader.actions'),
       key: 'actions',
-      width: 260,
+      width: 300,
       render: (_: unknown, record: TermsDocumentDto) => {
         const status = resolveStatus(record)
         return (

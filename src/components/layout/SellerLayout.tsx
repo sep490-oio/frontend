@@ -373,7 +373,7 @@ export function SellerLayout() {
           position: 'fixed',
           top: 16,
           left: isMobile ? 12 : sidebarWidth + 32,
-          right: 16,
+          right: isMobile ? 12 : 16,
           height: HEADER_HEIGHT,
           background: 'var(--color-bg-container)',
           backdropFilter: 'var(--oio-blur)',
@@ -390,7 +390,7 @@ export function SellerLayout() {
           boxShadow: 'var(--shadow-md)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 16, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 16, minWidth: 0, flexShrink: 0 }}>
           {isMobile ? (
             <button onClick={() => setMobileDrawerOpen(true)} style={{ ...iconBtnStyle(), padding: 4 }} aria-label="Open menu">
               <MenuOutlined />
@@ -417,7 +417,7 @@ export function SellerLayout() {
           </span>
         </div>
 
-        <div className="hide-scrollbar" style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 2 : 8, flexShrink: 0, flex: 1, minWidth: 0, overflowX: 'auto', justifyContent: 'flex-end' }}>
+        <div className="hide-scrollbar" style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 2 : 8, flexShrink: 0, flex: 1, minWidth: 0, justifyContent: 'flex-end' }}>
           <button
             onClick={() => navigate('/')}
             style={{
@@ -446,7 +446,7 @@ export function SellerLayout() {
             }}
           >
             <ArrowLeftOutlined style={{ fontSize: 11 }} />
-            {!isMobile && tc('layout.backToPlatform')}
+            {!isMobile && <span>{tc('layout.backToPlatform')}</span>}
           </button>
 
           <Tooltip title={isDark ? tc('layout.lightMode') : tc('layout.darkMode')}>
@@ -468,7 +468,7 @@ export function SellerLayout() {
               onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-secondary)' }}
             >
               <GlobalOutlined style={{ fontSize: 14 }} />
-              {!isMobile && (i18n.language === 'vi' ? 'EN' : 'VI')}
+              {!isMobile && <span>{i18n.language === 'vi' ? 'EN' : 'VI'}</span>}
             </button>
           </Tooltip>
 
@@ -498,7 +498,7 @@ export function SellerLayout() {
                   whiteSpace: 'nowrap',
                 }}
               >
-                {displayName} <span style={{ opacity: 0.6, fontSize: 11, fontWeight: 400 }}>(@{user?.userName})</span>
+                <span>{displayName}</span> <span style={{ opacity: 0.6, fontSize: 11, fontWeight: 400 }}>(@{user?.userName})</span>
               </span>
             )}
           </div>

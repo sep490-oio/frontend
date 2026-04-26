@@ -118,17 +118,19 @@ function MobileCardView<T extends Record<string, any>>({
               mobileRender(record as T, index)
             ) : (
               <Flex vertical gap={6}>
-                {columns.map((col) => {
+                {columns.map((col, idx) => {
                   const value = col.dataIndex ? (record as Record<string, any>)[String(col.dataIndex)] : undefined
                   const rendered = col.render
                     ? col.render(value, record as T, index)
                     : value
                   return (
-                    <Flex key={String(col.key ?? col.dataIndex)} justify="space-between" align="start" gap={8}>
+                    <Flex key={`${col.key ?? col.dataIndex ?? idx}-${idx}`} justify="space-between" align="start" gap={8}>
                       <Typography.Text type="secondary" style={{ fontSize: 12, flexShrink: 0 }}>
                         {String(col.title ?? '')}
                       </Typography.Text>
-                      <div style={{ textAlign: 'right', fontSize: 13 }}>{rendered as React.ReactNode}</div>
+                      <div style={{ textAlign: 'right', fontSize: 13, flex: 1, minWidth: 0 }}>
+                        <span className="oio-table-cell-content">{rendered as React.ReactNode}</span>
+                      </div>
                     </Flex>
                   )
                 })}
@@ -191,7 +193,7 @@ function MobileListView<T extends Record<string, any>>({
 
           if (mobileRender) {
             return (
-              <List.Item style={{ padding: '12px 0' }}>
+              <List.Item key={key} style={{ padding: '12px 0' }}>
                 {mobileRender(record, index)}
               </List.Item>
             )
@@ -206,12 +208,13 @@ function MobileListView<T extends Record<string, any>>({
 
           return (
             <List.Item
+              key={key}
               style={{ padding: '10px 0', cursor: detail.length > 0 ? 'pointer' : 'default' }}
               onClick={() => detail.length > 0 && setExpandedKey(isExpanded ? null : key)}
             >
               <Flex vertical style={{ width: '100%' }} gap={4}>
                 <Flex justify="space-between" align="center">
-                  {primary.map((col) => {
+                  {primary.map((col, idx) => {
                     const value = col.dataIndex
                       ? (record as Record<string, any>)[String(col.dataIndex)]
                       : undefined
@@ -219,7 +222,7 @@ function MobileListView<T extends Record<string, any>>({
                       ? col.render(value, record, index)
                       : value
                     return (
-                      <span key={String(col.key ?? col.dataIndex)} style={{ fontSize: 13 }}>
+                      <span key={`${col.key ?? col.dataIndex ?? idx}-${idx}`} style={{ fontSize: 13 }}>
                         {rendered as React.ReactNode}
                       </span>
                     )
@@ -230,7 +233,7 @@ function MobileListView<T extends Record<string, any>>({
                 </Flex>
                 {isExpanded && (
                   <Flex vertical gap={4} style={{ paddingTop: 8, borderTop: '1px solid var(--color-border)' }}>
-                    {detail.map((col) => {
+                    {detail.map((col, idx) => {
                       const value = col.dataIndex
                         ? (record as Record<string, any>)[String(col.dataIndex)]
                         : undefined
@@ -238,7 +241,7 @@ function MobileListView<T extends Record<string, any>>({
                         ? col.render(value, record, index)
                         : value
                       return (
-                        <Flex key={String(col.key ?? col.dataIndex)} justify="space-between" gap={8}>
+                        <Flex key={`${col.key ?? col.dataIndex ?? idx}-${idx}`} justify="space-between" gap={8}>
                           <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                             {String(col.title ?? '')}
                           </Typography.Text>
@@ -278,6 +281,11 @@ function getRowKey<T extends Record<string, any>>(
   rowKey: TableProps<T>['rowKey'],
 ): string {
   if (typeof rowKey === 'function') return String(rowKey(record))
-  if (typeof rowKey === 'string') return String(record[rowKey] ?? index)
-  return String((record as Record<string, any>).id ?? (record as Record<string, any>).key ?? index)
+  if (typeof rowKey === 'string' && record[rowKey] !== undefined) return String(record[rowKey])
+  
+  // Fallback to id or key
+  const id = (record as any).id ?? (record as any).key
+  if (id !== undefined) return String(id)
+  
+  return `row-${index}`
 }

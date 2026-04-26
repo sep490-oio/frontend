@@ -130,14 +130,14 @@ export default function AdminUsersPage() {
       title: t('users.status'),
       dataIndex: 'status',
       key: 'status',
-      width: 110,
+      width: 190,
       render: (status: string) => <StatusBadge status={status} />,
     },
     {
       title: t('users.roles'),
       dataIndex: 'roles',
       key: 'roles',
-      width: 180,
+      width: 240,
       responsive: ['lg'],
       render: (roles: string[]) => (
         <Space wrap size={4}>
@@ -151,16 +151,16 @@ export default function AdminUsersPage() {
       title: t('users.createdAt'),
       dataIndex: 'createdAt',
       key: 'createdAt',
-      width: 150,
+      width: 170,
       responsive: ['xl'],
       render: (date: string) => formatDateTime(date),
     },
     {
       title: t('users.actions'),
       key: 'actions',
-      width: isMobile ? 80 : 220,
+      width: isMobile ? 100 : 280,
       render: (_, record) => (
-        <Space size={isMobile ? 2 : 4} direction={isMobile ? 'vertical' : 'horizontal'} style={{ width: isMobile ? '100%' : undefined }}>
+        <Space size={isMobile ? 2 : 8} direction={isMobile ? 'vertical' : 'horizontal'} style={{ width: isMobile ? '100%' : undefined }}>
           <Button
             type="link"
             size="small"

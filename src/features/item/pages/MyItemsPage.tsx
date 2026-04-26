@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Button, Space, Modal, Flex, Tooltip, message, Segmented } from 'antd'
+import { Button, Space, Modal, Flex, Tooltip, message, Segmented, Typography } from 'antd'
 import {
   PlusOutlined,
   EditOutlined,
@@ -318,7 +318,7 @@ export default function MyItemsPage() {
       render: (title: string, record) => {
         const primaryImg = record.images?.find((img) => img.isPrimary) ?? record.images?.[0]
         return (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, maxWidth: '100%' }}>
             {primaryImg && (
               <img
                 src={primaryImg.thumbnailUrl ?? primaryImg.url}
@@ -326,8 +326,14 @@ export default function MyItemsPage() {
                 style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }}
               />
             )}
-            <Button type="link" onClick={() => navigate(`/items/${record.id}`)} style={{ padding: 0, textAlign: 'left' }}>
-              {title}
+            <Button
+              type="link"
+              onClick={() => navigate(`/items/${record.id}`)}
+              style={{ padding: 0, textAlign: 'left', maxWidth: '100%', height: 'auto' }}
+            >
+              <Typography.Text ellipsis style={{ maxWidth: '100%', color: 'inherit' }}>
+                {title}
+              </Typography.Text>
             </Button>
           </div>
         )

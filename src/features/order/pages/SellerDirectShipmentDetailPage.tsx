@@ -21,6 +21,7 @@ import {
 import { ArrowLeftOutlined, PrinterOutlined, CameraOutlined } from '@ant-design/icons'
 import dayjs, { type Dayjs } from 'dayjs'
 import { useTranslation } from 'react-i18next'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import {
   useSellerDirectShipmentById,
   useSetDirectShipmentDispatchDetails,
@@ -45,8 +46,9 @@ export default function SellerDirectShipmentDetailPage() {
   const { shipmentId = '' } = useParams<{ shipmentId: string }>()
   const { t } = useTranslation(['order', 'common'])
   const { t: tc } = useTranslation('common')
-  const navigate = useNavigate()
+   const navigate = useNavigate()
   const { message } = App.useApp()
+  const { isMobile } = useBreakpoint()
 
   const { data: shipment, isLoading, error } = useSellerDirectShipmentById(shipmentId)
   const { data: order } = useOrderById(shipment?.orderId ?? '')
@@ -181,12 +183,12 @@ export default function SellerDirectShipmentDetailPage() {
   }
 
   return (
-    <div style={{ maxWidth: 960, margin: '0 auto', padding: '0 12px' }}>
-      <Space style={{ marginBottom: 16 }}>
-        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)}>
+    <div style={{ maxWidth: 960, margin: '0 auto', padding: isMobile ? '0 12px' : '0 24px' }}>
+      <Space style={{ marginBottom: 16, width: '100%', justifyContent: 'space-between' }}>
+        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)} size={isMobile ? 'middle' : 'large'}>
           {tc('action.back', 'Back')}
         </Button>
-        <Button icon={<PrinterOutlined />} onClick={() => setPrintModalOpen(true)}>
+        <Button icon={<PrinterOutlined />} onClick={() => setPrintModalOpen(true)} size={isMobile ? 'middle' : 'large'}>
           {t('directShipment.labels.printLabel', 'Print Label')}
         </Button>
       </Space>
@@ -205,8 +207,8 @@ export default function SellerDirectShipmentDetailPage() {
         }}
       >
         <Flex vertical align="center" gap={12}>
-          <QRCode value={qrPayload} size={220} />
-          <Typography.Title level={3} className="oio-serif" style={{ margin: 0, fontWeight: 600, fontSize: 24 }}>
+          <QRCode value={qrPayload} size={isMobile ? 180 : 220} />
+          <Typography.Title level={isMobile ? 4 : 3} className="oio-serif" style={{ margin: 0, fontWeight: 600, fontSize: isMobile ? 20 : 24 }}>
             #{shipment.shipmentIdDisplay}
           </Typography.Title>
           {shipment.internalTrackingCode && (
@@ -219,7 +221,14 @@ export default function SellerDirectShipmentDetailPage() {
           )}
           <Typography.Text
             copyable={{ text: qrPayload }}
-            style={{ fontFamily: 'var(--font-mono)', fontSize: 12, wordBreak: 'break-all', maxWidth: 480, textAlign: 'center' }}
+            style={{ 
+              fontFamily: 'var(--font-mono)', 
+              fontSize: 12, 
+              wordBreak: 'break-all', 
+              maxWidth: isMobile ? '100%' : 480, 
+              textAlign: 'center',
+              display: 'block'
+            }}
             type="secondary"
           >
             {qrPayload}

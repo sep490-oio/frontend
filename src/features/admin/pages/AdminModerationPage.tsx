@@ -129,21 +129,21 @@ export default function AdminModerationPage() {
       title: tc('tableHeader.status'),
       dataIndex: 'status',
       key: 'status',
-      width: 110,
+      width: 260,
       render: (s: string) => <StatusBadge status={s} />,
     },
     {
       title: t('moderation.columns.assigned'),
       dataIndex: 'assignedTo',
       key: 'assignedTo',
-      width: 110,
+      width: 150,
       render: (v: string | null) => v ? v.slice(0, 8) + '...' : '-',
     },
     {
       title: t('moderation.columns.dispute'),
       dataIndex: 'disputeId',
       key: 'disputeId',
-      width: 80,
+      width: 100,
       render: (v: string | null) => v ? (
         <Button type="link" size="small" onClick={() => navigate(`/admin/disputes/${v}`)}>
           {tc('action.view')}
@@ -154,13 +154,13 @@ export default function AdminModerationPage() {
       title: tc('tableHeader.createdAt'),
       dataIndex: 'createdAt',
       key: 'createdAt',
-      width: 150,
+      width: 170,
       render: (v: string) => formatDateTime(v),
     },
     {
       title: tc('tableHeader.actions'),
       key: 'actions',
-      width: isMobile ? 80 : 200,
+      width: isMobile ? 100 : 240,
       render: (_: unknown, record: ReportDto) => {
         const canAct = record.status === ReportStatus.Open || record.status === ReportStatus.UnderReview
         if (isMobile) {
@@ -219,7 +219,7 @@ export default function AdminModerationPage() {
       title: t('moderation.columns.id'),
       dataIndex: 'disputeNumber',
       key: 'disputeNumber',
-      width: 120,
+      width: 150,
       render: (v: string) => v || '-',
     },
     {
@@ -232,27 +232,27 @@ export default function AdminModerationPage() {
       title: tc('tableHeader.status'),
       dataIndex: 'status',
       key: 'status',
-      width: 110,
+      width: 260,
       render: (s: string) => <StatusBadge status={s} />,
     },
     {
       title: t('moderation.columns.priority'),
       dataIndex: 'priority',
       key: 'priority',
-      width: 100,
+      width: 120,
       render: (s: string) => <StatusBadge status={s} size="small" />,
     },
     {
       title: tc('tableHeader.createdAt'),
       dataIndex: 'createdAt',
       key: 'createdAt',
-      width: 150,
+      width: 170,
       render: (v: string) => formatDateTime(v),
     },
     {
       title: tc('tableHeader.actions'),
       key: 'actions',
-      width: 80,
+      width: 100,
       render: (_: unknown, record: DisputeDto) => (
         <Button size="small" onClick={() => navigate(`/admin/disputes/${record.id}`)}>
           {tc('action.view')}

@@ -254,7 +254,14 @@
     "raiseDispute": "Mở tranh chấp",
     "estimatedPayout": "Dự kiến giải ngân",
     "decisionPrompt": "Bạn có {{hours}} giờ để chấp nhận hoặc mở tranh chấp",
-    "autoReleaseHint": "Sau khi hết thời gian, tiền sẽ được tự động chuyển cho người bán."
+    "autoReleaseHint": "Sau khi hết thời gian, tiền sẽ được tự động chuyển cho người bán.",
+    "filterHolding": "Chỉ đơn đang giữ tiền",
+    "status": {
+      "holding": "Đang giữ tiền",
+      "released_to_seller": "Đã giải ngân",
+      "disputed": "Tranh chấp",
+      "refunded_to_buyer": "Đã hoàn tiền"
+    }
   },
   "buyerOutboundReceive": {
     "activeDispute": "Đang có tranh chấp mở cho đơn hàng này"
@@ -275,6 +282,9 @@
   "statusProcessing": "Chờ lấy hàng",
   "statusPickedUp": "Đã lấy hàng",
   "statusOnDelivering": "Đang giao",
+  "statusDelivered": "Đã giao",
+  "statusCompleted": "Hoàn thành",
+  "statusCancelled": "Đã hủy",
   "carrierName": "Tên nhà vận chuyển",
   "recipient": "Người nhận",
   "phone": "Số điện thoại",

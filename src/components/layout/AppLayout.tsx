@@ -176,10 +176,9 @@ export function AppLayout() {
             height: 72,
             lineHeight: '72px',
             padding: isMobile ? '0 20px' : '0 40px',
-            background: isDark ? 'rgba(5, 7, 10, 0.7)' : 'rgba(253, 251, 247, 0.7)',
+            background: isDark ? 'rgba(5, 7, 10, 0.3)' : 'rgba(253, 251, 247, 0.3)',
             backdropFilter: 'blur(12px)',
             WebkitBackdropFilter: 'blur(12px)',
-            border: '1px solid var(--color-border)',
             borderRadius: 16,
             display: 'flex',
             alignItems: 'center',
@@ -239,7 +238,7 @@ export function AppLayout() {
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  {link.label}
+                  <span>{link.label}</span>
                 </Link>
               ))}
             </nav>
@@ -253,7 +252,7 @@ export function AppLayout() {
             alignItems: 'center',
             justifyContent: 'flex-end',
             gap: isMobile ? 4 : 12,
-            overflowX: 'auto'
+            overflowX: 'hidden'
           }}>
             {/* Search bar (desktop only) */}
             {!isNarrow && (
@@ -262,7 +261,7 @@ export function AppLayout() {
                 height: 36,
                 background: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.03)',
                 borderRadius: 100,
-                border: '1px solid var(--color-border-light)',
+
                 overflow: 'hidden',
                 display: 'flex',
                 alignItems: 'center',
@@ -292,7 +291,7 @@ export function AppLayout() {
                       borderRadius: 4,
                       fontSize: 10,
                       fontFamily: 'var(--font-mono)',
-                      border: '1px solid var(--color-border)',
+
                       boxShadow: '0 1px 0 rgba(0,0,0,0.1)'
                     }}>Ctrl B</div>
                   </div>
@@ -317,7 +316,7 @@ export function AppLayout() {
                   minHeight: 44,
                 }}
               >
-                {i18n.language === 'vi' ? 'EN' : 'VI'}
+                <span>{i18n.language === 'vi' ? 'EN' : 'VI'}</span>
               </Button>
             )}
 
@@ -346,7 +345,7 @@ export function AppLayout() {
                         color: 'var(--color-text-primary)',
                         fontFamily: SANS_FONT
                       }}>
-                        {currentUserData?.profile?.displayName ?? currentUserData?.userName}
+                        <span>{currentUserData?.profile?.displayName ?? currentUserData?.userName}</span>
                         <span style={{ marginLeft: 6, opacity: 0.6, fontSize: 12, fontWeight: 400 }}>
                           (@{currentUserData?.userName})
                         </span>
@@ -469,7 +468,7 @@ export function AppLayout() {
                     : 'transparent',
                 }}
               >
-                {link.label}
+                <span>{link.label}</span>
               </Link>
             ))}
           </nav>
@@ -490,7 +489,7 @@ export function AppLayout() {
                 height: 44,
               }}
             >
-              {i18n.language === 'vi' ? t('common:layout.switchToEn') : t('common:layout.switchToVi')}
+              <span>{i18n.language === 'vi' ? t('common:layout.switchToEn') : t('common:layout.switchToVi')}</span>
             </Button>
           </div>
         </Drawer>
@@ -517,7 +516,7 @@ export function AppLayout() {
             minHeight: 'calc(100vh - 64px - 200px)',
           }}
         >
-          <div key={location.pathname} className="oio-page-enter">
+          <div>
             {isAuthenticated && platformTermNeedsAcceptance && (
               <Alert
                 type="warning"
@@ -545,8 +544,7 @@ export function AppLayout() {
         {/* ─── Footer ─── */}
         <Footer
           style={{
-            background: 'var(--color-bg-primary)',
-            borderTop: '1px solid var(--color-border)',
+            background: 'transparent',
             padding: isMobile ? '32px 16px' : isTablet ? '48px 24px' : '64px 48px',
           }}
         >

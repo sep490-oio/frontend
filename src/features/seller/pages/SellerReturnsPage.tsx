@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Typography, Tabs, Table, Tag, Button, Popconfirm, App, Alert, Empty, Space, Divider } from 'antd'
+import { Typography, Tabs, Tag, Button, Popconfirm, App, Alert, Empty, Space, Divider, Flex } from 'antd'
 import { ScanOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import { useSearchParams, useNavigate } from 'react-router'
@@ -22,6 +22,7 @@ import {
   WarehouseReturnEvidenceCategory,
   WarehouseToSellerShipmentStatus,
 } from '@/types/enums'
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
@@ -73,12 +74,14 @@ function WarehouseReturnsTab() {
       title: t('returns.columns.item', 'Item'),
       key: 'item',
       render: (_: unknown, record) => (
-        <div>
-          <Typography.Text strong>{record.itemTitle ?? record.warehouseItemId.slice(0, 8) + '…'}</Typography.Text>
+        <Flex vertical gap={4} style={{ maxWidth: '100%' }}>
+          <Typography.Text strong ellipsis style={{ maxWidth: '100%' }}>
+            {record.itemTitle ?? record.warehouseItemId.slice(0, 8) + '…'}
+          </Typography.Text>
           <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', fontFamily: 'var(--font-mono)' }}>
             {record.warehouseItemId.slice(0, 8)}…
           </div>
-        </div>
+        </Flex>
       ),
     },
     {
@@ -171,7 +174,8 @@ function WarehouseReturnsTab() {
 
   return (
     <>
-      <Table<WarehouseToSellerShipmentDto>
+      <ResponsiveTable<WarehouseToSellerShipmentDto>
+        mobileMode="card"
         rowKey="id"
         columns={columns}
         dataSource={data ?? []}
@@ -211,7 +215,6 @@ function WarehouseReturnsTab() {
           ),
         }}
         pagination={false}
-        scroll={{ x: isMobile ? 'max-content' : undefined }}
       />
       <ReturnQrScanModal
         open={scanOpen}
@@ -382,7 +385,8 @@ function OrderReturnsTab() {
 
   return (
     <>
-      <Table<OrderDto>
+      <ResponsiveTable<OrderDto>
+        mobileMode="card"
         rowKey="id"
         columns={columns}
         dataSource={activeReturns}
@@ -432,7 +436,6 @@ function OrderReturnsTab() {
           emptyText: <Empty description={t('returns.emptyOrder', 'No active buyer returns.')} />,
         }}
         pagination={false}
-        scroll={{ x: isMobile ? 'max-content' : undefined }}
       />
       <ReturnQrScanModal
         open={scanOpen}

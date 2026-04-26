@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuctionDetail } from '@/features/auction/api'
 import { PriceHistoryChart } from '@/features/auction/components/PriceHistoryChart'
 import { StatusBadge } from '@/components/ui/StatusBadge'
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { formatCurrency, formatDateTime } from '@/utils/format'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { MONO_FONT, SERIF_FONT } from '@/styles/tokens'
@@ -60,7 +61,11 @@ export default function SellerAuctionDashboardPage() {
       title: t('bidder', 'Bidder'),
       dataIndex: 'bidderDisplayName',
       key: 'bidder',
-      render: (text: string) => <Text strong>{text || 'Anonymous'}</Text>,
+      render: (text: string) => (
+        <Typography.Text strong ellipsis style={{ maxWidth: 120 }}>
+          {text || 'Anonymous'}
+        </Typography.Text>
+      ),
     },
     {
       title: t('amount', 'Amount'),
@@ -94,13 +99,15 @@ export default function SellerAuctionDashboardPage() {
         </Button>
       </Space>
 
-      <Flex justify="space-between" align="center" style={{ marginBottom: 32 }}>
+      <Flex justify="space-between" align="center" wrap="wrap" gap={16} style={{ marginBottom: 32 }}>
         <div>
-          <Title level={2} style={{ margin: 0, fontFamily: SERIF_FONT }}>
+          <Title level={isMobile ? 3 : 2} style={{ margin: 0, fontFamily: SERIF_FONT }}>
             <DashboardOutlined style={{ marginRight: 12, color: 'var(--color-accent)' }} />
             {t('sellerDashboard.title', 'Auction Analytics')}
           </Title>
-          <Text type="secondary">{item.title}</Text>
+          <Text type="secondary" style={{ display: 'block', maxWidth: isMobile ? '80vw' : '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {item.title}
+          </Text>
         </div>
         <StatusBadge status={auction.status} />
       </Flex>
@@ -170,7 +177,8 @@ export default function SellerAuctionDashboardPage() {
             bordered={false}
             style={{ borderRadius: 20, boxShadow: 'var(--shadow-sm)', marginTop: 24 }}
           >
-            <Table
+            <ResponsiveTable
+              mobileMode="card"
               dataSource={recentBids}
               columns={bidColumns}
               rowKey="id"

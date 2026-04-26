@@ -99,7 +99,7 @@ export default function AboutPage() {
             OIO
           </div>
           {[
-            { number: '2024', label: t('about.statFounded') },
+            { number: '2026', label: t('about.statFounded') },
             { number: '10,000+', label: t('about.statItems') },
             { number: '99.8%', label: t('about.statSatisfaction') },
           ].map((stat) => (

@@ -1,4 +1,4 @@
-import { Row, Col, Card, Button, Space, Spin, Empty, Tag } from 'antd'
+import { Row, Col, Card, Button, Space, Spin, Empty, Tag, Typography } from 'antd'
 import {
   ShoppingOutlined,
   ThunderboltOutlined,
@@ -197,9 +197,24 @@ export default function SellerDashboardPage() {
         <Button
           type="link"
           onClick={() => navigate(`/auctions/${record.id}`)}
-          style={{ padding: 0, fontWeight: 500 }}
+          style={{
+            padding: 0,
+            fontWeight: 500,
+            maxWidth: '100%',
+            height: 'auto',
+            textAlign: isMobile ? 'right' : 'left',
+          }}
         >
-          {text ?? '-'}
+          <Typography.Text
+            ellipsis
+            style={{
+              maxWidth: '100%',
+              color: 'inherit',
+              display: 'block',
+            }}
+          >
+            {text ?? '-'}
+          </Typography.Text>
         </Button>
       ),
     },

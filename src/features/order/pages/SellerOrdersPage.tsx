@@ -17,7 +17,7 @@ import { useSelfShip, useBookOutbound } from '@/features/warehouse/api'
 import type { SelfShipRequest, BookOutboundRequest } from '@/features/warehouse/api'
 import { OrderItemSummary } from '@/features/order/components/OrderItemSummary'
 import { StatusBadge } from '@/components/ui/StatusBadge'
-import { OrderStatus } from '@/types/enums'
+import { OrderStatus, EscrowStatus } from '@/types/enums'
 import type { OrderDto } from '@/types'
 import { SANS_FONT } from '@/styles/tokens'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
@@ -43,14 +43,18 @@ export default function SellerOrdersPage() {
 
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
-  const [statusFilter, setStatusFilter] = useState<'paid' | 'processing' | 'picked_up' | 'on_delivering' | 'all'>('paid')
+  const [escrowFilter, setEscrowFilter] = useState<string>('all')
   const [shipModalOrder, setShipModalOrder] = useState<OrderDto | null>(null)
   const [bookModalOrder, setBookModalOrder] = useState<OrderDto | null>(null)
   const [shipForm] = Form.useForm<SelfShipRequest>()
   const [bookForm] = Form.useForm<BookOutboundRequest>()
 
   const { data, isLoading } = useSellerDirectShipOrders(
-    { pageNumber: page, pageSize },
+    { 
+      pageNumber: page, 
+      pageSize, 
+      escrowStatus: escrowFilter === 'all' ? undefined : escrowFilter
+    },
     { refetchInterval: 30000 },
   )
 
@@ -77,9 +81,9 @@ export default function SellerOrdersPage() {
 
   // Client-side status filter — BE returns paid+processing; we narrow on the UI.
   const rawOrders = data?.items ?? []
-  const orders = statusFilter === 'all'
+  const orders = escrowFilter === 'all'
     ? rawOrders
-    : rawOrders.filter((o) => o.status === statusFilter)
+    : rawOrders.filter((o) => o.escrowStatus === escrowFilter)
 
   const handleConfirm = (order: OrderDto) => {
     if (!order.shipping?.isStructured) {
@@ -222,6 +226,7 @@ export default function SellerOrdersPage() {
           <Flex justify="space-between" align="center" wrap="wrap" gap={8}>
             <Flex gap={8} align="center">
               <StatusBadge status={order.status} />
+              {order.escrowStatus && <StatusBadge status={order.escrowStatus} />}
               {renderSlaBadge(order)}
               <Typography.Text type="secondary" style={{ fontSize: 12, fontFamily: 'var(--font-mono)' }}>
                 {order.orderNumber}
@@ -375,14 +380,14 @@ export default function SellerOrdersPage() {
       </h1>
 
       <Tabs
-        activeKey={statusFilter}
-        onChange={(k) => { setStatusFilter(k as typeof statusFilter); setPage(1) }}
+        activeKey={escrowFilter}
+        onChange={(k) => { setEscrowFilter(k); setPage(1) }}
         items={[
-          { key: 'paid', label: <span><Tag color="gold">{t('statusPaid', 'Paid')}</Tag></span> },
-          { key: 'processing', label: <span><Tag color="blue">{t('statusProcessing', 'Processing')}</Tag></span> },
-          { key: 'picked_up', label: <span><Tag color="cyan">{t('statusPickedUp', 'Picked Up')}</Tag></span> },
-          { key: 'on_delivering', label: <span><Tag color="geekblue">{t('statusOnDelivering', 'On Delivering')}</Tag></span> },
           { key: 'all', label: t('all', 'All') },
+          { key: EscrowStatus.Holding, label: <span><Tag color="gold">{t('escrow.status.holding', 'Holding')}</Tag></span> },
+          { key: EscrowStatus.ReleasedToSeller, label: <span><Tag color="green">{t('escrow.status.released_to_seller', 'Released')}</Tag></span> },
+          { key: EscrowStatus.Disputed, label: <span><Tag color="red">{t('escrow.status.disputed', 'Disputed')}</Tag></span> },
+          { key: EscrowStatus.RefundedToBuyer, label: <span><Tag color="default">{t('escrow.status.refunded_to_buyer', 'Refunded')}</Tag></span> },
         ]}
         style={{ marginBottom: 16 }}
       />

@@ -421,8 +421,10 @@ export function AdminLayout() {
           background: 'var(--color-bg-primary)',
         }}
       >
-        <Content style={{ padding: isMobile ? 12 : isTablet ? 20 : 32 }}>
-          <Outlet />
+        <Content style={{ padding: isMobile ? 16 : isTablet ? 24 : 40 }}>
+          <div style={{ maxWidth: 1400, margin: '0 auto', background: 'var(--color-bg-container)', padding: isMobile ? 16 : 24, borderRadius: 12, boxShadow: 'var(--shadow-sm)' }}>
+            <Outlet />
+          </div>
         </Content>
       </main>
     </div>

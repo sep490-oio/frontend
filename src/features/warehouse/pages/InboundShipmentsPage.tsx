@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Typography, Button, Space, Tabs, Tag, Table } from 'antd'
+import { Typography, Button, Space, Tabs, Tag } from 'antd'
 import { PlusOutlined, EyeOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useInboundPackages } from '@/features/warehouse/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { getProviderLabel } from '@/features/warehouse/utils/shipmentLabels'
 import { formatCurrency, formatDateTime } from '@/utils/format'
 import type { InboundPackageDto } from '@/types'
@@ -50,8 +51,14 @@ export default function InboundShipmentsPage() {
       title: t('tracking', 'Tracking'),
       key: 'tracking',
       render: (_: unknown, r) => (
-        <Button type="link" style={{ padding: 0 }} onClick={() => gotoPackage(r.clientOrderCode)}>
-          {r.carrierTrackingNumber || r.clientOrderCode}
+        <Button
+          type="link"
+          style={{ padding: 0, maxWidth: '100%', textAlign: 'left', height: 'auto' }}
+          onClick={() => gotoPackage(r.clientOrderCode)}
+        >
+          <Typography.Text ellipsis style={{ maxWidth: '100%', color: 'inherit' }}>
+            {r.carrierTrackingNumber || r.clientOrderCode}
+          </Typography.Text>
         </Button>
       ),
     },
@@ -123,7 +130,8 @@ export default function InboundShipmentsPage() {
         }))}
       />
 
-      <Table<InboundPackageDto>
+      <ResponsiveTable<InboundPackageDto>
+        mobileMode="card"
         rowKey="clientOrderCode"
         columns={columns}
         dataSource={data?.items ?? []}

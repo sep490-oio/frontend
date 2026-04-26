@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, Space, Modal, Flex, Tooltip, Input, message, DatePicker, Form, Card, List } from 'antd'
+import { Button, Space, Modal, Flex, Tooltip, Input, message, DatePicker, Form, Card, List, Typography } from 'antd'
 import {
   PlusOutlined,
   EditOutlined,
@@ -346,12 +346,18 @@ export default function MyAuctionsPage() {
       key: 'itemTitle',
       ellipsis: true,
       render: (title: string, record) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, maxWidth: '100%' }}>
           {record.primaryImageUrl && (
             <img src={record.primaryImageUrl} alt="" style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }} />
           )}
-          <Button type="link" onClick={() => navigate(`/auctions/${record.id}`)} style={{ padding: 0, textAlign: 'left' }}>
-            {title}
+          <Button
+            type="link"
+            onClick={() => navigate(`/auctions/${record.id}`)}
+            style={{ padding: 0, textAlign: 'left', maxWidth: '100%', height: 'auto' }}
+          >
+            <Typography.Text ellipsis style={{ maxWidth: '100%', color: 'inherit' }}>
+              {title}
+            </Typography.Text>
           </Button>
         </div>
       ),
@@ -529,10 +535,12 @@ export default function MyAuctionsPage() {
                     <Flex justify="space-between" align="flex-start" gap={8}>
                       <Button
                         type="link"
-                        style={{ padding: 0, fontWeight: 600, fontSize: 14, textAlign: 'left', height: 'auto', lineHeight: 1.3 }}
+                        style={{ padding: 0, fontWeight: 600, fontSize: 14, textAlign: 'left', height: 'auto', lineHeight: 1.3, maxWidth: 'calc(100% - 100px)' }}
                         onClick={() => navigate(`/auctions/${record.id}`)}
                       >
-                        {record.itemTitle}
+                        <Typography.Text ellipsis style={{ color: 'inherit' }}>
+                          {record.itemTitle}
+                        </Typography.Text>
                       </Button>
                       <StatusBadge status={record.status} />
                     </Flex>

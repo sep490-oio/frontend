@@ -93,7 +93,7 @@ export default function AdminMonitoringPage() {
       title: t('monitoring.type', 'Type'),
       dataIndex: 'alertType',
       key: 'alertType',
-      width: 190,
+      width: 220,
       render: (type: string) => (
         <Typography.Text strong style={{ fontSize: 13 }}>
           {formatAlertType(type)}
@@ -104,7 +104,7 @@ export default function AdminMonitoringPage() {
       title: t('monitoring.severity', 'Severity'),
       dataIndex: 'severity',
       key: 'severity',
-      width: 110,
+      width: 160,
       
       ...(!isMobile ? {
         filters: [
@@ -128,13 +128,13 @@ export default function AdminMonitoringPage() {
       title: t('monitoring.status', 'Status'),
       dataIndex: 'status',
       key: 'status',
-      width: 120,
+      width: 220,
       render: (status: string) => <StatusBadge status={status} />,
     },
     {
       title: t('monitoring.entity', 'Entity'),
       key: 'entity',
-      width: 130,
+      width: 160,
       render: (_, record) => {
         const hasRoute = !!ENTITY_ROUTES[record.entityType?.toLowerCase()]
         return (
@@ -171,7 +171,7 @@ export default function AdminMonitoringPage() {
       title: t('monitoring.createdAt', 'Created'),
       dataIndex: 'createdAt',
       key: 'createdAt',
-      width: 150,
+      width: 180,
       sorter: (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
       defaultSortOrder: 'descend',
       render: (date: string) => (
@@ -183,7 +183,7 @@ export default function AdminMonitoringPage() {
     {
       title: t('monitoring.actions', 'Actions'),
       key: 'actions',
-      width: 120,
+      width: 160,
       render: (_, record) => (
         <Space size={4}>
           <Tooltip title={t('monitoring.viewDetails', 'View details')}>

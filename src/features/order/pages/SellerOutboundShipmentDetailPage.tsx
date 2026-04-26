@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router'
 import { Card, Descriptions, Spin, Alert, Button, Space, Typography, Timeline } from 'antd'
 import { ArrowLeftOutlined, LinkOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 
 import { useSellerOutboundShipmentById } from '@/features/order/api'
 import { OrderItemSummary } from '@/features/order/components/OrderItemSummary'
@@ -22,6 +23,7 @@ export default function SellerOutboundShipmentDetailPage() {
   const { id = '' } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { t } = useTranslation(['warehouse', 'common'])
+  const { isMobile } = useBreakpoint()
 
   const { data: shipment, isLoading, error } = useSellerOutboundShipmentById(id)
 
@@ -59,14 +61,14 @@ export default function SellerOutboundShipmentDetailPage() {
   }
 
   return (
-    <div style={{ maxWidth: 960, margin: '0 auto' }}>
+    <div style={{ maxWidth: 960, margin: '0 auto', padding: isMobile ? '0 12px' : '0 24px' }}>
       <Space style={{ marginBottom: 16 }}>
         <Button icon={<ArrowLeftOutlined />} onClick={handleBack}>
           {t('common:action.back', 'Back')}
         </Button>
       </Space>
 
-      <h1 style={{ fontFamily: SERIF_FONT, fontWeight: 400, fontSize: 28, marginBottom: 16 }}>
+      <h1 style={{ fontFamily: SERIF_FONT, fontWeight: 400, fontSize: isMobile ? 22 : 28, marginBottom: 16 }}>
         {t('warehouse:outboundShipment', 'Outbound Shipment')}
       </h1>
 

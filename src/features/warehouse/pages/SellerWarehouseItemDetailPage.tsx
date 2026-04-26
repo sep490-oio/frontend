@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Card, Typography, Space, Button, Timeline, Row, Col, Image, Tag, Spin, Alert, message } from 'antd'
-import { WarningOutlined } from '@ant-design/icons'
+import { Card, Typography, Space, Button, Timeline, Row, Col, Image, Tag, Spin, Alert, message, Flex } from 'antd'
+import { WarningOutlined, ArrowLeftOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useNavigate, useParams } from 'react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { useSellerWarehouseItem } from '@/features/warehouse/api'
@@ -20,6 +21,7 @@ export default function SellerWarehouseItemDetailPage() {
   const confirmCondition = useConfirmInspectedCondition()
   const [disputeModalOpen, setDisputeModalOpen] = useState(false)
   const [disputeCaseType, setDisputeCaseType] = useState<string | undefined>()
+  const { isMobile } = useBreakpoint()
 
   const handleConfirmCondition = () => {
     if (!data) return
@@ -117,30 +119,30 @@ export default function SellerWarehouseItemDetailPage() {
         boxShadow: 'var(--shadow-sm)'
       }}
     >
-      <Space align="start" size={16} style={{ width: '100%' }}>
+      <Flex align="start" gap={16} vertical={isMobile} style={{ width: '100%' }}>
         {data.itemImageUrl && (
           <Image
             src={data.itemImageUrl}
             alt={data.itemTitle ?? ''}
-            width={96}
-            height={96}
-            style={{ objectFit: 'cover', borderRadius: 8 }}
+            width={isMobile ? 80 : 96}
+            height={isMobile ? 80 : 96}
+            style={{ objectFit: 'cover', borderRadius: 8, flexShrink: 0 }}
           />
         )}
-        <div style={{ flex: 1 }}>
-          <Typography.Title level={4} className="oio-serif" style={{ marginTop: 0, marginBottom: 4, fontWeight: 400, fontSize: 20 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <Typography.Title level={isMobile ? 5 : 4} className="oio-serif" style={{ marginTop: 0, marginBottom: 4, fontWeight: 400, fontSize: isMobile ? 18 : 20 }}>
             {data.itemTitle ?? t('untitledItem', 'Untitled item')}
           </Typography.Title>
-          <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+          <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
             {data.itemId}
           </Typography.Text>
           <div style={{ marginTop: 8 }}>
-            <Button type="link" style={{ padding: 0 }} onClick={() => navigate(`/items/${data.itemId}`)}>
+            <Button type="link" style={{ padding: 0, fontSize: 13 }} onClick={() => navigate(`/items/${data.itemId}`)}>
               {t('viewOriginalItem', 'View original item')} →
             </Button>
           </div>
         </div>
-      </Space>
+      </Flex>
     </Card>
   )
 
@@ -408,8 +410,8 @@ export default function SellerWarehouseItemDetailPage() {
     <div>
       {msgCtx}
       <Space style={{ marginBottom: 16 }}>
-        <Button onClick={() => navigate('/seller/warehouse/items')}>
-          {t('backToList', '← Back to list')}
+        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/seller/warehouse/items')}>
+          {t('backToList', 'Back to list')}
         </Button>
       </Space>
       <Space direction="vertical" size={16} style={{ width: '100%' }}>

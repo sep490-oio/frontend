@@ -22,6 +22,7 @@ import {
 } from 'antd'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
 import {
   useInboundPackage,
@@ -42,6 +43,7 @@ export default function SellerInboundPackageDetailPage() {
   const navigate = useNavigate()
   const prefix = useRoutePrefix()
   const { message } = App.useApp()
+  const { isMobile } = useBreakpoint()
 
   const { data, isLoading, isError } = useInboundPackage(clientOrderCode)
   const cancelPkg = useCancelInboundPackage()
@@ -133,15 +135,15 @@ export default function SellerInboundPackageDetailPage() {
         </Button>
       </Space>
 
-      <Space align="center" style={{ marginBottom: 16, justifyContent: 'space-between', width: '100%' }}>
+      <Flex align="center" justify="space-between" wrap="wrap" gap={8} style={{ marginBottom: 16 }}>
         <Space direction="vertical" size={0}>
-          <Typography.Title level={3} style={{ margin: 0 }}>
+          <Typography.Title level={isMobile ? 4 : 3} style={{ margin: 0 }}>
             {t('inboundPackage', 'Inbound Package')}
           </Typography.Title>
-          <Typography.Text type="secondary">{data.clientOrderCode}</Typography.Text>
+          <Typography.Text type="secondary" style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? 12 : 14 }}>{data.clientOrderCode}</Typography.Text>
         </Space>
         <StatusBadge status={data.displayStatus} />
-      </Space>
+      </Flex>
 
       {/* Seller Actions */}
       <Card style={{ marginBottom: 16 }}>
@@ -177,6 +179,19 @@ export default function SellerInboundPackageDetailPage() {
       </Card>
 
       <Row gutter={[16, 16]}>
+        {/* QR Code on top for mobile */}
+        {isMobile && (
+          <Col span={24}>
+            <Card title={t('packageQr', 'Package QR')}>
+              <Space direction="vertical" align="center" style={{ width: '100%' }}>
+                <QRCode value={data.packageQrToken || data.clientOrderCode} size={160} />
+                <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                  {t('scanAtWarehouse', 'Scan at warehouse')}
+                </Typography.Text>
+              </Space>
+            </Card>
+          </Col>
+        )}
         <Col xs={24} md={16}>
           {/* Summary */}
           <Card title={t('packageSummary', 'Summary')} style={{ marginBottom: 16 }}>
@@ -281,16 +296,18 @@ export default function SellerInboundPackageDetailPage() {
           </Card>
         </Col>
 
-        <Col xs={24} md={8}>
-          <Card title={t('packageQr', 'Package QR')}>
-            <Space direction="vertical" align="center" style={{ width: '100%' }}>
-              <QRCode value={data.packageQrToken || data.clientOrderCode} size={180} />
-              <Typography.Text type="secondary">
-                {t('scanAtWarehouse', 'Scan at warehouse')}
-              </Typography.Text>
-            </Space>
-          </Card>
-        </Col>
+        {!isMobile && (
+          <Col xs={24} md={8}>
+            <Card title={t('packageQr', 'Package QR')}>
+              <Space direction="vertical" align="center" style={{ width: '100%' }}>
+                <QRCode value={data.packageQrToken || data.clientOrderCode} size={180} />
+                <Typography.Text type="secondary">
+                  {t('scanAtWarehouse', 'Scan at warehouse')}
+                </Typography.Text>
+              </Space>
+            </Card>
+          </Col>
+        )}
       </Row>
 
       <Modal

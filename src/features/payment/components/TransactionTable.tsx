@@ -233,7 +233,7 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
           <Flex vertical gap={12} style={{ padding: '4px 0' }}>
             <Flex justify="space-between" align="flex-start">
               <div style={{ flex: 1, paddingRight: 12 }}>
-                <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--color-text-primary)', marginBottom: 4 }}>
+                <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--color-text-primary)', marginBottom: 4, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {record.description || '-'}
                 </div>
                 <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)', fontFamily: MONO_FONT }}>
