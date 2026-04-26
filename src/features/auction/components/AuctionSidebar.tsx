@@ -559,7 +559,7 @@ export function AuctionSidebar({
 
   // ── Main content ─────────────────────────────────────────────────
   const sidebarContent = (
-    <div style={{ width: '100%' }}>
+    <div className="oio-widget" style={{ width: '100%', marginBottom: 0 }}>
       {/* 1. Price header */}
       <AuctionPriceHeader
         auction={auction}

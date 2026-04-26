@@ -42,6 +42,7 @@ import { useTranslation } from 'react-i18next'
 import { useAppSelector } from '@/app/store'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useTheme } from '@/hooks/useTheme'
 import { useSearchAuctions } from '@/features/auction/api'
 import { AuctionStatus } from '@/types/enums'
 
@@ -95,6 +96,7 @@ export const SpotlightSearchModal: React.FC = () => {
   const navigate = useNavigate()
   const { isMobile } = useBreakpoint()
   
+  const { isDark } = useTheme()
   const [isOpen, setIsOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -631,13 +633,27 @@ export const SpotlightSearchModal: React.FC = () => {
       className="spotlight-modal"
       centered={!isMobile}
       styles={{
-        mask: { backdropFilter: 'blur(4px)', background: 'rgba(0, 0, 0, 0.45)' },
-        body: { padding: 0, overflow: 'hidden' }
+        mask: { 
+          backdropFilter: 'blur(8px)', 
+          background: isDark ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.2)' 
+        },
+        body: { 
+          padding: 0, 
+          overflow: 'hidden', 
+          background: 'transparent'
+        }
       }}
       destroyOnClose
     >
-      <div style={{ display: 'flex', flexDirection: 'column' }} onKeyDown={handleModalKeyDown}>
-        <div style={{ padding: isMobile ? '12px 16px' : '16px 20px', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', background: 'transparent' }} onKeyDown={handleModalKeyDown}>
+        <div style={{ 
+          padding: isMobile ? '16px 20px' : '20px 24px', 
+          borderBottom: '1px solid var(--color-border)', 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 14,
+          background: 'transparent'
+        }}>
           {!isMobile && <SearchOutlined style={{ fontSize: 20, color: 'var(--color-text-secondary)' }} />}
           <Input 
             ref={inputRef}
@@ -783,7 +799,7 @@ export const SpotlightSearchModal: React.FC = () => {
             borderTop: '1px solid var(--color-border)', 
             display: 'flex', 
             alignItems: 'center', 
-            background: 'var(--color-bg-surface)', 
+            background: 'transparent', 
             fontSize: 12, 
             color: 'var(--color-text-secondary)',
             gap: 16

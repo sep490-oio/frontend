@@ -13,6 +13,7 @@ import FilterWidget from '@/components/ui/FilterWidget'
 import { AuctionStatus, AuctionType } from '@/types/enums'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useTheme } from '@/hooks/useTheme'
 import type { AuctionFilterParams, AuctionStatusGroup, PagedList, AuctionListItemDto } from '@/types'
 import { SERIF_FONT } from '@/styles/tokens'
 
@@ -71,6 +72,7 @@ export default function BrowseAuctionsPage() {
   const { t } = useTranslation('auction')
   const { t: tc } = useTranslation('common')
   const { isMobile, isTablet } = useBreakpoint()
+  const { isDark } = useTheme()
   const [searchParams, setSearchParams] = useSearchParams()
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false)
 
@@ -428,7 +430,7 @@ export default function BrowseAuctionsPage() {
           >
             <div style={{
               marginBottom: 24,
-              background: 'rgba(255, 255, 255, 0.05)',
+              background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
               borderRadius: 100,
               border: '1px solid var(--color-border-light)',
               overflow: 'hidden',
@@ -611,14 +613,15 @@ export default function BrowseAuctionsPage() {
               value={inputValue}
               onChange={handleInputChange}
               onSelect={handleSelect}
-              style={{ flex: 1, borderRadius: 100, overflow: 'hidden' }}
+              style={{ flex: 1, borderRadius: 100, overflow: 'hidden', background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)', border: '1px solid var(--color-border-light)' }}
               popupMatchSelectWidth={false}
             >
               <Input
                 prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
                 placeholder={t('searchPlaceholder')}
                 onPressEnter={handlePressEnter}
-                style={{ borderRadius: 100, height: 44, borderColor: 'var(--color-border)' }}
+                variant="borderless"
+                style={{ height: 44 }}
               />
             </AutoComplete>
             <Button

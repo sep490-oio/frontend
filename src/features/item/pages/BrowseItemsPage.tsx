@@ -8,6 +8,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge'
 import { CountdownTimer } from '@/components/ui/CountdownTimer'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useTheme } from '@/hooks/useTheme'
 import { SERIF_FONT } from '@/styles/tokens'
 import FilterWidget from '@/components/ui/FilterWidget'
 
@@ -19,6 +20,7 @@ export default function BrowseItemsPage() {
   const { t, i18n } = useTranslation('item')
   const { t: tc } = useTranslation('common')
   const { isMobile, isTablet } = useBreakpoint()
+  const { isDark } = useTheme()
   const isNarrow = isMobile || isTablet
   const navigate = useNavigate()
 
@@ -182,7 +184,7 @@ export default function BrowseItemsPage() {
             value={inputValue}
             onChange={handleInputChange}
             onSelect={handleSelect}
-            style={{ flex: 1, borderRadius: 100, overflow: 'hidden' }}
+            style={{ flex: 1, borderRadius: 100, overflow: 'hidden', background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)', border: '1px solid var(--color-border-light)' }}
             popupMatchSelectWidth={false}
           >
             <Input
@@ -190,8 +192,9 @@ export default function BrowseItemsPage() {
               placeholder={t('browse.searchPlaceholder')}
               onPressEnter={handlePressEnter}
               allowClear
+              variant="borderless"
               onClear={() => handleInputChange('')}
-              style={{ borderRadius: 100, height: 44, borderColor: 'var(--color-border)' }}
+              style={{ height: 44 }}
             />
           </AutoComplete>
           <Select
@@ -208,24 +211,33 @@ export default function BrowseItemsPage() {
       <Flex gap={32} align="flex-start">
         {!isNarrow && (
           <div className="hide-scrollbar" style={{ width: 280, flexShrink: 0, position: 'sticky', top: 100, maxHeight: 'calc(100vh - 120px)', overflowY: 'auto', paddingRight: 4 }}>
-            <AutoComplete
-              options={suggestOptions}
-              value={inputValue}
-              onChange={handleInputChange}
-              onSelect={handleSelect}
-              style={{ width: '100%', marginBottom: 20 }}
-              popupMatchSelectWidth={false}
-            >
-              <Input
-                prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)', marginRight: 4 }} />}
-                placeholder={t('browse.searchPlaceholder')}
-                onPressEnter={handlePressEnter}
-                allowClear
-                onClear={() => handleInputChange('')}
-                size="large"
-                style={{ borderRadius: 100, height: 48, borderColor: 'var(--color-border)', fontSize: 15 }}
-              />
-            </AutoComplete>
+            <div style={{
+              background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+              borderRadius: 100,
+              border: '1px solid var(--color-border-light)',
+              overflow: 'hidden',
+              marginBottom: 20
+            }}>
+              <AutoComplete
+                options={suggestOptions}
+                value={inputValue}
+                onChange={handleInputChange}
+                onSelect={handleSelect}
+                style={{ width: '100%' }}
+                popupMatchSelectWidth={false}
+              >
+                <Input
+                  prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)', marginRight: 4 }} />}
+                  placeholder={t('browse.searchPlaceholder')}
+                  onPressEnter={handlePressEnter}
+                  allowClear
+                  onClear={() => handleInputChange('')}
+                  size="large"
+                  variant="borderless"
+                  style={{ height: 48, fontSize: 15 }}
+                />
+              </AutoComplete>
+            </div>
 
             <FilterWidget title={t('browse.allCategories', 'Danh mục')} icon={<AppstoreOutlined />}>
               <Select

@@ -5,6 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useBrowseSellers } from '@/features/seller/api'
+import { useTheme } from '@/hooks/useTheme'
 
 import { SERIF_FONT, MONO_FONT } from '@/styles/tokens'
 import FilterWidget from '@/components/ui/FilterWidget'
@@ -23,6 +24,7 @@ export default function BrowseSellersPage() {
   const { t } = useTranslation('seller')
   const { t: tc } = useTranslation('common')
   const { isMobile, isTablet } = useBreakpoint()
+  const { isDark } = useTheme()
   const isNarrow = isMobile || isTablet
 
   const [searchParams, setSearchParams] = useSearchParams()
@@ -96,18 +98,23 @@ export default function BrowseSellersPage() {
 
       {/* ── Search Bar (Mobile) ────────────────────────────────────────────── */}
       {isMobile && (
-        <div style={{ marginBottom: 20 }}>
+        <div style={{ 
+          marginBottom: 20,
+          background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+          borderRadius: 100,
+          border: '1px solid var(--color-border-light)',
+          overflow: 'hidden'
+        }}>
           <Input
             prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
             placeholder={t('browse.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onPressEnter={() => setPage(1)}
+            variant="borderless"
             style={{
               width: '100%',
-              borderRadius: 100,
               height: 44,
-              borderColor: 'var(--color-border)',
             }}
           />
         </div>
@@ -126,23 +133,29 @@ export default function BrowseSellersPage() {
             paddingRight: 8,
             scrollbarWidth: 'thin'
           }}>
-            <Input
-              prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)', marginRight: 4 }} />}
-              placeholder={t('browse.searchPlaceholder', 'Tìm kiếm cửa hàng...')}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onPressEnter={() => setPage(1)}
-              size="large"
-              allowClear
-              style={{
-                width: '100%',
-                borderRadius: 100,
-                height: 48,
-                borderColor: 'var(--color-border)',
-                marginBottom: 20,
-                fontSize: 15
-              }}
-            />
+            <div style={{
+              background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+              borderRadius: 100,
+              border: '1px solid var(--color-border-light)',
+              overflow: 'hidden',
+              marginBottom: 20
+            }}>
+              <Input
+                prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)', marginRight: 4 }} />}
+                placeholder={t('browse.searchPlaceholder', 'Tìm kiếm cửa hàng...')}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onPressEnter={() => setPage(1)}
+                size="large"
+                allowClear
+                variant="borderless"
+                style={{
+                  width: '100%',
+                  height: 48,
+                  fontSize: 15
+                }}
+              />
+            </div>
 
             <FilterWidget title={t('browse.filterRating', 'Đánh giá cửa hàng')} noPadding>
               <div style={{ padding: '12px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>

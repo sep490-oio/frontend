@@ -41,9 +41,7 @@ export default function AuctionListPage() {
           width: '100vw',
           marginLeft: 'calc(50% - 50vw)',
           padding: isMobile ? '36px 16px 28px' : isTablet ? '48px 20px' : '64px 24px',
-          background: isDark
-            ? 'linear-gradient(135deg, #05070a 0%, #0a0e17 50%, #0d1629 100%)'
-            : 'linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 50%, #DBEAFE 100%)',
+          background: 'transparent',
         }}
       >
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
@@ -279,7 +277,7 @@ export default function AuctionListPage() {
       ) : null}
 
       {/* ── SECTION 2: CATEGORIES ── */}
-      <section style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)', padding: sectionPadding, background: 'var(--color-bg-surface)' }}>
+      <section style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)', padding: sectionPadding, background: 'transparent' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: isMobile ? 24 : 40 }}>
             <div
@@ -446,7 +444,7 @@ export default function AuctionListPage() {
             margin: '0 auto',
             padding: isMobile ? '28px 20px' : '40px 48px',
             borderRadius: 16,
-            background: 'var(--color-accent-light)',
+            background: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
             border: '1px solid var(--color-border)',
             textAlign: 'center',
           }}

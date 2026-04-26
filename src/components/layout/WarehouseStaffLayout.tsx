@@ -134,7 +134,7 @@ export function WarehouseStaffLayout() {
     })
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--color-bg-primary)' }}>
+    <div style={{ minHeight: '100vh', background: 'transparent' }}>
       {/* ── Sidebar ── */}
       <aside
         style={{
@@ -144,6 +144,8 @@ export function WarehouseStaffLayout() {
           bottom: 0,
           width: sidebarWidth,
           background: 'var(--color-bg-card)',
+          backdropFilter: 'var(--oio-blur)',
+          WebkitBackdropFilter: 'var(--oio-blur)',
           borderRight: '1px solid var(--color-border)',
           transition: 'width 200ms ease',
           display: isMobile ? 'none' : 'flex',
@@ -260,6 +262,8 @@ export function WarehouseStaffLayout() {
           right: 0,
           height: HEADER_HEIGHT,
           background: 'var(--color-bg-card)',
+          backdropFilter: 'var(--oio-blur)',
+          WebkitBackdropFilter: 'var(--oio-blur)',
           borderBottom: '1px solid var(--color-border)',
           display: 'flex',
           alignItems: 'center',
@@ -392,7 +396,7 @@ export function WarehouseStaffLayout() {
           marginTop: HEADER_HEIGHT,
           transition: 'margin-left 200ms ease',
           minHeight: `calc(100vh - ${HEADER_HEIGHT}px)`,
-          background: 'var(--color-bg-primary)',
+          background: 'transparent',
         }}
       >
         <Content style={{ padding: isMobile ? 12 : isTablet ? 20 : 32 }}>

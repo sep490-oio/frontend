@@ -1,19 +1,41 @@
-/* ─── OIO Design System: Blue ─── */
-
 :root {
   /* Colors */
-  --color-bg-primary: #FDFBF7;
-  --color-bg-surface: #F7F5F0;
-  --color-bg-card: #FFFFFF;
+  --color-bg-primary: #ccdbe8;
+  --color-bg-surface: rgba(247, 245, 240, 0.7);
+  --color-bg-card: rgba(255, 255, 255, 0.7);
   --color-text-primary: #1c1c1c;
   --color-text-secondary: #64748B;
-  --color-accent: #137fec;
-  --color-accent-hover: #106bc7;
-  --color-accent-light: rgba(19, 127, 236, 0.08);
+  --color-accent: #0284C7;
+  --color-accent-hover: #0369A1;
+  --color-accent-light: rgba(2, 132, 199, 0.08);
   --color-success: #4A7C59;
   --color-danger: #C4513D;
   --color-border: #E8E5DF;
   --color-border-light: #F7F5F0;
+  --bg-unified-gradient: linear-gradient(
+    180deg,
+    #150804 0%,
+    #0d1b2e 15%,
+    #1e3a5a 35%,
+    #4a7090 48%,
+    #7a9fb8 52%,
+    #8fb0c8 58%,
+    #b0c8d8 72%,
+    #ccdbe8 82%,
+    #e0ecf2 90%,
+    #f2ead8 100%
+  );
+  --bg-dark-offset: translateY(0%);
+  --bg-light-offset: translateY(-50%);
+  --bg-transition: 700ms cubic-bezier(0.4, 0, 0.2, 1);
+  --bg-gradient: linear-gradient(
+    180deg,
+    #8fb0c8 0%,
+    #b0c8d8 30%,
+    #ccdbe8 55%,
+    #e0ecf2 75%,
+    #f2ead8 100%
+  );
 
   /* Typography */
   --font-serif: 'Noto Serif', Georgia, 'Times New Roman', serif;
@@ -30,23 +52,32 @@
   --section-gap: 80px;
   --component-gap: 32px;
   --card-padding: 24px;
+  --oio-blur: blur(12px) saturate(180%);
 }
 
 /* ─── Dark Mode ─── */
 
 [data-theme="dark"] {
-  --color-bg-primary: #05070a;
-  --color-bg-surface: #11141b;
-  --color-bg-card: #11141b;
+  --color-bg-primary: #0d1b2e;
+  --color-bg-surface: rgba(10, 12, 16, 0.7);
+  --color-bg-card: rgba(17, 20, 27, 0.7);
   --color-text-primary: #F1F5F9;
   --color-text-secondary: #94A3B8;
-  --color-accent: #3494f8;
-  --color-accent-hover: #137fec;
-  --color-accent-light: rgba(52, 148, 248, 0.1);
+  --color-accent: #38BDF8;
+  --color-accent-hover: #0EA5E9;
+  --color-accent-light: rgba(56, 189, 248, 0.1);
   --color-success: #5A9C6B;
   --color-danger: #D4634E;
   --color-border: #1f242f;
   --color-border-light: #11141b;
+  --bg-gradient: linear-gradient(
+    180deg,
+    #150804 0%,
+    #0d1b2e 25%,
+    #1e3a5a 55%,
+    #4a7090 80%,
+    #7a9fb8 100%
+  );
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -126,7 +157,7 @@
 [data-theme="dark"] .ant-input,
 [data-theme="dark"] .ant-input-number,
 [data-theme="dark"] .ant-select-selector {
-  background: var(--color-bg-surface) !important;
+  background: var(--color-bg-surface);
   border-color: var(--color-border) !important;
   color: var(--color-text-primary) !important;
 }
@@ -177,6 +208,12 @@
   background: var(--color-bg-surface) !important;
 }
 
+.ant-input-borderless,
+.ant-input-borderless:hover,
+.ant-input-borderless:focus {
+  background: transparent !important;
+}
+
 /* ─── Base ─── */
 
 * {
@@ -187,20 +224,64 @@
 
 html {
   scroll-behavior: smooth;
+  scrollbar-gutter: stable;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  background-color: var(--color-bg-primary);
+  background: transparent !important;
+  overflow-x: hidden;
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   font-size: 14px;
   line-height: 1.6;
 }
 
+/* Unified gradient background layer */
+#app-bg {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 200vh;
+  background: var(--bg-unified-gradient);
+  background-size: 100% 100%;
+  transform: var(--bg-dark-offset);
+  transition: transform var(--bg-transition);
+  z-index: -1;
+  pointer-events: none;
+  will-change: transform;
+}
+
+body.theme-light #app-bg {
+  transform: var(--bg-light-offset);
+}
+
+body.theme-dark #app-bg {
+  transform: var(--bg-dark-offset);
+}
+
+.oio-widget {
+  background: var(--color-bg-container, rgba(255, 255, 255, 0.7));
+  backdrop-filter: var(--oio-blur);
+  -webkit-backdrop-filter: var(--oio-blur);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+  .oio-widget {
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+}
+
 /* Ensure sticky works with Ant Design Layout */
-.ant-layout, 
+.ant-layout,
 .ant-layout-content,
 .oio-page-enter {
   overflow: visible !important;
@@ -256,17 +337,21 @@ h1.oio-serif,
 /* ─── Scrollbar ─── */
 
 .hide-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
 
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
 
+/* ─── Premium Scrollbar ─── */
+
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
@@ -274,12 +359,28 @@ h1.oio-serif,
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 3px;
+  background-color: rgba(148, 163, 184, 0.2); /* Muted slate/gray with transparency */
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-secondary);
+  background-color: var(--color-accent);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-accent);
+}
+
+/* Firefox support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.2) transparent;
 }
 
 /* ─── Selection ─── */
@@ -442,9 +543,12 @@ h1.oio-serif,
 /* ─── Card Refinements ─── */
 
 .ant-card {
-  border-radius: 4px !important;
+  border-radius: 8px !important;
   border: 1px solid var(--color-border) !important;
   transition: box-shadow 250ms ease, transform 250ms ease !important;
+  background: var(--color-bg-container, rgba(255, 255, 255, 0.7)) !important;
+  backdrop-filter: var(--oio-blur);
+  -webkit-backdrop-filter: var(--oio-blur);
 }
 
 /* ─── Table Refinements ─── */
@@ -491,8 +595,12 @@ h1.oio-serif,
 /* ─── Modal Refinements ─── */
 
 .ant-modal-content {
-  border-radius: 4px !important;
+  border-radius: 12px !important;
   overflow: hidden;
+  background: var(--color-bg-elevated, rgba(255, 255, 255, 0.8)) !important;
+  backdrop-filter: var(--oio-blur);
+  -webkit-backdrop-filter: var(--oio-blur);
+  border: 1px solid var(--color-border) !important;
 }
 
 .ant-modal-header {
@@ -550,7 +658,8 @@ h1.oio-serif,
 @media (max-width: 576px) {
   .ant-message {
     right: 12px !important;
-    align-items: center;  /* Center horizontally on mobile */
+    align-items: center;
+    /* Center horizontally on mobile */
     left: 12px !important;
     width: auto !important;
   }
@@ -696,19 +805,36 @@ h1.oio-serif,
 
 /* Tap-to-focus ring used by SecureCaptureUploader */
 @keyframes oio-focus-ring {
-  0%   { transform: scale(1.4); opacity: 0; }
-  40%  { transform: scale(1);   opacity: 1; }
-  100% { transform: scale(0.8); opacity: 0; }
+  0% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
 }
 
 /* ─── Spotlight Modal Refinements ─── */
 .spotlight-modal .ant-modal-content {
-  background: var(--color-bg-card) !important;
-  box-shadow: var(--shadow-xl) !important;
+  background: rgba(253, 251, 247, 0.7) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
   padding: 0 !important;
-  border-radius: 12px !important;
-  overflow: hidden;
+  border-radius: 24px !important;
+  overflow: hidden !important;
   border: 1px solid var(--color-border) !important;
+}
+
+[data-theme="dark"] .spotlight-modal .ant-modal-content {
+  background: rgba(13, 27, 46, 0.7) !important;
 }
 
 .spotlight-modal .ant-modal-body {
@@ -723,11 +849,7 @@ h1.oio-serif,
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-}
-
-[data-theme="dark"] .spotlight-modal .ant-modal-content {
-  background: var(--color-bg-surface) !important;
-  border-color: var(--color-border) !important;
+  color: var(--color-text-primary) !important;
 }
 
 /* ─── Mobile Spotlight ─── */

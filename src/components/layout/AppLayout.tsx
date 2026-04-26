@@ -144,147 +144,340 @@ export function AppLayout() {
 
   return (
     <TermsGateProvider>
-    <Layout style={{ minHeight: '100vh', background: 'var(--color-bg-primary)' }}>
-      <a
-        href="#main-content"
-        style={{
-          position: 'absolute',
-          left: '-9999px',
-          top: 'auto',
-          width: '1px',
-          height: '1px',
-          overflow: 'hidden',
-          zIndex: 9999,
-        }}
-        onFocus={(e) => {
-          e.currentTarget.style.position = 'static'
-          e.currentTarget.style.width = 'auto'
-          e.currentTarget.style.height = 'auto'
-        }}
-      >
-        {t('common:layout.skipToContent')}
-      </a>
+      <Layout style={{ minHeight: '100vh', background: 'transparent' }}>
+        <a
+          href="#main-content"
+          style={{
+            position: 'absolute',
+            left: '-9999px',
+            top: 'auto',
+            width: '1px',
+            height: '1px',
+            overflow: 'hidden',
+            zIndex: 9999,
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.position = 'static'
+            e.currentTarget.style.width = 'auto'
+            e.currentTarget.style.height = 'auto'
+          }}
+        >
+          {t('common:layout.skipToContent')}
+        </a>
 
-      {/* ─── Header ─── */}
-      <Header
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 1000,
-          height: 64,
-          lineHeight: '64px',
-          padding: isMobile ? '0 12px' : isTablet ? '0 24px' : '0 48px',
-          background: isDark ? 'rgba(15, 15, 15, 0.95)' : 'rgba(250, 250, 247, 0.95)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          borderBottom: '1px solid var(--color-border)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 12,
-        }}
-      >
-        {/* Left: Hamburger (mobile/tablet) + Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, flex: 1, minWidth: 0 }}>
-          {isNarrow && (
+        {/* ─── Header ─── */}
+        <Header
+          style={{
+            position: 'fixed',
+            top: isMobile ? 8 : 16,
+            left: isMobile ? 8 : 16,
+            right: isMobile ? 8 : 16,
+            zIndex: 1000,
+            height: 72,
+            lineHeight: '72px',
+            padding: isMobile ? '0 20px' : '0 40px',
+            background: isDark ? 'rgba(5, 7, 10, 0.7)' : 'rgba(253, 251, 247, 0.7)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 16,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+            boxShadow: 'var(--shadow-md)',
+          }}
+        >
+          {/* Left: Hamburger (mobile/tablet) + Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, flex: '1 1 0%', minWidth: 0 }}>
+            {isNarrow && (
+              <Button
+                type="text"
+                icon={<MenuOutlined />}
+                onClick={() => setMobileMenuOpen(true)}
+                aria-label={t('common:layout.openMenu')}
+                style={{ color: 'var(--color-text-primary)', fontSize: 18, minWidth: 44, minHeight: 44 }}
+              />
+            )}
+            <Link
+              to="/"
+              style={{
+                fontFamily: SERIF_FONT,
+                fontSize: isMobile ? 20 : 24,
+                letterSpacing: '0.1em',
+                color: 'var(--color-text-primary)',
+                textDecoration: 'none',
+                fontWeight: 400,
+                flexShrink: 0,
+              }}
+            >
+              OIO
+            </Link>
+          </div>
+
+          {/* Center: Nav links (desktop only) */}
+          {!isNarrow && (
+            <nav
+              style={{
+                display: 'flex',
+                gap: isTablet ? 20 : 32,
+                justifyContent: 'center',
+                flex: '0 0 auto',
+              }}
+            >
+              {navLinks.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  style={{
+                    fontFamily: SANS_FONT,
+                    fontSize: 14,
+                    fontWeight: 500,
+                    color: (link as any).accent ? 'var(--color-accent)' : 'var(--color-text-primary)',
+                    textDecoration: 'none',
+                    transition: 'color 200ms ease',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          )}
+
+          {/* Right: Actions */}
+          <div className="hide-scrollbar" style={{
+            flex: '1 1 0%',
+            minWidth: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            gap: isMobile ? 4 : 12,
+            overflowX: 'auto'
+          }}>
+            {/* Search bar (desktop only) */}
+            {!isNarrow && (
+              <div style={{
+                lineHeight: '36px',
+                height: 36,
+                background: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.03)',
+                borderRadius: 100,
+                border: '1px solid var(--color-border-light)',
+                overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
+                flex: '0 0 auto',
+                width: 200,
+                transition: 'all 0.3s ease',
+              }}>
+                <div
+                  style={{ width: '100%', cursor: 'text' }}
+                  onClick={() => window.dispatchEvent(new Event('open-spotlight'))}
+                >
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    height: 36,
+                    padding: '0 12px',
+                    background: 'transparent',
+                    color: 'var(--color-text-secondary)',
+                    fontSize: 13
+                  }}>
+                    <SearchOutlined style={{ marginRight: 8 }} />
+                    <span>{t('common:action.search', 'Search...')}</span>
+                    <div style={{
+                      marginLeft: 'auto',
+                      background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
+                      padding: '2px 6px',
+                      borderRadius: 4,
+                      fontSize: 10,
+                      fontFamily: 'var(--font-mono)',
+                      border: '1px solid var(--color-border)',
+                      boxShadow: '0 1px 0 rgba(0,0,0,0.1)'
+                    }}>Ctrl B</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Language toggle — hidden on mobile */}
+            {!isMobile && (
+              <Button
+                type="text"
+                aria-label={t('common:layout.switchLanguage')}
+                onClick={() => {
+                  const next = i18n.language === 'vi' ? 'en' : 'vi'
+                  i18n.changeLanguage(next)
+                }}
+                style={{
+                  color: 'var(--color-text-secondary)',
+                  fontSize: 13,
+                  fontWeight: 500,
+                  padding: '4px 8px',
+                  minHeight: 44,
+                }}
+              >
+                {i18n.language === 'vi' ? 'EN' : 'VI'}
+              </Button>
+            )}
+
+            {/* Theme toggle */}
             <Button
               type="text"
-              icon={<MenuOutlined />}
-              onClick={() => setMobileMenuOpen(true)}
-              aria-label={t('common:layout.openMenu')}
-              style={{ color: 'var(--color-text-primary)', fontSize: 18, minWidth: 44, minHeight: 44 }}
+              aria-label={isDark ? t('common:layout.lightMode') : t('common:layout.darkMode')}
+              icon={isDark ? <SunOutlined /> : <MoonOutlined />}
+              onClick={toggleTheme}
+              style={{ color: 'var(--color-text-primary)', minWidth: 44, minHeight: 44 }}
             />
-          )}
-          <Link
-            to="/"
-            style={{
-              fontFamily: SERIF_FONT,
-              fontSize: isMobile ? 20 : 24,
-              letterSpacing: '0.1em',
-              color: 'var(--color-text-primary)',
-              textDecoration: 'none',
-              fontWeight: 400,
-              flexShrink: 0,
-            }}
-          >
-            OIO
-          </Link>
-        </div>
 
-        {/* Center: Nav links (desktop only) */}
-        {!isNarrow && (
-          <nav
-            style={{
+            {isAuthenticated ? (
+              <>
+                <NotificationDropdown />
+                <Dropdown
+                  menu={{ items: userMenuItems, onClick: handleUserMenuClick }}
+                  trigger={['click']}
+                  placement="bottomRight"
+                >
+                  <Space style={{ cursor: 'pointer' }}>
+                    {!isMobile && (
+                      <span style={{
+                        fontSize: 14,
+                        fontWeight: 500,
+                        color: 'var(--color-text-primary)',
+                        fontFamily: SANS_FONT
+                      }}>
+                        {currentUserData?.profile?.displayName ?? currentUserData?.userName}
+                        <span style={{ marginLeft: 6, opacity: 0.6, fontSize: 12, fontWeight: 400 }}>
+                          (@{currentUserData?.userName})
+                        </span>
+                      </span>
+                    )}
+                    <Avatar
+                      size={32}
+                      src={currentUserData?.profile?.avatarUrl}
+                      icon={<UserOutlined />}
+                      style={{ border: '1px solid var(--color-border)' }}
+                    />
+                  </Space>
+                </Dropdown>
+              </>
+            ) : (
+              <Space size={isMobile ? 6 : 12}>
+                <Button
+                  type="text"
+                  onClick={() => navigate('/login')}
+                  style={{
+                    fontFamily: SANS_FONT,
+                    fontSize: isMobile ? 13 : 14,
+                    fontWeight: 500,
+                    color: 'var(--color-text-primary)',
+                    height: 36,
+                    padding: isMobile ? '0 8px' : '0 15px',
+                  }}
+                >
+                  {t('common:action.login', 'Sign In')}
+                </Button>
+                {!isMobile && (
+                  <Button
+                    type="primary"
+                    onClick={() => navigate('/register')}
+                    style={{
+                      fontFamily: SANS_FONT,
+                      fontSize: 14,
+                      fontWeight: 500,
+                      height: 36,
+                      borderRadius: 2,
+                    }}
+                  >
+                    {t('common:action.register', 'Register')}
+                  </Button>
+                )}
+              </Space>
+            )}
+          </div>
+        </Header>
+
+        {/* ─── Mobile / Tablet Navigation Drawer ─── */}
+        <Drawer
+          title={
+            <span style={{ fontFamily: SERIF_FONT, fontSize: 20, letterSpacing: '0.1em' }}>
+              OIO
+            </span>
+          }
+          placement="left"
+          onClose={() => setMobileMenuOpen(false)}
+          open={mobileMenuOpen}
+          width={Math.min(280, window.innerWidth * 0.85)}
+          closeIcon={<CloseOutlined />}
+          styles={{ body: { padding: 0 } }}
+        >
+          {/* Drawer search */}
+          <div style={{ padding: '12px 16px 8px' }}>
+            <div style={{
+              height: 40,
+              background: 'rgba(255, 255, 255, 0.05)',
+              borderRadius: 100,
+              border: '1px solid var(--color-border-light)',
+              overflow: 'hidden',
               display: 'flex',
-              gap: isTablet ? 20 : 32,
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
+              alignItems: 'center',
+            }}>
+              <div
+                style={{ width: '100%', cursor: 'text' }}
+                onClick={() => {
+                  setMobileMenuOpen(false)
+                  window.dispatchEvent(new Event('open-spotlight'))
+                }}
+              >
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  height: 40,
+                  padding: '0 16px',
+                  background: 'transparent',
+                  color: 'var(--color-text-secondary)',
+                  fontSize: 14
+                }}>
+                  <SearchOutlined style={{ marginRight: 8 }} />
+                  <span>{t('common:action.search', 'Search...')}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Drawer nav links */}
+          <nav style={{ display: 'flex', flexDirection: 'column', padding: '8px 0' }}>
             {navLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
+                onClick={() => setMobileMenuOpen(false)}
                 style={{
                   fontFamily: SANS_FONT,
-                  fontSize: 14,
+                  fontSize: 15,
                   fontWeight: 500,
-                  color: (link as any).accent ? 'var(--color-accent)' : 'var(--color-text-primary)',
+                  color: location.pathname.startsWith(link.to)
+                    ? 'var(--color-accent)'
+                    : 'var(--color-text-primary)',
                   textDecoration: 'none',
-                  transition: 'color 200ms ease',
-                  whiteSpace: 'nowrap',
+                  padding: '12px 24px',
+                  borderLeft: location.pathname.startsWith(link.to)
+                    ? '3px solid var(--color-accent)'
+                    : '3px solid transparent',
+                  background: location.pathname.startsWith(link.to)
+                    ? 'var(--color-accent-light, rgba(196, 147, 61, 0.08))'
+                    : 'transparent',
                 }}
               >
                 {link.label}
               </Link>
             ))}
           </nav>
-        )}
 
-        {/* Right: Actions */}
-        <Space className="hide-scrollbar" size={isMobile ? 4 : 'middle'} style={{ flex: 1, minWidth: 0, justifyContent: 'flex-end', flexWrap: 'nowrap', overflowX: 'auto' }}>
-          {/* Search bar (desktop only) */}
-          {!isNarrow && (
-            <div style={{
-              lineHeight: '36px',
-              height: 36,
-              background: 'rgba(255, 255, 255, 0.04)',
-              borderRadius: 100,
-              border: '1px solid var(--color-border-light)',
-              overflow: 'hidden',
-              display: 'flex',
-              alignItems: 'center',
-              width: isTablet ? 180 : 240,
-              transition: 'all 0.3s ease',
-            }}>
-              <div 
-                style={{ width: '100%', cursor: 'text' }}
-                onClick={() => window.dispatchEvent(new Event('open-spotlight'))}
-              >
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  height: 36,
-                  padding: '0 12px',
-                  background: 'transparent',
-                  color: 'var(--color-text-secondary)',
-                  fontSize: 13
-                }}>
-                  <SearchOutlined style={{ marginRight: 8 }} />
-                  <span>{t('common:action.search', 'Search...')}</span>
-                  <div style={{ marginLeft: 'auto', background: 'rgba(0,0,0,0.05)', padding: '2px 6px', borderRadius: 4, fontSize: 11, fontFamily: 'var(--font-mono)' }}>Ctrl B</div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Language toggle — hidden on mobile */}
-          {!isMobile && (
+          {/* Language toggle in drawer (mobile only) */}
+          <div style={{ padding: '8px 24px', borderTop: '1px solid var(--color-border)', marginTop: 8 }}>
             <Button
               type="text"
-              aria-label={t('common:layout.switchLanguage')}
               onClick={() => {
                 const next = i18n.language === 'vi' ? 'en' : 'vi'
                 i18n.changeLanguage(next)
@@ -293,342 +486,169 @@ export function AppLayout() {
                 color: 'var(--color-text-secondary)',
                 fontSize: 13,
                 fontWeight: 500,
-                padding: '4px 8px',
-                minHeight: 44,
+                padding: 0,
+                height: 44,
               }}
             >
-              {i18n.language === 'vi' ? 'EN' : 'VI'}
+              {i18n.language === 'vi' ? t('common:layout.switchToEn') : t('common:layout.switchToVi')}
             </Button>
-          )}
+          </div>
+        </Drawer>
 
-          {/* Theme toggle */}
-          <Button
-            type="text"
-            aria-label={isDark ? t('common:layout.lightMode') : t('common:layout.darkMode')}
-            icon={isDark ? <SunOutlined /> : <MoonOutlined />}
-            onClick={toggleTheme}
-            style={{ color: 'var(--color-text-primary)', minWidth: 44, minHeight: 44 }}
+        {/* ─── Platform Terms Modal ─── */}
+        {isAuthenticated && (
+          <TermsAcceptanceModal
+            open={platformTermsModalOpen}
+            onClose={() => setPlatformTermsModalOpen(false)}
+            termType="platform"
           />
+        )}
 
-          {isAuthenticated ? (
-            <>
-              <NotificationDropdown />
-              <Dropdown
-                menu={{ items: userMenuItems, onClick: handleUserMenuClick }}
-                trigger={['click']}
-                placement="bottomRight"
-              >
-                <Space style={{ cursor: 'pointer' }}>
-                  {!isMobile && (
-                    <span style={{ 
-                      fontSize: 14, 
-                      fontWeight: 500, 
-                      color: 'var(--color-text-primary)',
-                      fontFamily: SANS_FONT
-                    }}>
-                      {currentUserData?.profile?.displayName ?? currentUserData?.userName}
-                      <span style={{ marginLeft: 6, opacity: 0.6, fontSize: 12, fontWeight: 400 }}>
-                        (@{currentUserData?.userName})
-                      </span>
-                    </span>
-                  )}
-                  <Avatar
-                    size={32}
-                    src={currentUserData?.profile?.avatarUrl}
-                    icon={<UserOutlined />}
-                    style={{ border: '1px solid var(--color-border)' }}
-                  />
-                </Space>
-              </Dropdown>
-            </>
-          ) : (
-            <Space size={isMobile ? 6 : 12}>
-              <Button
-                type="text"
-                onClick={() => navigate('/login')}
+        {/* ─── Content ─── */}
+        <Content
+          id="main-content"
+          style={{
+            marginTop: isMobile ? 88 : 104,
+            width: '100%',
+            maxWidth: 1600,
+            marginLeft: 'auto',
+            marginRight: 'auto',
+            padding: isMobile ? '0 12px' : isTablet ? '0 24px' : '0 48px',
+            minHeight: 'calc(100vh - 64px - 200px)',
+          }}
+        >
+          <div key={location.pathname} className="oio-page-enter">
+            {isAuthenticated && platformTermNeedsAcceptance && (
+              <Alert
+                type="warning"
+                showIcon
+                icon={<FileProtectOutlined />}
+                style={{ marginTop: 16, marginBottom: 8 }}
+                message={t('common:terms.pendingBannerTitle', 'Action required: review updated Platform Terms', { type: t('common:terms.type.platform', 'Platform Terms') })}
+                description={t('common:terms.pendingBannerDesc', 'You need to review and accept the current version before your account can perform gated actions.')}
+                action={
+                  <Button
+                    type="primary"
+                    size="small"
+                    onClick={() => setPlatformTermsModalOpen(true)}
+                    style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
+                  >
+                    {t('common:terms.reviewAndAccept', 'Review & Accept')}
+                  </Button>
+                }
+              />
+            )}
+            <Outlet />
+          </div>
+        </Content>
+
+        {/* ─── Footer ─── */}
+        <Footer
+          style={{
+            background: 'var(--color-bg-primary)',
+            borderTop: '1px solid var(--color-border)',
+            padding: isMobile ? '32px 16px' : isTablet ? '48px 24px' : '64px 48px',
+          }}
+        >
+          <div
+            style={{
+              maxWidth: 1600,
+              margin: '0 auto',
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
+              gap: isMobile ? 24 : isTablet ? 32 : 48,
+            }}
+          >
+            {/* Column 1 */}
+            <div>
+              <div
                 style={{
-                  fontFamily: SANS_FONT,
-                  fontSize: isMobile ? 13 : 14,
-                  fontWeight: 500,
+                  fontFamily: SERIF_FONT,
+                  fontSize: 20,
+                  letterSpacing: '0.1em',
                   color: 'var(--color-text-primary)',
-                  height: 36,
-                  padding: isMobile ? '0 8px' : '0 15px',
+                  marginBottom: 16,
                 }}
               >
-                {t('common:action.login', 'Sign In')}
-              </Button>
-              {!isMobile && (
-                <Button
-                  type="primary"
-                  onClick={() => navigate('/register')}
-                  style={{
-                    fontFamily: SANS_FONT,
-                    fontSize: 14,
-                    fontWeight: 500,
-                    height: 36,
-                    borderRadius: 2,
-                  }}
-                >
-                  {t('common:action.register', 'Register')}
-                </Button>
-              )}
-            </Space>
-          )}
-        </Space>
-      </Header>
+                OIO
+              </div>
+              <p style={{ fontFamily: SANS_FONT, fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.7, margin: 0 }}>
+                {t('common:footer.tagline', 'Premium auction platform for discerning collectors.')}
+              </p>
+            </div>
 
-      {/* ─── Mobile / Tablet Navigation Drawer ─── */}
-      <Drawer
-        title={
-          <span style={{ fontFamily: SERIF_FONT, fontSize: 20, letterSpacing: '0.1em' }}>
-            OIO
-          </span>
-        }
-        placement="left"
-        onClose={() => setMobileMenuOpen(false)}
-        open={mobileMenuOpen}
-        width={Math.min(280, window.innerWidth * 0.85)}
-        closeIcon={<CloseOutlined />}
-        styles={{ body: { padding: 0 } }}
-      >
-        {/* Drawer search */}
-        <div style={{ padding: '12px 16px 8px' }}>
-          <div style={{
-            height: 40,
-            background: 'rgba(255, 255, 255, 0.05)',
-            borderRadius: 100,
-            border: '1px solid var(--color-border-light)',
-            overflow: 'hidden',
-            display: 'flex',
-            alignItems: 'center',
-          }}>
-            <div 
-              style={{ width: '100%', cursor: 'text' }}
-              onClick={() => {
-                setMobileMenuOpen(false)
-                window.dispatchEvent(new Event('open-spotlight'))
-              }}
-            >
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                height: 40,
-                padding: '0 16px',
-                background: 'transparent',
-                color: 'var(--color-text-secondary)',
-                fontSize: 14
-              }}>
-                <SearchOutlined style={{ marginRight: 8 }} />
-                <span>{t('common:action.search', 'Search...')}</span>
+            {/* Column 2 */}
+            <div>
+              <div
+                style={{
+                  fontFamily: SANS_FONT,
+                  fontSize: 11,
+                  fontWeight: 500,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase' as const,
+                  color: 'var(--color-text-secondary)',
+                  marginBottom: 16,
+                }}
+              >
+                {t('common:footer.platform', 'Platform')}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <Link to="/auctions" style={{ fontFamily: SANS_FONT, fontSize: 13, color: 'var(--color-text-secondary)', textDecoration: 'none' }}>
+                  {t('common:menu.auctions', 'Auctions')}
+                </Link>
+                <Link to="/categories" style={{ fontFamily: SANS_FONT, fontSize: 13, color: 'var(--color-text-secondary)', textDecoration: 'none' }}>
+                  {t('common:menu.categories', 'Categories')}
+                </Link>
+              </div>
+            </div>
+
+            {/* Column 3 */}
+            <div>
+              <div
+                style={{
+                  fontFamily: SANS_FONT,
+                  fontSize: 11,
+                  fontWeight: 500,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase' as const,
+                  color: 'var(--color-text-secondary)',
+                  marginBottom: 16,
+                }}
+              >
+                {t('common:footer.support', 'Support')}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <Link to="/help" style={{ fontFamily: SANS_FONT, fontSize: 13, color: 'var(--color-text-secondary)', textDecoration: 'none' }}>
+                  {t('common:footer.help', 'Help Center')}
+                </Link>
+                <Link to="/terms" style={{ fontFamily: SANS_FONT, fontSize: 13, color: 'var(--color-text-secondary)', textDecoration: 'none' }}>
+                  {t('common:footer.terms', 'Terms of Service')}
+                </Link>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Drawer nav links */}
-        <nav style={{ display: 'flex', flexDirection: 'column', padding: '8px 0' }}>
-          {navLinks.map((link) => (
-            <Link
-              key={link.to}
-              to={link.to}
-              onClick={() => setMobileMenuOpen(false)}
-              style={{
-                fontFamily: SANS_FONT,
-                fontSize: 15,
-                fontWeight: 500,
-                color: location.pathname.startsWith(link.to)
-                  ? 'var(--color-accent)'
-                  : 'var(--color-text-primary)',
-                textDecoration: 'none',
-                padding: '12px 24px',
-                borderLeft: location.pathname.startsWith(link.to)
-                  ? '3px solid var(--color-accent)'
-                  : '3px solid transparent',
-                background: location.pathname.startsWith(link.to)
-                  ? 'var(--color-accent-light, rgba(196, 147, 61, 0.08))'
-                  : 'transparent',
-              }}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-
-        {/* Language toggle in drawer (mobile only) */}
-        <div style={{ padding: '8px 24px', borderTop: '1px solid var(--color-border)', marginTop: 8 }}>
-          <Button
-            type="text"
-            onClick={() => {
-              const next = i18n.language === 'vi' ? 'en' : 'vi'
-              i18n.changeLanguage(next)
-            }}
+          {/* Copyright */}
+          <div
             style={{
+              maxWidth: 1600,
+              margin: '0 auto',
+              paddingTop: 32,
+              marginTop: 48,
+              borderTop: '1px solid var(--color-border)',
+              textAlign: 'center',
+              fontFamily: SANS_FONT,
+              fontSize: 12,
               color: 'var(--color-text-secondary)',
-              fontSize: 13,
-              fontWeight: 500,
-              padding: 0,
-              height: 44,
             }}
           >
-            {i18n.language === 'vi' ? t('common:layout.switchToEn') : t('common:layout.switchToVi')}
-          </Button>
-        </div>
-      </Drawer>
-
-      {/* ─── Platform Terms Modal ─── */}
-      {isAuthenticated && (
-        <TermsAcceptanceModal
-          open={platformTermsModalOpen}
-          onClose={() => setPlatformTermsModalOpen(false)}
-          termType="platform"
-        />
-      )}
-
-      {/* ─── Content ─── */}
-      <Content
-        id="main-content"
-        style={{
-          marginTop: 64,
-          width: '100%',
-          maxWidth: 1600,
-          marginLeft: 'auto',
-          marginRight: 'auto',
-          padding: isMobile ? '0 12px' : isTablet ? '0 24px' : '0 48px',
-          minHeight: 'calc(100vh - 64px - 200px)',
-        }}
-      >
-        <div key={location.pathname} className="oio-page-enter">
-          {isAuthenticated && platformTermNeedsAcceptance && (
-            <Alert
-              type="warning"
-              showIcon
-              icon={<FileProtectOutlined />}
-              style={{ marginTop: 16, marginBottom: 8 }}
-              message={t('common:terms.pendingBannerTitle', 'Action required: review updated Platform Terms', { type: t('common:terms.type.platform', 'Platform Terms') })}
-              description={t('common:terms.pendingBannerDesc', 'You need to review and accept the current version before your account can perform gated actions.')}
-              action={
-                <Button
-                  type="primary"
-                  size="small"
-                  onClick={() => setPlatformTermsModalOpen(true)}
-                  style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
-                >
-                  {t('common:terms.reviewAndAccept', 'Review & Accept')}
-                </Button>
-              }
-            />
-          )}
-          <Outlet />
-        </div>
-      </Content>
-
-      {/* ─── Footer ─── */}
-      <Footer
-        style={{
-          background: 'var(--color-bg-primary)',
-          borderTop: '1px solid var(--color-border)',
-          padding: isMobile ? '32px 16px' : isTablet ? '48px 24px' : '64px 48px',
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 1600,
-            margin: '0 auto',
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
-            gap: isMobile ? 24 : isTablet ? 32 : 48,
-          }}
-        >
-          {/* Column 1 */}
-          <div>
-            <div
-              style={{
-                fontFamily: SERIF_FONT,
-                fontSize: 20,
-                letterSpacing: '0.1em',
-                color: 'var(--color-text-primary)',
-                marginBottom: 16,
-              }}
-            >
-              OIO
-            </div>
-            <p style={{ fontFamily: SANS_FONT, fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.7, margin: 0 }}>
-              {t('common:footer.tagline', 'Premium auction platform for discerning collectors.')}
-            </p>
+            &copy; {new Date().getFullYear()} OIO. All rights reserved.
           </div>
+        </Footer>
 
-          {/* Column 2 */}
-          <div>
-            <div
-              style={{
-                fontFamily: SANS_FONT,
-                fontSize: 11,
-                fontWeight: 500,
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase' as const,
-                color: 'var(--color-text-secondary)',
-                marginBottom: 16,
-              }}
-            >
-              {t('common:footer.platform', 'Platform')}
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <Link to="/auctions" style={{ fontFamily: SANS_FONT, fontSize: 13, color: 'var(--color-text-secondary)', textDecoration: 'none' }}>
-                {t('common:menu.auctions', 'Auctions')}
-              </Link>
-              <Link to="/categories" style={{ fontFamily: SANS_FONT, fontSize: 13, color: 'var(--color-text-secondary)', textDecoration: 'none' }}>
-                {t('common:menu.categories', 'Categories')}
-              </Link>
-            </div>
-          </div>
-
-          {/* Column 3 */}
-          <div>
-            <div
-              style={{
-                fontFamily: SANS_FONT,
-                fontSize: 11,
-                fontWeight: 500,
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase' as const,
-                color: 'var(--color-text-secondary)',
-                marginBottom: 16,
-              }}
-            >
-              {t('common:footer.support', 'Support')}
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <Link to="/help" style={{ fontFamily: SANS_FONT, fontSize: 13, color: 'var(--color-text-secondary)', textDecoration: 'none' }}>
-                {t('common:footer.help', 'Help Center')}
-              </Link>
-              <Link to="/terms" style={{ fontFamily: SANS_FONT, fontSize: 13, color: 'var(--color-text-secondary)', textDecoration: 'none' }}>
-                {t('common:footer.terms', 'Terms of Service')}
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Copyright */}
-        <div
-          style={{
-            maxWidth: 1600,
-            margin: '0 auto',
-            paddingTop: 32,
-            marginTop: 48,
-            borderTop: '1px solid var(--color-border)',
-            textAlign: 'center',
-            fontFamily: SANS_FONT,
-            fontSize: 12,
-            color: 'var(--color-text-secondary)',
-          }}
-        >
-          &copy; {new Date().getFullYear()} OIO. All rights reserved.
-        </div>
-      </Footer>
-      
-      {/* ─── Spotlight Search ─── */}
-      <SpotlightSearchModal />
-    </Layout>
+        {/* ─── Spotlight Search ─── */}
+        <SpotlightSearchModal />
+      </Layout>
     </TermsGateProvider>
   )
 }

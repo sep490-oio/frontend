@@ -1146,39 +1146,39 @@ export default function AuctionDetailPage() {
       <Row gutter={isDesktop ? [48, 32] : isTablet ? [0, 20] : [0, 12]}>
         {/* ══ LEFT COLUMN ══════════════════════════════════ */}
         <Col xs={24} lg={14}>
-          {/* 1. Image Gallery */}
-          <ImageGallery
-            images={images}
-            alt={item.title}
-            showOverlayBadges
-            isVerified={auction.verifyByPlatform}
-            viewCount={viewCount}
-            maxThumbnails={isMobile ? 3 : 5}
-          />
-
-          {/* 2. Product Title & Subtitle */}
-          <div style={{ marginTop: 24 }}>
-            <h1
-              className="oio-serif"
-              style={{ fontSize: isDesktop ? 28 : 24, lineHeight: 1.2, margin: '0 0 8px' }}
-            >
-              {item.title}
-            </h1>
-            <div style={{ fontSize: 14, color: 'var(--color-text-secondary)', display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-              {item.categoryId && <span>{categoryName ?? item.categoryId}</span>}
-              {item.categoryId && item.condition && <span>&middot;</span>}
-              {item.condition && <StatusBadge status={item.condition} size="small" />}
-              {item.createdAt && (
-                <>
-                  <span>&middot;</span>
-                  <span>{formatDate(item.createdAt)}</span>
-                </>
-              )}
+          {/* 1 & 2. Image Gallery & Title Widget */}
+          <div className="oio-widget" style={{ padding: 0, overflow: 'hidden' }}>
+            <ImageGallery
+              images={images}
+              alt={item.title}
+              showOverlayBadges
+              isVerified={auction.verifyByPlatform}
+              viewCount={viewCount}
+              maxThumbnails={isMobile ? 3 : 5}
+            />
+            <div style={{ padding: isMobile ? '16px 16px 24px' : '24px 24px 32px' }}>
+              <h1
+                className="oio-serif"
+                style={{ fontSize: isDesktop ? 28 : 24, lineHeight: 1.2, margin: '0 0 8px' }}
+              >
+                {item.title}
+              </h1>
+              <div style={{ fontSize: 14, color: 'var(--color-text-secondary)', display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+                {item.categoryId && <span>{categoryName ?? item.categoryId}</span>}
+                {item.categoryId && item.condition && <span>&middot;</span>}
+                {item.condition && <StatusBadge status={item.condition} size="small" />}
+                {item.createdAt && (
+                  <>
+                    <span>&middot;</span>
+                    <span>{formatDate(item.createdAt)}</span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* 3. Tabs */}
-          <div style={{ marginTop: isMobile ? 20 : 32 }}>
+          {/* 3. Tabs Widget */}
+          <div className="oio-widget">
             <AuctionDetailTabs
               item={item}
               auction={auction}

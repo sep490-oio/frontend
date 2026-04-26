@@ -133,17 +133,17 @@ export function SellerLayout() {
   const menuEntries = isVerified
     ? allMenuEntries
     : allMenuEntries
-        .map((entry) => {
-          if ('type' in entry && entry.type === 'group') {
-            const filteredChildren = entry.children.filter(
-              (child) => child.key === '/seller/verification' || child.key === '/seller/profile'
-            )
-            return filteredChildren.length > 0 ? { ...entry, children: filteredChildren } : null
-          }
-          const item = entry as MenuItem
-          return item.key === '/seller/verification' || item.key === '/seller/profile' ? entry : null
-        })
-        .filter((entry): entry is MenuEntry => entry !== null)
+      .map((entry) => {
+        if ('type' in entry && entry.type === 'group') {
+          const filteredChildren = entry.children.filter(
+            (child) => child.key === '/seller/verification' || child.key === '/seller/profile'
+          )
+          return filteredChildren.length > 0 ? { ...entry, children: filteredChildren } : null
+        }
+        const item = entry as MenuItem
+        return item.key === '/seller/verification' || item.key === '/seller/profile' ? entry : null
+      })
+      .filter((entry): entry is MenuEntry => entry !== null)
 
   const isActive = (key: string) => {
     if (key === '/seller') return location.pathname === '/seller'
