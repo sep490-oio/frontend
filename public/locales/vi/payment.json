@@ -57,7 +57,7 @@
   "paymentSuccessDesc": "Thanh toán của bạn đã được xử lý thành công.",
   "paymentFailedDesc": "Thanh toán không thể xử lý. Vui lòng thử lại.",
   "viewOrders": "Xem đơn hàng",
-  "backToHome": "Về trang chủ",
+  "backToHome": "Bảng điều khiển",
   "transactionDetails": "Chi tiết giao dịch",
   "txnRef": "Mã tham chiếu",
   "transactionNo": "Số giao dịch",

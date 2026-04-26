@@ -644,6 +644,7 @@ export function AuctionSidebar({
             isSeller={isSeller}
             onDeposit={onDeposit}
             depositLoading={depositLoading}
+            onCountdownEnd={onCountdownEnd}
           />
         </div>
       )}

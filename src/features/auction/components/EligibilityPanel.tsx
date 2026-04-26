@@ -18,6 +18,7 @@ interface EligibilityPanelProps {
   isSeller: boolean
   onDeposit: () => void
   depositLoading: boolean
+  onCountdownEnd?: () => void
 }
 
 export function EligibilityPanel({
@@ -31,6 +32,7 @@ export function EligibilityPanel({
   isSeller,
   onDeposit,
   depositLoading,
+  onCountdownEnd,
 }: EligibilityPanelProps) {
   const { t } = useTranslation('auction')
 
@@ -161,7 +163,7 @@ export function EligibilityPanel({
               {t('depositRequired', 'Deposit Required')}
             </Typography.Text>
             <Typography.Text style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
-              {t('registrationOpensIn', 'Registration opens in')}: <CountdownTimer endTime={qualificationStartAt!} size="small" />
+              {t('registrationOpensIn', 'Registration opens in')}: <CountdownTimer endTime={qualificationStartAt!} size="small" onEnd={onCountdownEnd} />
             </Typography.Text>
           </div>
         </Flex>
@@ -211,7 +213,7 @@ export function EligibilityPanel({
 
       {qualificationEndAt && (
         <Typography.Text style={{ fontSize: 12, color: 'var(--color-text-secondary)', display: 'block', marginTop: 8 }}>
-          {t('registrationClosesIn', 'Registration closes in')}: <CountdownTimer endTime={qualificationEndAt} size="small" />
+          {t('registrationClosesIn', 'Registration closes in')}: <CountdownTimer endTime={qualificationEndAt} size="small" onEnd={onCountdownEnd} />
         </Typography.Text>
       )}
 

@@ -1257,7 +1257,7 @@ export default function AuctionDetailPage() {
             isCancelLoading={cancelAutoBidMutation.isPending}
             priceHistory={data?.priceHistory}
             onExpandChart={() => setChartModalOpen(true)}
-            qualificationStatus={data?.currentUserParticipant?.qualificationStatus ?? (qualState === 'qualified' ? 'qualified' : undefined)}
+            qualificationStatus={isQualified ? 'qualified' : data?.currentUserParticipant?.qualificationStatus}
             depositStatus={data?.currentUserParticipant?.depositStatus}
             depositAmount={data?.currentUserParticipant?.depositAmount ?? auction.startingPrice?.amount}
             onDeposit={() => {
@@ -1292,6 +1292,7 @@ export default function AuctionDetailPage() {
                 )
               }
               queryClient.invalidateQueries({ queryKey: queryKeys.auctions.detail(id!) })
+              refetch()
             }}
             serverTimeOffset={hub.serverTimeOffset}
             currentUserId={currentUser?.id}

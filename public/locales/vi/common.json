@@ -1,6 +1,6 @@
 {
   "menu": {
-    "home": "Trang chủ",
+    "home": "Bảng điều khiển",
     "auctions": "Đấu giá",
     "items": "Sản phẩm",
     "sellers": "Người bán",
@@ -19,7 +19,7 @@
     "admin": "Quản trị",
     "warehouse": "Kho vận",
     "inspector": "Kiểm định",
-    "bids": "Lịch sử đấu giá",
+    "bids": "Đấu giá của tôi",
     "signIn": "Đăng nhập",
     "signUp": "Đăng ký",
     "watching": "đang theo dõi",
@@ -186,7 +186,7 @@
   "pageUpdatedDesc": "Phiên bản mới đã được triển khai. Vui lòng tải lại trang.",
   "unexpectedErrorDesc": "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.",
   "reloadPage": "Tải lại trang",
-  "goToHome": "Về trang chủ",
+  "goToHome": "Bảng điều khiển",
   "noImage": "Không có hình ảnh",
   "dragDropUpload": "Kéo thả hoặc nhấn để tải lên",
   "uploadLimit": "Tối đa {{max}} tệp ({{count}}/{{max}} đã tải)",
@@ -194,7 +194,7 @@
   "guard": {
     "noAccess": "Bạn không có quyền truy cập trang này.",
     "noWarehouseAccess": "Bạn không có quyền truy cập khu vực kho.",
-    "backToHome": "Về trang chủ"
+    "backToHome": "Bảng điều khiển"
   },
   "layout": {
     "lightMode": "Chế độ sáng",
@@ -370,7 +370,7 @@
       "dashboard": "Bảng điều khiển",
       "profile": "Hồ sơ cá nhân",
       "wallet": "Ví điện tử",
-      "myBids": "Lịch sử đấu giá",
+      "myBids": "Đấu giá của tôi",
       "watchlist": "Sản phẩm theo dõi",
       "myOrders": "Đơn hàng của tôi",
       "myShipments": "Vận đơn vận chuyển",

@@ -57,7 +57,7 @@
   "paymentSuccessDesc": "Your payment has been processed successfully.",
   "paymentFailedDesc": "Your payment could not be processed. Please try again.",
   "viewOrders": "View Orders",
-  "backToHome": "Back to Home",
+  "backToHome": "Back to Dashboard",
   "transactionDetails": "Transaction Details",
   "txnRef": "Reference",
   "transactionNo": "Transaction No.",

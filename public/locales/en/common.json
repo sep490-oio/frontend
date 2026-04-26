@@ -1,6 +1,6 @@
 {
   "menu": {
-    "home": "Home",
+    "home": "Dashboard",
     "auctions": "Auctions",
     "items": "Items",
     "sellers": "Sellers",
@@ -185,7 +185,7 @@
   "pageUpdatedDesc": "A new version has been deployed. Please reload the page.",
   "unexpectedErrorDesc": "An unexpected error occurred. Please try again.",
   "reloadPage": "Reload page",
-  "goToHome": "Go to home",
+  "goToHome": "Go to Dashboard",
   "noImage": "No image",
   "dragDropUpload": "Drag & drop or click to upload",
   "uploadLimit": "Up to {{max}} files ({{count}}/{{max}} uploaded)",
@@ -193,7 +193,7 @@
   "guard": {
     "noAccess": "You do not have permission to access this page.",
     "noWarehouseAccess": "You do not have permission to access the warehouse area.",
-    "backToHome": "Back to home"
+    "backToHome": "Back to Dashboard"
   },
   "layout": {
     "lightMode": "Light mode",

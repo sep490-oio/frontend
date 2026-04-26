@@ -193,10 +193,10 @@ export interface SealedBidDto {
 export interface WinnerOfferDto {
   offerId: string
   auctionId: string
-  auctionTitle: string
+  auctionTitle: string | null
   offerAmount: number
-  currency: string
-  status: string
+  currency: string | null
+  status: string | null
   expiresAt: string | null
   createdAt: string
 }
