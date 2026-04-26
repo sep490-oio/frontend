@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react'
-import { Popover, Badge, Button, Empty, Typography, Tag, Spin } from 'antd'
+import { Popover, Badge, Button, Empty, Typography, Spin } from 'antd'
 import {
   BellOutlined,
   InfoCircleOutlined,

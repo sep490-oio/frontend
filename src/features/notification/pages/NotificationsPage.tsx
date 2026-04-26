@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Typography, List, Button, Space, Spin, Empty, Pagination, Radio, Tag } from 'antd'
+import { Typography, List, Button, Space, Spin, Empty, Pagination, Tag } from 'antd'
 import {
   CheckOutlined,
   InfoCircleOutlined,
@@ -10,7 +10,7 @@ import {
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
-import { useNotifications, useMarkAsRead, useMarkAllAsRead, parseNotificationActions, getActionRoute, getEntityRoute, type NotificationAction } from '@/features/notification/api'
+import { useNotifications, useMarkAsRead, useMarkAllAsRead, parseNotificationActions, getActionRoute, getEntityRoute, type NotificationAction, type NotificationFilterParams } from '@/features/notification/api'
 import { useRespondRunnerUpOffer, useAuctionDetail } from '@/features/auction/api'
 import { useAuth } from '@/hooks/useAuth'
 import { NotificationStatus } from '@/types/enums'
@@ -119,7 +119,7 @@ export default function NotificationsPage() {
   const respondOffer = useRespondRunnerUpOffer()
 
   const handleFilterChange = (status: string) => {
-    setFilters((prev) => ({
+    setFilters((prev: NotificationFilterParams) => ({
       ...prev,
       status: status || undefined,
       pageNumber: 1,
@@ -458,15 +458,17 @@ export default function NotificationsPage() {
             </div>
 
             <div style={{ textAlign: 'center', marginTop: 48 }}>
-              <Pagination
-                current={data.metadata.currentPage}
-                pageSize={data.metadata.pageSize}
-                total={data.metadata.totalCount}
-                showSizeChanger
-                showTotal={(total) => tc('pagination.total', { total })}
-                onChange={(page, pageSize) => setFilters((prev) => ({ ...prev, pageNumber: page, pageSize }))}
-                className="oio-pagination"
-              />
+              {data?.metadata && (
+                <Pagination
+                  current={data.metadata.currentPage}
+                  pageSize={data.metadata.pageSize}
+                  total={data.metadata.totalCount}
+                  showSizeChanger
+                  showTotal={(total) => tc('pagination.total', { total })}
+                  onChange={(page, pageSize) => setFilters((prev: NotificationFilterParams) => ({ ...prev, pageNumber: page, pageSize }))}
+                  className="oio-pagination"
+                />
+              )}
             </div>
           </>
         )}
