@@ -34,9 +34,13 @@ import { useBreakpoint } from '@/hooks/useBreakpoint'
 /* ── Shared styles ───────────────────────────────────────────────────── */
 
 const statCardStyle: React.CSSProperties = {
-  background: 'var(--color-accent-light)',
+  background: 'var(--color-bg-container)',
+  backdropFilter: 'var(--oio-blur)',
+  WebkitBackdropFilter: 'var(--oio-blur)',
   borderColor: 'var(--color-border)',
+  borderRadius: 16,
   height: '100%',
+  boxShadow: 'var(--shadow-sm)',
 }
 
 const sectionTitleStyle: React.CSSProperties = {
@@ -340,7 +344,7 @@ export default function SellerDashboardPage() {
       {/* ── Item Status Overview ───────────────────────────────────── */}
       <Card
         title={<span style={sectionTitleStyle}>{t('dashboard.itemOverview')}</span>}
-        style={{ marginBottom: isMobile ? 16 : 24 }}
+        style={{ ...statCardStyle, marginBottom: isMobile ? 16 : 24 }}
         styles={{ body: { padding: isMobile ? '12px 16px' : '20px 24px' } }}
       >
         <Space wrap size={[8, 8]}>
@@ -371,7 +375,7 @@ export default function SellerDashboardPage() {
       {/* ── Auction Status Overview ────────────────────────────────── */}
       <Card
         title={<span style={sectionTitleStyle}>{t('dashboard.auctionOverview')}</span>}
-        style={{ marginBottom: isMobile ? 16 : 24 }}
+        style={{ ...statCardStyle, marginBottom: isMobile ? 16 : 24 }}
         styles={{ body: { padding: isMobile ? '12px 16px' : '20px 24px' } }}
       >
         <Space wrap size={[8, 8]}>
@@ -393,7 +397,7 @@ export default function SellerDashboardPage() {
       {/* ── Quick Actions ──────────────────────────────────────────── */}
       <Card
         title={<span style={sectionTitleStyle}>{t('dashboard.quickActions')}</span>}
-        style={{ marginBottom: isMobile ? 16 : 24 }}
+        style={{ ...statCardStyle, marginBottom: isMobile ? 16 : 24 }}
         styles={{ body: { padding: isMobile ? '12px 16px' : '20px 24px' } }}
       >
         {isMobile ? (
@@ -458,7 +462,7 @@ export default function SellerDashboardPage() {
       {/* ── Recent Auctions ────────────────────────────────────────── */}
       <Card
         title={<span style={sectionTitleStyle}>{t('recentAuctions')}</span>}
-        style={{ marginBottom: hasPendingActions ? (isMobile ? 16 : 24) : 0 }}
+        style={{ ...statCardStyle, marginBottom: hasPendingActions ? (isMobile ? 16 : 24) : 0 }}
         styles={{ body: { padding: isMobile ? '0 8px 8px' : undefined, overflowX: 'auto' } }}
       >
         <ResponsiveTable<AuctionListItemDto>
@@ -477,6 +481,7 @@ export default function SellerDashboardPage() {
       {hasPendingActions && (
         <Card
           title={<span style={sectionTitleStyle}>{t('pendingActions')}</span>}
+          style={statCardStyle}
           styles={{ body: { padding: isMobile ? '12px 16px' : '20px 24px' } }}
         >
           <Space direction="vertical" size={12} style={{ width: '100%' }}>
@@ -574,8 +579,11 @@ export default function SellerDashboardPage() {
           <Card
             style={{
               borderColor: 'var(--color-border)',
-              background: 'var(--color-accent-light)',
-              borderRadius: 12,
+              background: 'var(--color-bg-container)',
+              backdropFilter: 'var(--oio-blur)',
+              WebkitBackdropFilter: 'var(--oio-blur)',
+              borderRadius: 16,
+              boxShadow: 'var(--shadow-md)',
             }}
             styles={{ body: { padding: isMobile ? '14px 16px' : '16px 20px' } }}
           >

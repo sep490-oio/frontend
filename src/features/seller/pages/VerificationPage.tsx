@@ -177,7 +177,15 @@ export default function VerificationPage() {
               <>
                 <Card
                   title={<span style={{ fontFamily: SANS_FONT, fontWeight: 600 }}>{t('documents', 'Upload Documents')}</span>}
-                  style={{ marginTop: 24, borderRadius: 24, border: '1px solid var(--color-border)', background: 'var(--color-bg-card)' }}
+                  style={{ 
+                    marginTop: 24, 
+                    borderRadius: 24, 
+                    border: '1px solid var(--color-border)', 
+                    background: 'var(--color-bg-container)',
+                    backdropFilter: 'var(--oio-blur)',
+                    WebkitBackdropFilter: 'var(--oio-blur)',
+                    boxShadow: 'var(--shadow-md)'
+                  }}
                   styles={{ body: { padding: isMobile ? '16px' : '24px' } }}
                 >
                   <VerificationDocumentSlots
@@ -232,7 +240,15 @@ export default function VerificationPage() {
             {/* Read-only detail card for non-pending verifications */}
             {activeVerification && activeVerification.status !== IdentityVerificationStatus.Pending && currentStatus !== 'none' && (
               <Card 
-                style={{ marginTop: 24, borderRadius: 24, border: '1px solid var(--color-border)', background: 'var(--color-bg-card)' }} 
+                style={{ 
+                  marginTop: 24, 
+                  borderRadius: 24, 
+                  border: '1px solid var(--color-border)', 
+                  background: 'var(--color-bg-container)',
+                  backdropFilter: 'var(--oio-blur)',
+                  WebkitBackdropFilter: 'var(--oio-blur)',
+                  boxShadow: 'var(--shadow-md)'
+                }} 
                 styles={{ body: { padding: isMobile ? '16px' : '24px' } }}
               >
                 {activeVerification.document && (

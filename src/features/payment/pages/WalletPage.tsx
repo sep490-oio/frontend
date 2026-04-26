@@ -25,10 +25,12 @@ const TX_TYPE_KEYS = [
 ] as const
 
 const balanceCardStyle: React.CSSProperties = {
-  background: 'var(--color-bg-card)',
+  background: 'var(--color-bg-container)',
+  backdropFilter: 'var(--oio-blur)',
+  WebkitBackdropFilter: 'var(--oio-blur)',
   border: '1px solid var(--color-border)',
   borderRadius: 24,
-  boxShadow: 'var(--shadow-sm)',
+  boxShadow: 'var(--shadow-md)',
   height: '100%'
 }
 
@@ -112,10 +114,10 @@ export default function WalletPage() {
       {/* Header */}
       <div style={{ marginBottom: isMobile ? 24 : 40 }}>
         <h1
+          className="oio-serif"
           style={{
-            fontFamily: SANS_FONT,
-            fontWeight: 600,
-            fontSize: isMobile ? 24 : 32,
+            fontWeight: 400,
+            fontSize: isMobile ? 28 : 36,
             color: 'var(--color-text-primary)',
             marginBottom: 4,
             display: 'flex',

@@ -8,7 +8,8 @@ import { useSellerDirectShipments } from '@/features/order/api'
 import type { SellerDirectShipmentListItem } from '@/types'
 import { OrderItemSummary } from '@/features/order/components/OrderItemSummary'
 import { StatusBadge } from '@/components/ui/StatusBadge'
-import { SERIF_FONT, SANS_FONT } from '@/styles/tokens'
+import { SANS_FONT } from '@/styles/tokens'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 
 const STATUS_TABS = [
   { key: 'all', label: 'all' },
@@ -32,6 +33,7 @@ const STATUS_TABS = [
 export default function SellerDirectShipmentsListPage() {
   const { t } = useTranslation(['order', 'common'])
   const navigate = useNavigate()
+  const { isMobile } = useBreakpoint()
 
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
@@ -51,7 +53,15 @@ export default function SellerDirectShipmentsListPage() {
     return (
       <Card
         key={shipment.shipmentId}
-        style={{ borderRadius: 10, marginBottom: 12 }}
+        style={{ 
+          borderRadius: 16, 
+          marginBottom: 16, 
+          background: 'var(--color-bg-container)',
+          backdropFilter: 'var(--oio-blur)',
+          WebkitBackdropFilter: 'var(--oio-blur)',
+          border: '1px solid var(--color-border)',
+          boxShadow: 'var(--shadow-sm)'
+        }}
         styles={{ body: { padding: 16 } }}
       >
         <Flex vertical gap={12}>
@@ -142,7 +152,7 @@ export default function SellerDirectShipmentsListPage() {
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-      <h1 style={{ fontFamily: SERIF_FONT, fontWeight: 400, fontSize: 28, marginBottom: 16 }}>
+      <h1 className="oio-serif" style={{ fontWeight: 400, fontSize: isMobile ? 24 : 32, marginBottom: 16, color: 'var(--color-text-primary)' }}>
         {t('order:directShipment.sellerListTitle', 'Direct Shipments')}
       </h1>
 

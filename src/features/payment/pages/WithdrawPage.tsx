@@ -12,7 +12,7 @@ import {
 } from 'antd'
 const { Text } = Typography
 import { ArrowLeftOutlined, DeleteOutlined, BankOutlined } from '@ant-design/icons'
-import { SANS_FONT, MONO_FONT } from '@/styles/tokens'
+import { MONO_FONT } from '@/styles/tokens'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useNavigate } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
@@ -168,10 +168,10 @@ export default function WithdrawPage() {
 
       <div style={{ marginBottom: isMobile ? 24 : 40 }}>
         <h1
+          className="oio-serif"
           style={{
-            fontFamily: SANS_FONT,
-            fontWeight: 600,
-            fontSize: isMobile ? 24 : 32,
+            fontWeight: 400,
+            fontSize: isMobile ? 28 : 36,
             color: 'var(--color-text-primary)',
             marginBottom: 4,
             display: 'flex',
@@ -191,7 +191,9 @@ export default function WithdrawPage() {
       <Card 
         style={{ 
           marginBottom: 32,
-          background: 'var(--color-bg-card)',
+          background: 'var(--color-bg-container)',
+          backdropFilter: 'var(--oio-blur)',
+          WebkitBackdropFilter: 'var(--oio-blur)',
           border: '1px solid var(--color-border)',
           borderRadius: 24,
           boxShadow: 'var(--shadow-sm)',
@@ -210,9 +212,11 @@ export default function WithdrawPage() {
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 32, alignItems: 'start' }}>
         {/* Withdraw form */}
         <Card 
-          title={<span style={{ fontFamily: SANS_FONT, fontWeight: 600 }}>{t('withdrawForm', 'Withdrawal Request')}</span>}
+          title={<span className="oio-serif" style={{ fontWeight: 400, fontSize: 20 }}>{t('withdrawForm', 'Withdrawal Request')}</span>}
           style={{ 
-            background: 'var(--color-bg-card)',
+            background: 'var(--color-bg-container)',
+            backdropFilter: 'var(--oio-blur)',
+            WebkitBackdropFilter: 'var(--oio-blur)',
             border: '1px solid var(--color-border)',
             borderRadius: 24,
             boxShadow: 'var(--shadow-sm)',
@@ -320,9 +324,11 @@ export default function WithdrawPage() {
 
         {/* Recent withdrawals */}
         <Card 
-          title={<span style={{ fontFamily: SANS_FONT, fontWeight: 600 }}>{t('recentWithdrawals', 'Recent Withdrawals')}</span>}
+          title={<span className="oio-serif" style={{ fontWeight: 400, fontSize: 20 }}>{t('recentWithdrawals', 'Recent Withdrawals')}</span>}
           style={{ 
-            background: 'var(--color-bg-card)',
+            background: 'var(--color-bg-container)',
+            backdropFilter: 'var(--oio-blur)',
+            WebkitBackdropFilter: 'var(--oio-blur)',
             border: '1px solid var(--color-border)',
             borderRadius: 24,
             boxShadow: 'var(--shadow-sm)',

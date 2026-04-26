@@ -120,7 +120,7 @@ export default function WarehouseItemsPage() {
   return (
     <div>
       <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
-        <Typography.Title level={2} style={{ margin: 0 }}>
+        <Typography.Title level={2} className="oio-serif" style={{ margin: 0, fontWeight: 400 }}>
           {t('warehouseItems', 'Warehouse Items')}
         </Typography.Title>
       </Space>

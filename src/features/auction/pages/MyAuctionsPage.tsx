@@ -29,6 +29,7 @@ import { CountdownTimer } from '@/components/ui/CountdownTimer'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { EmptyState } from '@/components/ui/EmptyState'
+
 import { AuctionStatus } from '@/types/enums'
 import { formatDateTime } from '@/utils/format'
 import type { AuctionListItemDto } from '@/types'
@@ -474,7 +475,9 @@ export default function MyAuctionsPage() {
               flexShrink: 0,
               minHeight: 34,
               border: `1px solid ${statusFilter === pill.value ? 'var(--color-accent)' : 'var(--color-border)'}`,
-              background: statusFilter === pill.value ? 'var(--color-accent)' : 'transparent',
+              background: statusFilter === pill.value ? 'var(--color-accent)' : 'var(--color-bg-container)',
+              backdropFilter: statusFilter === pill.value ? 'none' : 'var(--oio-blur)',
+              WebkitBackdropFilter: statusFilter === pill.value ? 'none' : 'var(--oio-blur)',
               color: statusFilter === pill.value ? '#fff' : 'var(--color-text-secondary)',
             }}
             onClick={() => { setStatusFilter(pill.value); setPage(1) }}
@@ -586,7 +589,7 @@ export default function MyAuctionsPage() {
 
       {/* Cancel modal */}
       <Modal
-        title={t('cancelAuction', 'Cancel Auction')}
+        title={<span className="oio-serif" style={{ fontSize: 20 }}>{t('cancelAuction', 'Cancel Auction')}</span>}
         open={cancelModalOpen}
         onCancel={() => { setCancelModalOpen(false); setCancelAuctionId(null) }}
         onOk={handleCancelConfirm}
@@ -595,8 +598,11 @@ export default function MyAuctionsPage() {
           danger: true,
           loading: cancelAuction.isPending,
           disabled: !cancelReason.trim(),
+          style: { borderRadius: 8 }
         }}
+        cancelButtonProps={{ style: { borderRadius: 8 } }}
         centered
+        style={{ borderRadius: 24 }}
       >
         <p style={{ marginBottom: 12, color: 'var(--color-text-secondary)' }}>
           {t('cancelReasonPrompt', 'Please provide a reason for cancellation:')}
@@ -611,18 +617,19 @@ export default function MyAuctionsPage() {
 
       {/* Timing modal */}
       <Modal
-        title={submitPendingTimingAuctionId ? t('submitAndSetTiming', 'Submit & Set Auction Timing') : t('setTiming', 'Set Auction Timing')}
+        title={<span className="oio-serif" style={{ fontSize: 20 }}>{submitPendingTimingAuctionId ? t('submitAndSetTiming', 'Submit & Set Auction Timing') : t('setTiming', 'Set Auction Timing')}</span>}
         open={timingModalOpen}
         onCancel={() => { setTimingModalOpen(false); setTimingAuctionId(null); setSubmitPendingTimingAuctionId(null) }}
         onOk={handleTimingConfirm}
         okText={t('saveTiming', 'Save Timing')}
         okButtonProps={{
           loading: setAuctionTiming.isPending,
-          style: { background: 'var(--color-accent)', borderColor: 'var(--color-accent)' },
+          style: { background: 'var(--color-accent)', borderColor: 'var(--color-accent)', borderRadius: 8 },
         }}
+        cancelButtonProps={{ style: { borderRadius: 8 } }}
         centered
         width={isMobile ? '100%' : 720}
-        styles={{ body: { maxHeight: '70vh', overflowY: 'auto' } }}
+        style={{ borderRadius: 24 }}
       >
         <Form form={modalForm} layout="vertical">
           <AuctionTimingSection form={modalForm} itemApproved={true} />

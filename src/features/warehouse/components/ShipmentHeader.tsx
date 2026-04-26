@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { getProviderLabel, getModeLabel, getNextStepMessage } from '../utils/shipmentLabels'
 import { formatDateTime } from '@/utils/format'
-import { MONO_FONT } from '@/styles/tokens'
+
 
 interface ShipmentHeaderProps {
   clientOrderCode: string
@@ -37,7 +37,7 @@ export function ShipmentHeader({ clientOrderCode, status, providerCode, shipment
 
       <Flex justify="space-between" align="center" wrap="wrap" gap={12} style={{ marginBottom: 8 }}>
         <Flex align="center" gap={12}>
-          <Typography.Title level={3} style={{ margin: 0, fontFamily: MONO_FONT }}>
+          <Typography.Title level={3} className="oio-serif" style={{ margin: 0, fontWeight: 400, fontSize: 24 }}>
             {clientOrderCode}
           </Typography.Title>
           <Button
@@ -64,12 +64,15 @@ export function ShipmentHeader({ clientOrderCode, status, providerCode, shipment
 
       {nextStep && (
         <div style={{
-          padding: '10px 16px',
-          borderRadius: 8,
-          background: 'rgba(139, 115, 85, 0.06)',
-          border: '1px solid rgba(139, 115, 85, 0.12)',
+          padding: '12px 20px',
+          borderRadius: 16,
+          background: 'var(--color-bg-container)',
+          backdropFilter: 'var(--oio-blur)',
+          WebkitBackdropFilter: 'var(--oio-blur)',
+          border: '1px solid var(--color-border)',
           fontSize: 13,
           color: 'var(--color-text-primary)',
+          boxShadow: 'var(--shadow-sm)'
         }}>
           <strong>{t('nextStep', 'Next step')}:</strong> {nextStep}
         </div>

@@ -107,7 +107,16 @@ export default function SellerWarehouseItemDetailPage() {
   }
 
   const itemSummaryCard = (
-    <Card>
+    <Card
+      style={{
+        background: 'var(--color-bg-container)',
+        backdropFilter: 'var(--oio-blur)',
+        WebkitBackdropFilter: 'var(--oio-blur)',
+        borderRadius: 24,
+        border: '1px solid var(--color-border)',
+        boxShadow: 'var(--shadow-sm)'
+      }}
+    >
       <Space align="start" size={16} style={{ width: '100%' }}>
         {data.itemImageUrl && (
           <Image
@@ -119,7 +128,7 @@ export default function SellerWarehouseItemDetailPage() {
           />
         )}
         <div style={{ flex: 1 }}>
-          <Typography.Title level={4} style={{ marginTop: 0, marginBottom: 4 }}>
+          <Typography.Title level={4} className="oio-serif" style={{ marginTop: 0, marginBottom: 4, fontWeight: 400, fontSize: 20 }}>
             {data.itemTitle ?? t('untitledItem', 'Untitled item')}
           </Typography.Title>
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>

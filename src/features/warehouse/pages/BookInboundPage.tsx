@@ -221,9 +221,18 @@ export default function BookInboundPage() {
         </Button>
       </Space>
 
-      <Typography.Title level={2}>{t('bookInbound', 'Book Inbound Shipment')}</Typography.Title>
+      <Typography.Title level={2} className="oio-serif" style={{ fontWeight: 400, fontSize: isMobile ? 24 : 32 }}>{t('bookInbound', 'Book Inbound Shipment')}</Typography.Title>
 
-      <Card>
+      <Card
+        style={{
+          background: 'var(--color-bg-container)',
+          backdropFilter: 'var(--oio-blur)',
+          WebkitBackdropFilter: 'var(--oio-blur)',
+          border: '1px solid var(--color-border)',
+          borderRadius: 24,
+          boxShadow: 'var(--shadow-sm)',
+        }}
+      >
         <Form
           form={form}
           layout="vertical"

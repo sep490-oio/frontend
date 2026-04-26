@@ -15,9 +15,11 @@ export interface BalanceCardProps {
 
 const balanceCardBaseStyle: React.CSSProperties = {
   background: 'var(--color-bg-container)',
+  backdropFilter: 'var(--oio-blur)',
+  WebkitBackdropFilter: 'var(--oio-blur)',
   borderColor: 'var(--color-border)',
-  borderRadius: 12,
-  boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+  borderRadius: 24,
+  boxShadow: 'var(--shadow-sm)',
 }
 
 export function BalanceCard({ title, value, currency, helpText, color, loading, icon, style }: BalanceCardProps) {

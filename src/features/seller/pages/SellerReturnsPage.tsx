@@ -475,7 +475,7 @@ export default function SellerReturnsPage() {
 
   return (
     <div style={{ padding: isMobile ? '0 12px' : undefined }}>
-      <Typography.Title level={isMobile ? 4 : 3} style={{ marginBottom: 8 }}>
+      <Typography.Title level={isMobile ? 3 : 2} className="oio-serif" style={{ marginBottom: 8, fontWeight: 400 }}>
         {t('returns.pageTitle', 'Returns')}
       </Typography.Title>
       <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>

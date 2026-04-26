@@ -23,11 +23,15 @@ export function WithdrawalSnapshot({
     <Card
       size="small"
       style={{
-        background: 'var(--color-accent-light)',
+        background: 'var(--color-bg-container)',
+        backdropFilter: 'var(--oio-blur)',
+        WebkitBackdropFilter: 'var(--oio-blur)',
         borderColor: 'var(--color-border)',
+        borderRadius: 20,
+        boxShadow: 'var(--shadow-sm)',
       }}
       title={
-        <span style={{ fontSize: 14 }}>
+        <span style={{ fontSize: 14, fontWeight: 600 }}>
           {t('pendingWithdrawalSnapshot', 'Pending Withdrawals')}
         </span>
       }

@@ -79,7 +79,18 @@ export function ShipmentOverview({ shipment, itemInfo, currency = 'VND' }: Shipm
     <>
       {/* Item Info */}
       {itemInfo && (
-        <Card title={t('overview.itemInfo', 'Item Information')} size="small" style={{ marginBottom: 16 }}>
+        <Card 
+          title={<span className="oio-serif" style={{ fontWeight: 400, fontSize: 16 }}>{t('overview.itemInfo', 'Item Information')}</span>} 
+          size="small" 
+          style={{ 
+            marginBottom: 16,
+            background: 'var(--color-bg-container)',
+            backdropFilter: 'var(--oio-blur)',
+            WebkitBackdropFilter: 'var(--oio-blur)',
+            borderRadius: 24,
+            border: '1px solid var(--color-border)',
+          }}
+        >
           <Flex gap={12} align="start">
             {itemInfo.imageUrl && (
               <img
@@ -101,7 +112,17 @@ export function ShipmentOverview({ shipment, itemInfo, currency = 'VND' }: Shipm
       )}
 
       {/* Overview */}
-      <Card size="small" style={{ marginBottom: 12 }}>
+      <Card 
+        size="small" 
+        style={{ 
+          marginBottom: 12,
+          background: 'var(--color-bg-container)',
+          backdropFilter: 'var(--oio-blur)',
+          WebkitBackdropFilter: 'var(--oio-blur)',
+          borderRadius: 24,
+          border: '1px solid var(--color-border)',
+        }}
+      >
         <Typography.Text strong style={{ fontSize: 14, display: 'block', marginBottom: 8 }}>
           {t('overview', 'Overview')}
         </Typography.Text>
@@ -139,7 +160,17 @@ export function ShipmentOverview({ shipment, itemInfo, currency = 'VND' }: Shipm
       </Card>
 
       {/* Sender & Pickup */}
-      <Card size="small" style={{ marginBottom: 12 }}>
+      <Card 
+        size="small" 
+        style={{ 
+          marginBottom: 12,
+          background: 'var(--color-bg-container)',
+          backdropFilter: 'var(--oio-blur)',
+          WebkitBackdropFilter: 'var(--oio-blur)',
+          borderRadius: 24,
+          border: '1px solid var(--color-border)',
+        }}
+      >
         <Typography.Text strong style={{ fontSize: 14, display: 'block', marginBottom: 8 }}>
           {t('senderInfo', 'Sender & Pickup')}
         </Typography.Text>
@@ -164,7 +195,17 @@ export function ShipmentOverview({ shipment, itemInfo, currency = 'VND' }: Shipm
       </Card>
 
       {/* Package */}
-      <Card size="small" style={{ marginBottom: 12 }}>
+      <Card 
+        size="small" 
+        style={{ 
+          marginBottom: 12,
+          background: 'var(--color-bg-container)',
+          backdropFilter: 'var(--oio-blur)',
+          WebkitBackdropFilter: 'var(--oio-blur)',
+          borderRadius: 24,
+          border: '1px solid var(--color-border)',
+        }}
+      >
         <Typography.Text strong style={{ fontSize: 14, display: 'block', marginBottom: 8 }}>
           {t('package', 'Package')}
         </Typography.Text>
@@ -188,7 +229,16 @@ export function ShipmentOverview({ shipment, itemInfo, currency = 'VND' }: Shipm
       </Card>
 
       {/* Activity Timeline */}
-      <Card size="small">
+      <Card 
+        size="small"
+        style={{ 
+          background: 'var(--color-bg-container)',
+          backdropFilter: 'var(--oio-blur)',
+          WebkitBackdropFilter: 'var(--oio-blur)',
+          borderRadius: 24,
+          border: '1px solid var(--color-border)',
+        }}
+      >
         <Typography.Text strong style={{ fontSize: 14, display: 'block', marginBottom: 12 }}>
           {t('activity', 'Activity')}
         </Typography.Text>

@@ -127,7 +127,17 @@ export default function SellerProfilePage() {
 
       {editing ? (
         /* ── Edit Form ─────────────────────────────────────────────── */
-        <Card styles={{ body: { padding: isMobile ? '16px' : '24px' } }}>
+        <Card 
+          style={{ 
+            borderRadius: 24, 
+            background: 'var(--color-bg-container)', 
+            backdropFilter: 'var(--oio-blur)',
+            WebkitBackdropFilter: 'var(--oio-blur)',
+            border: '1px solid var(--color-border)',
+            boxShadow: 'var(--shadow-md)'
+          }} 
+          styles={{ body: { padding: isMobile ? '16px' : '24px' } }}
+        >
           <Form<CreateSellerProfileRequest>
             form={form}
             layout="vertical"
@@ -191,7 +201,18 @@ export default function SellerProfilePage() {
       ) : (
         /* ── View Mode ─────────────────────────────────────────────── */
         <>
-          <Card style={{ marginBottom: 16 }} styles={{ body: { padding: isMobile ? '0 16px' : '0 24px' } }}>
+          <Card 
+            style={{ 
+              marginBottom: 24, 
+              borderRadius: 24, 
+              background: 'var(--color-bg-container)', 
+              backdropFilter: 'var(--oio-blur)',
+              WebkitBackdropFilter: 'var(--oio-blur)',
+              border: '1px solid var(--color-border)',
+              boxShadow: 'var(--shadow-md)'
+            }} 
+            styles={{ body: { padding: isMobile ? '0 16px' : '0 24px' } }}
+          >
             {isMobile ? (
               // Mobile: vertical label-value rows
               <div>
@@ -238,7 +259,18 @@ export default function SellerProfilePage() {
           </Card>
 
           {/* Logo card */}
-          <Card title={t('logo', 'Logo')} styles={{ body: { padding: isMobile ? 16 : 24 } }}>
+          <Card 
+            title={<span className="oio-serif" style={{ fontWeight: 600 }}>{t('logo', 'Logo')}</span>} 
+            style={{ 
+              borderRadius: 24, 
+              background: 'var(--color-bg-container)', 
+              backdropFilter: 'var(--oio-blur)',
+              WebkitBackdropFilter: 'var(--oio-blur)',
+              border: '1px solid var(--color-border)',
+              boxShadow: 'var(--shadow-sm)'
+            }}
+            styles={{ body: { padding: isMobile ? 16 : 24 } }}
+          >
             {profile.logo ? (
               <img
                 src={profile.logo}

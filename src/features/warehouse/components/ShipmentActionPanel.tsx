@@ -94,7 +94,18 @@ export function ShipmentActionPanel({
 
   return (
     <div style={{ position: 'sticky', top: 24 }}>
-      <Card title={t('actions', 'Actions')} size="small">
+      <Card 
+        title={<span className="oio-serif" style={{ fontWeight: 400, fontSize: 18 }}>{t('actions', 'Actions')}</span>} 
+        size="small"
+        style={{
+          background: 'var(--color-bg-container)',
+          backdropFilter: 'var(--oio-blur)',
+          WebkitBackdropFilter: 'var(--oio-blur)',
+          borderRadius: 24,
+          border: '1px solid var(--color-border)',
+          boxShadow: 'var(--shadow-sm)'
+        }}
+      >
         {actionSuccess && (
           <Alert type="success" message={actionSuccess} showIcon style={{ marginBottom: 12 }} closable onClose={() => setActionSuccess(null)} />
         )}

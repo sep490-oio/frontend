@@ -4,6 +4,7 @@ import { PlusOutlined, EyeOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
 import { useTranslation } from 'react-i18next'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useInboundPackages } from '@/features/warehouse/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { getProviderLabel } from '@/features/warehouse/utils/shipmentLabels'
@@ -27,6 +28,7 @@ export default function InboundShipmentsPage() {
   const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
   const prefix = useRoutePrefix()
+  const { isMobile } = useBreakpoint()
 
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [page, setPage] = useState(1)
@@ -101,7 +103,7 @@ export default function InboundShipmentsPage() {
   return (
     <div>
       <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
-        <Typography.Title level={2} style={{ margin: 0 }}>
+        <Typography.Title level={2} className="oio-serif" style={{ margin: 0, fontWeight: 400, fontSize: isMobile ? 24 : 32 }}>
           {t('inboundPackages', 'Inbound Packages')}
         </Typography.Title>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate(`${prefix}/warehouse/inbound/book`)}>

@@ -54,10 +54,10 @@ export default function SellerWalletPage() {
     <div>
       <div style={{ marginBottom: 24 }}>
         <h1
+          className="oio-serif"
           style={{
-            fontFamily: SERIF_FONT,
             fontWeight: 400,
-            fontSize: 28,
+            fontSize: 32,
             color: 'var(--color-text-primary)',
             marginBottom: 4,
             letterSpacing: '-0.01em',
@@ -66,7 +66,7 @@ export default function SellerWalletPage() {
             gap: 12,
           }}
         >
-          <WalletOutlined style={{ fontSize: 24 }} />
+          <WalletOutlined style={{ fontSize: 28 }} />
           {t('sellerWallet', 'Seller Wallet')}
         </h1>
         <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, margin: 0 }}>

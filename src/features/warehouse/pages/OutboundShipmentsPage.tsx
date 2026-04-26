@@ -3,6 +3,7 @@ import { Typography, Space, Tabs, Button } from 'antd'
 import { EyeOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { useOutboundShipments } from '@/features/warehouse/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
@@ -24,6 +25,7 @@ export default function OutboundShipmentsPage() {
   const { t } = useTranslation('warehouse')
   const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
+  const { isMobile } = useBreakpoint()
 
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [page, setPage] = useState(1)
@@ -126,7 +128,7 @@ export default function OutboundShipmentsPage() {
   return (
     <div>
       <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
-        <Typography.Title level={2} style={{ margin: 0 }}>
+        <Typography.Title level={2} className="oio-serif" style={{ margin: 0, fontWeight: 400, fontSize: isMobile ? 24 : 32 }}>
           {t('outboundShipments')}
         </Typography.Title>
       </Space>

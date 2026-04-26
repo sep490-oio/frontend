@@ -247,22 +247,26 @@ export function SellerLayout() {
     })
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--color-bg-primary)' }}>
+    <div style={{ minHeight: '100vh', background: 'transparent' }}>
       {/* ── Sidebar ── */}
       <aside
         style={{
           position: 'fixed',
-          left: 0,
-          top: 0,
-          bottom: 0,
+          left: isMobile ? -sidebarWidth : 16,
+          top: 16,
+          bottom: 16,
           width: sidebarWidth,
-          background: 'var(--color-bg-card)',
-          borderRight: '1px solid var(--color-border)',
-          transition: 'width 200ms ease',
+          background: 'var(--color-bg-container)',
+          backdropFilter: 'var(--oio-blur)',
+          WebkitBackdropFilter: 'var(--oio-blur)',
+          border: '1px solid var(--color-border)',
+          borderRadius: 16,
+          transition: 'all 200ms ease',
           display: isMobile ? 'none' : 'flex',
           flexDirection: 'column',
           zIndex: 100,
           overflow: 'hidden',
+          boxShadow: 'var(--shadow-lg)',
         }}
       >
         <div
@@ -367,19 +371,23 @@ export function SellerLayout() {
       <header
         style={{
           position: 'fixed',
-          top: 0,
-          left: isMobile ? 0 : sidebarWidth,
-          right: 0,
+          top: 16,
+          left: isMobile ? 12 : sidebarWidth + 32,
+          right: 16,
           height: HEADER_HEIGHT,
-          background: 'var(--color-bg-card)',
-          borderBottom: '1px solid var(--color-border)',
+          background: 'var(--color-bg-container)',
+          backdropFilter: 'var(--oio-blur)',
+          WebkitBackdropFilter: 'var(--oio-blur)',
+          border: '1px solid var(--color-border)',
+          borderRadius: 16,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: isMobile ? '0 12px' : '0 24px',
-          transition: 'left 200ms ease',
+          transition: 'all 200ms ease',
           zIndex: 99,
           gap: 8,
+          boxShadow: 'var(--shadow-md)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 16, minWidth: 0 }}>
@@ -500,11 +508,11 @@ export function SellerLayout() {
       {/* ── Content area ── */}
       <main
         style={{
-          marginLeft: isMobile ? 0 : sidebarWidth,
-          marginTop: HEADER_HEIGHT,
+          marginLeft: isMobile ? 0 : sidebarWidth + 16,
+          paddingTop: HEADER_HEIGHT + 24,
           transition: 'margin-left 200ms ease',
-          minHeight: `calc(100vh - ${HEADER_HEIGHT}px)`,
-          background: 'var(--color-bg-primary)',
+          minHeight: '100vh',
+          background: 'transparent',
         }}
       >
         <Content style={{ padding: isMobile ? 12 : isTablet ? 20 : 32 }}>

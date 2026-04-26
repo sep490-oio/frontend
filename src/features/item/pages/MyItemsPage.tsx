@@ -19,6 +19,7 @@ import {
   useActivateItem,
   useResubmitItem,
 } from '@/features/item/api'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -41,16 +42,19 @@ const STATUS_PILL_VALUES = [
 ] as const
 
 const pillBase: React.CSSProperties = {
-  padding: '10px 24px',
+  padding: '8px 20px',
   borderRadius: 100,
-  fontSize: 14,
-  fontWeight: 600,
+  fontSize: 13,
+  fontWeight: 500,
   cursor: 'pointer',
   transition: 'all 200ms ease',
-  border: '1px solid var(--color-border, rgba(255,255,255,0.1))',
-  background: 'var(--color-bg-surface, rgba(255,255,255,0.05))',
-  color: 'var(--color-text-primary, #e5e7eb)',
+  border: '1px solid var(--color-border)',
+  background: 'var(--color-bg-container)',
+  backdropFilter: 'var(--oio-blur)',
+  WebkitBackdropFilter: 'var(--oio-blur)',
+  color: 'var(--color-text-secondary)',
   whiteSpace: 'nowrap',
+  minHeight: 36,
 }
 
 const pillActive: React.CSSProperties = {
@@ -66,6 +70,7 @@ export default function MyItemsPage() {
   const navigate = useNavigate()
   const prefix = useRoutePrefix()
   const [msgApi, contextHolder] = message.useMessage()
+  const { isMobile } = useBreakpoint()
   const [searchParams, setSearchParams] = useSearchParams()
 
   // Filters are synchronized with the URL so deep-links from the dashboard
@@ -364,12 +369,13 @@ export default function MyItemsPage() {
       {/* Header */}
       <Flex justify="space-between" align="center" style={{ marginBottom: 32 }}>
         <h1
+          className="oio-serif"
           style={{
             margin: 0,
-            fontSize: 40,
-            fontWeight: 700,
+            fontSize: isMobile ? 24 : 32,
+            fontWeight: 400,
             color: 'var(--color-text-primary)',
-            letterSpacing: '-0.02em',
+            letterSpacing: '-0.01em',
           }}
         >
           {t('myItems', 'My Items')}
@@ -463,7 +469,7 @@ export default function MyItemsPage() {
 
       {/* Submit modal — ask about platform verification */}
       <Modal
-        title={t('submitItem', 'Submit Item')}
+        title={<span className="oio-serif" style={{ fontSize: 20 }}>{t('submitItem', 'Submit Item')}</span>}
         open={submitModalOpen}
         onCancel={() => {
           setSubmitModalOpen(false)
@@ -471,6 +477,7 @@ export default function MyItemsPage() {
         }}
         footer={null}
         centered
+        style={{ borderRadius: 24, overflow: 'hidden' }}
       >
         <p style={{ marginBottom: 24, color: 'var(--color-text-secondary)' }}>
           {t(

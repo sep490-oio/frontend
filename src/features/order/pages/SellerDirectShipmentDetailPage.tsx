@@ -29,7 +29,6 @@ import {
   useOrderById,
 } from '@/features/order/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
-import { SERIF_FONT } from '@/styles/tokens'
 import { formatDateTime } from '@/utils/format'
 import { MultiCaptureUploader, type CapturedPhoto } from '@/components/ui/MultiCaptureUploader'
 import { useMediaUpload } from '@/hooks/useMediaUpload'
@@ -193,10 +192,21 @@ export default function SellerDirectShipmentDetailPage() {
       </Space>
 
       {/* QR card — prominent at top */}
-      <Card style={{ marginBottom: 16, textAlign: 'center' }}>
+      <Card 
+        style={{ 
+          marginBottom: 16, 
+          textAlign: 'center',
+          background: 'var(--color-bg-container)',
+          backdropFilter: 'var(--oio-blur)',
+          WebkitBackdropFilter: 'var(--oio-blur)',
+          borderRadius: 24,
+          border: '1px solid var(--color-border)',
+          boxShadow: 'var(--shadow-sm)'
+        }}
+      >
         <Flex vertical align="center" gap={12}>
           <QRCode value={qrPayload} size={220} />
-          <Typography.Title level={3} style={{ margin: 0, fontFamily: SERIF_FONT, fontWeight: 600 }}>
+          <Typography.Title level={3} className="oio-serif" style={{ margin: 0, fontWeight: 600, fontSize: 24 }}>
             #{shipment.shipmentIdDisplay}
           </Typography.Title>
           {shipment.internalTrackingCode && (
@@ -219,7 +229,17 @@ export default function SellerDirectShipmentDetailPage() {
 
       {/* Details card */}
       <Flex gap={16} wrap="wrap" align="flex-start">
-        <Card style={{ flex: '1 1 420px', minWidth: 320 }}>
+        <Card 
+          style={{ 
+            flex: '1 1 420px', 
+            minWidth: 320,
+            background: 'var(--color-bg-container)',
+            backdropFilter: 'var(--oio-blur)',
+            WebkitBackdropFilter: 'var(--oio-blur)',
+            borderRadius: 24,
+            border: '1px solid var(--color-border)'
+          }}
+        >
           <Descriptions column={1} size="small" bordered>
             <Descriptions.Item label={t('statusLabel', 'Status')}>
               <StatusBadge status={shipment.status} />
@@ -299,10 +319,17 @@ export default function SellerDirectShipmentDetailPage() {
         title={
           <Flex gap={8} align="center">
             <CameraOutlined />
-            {t('directShipment.dispatch.packagePhotos', 'Package Photos')}
+            <span className="oio-serif" style={{ fontWeight: 400, fontSize: 18 }}>{t('directShipment.dispatch.packagePhotos', 'Package Photos')}</span>
           </Flex>
         }
-        style={{ marginTop: 16 }}
+        style={{ 
+          marginTop: 16,
+          background: 'var(--color-bg-container)',
+          backdropFilter: 'var(--oio-blur)',
+          WebkitBackdropFilter: 'var(--oio-blur)',
+          borderRadius: 24,
+          border: '1px solid var(--color-border)'
+        }}
       >
         {shipment.sellerPackagePhotos && shipment.sellerPackagePhotos.length > 0 ? (
           <Flex wrap="wrap" gap={12}>
@@ -331,8 +358,15 @@ export default function SellerDirectShipmentDetailPage() {
 
       {/* Handover proofs */}
       <Card
-        title={t('directShipment.dispatch.handoverProofs', 'Handover Proofs')}
-        style={{ marginTop: 16 }}
+        title={<span className="oio-serif" style={{ fontWeight: 400, fontSize: 18 }}>{t('directShipment.dispatch.handoverProofs', 'Handover Proofs')}</span>}
+        style={{ 
+          marginTop: 16,
+          background: 'var(--color-bg-container)',
+          backdropFilter: 'var(--oio-blur)',
+          WebkitBackdropFilter: 'var(--oio-blur)',
+          borderRadius: 24,
+          border: '1px solid var(--color-border)'
+        }}
         extra={
           handoverAllowed && (
             <Button
@@ -372,7 +406,17 @@ export default function SellerDirectShipmentDetailPage() {
 
       {/* Recipient */}
       {order?.shipping && (
-        <Card title={t('recipient', 'Recipient')} style={{ marginTop: 16 }}>
+        <Card 
+          title={<span className="oio-serif" style={{ fontWeight: 400, fontSize: 18 }}>{t('recipient', 'Recipient')}</span>} 
+          style={{ 
+            marginTop: 16,
+            background: 'var(--color-bg-container)',
+            backdropFilter: 'var(--oio-blur)',
+            WebkitBackdropFilter: 'var(--oio-blur)',
+            borderRadius: 24,
+            border: '1px solid var(--color-border)'
+          }}
+        >
           <Descriptions column={1} size="small">
             <Descriptions.Item label={t('recipientName', 'Name')}>
               {order.shipping.recipientName ?? '—'}
@@ -389,7 +433,17 @@ export default function SellerDirectShipmentDetailPage() {
 
       {/* Item summary */}
       {order?.item && (
-        <Card title={t('item', 'Item')} style={{ marginTop: 16 }}>
+        <Card 
+          title={<span className="oio-serif" style={{ fontWeight: 400, fontSize: 18 }}>{t('item', 'Item')}</span>} 
+          style={{ 
+            marginTop: 16,
+            background: 'var(--color-bg-container)',
+            backdropFilter: 'var(--oio-blur)',
+            WebkitBackdropFilter: 'var(--oio-blur)',
+            borderRadius: 24,
+            border: '1px solid var(--color-border)'
+          }}
+        >
           <Flex gap={12} align="center">
             {order.item.primaryImageUrl && (
               <img
