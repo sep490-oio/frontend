@@ -36,7 +36,6 @@ type TabKey = 'warehouse' | 'order'
 function WarehouseReturnsTab() {
   const { t } = useTranslation('seller')
   const { message } = App.useApp()
-  const { isMobile } = useBreakpoint()
   const { data, isLoading } = useSellerWarehouseReturns()
   const confirmReceipt = useConfirmWarehouseReturnReceipt()
   const addEvidence = useAddWarehouseReturnEvidenceSeller()
@@ -237,7 +236,6 @@ function OrderReturnsTab() {
   const { t } = useTranslation('seller')
   const { message } = App.useApp()
   const navigate = useNavigate()
-  const { isMobile } = useBreakpoint()
   const addEvidence = useAddOrderReturnEvidenceSeller()
   const scanReturn = useScanOrderReturn()
   const confirmReceived = useConfirmReturnReceived()

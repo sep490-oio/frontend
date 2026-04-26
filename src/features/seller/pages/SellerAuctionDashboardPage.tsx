@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router'
-import { Typography, Card, Row, Col, Space, Spin, Button, Statistic, Flex, Table, Tag } from 'antd'
+import { Typography, Card, Row, Col, Space, Spin, Button, Statistic, Flex, Tag } from 'antd'
 import {
   ArrowLeftOutlined,
   DashboardOutlined,

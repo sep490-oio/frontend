@@ -14,10 +14,12 @@ import { BalanceCard } from '@/features/payment/components/BalanceCard'
 import { TransactionTable } from '@/features/payment/components/TransactionTable'
 import { WithdrawalSnapshot } from '@/features/payment/components/WithdrawalSnapshot'
 import { SERIF_FONT } from '@/styles/tokens'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 
 export default function SellerWalletPage() {
   const { t } = useTranslation('payment')
   const { t: tc } = useTranslation('common')
+  const { isMobile } = useBreakpoint()
 
   const TX_TYPE_OPTIONS = [
     { value: '', label: t('txTypeLabel.all') },
