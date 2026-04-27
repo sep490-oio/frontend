@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Modal, Form, Select, Input, App } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import {
   useCreateOrderDispute,
   useCreateAuctionDispute,
@@ -47,6 +48,7 @@ export function CreateDisputeModal({
   const { t: tc } = useTranslation('common')
   const { message } = App.useApp()
   const navigate = useNavigate()
+  const { isMobile } = useBreakpoint()
 
   const createOrderDispute = useCreateOrderDispute()
   const createAuctionDispute = useCreateAuctionDispute()
@@ -141,6 +143,7 @@ export function CreateDisputeModal({
         <Form.Item label={t('disputeDomain', 'Domain')} required>
           <Select
             value={domain || undefined}
+            size={isMobile ? 'large' : 'middle'}
             onChange={(val) => {
               setDomain(val)
               setCaseType('')
@@ -152,6 +155,7 @@ export function CreateDisputeModal({
         <Form.Item label={t('disputeCaseType', 'Case Type')} required>
           <Select
             value={caseType || undefined}
+            size={isMobile ? 'large' : 'middle'}
             onChange={(val) => setCaseType(val)}
             placeholder={t('selectCaseType', 'Select case type')}
             options={caseTypeOptions}
@@ -160,6 +164,7 @@ export function CreateDisputeModal({
         <Form.Item label={t('disputeTitle', 'Title')} required>
           <Input
             value={title}
+            size={isMobile ? 'large' : 'middle'}
             onChange={(e) => setTitle(e.target.value)}
             placeholder={t('disputeTitlePlaceholder', 'Brief summary of the issue')}
             maxLength={200}
@@ -182,6 +187,7 @@ export function CreateDisputeModal({
         >
           <Input.TextArea
             rows={4}
+            size={isMobile ? 'large' : 'middle'}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder={t('disputeDescriptionPlaceholder', 'Describe the issue in detail (min. 20 characters)...')}

@@ -289,5 +289,14 @@
   "recipient": "Người nhận",
   "phone": "Số điện thoại",
   "address": "Địa chỉ",
-  "item": "Sản phẩm"
+  "item": "Sản phẩm",
+  "rateThisSeller": "Đánh giá người bán này",
+  "overallRating": "Đánh giá chung",
+  "communication": "Giao tiếp",
+  "shippingSpeed": "Tốc độ giao hàng",
+  "itemAccuracy": "Mô tả sản phẩm",
+  "reviewPlaceholder": "Chia sẻ trải nghiệm của bạn với người bán này...",
+  "submitReview": "Gửi đánh giá",
+  "reviewSubmitted": "Gửi đánh giá thành công",
+  "reviewError": "Gửi đánh giá thất bại"
 }

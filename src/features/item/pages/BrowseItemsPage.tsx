@@ -210,7 +210,7 @@ export default function BrowseItemsPage() {
       {/* ── Main content Desktop/Grid ── */}
       <Flex gap={32} align="flex-start">
         {!isNarrow && (
-          <div className="hide-scrollbar" style={{ width: 280, flexShrink: 0, position: 'sticky', top: 100, maxHeight: 'calc(100vh - 120px)', overflowY: 'auto', paddingRight: 4 }}>
+          <div className="hide-scrollbar" style={{ width: 280, flexShrink: 0, position: 'sticky', top: 'var(--navbar-offset-desktop)', maxHeight: 'calc(100vh - var(--navbar-offset-desktop) - 20px)', overflowY: 'auto', paddingRight: 4 }}>
             <div style={{
               background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
               borderRadius: 100,

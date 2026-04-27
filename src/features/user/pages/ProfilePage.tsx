@@ -252,7 +252,8 @@ export default function ProfilePage() {
               textAlign: 'center',
               boxShadow: 'var(--shadow-sm)',
               position: 'sticky',
-              top: 24,
+              top: 'var(--navbar-offset-desktop)',
+              maxHeight: 'calc(100vh - var(--navbar-offset-desktop) - 20px)',
               padding: isMobile ? '40px 24px' : '48px 32px'
             }}
           >

@@ -770,7 +770,7 @@ export function AuctionSidebar({
   // ── Desktop: sticky sidebar ───────────────────────────────────────
   if (!isMobileScreen) {
     return (
-      <div style={isDesktop ? { position: 'sticky', top: 24 } : undefined}>
+      <div style={isDesktop ? { position: 'sticky', top: 'var(--navbar-offset-desktop)' } : undefined}>
         {sidebarContent}
       </div>
     )

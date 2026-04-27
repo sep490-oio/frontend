@@ -289,5 +289,14 @@
   "recipient": "Recipient",
   "phone": "Phone",
   "address": "Address",
-  "item": "Item"
+  "item": "Item",
+  "rateThisSeller": "Rate this Seller",
+  "overallRating": "Overall Rating",
+  "communication": "Communication",
+  "shippingSpeed": "Shipping Speed",
+  "itemAccuracy": "Item Accuracy",
+  "reviewPlaceholder": "Share your experience with this seller...",
+  "submitReview": "Submit Review",
+  "reviewSubmitted": "Review submitted successfully",
+  "reviewError": "Failed to submit review"
 }

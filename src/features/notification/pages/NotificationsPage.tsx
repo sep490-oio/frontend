@@ -135,8 +135,11 @@ export default function NotificationsPage() {
   }
 
   const handleAction = (item: NotificationDto, action: NotificationAction) => {
-    if (action.type === 'accept_offer' || action.type === 'decline_offer') {
-      const accept = action.type === 'accept_offer'
+    const isAccept = action.type.includes('accept')
+    const isDecline = action.type.includes('decline') || action.type.includes('reject')
+    
+    if (isAccept || isDecline) {
+      const accept = isAccept
       if (!item.entityId) return
 
       respondOffer.mutate(
@@ -424,7 +427,7 @@ export default function NotificationsPage() {
                                               e.stopPropagation()
                                               handleAction(item, action)
                                             }}
-                                            loading={(action.type === 'accept_offer' || action.type === 'decline_offer') && respondOffer.isPending}
+                                            loading={(action.type.includes('accept') || action.type.includes('decline') || action.type.includes('reject')) && respondOffer.isPending}
                                             disabled={!route}
                                             style={{
                                               height: 38,

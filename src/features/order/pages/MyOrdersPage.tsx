@@ -332,7 +332,6 @@ export default function MyOrdersPage() {
                 current={page}
                 pageSize={pageSize}
                 total={data?.metadata?.totalCount ?? 0}
-                size="small"
                 onChange={(p) => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
              />
           </Flex>

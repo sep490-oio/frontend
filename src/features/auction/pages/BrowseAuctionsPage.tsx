@@ -422,8 +422,8 @@ export default function BrowseAuctionsPage() {
               width: 280,
               flexShrink: 0,
               position: 'sticky',
-              top: 100,
-              maxHeight: 'calc(100vh - 120px)',
+              top: 'var(--navbar-offset-desktop)',
+              maxHeight: 'calc(100vh - var(--navbar-offset-desktop) - 20px)',
               overflowY: 'auto',
               paddingRight: 8,
             }}

@@ -506,7 +506,7 @@ export default function CheckoutPage() {
 
         {/* Right Column: Checkout Sidebar */}
         <Col xs={24} lg={9}>
-          <div style={{ position: 'sticky', top: 24 }}>
+          <div style={{ position: 'sticky', top: 'var(--navbar-offset-desktop)' }}>
             <Space direction="vertical" size={24} style={{ width: '100%' }}>
               {/* Payment Step */}
               <div style={{

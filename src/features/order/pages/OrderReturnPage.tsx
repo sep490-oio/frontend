@@ -109,6 +109,7 @@ export default function OrderReturnPage() {
               render={({ field }) => (
                 <Select
                   {...field}
+                  size={isMobile ? 'large' : 'middle'}
                   placeholder={t('selectReason', 'Select a reason')}
                   options={RETURN_REASONS.map((reason) => ({
                     value: reason,
@@ -131,6 +132,7 @@ export default function OrderReturnPage() {
                 <Input.TextArea
                   {...field}
                   rows={4}
+                  size={isMobile ? 'large' : 'middle'}
                   placeholder={t('descriptionPlaceholder', 'Provide additional details...')}
                 />
               )}

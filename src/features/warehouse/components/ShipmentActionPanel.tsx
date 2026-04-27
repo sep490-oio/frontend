@@ -93,7 +93,7 @@ export function ShipmentActionPanel({
   const hasActions = canCancel || canSetTracking || canAdvance || !!qrData
 
   return (
-    <div style={{ position: 'sticky', top: 24 }}>
+    <div style={{ position: 'sticky', top: 'var(--navbar-offset-desktop)' }}>
       <Card 
         title={<span className="oio-serif" style={{ fontWeight: 400, fontSize: 18 }}>{t('actions', 'Actions')}</span>} 
         size="small"

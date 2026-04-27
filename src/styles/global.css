@@ -884,3 +884,49 @@ h1.oio-serif,
     flex-direction: column;
   }
 }
+
+/* --- Sticky Offset for Floating Navbar --- */
+:root {
+  --navbar-offset-desktop: 112px;
+  --navbar-offset-mobile: 96px;
+}
+
+/* Ant Design Table Header Sticky */
+.ant-table-wrapper .ant-table-sticky-header,
+.ant-table-wrapper .ant-table-thead > tr > th {
+  top: var(--navbar-offset-desktop) !important;
+}
+
+/* Ant Design Affix */
+.ant-affix {
+  top: var(--navbar-offset-desktop) !important;
+}
+
+@media (max-width: 768px) {
+  .ant-table-wrapper .ant-table-sticky-header,
+  .ant-table-wrapper .ant-table-thead > tr > th,
+  .ant-affix {
+    top: var(--navbar-offset-mobile) !important;
+  }
+}
+
+/* Target elements with inline sticky styles that are too close to the top */
+[style*="position: sticky"][style*="top: 0"],
+[style*="position: sticky"][style*="top:0"],
+[style*="position: sticky"][style*="top: 24"],
+[style*="position: sticky"][style*="top:24"],
+[style*="position: sticky"][style*="top: 16"],
+[style*="position: sticky"][style*="top:16"] {
+  top: var(--navbar-offset-desktop) !important;
+}
+
+@media (max-width: 768px) {
+  [style*="position: sticky"][style*="top: 0"],
+  [style*="position: sticky"][style*="top:0"],
+  [style*="position: sticky"][style*="top: 24"],
+  [style*="position: sticky"][style*="top:24"],
+  [style*="position: sticky"][style*="top: 16"],
+  [style*="position: sticky"][style*="top:16"] {
+    top: var(--navbar-offset-mobile) !important;
+  }
+}

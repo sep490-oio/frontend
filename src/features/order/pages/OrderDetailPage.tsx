@@ -390,6 +390,33 @@ export default function OrderDetailPage() {
         onDispute={isBuyer && order.status !== OrderStatus.Completed ? handleOpenDispute : undefined}
       />
 
+      {/* Seller Rating Section — Displayed prominently after completion */}
+      {isBuyer && order.status === OrderStatus.Completed && !reviewSubmitted && (
+        <Card 
+          title={<span style={{ fontFamily: SANS_FONT, fontWeight: 600 }}>{t('rateThisSeller', 'Rate this Seller')}</span>}
+          style={{ 
+            marginBottom: isMobile ? 16 : 24,
+            borderRadius: 16,
+            border: '1px solid var(--color-border-light)',
+            boxShadow: 'var(--shadow-sm)'
+          }}
+        >
+          <SellerRatingForm
+            orderId={order.id}
+            loading={createReview.isPending}
+            onSubmit={async (data) => {
+              try {
+                await createReview.mutateAsync(data)
+                message.success(t('reviewSubmitted', 'Review submitted successfully'))
+                setReviewSubmitted(true)
+              } catch (err) {
+                message.error(t('reviewError', 'Failed to submit review'))
+              }
+            }}
+          />
+        </Card>
+      )}
+
       {/* Buyer-facing warehouse outbound shipment panel — compact summary.
           All actions now live on /me/outbound-shipments/:shipmentId. */}
       {isBuyer && !!order.warehouseOutboundShipment && (() => {
@@ -955,32 +982,6 @@ export default function OrderDetailPage() {
           confirmedAt={(order as any).confirmedAt}
         />
       )}
-
-      {/* Seller Rating */}
-      {isBuyer &&
-        order.status === OrderStatus.Completed &&
-        (order as any).confirmedAt &&
-        !(order as any).review &&
-        !reviewSubmitted && (
-          <Card
-            title={t('rateThisSeller', 'Rate this Seller')}
-            style={{ marginBottom: isMobile ? 16 : 24 }}
-          >
-            <SellerRatingForm
-              orderId={order.id}
-              loading={createReview.isPending}
-              onSubmit={async (data) => {
-                try {
-                  await createReview.mutateAsync(data)
-                  message.success(t('reviewSubmitted', 'Review submitted successfully'))
-                  setReviewSubmitted(true)
-                } catch {
-                  message.error(t('reviewError', 'Failed to submit review'))
-                }
-              }}
-            />
-          </Card>
-        )}
 
       {/* Shipping Information — editable for buyer pre-fulfillment, read-only otherwise */}
       {isBuyer && order.buyerCanUpdateShipping ? (

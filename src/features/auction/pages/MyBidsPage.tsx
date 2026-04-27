@@ -424,7 +424,7 @@ function RecentActivityLog({ localActivities = [] }: { localActivities?: any[] }
       gap: 20,
       height: 'fit-content',
       position: 'sticky',
-      top: 96,
+      top: 'var(--navbar-offset-desktop)',
       boxShadow: 'var(--shadow-sm)'
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>

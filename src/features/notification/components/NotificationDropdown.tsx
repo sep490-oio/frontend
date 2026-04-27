@@ -362,7 +362,7 @@ function NotificationContent({
                                   if (onAction) onAction(item, action)
                                   else if (route) navigate(route)
                                 }}
-                                loading={(action.type === 'accept_offer' || action.type === 'decline_offer') && isActionPending}
+                                loading={(action.type.includes('accept') || action.type.includes('decline') || action.type.includes('reject')) && isActionPending}
                                 disabled={!route}
                                 style={{
                                   borderRadius: 8,
@@ -467,8 +467,11 @@ export function NotificationDropdown() {
 
   const handleAction = useCallback(
     (item: NotificationDto, action: NotificationAction) => {
-      if (action.type === 'accept_offer' || action.type === 'decline_offer') {
-        const accept = action.type === 'accept_offer'
+      const isAccept = action.type.includes('accept')
+      const isDecline = action.type.includes('decline') || action.type.includes('reject')
+      
+      if (isAccept || isDecline) {
+        const accept = isAccept
         if (!item.entityId) return
 
         respondOffer.mutate(
