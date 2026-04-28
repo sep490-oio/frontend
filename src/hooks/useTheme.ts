@@ -79,8 +79,23 @@ export function useThemeProvider(): ThemeContextValue {
   }, [preset])
 
   const toggle = useCallback(() => {
-    setMode(prev => prev === 'light' ? 'dark' : 'light')
-  }, [])
+    const next = mode === 'light' ? 'dark' : 'light'
+
+    // Trigger the background animation immediately via body classes
+    if (next === 'light') {
+      document.body.classList.add('theme-light')
+      document.body.classList.remove('theme-dark')
+    } else {
+      document.body.classList.add('theme-dark')
+      document.body.classList.remove('theme-light')
+    }
+
+    // Delay the component theme switch to sync with the background slide (700ms)
+    // 600ms feels more natural as it finishes just before the slide ends.
+    setTimeout(() => {
+      setMode(next)
+    }, 600)
+  }, [mode])
 
   return { mode, preset, toggle, setPreset, isDark: mode === 'dark' }
 }

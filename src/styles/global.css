@@ -538,8 +538,24 @@ h1.oio-serif,
   text-transform: uppercase !important;
   color: var(--color-text-secondary) !important;
   background: var(--color-bg-surface) !important;
+  backdrop-filter: blur(12px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(180%) !important;
   border-bottom: 1px solid var(--color-border) !important;
   padding: 12px 16px !important;
+  z-index: 10 !important;
+}
+
+/* Ensure opaque background for sticky headers to prevent content bleed-through */
+.ant-table-thead>tr>th {
+  background-color: var(--color-bg-surface) !important;
+}
+
+[data-theme="light"] .ant-table-thead>tr>th {
+  background-color: rgb(247, 245, 240) !important;
+}
+
+[data-theme="dark"] .ant-table-thead>tr>th {
+  background-color: rgb(10, 12, 16) !important;
 }
 
 .ant-table-tbody>tr>td {
@@ -855,14 +871,16 @@ h1.oio-serif,
 
 /* --- Sticky Offset for Floating Navbar --- */
 :root {
-  --navbar-offset-desktop: 112px;
-  --navbar-offset-mobile: 96px;
+  --navbar-offset-desktop: 80px; /* Aligned with SellerLayout HEADER_HEIGHT (64) + top (16) */
+  --navbar-offset-mobile: 80px;
 }
 
-/* Ant Design Table Header Sticky */
+/* Ant Design Table Header Sticky - Adjust to stay below the floating navbar */
 .ant-table-wrapper .ant-table-sticky-header,
-.ant-table-wrapper .ant-table-thead>tr>th {
+.ant-table-wrapper .ant-table-thead > tr > th.ant-table-cell-fix-top,
+.ant-table-wrapper .ant-table-thead > tr > th[style*="position: sticky"] {
   top: var(--navbar-offset-desktop) !important;
+  z-index: 90 !important; /* Below the navbar (99) but above table content */
 }
 
 /* Ant Design Affix */
@@ -871,32 +889,16 @@ h1.oio-serif,
 }
 
 @media (max-width: 768px) {
-
   .ant-table-wrapper .ant-table-sticky-header,
-  .ant-table-wrapper .ant-table-thead>tr>th,
+  .ant-table-wrapper .ant-table-thead > tr > th.ant-table-cell-fix-top,
+  .ant-table-wrapper .ant-table-thead > tr > th[style*="position: sticky"],
   .ant-affix {
     top: var(--navbar-offset-mobile) !important;
+    z-index: 90 !important;
   }
 }
 
-/* Target elements with inline sticky styles that are too close to the top */
-[style*="position: sticky"][style*="top: 0"],
-[style*="position: sticky"][style*="top:0"],
-[style*="position: sticky"][style*="top: 24"],
-[style*="position: sticky"][style*="top:24"],
-[style*="position: sticky"][style*="top: 16"],
-[style*="position: sticky"][style*="top:16"] {
-  top: var(--navbar-offset-desktop) !important;
-}
 
 @media (max-width: 768px) {
 
-  [style*="position: sticky"][style*="top: 0"],
-  [style*="position: sticky"][style*="top:0"],
-  [style*="position: sticky"][style*="top: 24"],
-  [style*="position: sticky"][style*="top:24"],
-  [style*="position: sticky"][style*="top: 16"],
-  [style*="position: sticky"][style*="top:16"] {
-    top: var(--navbar-offset-mobile) !important;
-  }
 }

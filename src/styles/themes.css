@@ -39,30 +39,30 @@
   --bg-gradient: var(--bg-unified-gradient);
 }
 
-/* Mint Preset (Emerald Green) */
+/* Mint Preset (Spotify Green) */
 [data-preset="mint"] {
-  --color-accent: #059669;
-  --color-accent-hover: #047857;
-  --color-accent-light: rgba(5, 150, 105, 0.08);
-  --color-accent-rgb: 5, 150, 105;
+  --color-accent: #1DB954;
+  --color-accent-hover: #1ED760;
+  --color-accent-light: rgba(29, 185, 84, 0.08);
+  --color-accent-rgb: 29, 185, 84;
   --bg-unified-gradient: linear-gradient(180deg,
-      #064e3b 0%,
-      #065f46 15%,
-      #047857 35%,
-      #059669 48%,
-      #10b981 52%,
-      #34d399 58%,
-      #6ee7b7 72%,
-      #f0fdf4 82%,
-      #dcfce7 90%,
-      #a7f3d0 100%);
+      #052410 0%,
+      #0b4a21 15%,
+      #116d31 35%,
+      #179343 48%,
+      #1DB954 52%,
+      #1ED760 58%,
+      #68e090 72%,
+      #ebf9f0 82%,
+      #d1f2dd 90%,
+      #a8e8bf 100%);
 }
 
 [data-theme="dark"][data-preset="mint"] {
-  --color-accent: #34D399;
-  --color-accent-hover: #10B981;
-  --color-accent-light: rgba(52, 211, 153, 0.1);
-  --color-accent-rgb: 52, 211, 153;
+  --color-accent: #1ED760;
+  --color-accent-hover: #1DB954;
+  --color-accent-light: rgba(30, 215, 96, 0.1);
+  --color-accent-rgb: 30, 215, 96;
 }
 
 /* Ember Preset (Amber/Orange) */

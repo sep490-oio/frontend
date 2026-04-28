@@ -148,7 +148,7 @@ export function AdminLayout() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'var(--color-bg-primary)',
+      background: 'transparent',
       '--navbar-offset-desktop': '64px',
       '--navbar-offset-mobile': '64px'
     } as React.CSSProperties}>
@@ -423,7 +423,7 @@ export function AdminLayout() {
           marginTop: HEADER_HEIGHT,
           transition: 'margin-left 200ms ease',
           minHeight: `calc(100vh - ${HEADER_HEIGHT}px)`,
-          background: 'var(--color-bg-primary)',
+          background: 'transparent',
         }}
       >
         <Content style={{ padding: isMobile ? 16 : isTablet ? 24 : 40 }}>
