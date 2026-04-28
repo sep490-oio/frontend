@@ -31,6 +31,7 @@ export function useAuctions(params?: AuctionFilterParams, options?: { refetchInt
       return res.data
     },
     ...options,
+    staleTime: 0,
   })
 }
 
@@ -81,6 +82,7 @@ export function useMyAuctions(params?: PaginationParams & { status?: string; sor
       return res.data
     },
     ...options,
+    staleTime: 0,
   })
 }
 
@@ -92,6 +94,7 @@ export function useWatchlist(params?: PaginationParams) {
       const res = await apiClient.get<PagedList<WatchlistItemDto>>('/me/auctions/watch-list', { params })
       return res.data
     },
+    staleTime: 0,
   })
 }
 
@@ -132,6 +135,7 @@ export function useMyBids(params?: PaginationParams & { status?: string; sortBy?
       const res = await apiClient.get<PagedList<MyBidDto>>('/me/bids', { params })
       return res.data
     },
+    staleTime: 0,
   })
 }
 

@@ -348,12 +348,31 @@ export function AppLayout() {
                         fontSize: 14,
                         fontWeight: 500,
                         color: 'var(--color-text-primary)',
-                        fontFamily: SANS_FONT
+                        fontFamily: SANS_FONT,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        maxWidth: isTablet ? 120 : 250,
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap',
                       }}>
-                        <span>{currentUserData?.profile?.displayName ?? currentUserData?.userName}</span>
-                        <span style={{ marginLeft: 6, opacity: 0.6, fontSize: 12, fontWeight: 400 }}>
-                          (@{currentUserData?.userName})
+                        <span style={{ 
+                          overflow: 'hidden', 
+                          textOverflow: 'ellipsis', 
+                          whiteSpace: 'nowrap' 
+                        }}>
+                          {currentUserData?.profile?.displayName ?? currentUserData?.userName}
                         </span>
+                        {!isTablet && (
+                          <span style={{ 
+                            marginLeft: 6, 
+                            opacity: 0.6, 
+                            fontSize: 12, 
+                            fontWeight: 400,
+                            flexShrink: 0
+                          }}>
+                            (@{currentUserData?.userName})
+                          </span>
+                        )}
                       </span>
                     )}
                     <Avatar

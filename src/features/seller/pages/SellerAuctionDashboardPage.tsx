@@ -15,7 +15,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { formatCurrency, formatDateTime } from '@/utils/format'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
-import { MONO_FONT, SERIF_FONT } from '@/styles/tokens'
+import { SERIF_FONT } from '@/styles/tokens'
 import { ItemQA } from '@/features/item/components/ItemQA'
 import { useAuctionHub } from '@/features/auction/hooks/useAuctionHub'
 import { useCurrentUser } from '@/features/user/api'
@@ -239,8 +239,11 @@ export default function SellerAuctionDashboardPage() {
                 valueStyle={{ color: 'var(--color-success)' }}
               />
               <div style={{ marginTop: 16 }}>
-                <Text type="secondary">{t('winner', 'Winner ID')}: </Text>
-                <Text strong style={{ fontFamily: MONO_FONT }}>{auction.currentWinnerId}</Text>
+                <Text type="secondary">{t('winner', 'Người thắng')}: </Text>
+                <Text strong>
+                  {recentBids.find((b) => b.bidderId === auction.currentWinnerId)?.bidderDisplayName ||
+                    auction.currentWinnerId}
+                </Text>
               </div>
             </Card>
           )}

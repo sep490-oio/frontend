@@ -340,6 +340,8 @@ export default function CreateItemPage() {
                       style={{ width: '100%' }}
                       addonAfter="VND"
                       placeholder="100,000"
+                      formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+                      parser={(v) => (v ?? '').replace(/\$\s?|(,*)/g, '') as any}
                     />
                   </Form.Item>
                 </Col>
@@ -356,6 +358,8 @@ export default function CreateItemPage() {
                       style={{ width: '100%' }}
                       addonAfter="VND"
                       placeholder="10,000"
+                      formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+                      parser={(v) => (v ?? '').replace(/\$\s?|(,*)/g, '') as any}
                     />
                   </Form.Item>
                 </Col>
@@ -372,6 +376,8 @@ export default function CreateItemPage() {
                       style={{ width: '100%' }}
                       addonAfter="VND"
                       placeholder={ta('reservePricePlaceholder', 'Optional - minimum price to sell')}
+                      formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+                      parser={(v) => (v ?? '').replace(/\$\s?|(,*)/g, '') as any}
                     />
                   </Form.Item>
                 </Col>
@@ -388,6 +394,8 @@ export default function CreateItemPage() {
                       style={{ width: '100%' }}
                       addonAfter="VND"
                       placeholder={ta('buyNowPricePlaceholder', 'Optional - instant purchase price')}
+                      formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+                      parser={(v) => (v ?? '').replace(/\$\s?|(,*)/g, '') as any}
                     />
                   </Form.Item>
                 </Col>
