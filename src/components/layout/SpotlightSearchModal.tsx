@@ -648,7 +648,7 @@ export const SpotlightSearchModal: React.FC = () => {
       <div style={{ display: 'flex', flexDirection: 'column', background: 'transparent' }} onKeyDown={handleModalKeyDown}>
         <div style={{ 
           padding: isMobile ? '16px 20px' : '20px 24px', 
-          borderBottom: '1px solid var(--color-border)', 
+          borderBottom: '0px solid var(--color-border)', 
           display: 'flex', 
           alignItems: 'center', 
           gap: 14,

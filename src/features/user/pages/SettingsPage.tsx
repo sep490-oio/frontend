@@ -76,7 +76,7 @@ export default function SettingsPage() {
                 cursor: 'pointer',
                 padding: '24px 32px',
                 transition: 'all 0.3s ease',
-                borderBottom: '1px solid var(--color-border)'
+                borderBottom: '0px solid var(--color-border)'
               }}
               extra={<RightOutlined style={{ color: 'var(--color-text-tertiary)', fontSize: 16 }} />}
             >

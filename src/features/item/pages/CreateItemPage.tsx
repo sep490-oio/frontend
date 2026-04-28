@@ -171,7 +171,7 @@ export default function CreateItemPage() {
         <Card
           title={<span style={{ fontSize: 16 }}>{t('basicInfo', 'Basic Info')}</span>}
           style={{ marginBottom: 24, borderRadius: 12, border: '1px solid var(--color-border)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
-          styles={{ header: { borderBottom: '1px solid var(--color-border)' } }}
+          styles={{ header: { borderBottom: '0px solid var(--color-border)' } }}
         >
           <Form.Item
             name="title"
@@ -227,7 +227,7 @@ export default function CreateItemPage() {
         <Card
           title={<span style={{ fontSize: 16 }}>{t('description', 'Description')}</span>}
           style={{ marginBottom: 24, borderRadius: 12, border: '1px solid var(--color-border)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
-          styles={{ header: { borderBottom: '1px solid var(--color-border)' } }}
+          styles={{ header: { borderBottom: '0px solid var(--color-border)' } }}
         >
           <Form.Item
             name="description"
@@ -244,7 +244,7 @@ export default function CreateItemPage() {
         <Card
           title={<span style={{ fontSize: 16 }}>{t('media', 'Photos')}</span>}
           style={{ marginBottom: 24, borderRadius: 12, border: '1px solid var(--color-border)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
-          styles={{ header: { borderBottom: '1px solid var(--color-border)' } }}
+          styles={{ header: { borderBottom: '0px solid var(--color-border)' } }}
         >
           <Form.Item
             required

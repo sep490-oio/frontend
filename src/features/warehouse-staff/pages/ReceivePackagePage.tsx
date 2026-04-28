@@ -299,7 +299,7 @@ export default function ReceivePackagePage() {
                 key={item.inboundShipmentId}
                 style={{
                   padding: isMobile ? '10px 0' : undefined,
-                  borderBottom: '1px solid var(--color-border, #f0f0f0)',
+                  borderBottom: '0px solid var(--color-border, #f0f0f0)',
                 }}
               >
                 <Flex gap={12} align="flex-start">

@@ -459,7 +459,7 @@ function RecentActivityLog({ localActivities = [] }: { localActivities?: any[] }
                   display: 'flex',
                   gap: 12,
                   paddingBottom: 12,
-                  borderBottom: '1px solid var(--color-border-light)',
+                  borderBottom: '0px solid var(--color-border-light)',
                   cursor: notif.entityId ? 'pointer' : 'default'
                 }}
                 onClick={() => {

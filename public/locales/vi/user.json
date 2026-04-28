@@ -167,7 +167,9 @@
     "myBid": "Giá của tôi",
     "becomeSellerTitle": "Bắt đầu bán hàng trên OIO",
     "becomeSellerDesc": "Biến vật phẩm của bạn thành lợi nhuận. Tham gia cộng đồng người bán chuyên nghiệp ngay hôm nay.",
-    "becomeSellerBtn": "Đăng ký người bán"
+    "becomeSellerBtn": "Đăng ký người bán",
+    "bids": "lượt đặt giá",
+    "currentPrice": "Giá hiện tại"
   },
   "profile": {
     "title": "Hồ sơ của tôi",

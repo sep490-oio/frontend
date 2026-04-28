@@ -405,7 +405,7 @@ function MobileDateTimePicker({
         centered
         styles={{
           header: {
-            borderBottom: '1px solid var(--color-border-light, #f0f0f0)',
+            borderBottom: '0px solid var(--color-border-light, #f0f0f0)',
             paddingBottom: 12,
             marginBottom: 0,
           },

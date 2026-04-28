@@ -166,7 +166,7 @@ export function WarehouseStaffLayout() {
             alignItems: 'center',
             justifyContent: effectiveCollapsed ? 'center' : 'flex-start',
             padding: effectiveCollapsed ? '0' : '0 20px',
-            borderBottom: '1px solid var(--color-border)',
+            borderBottom: '0px solid var(--color-border)',
             flexShrink: 0,
           }}
         >
@@ -269,7 +269,7 @@ export function WarehouseStaffLayout() {
           background: 'var(--color-bg-card)',
           backdropFilter: 'var(--oio-blur)',
           WebkitBackdropFilter: 'var(--oio-blur)',
-          borderBottom: '1px solid var(--color-border)',
+          borderBottom: '0px solid var(--color-border)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',

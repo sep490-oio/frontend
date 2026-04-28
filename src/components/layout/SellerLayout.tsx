@@ -281,7 +281,7 @@ export function SellerLayout() {
             alignItems: 'center',
             justifyContent: effectiveCollapsed ? 'center' : 'flex-start',
             padding: effectiveCollapsed ? '0' : '0 20px',
-            borderBottom: '1px solid var(--color-border)',
+            borderBottom: '0px solid var(--color-border)',
             flexShrink: 0,
           }}
         >

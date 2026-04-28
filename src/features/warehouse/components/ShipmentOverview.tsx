@@ -55,7 +55,7 @@ interface ShipmentOverviewProps {
 function StatRow({ label, value }: { label: string; value: React.ReactNode }) {
   if (!value) return null
   return (
-    <Flex justify="space-between" style={{ padding: '6px 0', borderBottom: '1px solid var(--color-border-light)' }}>
+    <Flex justify="space-between" style={{ padding: '6px 0', borderBottom: '0px solid var(--color-border-light)' }}>
       <Typography.Text type="secondary" style={{ fontSize: 13 }}>{label}</Typography.Text>
       <Typography.Text style={{ fontSize: 13, fontWeight: 500, textAlign: 'right' }}>{value}</Typography.Text>
     </Flex>

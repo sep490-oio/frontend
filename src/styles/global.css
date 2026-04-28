@@ -17,30 +17,26 @@
   --color-border: #E8E5DF;
   --color-border-light: #F7F5F0;
   --color-bg-container: rgba(255, 255, 255, 0.7);
-  --bg-unified-gradient: linear-gradient(
-    180deg,
-    #150804 0%,
-    #0d1b2e 15%,
-    #1e3a5a 35%,
-    #4a7090 48%,
-    #7a9fb8 52%,
-    #8fb0c8 58%,
-    #b0c8d8 72%,
-    #ccdbe8 82%,
-    #e0ecf2 90%,
-    #f2ead8 100%
-  );
+  --bg-unified-gradient: linear-gradient(180deg,
+      #150804 0%,
+      #0d1b2e 15%,
+      #1e3a5a 35%,
+      #4a7090 48%,
+      #7a9fb8 52%,
+      #8fb0c8 58%,
+      #b0c8d8 72%,
+      #ccdbe8 82%,
+      #e0ecf2 90%,
+      #f2ead8 100%);
   --bg-dark-offset: translateY(0%);
   --bg-light-offset: translateY(-50%);
   --bg-transition: 700ms cubic-bezier(0.4, 0, 0.2, 1);
-  --bg-gradient: linear-gradient(
-    180deg,
-    #8fb0c8 0%,
-    #b0c8d8 30%,
-    #ccdbe8 55%,
-    #e0ecf2 75%,
-    #f2ead8 100%
-  );
+  --bg-gradient: linear-gradient(180deg,
+      #8fb0c8 0%,
+      #b0c8d8 30%,
+      #ccdbe8 55%,
+      #e0ecf2 75%,
+      #f2ead8 100%);
 
   /* Typography */
   --font-serif: 'Noto Serif', Georgia, 'Times New Roman', serif;
@@ -80,14 +76,12 @@
   --color-border: #1f242f;
   --color-border-light: #11141b;
   --color-bg-container: rgba(17, 20, 27, 0.7);
-  --bg-gradient: linear-gradient(
-    180deg,
-    #150804 0%,
-    #0d1b2e 25%,
-    #1e3a5a 55%,
-    #4a7090 80%,
-    #7a9fb8 100%
-  );
+  --bg-gradient: linear-gradient(180deg,
+      #150804 0%,
+      #0d1b2e 25%,
+      #1e3a5a 55%,
+      #4a7090 80%,
+      #7a9fb8 100%);
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -369,7 +363,8 @@ h1.oio-serif,
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: rgba(148, 163, 184, 0.2); /* Muted slate/gray with transparency */
+  background-color: rgba(148, 163, 184, 0.2);
+  /* Muted slate/gray with transparency */
   border: 3px solid transparent;
   background-clip: content-box;
   border-radius: 10px;
@@ -887,21 +882,13 @@ h1.oio-serif,
 
 /* --- Sticky Offset for Floating Navbar --- */
 :root {
-  --navbar-offset-desktop: 0px;
-  --navbar-offset-mobile: 0px;
+  --navbar-offset-desktop: 112px;
+  --navbar-offset-mobile: 96px;
 }
 
-
-/* 
- * Apply offset only to elements that are INTENDED to be sticky below the navbar.
- * We avoid generic [style*="position: sticky"] because it catches non-sticky table headers
- * that Ant Design sometimes marks as relative/sticky internally.
- */
-
-/* Ant Design Table Sticky Header (when sticky prop is active) */
-.ant-table-sticky-holder,
-.ant-table-sticky-header,
-.ant-table-wrapper-sticky .ant-table-thead > tr > th {
+/* Ant Design Table Header Sticky */
+.ant-table-wrapper .ant-table-sticky-header,
+.ant-table-wrapper .ant-table-thead>tr>th {
   top: var(--navbar-offset-desktop) !important;
 }
 
@@ -910,17 +897,33 @@ h1.oio-serif,
   top: var(--navbar-offset-desktop) !important;
 }
 
-/* Custom helper class for other sticky elements */
-.oio-sticky-offset {
+@media (max-width: 768px) {
+
+  .ant-table-wrapper .ant-table-sticky-header,
+  .ant-table-wrapper .ant-table-thead>tr>th,
+  .ant-affix {
+    top: var(--navbar-offset-mobile) !important;
+  }
+}
+
+/* Target elements with inline sticky styles that are too close to the top */
+[style*="position: sticky"][style*="top: 0"],
+[style*="position: sticky"][style*="top:0"],
+[style*="position: sticky"][style*="top: 24"],
+[style*="position: sticky"][style*="top:24"],
+[style*="position: sticky"][style*="top: 16"],
+[style*="position: sticky"][style*="top:16"] {
   top: var(--navbar-offset-desktop) !important;
 }
 
 @media (max-width: 768px) {
-  .ant-table-sticky-holder,
-  .ant-table-sticky-header,
-  .ant-table-wrapper-sticky .ant-table-thead > tr > th,
-  .ant-affix,
-  .oio-sticky-offset {
+
+  [style*="position: sticky"][style*="top: 0"],
+  [style*="position: sticky"][style*="top:0"],
+  [style*="position: sticky"][style*="top: 24"],
+  [style*="position: sticky"][style*="top:24"],
+  [style*="position: sticky"][style*="top: 16"],
+  [style*="position: sticky"][style*="top:16"] {
     top: var(--navbar-offset-mobile) !important;
   }
 }

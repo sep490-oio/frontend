@@ -19,7 +19,7 @@ const FilterWidget: React.FC<FilterWidgetProps> = ({ title, icon, children, noPa
     {title && (
       <div style={{
         padding: '16px 20px',
-        borderBottom: '1px solid var(--color-border)',
+        borderBottom: '0px solid var(--color-border)',
         fontWeight: 600,
         fontSize: 15,
         color: 'var(--color-text-primary)',

@@ -166,7 +166,9 @@
     "myBid": "My Bid",
     "becomeSellerTitle": "Start Selling on OIO",
     "becomeSellerDesc": "Turn your items into profit. Join our professional seller community today.",
-    "becomeSellerBtn": "Become a Seller"
+    "becomeSellerBtn": "Become a Seller",
+    "bids": "bids",
+    "currentPrice": "Current Price"
   },
   "profile": {
     "title": "My Profile",

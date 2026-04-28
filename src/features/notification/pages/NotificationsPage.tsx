@@ -30,39 +30,39 @@ function getEntityColor(entityId?: string) {
   return `hsl(${hue}, 75%, 40%)`
 }
 
-function AuctionGroupHeader({ 
-  auctionId, 
-  fallbackTitle, 
-  color 
-}: { 
-  auctionId: string; 
-  fallbackTitle: string; 
-  color: string 
+function AuctionGroupHeader({
+  auctionId,
+  fallbackTitle,
+  color
+}: {
+  auctionId: string;
+  fallbackTitle: string;
+  color: string
 }) {
   const { user } = useAuth()
   const { data: auction, isLoading } = useAuctionDetail(auctionId, user?.id)
-  
+
   return (
     <div style={{
       padding: '20px 24px',
       background: 'rgba(0,0,0,0.02)',
-      borderBottom: '1px solid var(--color-border-light)',
+      borderBottom: '0px solid transparent',
       display: 'flex',
       alignItems: 'center',
       gap: 12
     }}>
-      <div style={{ 
-        width: 4, 
-        height: 24, 
-        borderRadius: 2, 
-        background: color 
+      <div style={{
+        width: 4,
+        height: 24,
+        borderRadius: 2,
+        background: color
       }} />
       <div style={{ flex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-          <Tag color="gold" style={{ 
-            borderRadius: 100, 
-            margin: 0, 
-            fontWeight: 700, 
+          <Tag color="gold" style={{
+            borderRadius: 100,
+            margin: 0,
+            fontWeight: 700,
             fontSize: 10,
             border: 'none',
             background: 'rgba(212, 163, 115, 0.1)',
@@ -74,9 +74,9 @@ function AuctionGroupHeader({
             #{auctionId.slice(0, 8).toUpperCase()}
           </span>
         </div>
-        <Typography.Text strong style={{ 
-          fontSize: 18, 
-          color: 'var(--color-text-primary)', 
+        <Typography.Text strong style={{
+          fontSize: 18,
+          color: 'var(--color-text-primary)',
           fontFamily: SANS_FONT,
           display: 'block'
         }}>
@@ -137,7 +137,7 @@ export default function NotificationsPage() {
   const handleAction = (item: NotificationDto, action: NotificationAction) => {
     const isAccept = action.type.includes('accept')
     const isDecline = action.type.includes('decline') || action.type.includes('reject')
-    
+
     if (isAccept || isDecline) {
       const accept = isAccept
       if (!item.entityId) return
@@ -187,7 +187,7 @@ export default function NotificationsPage() {
           existing.items.push(item)
           return
         }
-        
+
         // Try to find a better title if the first one is just a status
         // Some notifications might have the auction name as the title
         groups.push({
@@ -209,26 +209,26 @@ export default function NotificationsPage() {
   }, [data?.items])
 
   return (
-    <div style={{ 
-      maxWidth: 1400, 
-      margin: '0 auto', 
+    <div style={{
+      maxWidth: 1400,
+      margin: '0 auto',
       padding: isMobile ? '24px 16px 80px' : '48px 32px 80px',
       fontFamily: SANS_FONT
     }}>
       {/* Header Section */}
-      <div style={{ 
-        display: 'flex', 
-        flexDirection: isMobile ? 'column' : 'row', 
-        justifyContent: 'space-between', 
-        alignItems: isMobile ? 'flex-start' : 'flex-end', 
-        gap: 16, 
-        marginBottom: 40 
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        justifyContent: 'space-between',
+        alignItems: isMobile ? 'flex-start' : 'flex-end',
+        gap: 16,
+        marginBottom: 40
       }}>
         <div>
-          <Typography.Title level={1} style={{ 
-            margin: 0, 
-            fontSize: isMobile ? 28 : 36, 
-            fontWeight: 700, 
+          <Typography.Title level={1} style={{
+            margin: 0,
+            fontSize: isMobile ? 28 : 36,
+            fontWeight: 700,
             fontFamily: SANS_FONT,
             letterSpacing: '-0.02em'
           }}>
@@ -238,12 +238,12 @@ export default function NotificationsPage() {
             {t('manageNotifications', 'Stay updated with your auction activity and account status')}
           </Typography.Text>
         </div>
-        
-        <Button 
-          type="primary" 
-          icon={<CheckOutlined />} 
-          onClick={handleMarkAllAsRead} 
-          loading={markAllAsRead.isPending} 
+
+        <Button
+          type="primary"
+          icon={<CheckOutlined />}
+          onClick={handleMarkAllAsRead}
+          loading={markAllAsRead.isPending}
           size="large"
           style={{
             height: 48,
@@ -300,9 +300,9 @@ export default function NotificationsPage() {
             <Spin size="large" tip="Loading notifications..." />
           </div>
         ) : groupedNotifications.length === 0 ? (
-          <div style={{ 
-            background: 'var(--color-bg-card)', 
-            borderRadius: 24, 
+          <div style={{
+            background: 'var(--color-bg-card)',
+            borderRadius: 24,
             border: '1px solid var(--color-border)',
             padding: 80,
             textAlign: 'center'
@@ -334,10 +334,10 @@ export default function NotificationsPage() {
                     }}
                   >
                     {isAuctionGroup ? (
-                      <AuctionGroupHeader 
-                        auctionId={group.key} 
-                        fallbackTitle={group.title} 
-                        color={entityColor} 
+                      <AuctionGroupHeader
+                        auctionId={group.key}
+                        fallbackTitle={group.title}
+                        color={entityColor}
                       />
                     ) : null}
 
@@ -352,7 +352,7 @@ export default function NotificationsPage() {
                               cursor: 'pointer',
                               padding: isMobile ? '20px' : '24px',
                               backgroundColor: isUnread ? 'rgba(139, 115, 85, 0.03)' : 'transparent',
-                              borderBottom: '1px solid var(--color-border-light)',
+                              borderBottom: '0px solid transparent',
                               transition: 'background 0.2s',
                               alignItems: 'flex-start'
                             }}
@@ -378,39 +378,53 @@ export default function NotificationsPage() {
                               </div>
 
                               <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 6 }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    {!isAuctionGroup && (
-                                      <Typography.Text strong style={{ fontSize: 16, color: 'var(--color-text-primary)' }}>
-                                        {item.title}
-                                      </Typography.Text>
-                                    )}
-                                    {isUnread && (
-                                      <div style={{ 
-                                        width: 8, 
-                                        height: 8, 
-                                        borderRadius: '50%', 
-                                        background: 'var(--color-accent)',
-                                        boxShadow: '0 0 8px var(--color-accent)'
-                                      }} />
-                                    )}
-                                  </div>
-                                  <Typography.Text type="secondary" style={{ fontSize: 12, whiteSpace: 'nowrap' }}>
-                                    {dayjs(item.createdAt).fromNow()}
-                                  </Typography.Text>
-                                </div>
+                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+                                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                                     {isUnread && !isAuctionGroup && (
+                                       <div style={{
+                                         width: 8,
+                                         height: 8,
+                                         borderRadius: '50%',
+                                         background: 'var(--color-accent)',
+                                         boxShadow: '0 0 8px var(--color-accent)',
+                                         flexShrink: 0
+                                       }} />
+                                     )}
+                                     {!isAuctionGroup && (
+                                       <Typography.Text strong style={{ fontSize: 16, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                         {item.title}
+                                       </Typography.Text>
+                                     )}
+                                   </div>
+                                   <Typography.Text type="secondary" style={{ fontSize: 12, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                     {dayjs(item.createdAt).fromNow()}
+                                   </Typography.Text>
+                                 </div>
 
-                                <Typography.Paragraph
-                                  style={{
-                                    margin: 0,
-                                    color: isUnread ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
-                                    fontSize: 15,
-                                    lineHeight: 1.6,
-                                    maxWidth: 800
-                                  }}
-                                >
-                                  {item.message}
-                                </Typography.Paragraph>
+                                 <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                                   {isUnread && isAuctionGroup && (
+                                     <div style={{
+                                       width: 8,
+                                       height: 8,
+                                       borderRadius: '50%',
+                                       background: 'var(--color-accent)',
+                                       boxShadow: '0 0 8px var(--color-accent)',
+                                       flexShrink: 0,
+                                       marginTop: 8
+                                     }} />
+                                   )}
+                                   <Typography.Paragraph
+                                     style={{
+                                       margin: 0,
+                                       color: isUnread ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+                                       fontSize: 15,
+                                       lineHeight: 1.6,
+                                       maxWidth: 800
+                                     }}
+                                   >
+                                     {item.message}
+                                   </Typography.Paragraph>
+                                 </div>
 
                                 {(() => {
                                   const actions = parseNotificationActions(item.actions)
