@@ -212,20 +212,18 @@ export default function AdminSellerProfilesPage() {
       {/* ── Table ──────────────────────────────────────────────────────────── */}
       <Row>
         <Col xs={24}>
-          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-            <ResponsiveTable<SellerProfileDto>
-              rowKey="id"
-              columns={columns}
-              dataSource={data ?? []}
-              loading={isLoading}
-              mobileMode="list"
-              pagination={{
-                pageSize: 20,
-                showSizeChanger: !isMobile,
-                simple: isMobile,
-              }}
-            />
-          </div>
+          <ResponsiveTable<SellerProfileDto>
+            rowKey="id"
+            columns={columns}
+            dataSource={data ?? []}
+            loading={isLoading}
+            mobileMode="list"
+            pagination={{
+              pageSize: 20,
+              showSizeChanger: !isMobile,
+              simple: isMobile,
+            }}
+          />
         </Col>
       </Row>
 

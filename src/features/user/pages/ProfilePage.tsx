@@ -34,9 +34,9 @@ const { Title, Text } = Typography
 // -- Schema types (schemas created inside component to access i18n) ----------
 
 type ProfileFormValues = {
-  firstName?: string
-  lastName?: string
-  displayName?: string
+  firstName: string
+  lastName: string
+  displayName: string
   dateOfBirth?: string
   gender?: string
 }
@@ -78,10 +78,11 @@ export default function ProfilePage() {
   const { message } = App.useApp()
 
   // Schemas defined inside component so validation messages use i18n
+  // Schemas defined inside component so validation messages use i18n
   const profileSchema = z.object({
-    firstName: z.string().max(50, t('profile.validation.maxChars', { max: 50 })).optional().or(z.literal('')),
-    lastName: z.string().max(50, t('profile.validation.maxChars', { max: 50 })).optional().or(z.literal('')),
-    displayName: z.string().max(100, t('profile.validation.maxChars', { max: 100 })).optional().or(z.literal('')),
+    firstName: z.string().min(1, t('profile.validation.firstNameRequired')).max(50, t('profile.validation.maxChars', { max: 50 })),
+    lastName: z.string().min(1, t('profile.validation.lastNameRequired')).max(50, t('profile.validation.maxChars', { max: 50 })),
+    displayName: z.string().min(1, t('profile.validation.displayNameRequired')).max(100, t('profile.validation.maxChars', { max: 100 })),
     dateOfBirth: z.string().optional().or(z.literal('')),
     gender: z.string().optional().or(z.literal('')),
   })
@@ -97,6 +98,7 @@ export default function ProfilePage() {
 
   const [showPhoneVerify, setShowPhoneVerify] = useState(false)
   const [avatarUploadId, setAvatarUploadId] = useState<string | null>(null)
+  const [uploadedAvatarUrl, setUploadedAvatarUrl] = useState<string | null>(null)
   const avatarUpload = useMediaUpload('user_avatar')
   const [avatarHover, setAvatarHover] = useState(false)
 
@@ -156,6 +158,8 @@ export default function ProfilePage() {
       })
       await queryClient.invalidateQueries({ queryKey: queryKeys.auth.currentUser() })
       await queryClient.invalidateQueries({ queryKey: queryKeys.users.profile() })
+      setAvatarUploadId(null)
+      setUploadedAvatarUrl(null)
       message.success(t('profile.updateSuccess', 'Profile updated successfully'))
     } catch {
       message.error(t('profile.updateError', 'Failed to update profile'))
@@ -181,6 +185,18 @@ export default function ProfilePage() {
       message.error(t('profile.otpInvalid', 'Invalid verification code'))
     }
   })
+
+  const handleAvatarUpload = async (file: File) => {
+    try {
+      const result = await avatarUpload.upload(file)
+      setAvatarUploadId(result.mediaUploadId)
+      setUploadedAvatarUrl(result.secureUrl)
+      message.success(t('profile.avatarUploaded', 'Avatar uploaded'))
+    } catch {
+      message.error(t('profile.avatarUploadError', 'Failed to upload avatar'))
+    }
+    return false
+  }
 
   if (userLoading || profileLoading) {
     return (
@@ -265,7 +281,7 @@ export default function ProfilePage() {
               <Avatar
                 size={140}
                 icon={<UserOutlined />}
-                src={profile?.avatarUrl}
+                src={uploadedAvatarUrl || profile?.avatarUrl}
                 style={{
                   border: '6px solid var(--color-border)',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -277,16 +293,7 @@ export default function ProfilePage() {
               <Upload
                 showUploadList={false}
                 accept="image/*"
-                beforeUpload={async (file) => {
-                  try {
-                    const result = await avatarUpload.upload(file)
-                    setAvatarUploadId(result.mediaUploadId)
-                    message.success(t('profile.avatarUploaded', 'Avatar uploaded'))
-                  } catch {
-                    message.error(t('profile.avatarUploadError', 'Failed to upload avatar'))
-                  }
-                  return false
-                }}
+                beforeUpload={handleAvatarUpload}
               >
                 <div
                   style={{
@@ -317,16 +324,7 @@ export default function ProfilePage() {
             <Upload
               showUploadList={false}
               accept="image/*"
-              beforeUpload={async (file) => {
-                try {
-                  const result = await avatarUpload.upload(file)
-                  setAvatarUploadId(result.mediaUploadId)
-                  message.success(t('profile.avatarUploaded', 'Avatar uploaded'))
-                } catch {
-                  message.error(t('profile.avatarUploadError', 'Failed to upload avatar'))
-                }
-                return false
-              }}
+              beforeUpload={handleAvatarUpload}
             >
               <Button
                 icon={<UploadOutlined />}
@@ -365,12 +363,17 @@ export default function ProfilePage() {
                       name="firstName"
                       control={profileControl}
                       render={({ field }) => (
-                        <Input
-                          {...field}
-                          placeholder={t('profile.firstNamePlaceholder', 'First name')}
-                          status={profileErrors.firstName ? 'error' : undefined}
-                          style={{ height: 52, borderRadius: 14 }}
-                        />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          <Input
+                            {...field}
+                            placeholder={t('profile.firstNamePlaceholder', 'First name')}
+                            status={profileErrors.firstName ? 'error' : undefined}
+                            style={{ height: 52, borderRadius: 14 }}
+                          />
+                          {profileErrors.firstName && (
+                            <Text type="danger" style={{ fontSize: 12 }}>{profileErrors.firstName.message}</Text>
+                          )}
+                        </div>
                       )}
                     />
                   </div>
@@ -382,12 +385,17 @@ export default function ProfilePage() {
                       name="lastName"
                       control={profileControl}
                       render={({ field }) => (
-                        <Input
-                          {...field}
-                          placeholder={t('profile.lastNamePlaceholder', 'Last name')}
-                          status={profileErrors.lastName ? 'error' : undefined}
-                          style={{ height: 52, borderRadius: 14 }}
-                        />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          <Input
+                            {...field}
+                            placeholder={t('profile.lastNamePlaceholder', 'Last name')}
+                            status={profileErrors.lastName ? 'error' : undefined}
+                            style={{ height: 52, borderRadius: 14 }}
+                          />
+                          {profileErrors.lastName && (
+                            <Text type="danger" style={{ fontSize: 12 }}>{profileErrors.lastName.message}</Text>
+                          )}
+                        </div>
                       )}
                     />
                   </div>
@@ -400,12 +408,17 @@ export default function ProfilePage() {
                   name="displayName"
                   control={profileControl}
                   render={({ field }) => (
-                    <Input
-                      {...field}
-                      placeholder={t('profile.displayNamePlaceholder', 'Display name')}
-                      status={profileErrors.displayName ? 'error' : undefined}
-                      style={{ height: 52, borderRadius: 14 }}
-                    />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <Input
+                        {...field}
+                        placeholder={t('profile.displayNamePlaceholder', 'Display name')}
+                        status={profileErrors.displayName ? 'error' : undefined}
+                        style={{ height: 52, borderRadius: 14 }}
+                      />
+                      {profileErrors.displayName && (
+                        <Text type="danger" style={{ fontSize: 12 }}>{profileErrors.displayName.message}</Text>
+                      )}
+                    </div>
                   )}
                 />
               </div>
@@ -418,13 +431,19 @@ export default function ProfilePage() {
                       name="dateOfBirth"
                       control={profileControl}
                       render={({ field }) => (
-                        <DatePicker
-                          style={{ width: '100%', height: 52, borderRadius: 14 }}
-                          value={field.value ? dayjs(field.value) : null}
-                          onChange={(date) => field.onChange(date ? date.format('YYYY-MM-DD') : '')}
-                          placeholder={t('profile.dateOfBirthPlaceholder', 'Select date')}
-                          format="DD/MM/YYYY"
-                        />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          <DatePicker
+                            style={{ width: '100%', height: 52, borderRadius: 14 }}
+                            value={field.value ? dayjs(field.value) : null}
+                            onChange={(date) => field.onChange(date ? date.format('YYYY-MM-DD') : '')}
+                            placeholder={t('profile.dateOfBirthPlaceholder', 'Select date')}
+                            format="DD/MM/YYYY"
+                            disabledDate={(current) => current && current > dayjs().endOf('day')}
+                          />
+                          {profileErrors.dateOfBirth && (
+                            <Text type="danger" style={{ fontSize: 12 }}>{profileErrors.dateOfBirth.message}</Text>
+                          )}
+                        </div>
                       )}
                     />
                   </div>
@@ -436,18 +455,23 @@ export default function ProfilePage() {
                       name="gender"
                       control={profileControl}
                       render={({ field }) => (
-                        <Select
-                          {...field}
-                          style={{ width: '100%', height: 52 }}
-                          placeholder={t('profile.genderPlaceholder', 'Select gender')}
-                          allowClear
-                          className="oio-select"
-                          options={[
-                            { value: 'male', label: t('profile.genderMale', 'Male') },
-                            { value: 'female', label: t('profile.genderFemale', 'Female') },
-                            { value: 'other', label: t('profile.genderOther', 'Other') },
-                          ]}
-                        />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          <Select
+                            {...field}
+                            style={{ width: '100%', height: 52 }}
+                            placeholder={t('profile.genderPlaceholder', 'Select gender')}
+                            allowClear
+                            className="oio-select"
+                            options={[
+                              { value: 'male', label: t('profile.genderMale', 'Male') },
+                              { value: 'female', label: t('profile.genderFemale', 'Female') },
+                              { value: 'other', label: t('profile.genderOther', 'Other') },
+                            ]}
+                          />
+                          {profileErrors.gender && (
+                            <Text type="danger" style={{ fontSize: 12 }}>{profileErrors.gender.message}</Text>
+                          )}
+                        </div>
                       )}
                     />
                   </div>
@@ -526,13 +550,18 @@ export default function ProfilePage() {
                         name="phoneNumber"
                         control={phoneControl}
                         render={({ field }) => (
-                          <Input
-                            {...field}
-                            prefix={<PhoneOutlined style={{ color: 'var(--color-accent)' }} />}
-                            placeholder={t('profile.phonePlaceholder', 'Phone number')}
-                            status={phoneErrors.phoneNumber ? 'error' : undefined}
-                            style={{ height: 52, borderRadius: 14 }}
-                          />
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            <Input
+                              {...field}
+                              prefix={<PhoneOutlined style={{ color: 'var(--color-accent)' }} />}
+                              placeholder={t('profile.phonePlaceholder', 'Phone number')}
+                              status={phoneErrors.phoneNumber ? 'error' : undefined}
+                              style={{ height: 52, borderRadius: 14 }}
+                            />
+                            {phoneErrors.phoneNumber && (
+                              <Text type="danger" style={{ fontSize: 12 }}>{phoneErrors.phoneNumber.message}</Text>
+                            )}
+                          </div>
                         )}
                       />
                     </Col>
@@ -560,22 +589,27 @@ export default function ProfilePage() {
                              name="code"
                              control={confirmControl}
                              render={({ field }) => (
-                               <Input
-                                 {...field}
-                                 placeholder="000000"
-                                 maxLength={6}
-                                 status={confirmErrors.code ? 'error' : undefined}
-                                 style={{ 
-                                   height: 52, 
-                                   borderRadius: 14, 
-                                   fontFamily: MONO_FONT, 
-                                   letterSpacing: '0.4em', 
-                                   textAlign: 'center', 
-                                   width: isMobile ? '100%' : 200,
-                                   fontSize: 20,
-                                   fontWeight: 700
-                                 }}
-                               />
+                               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                 <Input
+                                   {...field}
+                                   placeholder="000000"
+                                   maxLength={6}
+                                   status={confirmErrors.code ? 'error' : undefined}
+                                   style={{ 
+                                     height: 52, 
+                                     borderRadius: 14, 
+                                     fontFamily: MONO_FONT, 
+                                     letterSpacing: '0.4em', 
+                                     textAlign: 'center', 
+                                     width: isMobile ? '100%' : 200,
+                                     fontSize: 20,
+                                     fontWeight: 700
+                                   }}
+                                 />
+                                 {confirmErrors.code && (
+                                   <Text type="danger" style={{ fontSize: 12 }}>{confirmErrors.code.message}</Text>
+                                 )}
+                               </div>
                              )}
                            />
                            <Button

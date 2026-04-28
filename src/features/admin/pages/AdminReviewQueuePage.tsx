@@ -156,28 +156,26 @@ export default function AdminReviewQueuePage() {
         <FileSearchOutlined /> {t('reviewQueue.title')}
       </Typography.Title>
 
-      <div style={{ overflowX: 'auto' }}>
-        <ResponsiveTable<ReviewQueueItemDto>
-          rowKey="id"
-          columns={columns}
-          dataSource={data?.items ?? []}
-          loading={isLoading}
-          mobileMode="list"
-          onRow={(record) => ({
-            onClick: isMobile ? () => navigate(`/admin/items/${record.itemId}`) : undefined,
-            style: isMobile ? { cursor: 'pointer', minHeight: 56 } : undefined,
-          })}
-          pagination={{
-            current: data?.metadata?.currentPage ?? page,
-            pageSize: data?.metadata?.pageSize ?? pageSize,
-            total: data?.metadata?.totalCount ?? 0,
-            showSizeChanger: !isMobile,
-            showTotal: (total) => tc('pagination.total', { total }),
-            simple: isMobile,
-            onChange: (p, ps) => { setPage(p); setPageSize(ps) },
-          }}
-        />
-      </div>
+      <ResponsiveTable<ReviewQueueItemDto>
+        rowKey="id"
+        columns={columns}
+        dataSource={data?.items ?? []}
+        loading={isLoading}
+        mobileMode="list"
+        onRow={(record) => ({
+          onClick: isMobile ? () => navigate(`/admin/items/${record.itemId}`) : undefined,
+          style: isMobile ? { cursor: 'pointer', minHeight: 56 } : undefined,
+        })}
+        pagination={{
+          current: data?.metadata?.currentPage ?? page,
+          pageSize: data?.metadata?.pageSize ?? pageSize,
+          total: data?.metadata?.totalCount ?? 0,
+          showSizeChanger: !isMobile,
+          showTotal: (total) => tc('pagination.total', { total }),
+          simple: isMobile,
+          onChange: (p, ps) => { setPage(p); setPageSize(ps) },
+        }}
+      />
 
       {/* Assign reviewer modal */}
       <Modal

@@ -146,7 +146,12 @@ export function AdminLayout() {
     })
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--color-bg-primary)' }}>
+    <div style={{
+      minHeight: '100vh',
+      background: 'var(--color-bg-primary)',
+      '--navbar-offset-desktop': '64px',
+      '--navbar-offset-mobile': '64px'
+    } as React.CSSProperties}>
       {/* ── Sidebar (desktop + tablet icon-only) ── */}
       <aside
         style={{

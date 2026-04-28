@@ -321,28 +321,26 @@ export default function AdminDisputeListPage() {
         </Button>
       </Drawer>
 
-      <div style={{ overflowX: 'auto' }}>
-        <ResponsiveTable<DisputeListItemDto>
-          mobileMode="card"
-          columns={columns}
-          dataSource={data?.items ?? []}
-          rowKey="id"
-          loading={isLoading}
-          onRow={(record) => ({
-            onClick: () => navigate(`/admin/disputes/${record.id}`),
-            style: { cursor: 'pointer', minHeight: 56 },
-          })}
-          pagination={{
-            current: data?.metadata?.currentPage ?? 1,
-            pageSize: data?.metadata?.pageSize ?? 10,
-            total: data?.metadata?.totalCount ?? 0,
-            showSizeChanger: !isMobile,
-            showTotal: (total) => tc('pagination.total', { total }),
-            simple: isMobile,
-          }}
-          onChange={handleTableChange}
-        />
-      </div>
+      <ResponsiveTable<DisputeListItemDto>
+        mobileMode="card"
+        columns={columns}
+        dataSource={data?.items ?? []}
+        rowKey="id"
+        loading={isLoading}
+        onRow={(record) => ({
+          onClick: () => navigate(`/admin/disputes/${record.id}`),
+          style: { cursor: 'pointer', minHeight: 56 },
+        })}
+        pagination={{
+          current: data?.metadata?.currentPage ?? 1,
+          pageSize: data?.metadata?.pageSize ?? 10,
+          total: data?.metadata?.totalCount ?? 0,
+          showSizeChanger: !isMobile,
+          showTotal: (total) => tc('pagination.total', { total }),
+          simple: isMobile,
+        }}
+        onChange={handleTableChange}
+      />
     </div>
   )
 }

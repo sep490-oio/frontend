@@ -887,13 +887,21 @@ h1.oio-serif,
 
 /* --- Sticky Offset for Floating Navbar --- */
 :root {
-  --navbar-offset-desktop: 112px;
-  --navbar-offset-mobile: 96px;
+  --navbar-offset-desktop: 0px;
+  --navbar-offset-mobile: 0px;
 }
 
-/* Ant Design Table Header Sticky */
-.ant-table-wrapper .ant-table-sticky-header,
-.ant-table-wrapper .ant-table-thead > tr > th {
+
+/* 
+ * Apply offset only to elements that are INTENDED to be sticky below the navbar.
+ * We avoid generic [style*="position: sticky"] because it catches non-sticky table headers
+ * that Ant Design sometimes marks as relative/sticky internally.
+ */
+
+/* Ant Design Table Sticky Header (when sticky prop is active) */
+.ant-table-sticky-holder,
+.ant-table-sticky-header,
+.ant-table-wrapper-sticky .ant-table-thead > tr > th {
   top: var(--navbar-offset-desktop) !important;
 }
 
@@ -902,31 +910,17 @@ h1.oio-serif,
   top: var(--navbar-offset-desktop) !important;
 }
 
-@media (max-width: 768px) {
-  .ant-table-wrapper .ant-table-sticky-header,
-  .ant-table-wrapper .ant-table-thead > tr > th,
-  .ant-affix {
-    top: var(--navbar-offset-mobile) !important;
-  }
-}
-
-/* Target elements with inline sticky styles that are too close to the top */
-[style*="position: sticky"][style*="top: 0"],
-[style*="position: sticky"][style*="top:0"],
-[style*="position: sticky"][style*="top: 24"],
-[style*="position: sticky"][style*="top:24"],
-[style*="position: sticky"][style*="top: 16"],
-[style*="position: sticky"][style*="top:16"] {
+/* Custom helper class for other sticky elements */
+.oio-sticky-offset {
   top: var(--navbar-offset-desktop) !important;
 }
 
 @media (max-width: 768px) {
-  [style*="position: sticky"][style*="top: 0"],
-  [style*="position: sticky"][style*="top:0"],
-  [style*="position: sticky"][style*="top: 24"],
-  [style*="position: sticky"][style*="top:24"],
-  [style*="position: sticky"][style*="top: 16"],
-  [style*="position: sticky"][style*="top:16"] {
+  .ant-table-sticky-holder,
+  .ant-table-sticky-header,
+  .ant-table-wrapper-sticky .ant-table-thead > tr > th,
+  .ant-affix,
+  .oio-sticky-offset {
     top: var(--navbar-offset-mobile) !important;
   }
 }

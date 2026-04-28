@@ -212,7 +212,10 @@
       "maxChars": "Tối đa {{max}} ký tự",
       "phoneInvalid": "Số điện thoại không hợp lệ",
       "countryCodeRequired": "Vui lòng chọn mã quốc gia",
-      "otpLength": "Mã xác nhận phải gồm 6 chữ số"
+      "otpLength": "Mã xác nhận phải gồm 6 chữ số",
+      "firstNameRequired": "Họ không được để trống",
+      "lastNameRequired": "Tên không được để trống",
+      "displayNameRequired": "Tên hiển thị không được để trống"
     }
   }
 }

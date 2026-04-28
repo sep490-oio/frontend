@@ -127,7 +127,12 @@ export function InspectorLayout() {
     })
 
   return (
-    <div style={{ minHeight: '100vh', background: 'transparent' }}>
+    <div style={{
+      minHeight: '100vh',
+      background: 'transparent',
+      '--navbar-offset-desktop': '64px',
+      '--navbar-offset-mobile': '64px'
+    } as React.CSSProperties}>
       {/* ── Sidebar ── */}
       <aside
         style={{

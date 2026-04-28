@@ -211,7 +211,10 @@
       "maxChars": "Maximum {{max}} characters",
       "phoneInvalid": "Invalid phone number",
       "countryCodeRequired": "Please select country code",
-      "otpLength": "Verification code must be 6 digits"
+      "otpLength": "Verification code must be 6 digits",
+      "firstNameRequired": "First name is required",
+      "lastNameRequired": "Last name is required",
+      "displayNameRequired": "Display name is required"
     }
   }
 }

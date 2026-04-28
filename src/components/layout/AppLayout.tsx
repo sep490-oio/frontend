@@ -144,7 +144,12 @@ export function AppLayout() {
 
   return (
     <TermsGateProvider>
-      <Layout style={{ minHeight: '100vh', background: 'transparent' }}>
+      <Layout style={{
+        minHeight: '100vh',
+        background: 'transparent',
+        '--navbar-offset-desktop': '112px',
+        '--navbar-offset-mobile': '96px'
+      } as React.CSSProperties}>
         <a
           href="#main-content"
           style={{
