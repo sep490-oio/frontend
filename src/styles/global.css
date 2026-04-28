@@ -1,3 +1,5 @@
+@import './themes.css';
+
 :root {
   /* Colors */
   --color-bg-primary: #ccdbe8;
@@ -5,38 +7,18 @@
   --color-bg-card: rgba(255, 255, 255, 0.7);
   --color-text-primary: #1c1c1c;
   --color-text-secondary: #64748B;
-  --color-accent: #0284C7;
-  --color-accent-hover: #0369A1;
-  --color-accent-light: rgba(2, 132, 199, 0.08);
+  --color-border: #E8E5DF;
+  --color-border-light: #F7F5F0;
+  --color-bg-container: rgba(255, 255, 255, 0.7);
   --color-success: #4A7C59;
   --color-success-soft: rgba(74, 124, 89, 0.06);
   --color-warning: #C4933D;
   --color-warning-soft: rgba(196, 147, 61, 0.06);
   --color-danger: #C4513D;
   --color-danger-soft: rgba(196, 81, 61, 0.06);
-  --color-border: #E8E5DF;
-  --color-border-light: #F7F5F0;
-  --color-bg-container: rgba(255, 255, 255, 0.7);
-  --bg-unified-gradient: linear-gradient(180deg,
-      #150804 0%,
-      #0d1b2e 15%,
-      #1e3a5a 35%,
-      #4a7090 48%,
-      #7a9fb8 52%,
-      #8fb0c8 58%,
-      #b0c8d8 72%,
-      #ccdbe8 82%,
-      #e0ecf2 90%,
-      #f2ead8 100%);
   --bg-dark-offset: translateY(0%);
   --bg-light-offset: translateY(-50%);
   --bg-transition: 700ms cubic-bezier(0.4, 0, 0.2, 1);
-  --bg-gradient: linear-gradient(180deg,
-      #8fb0c8 0%,
-      #b0c8d8 30%,
-      #ccdbe8 55%,
-      #e0ecf2 75%,
-      #f2ead8 100%);
 
   /* Typography */
   --font-serif: 'Noto Serif', Georgia, 'Times New Roman', serif;
@@ -64,24 +46,15 @@
   --color-bg-card: rgba(17, 20, 27, 0.7);
   --color-text-primary: #F1F5F9;
   --color-text-secondary: #94A3B8;
-  --color-accent: #38BDF8;
-  --color-accent-hover: #0EA5E9;
-  --color-accent-light: rgba(56, 189, 248, 0.1);
+  --color-border: #1f242f;
+  --color-border-light: #11141b;
+  --color-bg-container: rgba(17, 20, 27, 0.7);
   --color-success: #5A9C6B;
   --color-success-soft: rgba(90, 156, 107, 0.15);
   --color-warning: #F97316;
   --color-warning-soft: rgba(249, 115, 22, 0.15);
   --color-danger: #D4634E;
   --color-danger-soft: rgba(212, 99, 78, 0.15);
-  --color-border: #1f242f;
-  --color-border-light: #11141b;
-  --color-bg-container: rgba(17, 20, 27, 0.7);
-  --bg-gradient: linear-gradient(180deg,
-      #150804 0%,
-      #0d1b2e 25%,
-      #1e3a5a 55%,
-      #4a7090 80%,
-      #7a9fb8 100%);
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -517,13 +490,13 @@ h1.oio-serif,
   font-weight: 500 !important;
   letter-spacing: 0.01em !important;
   transition: all 200ms ease !important;
-  background: linear-gradient(to right, #137fec, #106bc7) !important;
+  background: var(--color-accent) !important;
   border: none !important;
 }
 
 .ant-btn-primary:not(:disabled):hover {
-  background: linear-gradient(to right, #106bc7, #0c5299) !important;
-  filter: none !important;
+  background: var(--color-accent-hover) !important;
+  filter: brightness(1.1) !important;
   transform: translateY(-1px) !important;
 }
 
