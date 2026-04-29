@@ -46,6 +46,7 @@ import { useWallet, useCreateDepositPayment, useDepositFromWallet } from '@/feat
 import { useAuctionHub } from '@/features/auction/hooks/useAuctionHub'
 import { useUserHub } from '@/features/auction/hooks/useUserHub'
 import { queryClient, queryKeys } from '@/lib/queryClient'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 import { useAuth } from '@/hooks/useAuth'
 import { useCurrentUser } from '@/features/user/api'
 import { ImageGallery } from '@/components/ui/ImageGallery'
@@ -65,6 +66,7 @@ import { PriceHistoryChart } from '@/features/auction/components/PriceHistoryCha
 import { SellerActionBar } from '@/features/auction/components/SellerActionBar'
 import { CreateDisputeModal } from '@/features/order/components/CreateDisputeModal'
 import { addSpotlightRecent } from '@/components/layout/SpotlightSearchModal'
+import { useDisputeEligibility } from '@/features/dispute/hooks/useDisputeEligibility'
 
 // ── Qualification state helper ──────────────────────────────────────
 
@@ -123,6 +125,8 @@ export default function AuctionDetailPage() {
   const bidderTerms = useTermsGate('bidder')
   const { isAuthenticated } = useAuth()
   const { data: currentUser } = useCurrentUser()
+
+  const { data: eligibility } = useDisputeEligibility('auction', id, { enabled: !!id && isAuthenticated })
 
   // Cache key is scoped by auth context (anon vs. userId). When the user logs in
   // or `useCurrentUser` resolves, `userScope` changes and React Query refetches
@@ -664,7 +668,7 @@ export default function AuctionDetailPage() {
         const idempotencyKey = crypto.randomUUID()
         const hubResult = await hub.placeBid(rawBid, currency, idempotencyKey)
         if (!hubResult.success) {
-          throw new Error(hubResult.error ?? t('bidError', 'Failed to place bid'))
+          throw new Error(normalizeErrorMessage(hubResult.error, t('bidError', 'Failed to place bid')))
         }
         result = hubResult.data ?? {}
       } else {
@@ -732,8 +736,7 @@ export default function AuctionDetailPage() {
 
       setBidAmount(null)
     } catch (err) {
-      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      message.error(detail ?? (err as Error)?.message ?? t('bidError', 'Failed to place bid'))
+      message.error(normalizeErrorMessage(err, t('bidError', 'Failed to place bid')))
     }
   }
 
@@ -750,9 +753,7 @@ export default function AuctionDetailPage() {
     } catch (err) {
       // Revert optimistic update on error
       setOptimisticIsWatching(null)
-      const data = (err as { response?: { data?: any } })?.response?.data
-      const detail = data?.detail ?? data?.title ?? data?.message ?? (err as Error)?.message
-      message.error(detail ?? t('watchError', 'Failed to update watchlist'))
+      message.error(normalizeErrorMessage(err, t('watchError', 'Failed to update watchlist')))
     }
   }
 
@@ -776,8 +777,7 @@ export default function AuctionDetailPage() {
       setBuyNowConfirmOpen(false)
       navigate(`/checkout/${result.orderId}`)
     } catch (err) {
-      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      message.error(detail ?? t('buyNowError', 'Buy now failed'))
+      message.error(normalizeErrorMessage(err, t('buyNowError', 'Buy now failed')))
     }
   }, [id, buyNowMutation, message, t, navigate])
 
@@ -798,8 +798,7 @@ export default function AuctionDetailPage() {
       // Redirect to VNPay
       window.location.href = result.paymentUrl
     } catch (err) {
-      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      message.error(detail ?? t('depositError', 'Failed to create deposit payment'))
+      message.error(normalizeErrorMessage(err, t('depositError', 'Failed to create deposit payment')))
     }
   }
 
@@ -833,8 +832,7 @@ export default function AuctionDetailPage() {
           message.success(t('depositSuccess', 'Deposit successful — you are now qualified to bid!'))
           queryClient.invalidateQueries({ queryKey: queryKeys.auctions.detail(id) })
         } catch (err) {
-          const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-          message.error(detail ?? t('depositError', 'Deposit failed'))
+          message.error(normalizeErrorMessage(err, t('depositError', 'Deposit failed')))
         }
       },
     })
@@ -1063,7 +1061,7 @@ export default function AuctionDetailPage() {
       </button>
 
       {/* Report Auction button */}
-      {isAuthenticated && !isSeller && (
+      {isAuthenticated && eligibility?.canReport && (
         <Button
           size="small"
           icon={<FlagOutlined />}
@@ -1571,13 +1569,16 @@ export default function AuctionDetailPage() {
       </Modal>
 
       {/* Report Auction Modal */}
-      <CreateDisputeModal
-        targetType="auction"
-        targetId={id!}
-        auctionId={id!}
-        open={reportModalOpen}
-        onClose={() => setReportModalOpen(false)}
-      />
+      {eligibility?.canReport && (
+        <CreateDisputeModal
+          targetType="auction"
+          targetId={id!}
+          auctionId={id!}
+          open={reportModalOpen}
+          onClose={() => setReportModalOpen(false)}
+          eligibility={eligibility}
+        />
+      )}
 
       {/* Cancel Auction Modal */}
       <Modal

@@ -10,6 +10,8 @@ import { useConfirmInspectedCondition } from '@/features/item/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
 import { CreateDisputeModal } from '@/features/order/components/CreateDisputeModal'
+import { useDisputeEligibility } from '@/features/dispute/hooks/useDisputeEligibility'
+import { useAuth } from '@/hooks/useAuth'
 
 export default function SellerWarehouseItemDetailPage() {
   const { t } = useTranslation('warehouse')
@@ -20,7 +22,8 @@ export default function SellerWarehouseItemDetailPage() {
   const { data, isLoading, error } = useSellerWarehouseItem(warehouseItemId)
   const confirmCondition = useConfirmInspectedCondition()
   const [disputeModalOpen, setDisputeModalOpen] = useState(false)
-  const [disputeCaseType, setDisputeCaseType] = useState<string | undefined>()
+  const { isAuthenticated } = useAuth()
+  const { data: eligibility } = useDisputeEligibility('warehouse_item', warehouseItemId, { enabled: !!warehouseItemId && isAuthenticated })
   const { isMobile } = useBreakpoint()
 
   const handleConfirmCondition = () => {
@@ -368,10 +371,7 @@ export default function SellerWarehouseItemDetailPage() {
           <Button
             danger
             icon={<WarningOutlined />}
-            onClick={() => {
-              setDisputeCaseType('inspection_disagreement')
-              setDisputeModalOpen(true)
-            }}
+            onClick={() => setDisputeModalOpen(true)}
           >
             {t('disputeInspection', 'Dispute inspection result')}
           </Button>
@@ -395,10 +395,7 @@ export default function SellerWarehouseItemDetailPage() {
         <Button
           danger
           icon={<WarningOutlined />}
-          onClick={() => {
-            setDisputeCaseType('condition_mismatch')
-            setDisputeModalOpen(true)
-          }}
+          onClick={() => setDisputeModalOpen(true)}
         >
           {t('disputeRejection', 'Dispute rejection')}
         </Button>
@@ -426,14 +423,15 @@ export default function SellerWarehouseItemDetailPage() {
         {mediaCard}
       </Space>
 
-      <CreateDisputeModal
-        targetType="warehouse_item"
-        targetId={warehouseItemId}
-        open={disputeModalOpen}
-        onClose={() => setDisputeModalOpen(false)}
-        prefillDomain="warehouse_item"
-        prefillCaseType={disputeCaseType}
-      />
+      {eligibility?.canReport && (
+        <CreateDisputeModal
+          targetType="warehouse_item"
+          targetId={warehouseItemId}
+          open={disputeModalOpen}
+          onClose={() => setDisputeModalOpen(false)}
+          eligibility={eligibility}
+        />
+      )}
     </div>
   )
 }

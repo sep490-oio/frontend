@@ -40,6 +40,42 @@
     "shipment": "Shipment",
     "warehouse_item": "Warehouse Item"
   },
+  "domain": {
+    "auction_settlement": "Auction Settlement",
+    "item_condition": "Item Condition",
+    "payment": "Payment",
+    "shipping": "Shipping"
+  },
+  "caseType": {
+    "winner_non_payment": "Winner Non-Payment",
+    "seller_non_fulfillment": "Seller Non-Fulfillment",
+    "auction_cancelled_after_commitment": "Auction Cancelled After Commitment",
+    "buy_now_commitment_issue": "Buy Now Commitment Issue",
+    "deposit_forfeit_or_refund_issue": "Deposit Forfeit/Refund Issue",
+    "inspection_disagreement": "Inspection Disagreement",
+    "condition_mismatch": "Condition Mismatch",
+    "authenticity_concern": "Authenticity Concern",
+    "not_as_described_after_delivery": "Not As Described After Delivery",
+    "warehouse_damage": "Warehouse Damage",
+    "wallet_topup_missing": "Wallet Topup Missing",
+    "duplicate_charge": "Duplicate Charge",
+    "deposit_not_applied": "Deposit Not Applied",
+    "buy_now_deposit_offset_error": "Buy Now Deposit Offset Error",
+    "refund_missing": "Refund Missing",
+    "payout_mismatch": "Payout Mismatch",
+    "package_not_received": "Package Not Received",
+    "damaged_package": "Damaged Package",
+    "wrong_item_received": "Wrong Item Received",
+    "missing_items": "Missing Items",
+    "carrier_marked_delivered_but_not_received": "Carrier Marked Delivered But Not Received",
+    "handover_evidence_conflict": "Handover Evidence Conflict"
+  },
+  "reasonCode": {
+    "Dispute.RoleNotAllowed": "You may not report on this auction/order",
+    "Dispute.DomainMismatch": "Domain not allowed for your role",
+    "Dispute.CaseTypeMismatch": "Case type not allowed under domain",
+    "Dispute.StatusNotAllowed": "Auction not yet in disputable state"
+  },
   "statusLabel": {
     "open": "Open",
     "assigned": "Assigned",
