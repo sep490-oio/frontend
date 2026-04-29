@@ -106,6 +106,8 @@
   "myBids": "Đấu giá của tôi",
   "myBidsSubtitle": "Theo dõi và quản lý các phiên đấu giá bạn đã tham gia",
   "activityLog": "Hoạt động gần đây",
+  "groupByAuction": "Nhóm theo phiên đấu giá",
+  "ungroup": "Hủy nhóm",
   "bidStatusAll": "Tất cả",
   "bidStatusActive": "Đang dẫn đầu",
   "bidStatusOutbid": "Bị vượt giá",
