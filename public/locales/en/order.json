@@ -193,6 +193,23 @@
   "disputeCreated": "Dispute created successfully",
   "disputeError": "Failed to create dispute",
   "sellerOrders": "Seller Orders",
+  "sellerOrder": {
+    "paymentEscrow": {
+      "title": "Payment & Escrow",
+      "buyerPaid": "Has buyer paid?",
+      "notYet": "Buyer has not paid for this order yet. Escrow details will appear here once payment completes.",
+      "escrowStatus": "Escrow status",
+      "holdReason": "Why are funds on hold?",
+      "grossPaid": "Buyer paid (gross)",
+      "expectedNet": "Expected seller payout",
+      "actualReleased": "Released",
+      "platformFee": "Platform fee (10%)",
+      "inspectionFee": "Inspection fee (3%)",
+      "expectedRelease": "Expected release",
+      "decisionWindow": "Decision window ends",
+      "disputeNotice": "Funds are on hold while a dispute is open."
+    }
+  },
   "shipmentFeed": {
     "title": "My Shipments",
     "kindDirect": "Direct",

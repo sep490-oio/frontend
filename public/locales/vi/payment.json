@@ -192,5 +192,82 @@
   "postalCode": "Mã bưu chính (tùy chọn)",
   "shippingSaved": "Thông tin giao hàng đã được xác minh và lưu",
   "depositApplied": "Khấu trừ tiền cọc",
-  "walletPortion": "Thanh toán qua ví"
+  "walletPortion": "Thanh toán qua ví",
+  "sellerFinance": {
+    "title": "Tài chính người bán",
+    "subtitle": "Theo dõi số dư có thể rút, escrow đang giữ và phí",
+    "cards": {
+      "withdrawable": "Có thể rút",
+      "withdrawableHelp": "Số tiền có thể rút về tài khoản ngân hàng.",
+      "holding": "Sàn đang giữ",
+      "holdingHelp": "Buyer đã thanh toán nhưng chưa được release sang ví.",
+      "expected": "Dự kiến nhận (estimate)",
+      "expectedHelp": "= gross − phí sàn 10% − phí kiểm định 3% (nếu có).",
+      "pendingFees": "Phí/khấu trừ đang chờ",
+      "pendingFeesHelp": "Tổng phí sàn + phí kiểm định + phí seller đang chờ."
+    },
+    "tooltip": {
+      "holding": "Buyer đã thanh toán nhưng escrow chưa release",
+      "estimate": "Đây là số ước tính. Số thực tế sẽ được hiển thị sau khi giao dịch hoàn tất."
+    },
+    "tabs": {
+      "escrow": "Escrow & Pending Payout",
+      "fees": "Fees & Deductions",
+      "transactions": "Transactions"
+    },
+    "col": {
+      "orderNumber": "Mã đơn",
+      "itemTitle": "Sản phẩm",
+      "orderStatus": "Đơn hàng",
+      "escrowStatus": "Escrow",
+      "holdReason": "Lý do giữ",
+      "buyerPaidAt": "Buyer trả",
+      "expectedRelease": "Dự kiến release",
+      "netPayout": "Dự kiến nhận"
+    },
+    "label": {
+      "released": "Đã release",
+      "estimate": "(estimate)"
+    },
+    "action": {
+      "viewBreakdown": "Chi tiết",
+      "viewDispute": "Xem dispute",
+      "openOrder": "Mở chi tiết đơn hàng"
+    },
+    "drawer": {
+      "title": "Chi tiết tiền",
+      "orderStatus": "Trạng thái đơn",
+      "escrowStatus": "Trạng thái escrow",
+      "grossPaid": "Buyer đã trả",
+      "platformCommission": "Phí sàn (10%)",
+      "payoutBeforeInspection": "Trước phí kiểm định",
+      "inspectionFee": "Phí kiểm định (3%)",
+      "netPayout": "Seller nhận cuối",
+      "holdReason": "Lý do giữ",
+      "buyerPaidAt": "Buyer thanh toán lúc",
+      "expectedRelease": "Dự kiến release",
+      "decisionWindow": "Kết thúc decision window"
+    },
+    "fees": {
+      "explainTitle": "Cách tính phí",
+      "explainBody": "Phí sàn 10% áp dụng cho mọi đơn hàng. Phí kiểm định 3% chỉ áp dụng cho item đã được sàn xác minh, và được giới hạn tối đa 625.000 VND/đơn.",
+      "platform": "Tổng phí sàn 10% pending",
+      "inspection": "Tổng phí kiểm định 3%",
+      "inspectionNote": "Chỉ áp dụng cho item có \"Sàn xác minh\".",
+      "pendingCharges": "Phí seller đang chờ",
+      "disputed": "Đang tranh chấp",
+      "readyToRelease": "Sẵn sàng release"
+    },
+    "empty": {
+      "noEscrowTitle": "Chưa có giao dịch escrow",
+      "noEscrow": "Chưa có giao dịch escrow nào — khi buyer thanh toán đơn hàng đầu tiên, tiền sẽ hiển thị tại đây."
+    },
+    "holdReason": {
+      "awaitingDelivery": "Đang chờ giao hàng",
+      "awaitingAcceptance": "Đang chờ buyer xác nhận",
+      "frozenByDispute": "Tạm khóa do tranh chấp",
+      "inspectionInProgress": "Đang kiểm định"
+    },
+    "disputeFrozen": "Frozen by dispute"
+  }
 }

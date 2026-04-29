@@ -4,6 +4,8 @@ import { invalidateAndRefetchActive } from '@/lib/mutationFreshness'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type {
   SellerWalletOverviewDto,
+  SellerFinanceOverviewDto,
+  SellerEscrowLedgerRowDto,
   WalletSummaryDto,
   WalletTransactionDto,
   PaymentMethodDto,
@@ -35,6 +37,35 @@ export function useSellerWalletOverview(options?: { refetchInterval?: number; en
       const res = await apiClient.get<SellerWalletOverviewDto>('/seller/wallet/overview')
       return res.data
     },
+    ...options,
+  })
+}
+
+// ── Seller Finance Transparency ─────────────────────────────────────
+// Two BE endpoints (`/seller/finance/overview` and `/seller/finance/escrow-ledger`)
+// power the seller finance dashboard. Both queries default to a 30s stale
+// window so summary cards stay reasonably fresh without hammering BE.
+
+export function useSellerFinanceOverview(options?: { refetchInterval?: number; enabled?: boolean }) {
+  return useQuery({
+    queryKey: queryKeys.sellerFinance.overview(),
+    queryFn: async () => {
+      const res = await apiClient.get<SellerFinanceOverviewDto>('/seller/finance/overview')
+      return res.data
+    },
+    staleTime: 30_000,
+    ...options,
+  })
+}
+
+export function useSellerEscrowLedger(options?: { refetchInterval?: number; enabled?: boolean }) {
+  return useQuery({
+    queryKey: queryKeys.sellerFinance.escrowLedger(),
+    queryFn: async () => {
+      const res = await apiClient.get<SellerEscrowLedgerRowDto[]>('/seller/finance/escrow-ledger')
+      return extractArray<SellerEscrowLedgerRowDto>(res.data)
+    },
+    staleTime: 30_000,
     ...options,
   })
 }

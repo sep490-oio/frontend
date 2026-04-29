@@ -50,6 +50,7 @@ import { useAddresses, useCurrentUser, useCurrentUserProfile } from '@/features/
 import type { UpdateOrderShippingRequest } from '@/types'
 import { SellerRatingForm } from '@/features/order/components/SellerRatingForm'
 import { OrderItemSummary } from '@/features/order/components/OrderItemSummary'
+import { SellerPaymentEscrowCard } from '@/features/order/components/SellerPaymentEscrowCard'
 import { useAuth } from '@/hooks/useAuth'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/queryClient'
@@ -393,6 +394,14 @@ export default function OrderDetailPage() {
         onAcceptRelease={isBuyer && !hasActiveReturn ? handleAcceptRelease : undefined}
         onDispute={isBuyer && order.status !== OrderStatus.Completed ? handleOpenDispute : undefined}
       />
+
+      {/* Seller Payment & Escrow card — sourced from /seller/finance/escrow-ledger.
+          Surfaces gross paid, fees, expected/actual net payout, hold reason,
+          and dispute link so the seller can reason about money for this order
+          without leaving the page. */}
+      {isSeller && (
+        <SellerPaymentEscrowCard orderId={order.id} isMobile={isMobile} />
+      )}
 
       {/* Seller Rating Section — Displayed prominently after completion */}
       {isBuyer && order.status === OrderStatus.Completed && !reviewSubmitted && (

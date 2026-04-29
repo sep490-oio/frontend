@@ -128,3 +128,47 @@ export interface EscrowDto {
   releasedAt?: string
   refundedAt?: string
 }
+
+// ── Seller Finance Transparency ───────────────────────────────────────
+// Mirrors BE `SellerFinanceOverviewDto` returned by GET /api/seller/finance/overview.
+// All amounts are denominated in `currency`. Estimate fields are derived by BE
+// (do not recompute on FE — display the value verbatim).
+export interface SellerFinanceOverviewDto {
+  withdrawableBalance: number
+  pendingWithdrawalAmount: number
+  grossEscrowHolding: number
+  readyToReleaseAmount: number
+  disputedEscrowAmount: number
+  estimatedSellerNetPayout: number
+  estimatedPlatformCommission: number
+  estimatedInspectionFee: number
+  pendingSellerFeeCharges: number
+  currency: string
+  updatedAt: string
+}
+
+// Per-order escrow row exposed to the seller. `escrowStatus` mirrors BE
+// (`Holding | ReleasedToSeller | RefundedToBuyer`) and is rendered via StatusBadge.
+export type SellerEscrowRowStatus = 'Holding' | 'ReleasedToSeller' | 'RefundedToBuyer'
+
+export interface SellerEscrowLedgerRowDto {
+  orderId: string
+  orderNumber: string
+  auctionId: string | null
+  itemTitle: string
+  grossPaidAmount: number
+  currency: string
+  orderStatus: string
+  escrowStatus: SellerEscrowRowStatus
+  holdReason: string | null
+  buyerPaidAt: string | null
+  expectedReleaseAt: string | null
+  decisionWindowEndsAt: string | null
+  isPlatformVerifiedItem: boolean
+  platformCommissionAmount: number
+  inspectionFeeAmount: number
+  estimatedNetPayout: number
+  actualReleasedAmount: number | null
+  disputeId: string | null
+  disputeStatus: string | null
+}
