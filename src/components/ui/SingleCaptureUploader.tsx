@@ -4,6 +4,7 @@ import { CameraOutlined, ReloadOutlined, UploadOutlined } from '@ant-design/icon
 import { useTranslation } from 'react-i18next'
 import { SecureCaptureUploader } from '@/components/ui/SecureCaptureUploader'
 import { LiveCapturedBadge } from '@/components/ui/LiveCapturedBadge'
+import type { CaptureQualityProfile } from '@/types/capture'
 
 interface SingleCaptureUploaderProps {
   label: string
@@ -13,6 +14,8 @@ interface SingleCaptureUploaderProps {
   allowUploadFallback: boolean
   cameraAvailable: boolean
   helpText?: string
+  /** Quality profile for blur/brightness validation. Default 'item_or_package' (lenient). */
+  qualityProfile?: CaptureQualityProfile
 }
 
 export function SingleCaptureUploader({
@@ -23,6 +26,7 @@ export function SingleCaptureUploader({
   allowUploadFallback,
   cameraAvailable,
   helpText,
+  qualityProfile = 'item_or_package',
 }: SingleCaptureUploaderProps) {
   const { t } = useTranslation('warehouse')
   const [open, setOpen] = useState(false)
@@ -154,6 +158,7 @@ export function SingleCaptureUploader({
           step="item_photo"
           facingMode="environment"
           overlayType="document"
+          qualityProfile={qualityProfile}
           instruction={label}
           onCapture={(blob) => handleCapture(blob)}
         />

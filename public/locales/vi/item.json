@@ -55,6 +55,16 @@
   "viewAuction": "Xem phiên đấu giá",
   "viewOrder": "Xem đơn hàng",
   "resubmit": "Gửi lại",
+  "resubmitError": "Gửi lại sản phẩm thất bại",
+  "myItems": {
+    "resubmit": "Gửi lại để duyệt",
+    "openWarehouse": "Xem item tại kho",
+    "warehousePending": "Chờ tiếp nhận tại kho",
+    "requestReinspection": "Yêu cầu kiểm định lại"
+  },
+  "error": {
+    "warehouseRejectedCannotOnlineResubmit": "Item này đã thuộc flow kiểm định tại kho, không thể gửi sang review online."
+  },
   "statusTab": {
     "all": "Tất cả",
     "draft": "Nháp",

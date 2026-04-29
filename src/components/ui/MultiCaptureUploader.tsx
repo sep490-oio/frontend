@@ -4,7 +4,7 @@ import { CameraOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icon
 import { useTranslation } from 'react-i18next'
 import { SecureCaptureUploader } from '@/components/ui/SecureCaptureUploader'
 import { LiveCapturedBadge } from '@/components/ui/LiveCapturedBadge'
-import type { CaptureMetadata, CaptureStep } from '@/types/capture'
+import type { CaptureMetadata, CaptureQualityProfile, CaptureStep } from '@/types/capture'
 
 const ALLOW_UPLOAD = String(import.meta.env.VITE_ALLOW_UPLOAD).trim() === 'true'
 
@@ -18,6 +18,8 @@ interface MultiCaptureUploaderProps {
   maxPhotos?: number
   step?: CaptureStep
   facingMode?: 'user' | 'environment'
+  /** Quality profile passed to SecureCaptureUploader. Default 'item_or_package' (lenient). */
+  qualityProfile?: CaptureQualityProfile
   onPhotosChange: (photos: CapturedPhoto[]) => void
   instruction?: string
 }
@@ -26,6 +28,7 @@ export function MultiCaptureUploader({
   maxPhotos = 10,
   step = 'item_photo',
   facingMode = 'environment',
+  qualityProfile = 'item_or_package',
   onPhotosChange,
   instruction,
 }: MultiCaptureUploaderProps) {
@@ -174,6 +177,7 @@ export function MultiCaptureUploader({
             step={step}
             facingMode={facingMode}
             overlayType="document"
+            qualityProfile={qualityProfile}
             onCapture={handleCapture}
             instruction={instruction || t('captureItemPhoto', 'Take a clear photo of your item')}
           />

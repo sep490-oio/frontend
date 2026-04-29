@@ -1,12 +1,13 @@
 import { useState } from 'react'
-import { Card, Typography, Space, Button, Timeline, Row, Col, Image, Tag, Spin, Alert, message, Flex } from 'antd'
-import { WarningOutlined, ArrowLeftOutlined } from '@ant-design/icons'
+import { Card, Typography, Space, Button, Timeline, Row, Col, Image, Tag, Spin, Alert, message, Flex, Modal, Input, Tooltip } from 'antd'
+import { WarningOutlined, ArrowLeftOutlined, SyncOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useNavigate, useParams } from 'react-router'
 import { useQueryClient } from '@tanstack/react-query'
-import { useSellerWarehouseItem } from '@/features/warehouse/api'
+import { useSellerWarehouseItem, useRequestWarehouseReinspection } from '@/features/warehouse/api'
 import { useConfirmInspectedCondition } from '@/features/item/api'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
 import { CreateDisputeModal } from '@/features/order/components/CreateDisputeModal'
@@ -21,7 +22,10 @@ export default function SellerWarehouseItemDetailPage() {
   const [msgApi, msgCtx] = message.useMessage()
   const { data, isLoading, error } = useSellerWarehouseItem(warehouseItemId)
   const confirmCondition = useConfirmInspectedCondition()
+  const requestReinspection = useRequestWarehouseReinspection()
   const [disputeModalOpen, setDisputeModalOpen] = useState(false)
+  const [reinspectionModalOpen, setReinspectionModalOpen] = useState(false)
+  const [reinspectionReason, setReinspectionReason] = useState('')
   const { isAuthenticated } = useAuth()
   const { data: eligibility } = useDisputeEligibility('warehouse_item', warehouseItemId, { enabled: !!warehouseItemId && isAuthenticated })
   const { isMobile } = useBreakpoint()
@@ -37,6 +41,22 @@ export default function SellerWarehouseItemDetailPage() {
         msgApi.error(t('conditionConfirmFailed', 'Could not confirm condition'))
       },
     })
+  }
+
+  const handleReinspectionConfirm = () => {
+    requestReinspection.mutate(
+      { warehouseItemId, reason: reinspectionReason.trim() || undefined },
+      {
+        onSuccess: () => {
+          msgApi.success(t('warehouseItem.reinspection.successToast', 'Re-inspection requested'))
+          setReinspectionModalOpen(false)
+          setReinspectionReason('')
+        },
+        onError: (err) => {
+          msgApi.error(normalizeErrorMessage(err, t('warehouseItem.reinspection.errorToast', 'Failed to request re-inspection')))
+        },
+      },
+    )
   }
 
   if (isLoading) {
@@ -380,6 +400,8 @@ export default function SellerWarehouseItemDetailPage() {
     </Card>
   ) : null
 
+  const isReturning = data?.outboundStatus === 'in_transit' || data?.outboundStatus === 'delivered'
+
   const rejectionDisputeCard = insp?.decisionStatus === 'rejected' ? (
     <Card style={{ borderColor: '#ff4d4f' }}>
       <Space direction="vertical" size={12} style={{ width: '100%' }}>
@@ -392,20 +414,63 @@ export default function SellerWarehouseItemDetailPage() {
             'If you believe this rejection is incorrect, you can dispute the decision.',
           )}
         </Typography.Paragraph>
-        <Button
-          danger
-          icon={<WarningOutlined />}
-          onClick={() => setDisputeModalOpen(true)}
-        >
-          {t('disputeRejection', 'Dispute rejection')}
-        </Button>
+        <Space wrap>
+          {isReturning ? (
+            <Tooltip title={t('warehouseItem.reinspection.returningTooltip', 'Item is being returned to you. After receipt, please create a new inbound shipment.')}>
+              <Tag icon={<SyncOutlined spin />} color="processing">
+                {t('warehouseItem.reinspection.returningTag', 'Returning to seller')}
+              </Tag>
+            </Tooltip>
+          ) : (
+            <Button
+              type="primary"
+              icon={<SyncOutlined />}
+              loading={requestReinspection.isPending}
+              onClick={() => setReinspectionModalOpen(true)}
+            >
+              {t('warehouseItem.reinspection.button', 'Request re-inspection')}
+            </Button>
+          )}
+          <Button
+            danger
+            icon={<WarningOutlined />}
+            onClick={() => setDisputeModalOpen(true)}
+          >
+            {t('disputeRejection', 'Dispute rejection')}
+          </Button>
+        </Space>
       </Space>
     </Card>
   ) : null
 
+  const reinspectionModal = (
+    <Modal
+      open={reinspectionModalOpen}
+      title={t('warehouseItem.reinspection.confirmTitle', 'Request re-inspection?')}
+      onOk={handleReinspectionConfirm}
+      onCancel={() => { setReinspectionModalOpen(false); setReinspectionReason('') }}
+      okText={t('warehouseItem.reinspection.button', 'Request re-inspection')}
+      cancelText={t('cancel', 'Cancel')}
+      confirmLoading={requestReinspection.isPending}
+    >
+      <Space direction="vertical" size={12} style={{ width: '100%' }}>
+        <Typography.Paragraph style={{ marginBottom: 0 }}>
+          {t('warehouseItem.reinspection.confirmBody', 'Inspector will review your item again. Previous decision and evidence remain in audit log.')}
+        </Typography.Paragraph>
+        <Input.TextArea
+          rows={3}
+          placeholder={t('warehouseItem.reinspection.reasonPlaceholder', 'Optional: describe why you are requesting re-inspection')}
+          value={reinspectionReason}
+          onChange={(e) => setReinspectionReason(e.target.value)}
+        />
+      </Space>
+    </Modal>
+  )
+
   return (
     <div>
       {msgCtx}
+      {reinspectionModal}
       <Space style={{ marginBottom: 16 }}>
         <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/seller/warehouse/items')}>
           {t('backToList', 'Back to list')}

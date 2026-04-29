@@ -27,6 +27,8 @@ export interface ItemDto {
    * of truth is Auction.VerifyByPlatform, NOT item.status.
    */
   requiresPlatformInspection?: boolean
+  /** Set when the item is linked to a warehouse item (platform inspection flow). */
+  warehouseItemId?: string | null
 }
 
 export interface ItemMediaDto {

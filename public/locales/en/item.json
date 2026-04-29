@@ -55,6 +55,16 @@
   "viewAuction": "View Auction",
   "viewOrder": "View Order",
   "resubmit": "Resubmit",
+  "resubmitError": "Failed to resubmit item",
+  "myItems": {
+    "resubmit": "Resubmit for review",
+    "openWarehouse": "Open warehouse item",
+    "warehousePending": "Pending warehouse intake",
+    "requestReinspection": "Request re-inspection"
+  },
+  "error": {
+    "warehouseRejectedCannotOnlineResubmit": "This item is in warehouse inspection flow and cannot be submitted to online review."
+  },
   "statusTab": {
     "all": "All",
     "draft": "Draft",
