@@ -22,9 +22,9 @@ export default function BookInboundPage() {
   ]
 
   const GHN_HANDLING_OPTIONS = [
-    { label: t('handlingOption.tryItem', 'Cho thử hàng'), value: 'CHOTHUHANG' },
-    { label: t('handlingOption.viewOnly', 'Cho xem hàng không thử'), value: 'CHOXEMHANGKHONGTHU' },
-    { label: t('handlingOption.noView', 'Không cho xem hàng'), value: 'KHONGCHOXEMHANG' },
+    { label: t('handlingOption.tryItem', 'Allow trying the item'), value: 'CHOTHUHANG' },
+    { label: t('handlingOption.viewOnly', 'Allow viewing but not trying'), value: 'CHOXEMHANGKHONGTHU' },
+    { label: t('handlingOption.noView', 'Do not allow viewing the item'), value: 'KHONGCHOXEMHANG' },
   ]
 
   const navigate = useNavigate()
@@ -209,8 +209,13 @@ export default function BookInboundPage() {
       message.success(t('bookSuccess', 'Inbound package booked successfully'))
       const firstResult = results[0]
       navigate(`${prefix}/warehouse/inbound/packages/${encodeURIComponent(firstResult.clientOrderCode)}`)
-    } catch {
-      message.error(t('bookError', 'Failed to book inbound shipment'))
+    } catch (err: any) {
+      const apiError = err.response?.data
+      if (err.response?.status === 409 && apiError?.code === 'InboundShipment.AlreadyExists') {
+        message.error(t('alreadyExistsError', 'This item already has an active shipping request. Please check your history.'))
+      } else {
+        message.error(t('bookError', 'Failed to book inbound shipment'))
+      }
     }
   }
 

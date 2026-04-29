@@ -14,6 +14,6 @@ export interface WardDto {
 }
 
 export interface GhnMetadata {
-  Id: number // districtId
-  Code: string // wardCode
+  id: number // districtId
+  code: string // wardCode
 }

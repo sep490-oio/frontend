@@ -58,8 +58,8 @@ export default function GhnAddressSelect({
     const ward = wards?.find((w) => w.wardName === val)
     if (ward && districtId) {
       form.setFieldValue(metadataName, {
-        Id: districtId,
-        Code: ward.wardCode,
+        id: districtId,
+        code: ward.wardCode,
       })
     } else {
       form.setFieldValue(metadataName, undefined)
@@ -71,10 +71,10 @@ export default function GhnAddressSelect({
     if (districtId && currentWard && wards) {
       const ward = wards.find((w) => w.wardName === currentWard)
       const existingMetadata = form.getFieldValue(metadataName)
-      if (ward && (!existingMetadata || existingMetadata.Code !== ward.wardCode)) {
+      if (ward && (!existingMetadata || existingMetadata.code !== ward.wardCode)) {
         form.setFieldValue(metadataName, {
-          Id: districtId,
-          Code: ward.wardCode,
+          id: districtId,
+          code: ward.wardCode,
         })
       }
     }

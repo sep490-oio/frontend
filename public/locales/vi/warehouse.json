@@ -471,5 +471,12 @@
     "outboundBooked": "Đã đặt vận đơn xuất",
     "dispatched": "Đã gửi cho người mua",
     "delivered": "Đã giao"
-  }
+  },
+  "alreadyExistsError": "Sản phẩm này đã có yêu cầu vận chuyển đang hoạt động. Vui lòng kiểm tra lịch sử của bạn.",
+  "noEligibleInboundItemsTitle": "Không có sản phẩm nào chờ kiểm định",
+  "noEligibleInboundItemsDesc": "Chỉ những sản phẩm có trạng thái \"Chờ xác minh\" đã được gửi để kiểm định và chưa có yêu cầu gửi hàng đang hoạt động mới có thể được gửi vào kho. Vui lòng gửi sản phẩm để kiểm định trước.",
+  "noEligibleInboundItemsPlaceholder": "Không có sản phẩm đủ điều kiện để gửi",
+  "selectedItems": "Sản phẩm đã chọn",
+  "externalDimensionsNote": "Nhập tổng kích thước kiện hàng cho tất cả các sản phẩm.",
+  "weightMinPerItem": "Tổng trọng lượng phải ít nhất là {{count}}g (1g cho mỗi sản phẩm đã chọn)."
 }

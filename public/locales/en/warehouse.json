@@ -471,5 +471,12 @@
     "outboundBooked": "Outbound shipment booked",
     "dispatched": "Dispatched to buyer",
     "delivered": "Delivered"
-  }
+  },
+  "alreadyExistsError": "This item already has an active shipping request. Please check your history.",
+  "noEligibleInboundItemsTitle": "No items are waiting for platform inspection",
+  "noEligibleInboundItemsDesc": "Only items in status \"pending_verify\" that were submitted for platform verification and do not already have an active inbound shipment can be shipped in. Submit an item for platform verification first.",
+  "noEligibleInboundItemsPlaceholder": "No eligible items to ship",
+  "selectedItems": "Selected Items",
+  "externalDimensionsNote": "Enter the total package dimensions for all items.",
+  "weightMinPerItem": "Total weight must be at least {{count}}g (1g per selected item)."
 }
