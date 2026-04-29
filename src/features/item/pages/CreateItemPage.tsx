@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useCreateItem, useSubmitItem, useCategories, useSuggestDescription, mapSuggestError, coerceSuggestionToEditorHtml } from '@/features/item/api'
 import type { SuggestDescriptionResponse } from '@/features/item/api'
-import { useCreateAuction } from '@/features/auction/api'
+import { useCreateAuction } from '@/features/auction/auctionApi'
 import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { MultiCaptureUploader } from '@/components/ui/MultiCaptureUploader'
 import type { CapturedPhoto } from '@/components/ui/MultiCaptureUploader'
@@ -492,7 +492,7 @@ export default function CreateItemPage() {
                     label={ta('startingPrice', 'Starting Price')}
                     rules={[{ required: true, message: ta('startingPriceRequired', 'Please enter starting price') }]}
                   >
-                    <InputNumber
+                    <InputNumber<number>
                       size="large"
                       min={0}
                       step={1000}
@@ -510,7 +510,7 @@ export default function CreateItemPage() {
                     label={ta('bidIncrement', 'Bid Increment')}
                     rules={[{ required: true, message: ta('bidIncrementRequired', 'Please enter bid increment') }]}
                   >
-                    <InputNumber
+                    <InputNumber<number>
                       size="large"
                       min={1000}
                       step={1000}
@@ -528,7 +528,7 @@ export default function CreateItemPage() {
                     label={ta('reservePrice', 'Reserve Price')}
                     help={ta('reservePriceHelp', 'Auction only succeeds if this price is met.')}
                   >
-                    <InputNumber
+                    <InputNumber<number>
                       size="large"
                       min={0}
                       step={1000}
@@ -546,7 +546,7 @@ export default function CreateItemPage() {
                     label={ta('buyNowPrice', 'Buy Now Price')}
                     help={ta('buyNowPriceHelp', 'Allows buyers to purchase instantly and end the auction.')}
                   >
-                    <InputNumber
+                    <InputNumber<number>
                       size="large"
                       min={0}
                       step={1000}
