@@ -94,6 +94,8 @@
   "myBids": "My Bids",
   "myBidsSubtitle": "Track and manage the auctions you have participated in",
   "activityLog": "Recent Activity",
+  "groupByAuction": "Group by Auction",
+  "ungroup": "Ungroup",
   "bidStatusAll": "All",
   "bidStatusActive": "Leading",
   "bidStatusOutbid": "Outbid",
