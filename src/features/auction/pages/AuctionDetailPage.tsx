@@ -761,8 +761,13 @@ export default function AuctionDetailPage() {
     if (!ensureTermsAccepted()) return
     if (!id || !autoBidMax) return
     try {
-      await autoBidMutation.mutateAsync({ auctionId: id, maxAmount: autoBidMax, currency, incrementAmount: autoBidIncrement ?? undefined })
-      message.success(t('autoBidConfigured', 'Auto-bid configured'))
+      const result = await autoBidMutation.mutateAsync({ auctionId: id, maxAmount: autoBidMax, currency, incrementAmount: autoBidIncrement ?? undefined })
+      const bidWasPlaced = result.totalAutoBids > 0
+      if (bidWasPlaced) {
+        message.success(t('autoBid.configuredAndBidPlaced', 'Auto-bid configured and placed your opening/proxy bid.'))
+      } else {
+        message.success(t('autoBid.configured', 'Auto-bid configured.'))
+      }
       setAutoBidModalOpen(false)
     } catch {
       message.error(t('autoBidError', 'Failed to configure auto-bid'))

@@ -319,6 +319,8 @@
   "errorQualStartFuture": "Pick a qualification opening time in the future.",
   "errorExtensionRange": "Extension minutes must be between 1 and 30.",
   "errorStartFuture": "Pick a start time in the future.",
+  "autoBid.configured": "Auto-bid configured.",
+  "autoBid.configuredAndBidPlaced": "Auto-bid configured and placed your opening/proxy bid.",
   "autoBid.pause": "Pause",
   "autoBid.resume": "Resume",
   "autoBid.budgetUsed": "Budget Used",

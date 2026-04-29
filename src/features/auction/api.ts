@@ -289,7 +289,9 @@ export function useConfigureAutoBid() {
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.auctions.myAutoBid(variables.auctionId) })
       qc.invalidateQueries({ queryKey: queryKeys.auctions.detail(variables.auctionId) })
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.bids(variables.auctionId) })
       qc.invalidateQueries({ queryKey: queryKeys.auctions.myBids() })
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.myAuctionsRoot() })
     },
   })
 }
@@ -407,6 +409,9 @@ export function useResumeAutoBid() {
     },
     onSuccess: (_, auctionId) => {
       qc.invalidateQueries({ queryKey: queryKeys.auctions.myAutoBid(auctionId) })
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.detail(auctionId) })
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.bids(auctionId) })
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.myBids() })
     },
   })
 }
