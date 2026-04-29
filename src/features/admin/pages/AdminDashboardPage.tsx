@@ -20,7 +20,7 @@ import {
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useAdminUsers, useAdminReports, useAdminWithdrawals, usePendingVerifications, usePlatformWallet } from '@/features/admin/api'
-import { useAuctions } from '@/features/auction/api'
+import { useAuctions } from '@/features/auction/auctionApi.ts'
 import { formatCurrency, formatDateTime } from '@/utils/format'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { useBreakpoint } from '@/hooks/useBreakpoint'

@@ -3,13 +3,13 @@
 :root {
   /* Colors */
   --color-bg-primary: #ccdbe8;
-  --color-bg-surface: rgba(247, 245, 240, 0.7);
-  --color-bg-card: rgba(255, 255, 255, 0.7);
+  --color-bg-surface: #F7F5F0;
+  --color-bg-card: #FFFFFF;
   --color-text-primary: #1c1c1c;
   --color-text-secondary: #64748B;
   --color-border: #E8E5DF;
   --color-border-light: #F7F5F0;
-  --color-bg-container: rgba(255, 255, 255, 0.7);
+  --color-bg-container: #FFFFFF;
   --color-success: #4A7C59;
   --color-success-soft: rgba(74, 124, 89, 0.06);
   --color-warning: #C4933D;
@@ -42,13 +42,13 @@
 
 [data-theme="dark"] {
   --color-bg-primary: #0d1b2e;
-  --color-bg-surface: rgba(10, 12, 16, 0.7);
-  --color-bg-card: rgba(17, 20, 27, 0.7);
+  --color-bg-surface: #0A0C10;
+  --color-bg-card: #11141B;
   --color-text-primary: #F1F5F9;
   --color-text-secondary: #94A3B8;
   --color-border: #1f242f;
   --color-border-light: #11141b;
-  --color-bg-container: rgba(17, 20, 27, 0.7);
+  --color-bg-container: #11141B;
   --color-success: #5A9C6B;
   --color-success-soft: rgba(90, 156, 107, 0.15);
   --color-warning: #F97316;
@@ -524,7 +524,7 @@ h1.oio-serif,
   border-radius: 8px !important;
   border: 1px solid var(--color-border) !important;
   transition: box-shadow 250ms ease, transform 250ms ease !important;
-  background: var(--color-bg-container, rgba(255, 255, 255, 0.7)) !important;
+  background: var(--color-bg-container) !important;
   backdrop-filter: var(--oio-blur);
   -webkit-backdrop-filter: var(--oio-blur);
 }
@@ -591,7 +591,7 @@ h1.oio-serif,
 .ant-modal-content {
   border-radius: 12px !important;
   overflow: hidden;
-  background: var(--color-bg-elevated, rgba(255, 255, 255, 0.8)) !important;
+  background: var(--color-bg-card) !important;
   backdrop-filter: var(--oio-blur);
   -webkit-backdrop-filter: var(--oio-blur);
   border: 1px solid var(--color-border) !important;
@@ -817,7 +817,7 @@ h1.oio-serif,
 
 /* ─── Spotlight Modal Refinements ─── */
 .spotlight-modal .ant-modal-content {
-  background: rgba(253, 251, 247, 0.7) !important;
+  background: var(--color-bg-card) !important;
   backdrop-filter: blur(20px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
@@ -828,7 +828,7 @@ h1.oio-serif,
 }
 
 [data-theme="dark"] .spotlight-modal .ant-modal-content {
-  background: rgba(13, 27, 46, 0.7) !important;
+  background: var(--color-bg-card) !important;
 }
 
 .spotlight-modal .ant-modal-body {

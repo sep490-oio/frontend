@@ -9,7 +9,7 @@ import {
   DollarOutlined,
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
-import { useAuctionDetail } from '@/features/auction/api'
+import { useAuctionDetail } from '@/features/auction/auctionApi.ts'
 import { PriceHistoryChart } from '@/features/auction/components/PriceHistoryChart'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'

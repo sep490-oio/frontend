@@ -179,20 +179,24 @@
     "resendEmail": "Gửi lại email xác minh",
     "resendSuccess": "Đã gửi email xác minh! Vui lòng kiểm tra hộp thư.",
     "resendError": "Gửi email xác minh thất bại. Vui lòng đợi 60 giây giữa các lần gửi.",
-    "appearance": "Diện mạo",
+    "appearance": "Diện mạo & Thương hiệu",
     "themeMode": "Chế độ giao diện",
     "switchToDark": "Chuyển sang Chế độ tối",
     "switchToLight": "Chuyển sang Chế độ sáng",
-    "colorPreset": "Tông màu chủ đạo",
-    "presetHint": "Chọn sự kết hợp màu sắc phù hợp với phong cách của bạn.",
+    "colorPreset": "Mã màu thương hiệu",
+    "presetHint": "Mỗi bộ màu sử dụng công thức đa sắc độ để tối ưu hóa chiều sâu thị giác.",
     "presets": {
-      "default": "Mặc định",
-      "mint": "Bạc hà",
-      "ember": "Hổ phách",
+      "default": "Đại dương sâu",
+      "mint": "Thực vật học",
+      "ember": "Hoàng hôn",
       "aurora": "Cực quang",
-      "slate": "Xám đá",
-      "frosted": "Xám mờ"
+      "slate": "Bão tố",
+      "frosted": "Thép mờ",
+      "custom": "Duy nhất"
     },
+    "customColor": "Tinh chỉnh chuẩn xác",
+    "customDesc": "Điều chỉnh sắc độ và cường độ để tạo nên bản sắc thương hiệu riêng của bạn.",
+    "customHueHint": "Kéo thanh trượt để tạo màu sắc thương hiệu riêng của bạn. Mọi yếu tố trong ứng dụng sẽ thích nghi theo tông màu này.",
     "changeAvatar": "Đổi ảnh đại diện",
     "avatarUploaded": "Đã tải ảnh đại diện",
     "avatarUploadError": "Tải ảnh đại diện thất bại",
@@ -232,6 +236,51 @@
       "firstNameRequired": "Họ không được để trống",
       "lastNameRequired": "Tên không được để trống",
       "displayNameRequired": "Tên hiển thị không được để trống"
+    }
+  },
+  "settings": {
+    "title": "Cài đặt",
+    "subtitle": "Quản lý tùy chọn tài khoản và bảo mật của bạn",
+    "notifications": {
+      "title": "Thông báo",
+      "description": "Chọn cách bạn nhận thông báo — trên nền tảng và qua email"
+    },
+    "appearance": {
+      "livePreview": "Xem trực tiếp",
+      "sampleInterface": "Giao diện mẫu",
+      "sampleDesc": "Xem các lựa chọn của bạn ảnh hưởng thế nào đến nhận diện thị giác của nền tảng.",
+      "primaryAction": "Hành động chính",
+      "ghost": "Nút phụ",
+      "activeTag": "Thẻ hoạt động",
+      "backgroundGradient": "Dải màu nền",
+      "brightness": "Độ sáng",
+      "lightModeActive": "Chế độ sáng đang bật",
+      "darkModeActive": "Chế độ tối đang bật",
+      "clickForDark": "Nhấn để chuyển sang Tối",
+      "clickForLight": "Nhấn để chuyển sang Sáng",
+      "colorDna": "Mã màu thương hiệu",
+      "presetHint": "Mỗi bộ màu sử dụng công thức đa sắc độ để tối ưu hóa chiều sâu thị giác.",
+      "precisionTuning": "Tinh chỉnh chuẩn xác",
+      "pigmentHue": "Sắc độ (Hue)",
+      "intensity": "Cường độ (Saturation)",
+      "quickTemplates": "MẪU NHANH",
+      "swatches": {
+        "ruby": "Hồng ngọc",
+        "amber": "Hổ phách",
+        "emerald": "Lục bảo",
+        "sapphire": "Lam ngọc",
+        "amethyst": "Thạch anh",
+        "rose": "Hoa hồng"
+      },
+      "presets": {
+        "default": { "label": "Đại dương sâu", "desc": "Xanh biển & Navy cổ điển" },
+        "mint": { "label": "Thực vật học", "desc": "Sắc xanh rừng tự nhiên" },
+        "ember": { "label": "Hoàng hôn", "desc": "Hổ phách ấm áp & Đất" },
+        "aurora": { "label": "Cực quang", "desc": "Tím Indigo & Chạng vạng" },
+        "slate": { "label": "Bão tố", "desc": "Xám xanh kỹ thuật" },
+        "frosted": { "label": "Thép mờ", "desc": "Kim loại mờ hiện đại" },
+        "custom": { "label": "Duy nhất", "desc": "Công thức HSL của riêng bạn" }
+      }
     }
   }
 }

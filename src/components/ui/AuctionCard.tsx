@@ -9,7 +9,7 @@ import { AuctionStatus } from '@/types/enums'
 import type { AuctionListItemDto } from '@/types'
 import { MONO_FONT } from '@/styles/tokens'
 import { useAuth } from '@/hooks/useAuth'
-import { useWatchAuction, useUnwatchAuction } from '@/features/auction/api'
+import { useWatchAuction, useUnwatchAuction } from '@/features/auction/auctionApi.ts'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 
 interface AuctionCardProps {

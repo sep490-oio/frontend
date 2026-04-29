@@ -94,6 +94,8 @@
   "myBids": "My Bids",
   "myBidsSubtitle": "Track and manage the auctions you have participated in",
   "activityLog": "Recent Activity",
+  "groupByAuction": "Group by Auction",
+  "ungroup": "Ungroup",
   "bidStatusAll": "All",
   "bidStatusActive": "Leading",
   "bidStatusOutbid": "Outbid",
@@ -517,5 +519,8 @@
   "removeFromWatchlist": "Remove",
   "notifyOnBid": "Notify on new bids",
   "notifyOnEnd": "Notify when auction ends",
-  "you": "You"
+  "you": "You",
+  "closeAuction": "Close Auction",
+  "closeAuctionConfirm": "Are you sure you want to close this auction? This will end the auction process and cannot be undone.",
+  "closeAuctionSuccess": "Auction closed successfully"
 }

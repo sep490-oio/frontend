@@ -106,6 +106,8 @@
   "myBids": "Đấu giá của tôi",
   "myBidsSubtitle": "Theo dõi và quản lý các phiên đấu giá bạn đã tham gia",
   "activityLog": "Hoạt động gần đây",
+  "groupByAuction": "Nhóm theo phiên đấu giá",
+  "ungroup": "Hủy nhóm",
   "bidStatusAll": "Tất cả",
   "bidStatusActive": "Đang dẫn đầu",
   "bidStatusOutbid": "Bị vượt giá",
@@ -182,6 +184,9 @@
     "minutes": "phút",
     "hours": "giờ",
     "days": "ngày",
+    "minutes_count": "{{count}} phút",
+    "hours_count": "{{count}} giờ",
+    "days_count": "{{count}} ngày",
     "date": "Ngày",
     "time": "Giờ",
     "clear": "Xóa",
@@ -515,5 +520,12 @@
   "removeFromWatchlist": "Xóa",
   "notifyOnBid": "Thông báo khi có người đặt giá",
   "notifyOnEnd": "Thông báo khi phiên kết thúc",
-  "you": "Bạn"
+  "you": "Bạn",
+  "closeAuction": "Đóng phiên đấu giá",
+  "closeAuctionConfirm": "Bạn có chắc chắn muốn đóng phiên đấu giá này không? Hành động này sẽ kết thúc hoàn toàn quy trình đấu giá.",
+  "closeAuctionSuccess": "Đã đóng phiên đấu giá thành công",
+  "selectedItem": "Vật phẩm đã chọn",
+  "pricingAndTiming": "Giá & Thời gian",
+  "verifiedByPlatformTitle": "Xác thực bởi Nền tảng",
+  "verifiedByPlatformDesc": "Yêu cầu chuyên gia oio.vn kiểm định vật phẩm trước khi đấu giá."
 }

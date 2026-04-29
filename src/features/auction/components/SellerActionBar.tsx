@@ -8,6 +8,7 @@ import {
   TruckOutlined,
   UserSwitchOutlined,
   ReloadOutlined,
+  CloseCircleOutlined,
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { getSellerActions, isSubmitDisabled, type SellerAction } from '@/features/auction/utils/sellerActions'
@@ -26,11 +27,14 @@ interface SellerActionBarProps {
   onConfigureShipping?: () => void
   onOfferRunnerUp?: () => void
   onRelist?: () => void
+  onClose?: () => void
+  canOfferRunnerUp?: boolean
   // Loading states
   isSubmitLoading?: boolean
   isCancelLoading?: boolean
   isOfferRunnerUpLoading?: boolean
   isRelistLoading?: boolean
+  isCloseLoading?: boolean
 }
 
 const actionConfig: Record<SellerAction, {
@@ -48,6 +52,7 @@ const actionConfig: Record<SellerAction, {
   configureShipping: { icon: <TruckOutlined />, labelKey: 'configureShipping', labelFallback: 'Shipping', type: 'default' },
   offerRunnerUp: { icon: <UserSwitchOutlined />, labelKey: 'offerRunnerUp', labelFallback: 'Offer Runner-Up', type: 'default' },
   relist: { icon: <ReloadOutlined />, labelKey: 'relistAuction', labelFallback: 'Relist', type: 'primary' },
+  close: { icon: <CloseCircleOutlined />, labelKey: 'closeAuction', labelFallback: 'Close', danger: true },
 }
 
 export function SellerActionBar({
@@ -63,14 +68,17 @@ export function SellerActionBar({
   onConfigureShipping,
   onOfferRunnerUp,
   onRelist,
+  onClose,
+  canOfferRunnerUp,
   isSubmitLoading,
   isCancelLoading,
   isOfferRunnerUpLoading,
   isRelistLoading,
+  isCloseLoading,
 }: SellerActionBarProps) {
   const { t } = useTranslation('auction')
 
-  const actions = getSellerActions({ status, verifyByPlatform })
+  const actions = getSellerActions({ status, verifyByPlatform, canOfferRunnerUp })
   if (actions.length === 0) return null
 
   const handlers: Record<SellerAction, (() => void) | undefined> = {
@@ -82,6 +90,7 @@ export function SellerActionBar({
     configureShipping: onConfigureShipping,
     offerRunnerUp: onOfferRunnerUp,
     relist: onRelist,
+    close: onClose,
   }
 
   const loadingMap: Partial<Record<SellerAction, boolean>> = {
@@ -89,6 +98,7 @@ export function SellerActionBar({
     cancel: isCancelLoading,
     offerRunnerUp: isOfferRunnerUpLoading,
     relist: isRelistLoading,
+    close: isCloseLoading,
   }
 
   const submitDisabled = isSubmitDisabled(itemStatus)
@@ -126,6 +136,28 @@ export function SellerActionBar({
                 cancelText={t('cancel', 'Cancel')}
               >
                 <Button
+                  icon={config.icon}
+                  loading={loading}
+                  size="middle"
+                >
+                  {t(config.labelKey, config.labelFallback)}
+                </Button>
+              </Popconfirm>
+            )
+          }
+
+          if (action === 'close') {
+            return (
+              <Popconfirm
+                key={action}
+                title={t('closeAuctionConfirm', 'Are you sure you want to close this auction? This will end the auction process.')}
+                onConfirm={handler}
+                okText={t('confirm', 'Confirm')}
+                cancelText={t('cancel', 'Cancel')}
+                okButtonProps={{ danger: true }}
+              >
+                <Button
+                  danger
                   icon={config.icon}
                   loading={loading}
                   size="middle"

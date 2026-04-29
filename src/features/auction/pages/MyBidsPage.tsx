@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
-import { Typography, Select, Spin, Empty, Flex, Pagination, Button, Tag } from 'antd'
+import { Typography, Select, Spin, Empty, Flex, Pagination, Button, Tag, Tooltip } from 'antd'
 import { HistoryOutlined, ThunderboltOutlined, TrophyOutlined, LineChartOutlined, ClockCircleOutlined, ArrowRightOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { useMyBids, useMyPendingWinnerOffers, useRespondRunnerUpOffer, useAuctionDetail } from '@/features/auction/api'
+import { useMyBids, useMyPendingWinnerOffers, useRespondRunnerUpOffer, useAuctionDetail } from '@/features/auction/auctionApi.ts'
 import { useUserHubStatus } from '@/features/user/contexts/UserHubContext'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
-import type { MyBidDto } from '@/features/auction/api'
+import type { MyBidDto } from '@/features/auction/auctionApi.ts'
 import { PriceDisplay } from '@/components/ui/PriceDisplay'
 import { AuctionStatus } from '@/types/enums'
 import { formatDateTime } from '@/utils/format'
@@ -17,6 +17,7 @@ import { CountdownTimer } from '@/components/ui/CountdownTimer'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { useAuctionHub } from '@/features/auction/hooks/useAuctionHub'
 import { useUserHub } from '@/features/auction/hooks/useUserHub'
+import { getServerNowMs } from '@/utils/time'
 import { useCurrentUser } from '@/features/user/api'
 import { useNotifications } from '@/features/notification/api'
 import { BidderPositionBlock } from '@/features/auction/components/BidderPositionBlock'
@@ -387,31 +388,50 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
 
 function RecentActivityLog({ localActivities = [] }: { localActivities?: any[] }) {
   const { t } = useTranslation(['auction', 'common'])
-  const { data: notificationsData, isLoading } = useNotifications({ pageSize: 15 })
+  const { data: notificationsData, isLoading } = useNotifications({ pageSize: 50 })
   const navigate = useNavigate()
-
+  const [filter, setFilter] = useState<'all' | 'outbid' | 'won'>('all')
+  const [groupByAuction, setGroupByAuction] = useState(false)
 
   const notifications = notificationsData?.items ?? []
 
   // Merge local activities with server notifications, avoiding duplicates
   const allActivities = useMemo(() => {
     const merged = [...localActivities, ...notifications]
-    // Simple deduplication: if a local activity has the same entityId and approximate timestamp as a notification
-    // Or if they are identical (shouldn't happen with IDs)
     const unique = merged.reduce((acc: any[], curr) => {
       const exists = acc.find(a =>
         (a.id === curr.id) ||
-        (a.entityId === curr.entityId && Math.abs(new Date(a.createdAt).getTime() - new Date(curr.createdAt).getTime()) < 5000)
+        (a.entityId === curr.entityId && Math.abs(new Date(a.createdAt).getTime() - new Date(curr.createdAt).getTime()) < 5000 && a.title === curr.title)
       )
       if (!exists) acc.push(curr)
       return acc
     }, [])
 
-    return unique
+    let filtered = unique
       .filter(n => n.entityType?.toLowerCase() === 'auction' || n.notificationType?.toLowerCase() === 'auction')
+      .filter(n => {
+        if (filter === 'all') return true
+        if (filter === 'outbid') return n.eventType?.toLowerCase().includes('outbid') || n.title.includes('vượt giá')
+        if (filter === 'won') return n.eventType?.toLowerCase().includes('won') || n.title.includes('thắng')
+        return true
+      })
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 15)
-  }, [notifications, localActivities])
+
+    if (groupByAuction) {
+      const groups: Record<string, any[]> = {}
+      filtered.forEach(notif => {
+        const key = notif.entityId || 'other'
+        if (!groups[key]) groups[key] = []
+        groups[key].push(notif)
+      })
+      // Convert to array and sort by latest activity in group
+      return Object.values(groups)
+        .sort((a, b) => new Date(b[0].createdAt).getTime() - new Date(a[0].createdAt).getTime())
+        .map(group => ({ isGroup: true, entityId: group[0].entityId, title: group[0].title, activities: group }))
+    }
+
+    return filtered.slice(0, 20)
+  }, [notifications, localActivities, filter, groupByAuction])
 
   return (
     <div style={{
@@ -438,11 +458,49 @@ function RecentActivityLog({ localActivities = [] }: { localActivities?: any[] }
           onClick={() => navigate('/me/notifications')}
           style={{ fontSize: 12, color: 'var(--color-accent)', padding: 0 }}
         >
-          {t('common:action.viewAll')} <ArrowRightOutlined style={{ fontSize: 10 }} />
+          {t('viewAll')} <ArrowRightOutlined style={{ fontSize: 10 }} />
         </Button>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        {/* Filter Tabs */}
+        <div style={{ display: 'flex', gap: 4, background: 'var(--color-bg-surface)', padding: 4, borderRadius: 12, flex: 1, marginRight: 12 }}>
+          {(['all', 'outbid', 'won'] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              style={{
+                flex: 1,
+                padding: '6px 0',
+                border: 'none',
+                background: filter === f ? 'var(--color-bg-card)' : 'transparent',
+                color: filter === f ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)',
+                borderRadius: 8,
+                fontSize: 11,
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                boxShadow: filter === f ? '0 2px 4px rgba(0,0,0,0.1)' : 'none'
+              }}
+            >
+              {f === 'all' ? t('common:action.all', 'All') : f === 'outbid' ? t('auction:bidStatusOutbid', 'Outbid') : t('auction:bidStatusWon', 'Won')}
+            </button>
+          ))}
+        </div>
+        
+        {/* Grouping Toggle */}
+        <Tooltip title={groupByAuction ? t('auction:ungroup', 'Ungroup') : t('auction:groupByAuction', 'Group by Auction')}>
+          <Button 
+            size="small" 
+            type={groupByAuction ? 'primary' : 'default'}
+            icon={<HistoryOutlined />}
+            onClick={() => setGroupByAuction(!groupByAuction)}
+            style={{ borderRadius: 8, width: 32, height: 32, flexShrink: 0 }}
+          />
+        </Tooltip>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: groupByAuction ? 20 : 12 }}>
         {isLoading && allActivities.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '20px 0' }}><Spin size="small" /></div>
         ) : allActivities.length === 0 ? (
@@ -450,74 +508,123 @@ function RecentActivityLog({ localActivities = [] }: { localActivities?: any[] }
             {t('common:notification.noNotifications')}
           </Text>
         ) : (
-          allActivities.map((notif) => {
-            const isOutbid = notif.eventType?.toLowerCase().includes('outbid') || notif.title.includes('vượt giá')
-            return (
-              <div
-                key={notif.id}
-                style={{
-                  display: 'flex',
-                  gap: 12,
-                  paddingBottom: 12,
-                  borderBottom: '0px solid var(--color-border-light)',
-                  cursor: notif.entityId ? 'pointer' : 'default'
-                }}
-                onClick={() => {
-                  if (notif.entityId) {
-                    navigate(`/auctions/${notif.entityId}`)
-                  }
-                }}
-              >
-                <div style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 8,
-                  background: isOutbid ? 'rgba(239, 68, 68, 0.1)' : 'var(--color-bg-surface)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                  border: isOutbid ? '1px solid rgba(239, 68, 68, 0.2)' : '1px solid var(--color-border-light)'
-                }}>
-                  {isOutbid ? (
-                    <LineChartOutlined style={{ fontSize: 12, color: '#ef4444' }} />
-                  ) : (
-                    <ThunderboltOutlined style={{ fontSize: 12, color: 'var(--color-accent)' }} />
-                  )}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: 'var(--color-text-primary)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    gap: 8
-                  }}>
-                    <span style={{
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}>
-                      {notif.title.replace('Đặt giá thành công: ', '').replace('Bid Success: ', '').replace('Bạn đã bị vượt giá!', t('bidStatusOutbid', 'Outbid'))}
+          allActivities.map((item, idx) => {
+            if (item.isGroup) {
+              return (
+                <div key={item.entityId || idx} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div 
+                    style={{ 
+                      fontSize: 12, 
+                      fontWeight: 700, 
+                      color: 'var(--color-text-tertiary)', 
+                      textTransform: 'uppercase', 
+                      letterSpacing: '0.05em',
+                      borderBottom: '1px solid var(--color-border-light)',
+                      paddingBottom: 4,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}
+                    onClick={() => item.entityId && navigate(`/auctions/${item.entityId}`)}
+                  >
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                      {item.title.replace('Đặt giá thành công: ', '').replace('Bid Success: ', '').replace('Bạn đã bị vượt giá!', '').replace('Ban da thang phien dau gia', '').trim()}
                     </span>
+                    <Tag style={{ margin: 0, borderRadius: 4, fontSize: 10 }}>{item.activities.length}</Tag>
                   </div>
-                  <div style={{
-                    fontSize: 12,
-                    color: isOutbid ? '#ef4444' : 'var(--color-text-secondary)',
-                    marginTop: 2,
-                    lineHeight: 1.4
-                  }}>
-                    {notif.message}
-                  </div>
-                  <div style={{ fontSize: 10, color: 'var(--color-text-tertiary)', marginTop: 4 }}>
-                    {formatDateTime(notif.createdAt)}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingLeft: 4 }}>
+                    {item.activities.map((notif: any) => (
+                      <ActivityItem key={notif.id} notif={notif} hideTitle />
+                    ))}
                   </div>
                 </div>
-              </div>
-            )
+              )
+            }
+            return <ActivityItem key={item.id} notif={item} />
           })
         )}
+      </div>
+    </div>
+  )
+}
+
+function ActivityItem({ notif, hideTitle = false }: { notif: any, hideTitle?: boolean }) {
+  const { t } = useTranslation(['auction', 'common'])
+  const navigate = useNavigate()
+  const isOutbid = notif.eventType?.toLowerCase().includes('outbid') || notif.title.includes('vượt giá')
+  const isWon = notif.eventType?.toLowerCase().includes('won') || notif.title.includes('thắng')
+  
+  return (
+    <div
+      className="oio-press"
+      style={{
+        display: 'flex',
+        gap: 12,
+        padding: hideTitle ? '8px 0' : '12px',
+        borderRadius: 16,
+        background: (!hideTitle && (isOutbid || isWon)) ? 'var(--color-bg-surface)' : 'transparent',
+        transition: 'all 0.2s ease',
+        cursor: notif.entityId ? 'pointer' : 'default'
+      }}
+      onClick={() => {
+        if (notif.entityId) {
+          navigate(`/auctions/${notif.entityId}`)
+        }
+      }}
+    >
+      <div style={{
+        width: hideTitle ? 24 : 32,
+        height: hideTitle ? 24 : 32,
+        borderRadius: hideTitle ? 8 : 10,
+        background: isOutbid ? 'rgba(239, 68, 68, 0.1)' : isWon ? 'rgba(34, 197, 94, 0.1)' : 'var(--color-bg-surface)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+        border: '1px solid var(--color-border-light)'
+      }}>
+        {isOutbid ? (
+          <LineChartOutlined style={{ fontSize: hideTitle ? 10 : 14, color: '#ef4444' }} />
+        ) : isWon ? (
+          <TrophyOutlined style={{ fontSize: hideTitle ? 10 : 14, color: '#22c55e' }} />
+        ) : (
+          <ThunderboltOutlined style={{ fontSize: hideTitle ? 10 : 14, color: 'var(--color-accent)' }} />
+        )}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        {!hideTitle && (
+          <div style={{
+            fontSize: 13,
+            fontWeight: 700,
+            color: 'var(--color-text-primary)',
+            marginBottom: 2,
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            <span style={{ fontSize: 11, color: 'var(--color-accent)', textTransform: 'uppercase', letterSpacing: '0.02em', marginBottom: 2 }}>
+              {isOutbid ? t('auction:bidStatusOutbid') : isWon ? t('auction:bidStatusWon') : t('auction:bidStatusLeading', 'Leading')}
+            </span>
+            <span style={{
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap'
+            }}>
+              {notif.title.replace('Đặt giá thành công: ', '').replace('Bid Success: ', '').replace('Bạn đã bị vượt giá!', '').replace('Ban da thang phien dau gia', '').trim()}
+            </span>
+          </div>
+        )}
+        <div style={{
+          fontSize: hideTitle ? 12 : 12,
+          color: (hideTitle && isOutbid) ? '#ef4444' : 'var(--color-text-secondary)',
+          lineHeight: 1.4,
+          fontWeight: hideTitle ? 500 : 400
+        }}>
+          {notif.message}
+        </div>
+        <div style={{ fontSize: 10, color: 'var(--color-text-tertiary)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+          <ClockCircleOutlined style={{ fontSize: 9 }} />
+          {formatDateTime(notif.createdAt)}
+        </div>
       </div>
     </div>
   )
@@ -556,11 +663,12 @@ export default function MyBidsPage() {
         if (prevItem) {
           // Detect Bid Success (Price increased)
           if (item.myLatestBidAmount > prevItem.myLatestBidAmount) {
+            const now = getServerNowMs()
             setLocalActivities(prev => [{
-              id: `local-bid-${Date.now()}-${item.auctionId}`,
+              id: `local-bid-${now}-${item.auctionId}`,
               title: item.itemTitle,
               message: t('bidSuccessMsg', 'Bạn đã đặt giá thành công: {{amount}}đ', { amount: item.myLatestBidAmount.toLocaleString() }),
-              createdAt: new Date().toISOString(),
+              createdAt: new Date(now).toISOString(),
               eventType: 'AuctionBidSuccess',
               entityType: 'Auction',
               entityId: item.auctionId
@@ -568,11 +676,12 @@ export default function MyBidsPage() {
           }
           // Detect Outbid (Position changed to outbid)
           else if (item.position === 'outbid' && prevItem.position !== 'outbid') {
+            const now = getServerNowMs()
             setLocalActivities(prev => [{
-              id: `local-outbid-${Date.now()}-${item.auctionId}`,
+              id: `local-outbid-${now}-${item.auctionId}`,
               title: item.itemTitle,
               message: t('outbidMsg', 'Bạn đã bị vượt giá!'),
-              createdAt: new Date().toISOString(),
+              createdAt: new Date(now).toISOString(),
               eventType: 'AuctionOutbid',
               entityType: 'Auction',
               entityId: item.auctionId
@@ -580,11 +689,12 @@ export default function MyBidsPage() {
           }
           // Detect Won (Position changed to won)
           else if (item.position === 'won' && prevItem.position !== 'won') {
+            const now = getServerNowMs()
             setLocalActivities(prev => [{
-              id: `local-won-${Date.now()}-${item.auctionId}`,
+              id: `local-won-${now}-${item.auctionId}`,
               title: item.itemTitle,
               message: t('wonMsg', 'Bạn đã thắng phiên đấu giá!'),
-              createdAt: new Date().toISOString(),
+              createdAt: new Date(now).toISOString(),
               eventType: 'AuctionWon',
               entityType: 'Auction',
               entityId: item.auctionId

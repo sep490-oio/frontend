@@ -13,6 +13,10 @@ interface AuthState {
   twoFactorUserName: string | null
 }
 
+interface SystemState {
+  clockOffset: number
+}
+
 // Clean up corrupted token values (e.g., literal "undefined" string from previous bugs)
 function getValidToken(key: string): string | null {
   const value = localStorage.getItem(key)
@@ -33,6 +37,10 @@ const initialState: AuthState = {
   isAuthenticated: !!storedAccessToken,
   requires2FA: false,
   twoFactorUserName: null,
+}
+
+const initialSystemState: SystemState = {
+  clockOffset: 0,
 }
 
 const authSlice = createSlice({
@@ -81,12 +89,24 @@ const authSlice = createSlice({
   },
 })
 
+const systemSlice = createSlice({
+  name: 'system',
+  initialState: initialSystemState,
+  reducers: {
+    setClockOffset(state, action: PayloadAction<number>) {
+      state.clockOffset = action.payload
+    },
+  },
+})
+
 export const { setCredentials, setUser, set2FARequired, logout } = authSlice.actions
+export const { setClockOffset } = systemSlice.actions
 
 // ─── Store ─────────────────────────────────────────────────
 export const store = configureStore({
   reducer: {
     auth: authSlice.reducer,
+    system: systemSlice.reducer,
   },
 })
 

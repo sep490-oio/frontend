@@ -461,6 +461,7 @@ export function useRespondRunnerUpOffer() {
 }
 
 // Close auction
+// Force reload
 export function useCloseAuction() {
   const qc = useQueryClient()
   return useMutation({

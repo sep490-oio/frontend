@@ -18,7 +18,7 @@ import {
   getEntityRoute,
   type NotificationAction,
 } from '@/features/notification/api'
-import { useRespondRunnerUpOffer, useAuctionDetail } from '@/features/auction/api'
+import { useRespondRunnerUpOffer, useAuctionDetail } from '@/features/auction/auctionApi.ts'
 import { useNotificationHub } from '@/features/notification/hooks/useNotificationHub'
 import { useAuth } from '@/hooks/useAuth'
 import { NotificationStatus } from '@/types/enums'

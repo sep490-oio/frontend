@@ -4,7 +4,7 @@ import { SearchOutlined, FilterOutlined, AppstoreOutlined, SortAscendingOutlined
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
-import { useAuctions, useSuggestAuctions } from '@/features/auction/api'
+import { useAuctions, useSuggestAuctions } from '@/features/auction/auctionApi.ts'
 import { useCategories } from '@/features/item/api'
 import apiClient from '@/lib/axios'
 import { AuctionCard } from '@/components/ui/AuctionCard'

@@ -41,6 +41,7 @@ export interface AuctionDto {
   rejectionCount: number
   createdAt: string
   isOnWatchList?: boolean
+  canOfferRunnerUp?: boolean
 }
 
 export interface ParticipantInfoDto {
@@ -85,6 +86,7 @@ export interface AuctionDetailDto {
   currentUserBidState?: CurrentUserBidStateDto
   currentBuyerOrder?: CurrentBuyerOrderDto
   sealedBidInfo?: SealedBidInfoDto | null
+  canOfferRunnerUp?: boolean
 }
 
 export interface AuctionItemDto {
@@ -132,6 +134,7 @@ export interface AuctionListItemDto {
   isWatched?: boolean
   hasWatched?: boolean
   isOnWatchList?: boolean
+  canOfferRunnerUp?: boolean
 }
 
 export interface BidDto {
