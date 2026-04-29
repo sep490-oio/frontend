@@ -177,5 +177,20 @@
   "confirmPayment": "Authorize payment for this order?",
   "secureCheckout": "Secure encrypted checkout",
   "grossPrice": "Original Price",
-  "amountDue": "Amount Due"
+  "amountDue": "Amount Due",
+  "paymentDeadline": "Payment deadline",
+  "shippingPlaceholderWarning": "Please complete your delivery address before paying.",
+  "recipientName": "Recipient Name",
+  "recipientRequired": "Recipient name is required",
+  "recipientNamePlaceholder": "Full name",
+  "phoneNumber": "Phone Number",
+  "phoneRequired": "Phone number is required",
+  "phoneNumberPlaceholder": "09xx xxx xxx",
+  "street": "Street Address",
+  "streetRequired": "Street is required",
+  "streetPlaceholder": "House number, street name",
+  "postalCode": "Postal Code (optional)",
+  "shippingSaved": "Shipping information verified and saved",
+  "depositApplied": "Deposit Deduction",
+  "walletPortion": "Paid via Wallet"
 }

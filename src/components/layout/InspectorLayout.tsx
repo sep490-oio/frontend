@@ -127,7 +127,12 @@ export function InspectorLayout() {
     })
 
   return (
-    <div style={{ minHeight: '100vh', background: 'transparent' }}>
+    <div style={{
+      minHeight: '100vh',
+      background: 'transparent',
+      '--navbar-offset-desktop': '64px',
+      '--navbar-offset-mobile': '64px'
+    } as React.CSSProperties}>
       {/* ── Sidebar ── */}
       <aside
         style={{
@@ -154,7 +159,7 @@ export function InspectorLayout() {
             alignItems: 'center',
             justifyContent: effectiveCollapsed ? 'center' : 'flex-start',
             padding: effectiveCollapsed ? '0' : '0 20px',
-            borderBottom: '1px solid var(--color-border)',
+            borderBottom: '0px solid var(--color-border)',
             flexShrink: 0,
           }}
         >
@@ -256,7 +261,7 @@ export function InspectorLayout() {
           background: 'var(--color-bg-card)',
           backdropFilter: 'var(--oio-blur)',
           WebkitBackdropFilter: 'var(--oio-blur)',
-          borderBottom: '1px solid var(--color-border)',
+          borderBottom: '0px solid var(--color-border)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',

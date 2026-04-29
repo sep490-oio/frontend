@@ -65,7 +65,7 @@ const sectionHeaderStyle: React.CSSProperties = {
   gap: 10,
   marginBottom: 20,
   paddingBottom: 12,
-  borderBottom: '1px solid var(--color-border)',
+  borderBottom: '0px solid var(--color-border)',
 }
 
 const sectionIconStyle: React.CSSProperties = {

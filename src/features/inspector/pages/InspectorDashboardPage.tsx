@@ -325,7 +325,7 @@ export default function InspectorDashboardPage() {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
+                <tr style={{ borderBottom: '0px solid var(--color-border)' }}>
                   <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600 }}>{t('dashboard.columnItem')}</th>
                   <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600 }}>{t('dashboard.columnSeller')}</th>
                   <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600 }}>{t('dashboard.columnStatus')}</th>
@@ -334,7 +334,7 @@ export default function InspectorDashboardPage() {
               </thead>
               <tbody>
                 {completedToday.map((item) => (
-                  <tr key={item.inboundShipmentId} style={{ borderBottom: '1px solid var(--color-border-light)' }}>
+                  <tr key={item.inboundShipmentId} style={{ borderBottom: '0px solid var(--color-border-light)' }}>
                     <td style={{ padding: '10px 12px', fontSize: 13 }}>{item.itemTitle}</td>
                     <td style={{ padding: '10px 12px', fontSize: 13, color: 'var(--color-text-secondary)' }}>{item.sellerId.slice(0, 8)}...</td>
                     <td style={{ padding: '10px 12px' }}><StatusBadge status={item.queueStatus} /></td>

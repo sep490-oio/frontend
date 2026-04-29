@@ -15,8 +15,9 @@ import {
   Col,
   App,
   Flex,
+  Space,
 } from 'antd'
-import { UserOutlined, UploadOutlined, PhoneOutlined, CheckCircleOutlined, CameraOutlined, IdcardOutlined } from '@ant-design/icons'
+import { UserOutlined, UploadOutlined, PhoneOutlined, CheckCircleOutlined, CameraOutlined, SafetyCertificateOutlined } from '@ant-design/icons'
 import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -34,11 +35,12 @@ const { Title, Text } = Typography
 // -- Schema types (schemas created inside component to access i18n) ----------
 
 type ProfileFormValues = {
-  firstName?: string
-  lastName?: string
-  displayName?: string
+  firstName: string
+  lastName: string
+  displayName: string
   dateOfBirth?: string
   gender?: string
+  avatarMediaUploadId?: string
 }
 
 type PhoneFormValues = {
@@ -52,13 +54,7 @@ type ConfirmPhoneFormValues = {
 
 // -- Styles --------------------------------------------------------------------
 
-const sectionHeadingStyle: React.CSSProperties = {
-  fontFamily: SANS_FONT,
-  fontWeight: 600,
-  fontSize: 18,
-  color: 'var(--color-text-primary)',
-  margin: 0,
-}
+
 
 const labelStyle: React.CSSProperties = {
   display: 'block',
@@ -79,11 +75,12 @@ export default function ProfilePage() {
 
   // Schemas defined inside component so validation messages use i18n
   const profileSchema = z.object({
-    firstName: z.string().max(50, t('profile.validation.maxChars', { max: 50 })).optional().or(z.literal('')),
-    lastName: z.string().max(50, t('profile.validation.maxChars', { max: 50 })).optional().or(z.literal('')),
-    displayName: z.string().max(100, t('profile.validation.maxChars', { max: 100 })).optional().or(z.literal('')),
+    firstName: z.string().min(1, t('profile.validation.firstNameRequired')).max(50, t('profile.validation.maxChars', { max: 50 })),
+    lastName: z.string().min(1, t('profile.validation.lastNameRequired')).max(50, t('profile.validation.maxChars', { max: 50 })),
+    displayName: z.string().min(1, t('profile.validation.displayNameRequired')).max(100, t('profile.validation.maxChars', { max: 100 })),
     dateOfBirth: z.string().optional().or(z.literal('')),
     gender: z.string().optional().or(z.literal('')),
+    avatarMediaUploadId: z.string().optional(),
   })
 
   const phoneSchema = z.object({
@@ -96,7 +93,7 @@ export default function ProfilePage() {
   })
 
   const [showPhoneVerify, setShowPhoneVerify] = useState(false)
-  const [avatarUploadId, setAvatarUploadId] = useState<string | null>(null)
+  const [uploadedAvatarUrl, setUploadedAvatarUrl] = useState<string | null>(null)
   const avatarUpload = useMediaUpload('user_avatar')
   const [avatarHover, setAvatarHover] = useState(false)
 
@@ -111,6 +108,7 @@ export default function ProfilePage() {
   const {
     control: profileControl,
     handleSubmit: handleProfileSubmit,
+    setValue,
     formState: { errors: profileErrors },
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -152,10 +150,12 @@ export default function ProfilePage() {
         displayName: values.displayName || undefined,
         dateOfBirth: values.dateOfBirth || undefined,
         gender: (values.gender || undefined) as Gender | undefined,
-        avatarMediaUploadId: avatarUploadId || undefined,
+        avatarMediaUploadId: values.avatarMediaUploadId || undefined,
       })
       await queryClient.invalidateQueries({ queryKey: queryKeys.auth.currentUser() })
       await queryClient.invalidateQueries({ queryKey: queryKeys.users.profile() })
+      setUploadedAvatarUrl(null)
+      setValue('avatarMediaUploadId', undefined)
       message.success(t('profile.updateSuccess', 'Profile updated successfully'))
     } catch {
       message.error(t('profile.updateError', 'Failed to update profile'))
@@ -182,34 +182,136 @@ export default function ProfilePage() {
     }
   })
 
+  const handleAvatarUpload = async (file: File) => {
+    try {
+      const result = await avatarUpload.upload(file)
+      setValue('avatarMediaUploadId', result.mediaUploadId)
+      setUploadedAvatarUrl(result.secureUrl)
+      message.success(t('profile.avatarUploaded', 'Avatar uploaded'))
+    } catch {
+      message.error(t('profile.avatarUploadError', 'Failed to upload avatar'))
+    }
+    return false
+  }
+
   if (userLoading || profileLoading) {
     return (
-      <div style={{ textAlign: 'center', padding: isMobile ? 48 : 80 }}>
+      <div style={{ textAlign: 'center', padding: isMobile ? 64 : 120 }}>
         <Spin size="large" />
       </div>
     )
   }
 
   return (
-    <div style={{ maxWidth: 1400, margin: '0 auto', padding: isMobile ? '24px 16px 80px' : '48px 24px 80px' }}>
-      {/* Header */}
-      <div style={{ marginBottom: isMobile ? 24 : 40 }}>
-        <Title
-          level={2}
-          style={{
-            fontFamily: SANS_FONT,
-            fontWeight: 600,
-            color: 'var(--color-text-primary)',
-            marginBottom: 4,
-            fontSize: isMobile ? 24 : 32,
-          }}
-        >
-          <IdcardOutlined style={{ marginRight: 12, color: 'var(--color-accent)' }} />
-          {t('profile.title', 'My Profile')}
-        </Title>
-        <Text style={{ color: 'var(--color-text-secondary)', fontSize: 16 }}>
-          {t('profile.subtitle', 'Manage your account information and preferences')}
-        </Text>
+    <div style={{ 
+      maxWidth: 1200, 
+      margin: '0 auto', 
+      padding: isMobile ? '24px 16px 80px' : '40px 32px 80px',
+      fontFamily: SANS_FONT
+    }}>
+      {/* Header with Background Accent */}
+      <div style={{ 
+        position: 'relative',
+        marginBottom: 48,
+        padding: isMobile ? '32px 24px' : '48px 40px',
+        background: 'var(--color-bg-card)',
+        borderRadius: 32,
+        border: '1px solid var(--color-border)',
+        overflow: 'hidden',
+        boxShadow: 'var(--shadow-md)',
+      }}>
+        {/* Decorative background element */}
+        <div style={{
+          position: 'absolute',
+          top: -100,
+          right: -100,
+          width: 300,
+          height: 300,
+          background: 'radial-gradient(circle, var(--color-accent-light) 0%, transparent 70%)',
+          opacity: 0.5,
+          pointerEvents: 'none'
+        }} />
+
+        <Flex align="center" gap={isMobile ? 16 : 32} vertical={isMobile}>
+          <div
+            style={{ position: 'relative', flexShrink: 0 }}
+            onMouseEnter={() => setAvatarHover(true)}
+            onMouseLeave={() => setAvatarHover(false)}
+          >
+            <Avatar
+              size={isMobile ? 100 : 140}
+              icon={<UserOutlined />}
+              src={uploadedAvatarUrl || profile?.avatarUrl}
+              style={{
+                border: '4px solid var(--color-bg-card)',
+                boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+                background: 'var(--color-bg-surface)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                transform: avatarHover ? 'scale(1.02)' : 'none'
+              }}
+            />
+            <Upload
+              showUploadList={false}
+              accept="image/*"
+              beforeUpload={handleAvatarUpload}
+            >
+              <Button
+                icon={<CameraOutlined />}
+                shape="circle"
+                size="large"
+                style={{
+                  position: 'absolute',
+                  bottom: 4,
+                  right: 4,
+                  background: 'var(--color-accent)',
+                  color: '#fff',
+                  border: '4px solid var(--color-bg-card)',
+                  boxShadow: 'var(--shadow-md)',
+                  opacity: avatarHover || isMobile ? 1 : 0.8,
+                  transform: avatarHover ? 'scale(1.1)' : 'none',
+                  transition: 'all 0.2s'
+                }}
+              />
+            </Upload>
+          </div>
+
+          <div style={{ textAlign: isMobile ? 'center' : 'left', flex: 1 }}>
+            <Title
+              level={1}
+              style={{
+                margin: 0,
+                fontSize: isMobile ? 28 : 40,
+                fontWeight: 700,
+                letterSpacing: '-0.02em',
+                color: 'var(--color-text-primary)'
+              }}
+            >
+              {profile?.displayName || user?.email?.split('@')[0]}
+            </Title>
+            <Flex align="center" gap={8} justify={isMobile ? 'center' : 'flex-start'} style={{ marginTop: 8 }}>
+              <Text style={{ 
+                color: 'var(--color-text-secondary)', 
+                fontSize: 16,
+                fontFamily: MONO_FONT 
+              }}>
+                {user?.email}
+              </Text>
+              {user?.emailConfirmed && (
+                <CheckCircleOutlined style={{ color: 'var(--color-success)', fontSize: 16 }} />
+              )}
+            </Flex>
+          </div>
+
+          {!isMobile && (
+             <Button 
+                icon={<UploadOutlined />} 
+                onClick={() => document.querySelector<HTMLInputElement>('input[type="file"]')?.click()}
+                style={{ borderRadius: 12, height: 44, padding: '0 24px' }}
+             >
+                {t('profile.changeAvatar', 'Update Photo')}
+             </Button>
+          )}
+        </Flex>
       </div>
 
       {/* Email not confirmed banner */}
@@ -217,145 +319,73 @@ export default function ProfilePage() {
         <Alert
           type="warning"
           showIcon
-          style={{ marginBottom: 32, borderRadius: 20, padding: 20, border: '1px solid var(--color-warning)' }}
-          message={<span style={{ fontWeight: 700, fontSize: 15 }}>{t('profile.emailNotConfirmed', 'Your email is not verified')}</span>}
-          description={<div style={{ marginTop: 4, fontSize: 14 }}>{t('profile.emailNotConfirmedDesc', 'Please verify your email address to access all features.')}</div>}
-          action={
-            <Button
-              size="large"
-              type="primary"
-              loading={resendEmail.isPending}
-              onClick={async () => {
-                try {
-                  await resendEmail.mutateAsync({ email: user.email })
-                  message.success(t('profile.resendSuccess', 'Verification email sent!'))
-                } catch {
-                  message.error(t('profile.resendError', 'Failed to send verification email.'))
-                }
-              }}
-              style={{ background: 'var(--color-warning)', borderColor: 'var(--color-warning)', color: '#000', fontWeight: 700, borderRadius: 10, height: 44 }}
-            >
-              {t('profile.resendEmail', 'Resend Email')}
-            </Button>
+          style={{ 
+            marginBottom: 40, 
+            borderRadius: 24, 
+            padding: '20px 24px',
+            background: 'rgba(250, 173, 20, 0.05)',
+            border: '1px solid rgba(250, 173, 20, 0.2)'
+          }}
+          message={<Text strong style={{ fontSize: 16 }}>{t('profile.emailNotConfirmed', 'Email Verification Required')}</Text>}
+          description={
+            <div style={{ marginTop: 8 }}>
+              <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
+                {t('profile.emailNotConfirmedDesc', 'Please verify your email address to unlock all platform features.')}
+              </Text>
+              <Button
+                type="primary"
+                loading={resendEmail.isPending}
+                onClick={async () => {
+                  try {
+                    await resendEmail.mutateAsync({ email: user.email })
+                    message.success(t('profile.resendSuccess', 'Verification email sent!'))
+                  } catch {
+                    message.error(t('profile.resendError', 'Failed to send verification email.'))
+                  }
+                }}
+                style={{ 
+                  background: '#faad14', 
+                  borderColor: '#faad14', 
+                  color: '#000', 
+                  fontWeight: 600,
+                  borderRadius: 10
+                }}
+              >
+                {t('profile.resendEmail', 'Resend Verification Email')}
+              </Button>
+            </div>
           }
         />
       )}
 
-      <Row gutter={isMobile ? [24, 24] : [32, 32]}>
-        {/* Left Col: Avatar & Status */}
-        <Col xs={24} lg={8}>
-          <div
-            style={{
-              background: 'var(--color-bg-card)',
-              border: '1px solid var(--color-border)',
-              borderRadius: 24,
-              textAlign: 'center',
-              boxShadow: 'var(--shadow-sm)',
-              position: 'sticky',
-              top: 'var(--navbar-offset-desktop)',
-              maxHeight: 'calc(100vh - var(--navbar-offset-desktop) - 20px)',
-              padding: isMobile ? '40px 24px' : '48px 32px'
-            }}
-          >
-            <div
-              style={{ position: 'relative', width: 140, height: 140, margin: '0 auto 24px' }}
-              onMouseEnter={() => setAvatarHover(true)}
-              onMouseLeave={() => setAvatarHover(false)}
-            >
-              <Avatar
-                size={140}
-                icon={<UserOutlined />}
-                src={profile?.avatarUrl}
-                style={{
-                  border: '6px solid var(--color-border)',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  background: 'var(--color-bg-surface)',
-                  boxShadow: 'var(--shadow-md)',
-                  ...(avatarHover ? { borderColor: 'var(--color-accent)', transform: 'scale(1.02)' } : {}),
-                }}
-              />
-              <Upload
-                showUploadList={false}
-                accept="image/*"
-                beforeUpload={async (file) => {
-                  try {
-                    const result = await avatarUpload.upload(file)
-                    setAvatarUploadId(result.mediaUploadId)
-                    message.success(t('profile.avatarUploaded', 'Avatar uploaded'))
-                  } catch {
-                    message.error(t('profile.avatarUploadError', 'Failed to upload avatar'))
-                  }
-                  return false
-                }}
-              >
-                <div
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    borderRadius: '50%',
-                    background: 'rgba(0,0,0,0.4)',
-                    backdropFilter: 'blur(4px)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    opacity: avatarHover || isMobile ? 1 : 0,
-                    transition: 'opacity 0.3s ease',
-                    cursor: 'pointer',
-                    border: '2px solid rgba(255,255,255,0.2)'
-                  }}
-                >
-                  <CameraOutlined style={{ color: '#fff', fontSize: 28 }} />
-                </div>
-              </Upload>
-            </div>
-
-            <Title level={4} style={{ margin: '0 0 4px 0', fontFamily: SANS_FONT, fontWeight: 700, fontSize: 20 }}>
-              {profile?.displayName || user?.email?.split('@')[0]}
-            </Title>
-            <Text style={{ display: 'block', marginBottom: 32, color: 'var(--color-text-tertiary)', fontSize: 14, fontFamily: MONO_FONT }}>{user?.email}</Text>
-
-            <Upload
-              showUploadList={false}
-              accept="image/*"
-              beforeUpload={async (file) => {
-                try {
-                  const result = await avatarUpload.upload(file)
-                  setAvatarUploadId(result.mediaUploadId)
-                  message.success(t('profile.avatarUploaded', 'Avatar uploaded'))
-                } catch {
-                  message.error(t('profile.avatarUploadError', 'Failed to upload avatar'))
-                }
-                return false
-              }}
-            >
-              <Button
-                icon={<UploadOutlined />}
-                loading={avatarUpload.uploading}
-                block
-                style={{ borderRadius: 14, fontWeight: 700, height: 48, background: 'var(--color-bg-surface)' }}
-              >
-                {t('profile.changeAvatar', 'Change Avatar')}
-              </Button>
-            </Upload>
-          </div>
-        </Col>
-
-        {/* Right Col: Forms */}
+      <Row gutter={[40, 40]}>
+        {/* Main Content: Personal Information */}
         <Col xs={24} lg={16}>
-          {/* Personal Info Form */}
-          <div style={{ marginBottom: 20 }}>
-            <span style={sectionHeadingStyle}>{t('profile.personalInfo', 'Personal Information')}</span>
-          </div>
-          <div
-            style={{
-              background: 'var(--color-bg-card)',
-              border: '1px solid var(--color-border)',
-              borderRadius: 24,
-              marginBottom: 32,
-              boxShadow: 'var(--shadow-sm)',
-              padding: isMobile ? '24px 20px' : '40px'
-            }}
-          >
+          <div style={{ 
+            background: 'var(--color-bg-card)', 
+            borderRadius: 32, 
+            border: '1px solid var(--color-border)',
+            padding: isMobile ? '32px 24px' : '40px',
+            boxShadow: 'var(--shadow-sm)'
+          }}>
+            <Flex align="center" gap={12} style={{ marginBottom: 32 }}>
+              <div style={{ 
+                width: 40, 
+                height: 40, 
+                borderRadius: 12, 
+                background: 'var(--color-accent-light)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--color-accent)'
+              }}>
+                <UserOutlined style={{ fontSize: 20 }} />
+              </div>
+              <Title level={4} style={{ margin: 0, fontWeight: 700 }}>
+                {t('profile.personalInfo', 'Personal Details')}
+              </Title>
+            </Flex>
+
             <form onSubmit={onProfileSave}>
               <Row gutter={24}>
                 <Col xs={24} sm={12}>
@@ -365,12 +395,18 @@ export default function ProfilePage() {
                       name="firstName"
                       control={profileControl}
                       render={({ field }) => (
-                        <Input
-                          {...field}
-                          placeholder={t('profile.firstNamePlaceholder', 'First name')}
-                          status={profileErrors.firstName ? 'error' : undefined}
-                          style={{ height: 52, borderRadius: 14 }}
-                        />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          <Input
+                            {...field}
+                            size="large"
+                            placeholder={t('profile.firstNamePlaceholder', 'First name')}
+                            status={profileErrors.firstName ? 'error' : undefined}
+                            style={{ borderRadius: 12 }}
+                          />
+                          {profileErrors.firstName && (
+                            <Text type="danger" style={{ fontSize: 12 }}>{profileErrors.firstName.message}</Text>
+                          )}
+                        </div>
                       )}
                     />
                   </div>
@@ -382,12 +418,18 @@ export default function ProfilePage() {
                       name="lastName"
                       control={profileControl}
                       render={({ field }) => (
-                        <Input
-                          {...field}
-                          placeholder={t('profile.lastNamePlaceholder', 'Last name')}
-                          status={profileErrors.lastName ? 'error' : undefined}
-                          style={{ height: 52, borderRadius: 14 }}
-                        />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          <Input
+                            {...field}
+                            size="large"
+                            placeholder={t('profile.lastNamePlaceholder', 'Last name')}
+                            status={profileErrors.lastName ? 'error' : undefined}
+                            style={{ borderRadius: 12 }}
+                          />
+                          {profileErrors.lastName && (
+                            <Text type="danger" style={{ fontSize: 12 }}>{profileErrors.lastName.message}</Text>
+                          )}
+                        </div>
                       )}
                     />
                   </div>
@@ -395,17 +437,26 @@ export default function ProfilePage() {
               </Row>
 
               <div style={{ marginBottom: 24 }}>
-                <label style={labelStyle}>{t('profile.displayName', 'Display Name')}</label>
+                <label style={labelStyle}>{t('profile.displayName', 'Public Display Name')}</label>
                 <Controller
                   name="displayName"
                   control={profileControl}
                   render={({ field }) => (
-                    <Input
-                      {...field}
-                      placeholder={t('profile.displayNamePlaceholder', 'Display name')}
-                      status={profileErrors.displayName ? 'error' : undefined}
-                      style={{ height: 52, borderRadius: 14 }}
-                    />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <Input
+                        {...field}
+                        size="large"
+                        placeholder={t('profile.displayNamePlaceholder', 'How others see you')}
+                        status={profileErrors.displayName ? 'error' : undefined}
+                        style={{ borderRadius: 12 }}
+                      />
+                      <Text type="secondary" style={{ fontSize: 12, marginTop: 4 }}>
+                        {t('profile.displayNameHint', 'This name will be shown on your auction activity and public profile.')}
+                      </Text>
+                      {profileErrors.displayName && (
+                        <Text type="danger" style={{ fontSize: 12 }}>{profileErrors.displayName.message}</Text>
+                      )}
+                    </div>
                   )}
                 />
               </div>
@@ -418,13 +469,20 @@ export default function ProfilePage() {
                       name="dateOfBirth"
                       control={profileControl}
                       render={({ field }) => (
-                        <DatePicker
-                          style={{ width: '100%', height: 52, borderRadius: 14 }}
-                          value={field.value ? dayjs(field.value) : null}
-                          onChange={(date) => field.onChange(date ? date.format('YYYY-MM-DD') : '')}
-                          placeholder={t('profile.dateOfBirthPlaceholder', 'Select date')}
-                          format="DD/MM/YYYY"
-                        />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          <DatePicker
+                            size="large"
+                            style={{ width: '100%', borderRadius: 12 }}
+                            value={field.value ? dayjs(field.value) : null}
+                            onChange={(date) => field.onChange(date ? date.format('YYYY-MM-DD') : '')}
+                            placeholder={t('profile.dateOfBirthPlaceholder', 'Select date')}
+                            format="DD/MM/YYYY"
+                            disabledDate={(current) => current && current > dayjs().endOf('day')}
+                          />
+                          {profileErrors.dateOfBirth && (
+                            <Text type="danger" style={{ fontSize: 12 }}>{profileErrors.dateOfBirth.message}</Text>
+                          )}
+                        </div>
                       )}
                     />
                   </div>
@@ -436,18 +494,24 @@ export default function ProfilePage() {
                       name="gender"
                       control={profileControl}
                       render={({ field }) => (
-                        <Select
-                          {...field}
-                          style={{ width: '100%', height: 52 }}
-                          placeholder={t('profile.genderPlaceholder', 'Select gender')}
-                          allowClear
-                          className="oio-select"
-                          options={[
-                            { value: 'male', label: t('profile.genderMale', 'Male') },
-                            { value: 'female', label: t('profile.genderFemale', 'Female') },
-                            { value: 'other', label: t('profile.genderOther', 'Other') },
-                          ]}
-                        />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          <Select
+                            {...field}
+                            size="large"
+                            style={{ width: '100%' }}
+                            placeholder={t('profile.genderPlaceholder', 'Select gender')}
+                            allowClear
+                            className="oio-select"
+                            options={[
+                              { value: 'male', label: t('profile.genderMale', 'Male') },
+                              { value: 'female', label: t('profile.genderFemale', 'Female') },
+                              { value: 'other', label: t('profile.genderOther', 'Other') },
+                            ]}
+                          />
+                          {profileErrors.gender && (
+                            <Text type="danger" style={{ fontSize: 12 }}>{profileErrors.gender.message}</Text>
+                          )}
+                        </div>
                       )}
                     />
                   </div>
@@ -461,147 +525,235 @@ export default function ProfilePage() {
                 size="large"
                 block={isMobile}
                 style={{
-                  background: 'var(--color-accent)',
-                  borderColor: 'var(--color-accent)',
-                  fontWeight: 700,
                   height: 52,
                   borderRadius: 14,
-                  padding: '0 48px'
+                  padding: '0 40px',
+                  fontWeight: 700,
+                  boxShadow: '0 8px 20px -6px rgba(var(--color-accent-rgb, 2, 132, 199), 0.4)'
                 }}
               >
-                {t('profile.saveChanges', 'Update Profile')}
+                {t('profile.saveChanges', 'Save Changes')}
               </Button>
             </form>
           </div>
+        </Col>
 
-          {/* Phone Number Section */}
-          <div style={{ marginBottom: 20 }}>
-            <span style={sectionHeadingStyle}>{t('profile.phoneNumber', 'Security Contact')}</span>
-          </div>
-          <div
-            style={{
-              background: 'var(--color-bg-card)',
+        {/* Sidebar Content: Security & Verification */}
+        <Col xs={24} lg={8}>
+          <Space direction="vertical" size={32} style={{ width: '100%' }}>
+            {/* Phone Verification Card */}
+            <div style={{ 
+              background: 'var(--color-bg-card)', 
+              borderRadius: 32, 
               border: '1px solid var(--color-border)',
-              borderRadius: 24,
-              boxShadow: 'var(--shadow-sm)',
-              padding: isMobile ? '24px 20px' : '40px'
-            }}
-          >
-            {user?.phoneNumberConfirmed ? (
-              <Alert
-                type="success"
-                showIcon
-                icon={<CheckCircleOutlined />}
-                message={<span style={{ fontWeight: 700 }}>{t('profile.phoneConfirmed', 'Phone number verified')}</span>}
-                description={<div style={{ fontFamily: MONO_FONT, marginTop: 4 }}>{user.countryCode} {user.phoneNumber}</div>}
-                style={{ borderRadius: 20, padding: 20 }}
-              />
-            ) : (
-              <>
-                <Text style={{ display: 'block', marginBottom: 24, fontSize: 14, color: 'var(--color-text-secondary)' }}>
-                  {t('profile.addPhoneHint', 'Add a phone number for two-factor authentication and important security alerts.')}
-                </Text>
-                <form onSubmit={onPhoneSave}>
-                  <Row gutter={[12, 12]}>
-                    <Col xs={24} sm={6}>
-                       <Controller
-                          name="countryCode"
-                          control={phoneControl}
-                          render={({ field }) => (
-                             <Select
-                                {...field}
-                                style={{ width: '100%', height: 52 }}
-                                className="oio-select"
-                                options={[
-                                   { value: '+84', label: '🇻🇳 +84' },
-                                   { value: '+1', label: '🇺🇸 +1' },
-                                   { value: '+81', label: '🇯🇵 +81' },
-                                ]}
-                             />
-                          )}
-                       />
-                    </Col>
-                    <Col xs={24} sm={12}>
+              padding: '32px 24px',
+              boxShadow: 'var(--shadow-sm)'
+            }}>
+              <Flex align="center" gap={12} style={{ marginBottom: 24 }}>
+                <div style={{ 
+                  width: 36, 
+                  height: 36, 
+                  borderRadius: 10, 
+                  background: user?.phoneNumberConfirmed ? 'var(--color-success-soft)' : 'var(--color-warning-soft)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: user?.phoneNumberConfirmed ? 'var(--color-success)' : 'var(--color-warning)'
+                }}>
+                  <PhoneOutlined style={{ fontSize: 18 }} />
+                </div>
+                <Title level={5} style={{ margin: 0, fontWeight: 700 }}>
+                  {t('profile.phoneSection', 'Security Contact')}
+                </Title>
+              </Flex>
+
+              {user?.phoneNumberConfirmed ? (
+                <div style={{ 
+                  padding: 16, 
+                  background: 'var(--color-bg-surface)', 
+                  borderRadius: 16,
+                  border: '1px solid var(--color-border-light)'
+                }}>
+                  <Flex align="center" gap={10} style={{ marginBottom: 4 }}>
+                    <CheckCircleOutlined style={{ color: 'var(--color-success)' }} />
+                    <Text strong>{t('profile.verified', 'Verified')}</Text>
+                  </Flex>
+                  <Text style={{ fontFamily: MONO_FONT, fontSize: 16, display: 'block' }}>
+                    {user.countryCode} {user.phoneNumber}
+                  </Text>
+                </div>
+              ) : (
+                <>
+                  <Text type="secondary" style={{ display: 'block', marginBottom: 24, fontSize: 13 }}>
+                    {t('profile.phoneHint', 'Add your phone number to enable 2FA and receive important auction alerts.')}
+                  </Text>
+                  
+                  <form onSubmit={onPhoneSave}>
+                    <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                      <Controller
+                        name="countryCode"
+                        control={phoneControl}
+                        render={({ field }) => (
+                          <Select
+                            {...field}
+                            size="large"
+                            style={{ width: '100%' }}
+                            options={[
+                              { value: '+84', label: '🇻🇳 +84' },
+                              { value: '+1', label: '🇺🇸 +1' },
+                              { value: '+81', label: '🇯🇵 +81' },
+                            ]}
+                          />
+                        )}
+                      />
                       <Controller
                         name="phoneNumber"
                         control={phoneControl}
                         render={({ field }) => (
-                          <Input
-                            {...field}
-                            prefix={<PhoneOutlined style={{ color: 'var(--color-accent)' }} />}
-                            placeholder={t('profile.phonePlaceholder', 'Phone number')}
-                            status={phoneErrors.phoneNumber ? 'error' : undefined}
-                            style={{ height: 52, borderRadius: 14 }}
-                          />
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            <Input
+                              {...field}
+                              size="large"
+                              placeholder={t('profile.phonePlaceholder', 'Phone number')}
+                              status={phoneErrors.phoneNumber ? 'error' : undefined}
+                              style={{ borderRadius: 12 }}
+                            />
+                            {phoneErrors.phoneNumber && (
+                              <Text type="danger" style={{ fontSize: 11 }}>{phoneErrors.phoneNumber.message}</Text>
+                            )}
+                          </div>
                         )}
                       />
-                    </Col>
-                    <Col xs={24} sm={6}>
                       <Button
                         type="primary"
                         htmlType="submit"
                         loading={setPhoneNumber.isPending}
                         block
-                        style={{ background: 'var(--color-accent)', fontWeight: 700, height: 52, borderRadius: 14 }}
+                        style={{ height: 44, borderRadius: 12, fontWeight: 600, marginTop: 4 }}
                       >
-                        {t('profile.sendCode', 'Verify')}
+                        {t('profile.verifyPhone', 'Verify Phone')}
                       </Button>
-                    </Col>
-                  </Row>
-                </form>
+                    </Space>
+                  </form>
 
-                {showPhoneVerify && (
-                  <div style={{ marginTop: 24, padding: 32, background: 'var(--color-bg-surface)', borderRadius: 24, border: '1px solid var(--color-border)' }}>
-                    <form onSubmit={onConfirmPhone}>
-                      <Flex vertical gap={20}>
-                        <Text strong style={{ fontSize: 15, color: 'var(--color-text-primary)' }}>{t('profile.enterOtp', 'Enter the 6-digit code')}</Text>
-                        <Flex gap={12} vertical={isMobile}>
-                           <Controller
-                             name="code"
-                             control={confirmControl}
-                             render={({ field }) => (
-                               <Input
-                                 {...field}
-                                 placeholder="000000"
-                                 maxLength={6}
-                                 status={confirmErrors.code ? 'error' : undefined}
-                                 style={{ 
-                                   height: 52, 
-                                   borderRadius: 14, 
-                                   fontFamily: MONO_FONT, 
-                                   letterSpacing: '0.4em', 
-                                   textAlign: 'center', 
-                                   width: isMobile ? '100%' : 200,
-                                   fontSize: 20,
-                                   fontWeight: 700
-                                 }}
-                               />
-                             )}
-                           />
-                           <Button
-                             type="primary"
-                             htmlType="submit"
-                             loading={confirmPhone.isPending}
-                             block={isMobile}
-                             style={{ 
-                               height: 52, 
-                               borderRadius: 14, 
-                               fontWeight: 700, 
-                               background: 'var(--color-success)', 
-                               borderColor: 'var(--color-success)',
-                               padding: '0 40px'
-                             }}
-                           >
-                             {t('profile.confirm', 'Confirm')}
-                           </Button>
+                  {showPhoneVerify && (
+                    <div style={{ 
+                      marginTop: 20, 
+                      padding: 20, 
+                      background: 'var(--color-bg-surface)', 
+                      borderRadius: 20,
+                      border: '1px solid var(--color-accent-light)'
+                    }}>
+                      <form onSubmit={onConfirmPhone}>
+                        <Text strong style={{ display: 'block', marginBottom: 12, fontSize: 13 }}>
+                          {t('profile.enterCode', 'Verification Code')}
+                        </Text>
+                        <Flex gap={8}>
+                          <Controller
+                            name="code"
+                            control={confirmControl}
+                            render={({ field }) => (
+                              <Input
+                                {...field}
+                                size="large"
+                                placeholder="000000"
+                                maxLength={6}
+                                style={{ 
+                                  textAlign: 'center', 
+                                  fontFamily: MONO_FONT, 
+                                  letterSpacing: '0.2em',
+                                  fontSize: 16,
+                                  borderRadius: 10
+                                }}
+                              />
+                            )}
+                          />
+                          <Button
+                            type="primary"
+                            htmlType="submit"
+                            loading={confirmPhone.isPending}
+                            style={{ 
+                              height: 40, 
+                              borderRadius: 10,
+                              background: 'var(--color-success)',
+                              borderColor: 'var(--color-success)'
+                            }}
+                          >
+                            {t('profile.confirm', 'OK')}
+                          </Button>
                         </Flex>
-                      </Flex>
-                    </form>
+                        {confirmErrors.code && (
+                          <Text type="danger" style={{ fontSize: 11, marginTop: 4, display: 'block' }}>{confirmErrors.code.message}</Text>
+                        )}
+                      </form>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Quick Stats / Info Card */}
+            <div style={{ 
+              background: 'var(--color-bg-card)', 
+              borderRadius: 32, 
+              border: '1px solid var(--color-border)',
+              padding: '24px',
+              boxShadow: 'var(--shadow-sm)',
+              position: 'relative',
+              overflow: 'hidden'
+            }}>
+              {/* Subtle background decoration */}
+              <div style={{
+                position: 'absolute',
+                top: -20,
+                right: -20,
+                width: 100,
+                height: 100,
+                background: 'var(--color-accent-light)',
+                borderRadius: '50%',
+                filter: 'blur(30px)',
+                zIndex: 0
+              }} />
+
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <Flex align="center" gap={10} style={{ marginBottom: 20 }}>
+                  <div style={{ 
+                    padding: 8, 
+                    background: 'var(--color-accent-light)', 
+                    borderRadius: 10,
+                    color: 'var(--color-accent)',
+                    display: 'flex'
+                  }}>
+                    <SafetyCertificateOutlined style={{ fontSize: 18 }} />
                   </div>
-                )}
-              </>
-            )}
-          </div>
+                  <Title level={5} style={{ margin: 0, fontWeight: 700, fontSize: 16 }}>
+                    {t('profile.membership', 'OIO Member')}
+                  </Title>
+                </Flex>
+
+                <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                  <Flex justify="space-between" align="center">
+                    <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      {t('profile.memberSince', 'Joined')}
+                    </Text>
+                    <Text strong style={{ fontSize: 14 }}>
+                      {user?.createdAt ? dayjs(user.createdAt).format('DD/MM/YYYY') : '-'}
+                    </Text>
+                  </Flex>
+                  
+                  <Flex justify="space-between" align="center">
+                    <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      {t('profile.accountStatus', 'Status')}
+                    </Text>
+                    <Flex align="center" gap={6}>
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px rgba(34, 197, 94, 0.4)' }} />
+                      <Text strong style={{ fontSize: 14, color: '#22c55e' }}>{t('profile.active', 'Active Account')}</Text>
+                    </Flex>
+                  </Flex>
+                </Space>
+              </div>
+            </div>
+          </Space>
         </Col>
       </Row>
     </div>

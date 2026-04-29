@@ -177,5 +177,20 @@
   "confirmPayment": "Xác nhận thanh toán cho đơn hàng này?",
   "secureCheckout": "Thanh toán được mã hóa an toàn",
   "grossPrice": "Giá gốc",
-  "amountDue": "Số tiền cần trả"
+  "amountDue": "Số tiền cần trả",
+  "paymentDeadline": "Hạn thanh toán",
+  "shippingPlaceholderWarning": "Vui lòng hoàn tất địa chỉ giao hàng trước khi thanh toán.",
+  "recipientName": "Tên người nhận",
+  "recipientRequired": "Vui lòng nhập tên người nhận",
+  "recipientNamePlaceholder": "Họ và tên đầy đủ",
+  "phoneNumber": "Số điện thoại",
+  "phoneRequired": "Vui lòng nhập số điện thoại",
+  "phoneNumberPlaceholder": "09xx xxx xxx",
+  "street": "Địa chỉ",
+  "streetRequired": "Vui lòng nhập địa chỉ",
+  "streetPlaceholder": "Số nhà, tên đường...",
+  "postalCode": "Mã bưu chính (tùy chọn)",
+  "shippingSaved": "Thông tin giao hàng đã được xác minh và lưu",
+  "depositApplied": "Khấu trừ tiền cọc",
+  "walletPortion": "Thanh toán qua ví"
 }

@@ -111,6 +111,7 @@ export default function MyItemsPage() {
   const params = {
     pageNumber: page,
     pageSize,
+    sortBy: 'CreatedAt Desc',
     ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
     ...(verifyFilter === 'platform'
       ? { requiresPlatformInspection: true }

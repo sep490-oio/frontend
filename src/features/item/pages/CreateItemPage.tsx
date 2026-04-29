@@ -171,7 +171,7 @@ export default function CreateItemPage() {
         <Card
           title={<span style={{ fontSize: 16 }}>{t('basicInfo', 'Basic Info')}</span>}
           style={{ marginBottom: 24, borderRadius: 12, border: '1px solid var(--color-border)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
-          styles={{ header: { borderBottom: '1px solid var(--color-border)' } }}
+          styles={{ header: { borderBottom: '0px solid var(--color-border)' } }}
         >
           <Form.Item
             name="title"
@@ -227,7 +227,7 @@ export default function CreateItemPage() {
         <Card
           title={<span style={{ fontSize: 16 }}>{t('description', 'Description')}</span>}
           style={{ marginBottom: 24, borderRadius: 12, border: '1px solid var(--color-border)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
-          styles={{ header: { borderBottom: '1px solid var(--color-border)' } }}
+          styles={{ header: { borderBottom: '0px solid var(--color-border)' } }}
         >
           <Form.Item
             name="description"
@@ -244,7 +244,7 @@ export default function CreateItemPage() {
         <Card
           title={<span style={{ fontSize: 16 }}>{t('media', 'Photos')}</span>}
           style={{ marginBottom: 24, borderRadius: 12, border: '1px solid var(--color-border)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
-          styles={{ header: { borderBottom: '1px solid var(--color-border)' } }}
+          styles={{ header: { borderBottom: '0px solid var(--color-border)' } }}
         >
           <Form.Item
             required
@@ -340,6 +340,8 @@ export default function CreateItemPage() {
                       style={{ width: '100%' }}
                       addonAfter="VND"
                       placeholder="100,000"
+                      formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+                      parser={(v) => (v ?? '').replace(/\$\s?|(,*)/g, '') as any}
                     />
                   </Form.Item>
                 </Col>
@@ -356,6 +358,8 @@ export default function CreateItemPage() {
                       style={{ width: '100%' }}
                       addonAfter="VND"
                       placeholder="10,000"
+                      formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+                      parser={(v) => (v ?? '').replace(/\$\s?|(,*)/g, '') as any}
                     />
                   </Form.Item>
                 </Col>
@@ -372,6 +376,8 @@ export default function CreateItemPage() {
                       style={{ width: '100%' }}
                       addonAfter="VND"
                       placeholder={ta('reservePricePlaceholder', 'Optional - minimum price to sell')}
+                      formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+                      parser={(v) => (v ?? '').replace(/\$\s?|(,*)/g, '') as any}
                     />
                   </Form.Item>
                 </Col>
@@ -388,6 +394,8 @@ export default function CreateItemPage() {
                       style={{ width: '100%' }}
                       addonAfter="VND"
                       placeholder={ta('buyNowPricePlaceholder', 'Optional - instant purchase price')}
+                      formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+                      parser={(v) => (v ?? '').replace(/\$\s?|(,*)/g, '') as any}
                     />
                   </Form.Item>
                 </Col>

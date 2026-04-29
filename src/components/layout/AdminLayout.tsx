@@ -146,7 +146,12 @@ export function AdminLayout() {
     })
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--color-bg-primary)' }}>
+    <div style={{
+      minHeight: '100vh',
+      background: 'transparent',
+      '--navbar-offset-desktop': '64px',
+      '--navbar-offset-mobile': '64px'
+    } as React.CSSProperties}>
       {/* ── Sidebar (desktop + tablet icon-only) ── */}
       <aside
         style={{
@@ -172,7 +177,7 @@ export function AdminLayout() {
             alignItems: 'center',
             justifyContent: effectiveCollapsed ? 'center' : 'flex-start',
             padding: effectiveCollapsed ? '0' : '0 20px',
-            borderBottom: '1px solid var(--color-border)',
+            borderBottom: '0px solid var(--color-border)',
             flexShrink: 0,
           }}
         >
@@ -274,7 +279,7 @@ export function AdminLayout() {
           right: 0,
           height: HEADER_HEIGHT,
           background: 'var(--color-bg-card)',
-          borderBottom: '1px solid var(--color-border)',
+          borderBottom: '0px solid var(--color-border)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -418,7 +423,7 @@ export function AdminLayout() {
           marginTop: HEADER_HEIGHT,
           transition: 'margin-left 200ms ease',
           minHeight: `calc(100vh - ${HEADER_HEIGHT}px)`,
-          background: 'var(--color-bg-primary)',
+          background: 'transparent',
         }}
       >
         <Content style={{ padding: isMobile ? 16 : isTablet ? 24 : 40 }}>

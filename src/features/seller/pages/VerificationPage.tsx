@@ -292,7 +292,7 @@ export default function VerificationPage() {
                       size="small"
                       dataSource={activeVerification.documents}
                       renderItem={(doc) => (
-                        <List.Item style={{ padding: '12px 0', borderBottom: '1px solid var(--color-border-light)' }}>
+                        <List.Item style={{ padding: '12px 0', borderBottom: '0px solid var(--color-border-light)' }}>
                           <List.Item.Meta
                             avatar={<div style={{ width: 40, height: 40, borderRadius: 8, background: 'var(--color-bg-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FileOutlined style={{ fontSize: 18, color: 'var(--color-accent)' }} /></div>}
                             title={

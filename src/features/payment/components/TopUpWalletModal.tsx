@@ -121,7 +121,7 @@ export function TopUpWalletModal({ open, onClose, currency = 'VND' }: Props) {
                 style={{
                   width: '100%',
                   padding: '12px 0',
-                  borderBottom: '1px solid var(--color-border-light)',
+                  borderBottom: '0px solid var(--color-border-light)',
                 }}
               >
                 <Flex align="center" gap={12}>

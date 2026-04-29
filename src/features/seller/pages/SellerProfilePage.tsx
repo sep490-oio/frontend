@@ -23,7 +23,7 @@ function InfoRow({ label, children, fullWidth }: InfoRowProps) {
     <div
       style={{
         padding: '12px 0',
-        borderBottom: '1px solid var(--color-border-light)',
+        borderBottom: '0px solid var(--color-border-light)',
         display: fullWidth ? 'block' : 'flex',
         alignItems: 'flex-start',
         gap: 12,
@@ -241,7 +241,7 @@ export default function SellerProfilePage() {
                     ...(profile.approvedAt ? [{ label: t('approvedAt', 'Approved'), value: formatDateTime(profile.approvedAt) }] : []),
                   ].map((item, idx) => (
                     <Col key={idx} xs={24} sm={12}>
-                      <div style={{ padding: '14px 0', borderBottom: '1px solid var(--color-border-light)', paddingRight: 24 }}>
+                      <div style={{ padding: '14px 0', borderBottom: '0px solid var(--color-border-light)', paddingRight: 24 }}>
                         <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 4 }}>{item.label}</div>
                         <div style={{ fontSize: 14, color: 'var(--color-text-primary)', fontWeight: 500 }}>{item.value}</div>
                       </div>

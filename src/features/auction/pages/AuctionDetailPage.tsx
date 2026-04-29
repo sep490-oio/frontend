@@ -1384,6 +1384,8 @@ export default function AuctionDetailPage() {
               value={autoBidMax}
               onChange={(v) => setAutoBidMax(v)}
               addonAfter={currency}
+              formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+              parser={(v) => (v ?? '').replace(/\$\s?|(,*)/g, '') as any}
             />
             <Typography.Text style={{ fontSize: 12, color: 'var(--color-text-secondary)', display: 'block', marginTop: 4 }}>
               {t('autoBidMinHelp', 'Must be higher than current price')}: {formatCurrency(currentPrice, currency)}
@@ -1402,6 +1404,8 @@ export default function AuctionDetailPage() {
               onChange={(v) => setAutoBidIncrement(v)}
               addonAfter={currency}
               placeholder={t('autoBidIncrementPlaceholder', 'Default: auction increment ({{amount}})', { amount: formatCurrency(auction?.bidIncrement?.amount ?? 0, currency) })}
+              formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+              parser={(v) => (v ?? '').replace(/\$\s?|(,*)/g, '') as any}
             />
             <Typography.Text style={{ fontSize: 12, color: 'var(--color-text-secondary)', display: 'block', marginTop: 4 }}>
               {t('autoBidIncrementHelp', 'Custom step size for each auto-bid. Leave empty to use the auction default.')}

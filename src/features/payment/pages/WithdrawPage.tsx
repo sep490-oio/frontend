@@ -222,7 +222,7 @@ export default function WithdrawPage() {
             boxShadow: 'var(--shadow-sm)',
           }}
           styles={{ 
-            header: { borderBottom: '1px solid var(--color-border)', padding: '16px 24px' },
+            header: { borderBottom: '0px solid var(--color-border)', padding: '16px 24px' },
             body: { padding: 24 }
           }}
         >
@@ -334,7 +334,7 @@ export default function WithdrawPage() {
             boxShadow: 'var(--shadow-sm)',
           }}
           styles={{ 
-            header: { borderBottom: '1px solid var(--color-border)', padding: '16px 24px' },
+            header: { borderBottom: '0px solid var(--color-border)', padding: '16px 24px' },
             body: { padding: 0 }
           }}
         >

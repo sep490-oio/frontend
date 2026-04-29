@@ -54,6 +54,7 @@ export default function BookInboundPage() {
   const { data: itemsData, isLoading: itemsLoading } = useMyItems({
     pageNumber: 1,
     pageSize: 100,
+    sortBy: 'CreatedAt Desc',
     status: 'pending_verify',
     requiresPlatformInspection: true,
     hasActiveInbound: false,

@@ -316,36 +316,34 @@ export default function AdminModerationPage() {
             style={{ width: isMobile ? '100%' : 180, marginBottom: 16 }}
             placeholder={t('moderation.filterByStatus')}
           />
-          <div style={{ overflowX: 'auto' }}>
-            <ResponsiveTable
-              columns={reportColumns}
-              dataSource={reports.data?.items ?? []}
-              rowKey="id"
-              loading={reports.isLoading}
-              mobileMode="card"
-              onRow={isMobile ? (record: ReportDto) => ({
-                onClick: () => {
-                  const canAct = record.status === ReportStatus.Open || record.status === ReportStatus.UnderReview
-                  if (canAct) {
-                    setResolveReportId(record.id)
-                    setResolutionNotes('')
-                    setDismissedFlag(false)
-                    setEnforcementAction('none')
-                    setResolveDrawerOpen(true)
-                  }
-                },
-                style: { cursor: 'pointer', minHeight: 56 },
-              }) : undefined}
-              pagination={{
-                current: reportPage,
-                pageSize,
-                total: reports.data?.metadata?.totalCount ?? 0,
-                onChange: setReportPage,
-                simple: isMobile,
-                showSizeChanger: false,
-              }}
-            />
-          </div>
+          <ResponsiveTable
+            columns={reportColumns}
+            dataSource={reports.data?.items ?? []}
+            rowKey="id"
+            loading={reports.isLoading}
+            mobileMode="card"
+            onRow={isMobile ? (record: ReportDto) => ({
+              onClick: () => {
+                const canAct = record.status === ReportStatus.Open || record.status === ReportStatus.UnderReview
+                if (canAct) {
+                  setResolveReportId(record.id)
+                  setResolutionNotes('')
+                  setDismissedFlag(false)
+                  setEnforcementAction('none')
+                  setResolveDrawerOpen(true)
+                }
+              },
+              style: { cursor: 'pointer', minHeight: 56 },
+            }) : undefined}
+            pagination={{
+              current: reportPage,
+              pageSize,
+              total: reports.data?.metadata?.totalCount ?? 0,
+              onChange: setReportPage,
+              simple: isMobile,
+              showSizeChanger: false,
+            }}
+          />
         </>
       ),
     },
@@ -361,27 +359,25 @@ export default function AdminModerationPage() {
             style={{ width: isMobile ? '100%' : 200, marginBottom: 16 }}
             placeholder={t('moderation.filterByStatus')}
           />
-          <div style={{ overflowX: 'auto' }}>
-            <ResponsiveTable
-              columns={disputeColumns}
-              dataSource={disputes.data?.items ?? []}
-              rowKey="id"
-              loading={disputes.isLoading}
-              mobileMode="card"
-              onRow={(record: DisputeDto) => ({
-                onClick: () => navigate(`/admin/disputes/${record.id}`),
-                style: { cursor: 'pointer', minHeight: 56 },
-              })}
-              pagination={{
-                current: disputePage,
-                pageSize,
-                total: disputes.data?.metadata?.totalCount ?? 0,
-                onChange: setDisputePage,
-                simple: isMobile,
-                showSizeChanger: false,
-              }}
-            />
-          </div>
+          <ResponsiveTable
+            columns={disputeColumns}
+            dataSource={disputes.data?.items ?? []}
+            rowKey="id"
+            loading={disputes.isLoading}
+            mobileMode="card"
+            onRow={(record: DisputeDto) => ({
+              onClick: () => navigate(`/admin/disputes/${record.id}`),
+              style: { cursor: 'pointer', minHeight: 56 },
+            })}
+            pagination={{
+              current: disputePage,
+              pageSize,
+              total: disputes.data?.metadata?.totalCount ?? 0,
+              onChange: setDisputePage,
+              simple: isMobile,
+              showSizeChanger: false,
+            }}
+          />
         </>
       ),
     },

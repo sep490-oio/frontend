@@ -167,7 +167,9 @@
     "myBid": "Giá của tôi",
     "becomeSellerTitle": "Bắt đầu bán hàng trên OIO",
     "becomeSellerDesc": "Biến vật phẩm của bạn thành lợi nhuận. Tham gia cộng đồng người bán chuyên nghiệp ngay hôm nay.",
-    "becomeSellerBtn": "Đăng ký người bán"
+    "becomeSellerBtn": "Đăng ký người bán",
+    "bids": "lượt đặt giá",
+    "currentPrice": "Giá hiện tại"
   },
   "profile": {
     "title": "Hồ sơ của tôi",
@@ -177,6 +179,20 @@
     "resendEmail": "Gửi lại email xác minh",
     "resendSuccess": "Đã gửi email xác minh! Vui lòng kiểm tra hộp thư.",
     "resendError": "Gửi email xác minh thất bại. Vui lòng đợi 60 giây giữa các lần gửi.",
+    "appearance": "Diện mạo",
+    "themeMode": "Chế độ giao diện",
+    "switchToDark": "Chuyển sang Chế độ tối",
+    "switchToLight": "Chuyển sang Chế độ sáng",
+    "colorPreset": "Tông màu chủ đạo",
+    "presetHint": "Chọn sự kết hợp màu sắc phù hợp với phong cách của bạn.",
+    "presets": {
+      "default": "Mặc định",
+      "mint": "Bạc hà",
+      "ember": "Hổ phách",
+      "aurora": "Cực quang",
+      "slate": "Xám đá",
+      "frosted": "Xám mờ"
+    },
     "changeAvatar": "Đổi ảnh đại diện",
     "avatarUploaded": "Đã tải ảnh đại diện",
     "avatarUploadError": "Tải ảnh đại diện thất bại",
@@ -212,7 +228,10 @@
       "maxChars": "Tối đa {{max}} ký tự",
       "phoneInvalid": "Số điện thoại không hợp lệ",
       "countryCodeRequired": "Vui lòng chọn mã quốc gia",
-      "otpLength": "Mã xác nhận phải gồm 6 chữ số"
+      "otpLength": "Mã xác nhận phải gồm 6 chữ số",
+      "firstNameRequired": "Họ không được để trống",
+      "lastNameRequired": "Tên không được để trống",
+      "displayNameRequired": "Tên hiển thị không được để trống"
     }
   }
 }
