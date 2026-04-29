@@ -4,7 +4,7 @@ import { Typography, Card, Button, Space, Spin, Switch, InputNumber, Input, App,
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { ArrowLeftOutlined, ThunderboltOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
-import { useAuctionDetail, useAuctionBids } from '@/features/auction/api'
+import { useAuctionDetail, useAuctionBids } from '@/features/auction/auctionApi.ts'
 import { useSetCuration, useTriggerEmergency, useResolveEmergency, useCancelBid, useFlagAuction } from '@/features/admin/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime, formatCurrency } from '@/utils/format'

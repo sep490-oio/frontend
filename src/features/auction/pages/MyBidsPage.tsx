@@ -3,10 +3,10 @@ import { Typography, Select, Spin, Empty, Flex, Pagination, Button, Tag } from '
 import { HistoryOutlined, ThunderboltOutlined, TrophyOutlined, LineChartOutlined, ClockCircleOutlined, ArrowRightOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { useMyBids, useMyPendingWinnerOffers, useRespondRunnerUpOffer, useAuctionDetail } from '@/features/auction/api'
+import { useMyBids, useMyPendingWinnerOffers, useRespondRunnerUpOffer, useAuctionDetail } from '@/features/auction/auctionApi.ts'
 import { useUserHubStatus } from '@/features/user/contexts/UserHubContext'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
-import type { MyBidDto } from '@/features/auction/api'
+import type { MyBidDto } from '@/features/auction/auctionApi.ts'
 import { PriceDisplay } from '@/components/ui/PriceDisplay'
 import { AuctionStatus } from '@/types/enums'
 import { formatDateTime } from '@/utils/format'
@@ -17,6 +17,7 @@ import { CountdownTimer } from '@/components/ui/CountdownTimer'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { useAuctionHub } from '@/features/auction/hooks/useAuctionHub'
 import { useUserHub } from '@/features/auction/hooks/useUserHub'
+import { getServerNowMs } from '@/utils/time'
 import { useCurrentUser } from '@/features/user/api'
 import { useNotifications } from '@/features/notification/api'
 import { BidderPositionBlock } from '@/features/auction/components/BidderPositionBlock'
@@ -556,11 +557,12 @@ export default function MyBidsPage() {
         if (prevItem) {
           // Detect Bid Success (Price increased)
           if (item.myLatestBidAmount > prevItem.myLatestBidAmount) {
+            const now = getServerNowMs()
             setLocalActivities(prev => [{
-              id: `local-bid-${Date.now()}-${item.auctionId}`,
+              id: `local-bid-${now}-${item.auctionId}`,
               title: item.itemTitle,
               message: t('bidSuccessMsg', 'Bạn đã đặt giá thành công: {{amount}}đ', { amount: item.myLatestBidAmount.toLocaleString() }),
-              createdAt: new Date().toISOString(),
+              createdAt: new Date(now).toISOString(),
               eventType: 'AuctionBidSuccess',
               entityType: 'Auction',
               entityId: item.auctionId
@@ -568,11 +570,12 @@ export default function MyBidsPage() {
           }
           // Detect Outbid (Position changed to outbid)
           else if (item.position === 'outbid' && prevItem.position !== 'outbid') {
+            const now = getServerNowMs()
             setLocalActivities(prev => [{
-              id: `local-outbid-${Date.now()}-${item.auctionId}`,
+              id: `local-outbid-${now}-${item.auctionId}`,
               title: item.itemTitle,
               message: t('outbidMsg', 'Bạn đã bị vượt giá!'),
-              createdAt: new Date().toISOString(),
+              createdAt: new Date(now).toISOString(),
               eventType: 'AuctionOutbid',
               entityType: 'Auction',
               entityId: item.auctionId
@@ -580,11 +583,12 @@ export default function MyBidsPage() {
           }
           // Detect Won (Position changed to won)
           else if (item.position === 'won' && prevItem.position !== 'won') {
+            const now = getServerNowMs()
             setLocalActivities(prev => [{
-              id: `local-won-${Date.now()}-${item.auctionId}`,
+              id: `local-won-${now}-${item.auctionId}`,
               title: item.itemTitle,
               message: t('wonMsg', 'Bạn đã thắng phiên đấu giá!'),
-              createdAt: new Date().toISOString(),
+              createdAt: new Date(now).toISOString(),
               eventType: 'AuctionWon',
               entityType: 'Auction',
               entityId: item.auctionId

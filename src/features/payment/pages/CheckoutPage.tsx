@@ -69,7 +69,7 @@ export default function CheckoutPage() {
   const [cardType, setCardType] = useState<string>('01') // 01=ATM/domestic, 02=international
   const bidderTerms = useTermsGate('bidder')
 
-  const { data: order, isLoading: orderLoading } = useOrderById(orderId)
+  const { data: order, isLoading: orderLoading, refetch } = useOrderById(orderId)
   const { data: methods, isLoading: methodsLoading } = usePaymentMethods()
   const { data: wallet, isLoading: walletLoading } = useWallet()
   const { data: addresses } = useAddresses()
@@ -355,7 +355,10 @@ export default function CheckoutPage() {
               }}>
                 <InfoCircleOutlined style={{ color: '#faad14', fontSize: 18 }} />
                 <Typography.Text style={{ color: '#faad14', fontWeight: 500 }}>
-                  {t('paymentDeadline', 'Payment deadline')}: <CountdownTimer endTime={(order as any).paymentDueAt} size="small" />
+                  {t('paymentDeadline', 'Payment deadline')}: <CountdownTimer endTime={(order as any).paymentDueAt} size="small" onEnd={() => {
+                    message.info(t('deadlineExpired', 'Payment deadline expired. Checking status...'))
+                    refetch()
+                  }} />
                 </Typography.Text>
               </div>
             )}

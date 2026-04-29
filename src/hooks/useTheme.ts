@@ -1,21 +1,29 @@
 import { useState, useEffect, useCallback, createContext, useContext } from 'react'
 
-export type ColorPreset = 'default' | 'mint' | 'ember' | 'aurora' | 'slate' | 'frosted'
+export type ColorPreset = 'default' | 'mint' | 'ember' | 'aurora' | 'slate' | 'frosted' | 'custom'
 type ThemeMode = 'light' | 'dark'
 
 interface ThemeContextValue {
   mode: ThemeMode
   preset: ColorPreset
+  hue: number
+  saturation: number
   toggle: () => void
   setPreset: (preset: ColorPreset) => void
+  setHue: (hue: number) => void
+  setSaturation: (saturation: number) => void
   isDark: boolean
 }
 
 export const ThemeContext = createContext<ThemeContextValue>({
   mode: 'light',
   preset: 'default',
+  hue: 200,
+  saturation: 75,
   toggle: () => { },
   setPreset: () => { },
+  setHue: () => { },
+  setSaturation: () => { },
   isDark: false,
 })
 
@@ -30,8 +38,16 @@ export function useThemeProvider(): ThemeContextValue {
 
   const [preset, setPreset] = useState<ColorPreset>(() => {
     const saved = localStorage.getItem('oio_theme_preset') as ColorPreset
-    const valid: ColorPreset[] = ['default', 'mint', 'ember', 'aurora', 'slate']
+    const valid: ColorPreset[] = ['default', 'mint', 'ember', 'aurora', 'slate', 'frosted', 'custom']
     return valid.includes(saved) ? saved : 'default'
+  })
+
+  const [hue, setHue] = useState<number>(() => {
+    return Number(localStorage.getItem('oio_theme_hue')) || 200
+  })
+
+  const [saturation, setSaturation] = useState<number>(() => {
+    return Number(localStorage.getItem('oio_theme_saturation')) || 75
   })
 
   // Initialize theme classes and inject background element
@@ -97,5 +113,15 @@ export function useThemeProvider(): ThemeContextValue {
     }, 600)
   }, [mode])
 
-  return { mode, preset, toggle, setPreset, isDark: mode === 'dark' }
+  useEffect(() => {
+    localStorage.setItem('oio_theme_hue', hue.toString())
+    document.documentElement.style.setProperty('--custom-hue', hue.toString())
+  }, [hue])
+
+  useEffect(() => {
+    localStorage.setItem('oio_theme_saturation', saturation.toString())
+    document.documentElement.style.setProperty('--custom-saturation', `${saturation}%`)
+  }, [saturation])
+
+  return { mode, preset, hue, saturation, toggle, setPreset, setHue, setSaturation, isDark: mode === 'dark' }
 }

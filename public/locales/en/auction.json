@@ -515,5 +515,8 @@
   "removeFromWatchlist": "Remove",
   "notifyOnBid": "Notify on new bids",
   "notifyOnEnd": "Notify when auction ends",
-  "you": "You"
+  "you": "You",
+  "closeAuction": "Close Auction",
+  "closeAuctionConfirm": "Are you sure you want to close this auction? This will end the auction process and cannot be undone.",
+  "closeAuctionSuccess": "Auction closed successfully"
 }

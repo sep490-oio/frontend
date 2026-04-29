@@ -7,17 +7,19 @@ export type SellerAction =
   | 'configureShipping'
   | 'offerRunnerUp'
   | 'relist'
+  | 'close'
 
 interface GetSellerActionsParams {
   status: string
   verifyByPlatform?: boolean
+  canOfferRunnerUp?: boolean
 }
 
 /**
  * Single source of truth for which seller actions are available per auction status.
  * Used by both MyAuctionsPage and AuctionDetailPage.
  */
-export function getSellerActions({ status }: GetSellerActionsParams): SellerAction[] {
+export function getSellerActions({ status, canOfferRunnerUp }: GetSellerActionsParams): SellerAction[] {
   const s = status?.toLowerCase()
   const actions: SellerAction[] = []
 
@@ -39,8 +41,11 @@ export function getSellerActions({ status }: GetSellerActionsParams): SellerActi
       // offerRunnerUp is ONLY valid in payment_defaulted (backend enforced).
       break
     case 'payment_defaulted':
-      actions.push('relist', 'offerRunnerUp')
-      break
+      actions.push('relist', 'close')
+      if (canOfferRunnerUp !== false) {
+        actions.push('offerRunnerUp')
+      }
+      break;
     case 'failed':
       actions.push('relist')
       break

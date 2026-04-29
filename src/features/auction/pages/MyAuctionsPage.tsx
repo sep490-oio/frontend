@@ -10,6 +10,7 @@ import {
   ReloadOutlined,
   UserSwitchOutlined,
   DashboardOutlined,
+  CloseCircleOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
@@ -22,7 +23,9 @@ import {
   useSetAuctionTiming,
   useRelistAuction,
   useOfferRunnerUp,
-} from '@/features/auction/api'
+  useCloseAuction,
+} from '@/features/auction/auctionApi'
+import { getServerDayjs } from '@/utils/time'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { PriceDisplay } from '@/components/ui/PriceDisplay'
 import { CountdownTimer } from '@/components/ui/CountdownTimer'
@@ -49,6 +52,7 @@ export default function MyAuctionsPage() {
     { value: AuctionStatus.Ended, label: tc('statusLabel.ended') },
     { value: AuctionStatus.Sold, label: tc('statusLabel.sold') },
     { value: AuctionStatus.Failed, label: tc('statusLabel.failed') },
+    { value: AuctionStatus.PaymentDefaulted, label: tc('statusLabel.payment_defaulted') },
     { value: AuctionStatus.Cancelled, label: tc('statusLabel.cancelled') },
     { value: AuctionStatus.Pending, label: tc('statusLabel.pending') },
     { value: AuctionStatus.Terminated, label: tc('statusLabel.terminated') },
@@ -86,6 +90,7 @@ export default function MyAuctionsPage() {
   const setAuctionTiming = useSetAuctionTiming()
   const relistAuction = useRelistAuction()
   const offerRunnerUp = useOfferRunnerUp()
+  const closeAuction = useCloseAuction()
 
   /* ── Cancel handlers ── */
   const openCancelModal = (id: string) => {
@@ -212,6 +217,10 @@ export default function MyAuctionsPage() {
       msgApi.error(t('relistValidation', 'Thời gian đăng ký phải trước thời gian đấu giá'))
       return
     }
+    if (relistForm.qualificationStartAt.isBefore(getServerDayjs().subtract(1, 'minute'))) {
+      msgApi.error(t('relistStartFuture', 'Thời gian bắt đầu phải ở tương lai'))
+      return
+    }
     relistAuction.mutate(
       {
         auctionId: relistAuctionId,
@@ -235,13 +244,28 @@ export default function MyAuctionsPage() {
       onSuccess: () => msgApi.success(t('offerRunnerUpSuccess', 'Offer sent to runner-up')),
     })
   }
+ 
+  const handleCloseAuction = (id: string) => {
+    Modal.confirm({
+      title: t('closeAuctionConfirmTitle', 'Đóng phiên đấu giá?'),
+      content: t('closeAuctionConfirmDesc', 'Bạn có chắc chắn muốn đóng phiên đấu giá này? Hành động này sẽ kết thúc hoàn toàn quy trình đấu giá.'),
+      okText: t('confirm', 'Xác nhận'),
+      okType: 'danger',
+      cancelText: t('cancel', 'Hủy'),
+      onOk: () => {
+        closeAuction.mutate(id, {
+          onSuccess: () => msgApi.success(t('closeAuctionSuccess', 'Auction closed')),
+        })
+      }
+    })
+  }
 
   /* ── Action buttons per status ── */
   const renderActions = (record: AuctionListItemDto) => {
-    const s = record.status
+    const s = record.status?.toLowerCase()
     return (
       <Space size="small" wrap>
-        {s === AuctionStatus.Draft && (
+        {s === 'draft' && (
           <>
             <Tooltip title={tc('action.edit', 'Edit')}>
               <Button type="text" size="small" icon={<EditOutlined />} onClick={() => navigate(`${prefix}/auctions/${record.id}/edit`)} />
@@ -265,7 +289,7 @@ export default function MyAuctionsPage() {
             </Tooltip>
           </>
         )}
-        {s === AuctionStatus.Approved && (
+        {s === 'approved' && (
           <>
             <Tooltip title={t('setTiming', 'Set Timing')}>
               <Button type="text" size="small" icon={<ClockCircleOutlined />} onClick={() => openTimingModal(record.id)} />
@@ -275,7 +299,7 @@ export default function MyAuctionsPage() {
             </Tooltip>
           </>
         )}
-        {s === AuctionStatus.Scheduled && (
+        {s === 'scheduled' && (
           <>
             <Tooltip title={t('dashboard', 'Dashboard')}>
               <Button type="text" size="small" icon={<DashboardOutlined />} onClick={() => navigate(`/seller/auctions/${record.id}/dashboard`)} />
@@ -288,7 +312,7 @@ export default function MyAuctionsPage() {
             </Tooltip>
           </>
         )}
-        {s === AuctionStatus.Active && (
+        {s === 'active' && (
           <>
             <Tooltip title={t('dashboard', 'Dashboard')}>
               <Button type="text" size="small" icon={<DashboardOutlined />} onClick={() => navigate(`/seller/auctions/${record.id}/dashboard`)} />
@@ -301,7 +325,7 @@ export default function MyAuctionsPage() {
             </Tooltip>
           </>
         )}
-        {s === AuctionStatus.Ended && (
+        {(s === 'ended' || s === 'failed') && (
           <Space size="small">
             <Tooltip title={t('dashboard', 'Dashboard')}>
               <Button type="text" size="small" icon={<DashboardOutlined />} onClick={() => navigate(`/seller/auctions/${record.id}/dashboard`)} />
@@ -309,9 +333,14 @@ export default function MyAuctionsPage() {
             <Tooltip title={t('viewDetail', 'View Detail')}>
               <Button type="text" size="small" icon={<EyeOutlined />} onClick={() => navigate(`/auctions/${record.id}`)} />
             </Tooltip>
+            {s === 'failed' && (
+              <Tooltip title={t('relist', 'Relist')}>
+                <Button type="text" size="small" icon={<ReloadOutlined />} loading={relistAuction.isPending} onClick={() => openRelistModal(record.id)} />
+              </Tooltip>
+            )}
           </Space>
         )}
-        {s === AuctionStatus.Sold && (
+        {s === 'sold' && (
           <Space size="small">
             <Tooltip title={t('dashboard', 'Dashboard')}>
               <Button type="text" size="small" icon={<DashboardOutlined />} onClick={() => navigate(`/seller/auctions/${record.id}/dashboard`)} />
@@ -321,7 +350,7 @@ export default function MyAuctionsPage() {
             </Tooltip>
           </Space>
         )}
-        {s === AuctionStatus.PaymentDefaulted && (
+        {s === 'payment_defaulted' && (
           <>
             <Tooltip title={t('dashboard', 'Dashboard')}>
               <Button type="text" size="small" icon={<DashboardOutlined />} onClick={() => navigate(`/seller/auctions/${record.id}/dashboard`)} />
@@ -329,9 +358,15 @@ export default function MyAuctionsPage() {
             <Tooltip title={t('relist', 'Relist')}>
               <Button type="text" size="small" icon={<ReloadOutlined />} loading={relistAuction.isPending} onClick={() => openRelistModal(record.id)} />
             </Tooltip>
-            <Tooltip title={t('offerRunnerUp', 'Offer Runner-up')}>
-              <Button type="text" size="small" icon={<UserSwitchOutlined />} loading={offerRunnerUp.isPending} onClick={() => handleOfferRunnerUp(record.id)} />
-            </Tooltip>
+            {record.canOfferRunnerUp !== false ? (
+              <Tooltip title={t('offerRunnerUp', 'Offer Runner-up')}>
+                <Button type="text" size="small" icon={<UserSwitchOutlined />} loading={offerRunnerUp.isPending} onClick={() => handleOfferRunnerUp(record.id)} />
+              </Tooltip>
+            ) : (
+              <Tooltip title={t('closeAuction', 'Close Auction')}>
+                <Button type="text" size="small" danger icon={<CloseCircleOutlined />} loading={closeAuction.isPending} onClick={() => handleCloseAuction(record.id)} />
+              </Tooltip>
+            )}
           </>
         )}
       </Space>

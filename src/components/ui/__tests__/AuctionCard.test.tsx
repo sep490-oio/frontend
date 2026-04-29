@@ -25,7 +25,7 @@ vi.mock('react-i18next', () => ({
 }))
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false }) }))
 vi.mock('@/hooks/useBreakpoint', () => ({ useBreakpoint: () => ({ isMobile: false }) }))
-vi.mock('@/features/auction/api', () => ({
+vi.mock('@/features/auction/auctionApi.ts', () => ({
   useWatchAuction: () => ({ mutate: vi.fn() }),
   useUnwatchAuction: () => ({ mutate: vi.fn() }),
 }))
