@@ -6,7 +6,6 @@ import {
   Input,
   InputNumber,
   Button,
-  Card,
   Space,
   App,
   Switch,
@@ -25,7 +24,7 @@ import {
 import { useNavigate, useSearchParams, useParams } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
 import { useTranslation } from 'react-i18next'
-import { useCreateAuction, useCreateAuctionFromItem, useUpdateAuction, useSubmitAuction, useAuctionDetail } from '@/features/auction/api'
+import { useCreateAuction, useCreateAuctionFromItem, useUpdateAuction, useSubmitAuction, useAuctionDetail } from '@/features/auction/auctionApi'
 import { useCategories, useSubmitItem, useItemById } from '@/features/item/api'
 import { MultiCaptureUploader } from '@/components/ui/MultiCaptureUploader'
 import type { CapturedPhoto } from '@/components/ui/MultiCaptureUploader'
@@ -35,7 +34,7 @@ import { AuctionTimingSection } from '@/features/auction/components/AuctionTimin
 import { AuctionType, ItemStatus } from '@/types/enums'
 import { useConditionOptions, useAuctionTypeOptions } from '@/utils/enumLabels'
 import { DEFAULT_CURRENCY } from '@/utils/constants'
-import type { CreateAuctionRequest } from '@/features/auction/api'
+import type { CreateAuctionRequest } from '@/features/auction/auctionApi'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { SERIF_FONT } from '@/styles/tokens'
 import { htmlToPlainTextExcerpt } from '@/components/ui/SafeHtmlRenderer'
@@ -483,21 +482,18 @@ export default function CreateAuctionPage() {
 
       <Typography.Title
         level={isMobile ? 3 : 2}
+        className="oio-serif"
         style={{
-          fontFamily: SERIF_FONT,
           color: 'var(--color-text-primary)',
           marginBottom: 20,
-          fontSize: isMobile ? 20 : undefined,
+          fontSize: isMobile ? 24 : 32,
         }}
       >
         {isEditMode ? t('editAuction', 'Edit Auction') : t('createAuction', 'Tạo đấu giá mới')}
       </Typography.Title>
 
       {/* Steps Progress */}
-      <Card 
-        styles={{ body: { padding: isMobile ? '12px 16px' : '16px 24px' } }}
-        style={{ borderRadius: 12, border: '1px solid var(--color-border)', marginBottom: 16 }}
-      >
+      <div className="oio-widget" style={{ marginBottom: 16 }}>
         <Steps
           size="small"
           items={stepsItems}
@@ -510,7 +506,7 @@ export default function CreateAuctionPage() {
             {stepStatusText[submissionStep]}
           </div>
         )}
-      </Card>
+      </div>
 
       {/* Partial Failure Alert */}
       {submissionError && (
@@ -541,10 +537,7 @@ export default function CreateAuctionPage() {
 
       {/* Item Preview */}
       {(isFromItem || (isEditMode && existingItemForPreview)) && existingItemForPreview && (
-        <Card 
-          styles={{ body: { padding: isMobile ? '16px' : '24px' } }}
-          style={{ borderRadius: 12, border: '1px solid var(--color-border)', marginBottom: 16 }}
-        >
+        <div className="oio-widget" style={{ marginBottom: 16 }}>
           <SectionHeader number={1} title={t('selectedItem', 'Vật phẩm đã chọn')} isMobile={isMobile} />
           <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
             {existingItemForPreview.images && existingItemForPreview.images.length > 0 && (
@@ -583,14 +576,11 @@ export default function CreateAuctionPage() {
               )}
             </div>
           </div>
-        </Card>
+        </div>
       )}
 
       {/* Main Form */}
-      <Card 
-        styles={{ body: { padding: isMobile ? '20px 16px' : '32px 24px' } }}
-        style={{ borderRadius: 12, border: '1px solid var(--color-border)' }}
-      >
+      <div className="oio-widget">
         <SectionHeader number={pricingSectionNumber} title={t('pricingAndTiming', 'Pricing & Time')} isMobile={isMobile} />
         <Form<FormValues>
           form={form}
@@ -813,10 +803,10 @@ export default function CreateAuctionPage() {
                   <SafetyCertificateOutlined style={{ fontSize: 20, color: 'var(--color-accent)', flexShrink: 0 }} />
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-text-primary)' }}>
-                      Xác thực bởi Nền tảng
+                      {t('verifiedByPlatformTitle', 'Xác thực bởi Nền tảng')}
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 2 }}>
-                      Yêu cầu chuyên gia oio.vn kiểm định vật phẩm trước khi đấu giá.
+                      {t('verifiedByPlatformDesc', 'Yêu cầu chuyên gia oio.vn kiểm định vật phẩm trước khi đấu giá.')}
                     </div>
                   </div>
                 </div>
@@ -902,7 +892,7 @@ export default function CreateAuctionPage() {
             )}
           </Form.Item>
         </Form>
-      </Card>
+      </div>
     </div>
   )
 }

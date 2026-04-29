@@ -43,7 +43,7 @@ import { useAppSelector } from '@/app/store'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useTheme } from '@/hooks/useTheme'
-import { useSearchAuctions } from '@/features/auction/api'
+import { useSearchAuctions } from '@/features/auction/auctionApi.ts'
 import { AuctionStatus } from '@/types/enums'
 
 export type RecentItemV2 = {

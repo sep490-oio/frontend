@@ -95,14 +95,14 @@ export function getAuctionHub(): signalR.HubConnection {
 
 export function getDisputeHub(): signalR.HubConnection {
   if (!disputeHub) {
-    disputeHub = createHubConnection('/disputes')
+    disputeHub = createHubConnection('/dispute')
   }
   return disputeHub
 }
 
 export function getNotificationHub(): signalR.HubConnection {
   if (!notificationHub) {
-    notificationHub = createHubConnection('/notifications')
+    notificationHub = createHubConnection('/notification')
   }
   return notificationHub
 }

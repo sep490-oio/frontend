@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
+import { getServerNow, getServerNowMs } from '@/utils/time'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import {
   Typography,
@@ -41,7 +42,8 @@ import {
   useCancelAuction,
   useAdminRejectAuction,
   useSetAuctionTiming,
-} from '@/features/auction/api'
+  useCloseAuction,
+} from '@/features/auction/auctionApi'
 import { useWallet, useCreateDepositPayment, useDepositFromWallet } from '@/features/payment/api'
 import { useAuctionHub } from '@/features/auction/hooks/useAuctionHub'
 import { useUserHub } from '@/features/auction/hooks/useUserHub'
@@ -85,7 +87,7 @@ function computeQualificationState(
   if (userId && auction.sellerId === userId) return 'is_seller'
   if (isQualified) return 'qualified'
 
-  const now = Date.now()
+  const now = getServerNowMs()
   const qualStart = auction.qualificationStartAt ? new Date(auction.qualificationStartAt).getTime() : null
   const qualEnd = auction.qualificationEndAt ? new Date(auction.qualificationEndAt).getTime() : null
 
@@ -232,6 +234,7 @@ export default function AuctionDetailPage() {
   const relistAuction = useRelistAuction()
   const submitAuctionMutation = useSubmitAuction()
   const cancelAuctionMutation = useCancelAuction()
+  const closeAuctionMutation = useCloseAuction()
   const adminRejectMutation = useAdminRejectAuction()
   const adminRemoveItemMutation = useAdminRemoveItem()
   const setAuctionTimingMutation = useSetAuctionTiming()
@@ -325,7 +328,7 @@ export default function AuctionDetailPage() {
   // If returning from VnPay deposit with success flag, mark qualified
   useEffect(() => {
     if (depositedParam && id && storageKey) {
-      const now = Date.now().toString()
+      const now = getServerNowMs().toString()
       localStorage.setItem(storageKey, 'true')
       localStorage.setItem(`${storageKey}_ts`, now)
       setIsQualified(true)
@@ -344,7 +347,7 @@ export default function AuctionDetailPage() {
 
     const isDataForCurrentUser = data && detailUserScope === currentUser?.id
     const lastDepositTs = parseInt(localStorage.getItem(`${storageKey}_ts`) || '0', 10)
-    const isRecentlyDeposited = (Date.now() - lastDepositTs) < 30000 || hasJustDeposited.current
+    const isRecentlyDeposited = (getServerNowMs() - lastDepositTs) < 30000 || hasJustDeposited.current
 
     if (isDataForCurrentUser && !isLoading && !isFetching && !data.currentUserParticipant && !isRecentlyDeposited) {
       localStorage.removeItem(storageKey)
@@ -379,7 +382,7 @@ export default function AuctionDetailPage() {
 
     if (!isQualifiedOnServer && !isLoading) {
       const lastDepositTs = parseInt(localStorage.getItem(`${storageKey}_ts`) || '0', 10)
-      const recentlyDeposited = (Date.now() - lastDepositTs) < 30000
+      const recentlyDeposited = (getServerNowMs() - lastDepositTs) < 30000
 
       if (recentlyDeposited) {
         const timer = setInterval(() => {
@@ -582,14 +585,14 @@ export default function AuctionDetailPage() {
     const nextBoundary = [auction.qualificationStartAt, auction.qualificationEndAt]
       .filter((value): value is string => Boolean(value))
       .map((value) => new Date(value).getTime())
-      .filter((value) => value > Date.now())
+      .filter((value) => value > getServerNowMs())
       .sort((a, b) => a - b)[0]
 
     if (!nextBoundary) return
 
     const timeout = window.setTimeout(() => {
       setQualificationBoundaryTick((value) => value + 1)
-    }, Math.max(0, nextBoundary - Date.now()) + 250)
+    }, Math.max(0, nextBoundary - getServerNowMs()) + 250)
 
     return () => window.clearTimeout(timeout)
   }, [auction, auction?.qualificationEndAt, auction?.qualificationStartAt, qualificationBoundaryTick])
@@ -702,7 +705,7 @@ export default function AuctionDetailPage() {
               position: result.wasImmediatelyOutbid ? 'outbid' : 'leading',
               isCurrentWinner: !result.wasImmediatelyOutbid,
               latestBidAmount: effectiveAmount,
-              latestBidAt: new Date().toISOString(),
+              latestBidAt: getServerNow().toISOString(),
               hasAutoBid: old.currentUserBidState?.hasAutoBid ?? false,
             },
           } : old,
@@ -1119,10 +1122,13 @@ export default function AuctionDetailPage() {
           onConfigureShipping={() => { shippingForm.resetFields(); setShippingModalOpen(true) }}
           onOfferRunnerUp={() => offerRunnerUp.mutateAsync(id!).then(() => message.success(t('offerRunnerUpSuccess', 'Offer sent')))}
           onRelist={() => { setRelistForm({ qualificationStartAt: null, qualificationEndAt: null, startAt: null, endAt: null }); setRelistModalOpen(true) }}
+          onClose={() => closeAuctionMutation.mutateAsync(id!).then(() => message.success(t('closeAuctionSuccess', 'Auction closed')))}
+          canOfferRunnerUp={auction?.canOfferRunnerUp}
           isSubmitLoading={submitAuctionMutation.isPending}
           isCancelLoading={cancelAuctionMutation.isPending}
           isOfferRunnerUpLoading={offerRunnerUp.isPending}
           isRelistLoading={relistAuction.isPending}
+          isCloseLoading={closeAuctionMutation.isPending}
         />
       )}
 

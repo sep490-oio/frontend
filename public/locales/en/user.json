@@ -178,20 +178,24 @@
     "resendEmail": "Resend Verification Email",
     "resendSuccess": "Verification email sent! Please check your inbox.",
     "resendError": "Failed to send verification email. Please wait 60 seconds between attempts.",
-    "appearance": "Appearance",
+    "appearance": "Appearance & Branding",
     "themeMode": "Theme Mode",
     "switchToDark": "Switch to Dark Mode",
     "switchToLight": "Switch to Light Mode",
-    "colorPreset": "Color Combo",
-    "presetHint": "Choose a color combination that matches your style.",
+    "colorPreset": "Brand Color DNA",
+    "presetHint": "Each preset uses a unique multi-pigment formula for maximum visual depth.",
     "presets": {
-      "default": "Default",
-      "mint": "Mint",
-      "ember": "Ember",
-      "aurora": "Aurora",
-      "slate": "Slate",
-      "frosted": "Frosted"
+      "default": "Deep Ocean",
+      "mint": "Botanical",
+      "ember": "Sunset",
+      "aurora": "Twilight",
+      "slate": "Storm",
+      "frosted": "Matte Steel",
+      "custom": "Unique"
     },
+    "customColor": "Precision Tuning",
+    "customDesc": "Adjust the pigment and intensity to create your own brand identity.",
+    "customHueHint": "Slide to create your own signature brand color. All platform elements will adapt to this pigment.",
     "changeAvatar": "Change Avatar",
     "avatarUploaded": "Avatar uploaded",
     "avatarUploadError": "Failed to upload avatar",
@@ -231,6 +235,51 @@
       "firstNameRequired": "First name is required",
       "lastNameRequired": "Last name is required",
       "displayNameRequired": "Display name is required"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your account preferences and security",
+    "notifications": {
+      "title": "Notifications",
+      "description": "Choose how you receive notifications — in-platform and email"
+    },
+    "appearance": {
+      "livePreview": "Live Preview",
+      "sampleInterface": "Sample Interface",
+      "sampleDesc": "See how your choices affect the platform's visual identity.",
+      "primaryAction": "Primary Action",
+      "ghost": "Ghost",
+      "activeTag": "Active Tag",
+      "backgroundGradient": "Background Gradient",
+      "brightness": "Brightness",
+      "lightModeActive": "Light Mode Active",
+      "darkModeActive": "Dark Mode Active",
+      "clickForDark": "Click for Dark",
+      "clickForLight": "Click for Light",
+      "colorDna": "Brand Color DNA",
+      "presetHint": "Each preset uses a unique multi-pigment formula for maximum visual depth.",
+      "precisionTuning": "Precision Tuning",
+      "pigmentHue": "Pigment Hue",
+      "intensity": "Intensity (Saturation)",
+      "quickTemplates": "QUICK TEMPLATES",
+      "swatches": {
+        "ruby": "Ruby",
+        "amber": "Amber",
+        "emerald": "Emerald",
+        "sapphire": "Sapphire",
+        "amethyst": "Amethyst",
+        "rose": "Rose"
+      },
+      "presets": {
+        "default": { "label": "Deep Ocean", "desc": "Classic blue & navy" },
+        "mint": { "label": "Botanical", "desc": "Organic forest greens" },
+        "ember": { "label": "Sunset", "desc": "Warm amber & earth" },
+        "aurora": { "label": "Twilight", "desc": "Indigo & twilight purples" },
+        "slate": { "label": "Storm", "desc": "Technical blue-grays" },
+        "frosted": { "label": "Steel", "desc": "Clean matte metallics" },
+        "custom": { "label": "Unique", "desc": "Your own HSL formula" }
+      }
     }
   }
 }

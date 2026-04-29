@@ -11,7 +11,7 @@ import {
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import { useNotifications, useMarkAsRead, useMarkAllAsRead, parseNotificationActions, getActionRoute, getEntityRoute, type NotificationAction, type NotificationFilterParams } from '@/features/notification/api'
-import { useRespondRunnerUpOffer, useAuctionDetail } from '@/features/auction/api'
+import { useRespondRunnerUpOffer, useAuctionDetail } from '@/features/auction/auctionApi.ts'
 import { useAuth } from '@/hooks/useAuth'
 import { NotificationStatus } from '@/types/enums'
 import { useBreakpoint } from '@/hooks/useBreakpoint'

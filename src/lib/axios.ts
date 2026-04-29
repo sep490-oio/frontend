@@ -29,7 +29,27 @@ export function unregisterTermsGateHandler() {
 const apiClient = axios.create({
   baseURL: API_URL,
   headers: { 'Content-Type': 'application/json' },
+  // Important: some browsers strip the Date header from response.headers
+  // unless explicitly exposed by the server.
 })
+
+// Add a transformer to wrap large integers in quotes before JSON.parse
+// to avoid rounding errors with 64-bit IDs (§4.3 BigInt Handling).
+apiClient.defaults.transformResponse = [
+  (data) => {
+    if (typeof data === 'string' && data.length > 0) {
+      // Find large numbers (12+ digits) that are not already in quotes
+      // and wrap them in quotes. This targets numeric IDs in JSON.
+      // We check for numbers following :, [, or , to catch IDs in objects and arrays.
+      return data.replace(/([:\[,]\s*)(\d{12,})/g, '$1"$2"')
+    }
+    return data
+  },
+  ...(Array.isArray(axios.defaults.transformResponse) 
+    ? axios.defaults.transformResponse 
+    : [axios.defaults.transformResponse]) as any[]
+]
+
 
 // Axios request queue — gates retrying failed requests (separate from tokenRefresh mutex)
 let isRefreshing = false

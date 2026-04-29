@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import type { QueryClient } from '@tanstack/react-query'
+import { getServerNowMs } from '@/utils/time'
 
 import { upsertItemQuestionCaches } from '@/features/item/api'
 import { queryKeys } from '@/lib/queryClient'
@@ -239,7 +240,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         ...prev,
         connected: true,
         lastError: null,
-        lastSyncedAt: Date.now(),
+        lastSyncedAt: getServerNowMs(),
       }))
     }
 
@@ -270,16 +271,6 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         }
 
         markConnected()
-
-        try {
-          const serverTime = await connection.invoke<string>('GetServerTime')
-          const serverMs = new Date(serverTime).getTime()
-          const clientMs = Date.now()
-          const offset = serverMs - clientMs
-          setState((prev) => ({ ...prev, serverTimeOffset: offset }))
-        } catch {
-          // Ignore — fallback to client time
-        }
       } catch (error) {
         if (!isActive) {
           return
@@ -314,7 +305,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         // Clear outbid only when the current user placed a new bid
         outbid: currentUserId && data.bidderId === currentUserId ? null : prev.outbid,
         connected: true,
-        lastSyncedAt: Date.now(),
+        lastSyncedAt: getServerNowMs(),
       }))
 
       // Cache patching handled by AuctionStateChanged — only keep wallet invalidation
@@ -335,7 +326,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
           currency: eventCurrency,
         },
         connected: true,
-        lastSyncedAt: Date.now(),
+        lastSyncedAt: getServerNowMs(),
       }))
 
       // Cache patching handled by AuctionStateChanged
@@ -350,7 +341,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         ...prev,
         auctionStarted: data,
         connected: true,
-        lastSyncedAt: Date.now(),
+        lastSyncedAt: getServerNowMs(),
       }))
 
       // Cache patching handled by AuctionStateChanged
@@ -373,7 +364,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         },
         outbid: null, // Clear outbid — auction is no longer active
         connected: true,
-        lastSyncedAt: Date.now(),
+        lastSyncedAt: getServerNowMs(),
       }))
 
       // Cache patching handled by AuctionStateChanged — only keep wallet invalidation
@@ -389,7 +380,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         ...prev,
         auctionExtended: data,
         connected: true,
-        lastSyncedAt: Date.now(),
+        lastSyncedAt: getServerNowMs(),
       }))
 
       // Cache patching handled by AuctionStateChanged
@@ -405,7 +396,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         auctionCancelled: data,
         outbid: null, // Clear outbid — auction is cancelled
         connected: true,
-        lastSyncedAt: Date.now(),
+        lastSyncedAt: getServerNowMs(),
       }))
 
       // Patch the cache directly — don't rely on a paired AuctionStateChanged event.
@@ -437,7 +428,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         ...prev,
         buyNowReserved: data,
         connected: true,
-        lastSyncedAt: Date.now(),
+        lastSyncedAt: getServerNowMs(),
       }))
 
       // Cache patching handled by AuctionStateChanged
@@ -452,7 +443,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         ...prev,
         buyNowReservationReleased: data,
         connected: true,
-        lastSyncedAt: Date.now(),
+        lastSyncedAt: getServerNowMs(),
       }))
 
       // Cache patching handled by AuctionStateChanged
@@ -474,7 +465,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         },
         outbid: null, // Clear outbid — auction sold via buy now
         connected: true,
-        lastSyncedAt: Date.now(),
+        lastSyncedAt: getServerNowMs(),
       }))
 
       // Buy-now finalizes the auction. Invalidate auction detail so any client
@@ -502,7 +493,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
       setState((prev) => ({
         ...prev,
         connected: true,
-        lastSyncedAt: Date.now(),
+        lastSyncedAt: getServerNowMs(),
       }))
 
       upsertItemQuestionCaches(qc, data.itemId, data)
@@ -528,7 +519,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
       setState((prev) => ({
         ...prev,
         connected: true,
-        lastSyncedAt: Date.now(),
+        lastSyncedAt: getServerNowMs(),
       }))
     }
 
@@ -540,7 +531,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
       setState((prev) => ({
         ...prev,
         connected: true,
-        lastSyncedAt: Date.now(),
+        lastSyncedAt: getServerNowMs(),
       }))
 
       upsertItemQuestionCaches(qc, data.itemId, data)
