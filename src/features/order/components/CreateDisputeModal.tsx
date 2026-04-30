@@ -10,8 +10,9 @@ import {
   useCreateWarehouseItemDispute,
   useCreatePaymentDispute,
 } from '@/features/dispute/api'
+import type { DisputeEligibilityDto, DisputeTargetType } from '@/types/dispute'
 
-export type DisputeTargetType = 'order' | 'auction' | 'shipment' | 'warehouse_item' | 'payment'
+export type { DisputeTargetType } from '@/types/dispute'
 
 export interface CreateDisputeModalProps {
   targetType: DisputeTargetType
@@ -20,18 +21,7 @@ export interface CreateDisputeModalProps {
   auctionId?: string
   open: boolean
   onClose: () => void
-  prefillDomain?: string
-  prefillCaseType?: string
-}
-
-const DOMAIN_KEYS = ['order', 'auction', 'payment', 'shipment', 'warehouse_item'] as const
-
-const CASE_TYPE_KEYS: Record<string, string[]> = {
-  order: ['item_not_as_described', 'item_damaged', 'item_not_received', 'wrong_item', 'other'],
-  auction: ['bid_manipulation', 'counterfeit', 'misrepresentation', 'other'],
-  payment: ['unauthorized_charge', 'double_charge', 'refund_not_received', 'other'],
-  shipment: ['lost_in_transit', 'damaged_in_transit', 'delivery_issue', 'other'],
-  warehouse_item: ['item_damaged', 'item_missing', 'wrong_item', 'other'],
+  eligibility: DisputeEligibilityDto
 }
 
 export function CreateDisputeModal({
@@ -41,10 +31,10 @@ export function CreateDisputeModal({
   auctionId,
   open,
   onClose,
-  prefillDomain,
-  prefillCaseType,
+  eligibility,
 }: CreateDisputeModalProps) {
-  const { t } = useTranslation('order')
+  const { t } = useTranslation('dispute')
+  const { t: to } = useTranslation('order')
   const { t: tc } = useTranslation('common')
   const { message } = App.useApp()
   const navigate = useNavigate()
@@ -56,19 +46,26 @@ export function CreateDisputeModal({
   const createWarehouseItemDispute = useCreateWarehouseItemDispute()
   const createPaymentDispute = useCreatePaymentDispute()
 
-  const [domain, setDomain] = useState(prefillDomain ?? (targetType === 'warehouse_item' ? 'warehouse_item' : targetType))
-  const [caseType, setCaseType] = useState(prefillCaseType ?? '')
+  const allowedDomains = eligibility.allowedDomains ?? []
+  const allowedCaseTypesByDomain = eligibility.allowedCaseTypes ?? {}
+
+  // Lazy init: auto-select the only allowed domain on first render.
+  // Caller must remount the modal (e.g. via `key` or conditional render) when eligibility changes.
+  const [domain, setDomain] = useState<string>(() =>
+    allowedDomains.length === 1 ? allowedDomains[0]! : '',
+  )
+  const [caseType, setCaseType] = useState<string>('')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
 
-  const domainOptions = DOMAIN_KEYS.map((key) => ({
-    value: key,
-    label: t(`disputeDomainOption.${key}`, key),
+  const domainOptions = allowedDomains.map((d) => ({
+    value: d,
+    label: t(`domain.${d}`, d),
   }))
 
-  const caseTypeOptions = (CASE_TYPE_KEYS[domain] ?? CASE_TYPE_KEYS['order']!).map((key) => ({
-    value: key,
-    label: t(`disputeCaseTypeOption.${key}`, key),
+  const caseTypeOptions = (allowedCaseTypesByDomain[domain] ?? []).map((ct) => ({
+    value: ct,
+    label: t(`caseType.${ct}`, ct),
   }))
 
   const isPending =
@@ -79,10 +76,20 @@ export function CreateDisputeModal({
     createPaymentDispute.isPending
 
   const reset = () => {
-    setDomain(prefillDomain ?? (targetType === 'warehouse_item' ? 'warehouse_item' : targetType))
-    setCaseType(prefillCaseType ?? '')
+    setDomain(allowedDomains.length === 1 ? allowedDomains[0]! : '')
+    setCaseType('')
     setTitle('')
     setDescription('')
+  }
+
+  const mapErrorToMessage = (err: unknown): string => {
+    const code =
+      (err as { response?: { data?: { code?: string } } })?.response?.data?.code ??
+      (err as { code?: string })?.code
+    if (typeof code === 'string' && code.startsWith('Dispute.')) {
+      return t(`reasonCode.${code}`, to('disputeError', 'Failed to create dispute'))
+    }
+    return to('disputeError', 'Failed to create dispute')
   }
 
   const handleSubmit = async () => {
@@ -113,18 +120,18 @@ export function CreateDisputeModal({
           return
       }
 
-      message.success(t('disputeCreated', 'Dispute created successfully'))
+      message.success(to('disputeCreated', 'Dispute created successfully'))
       reset()
       onClose()
       navigate(`/me/disputes/${result.id}`)
-    } catch {
-      message.error(t('disputeError', 'Failed to create dispute'))
+    } catch (err) {
+      message.error(mapErrorToMessage(err))
     }
   }
 
   return (
     <Modal
-      title={t('openDispute', 'Report Issue / Open Dispute')}
+      title={to('openDispute', 'Report Issue / Open Dispute')}
       open={open}
       onCancel={() => {
         reset()
@@ -140,43 +147,45 @@ export function CreateDisputeModal({
       centered
     >
       <Form layout="vertical">
-        <Form.Item label={t('disputeDomain', 'Domain')} required>
+        <Form.Item label={to('disputeDomain', 'Domain')} required>
           <Select
             value={domain || undefined}
             size={isMobile ? 'large' : 'middle'}
+            disabled={allowedDomains.length <= 1}
             onChange={(val) => {
               setDomain(val)
               setCaseType('')
             }}
-            placeholder={t('selectDomain', 'Select domain')}
+            placeholder={to('selectDomain', 'Select domain')}
             options={domainOptions}
           />
         </Form.Item>
-        <Form.Item label={t('disputeCaseType', 'Case Type')} required>
+        <Form.Item label={to('disputeCaseType', 'Case Type')} required>
           <Select
             value={caseType || undefined}
             size={isMobile ? 'large' : 'middle'}
+            disabled={!domain || caseTypeOptions.length === 0}
             onChange={(val) => setCaseType(val)}
-            placeholder={t('selectCaseType', 'Select case type')}
+            placeholder={to('selectCaseType', 'Select case type')}
             options={caseTypeOptions}
           />
         </Form.Item>
-        <Form.Item label={t('disputeTitle', 'Title')} required>
+        <Form.Item label={to('disputeTitle', 'Title')} required>
           <Input
             value={title}
             size={isMobile ? 'large' : 'middle'}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder={t('disputeTitlePlaceholder', 'Brief summary of the issue')}
+            placeholder={to('disputeTitlePlaceholder', 'Brief summary of the issue')}
             maxLength={200}
             showCount
           />
         </Form.Item>
         <Form.Item
-          label={t('disputeDescription', 'Description')}
+          label={to('disputeDescription', 'Description')}
           required
           help={
             description.trim().length > 0 && description.trim().length < 20
-              ? t('disputeDescriptionMinLength', 'Please enter at least 20 characters')
+              ? to('disputeDescriptionMinLength', 'Please enter at least 20 characters')
               : undefined
           }
           validateStatus={
@@ -190,36 +199,12 @@ export function CreateDisputeModal({
             size={isMobile ? 'large' : 'middle'}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder={t('disputeDescriptionPlaceholder', 'Describe the issue in detail (min. 20 characters)...')}
+            placeholder={to('disputeDescriptionPlaceholder', 'Describe the issue in detail (min. 20 characters)...')}
             showCount
             maxLength={1000}
           />
         </Form.Item>
       </Form>
     </Modal>
-  )
-}
-
-/**
- * @deprecated Use CreateDisputeModal instead. This alias exists for backwards compatibility.
- */
-export function OrderDisputeModal({
-  orderId,
-  open,
-  onClose,
-}: {
-  orderId: string
-  open: boolean
-  onClose: () => void
-  redirectPath?: string
-}) {
-  return (
-    <CreateDisputeModal
-      targetType="order"
-      targetId={orderId}
-      orderId={orderId}
-      open={open}
-      onClose={onClose}
-    />
   )
 }

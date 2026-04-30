@@ -6,6 +6,7 @@ import { getServerNowMs } from '@/utils/time'
 import { upsertItemQuestionCaches } from '@/features/item/api'
 import { queryKeys } from '@/lib/queryClient'
 import { getAuctionHub, startConnection } from '@/lib/signalr'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 import { DEFAULT_CURRENCY } from '@/utils/constants'
 import { BidStatus } from '@/types/enums'
 import type {
@@ -21,6 +22,7 @@ import type {
   BuyNowNotification,
   BuyNowReservedNotification,
   BuyNowReservationReleasedNotification,
+  ErrorNotification,
   HubCommandResult,
   ItemQuestionNotification,
   OutbidNotification,
@@ -466,14 +468,20 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         lastSyncedAt: getServerNowMs(),
       }))
 
-      // Cache patching handled by AuctionStateChanged — only keep wallet invalidation
+      // Buy-now finalizes the auction. Invalidate auction detail so any client
+      // (including a losing bidder still viewing the page) refreshes status,
+      // currentPrice, and currentUserBidState — preventing stale "place bid"
+      // attempts that would surface as "[object Object]" toasts.
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.detail(data.auctionId) })
       qc.invalidateQueries({ queryKey: queryKeys.wallet.summary() })
     }
 
-    const errorHandler = (data: { message: string; code?: string }) => {
+    const errorHandler = (data: ErrorNotification | string | null | undefined) => {
+      const normalized = normalizeErrorMessage(data, 'Realtime error')
+      const code = data && typeof data === 'object' ? data.code : undefined
       setState((prev) => ({
         ...prev,
-        lastError: data,
+        lastError: { message: normalized, code },
       }))
     }
 

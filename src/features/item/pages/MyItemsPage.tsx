@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Button, Space, Modal, Flex, Tooltip, message, Segmented, Typography } from 'antd'
+import { Button, Space, Modal, Flex, Tooltip, message, Segmented, Typography, Tag } from 'antd'
 import {
   PlusOutlined,
   EditOutlined,
@@ -9,6 +9,7 @@ import {
   ReloadOutlined,
   DeleteOutlined,
   RocketOutlined,
+  AuditOutlined,
 } from '@ant-design/icons'
 import { useNavigate, useSearchParams } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
@@ -19,6 +20,7 @@ import {
   useActivateItem,
   useResubmitItem,
 } from '@/features/item/api'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { StatusBadge } from '@/components/ui/StatusBadge'
@@ -153,6 +155,10 @@ export default function MyItemsPage() {
   const handleResubmit = (id: string) => {
     resubmitItem.mutate({ itemId: id }, {
       onSuccess: () => msgApi.success(t('resubmitSuccess', 'Item resubmitted')),
+      onError: (err) => {
+        const msg = normalizeErrorMessage(err, t('resubmitError', 'Failed to resubmit item'))
+        msgApi.error(msg)
+      },
     })
   }
 
@@ -283,29 +289,49 @@ export default function MyItemsPage() {
           </Tooltip>
         )}
 
-        {/* Rejected: Resubmit, Delete */}
-        {s === ItemStatus.Rejected && (
-          <>
-            <Tooltip title={t('resubmit', 'Resubmit')}>
-              <Button
-                type="text"
-                size="small"
-                icon={<ReloadOutlined />}
-                loading={resubmitItem.isPending}
-                onClick={() => handleResubmit(record.id)}
-              />
-            </Tooltip>
-            <Tooltip title={tc('action.delete', 'Delete')}>
-              <Button
-                type="text"
-                size="small"
-                danger
-                icon={<DeleteOutlined />}
-                disabled
-              />
-            </Tooltip>
-          </>
-        )}
+        {/* Rejected: gate by warehouse vs online flow */}
+        {s === ItemStatus.Rejected && (() => {
+          const isWarehouseBound = record.requiresPlatformInspection || !!record.warehouseItemId
+          const canResubmitOnline = !isWarehouseBound
+          const canRequestReinspection = isWarehouseBound
+          return (
+            <>
+              {canResubmitOnline && (
+                <Tooltip title={t('resubmit', 'Resubmit')}>
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={<ReloadOutlined />}
+                    loading={resubmitItem.isPending}
+                    onClick={() => handleResubmit(record.id)}
+                  />
+                </Tooltip>
+              )}
+              {canRequestReinspection && record.warehouseItemId && (
+                <Tooltip title={t('myItems.openWarehouse', 'Open warehouse item')}>
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={<AuditOutlined />}
+                    onClick={() => navigate(`/seller/warehouse/items/${record.warehouseItemId}`)}
+                  />
+                </Tooltip>
+              )}
+              {canRequestReinspection && !record.warehouseItemId && (
+                <Tag style={{ margin: 0 }}>{t('myItems.warehousePending', 'Pending warehouse intake')}</Tag>
+              )}
+              <Tooltip title={tc('action.delete', 'Delete')}>
+                <Button
+                  type="text"
+                  size="small"
+                  danger
+                  icon={<DeleteOutlined />}
+                  disabled
+                />
+              </Tooltip>
+            </>
+          )
+        })()}
       </Space>
     )
   }

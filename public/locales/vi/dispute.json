@@ -40,6 +40,42 @@
     "shipment": "Vận chuyển",
     "warehouse_item": "Vật phẩm kho"
   },
+  "domain": {
+    "auction_settlement": "Thỏa thuận đấu giá",
+    "item_condition": "Tình trạng hàng",
+    "payment": "Thanh toán",
+    "shipping": "Vận chuyển"
+  },
+  "caseType": {
+    "winner_non_payment": "Người thắng không thanh toán",
+    "seller_non_fulfillment": "Người bán không thực hiện",
+    "auction_cancelled_after_commitment": "Hủy đấu giá sau cam kết",
+    "buy_now_commitment_issue": "Vấn đề cam kết Mua Ngay",
+    "deposit_forfeit_or_refund_issue": "Vấn đề tịch thu/hoàn tiền cọc",
+    "inspection_disagreement": "Bất đồng kiểm tra",
+    "condition_mismatch": "Tình trạng không khớp",
+    "authenticity_concern": "Quan ngại tính xác thực",
+    "not_as_described_after_delivery": "Không như mô tả sau giao hàng",
+    "warehouse_damage": "Hư hỏng tại kho",
+    "wallet_topup_missing": "Thiếu nạp tiền ví",
+    "duplicate_charge": "Tính phí trùng",
+    "deposit_not_applied": "Tiền cọc chưa được áp dụng",
+    "buy_now_deposit_offset_error": "Lỗi bù trừ cọc Mua Ngay",
+    "refund_missing": "Thiếu hoàn tiền",
+    "payout_mismatch": "Sai khớp chi trả",
+    "package_not_received": "Chưa nhận được kiện hàng",
+    "damaged_package": "Kiện hàng hư hỏng",
+    "wrong_item_received": "Nhận sai hàng",
+    "missing_items": "Thiếu món",
+    "carrier_marked_delivered_but_not_received": "Nhà vận chuyển báo giao nhưng chưa nhận",
+    "handover_evidence_conflict": "Xung đột bằng chứng giao nhận"
+  },
+  "reasonCode": {
+    "Dispute.RoleNotAllowed": "Bạn không có quyền báo cáo phiên/đơn này",
+    "Dispute.DomainMismatch": "Lĩnh vực không phù hợp với vai trò của bạn",
+    "Dispute.CaseTypeMismatch": "Lý do cụ thể không phù hợp với lĩnh vực",
+    "Dispute.StatusNotAllowed": "Phiên đấu giá chưa kết thúc"
+  },
   "statusLabel": {
     "open": "Mở",
     "assigned": "Đã phân công",

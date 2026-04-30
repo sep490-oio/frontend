@@ -1,12 +1,13 @@
 import { useState } from 'react'
-import { Typography, Form, Input, Select, InputNumber, Button, Card, Space, App, Switch, Row, Col, Flex } from 'antd'
-import { ArrowLeftOutlined, ThunderboltOutlined } from '@ant-design/icons'
+import { Typography, Form, Input, Select, InputNumber, Button, Card, Space, App, Switch, Row, Col, Flex, Alert, Tag, Tooltip } from 'antd'
+import { ArrowLeftOutlined, ThunderboltOutlined, RobotOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
 import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
-import { useCreateItem, useSubmitItem, useCategories } from '@/features/item/api'
-import { useCreateAuction } from '@/features/auction/auctionApi.ts'
+import { useCreateItem, useSubmitItem, useCategories, useSuggestDescription, mapSuggestError, coerceSuggestionToEditorHtml } from '@/features/item/api'
+import type { SuggestDescriptionResponse } from '@/features/item/api'
+import { useCreateAuction } from '@/features/auction/auctionApi'
 import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { MultiCaptureUploader } from '@/components/ui/MultiCaptureUploader'
 import type { CapturedPhoto } from '@/components/ui/MultiCaptureUploader'
@@ -29,15 +30,17 @@ export default function CreateItemPage() {
   const { t } = useTranslation('item')
   const { t: tc } = useTranslation('common')
   const { t: ta } = useTranslation('auction')
+  const { i18n } = useTranslation()
   const navigate = useNavigate()
   const prefix = useRoutePrefix()
-  const { message } = App.useApp()
+  const { message, modal } = App.useApp()
   const { isMobile } = useBreakpoint()
   const [form] = Form.useForm<CreateItemRequest & AuctionFields>()
 
   const createItem = useCreateItem()
   const submitItem = useSubmitItem()
   const createAuction = useCreateAuction()
+  const suggest = useSuggestDescription()
   const CONDITION_OPTIONS = useConditionOptions()
   const AUCTION_TYPE_OPTIONS = useAuctionTypeOptions()
   const mediaUpload = useMediaUpload('item_image')
@@ -45,15 +48,84 @@ export default function CreateItemPage() {
   const [capturedPhotos, setCapturedPhotos] = useState<CapturedPhoto[]>([])
   const [submitting, setSubmitting] = useState(false)
 
+  // AI suggest state
+  const [uploadedMediaIds, setUploadedMediaIds] = useState<string[] | null>(null)
+  const [aiResult, setAiResult] = useState<SuggestDescriptionResponse | null>(null)
+
   // Optional auction toggle
   const [includeAuction, setIncludeAuction] = useState(false)
   // Platform verification toggle
   const [verifyByPlatform, setVerifyByPlatform] = useState(false)
 
+  // Reactive title watch for suggest button enable/disable
+  const titleValue = Form.useWatch('title', form)
+  const canSuggest =
+    Boolean((titleValue as string | undefined)?.trim()) &&
+    (capturedPhotos.length > 0 || (uploadedMediaIds?.length ?? 0) > 0)
+
   const categoryOptions = (categories ?? []).map((cat) => ({
     label: tc(`categories.items.${cat.name}`, cat.name),
     value: cat.id,
   }))
+
+  const handleSuggest = async () => {
+    const title = (form.getFieldValue('title') as string | undefined) ?? ''
+    const condition = (form.getFieldValue('condition') as string | undefined) ?? ''
+
+    let ids: string[]
+
+    if (uploadedMediaIds !== null) {
+      // Already uploaded during a previous suggest call — reuse
+      ids = uploadedMediaIds
+    } else {
+      // Upload photos now and persist ids for future reuse
+      const files = capturedPhotos.map(
+        (p) => new File([p.blob], 'item.jpg', { type: p.blob.type ?? 'image/jpeg' }),
+      )
+      const uploadResults = await mediaUpload.uploadMultiple(files)
+      ids = uploadResults.map((r) => r.mediaUploadId)
+      setUploadedMediaIds(ids)
+    }
+
+    try {
+      const result = await suggest.mutateAsync({
+        title,
+        condition,
+        imageMediaUploadIds: ids,
+        locale: i18n.language === 'en' ? 'en' : 'vi',
+      })
+
+      setAiResult(result)
+
+      // Backend is source of truth for HTML safety; we still coerce defensively
+      // so plain-text fallbacks (legacy responses) still render in the editor.
+      const editorHtml = coerceSuggestionToEditorHtml(result.description, result.descriptionFormat)
+
+      const currentDescription = (form.getFieldValue('description') as string | undefined) ?? ''
+      if (!currentDescription.trim()) {
+        form.setFieldsValue({ description: editorHtml })
+      } else {
+        modal.confirm({
+          title: t('aiSuggest.overwriteConfirmTitle'),
+          content: t('aiSuggest.overwriteConfirmContent'),
+          onOk: () => {
+            form.setFieldsValue({ description: editorHtml })
+          },
+        })
+      }
+    } catch (err: unknown) {
+      const mapped = mapSuggestError(err)
+      if (mapped.code === 'unavailable') {
+        message.error(t('aiSuggest.providerUnavailable'))
+      } else if (mapped.code === 'disabled') {
+        message.warning(t('aiSuggest.disabled'))
+      } else if (mapped.code === 'rate') {
+        message.warning(t('aiSuggest.rateLimited'))
+      } else {
+        message.error(mapped.detail ?? t('createError'))
+      }
+    }
+  }
 
   /**
    * Submit flow:
@@ -84,16 +156,27 @@ export default function CreateItemPage() {
 
       setSubmitting(true)
 
-      // Step 1: Upload photos
-      const files = capturedPhotos.map((photo, i) =>
-        new File([photo.blob], `item-photo-${i + 1}.jpg`, { type: 'image/jpeg' })
-      )
-      const uploadResults = await mediaUpload.uploadMultiple(files)
-      const images = uploadResults.map((result, i) => ({
-        mediaUploadId: result.mediaUploadId,
-        isPrimary: i === 0,
-        sortOrder: i,
-      }))
+      let images: Array<{ mediaUploadId: string; isPrimary: boolean; sortOrder: number }>
+
+      if (uploadedMediaIds !== null) {
+        // Reuse already-uploaded ids from suggest step — skip re-upload
+        images = uploadedMediaIds.map((id, i) => ({
+          mediaUploadId: id,
+          isPrimary: i === 0,
+          sortOrder: i,
+        }))
+      } else {
+        // Step 1: Upload photos
+        const files = capturedPhotos.map((photo, i) =>
+          new File([photo.blob], `item-photo-${i + 1}.jpg`, { type: 'image/jpeg' })
+        )
+        const uploadResults = await mediaUpload.uploadMultiple(files)
+        images = uploadResults.map((result, i) => ({
+          mediaUploadId: result.mediaUploadId,
+          isPrimary: i === 0,
+          sortOrder: i,
+        }))
+      }
 
       // Step 2: Create based on mode and auction toggle
       const mediaPayload = images.map((img) => ({
@@ -147,9 +230,11 @@ export default function CreateItemPage() {
       }
 
       navigate(`${prefix}/items`)
-    } catch (err: any) {
-      if (err?.errorFields) return // form validation error
-      message.error(err?.response?.data?.detail ?? t('createError', 'Failed to create item'))
+    } catch (err: unknown) {
+      const errAny = err as Record<string, unknown> | undefined
+      if (errAny?.errorFields) return // form validation error
+      const responseData = (errAny?.response as Record<string, unknown> | undefined)?.data as Record<string, unknown> | undefined
+      message.error((responseData?.detail as string | undefined) ?? t('createError', 'Failed to create item'))
     } finally {
       setSubmitting(false)
     }
@@ -197,6 +282,46 @@ export default function CreateItemPage() {
                   optionFilterProp="label"
                 />
               </Form.Item>
+              {/* AI suggested category tip */}
+              {aiResult?.suggestedCategory && (
+                <div style={{ marginTop: -12, marginBottom: 16 }}>
+                  <Alert
+                    type="info"
+                    showIcon
+                    message={
+                      <Flex align="center" justify="space-between" gap={8}>
+                        <span>{t('aiSuggest.categoryTip', { name: aiResult.suggestedCategory.name })}</span>
+                        <Button
+                          size="small"
+                          onClick={() => {
+                            if (aiResult.suggestedCategory) {
+                              form.setFieldsValue({ categoryId: aiResult.suggestedCategory.id })
+                            }
+                          }}
+                        >
+                          {t('aiSuggest.applySuggestion', 'Apply suggestion')}
+                        </Button>
+                      </Flex>
+                    }
+                  />
+                </div>
+              )}
+              {/* Alternative category chips */}
+              {aiResult && aiResult.alternatives.length > 0 && (
+                <div style={{ marginTop: -8, marginBottom: 16 }}>
+                  <Flex gap={4} wrap="wrap">
+                    {aiResult.alternatives.map((alt) => (
+                      <Tag
+                        key={alt.id}
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => form.setFieldsValue({ categoryId: alt.id })}
+                      >
+                        {alt.name}
+                      </Tag>
+                    ))}
+                  </Flex>
+                </div>
+              )}
             </Col>
             <Col xs={24} md={8}>
               <Form.Item
@@ -229,6 +354,40 @@ export default function CreateItemPage() {
           style={{ marginBottom: 24, borderRadius: 12, border: '1px solid var(--color-border)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
           styles={{ header: { borderBottom: '0px solid var(--color-border)' } }}
         >
+          {/* AI suggest button */}
+          <div style={{ marginBottom: 12 }}>
+            <Tooltip title={t('aiSuggest.privacyHint')}>
+              <Button
+                type="default"
+                icon={<RobotOutlined />}
+                loading={suggest.isPending || mediaUpload.uploading}
+                disabled={!canSuggest}
+                onClick={handleSuggest}
+              >
+                {suggest.isPending || mediaUpload.uploading
+                  ? t('aiSuggest.buttonLoading', 'Generating suggestion...')
+                  : t('aiSuggest.button', 'AI Suggest Description')}
+              </Button>
+            </Tooltip>
+          </div>
+
+          {/* AI warnings */}
+          {aiResult && aiResult.warnings.length > 0 && (
+            <Alert
+              type="warning"
+              showIcon
+              message={t('aiSuggest.warningHeader', 'Notes from suggestion')}
+              description={
+                <ul style={{ margin: 0, paddingLeft: 16 }}>
+                  {aiResult.warnings.map((w) => (
+                    <li key={w}>{w}</li>
+                  ))}
+                </ul>
+              }
+              style={{ marginBottom: 12 }}
+            />
+          )}
+
           <Form.Item
             name="description"
             style={{ margin: 0 }}
@@ -333,7 +492,7 @@ export default function CreateItemPage() {
                     label={ta('startingPrice', 'Starting Price')}
                     rules={[{ required: true, message: ta('startingPriceRequired', 'Please enter starting price') }]}
                   >
-                    <InputNumber
+                    <InputNumber<number>
                       size="large"
                       min={0}
                       step={1000}
@@ -341,7 +500,7 @@ export default function CreateItemPage() {
                       addonAfter="VND"
                       placeholder="100,000"
                       formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
-                      parser={(v) => (v ?? '').replace(/\$\s?|(,*)/g, '') as any}
+                      parser={(v) => Number((v ?? '').replace(/\$\s?|(,*)/g, ''))}
                     />
                   </Form.Item>
                 </Col>
@@ -351,7 +510,7 @@ export default function CreateItemPage() {
                     label={ta('bidIncrement', 'Bid Increment')}
                     rules={[{ required: true, message: ta('bidIncrementRequired', 'Please enter bid increment') }]}
                   >
-                    <InputNumber
+                    <InputNumber<number>
                       size="large"
                       min={1000}
                       step={1000}
@@ -359,7 +518,7 @@ export default function CreateItemPage() {
                       addonAfter="VND"
                       placeholder="10,000"
                       formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
-                      parser={(v) => (v ?? '').replace(/\$\s?|(,*)/g, '') as any}
+                      parser={(v) => Number((v ?? '').replace(/\$\s?|(,*)/g, ''))}
                     />
                   </Form.Item>
                 </Col>
@@ -369,7 +528,7 @@ export default function CreateItemPage() {
                     label={ta('reservePrice', 'Reserve Price')}
                     help={ta('reservePriceHelp', 'Auction only succeeds if this price is met.')}
                   >
-                    <InputNumber
+                    <InputNumber<number>
                       size="large"
                       min={0}
                       step={1000}
@@ -377,7 +536,7 @@ export default function CreateItemPage() {
                       addonAfter="VND"
                       placeholder={ta('reservePricePlaceholder', 'Optional - minimum price to sell')}
                       formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
-                      parser={(v) => (v ?? '').replace(/\$\s?|(,*)/g, '') as any}
+                      parser={(v) => Number((v ?? '').replace(/\$\s?|(,*)/g, ''))}
                     />
                   </Form.Item>
                 </Col>
@@ -387,7 +546,7 @@ export default function CreateItemPage() {
                     label={ta('buyNowPrice', 'Buy Now Price')}
                     help={ta('buyNowPriceHelp', 'Allows buyers to purchase instantly and end the auction.')}
                   >
-                    <InputNumber
+                    <InputNumber<number>
                       size="large"
                       min={0}
                       step={1000}
@@ -395,7 +554,7 @@ export default function CreateItemPage() {
                       addonAfter="VND"
                       placeholder={ta('buyNowPricePlaceholder', 'Optional - instant purchase price')}
                       formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
-                      parser={(v) => (v ?? '').replace(/\$\s?|(,*)/g, '') as any}
+                      parser={(v) => Number((v ?? '').replace(/\$\s?|(,*)/g, ''))}
                     />
                   </Form.Item>
                 </Col>

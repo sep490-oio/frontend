@@ -283,7 +283,17 @@
     "originalItem": "Original Item Info",
     "condition": "Condition",
     "viewItem": "View item page",
-    "seller": "Seller"
+    "seller": "Seller",
+    "reinspection": {
+      "button": "Request re-inspection",
+      "confirmTitle": "Request re-inspection?",
+      "confirmBody": "Inspector will review your item again. Previous decision and evidence remain in audit log.",
+      "reasonPlaceholder": "Optional: describe why you are requesting re-inspection",
+      "successToast": "Re-inspection requested",
+      "errorToast": "Failed to request re-inspection",
+      "returningTag": "Returning to seller",
+      "returningTooltip": "Item is being returned to you. After receipt, please create a new inbound shipment."
+    }
   },
   "receive": {
     "packageTitle": "Package",

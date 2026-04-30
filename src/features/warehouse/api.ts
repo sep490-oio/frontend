@@ -774,3 +774,20 @@ export function useStoreWarehouseItem() {
     },
   })
 }
+
+export function useRequestWarehouseReinspection() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ warehouseItemId, reason }: { warehouseItemId: string; reason?: string }) => {
+      const { data } = await apiClient.post(
+        `/seller/warehouse/items/${warehouseItemId}/request-reinspection`,
+        { reason },
+      )
+      return data
+    },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: [...queryKeys.warehouse.itemsRoot(), 'seller', 'detail', variables.warehouseItemId] })
+      qc.invalidateQueries({ queryKey: [...queryKeys.warehouse.itemsRoot(), 'seller', 'list'] })
+    },
+  })
+}

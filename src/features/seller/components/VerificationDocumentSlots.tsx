@@ -271,6 +271,7 @@ export function VerificationDocumentSlots({
                 step={currentSlot.type as 'id_front' | 'id_back' | 'selfie'}
                 facingMode={currentSlot.type === 'selfie' ? 'user' : 'environment'}
                 overlayType={currentSlot.type === 'selfie' ? 'face' : 'document'}
+                qualityProfile={currentSlot.type === 'selfie' ? 'face' : 'strict_document'}
                 onCapture={(blob) => handleCaptured(blob)}
                 instruction={guide.tips[0]}
               />

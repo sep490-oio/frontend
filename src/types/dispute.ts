@@ -133,7 +133,19 @@ export interface CreateDisputeRequest {
   caseType: string
   title: string
   description: string
+  // RoleKey is added by BE handler from JWT/session, not by FE.
+  // FE sends domain/caseType filtered by allowedDomains/allowedCaseTypes from eligibility.
 }
+
+export interface DisputeEligibilityDto {
+  canReport: boolean
+  role: 'seller' | 'winner' | 'losing_bidder' | 'observer' | 'buyer' | 'owner' | null
+  allowedDomains: string[]
+  allowedCaseTypes: Record<string, string[]>
+  reason?: 'NotAuthenticated' | 'NotParticipant' | 'AuctionStillActive' | 'AuctionPreBidding' | 'OutOfScope'
+}
+
+export type DisputeTargetType = 'auction' | 'order' | 'payment' | 'shipment' | 'warehouse_item'
 
 // For detail endpoint
 export interface DisputeThreadDto {

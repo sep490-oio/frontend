@@ -192,14 +192,24 @@
   "disputeDescriptionMinLength": "Vui lòng nhập ít nhất 20 ký tự",
   "disputeCreated": "Đã tạo tranh chấp thành công",
   "disputeError": "Không thể tạo tranh chấp",
-  "disputeDomainOption": {
-    "order": "Đơn hàng",
-    "auction": "Phiên đấu giá",
-    "payment": "Thanh toán",
-    "shipment": "Vận chuyển",
-    "warehouse_item": "Hàng trong kho"
-  },
   "sellerOrders": "Đơn hàng người bán",
+  "sellerOrder": {
+    "paymentEscrow": {
+      "title": "Thanh toán & Escrow",
+      "buyerPaid": "Buyer đã thanh toán?",
+      "notYet": "Buyer chưa thanh toán đơn hàng này. Khi thanh toán hoàn tất, chi tiết escrow sẽ hiển thị tại đây.",
+      "escrowStatus": "Trạng thái escrow",
+      "holdReason": "Vì sao chưa rút được?",
+      "grossPaid": "Buyer trả (gross)",
+      "expectedNet": "Dự kiến seller nhận",
+      "actualReleased": "Đã release",
+      "platformFee": "Phí sàn 10%",
+      "inspectionFee": "Phí kiểm định 3%",
+      "expectedRelease": "Dự kiến release",
+      "decisionWindow": "Kết thúc decision window",
+      "disputeNotice": "Tiền đang bị giữ do có tranh chấp."
+    }
+  },
   "shipmentFeed": {
     "title": "Vận đơn của tôi",
     "kindDirect": "Trực tiếp",
@@ -208,23 +218,6 @@
     "viewShipment": "Xem vận đơn",
     "searchPlaceholder": "Tìm đơn hàng / mã vận đơn / tiêu đề",
     "empty": "Chưa có vận đơn"
-  },
-  "disputeCaseTypeOption": {
-    "item_not_as_described": "Sản phẩm không đúng mô tả",
-    "item_damaged": "Sản phẩm bị hư hỏng",
-    "item_not_received": "Chưa nhận được hàng",
-    "wrong_item": "Sai sản phẩm",
-    "other": "Khác",
-    "bid_manipulation": "Thao túng đấu giá",
-    "counterfeit": "Hàng giả",
-    "misrepresentation": "Thông tin sai lệch",
-    "unauthorized_charge": "Trừ tiền trái phép",
-    "double_charge": "Trừ tiền hai lần",
-    "refund_not_received": "Chưa nhận được hoàn tiền",
-    "lost_in_transit": "Thất lạc khi vận chuyển",
-    "damaged_in_transit": "Hư hỏng khi vận chuyển",
-    "delivery_issue": "Vấn đề giao hàng",
-    "item_missing": "Thiếu sản phẩm"
   },
   "escrow": {
     "title": "Dòng thời gian ký quỹ & thanh toán",

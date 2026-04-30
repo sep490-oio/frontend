@@ -35,8 +35,24 @@ export interface ApiError {
   metadata?: Record<string, unknown>
 }
 
+/**
+ * Mirrors backend `ErrorNotification` SignalR payload (camelCase JSON shape).
+ * See: OIO/src/core/OIO.Application/Context/AuctionContext/Hubs/IAuctionHubClient.cs
+ */
+export interface ErrorNotification {
+  code?: string
+  message?: string
+  errors?: Record<string, string[]> | string[] | null
+}
+
 export interface HubCommandResult<T> {
   success: boolean
   data?: T
-  error?: string
+  /**
+   * BE sends a structured `ErrorNotification` object. Kept as a union with
+   * `string` for backwards compatibility with any legacy paths that may still
+   * stringify the error before forwarding it to the client. Always normalize
+   * via `normalizeErrorMessage` before showing to users.
+   */
+  error?: ErrorNotification | string | null
 }

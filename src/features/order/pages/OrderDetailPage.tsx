@@ -33,6 +33,7 @@ import { ReturnEvidenceUploader } from '@/features/order/components/ReturnEviden
 import { ReturnQrDisplayModal } from '@/features/order/components/ReturnQrDisplayModal'
 import { OrderReturnEvidenceCategory } from '@/types/enums'
 import { CreateDisputeModal } from '@/features/order/components/CreateDisputeModal'
+import { useDisputeEligibility } from '@/features/dispute/hooks/useDisputeEligibility'
 import { ActiveDisputeBanner } from '@/components/dispute/ActiveDisputeBanner'
 // useAcknowledgeReceivedOutboundShipment removed — actions moved to shipment page
 // Tooltip removed — no longer used after shipment panel cleanup
@@ -49,6 +50,7 @@ import { useAddresses, useCurrentUser, useCurrentUserProfile } from '@/features/
 import type { UpdateOrderShippingRequest } from '@/types'
 import { SellerRatingForm } from '@/features/order/components/SellerRatingForm'
 import { OrderItemSummary } from '@/features/order/components/OrderItemSummary'
+import { SellerPaymentEscrowCard } from '@/features/order/components/SellerPaymentEscrowCard'
 import { useAuth } from '@/hooks/useAuth'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/queryClient'
@@ -84,7 +86,7 @@ export default function OrderDetailPage() {
   const prefix = useRoutePrefix()
 
   const { message } = App.useApp()
-  const { user: authUser } = useAuth()
+  const { user: authUser, isAuthenticated } = useAuth()
   const { data: currentUser } = useCurrentUser()
   const user = currentUser ?? authUser
   const { isMobile } = useBreakpoint()
@@ -126,6 +128,9 @@ export default function OrderDetailPage() {
 
   // Dispute modal state
   const [disputeModalOpen, setDisputeModalOpen] = useState(false)
+
+  const { data: eligibility } = useDisputeEligibility('order', id, { enabled: !!id && isAuthenticated })
+
   const confirmSellerOrder = useConfirmSellerOrder()
   const markPickedUp = useMarkOrderPickedUp()
   const markOnDelivering = useMarkOrderOnDelivering()
@@ -389,6 +394,14 @@ export default function OrderDetailPage() {
         onAcceptRelease={isBuyer && !hasActiveReturn ? handleAcceptRelease : undefined}
         onDispute={isBuyer && order.status !== OrderStatus.Completed ? handleOpenDispute : undefined}
       />
+
+      {/* Seller Payment & Escrow card — sourced from /seller/finance/escrow-ledger.
+          Surfaces gross paid, fees, expected/actual net payout, hold reason,
+          and dispute link so the seller can reason about money for this order
+          without leaving the page. */}
+      {isSeller && (
+        <SellerPaymentEscrowCard orderId={order.id} isMobile={isMobile} />
+      )}
 
       {/* Seller Rating Section — Displayed prominently after completion */}
       {isBuyer && order.status === OrderStatus.Completed && !reviewSubmitted && (
@@ -1521,13 +1534,16 @@ export default function OrderDetailPage() {
       </Modal>
 
       {/* Open Dispute Modal */}
-      <CreateDisputeModal
-        targetType="order"
-        targetId={order.id}
-        orderId={order.id}
-        open={disputeModalOpen}
-        onClose={() => setDisputeModalOpen(false)}
-      />
+      {eligibility?.canReport && (
+        <CreateDisputeModal
+          targetType="order"
+          targetId={order.id}
+          orderId={order.id}
+          open={disputeModalOpen}
+          onClose={() => setDisputeModalOpen(false)}
+          eligibility={eligibility}
+        />
+      )}
 
       {/* Return QR display — shown after MarkShipped success and reopenable
           via the persistent QR card on the return section above. */}

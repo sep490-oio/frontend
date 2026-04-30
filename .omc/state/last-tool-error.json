@@ -1,7 +1,0 @@
-{
-  "tool_name": "mcp__chrome-devtools__wait_for",
-  "tool_input_preview": "{\"text\":[\"Preview PDF\",\"preview\",\"Xem trước\",\"Điều khoản\"],\"timeout\":3000}",
-  "error": "Timed out after waiting 3000ms\nCause: Locator.waitHandle",
-  "timestamp": "2026-04-21T14:15:41.422Z",
-  "retry_count": 1
-}

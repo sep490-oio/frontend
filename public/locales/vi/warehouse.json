@@ -283,7 +283,17 @@
     "originalItem": "Thông tin sản phẩm gốc",
     "condition": "Tình trạng",
     "viewItem": "Xem trang sản phẩm",
-    "seller": "Người bán"
+    "seller": "Người bán",
+    "reinspection": {
+      "button": "Yêu cầu kiểm định lại",
+      "confirmTitle": "Yêu cầu kiểm định lại?",
+      "confirmBody": "Inspector sẽ review lại item của bạn. Reason cũ và evidence sẽ được giữ trong audit log.",
+      "reasonPlaceholder": "Tùy chọn: mô tả lý do yêu cầu kiểm định lại",
+      "successToast": "Đã gửi yêu cầu kiểm định lại",
+      "errorToast": "Gửi yêu cầu kiểm định lại thất bại",
+      "returningTag": "Đang trả về cho seller",
+      "returningTooltip": "Hàng đang được trả về cho bạn. Sau khi nhận hàng, vui lòng tạo inbound mới."
+    }
   },
   "receive": {
     "packageTitle": "Kiện hàng",

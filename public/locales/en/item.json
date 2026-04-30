@@ -55,6 +55,16 @@
   "viewAuction": "View Auction",
   "viewOrder": "View Order",
   "resubmit": "Resubmit",
+  "resubmitError": "Failed to resubmit item",
+  "myItems": {
+    "resubmit": "Resubmit for review",
+    "openWarehouse": "Open warehouse item",
+    "warehousePending": "Pending warehouse intake",
+    "requestReinspection": "Request re-inspection"
+  },
+  "error": {
+    "warehouseRejectedCannotOnlineResubmit": "This item is in warehouse inspection flow and cannot be submitted to online review."
+  },
   "statusTab": {
     "all": "All",
     "draft": "Draft",
@@ -121,5 +131,25 @@
   "loadingMore": "Loading more…",
   "loadMore": "Load more",
   "askLabel": "Ask a question",
-  "sending": "Sending…"
+  "sending": "Sending…",
+  "captureRequiredError": "Please capture at least 1 photo",
+  "draftSaved": "Draft saved",
+  "createWithAuctionSuccess": "Item and auction created and submitted",
+  "createAndSubmitSuccess": "Item created and submitted for review",
+  "basicInfo": "Basic Info",
+  "aiSuggest": {
+    "button": "AI Suggest Description",
+    "buttonLoading": "Generating suggestion...",
+    "needTitle": "Please enter a title first",
+    "needPhoto": "Please capture at least 1 photo",
+    "categoryTip": "Suggested category: {{name}}",
+    "applySuggestion": "Apply suggestion",
+    "warningHeader": "Notes from suggestion",
+    "providerUnavailable": "The suggestion service is unavailable. You can enter a description manually.",
+    "disabled": "The suggestion feature is currently disabled.",
+    "rateLimited": "You have requested too many suggestions, please wait a few seconds.",
+    "overwriteConfirmTitle": "Overwrite current description?",
+    "overwriteConfirmContent": "The current description will be replaced with the AI suggestion.",
+    "privacyHint": "Your photos and title will be sent to an AI service to generate a suggestion."
+  }
 }

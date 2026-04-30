@@ -85,6 +85,11 @@ export const queryKeys = {
     transactions: (params?: unknown) => [...queryKeys.wallet.all, 'transactions', params] as const,
     withdrawals: (params?: unknown) => [...queryKeys.wallet.all, 'withdrawals', params] as const,
   },
+  sellerFinance: {
+    all: ['sellerFinance'] as const,
+    overview: () => [...queryKeys.sellerFinance.all, 'overview'] as const,
+    escrowLedger: () => [...queryKeys.sellerFinance.all, 'escrowLedger'] as const,
+  },
   paymentMethods: {
     all: ['paymentMethods'] as const,
     list: () => [...queryKeys.paymentMethods.all, 'list'] as const,

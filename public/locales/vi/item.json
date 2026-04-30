@@ -55,6 +55,16 @@
   "viewAuction": "Xem phiên đấu giá",
   "viewOrder": "Xem đơn hàng",
   "resubmit": "Gửi lại",
+  "resubmitError": "Gửi lại sản phẩm thất bại",
+  "myItems": {
+    "resubmit": "Gửi lại để duyệt",
+    "openWarehouse": "Xem item tại kho",
+    "warehousePending": "Chờ tiếp nhận tại kho",
+    "requestReinspection": "Yêu cầu kiểm định lại"
+  },
+  "error": {
+    "warehouseRejectedCannotOnlineResubmit": "Item này đã thuộc flow kiểm định tại kho, không thể gửi sang review online."
+  },
   "statusTab": {
     "all": "Tất cả",
     "draft": "Nháp",
@@ -120,5 +130,25 @@
   "loadingMore": "Đang tải thêm…",
   "loadMore": "Xem thêm câu hỏi",
   "askLabel": "Đặt câu hỏi",
-  "sending": "Đang gửi…"
+  "sending": "Đang gửi…",
+  "captureRequiredError": "Vui lòng chụp ít nhất 1 ảnh",
+  "draftSaved": "Đã lưu nháp",
+  "createWithAuctionSuccess": "Sản phẩm và phiên đấu giá đã được tạo và gửi duyệt",
+  "createAndSubmitSuccess": "Sản phẩm đã được tạo và gửi duyệt",
+  "basicInfo": "Thông tin cơ bản",
+  "aiSuggest": {
+    "button": "Gợi ý mô tả với AI",
+    "buttonLoading": "Đang gợi ý...",
+    "needTitle": "Vui lòng nhập tiêu đề trước",
+    "needPhoto": "Vui lòng chụp ít nhất 1 ảnh",
+    "categoryTip": "Gợi ý danh mục: {{name}}",
+    "applySuggestion": "Áp dụng gợi ý",
+    "warningHeader": "Lưu ý từ gợi ý",
+    "providerUnavailable": "Hệ thống gợi ý đang gặp sự cố. Bạn có thể nhập mô tả thủ công.",
+    "disabled": "Tính năng gợi ý đang tắt.",
+    "rateLimited": "Bạn đã yêu cầu gợi ý quá nhiều, vui lòng đợi vài giây.",
+    "overwriteConfirmTitle": "Ghi đè mô tả hiện tại?",
+    "overwriteConfirmContent": "Mô tả hiện tại sẽ bị thay bằng gợi ý của AI.",
+    "privacyHint": "Ảnh và tiêu đề sẽ được gửi tới dịch vụ AI để tạo gợi ý."
+  }
 }

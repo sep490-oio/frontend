@@ -322,6 +322,8 @@
   "errorQualStartFuture": "Chọn thời gian bắt đầu đăng ký trong tương lai.",
   "errorExtensionRange": "Thời gian gia hạn phải từ 1 đến 30 phút.",
   "errorStartFuture": "Chọn thời gian bắt đầu trong tương lai.",
+  "autoBid.configured": "Đã thiết lập đấu giá tự động.",
+  "autoBid.configuredAndBidPlaced": "Đã thiết lập đấu giá tự động và đặt giá khởi/proxy giúp bạn.",
   "autoBid.pause": "Tạm dừng",
   "autoBid.resume": "Tiếp tục",
   "autoBid.budgetUsed": "Ngân sách đã dùng",
