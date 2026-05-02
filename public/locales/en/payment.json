@@ -269,5 +269,6 @@
       "inspectionInProgress": "Inspection in progress"
     },
     "disputeFrozen": "Frozen by dispute"
-  }
+  },
+  "finalPrice": "Final Price"
 }

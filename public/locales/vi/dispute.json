@@ -40,13 +40,13 @@
     "shipment": "Vận chuyển",
     "warehouse_item": "Vật phẩm kho"
   },
-  "domain": {
+  "domainSchema": {
     "auction_settlement": "Thỏa thuận đấu giá",
     "item_condition": "Tình trạng hàng",
     "payment": "Thanh toán",
     "shipping": "Vận chuyển"
   },
-  "caseType": {
+  "caseTypeSchema": {
     "winner_non_payment": "Người thắng không thanh toán",
     "seller_non_fulfillment": "Người bán không thực hiện",
     "auction_cancelled_after_commitment": "Hủy đấu giá sau cam kết",

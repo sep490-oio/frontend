@@ -150,23 +150,7 @@ export function AppLayout() {
         '--navbar-offset-desktop': '112px',
         '--navbar-offset-mobile': '96px'
       } as React.CSSProperties}>
-        <a
-          href="#main-content"
-          style={{
-            position: 'absolute',
-            left: '-9999px',
-            top: 'auto',
-            width: '1px',
-            height: '1px',
-            overflow: 'hidden',
-            zIndex: 9999,
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.position = 'static'
-            e.currentTarget.style.width = 'auto'
-            e.currentTarget.style.height = 'auto'
-          }}
-        >
+        <a href="#main-content" className="skip-link">
           {t('common:layout.skipToContent')}
         </a>
 

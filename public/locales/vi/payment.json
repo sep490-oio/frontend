@@ -269,5 +269,6 @@
       "inspectionInProgress": "Đang kiểm định"
     },
     "disputeFrozen": "Frozen by dispute"
-  }
+  },
+  "finalPrice": "Giá chốt"
 }

@@ -308,7 +308,7 @@ export default function MyItemsPage() {
                 </Tooltip>
               )}
               {canRequestReinspection && record.warehouseItemId && (
-                <Tooltip title={t('myItems.openWarehouse', 'Open warehouse item')}>
+                <Tooltip title={t('myItemsActions.openWarehouse', 'Open warehouse item')}>
                   <Button
                     type="text"
                     size="small"
@@ -318,7 +318,7 @@ export default function MyItemsPage() {
                 </Tooltip>
               )}
               {canRequestReinspection && !record.warehouseItemId && (
-                <Tag style={{ margin: 0 }}>{t('myItems.warehousePending', 'Pending warehouse intake')}</Tag>
+                <Tag style={{ margin: 0 }}>{t('myItemsActions.warehousePending', 'Pending warehouse intake')}</Tag>
               )}
               <Tooltip title={tc('action.delete', 'Delete')}>
                 <Button

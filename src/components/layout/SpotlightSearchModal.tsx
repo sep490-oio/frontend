@@ -35,7 +35,8 @@ import {
   ExceptionOutlined,
   TrophyOutlined,
   MonitorOutlined,
-  LockOutlined
+  LockOutlined,
+  LogoutOutlined
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -43,6 +44,7 @@ import { useAppSelector } from '@/app/store'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useTheme } from '@/hooks/useTheme'
+import { useAuth } from '@/hooks/useAuth'
 import { useSearchAuctions } from '@/features/auction/auctionApi.ts'
 import { AuctionStatus } from '@/types/enums'
 
@@ -97,6 +99,7 @@ export const SpotlightSearchModal: React.FC = () => {
   const { isMobile } = useBreakpoint()
   
   const { isDark } = useTheme()
+  const { logout: handleLogout } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -242,6 +245,12 @@ export const SpotlightSearchModal: React.FC = () => {
       title: t('common:spotlight.title.disputes', 'Disputes Center'),
       desc: t('common:spotlight.desc.disputes', 'Resolve issues and refunds'),
       keywords: ['disputes', 'tranh chấp', 'bồi hoàn', 'refund', 'khiếu nại', 'issue'], auth: ['user']
+    },
+    {
+      id: 'logout', path: 'action:logout', icon: <LogoutOutlined style={{ color: 'var(--color-danger)' }} />,
+      title: t('common:menu.logout', 'Sign Out'),
+      desc: t('common:spotlight.desc.logout', 'Log out of your account'),
+      keywords: ['logout', 'đăng xuất', 'sign out', 'thoát'], auth: ['user']
     },
 
     // --- SELLER ---
@@ -562,7 +571,9 @@ export const SpotlightSearchModal: React.FC = () => {
        const found = results.find(r => r.id === id)
        addSpotlightRecent(currentUserId, { id, type: 'dynamic', path, title: found?.title, desc: found?.desc, status: found?.status, price: found?.price, currency: found?.currency })
     }
-    if (path.startsWith('/auctions/') && path.length > '/auctions/'.length) {
+    if (path === 'action:logout') {
+      handleLogout().then(() => navigate('/'))
+    } else if (path.startsWith('/auctions/') && path.length > '/auctions/'.length) {
       window.location.href = path
     } else {
       navigate(path)

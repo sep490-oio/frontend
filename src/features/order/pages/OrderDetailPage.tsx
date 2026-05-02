@@ -108,6 +108,7 @@ export default function OrderDetailPage() {
   const confirmReturnReceived = useConfirmReturnReceived()
   const createReview = useCreateSellerReview()
   const [reviewSubmitted, setReviewSubmitted] = useState(false)
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
 
   // Reject return modal state
   const [rejectModalOpen, setRejectModalOpen] = useState(false)
@@ -220,6 +221,7 @@ export default function OrderDetailPage() {
       message.success(
         t('directShipment.confirmAndAccept', 'Inspected and Accept Item'),
       )
+      setIsReviewModalOpen(true)
     } catch (e) {
       message.error((e as Error)?.message ?? t('genericError', 'Something went wrong'))
     }
@@ -414,21 +416,53 @@ export default function OrderDetailPage() {
             boxShadow: 'var(--shadow-sm)'
           }}
         >
-          <SellerRatingForm
-            orderId={order.id}
-            loading={createReview.isPending}
-            onSubmit={async (data) => {
-              try {
-                await createReview.mutateAsync(data)
-                message.success(t('reviewSubmitted', 'Review submitted successfully'))
-                setReviewSubmitted(true)
-              } catch (err) {
-                message.error(t('reviewError', 'Failed to submit review'))
-              }
-            }}
-          />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <Typography.Text type="secondary">
+              {t('rateThisSellerDesc', 'Please take a moment to rate your experience with this seller.')}
+            </Typography.Text>
+            <div>
+              <Button type="primary" onClick={() => setIsReviewModalOpen(true)}>
+                {t('rateThisSeller', 'Rate this Seller')}
+              </Button>
+            </div>
+          </div>
         </Card>
       )}
+
+      {/* Review Modal */}
+      <Modal
+        open={isReviewModalOpen}
+        onCancel={() => setIsReviewModalOpen(false)}
+        footer={null}
+        destroyOnClose
+        centered
+        width={500}
+        closeIcon={null}
+        styles={{ 
+          body: { 
+            padding: 24,
+            borderRadius: 24,
+            border: '1px solid var(--color-border)',
+            boxShadow: 'var(--shadow-lg)',
+            background: 'var(--color-bg-card)'
+          } 
+        }}
+      >
+        <SellerRatingForm
+          orderId={order.id}
+          loading={createReview.isPending}
+          onSubmit={async (data) => {
+            try {
+              await createReview.mutateAsync(data)
+              message.success(t('reviewSubmitted', 'Review submitted successfully'))
+              setReviewSubmitted(true)
+              setIsReviewModalOpen(false)
+            } catch (err) {
+              message.error(t('reviewError', 'Failed to submit review'))
+            }
+          }}
+        />
+      </Modal>
 
       {/* Buyer-facing warehouse outbound shipment panel — compact summary.
           All actions now live on /me/outbound-shipments/:shipmentId. */}

@@ -37,8 +37,8 @@ const statCardStyle: React.CSSProperties = {
   background: 'var(--color-bg-container)',
   backdropFilter: 'var(--oio-blur)',
   WebkitBackdropFilter: 'var(--oio-blur)',
-  borderColor: 'var(--color-border)',
-  borderRadius: 16,
+  border: '1px solid var(--color-border)',
+  borderRadius: 24,
   height: '100%',
   boxShadow: 'var(--shadow-sm)',
 }
@@ -593,11 +593,11 @@ export default function SellerDashboardPage() {
         <Col xs={24} md={8}>
           <Card
             style={{
-              borderColor: 'var(--color-border)',
+              border: '1px solid var(--color-border)',
               background: 'var(--color-bg-container)',
               backdropFilter: 'var(--oio-blur)',
               WebkitBackdropFilter: 'var(--oio-blur)',
-              borderRadius: 16,
+              borderRadius: 24,
               boxShadow: 'var(--shadow-md)',
             }}
             styles={{ body: { padding: isMobile ? '14px 16px' : '16px 20px' } }}

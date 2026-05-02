@@ -48,8 +48,8 @@ const VARIANT_STYLES: Record<BadgeVariant, StatusBadgeStyle> = {
 
 const STATUS_VARIANT_MAP: Record<string, BadgeVariant> = {
   // Auction/Item active states
-  active: 'solid-success',
-  live: 'solid-danger',
+  active: 'soft-success',
+  live: 'soft-danger',
 
   // Scheduled/upcoming
   scheduled: 'soft-warning',
@@ -58,8 +58,8 @@ const STATUS_VARIANT_MAP: Record<string, BadgeVariant> = {
   // Success states
   sold: 'solid-success',
   completed: 'solid-success',
-  verified: 'solid-success',
-  approved: 'soft-success',
+  verified: 'soft-info',
+  approved: 'soft-info',
 
   // Archived/terminal — retained but no longer actionable (e.g. superseded terms docs).
   archived: 'soft-muted',
@@ -75,7 +75,7 @@ const STATUS_VARIANT_MAP: Record<string, BadgeVariant> = {
 
   // Warning states
   payment_defaulted: 'soft-danger',
-  in_auction: 'soft-info',
+  in_auction: 'soft-purple',
 
   // Error states
   ended: 'neutral',
@@ -151,7 +151,7 @@ const STATUS_VARIANT_MAP: Record<string, BadgeVariant> = {
   regular: 'solid-info',
   sealed: 'solid-purple',
 
-  // Item Conditions (Solid style to match Active)
+  // Item Conditions (Solid style to match original design)
   new: 'solid-success',
   like_new: 'solid-info',
   very_good: 'solid-warning',

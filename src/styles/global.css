@@ -569,6 +569,11 @@ h1.oio-serif,
 
 /* ─── Input Refinements ─── */
 
+.oio-table-wrapper table {
+  width: max-content !important;
+  min-width: 100% !important;
+}
+
 .ant-input,
 .ant-input-number,
 .ant-select-selector,

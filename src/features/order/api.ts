@@ -7,7 +7,7 @@ import type { OrderReturnEvidenceCategory } from '@/types/enums'
 
 // ── Queries ──────────────────────────────────────────────────────────
 
-export function useMyOrders(params?: PaginationParams & { status?: string }, options?: { refetchInterval?: number }) {
+export function useMyOrders(params?: PaginationParams & { status?: string; role?: string; escrowStatus?: string }, options?: { refetchInterval?: number }) {
   return useQuery({
     queryKey: queryKeys.orders.list(params),
     queryFn: async () => {

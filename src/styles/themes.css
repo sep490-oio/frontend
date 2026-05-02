@@ -175,13 +175,17 @@
   --color-accent-rgb: 2, 132, 199;
 
   --bg-unified-gradient: linear-gradient(180deg,
-      hsl(var(--custom-hue), calc(var(--custom-saturation) * 0.5), 4%) 0%,
-      hsl(var(--custom-hue), calc(var(--custom-saturation) * 0.4), 8%) 15%,
-      hsl(var(--custom-hue), calc(var(--custom-saturation) * 0.3), 15%) 35%,
-      hsl(var(--custom-hue), calc(var(--custom-saturation) * 0.2), 35%) 48%,
-      hsl(var(--custom-hue), calc(var(--custom-saturation) * 0.1), 65%) 52%,
-      hsl(var(--custom-hue), calc(var(--custom-saturation) * 0.05), 82%) 58%,
-      hsl(var(--custom-hue), calc(var(--custom-saturation) * 0.03), 92%) 72%,
+      /* Top half (Dark Mode): Reduced saturation and lightness for a more muted, darker look */
+      hsl(var(--custom-hue), calc(var(--custom-saturation) * 0.15), 3%) 0%,
+      hsl(var(--custom-hue), calc(var(--custom-saturation) * 0.12), 6%) 15%,
+      hsl(var(--custom-hue), calc(var(--custom-saturation) * 0.1), 10%) 35%,
+      hsl(var(--custom-hue), calc(var(--custom-saturation) * 0.08), 14%) 48%,
+      
+      /* Bottom half (Light Mode): Increased saturation and color presence, delaying the fade to white */
+      hsl(var(--custom-hue), var(--custom-saturation), 90%) 52%,
+      hsl(var(--custom-hue), var(--custom-saturation), 94%) 70%,
+      hsl(var(--custom-hue), calc(var(--custom-saturation) * 0.7), 97%) 85%,
+      hsl(var(--custom-hue), calc(var(--custom-saturation) * 0.3), 99%) 95%,
       #fff 100%);
 }
 
@@ -218,3 +222,31 @@
 [data-theme="dark"] .ant-slider-rail {
   background: rgba(255, 255, 255, 0.1) !important;
 }
+
+/* ─── Skip Link (A11y) ─── */
+.skip-link {
+  position: fixed;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-accent);
+  color: #fff;
+  padding: 12px 24px;
+  z-index: 10001;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 0 0 12px 12px;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: none;
+  color: #fff;
+}
+
+.skip-link:hover {
+  color: #fff;
+  background: var(--color-accent-hover);
+}

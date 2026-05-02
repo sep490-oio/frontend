@@ -40,13 +40,13 @@
     "shipment": "Shipment",
     "warehouse_item": "Warehouse Item"
   },
-  "domain": {
+  "domainSchema": {
     "auction_settlement": "Auction Settlement",
     "item_condition": "Item Condition",
     "payment": "Payment",
     "shipping": "Shipping"
   },
-  "caseType": {
+  "caseTypeSchema": {
     "winner_non_payment": "Winner Non-Payment",
     "seller_non_fulfillment": "Seller Non-Fulfillment",
     "auction_cancelled_after_commitment": "Auction Cancelled After Commitment",

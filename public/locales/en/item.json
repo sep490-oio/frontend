@@ -56,7 +56,7 @@
   "viewOrder": "View Order",
   "resubmit": "Resubmit",
   "resubmitError": "Failed to resubmit item",
-  "myItems": {
+  "myItemsActions": {
     "resubmit": "Resubmit for review",
     "openWarehouse": "Open warehouse item",
     "warehousePending": "Pending warehouse intake",

@@ -56,7 +56,7 @@
   "viewOrder": "Xem đơn hàng",
   "resubmit": "Gửi lại",
   "resubmitError": "Gửi lại sản phẩm thất bại",
-  "myItems": {
+  "myItemsActions": {
     "resubmit": "Gửi lại để duyệt",
     "openWarehouse": "Xem item tại kho",
     "warehousePending": "Chờ tiếp nhận tại kho",

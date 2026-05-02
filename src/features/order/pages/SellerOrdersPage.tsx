@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 import dayjs from 'dayjs'
 
 import {
-  useSellerDirectShipOrders,
+  useMyOrders,
   useConfirmSellerOrder,
   useMarkOrderPickedUp,
   useMarkOrderOnDelivering,
@@ -49,10 +49,11 @@ export default function SellerOrdersPage() {
   const [shipForm] = Form.useForm<SelfShipRequest>()
   const [bookForm] = Form.useForm<BookOutboundRequest>()
 
-  const { data, isLoading } = useSellerDirectShipOrders(
+  const { data, isLoading } = useMyOrders(
     { 
       pageNumber: page, 
       pageSize, 
+      role: 'seller',
       escrowStatus: escrowFilter === 'all' ? undefined : escrowFilter
     },
     { refetchInterval: 30000 },
