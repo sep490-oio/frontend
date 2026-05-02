@@ -121,9 +121,9 @@ export default function ShippingDetailsForm({ form }: ShippingDetailsFormProps) 
               onChange={(v) => {
                 setShippingMode(v)
                 if (v === 'platform') {
-                  form.setFieldsValue({ providerCode: 'ghn', externalTrackingNumber: null, externalCarrierName: null })
+                  form.setFieldsValue({ providerCode: 'ghn', externalTrackingNumber: undefined, externalCarrierName: undefined })
                 } else {
-                  form.setFieldsValue({ providerCode: null })
+                  form.setFieldsValue({ providerCode: undefined })
                 }
               }}
               options={SHIPPING_MODE_OPTIONS_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey, o.value === 'platform' ? 'GHN (Giao Hang Nhanh)' : 'Self-delivery / Other carrier') }))}
