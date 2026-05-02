@@ -156,7 +156,7 @@ export default function ItemDetailPage() {
         okText={tc('action.confirm', 'Confirm')}
         okButtonProps={{ loading: chooseShipping.isPending }}
         centered
-        width={isMobile ? '95vw' : 560}
+        width={isMobile ? '95vw' : 860}
       >
         <ShippingDetailsForm form={shippingForm} />
       </Modal>

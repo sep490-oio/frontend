@@ -541,8 +541,64 @@ export function mapSuggestError(err: unknown): { code: 'disabled' | 'unavailable
 export function useChooseItemShipping() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ itemId, senderName, senderPhone, senderAddress, senderWard, senderDistrict, senderProvince, weightGrams, insuranceValue }: { itemId: string; senderName: string; senderPhone: string; senderAddress: string; senderWard: string; senderDistrict: string; senderProvince: string; weightGrams: number; insuranceValue: number }) => {
-      await apiClient.post(`/items/${itemId}/shipping`, { senderName, senderPhone, senderAddress, senderWard, senderDistrict, senderProvince, weightGrams, insuranceValue })
+    mutationFn: async ({
+      itemId,
+      senderName,
+      senderPhone,
+      senderAddress,
+      senderWard,
+      senderDistrict,
+      senderProvince,
+      senderMetadata,
+      weightGrams,
+      insuranceValue,
+      providerCode,
+      lengthCm,
+      widthCm,
+      heightCm,
+      externalTrackingNumber,
+      externalCarrierName,
+      notes,
+    }: {
+      itemId: string
+      senderName: string
+      senderPhone: string
+      senderAddress: string
+      senderWard: string
+      senderDistrict: string
+      senderProvince: string
+      senderMetadata?: any
+      weightGrams: number
+      insuranceValue: number
+      providerCode?: string
+      lengthCm?: number
+      widthCm?: number
+      heightCm?: number
+      externalTrackingNumber?: string
+      externalCarrierName?: string
+      notes?: string
+    }) => {
+      await apiClient.post(`/items/${itemId}/shipping`, {
+        senderName,
+        senderPhone,
+        senderAddress,
+        senderWard,
+        senderDistrict,
+        senderProvince,
+        senderCarrierAddressDataJson: senderMetadata ? JSON.stringify({
+          district_id: senderMetadata.id,
+          ward_code: String(senderMetadata.code)
+        }) : null,
+        weightGrams,
+        insuranceValue,
+        providerCode: providerCode ?? null,
+        lengthCm: lengthCm ?? undefined,
+        widthCm: widthCm ?? undefined,
+        heightCm: heightCm ?? undefined,
+        externalTrackingNumber: externalTrackingNumber ?? null,
+        externalCarrierName: externalCarrierName ?? undefined,
+        notes: notes ?? undefined,
+      })
     },
     onSuccess: (_, { itemId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.items.detail(itemId) })
