@@ -3,6 +3,7 @@ import { Spin, Flex } from 'antd'
 import { useAuth } from '@/hooks/useAuth'
 import { useMySellerProfile } from '@/features/seller/api'
 import { SellerProfileStatus } from '@/types/enums'
+import { buildLoginRedirect } from '@/utils/returnTo'
 
 export function SellerGuard() {
   const { isAuthenticated } = useAuth()
@@ -10,7 +11,12 @@ export function SellerGuard() {
   const location = useLocation()
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />
+    return (
+      <Navigate
+        to={buildLoginRedirect(location.pathname, location.search, location.hash)}
+        replace
+      />
+    )
   }
 
   if (isLoading) {
