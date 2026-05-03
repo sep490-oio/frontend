@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, Space, Modal, Flex, Tooltip, Input, message, DatePicker, Form, Card, List, Typography } from 'antd'
+import { Button, Space, Modal, Flex, Tooltip, Input, message, Form, Card, List, Typography } from 'antd'
 import {
   PlusOutlined,
   EditOutlined,
@@ -25,7 +25,6 @@ import {
   useOfferRunnerUp,
   useCloseAuction,
 } from '@/features/auction/auctionApi'
-import { getServerDayjs } from '@/utils/time'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { PriceDisplay } from '@/components/ui/PriceDisplay'
 import { CountdownTimer } from '@/components/ui/CountdownTimer'
@@ -75,6 +74,7 @@ export default function MyAuctionsPage() {
   const [timingModalOpen, setTimingModalOpen] = useState(false)
   const [timingAuctionId, setTimingAuctionId] = useState<string | null>(null)
   const [modalForm] = Form.useForm()
+  const [relistModalForm] = Form.useForm()
   const [submitPendingTimingAuctionId, setSubmitPendingTimingAuctionId] = useState<string | null>(null)
 
   const params = {
@@ -195,48 +195,39 @@ export default function MyAuctionsPage() {
     }
   }
 
-  /* ── Relist modal state ── */
   const [relistModalOpen, setRelistModalOpen] = useState(false)
   const [relistAuctionId, setRelistAuctionId] = useState<string | null>(null)
-  const [relistForm, setRelistForm] = useState<{
-    qualificationStartAt: dayjs.Dayjs | null
-    qualificationEndAt: dayjs.Dayjs | null
-    startAt: dayjs.Dayjs | null
-    endAt: dayjs.Dayjs | null
-  }>({ qualificationStartAt: null, qualificationEndAt: null, startAt: null, endAt: null })
 
   const openRelistModal = (id: string) => {
     setRelistAuctionId(id)
-    setRelistForm({ qualificationStartAt: null, qualificationEndAt: null, startAt: null, endAt: null })
+    relistModalForm.resetFields()
     setRelistModalOpen(true)
   }
 
-  const handleRelistConfirm = () => {
-    if (!relistAuctionId || !relistForm.qualificationStartAt || !relistForm.qualificationEndAt || !relistForm.startAt || !relistForm.endAt) return
-    if (relistForm.qualificationEndAt.isAfter(relistForm.startAt)) {
-      msgApi.error(t('relistValidation', 'Thời gian đăng ký phải trước thời gian đấu giá'))
-      return
-    }
-    if (relistForm.qualificationStartAt.isBefore(getServerDayjs().subtract(1, 'minute'))) {
-      msgApi.error(t('relistStartFuture', 'Thời gian bắt đầu phải ở tương lai'))
-      return
-    }
-    relistAuction.mutate(
-      {
-        auctionId: relistAuctionId,
-        qualificationStartAt: relistForm.qualificationStartAt.toISOString(),
-        qualificationEndAt: relistForm.qualificationEndAt.toISOString(),
-        startAt: relistForm.startAt.toISOString(),
-        endAt: relistForm.endAt.toISOString(),
-      },
-      {
-        onSuccess: () => {
-          msgApi.success(t('relistSuccess', 'Auction relisted'))
-          setRelistModalOpen(false)
-          setRelistAuctionId(null)
+  const handleRelistConfirm = async () => {
+    if (!relistAuctionId) return
+    try {
+      const values = await relistModalForm.validateFields()
+      
+      relistAuction.mutate(
+        {
+          auctionId: relistAuctionId,
+          qualificationStartAt: dayjs(values.qualificationStartAt).toISOString(),
+          qualificationEndAt: dayjs(values.qualificationEndAt).toISOString(),
+          startAt: dayjs(values.startTime).toISOString(),
+          endAt: dayjs(values.endTime).toISOString(),
         },
-      },
-    )
+        {
+          onSuccess: () => {
+            msgApi.success(t('relistSuccess', 'Auction relisted'))
+            setRelistModalOpen(false)
+            setRelistAuctionId(null)
+          },
+        },
+      )
+    } catch {
+      // Validation error
+    }
   }
 
   const handleOfferRunnerUp = (id: string) => {
@@ -333,7 +324,7 @@ export default function MyAuctionsPage() {
             <Tooltip title={t('viewDetail', 'View Detail')}>
               <Button type="text" size="small" icon={<EyeOutlined />} onClick={() => navigate(`/auctions/${record.id}`)} />
             </Tooltip>
-            {s === 'failed' && (
+            {s === 'failed' && record.itemStatus !== 'in_auction' && record.itemStatus !== 'sold' && (
               <Tooltip title={t('relist', 'Relist')}>
                 <Button type="text" size="small" icon={<ReloadOutlined />} loading={relistAuction.isPending} onClick={() => openRelistModal(record.id)} />
               </Tooltip>
@@ -355,9 +346,11 @@ export default function MyAuctionsPage() {
             <Tooltip title={t('dashboard', 'Dashboard')}>
               <Button type="text" size="small" icon={<DashboardOutlined />} onClick={() => navigate(`/seller/auctions/${record.id}/dashboard`)} />
             </Tooltip>
-            <Tooltip title={t('relist', 'Relist')}>
-              <Button type="text" size="small" icon={<ReloadOutlined />} loading={relistAuction.isPending} onClick={() => openRelistModal(record.id)} />
-            </Tooltip>
+            {record.itemStatus !== 'in_auction' && record.itemStatus !== 'sold' && (
+              <Tooltip title={t('relist', 'Relist')}>
+                <Button type="text" size="small" icon={<ReloadOutlined />} loading={relistAuction.isPending} onClick={() => openRelistModal(record.id)} />
+              </Tooltip>
+            )}
             {record.canOfferRunnerUp !== false ? (
               <Tooltip title={t('offerRunnerUp', 'Offer Runner-up')}>
                 <Button type="text" size="small" icon={<UserSwitchOutlined />} loading={offerRunnerUp.isPending} onClick={() => handleOfferRunnerUp(record.id)} />
@@ -671,7 +664,7 @@ export default function MyAuctionsPage() {
         }}
         cancelButtonProps={{ style: { borderRadius: 8 } }}
         centered
-        width={isMobile ? '100%' : 720}
+        width={isMobile ? '100%' : isTablet ? 800 : 1000}
         style={{ borderRadius: 24 }}
       >
         <Form form={modalForm} layout="vertical">
@@ -679,7 +672,6 @@ export default function MyAuctionsPage() {
         </Form>
       </Modal>
 
-      {/* Relist modal */}
       <Modal
         title={t('relistAuction', 'Đăng lại phiên đấu giá')}
         open={relistModalOpen}
@@ -688,31 +680,16 @@ export default function MyAuctionsPage() {
         okText={t('confirmRelist', 'Đăng lại')}
         okButtonProps={{
           loading: relistAuction.isPending,
-          disabled: !relistForm.qualificationStartAt || !relistForm.qualificationEndAt || !relistForm.startAt || !relistForm.endAt,
-          style: { background: 'var(--color-accent)', borderColor: 'var(--color-accent)' },
+          style: { background: 'var(--color-accent)', borderColor: 'var(--color-accent)', borderRadius: 8 },
         }}
+        cancelButtonProps={{ style: { borderRadius: 8 } }}
         centered
-        width={isMobile ? '100%' : 480}
+        width={isMobile ? '100%' : isTablet ? 800 : 1000}
+        style={{ borderRadius: 24 }}
       >
-        <Flex vertical gap={16} style={{ marginTop: 16 }}>
-          {[
-            { label: t('relist.qualificationStart'), key: 'qualificationStartAt' as const, placeholder: t('relist.qualificationStartPlaceholder') },
-            { label: t('relist.qualificationEnd'), key: 'qualificationEndAt' as const, placeholder: t('relist.qualificationEndPlaceholder') },
-            { label: t('relist.auctionStart'), key: 'startAt' as const, placeholder: t('relist.auctionStartPlaceholder') },
-            { label: t('relist.auctionEnd'), key: 'endAt' as const, placeholder: t('relist.auctionEndPlaceholder') },
-          ].map(({ label, key, placeholder }) => (
-            <div key={key}>
-              <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13 }}>{label}</label>
-              <DatePicker
-                showTime
-                style={{ width: '100%' }}
-                value={relistForm[key]}
-                onChange={(v) => setRelistForm((prev) => ({ ...prev, [key]: v }))}
-                placeholder={placeholder}
-              />
-            </div>
-          ))}
-        </Flex>
+        <Form form={relistModalForm} layout="vertical">
+          <AuctionTimingSection form={relistModalForm} itemApproved={true} />
+        </Form>
       </Modal>
     </div>
   )

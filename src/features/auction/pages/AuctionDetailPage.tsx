@@ -15,7 +15,6 @@ import {
   Breadcrumb,
   Input,
   DatePicker,
-  Flex,
 } from 'antd'
 import dayjs from 'dayjs'
 import { ArrowLeftOutlined, FlagOutlined } from '@ant-design/icons'
@@ -69,6 +68,7 @@ import { SellerActionBar } from '@/features/auction/components/SellerActionBar'
 import { CreateDisputeModal } from '@/features/order/components/CreateDisputeModal'
 import { addSpotlightRecent } from '@/components/layout/SpotlightSearchModal'
 import { useDisputeEligibility } from '@/features/dispute/hooks/useDisputeEligibility'
+import { AuctionTimingSection } from '@/features/auction/components/AuctionTimingSection'
 
 // ── Qualification state helper ──────────────────────────────────────
 
@@ -239,6 +239,7 @@ export default function AuctionDetailPage() {
   const adminRemoveItemMutation = useAdminRemoveItem()
   const setAuctionTimingMutation = useSetAuctionTiming()
   const [shippingForm] = Form.useForm<ShippingDetailsFormValues>()
+  const [relistModalForm] = Form.useForm()
 
   const [bidAmount, setBidAmount] = useState<number | null>(null)
   const [autoBidModalOpen, setAutoBidModalOpen] = useState(false)
@@ -260,12 +261,6 @@ export default function AuctionDetailPage() {
   const [depositModalOpen, setDepositModalOpen] = useState(false)
   const [shippingModalOpen, setShippingModalOpen] = useState(false)
   const [relistModalOpen, setRelistModalOpen] = useState(false)
-  const [relistForm, setRelistForm] = useState<{
-    qualificationStartAt: dayjs.Dayjs | null
-    qualificationEndAt: dayjs.Dayjs | null
-    startAt: dayjs.Dayjs | null
-    endAt: dayjs.Dayjs | null
-  }>({ qualificationStartAt: null, qualificationEndAt: null, startAt: null, endAt: null })
   const [reportModalOpen, setReportModalOpen] = useState(false)
   const [cancelModalOpen, setCancelModalOpen] = useState(false)
   const [chartModalOpen, setChartModalOpen] = useState(false)
@@ -1009,6 +1004,24 @@ export default function AuctionDetailPage() {
     }
   }
 
+  const handleRelistConfirm = async () => {
+    try {
+      const values = await relistModalForm.validateFields()
+      const result = await relistAuction.mutateAsync({
+        auctionId: id ?? '',
+        qualificationStartAt: dayjs(values.qualificationStartAt).toISOString(),
+        qualificationEndAt: dayjs(values.qualificationEndAt).toISOString(),
+        startAt: dayjs(values.startTime).toISOString(),
+        endAt: dayjs(values.endTime).toISOString(),
+      })
+      message.success(t('relistSuccess', 'Auction relisted'))
+      setRelistModalOpen(false)
+      if (result.id) navigate(`/auctions/${result.id}`)
+    } catch {
+      // Validation failed or mutation error
+    }
+  }
+
   // ── Loading / empty states ──────────────────────────────────────
 
   if (isPageLoading) {
@@ -1121,7 +1134,7 @@ export default function AuctionDetailPage() {
           onCancel={handleSellerCancel}
           onConfigureShipping={() => { shippingForm.resetFields(); setShippingModalOpen(true) }}
           onOfferRunnerUp={() => offerRunnerUp.mutateAsync(id!).then(() => message.success(t('offerRunnerUpSuccess', 'Offer sent')))}
-          onRelist={() => { setRelistForm({ qualificationStartAt: null, qualificationEndAt: null, startAt: null, endAt: null }); setRelistModalOpen(true) }}
+          onRelist={() => { relistModalForm.resetFields(); setRelistModalOpen(true) }}
           onClose={() => closeAuctionMutation.mutateAsync(id!).then(() => message.success(t('closeAuctionSuccess', 'Auction closed')))}
           canOfferRunnerUp={auction?.canOfferRunnerUp}
           isSubmitLoading={submitAuctionMutation.isPending}
@@ -1505,82 +1518,20 @@ export default function AuctionDetailPage() {
         title={t('relistAuction', 'Relist Auction')}
         open={relistModalOpen}
         onCancel={() => setRelistModalOpen(false)}
-        onOk={async () => {
-          if (!relistForm.qualificationStartAt || !relistForm.qualificationEndAt || !relistForm.startAt || !relistForm.endAt) return
-          try {
-            const result = await relistAuction.mutateAsync({
-              auctionId: id ?? '',
-              qualificationStartAt: relistForm.qualificationStartAt.toISOString(),
-              qualificationEndAt: relistForm.qualificationEndAt.toISOString(),
-              startAt: relistForm.startAt.toISOString(),
-              endAt: relistForm.endAt.toISOString(),
-            })
-            message.success(t('relistSuccess', 'Auction relisted'))
-            setRelistModalOpen(false)
-            if (result.id) navigate(`/auctions/${result.id}`)
-          } catch {
-            message.error(t('relistError', 'Failed to relist auction'))
-          }
-        }}
+        onOk={handleRelistConfirm}
         okText={t('confirmRelist', 'Relist')}
         okButtonProps={{
           loading: relistAuction.isPending,
-          disabled: !relistForm.qualificationStartAt || !relistForm.qualificationEndAt || !relistForm.startAt || !relistForm.endAt,
-          style: { background: 'var(--color-accent)', borderColor: 'var(--color-accent)' },
+          style: { background: 'var(--color-accent)', borderColor: 'var(--color-accent)', borderRadius: 8 },
         }}
+        cancelButtonProps={{ style: { borderRadius: 8 } }}
         centered
-        width={480}
+        width={isMobile ? '100%' : isTablet ? 800 : 1000}
+        style={{ borderRadius: 24 }}
       >
-        <Flex vertical gap={16} style={{ marginTop: 16 }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13 }}>
-              {t('qualificationStart', 'Qualification Start')} *
-            </label>
-            <DatePicker
-              showTime
-              style={{ width: '100%' }}
-              value={relistForm.qualificationStartAt}
-              onChange={(v) => setRelistForm((prev) => ({ ...prev, qualificationStartAt: v }))}
-              placeholder={t('selectStartTime', 'Select start time')}
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13 }}>
-              {t('qualificationEnd', 'Qualification End')} *
-            </label>
-            <DatePicker
-              showTime
-              style={{ width: '100%' }}
-              value={relistForm.qualificationEndAt}
-              onChange={(v) => setRelistForm((prev) => ({ ...prev, qualificationEndAt: v }))}
-              placeholder={t('selectEndTime', 'Select end time')}
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13 }}>
-              {t('auctionStart', 'Auction Start')} *
-            </label>
-            <DatePicker
-              showTime
-              style={{ width: '100%' }}
-              value={relistForm.startAt}
-              onChange={(v) => setRelistForm((prev) => ({ ...prev, startAt: v }))}
-              placeholder={t('selectStartTime', 'Select start time')}
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13 }}>
-              {t('auctionEnd', 'Auction End')} *
-            </label>
-            <DatePicker
-              showTime
-              style={{ width: '100%' }}
-              value={relistForm.endAt}
-              onChange={(v) => setRelistForm((prev) => ({ ...prev, endAt: v }))}
-              placeholder={t('selectEndTime', 'Select end time')}
-            />
-          </div>
-        </Flex>
+        <Form form={relistModalForm} layout="vertical">
+          <AuctionTimingSection form={relistModalForm} itemApproved={true} />
+        </Form>
       </Modal>
 
       {/* Report Auction Modal */}

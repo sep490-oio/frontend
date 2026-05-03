@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
 import {
@@ -50,6 +50,7 @@ import { useAddresses, useCurrentUser, useCurrentUserProfile } from '@/features/
 import type { UpdateOrderShippingRequest } from '@/types'
 import { SellerRatingForm } from '@/features/order/components/SellerRatingForm'
 import { OrderItemSummary } from '@/features/order/components/OrderItemSummary'
+import { useAuctionDetail } from '@/features/auction/auctionApi'
 import { SellerPaymentEscrowCard } from '@/features/order/components/SellerPaymentEscrowCard'
 import { useAuth } from '@/hooks/useAuth'
 import { useQueryClient } from '@tanstack/react-query'
@@ -92,6 +93,9 @@ export default function OrderDetailPage() {
   const { isMobile } = useBreakpoint()
   const qc = useQueryClient()
   const { data: order, isLoading, error } = useOrderById(id)
+  const { data: auctionData } = useAuctionDetail(order?.auctionId || '', user?.id, {
+    enabled: !!order?.auctionId && !!user?.id,
+  })
 
   // Poll order detail when status is 'paid' — auto-ship runs async after payment
   useEffect(() => {
@@ -167,6 +171,17 @@ export default function OrderDetailPage() {
       navigate(`/seller/orders/${order.id}`, { replace: true })
     }
   }, [order, user, routeIsSeller, routeIsBuyer, ownsAsSeller, ownsAsBuyer, navigate])
+
+  const depositApplied = useMemo(() => {
+    if (order?.depositAppliedAmount != null && order.depositAppliedAmount > 0) {
+      return order.depositAppliedAmount
+    }
+    const isWinner = auctionData?.auction?.currentWinnerId === user?.id
+    if (isWinner && auctionData?.currentUserParticipant?.depositAmount) {
+      return auctionData.currentUserParticipant.depositAmount
+    }
+    return 0
+  }, [order?.depositAppliedAmount, auctionData, user?.id])
 
   if (isLoading) {
     return (
@@ -390,7 +405,7 @@ export default function OrderDetailPage() {
 
       {/* Escrow timeline */}
       <EscrowTimeline
-        order={order}
+        order={{ ...order, depositAppliedAmount: depositApplied }}
         isSeller={isSeller}
         hideBuyerDecisionActions={hideLegacyDelivered || hasActiveReturn}
         onAcceptRelease={isBuyer && !hasActiveReturn ? handleAcceptRelease : undefined}
@@ -941,17 +956,17 @@ export default function OrderDetailPage() {
           <Descriptions.Item label={t('totalAmount', 'Total Amount')}>
             <PriceDisplay amount={order.totalAmount} currency={order.currency} size="small" />
           </Descriptions.Item>
-          {order.depositAppliedAmount != null && order.depositAppliedAmount > 0 && (
+          {depositApplied > 0 && (
             <>
               <Descriptions.Item label={t('depositApplied', 'Deposit applied')}>
                 <Typography.Text type="success">
-                  −{formatCurrency(order.depositAppliedAmount, order.currency)}
+                  −{formatCurrency(depositApplied, order.currency)}
                 </Typography.Text>
               </Descriptions.Item>
               <Descriptions.Item label={t('amountDue', 'Amount due')}>
                 <Typography.Text strong>
                   {formatCurrency(
-                    Math.max(0, (order.totalAmount ?? 0) - (order.depositAppliedAmount ?? 0)),
+                    Math.max(0, (order.totalAmount ?? 0) - depositApplied),
                     order.currency,
                   )}
                 </Typography.Text>

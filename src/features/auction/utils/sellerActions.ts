@@ -13,13 +13,14 @@ interface GetSellerActionsParams {
   status: string
   verifyByPlatform?: boolean
   canOfferRunnerUp?: boolean
+  itemStatus?: string
 }
 
 /**
  * Single source of truth for which seller actions are available per auction status.
  * Used by both MyAuctionsPage and AuctionDetailPage.
  */
-export function getSellerActions({ status, canOfferRunnerUp }: GetSellerActionsParams): SellerAction[] {
+export function getSellerActions({ status, canOfferRunnerUp, itemStatus }: GetSellerActionsParams): SellerAction[] {
   const s = status?.toLowerCase()
   const actions: SellerAction[] = []
 
@@ -49,6 +50,14 @@ export function getSellerActions({ status, canOfferRunnerUp }: GetSellerActionsP
     case 'failed':
       actions.push('relist')
       break
+  }
+
+  // Filter out relist if the item is already in another auction or sold
+  if (actions.includes('relist') && itemStatus) {
+    const is = itemStatus.toLowerCase()
+    if (is === 'in_auction' || is === 'sold') {
+      return actions.filter((a) => a !== 'relist')
+    }
   }
 
   return actions

@@ -245,7 +245,8 @@
   },
   "bidStatusLeading": "Đang dẫn đầu",
   "bidStatusLost": "Đã thua",
-  "relist": {
+  "relist": "Đăng lại",
+  "relistFields": {
     "qualificationStart": "Bắt đầu đăng ký *",
     "qualificationStartPlaceholder": "Chọn thời gian bắt đầu đăng ký",
     "qualificationEnd": "Kết thúc đăng ký *",

@@ -856,394 +856,404 @@ export function AuctionTimingSection({ form, itemApproved = true }: AuctionTimin
         }}
       >
         {/* Section title */}
-        <Flex align="center" gap={8} style={{ marginBottom: 12 }}>
+        <Flex align="center" gap={8} style={{ marginBottom: 4 }}>
           <ClockCircleOutlined style={{ color: 'var(--color-accent)', fontSize: 16, flexShrink: 0 }} />
           <Text className="oio-serif" style={{ fontWeight: 600, fontSize: 18, color: 'var(--color-text-primary)' }}>
             {t('scheduleSectionTitle', 'Schedule')}
           </Text>
         </Flex>
-        <Text type="secondary" style={{ display: 'block', fontSize: 13, marginBottom: 20 }}>
+        <Text type="secondary" style={{ display: 'block', fontSize: 13, marginBottom: 24 }}>
           {t('scheduleSectionSubtitle', 'Set qualification and bidding windows.')}
         </Text>
 
-        {/* ── Simple mode ────────────────────────────────────────────────── */}
-        {!state.advancedOverride && (
-          <>
-            {/* Validation error alert */}
-            {validationErrors.length > 0 && (
-              <Alert
-                type="error"
-                showIcon
-                style={{ marginBottom: 14, borderRadius: 8 }}
-                message={t('timingValidationError', 'Please fix the following:')}
-                description={
-                  <ul style={{ margin: 0, paddingLeft: 16, fontSize: 13 }}>
-                    {validationErrors.map((err) => (
-                      <li key={err}>{err}</li>
-                    ))}
-                  </ul>
-                }
-              />
-            )}
-
-            {/* 1. When should qualification open? */}
-            <Form.Item
-              label={
-                <Text className="oio-label" style={{ marginBottom: 4, display: 'block' }}>
-                  {t('whenQualOpen', 'When should qualification open?')}
-                </Text>
-              }
-            >
-              <Radio.Group
-                value={state.qualificationOpenMode}
-                onChange={(e) =>
-                  patch({
-                    qualificationOpenMode: e.target.value as QualOpenMode,
-                    scheduledQualificationStart: null,
-                  })
-                }
-                style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
-              >
-                <Radio value="now" style={{ fontSize: 13 }}>
-                  {t('qualOpenNow', 'Open qualification now')}
-                </Radio>
-                <Radio value="later" style={{ fontSize: 13 }}>
-                  {t('qualOpenLater', 'Schedule qualification for later')}
-                </Radio>
-              </Radio.Group>
-
-              {state.qualificationOpenMode === 'later' && (
-                <div style={{ width: '100%', marginTop: 10 }}>
-                  <MobileDateTimePicker
-                    value={state.scheduledQualificationStart}
-                    onChange={(val) => patch({ scheduledQualificationStart: val })}
-                    placeholder={t('scheduledQualStartPlaceholder', 'Pick a date and time')}
-                    disabledDate={disabledDate}
-                    isMobile={isMobile}
-                    label={t('whenQualOpen', 'When should qualification open?')}
+        <Flex gap={32} vertical={isMobile} align="flex-start">
+          {/* LEFT COLUMN: Settings */}
+          <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
+            {/* ── Simple mode ────────────────────────────────────────────────── */}
+            {!state.advancedOverride && (
+              <>
+                {/* Validation error alert */}
+                {validationErrors.length > 0 && (
+                  <Alert
+                    type="error"
+                    showIcon
+                    style={{ marginBottom: 14, borderRadius: 8 }}
+                    message={t('timingValidationError', 'Please fix the following:')}
+                    description={
+                      <ul style={{ margin: 0, paddingLeft: 16, fontSize: 13 }}>
+                        {validationErrors.map((err) => (
+                          <li key={err}>{err}</li>
+                        ))}
+                      </ul>
+                    }
                   />
-                </div>
-              )}
-            </Form.Item>
+                )}
 
-            {/* 2. Qualification phase lasts */}
-            <Form.Item
-              label={
-                <Text className="oio-label" style={{ marginBottom: 4, display: 'block' }}>
-                  {t('qualDurationLabel', 'Qualification phase lasts')}
-                </Text>
-              }
-            >
-              <PresetButtons
-                options={QUAL_DURATION_OPTIONS}
-                value={state.qualificationDurationPreset}
-                onChange={(v) => patch({ qualificationDurationPreset: v })}
-                customLabel={t('durationCustom', 'Custom…')}
-              />
-              {state.qualificationDurationPreset === 'custom' && (
-                <CustomDurationPicker
-                  value={state.qualificationDurationCustom}
-                  onChange={(v) => patch({ qualificationDurationCustom: v })}
-                  placeholder="60"
-                />
-              )}
-            </Form.Item>
-
-            {/* 3. Bidding starts after qualification closes */}
-            <Form.Item
-              label={
-                <Text className="oio-label" style={{ marginBottom: 4, display: 'block' }}>
-                  {t('biddingGapLabel', 'Bidding starts after qualification closes')}
-                </Text>
-              }
-              help={
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  {t(
-                    'biddingGapHelp',
-                    'Gap between qualification closing and bidding opening. Minimum 1 minute.',
-                  )}
-                </Text>
-              }
-            >
-              <PresetButtons
-                options={BIDDING_GAP_OPTIONS}
-                value={state.biddingGapPreset}
-                onChange={(v) => patch({ biddingGapPreset: v })}
-                customLabel={t('durationCustom', 'Custom…')}
-              />
-              {state.biddingGapPreset === 'custom' && (
-                <CustomDurationPicker
-                  value={state.biddingGapCustom}
-                  onChange={(v) => patch({ biddingGapCustom: v })}
-                  placeholder="60"
-                />
-              )}
-            </Form.Item>
-
-            {/* 4. Auction duration */}
-            <Form.Item
-              label={
-                <Text className="oio-label" style={{ marginBottom: 4, display: 'block' }}>
-                  {t('auctionDurationLabel', 'Auction duration')}
-                </Text>
-              }
-            >
-              <PresetButtons
-                options={AUCTION_DURATION_OPTIONS}
-                value={state.auctionDurationPreset}
-                onChange={(v) => patch({ auctionDurationPreset: v })}
-                customLabel={t('durationCustom', 'Custom…')}
-              />
-              {state.auctionDurationPreset === 'custom' && (
-                <CustomDurationPicker
-                  value={state.auctionDurationCustom}
-                  onChange={(v) => patch({ auctionDurationCustom: v })}
-                  placeholder="1440"
-                />
-              )}
-            </Form.Item>
-
-            {/* 5. Auto-extend */}
-            <Form.Item
-              label={
-                <Text strong style={{ fontSize: 13 }}>
-                  {t('autoExtendTitle', 'Auto-extend')}
-                </Text>
-              }
-            >
-              <Flex align="flex-start" gap={10} wrap="wrap">
-                <Switch
-                  checked={isSealed ? false : state.autoExtend}
-                  onChange={(val) => patch({ autoExtend: val })}
-                  disabled={isSealed}
-                  style={{ marginTop: 2, flexShrink: 0 }}
-                />
-                <Text style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-                  {isSealed
-                    ? t(
-                        'autoExtendSealedDisabled',
-                        'Auto-extend is not available for sealed auctions.',
-                      )
-                    : t(
-                        'autoExtendDesc',
-                        "If someone bids near the end, the auction gets a few extra minutes.",
-                      )}
-                </Text>
-              </Flex>
-              {state.autoExtend && (
-                <Flex align="center" gap={8} style={{ marginTop: 10 }} wrap="wrap">
-                  <Text
-                    style={{
-                      fontSize: 13,
-                      color: 'var(--color-text-secondary)',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {t('extensionMinutesLabel', 'Extend by (minutes):')}
-                  </Text>
-                  <InputNumber
-                    min={1}
-                    max={30}
-                    value={state.extensionMinutes}
-                    onChange={(val) => patch({ extensionMinutes: val })}
-                    style={{ width: 80 }}
-                  />
-                </Flex>
-              )}
-            </Form.Item>
-          </>
-        )}
-
-        {/* ── Advanced override active notice ──────────────────────────── */}
-        {state.advancedOverride && (
-          <Alert
-            type="info"
-            showIcon
-            style={{ marginBottom: 14, borderRadius: 8 }}
-            message={t('advancedTimingActive', 'Advanced timing in use.')}
-            description={t(
-              'advancedTimingActiveDesc',
-              'Simple mode is paused. Click Reset to return to simple mode.',
-            )}
-            action={
-              <Button size="small" type="link" onClick={handleResetToSimple}>
-                {t('resetToSimple', 'Reset to simple')}
-              </Button>
-            }
-          />
-        )}
-
-        {/* ── Live summary card ─────────────────────────────────────────── */}
-        {hasDerived &&
-          derived.startTime &&
-          derived.endTime &&
-          derived.qualificationStartAt &&
-          derived.qualificationEndAt && (
-            <div
-              className="oio-widget"
-              style={{
-                background: 'var(--color-bg-surface)',
-                marginBottom: 14,
-                padding: '16px 20px',
-                border: '1px solid var(--color-border-light)',
-                borderRadius: 8,
-              }}
-            >
-              <Text
-                className="oio-label"
-                style={{
-                  display: 'block',
-                  marginBottom: 12,
-                  color: 'var(--color-accent)',
-                  fontSize: 10,
-                }}
-              >
-                {t('liveSummaryHeader', 'Schedule Summary')}
-              </Text>
-              {!state.advancedOverride && (
-                <Text
-                  style={{
-                    display: 'block',
-                    fontSize: 13,
-                    color: 'var(--color-text-primary)',
-                    marginBottom: 16,
-                    lineHeight: 1.5,
-                  }}
-                >
-                  {formatNaturalSummary(state, derived.qualificationStartAt, t)}
-                </Text>
-              )}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px 24px' }}>
-                {[
-                  {
-                    label: t('qualOpens', 'Qualification opens'),
-                    value: derived.qualificationStartAt.format(DISPLAY_FORMAT),
-                  },
-                  {
-                    label: t('qualCloses', 'Qualification closes'),
-                    value: derived.qualificationEndAt.format(DISPLAY_FORMAT),
-                  },
-                  {
-                    label: t('biddingStarts', 'Bidding starts'),
-                    value: derived.startTime.format(DISPLAY_FORMAT),
-                  },
-                  {
-                    label: t('auctionEnds', 'Auction ends'),
-                    value: derived.endTime.format(DISPLAY_FORMAT),
-                  },
-                  {
-                    label: t('autoExtendTitle', 'Auto-extend'),
-                    value: state.autoExtend ? t('timing.autoExtendOn', { minutes: state.extensionMinutes, defaultValue: `ON (${state.extensionMinutes} MIN)` }) : t('timing.autoExtendOff', 'OFF'),
-                  },
-                ].map(({ label, value }) => (
-                  <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <Text className="oio-label" style={{ fontSize: 9, opacity: 0.6 }}>{label}</Text>
-                    <Text style={{ 
-                      fontSize: 13, 
-                      fontFamily: 'var(--font-mono)', 
-                      fontWeight: 500,
-                      color: 'var(--color-text-primary)' 
-                    }}>
-                      {value}
+                {/* 1. When should qualification open? */}
+                <Form.Item
+                  label={
+                    <Text className="oio-label" style={{ marginBottom: 4, display: 'block' }}>
+                      {t('whenQualOpen', 'When should qualification open?')}
                     </Text>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+                  }
+                >
+                  <Radio.Group
+                    value={state.qualificationOpenMode}
+                    onChange={(e) =>
+                      patch({
+                        qualificationOpenMode: e.target.value as QualOpenMode,
+                        scheduledQualificationStart: null,
+                      })
+                    }
+                    style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
+                  >
+                    <Radio value="now" style={{ fontSize: 13 }}>
+                      {t('qualOpenNow', 'Open qualification now')}
+                    </Radio>
+                    <Radio value="later" style={{ fontSize: 13 }}>
+                      {t('qualOpenLater', 'Schedule qualification for later')}
+                    </Radio>
+                  </Radio.Group>
 
-        {/* ── Advanced timing toggle ────────────────────────────────────── */}
-        <Collapse
-          ghost
-          activeKey={state.showAdvanced ? ['adv'] : []}
-          onChange={(keys) =>
-            setState((prev) => ({
-              ...prev,
-              showAdvanced: Array.isArray(keys) ? keys.includes('adv') : keys === 'adv',
-            }))
-          }
-          style={{ marginBottom: 8 }}
-          items={[
-            {
-              key: 'adv',
-              label: (
-                <Button type="link" style={{ padding: 0, height: 'auto', fontSize: 13 }}>
-                  {t('advancedTiming', 'Advanced timing')}
-                </Button>
-              ),
-              children: (
-                <div>
-                  {/* Advanced DatePickers */}
-                  {[
-                    {
-                      name: 'qualificationStartAt',
-                      label: t('timing.qualificationStart', 'Qualification Start'),
-                      rules: [{ validator: validateAdvancedStart }],
-                    },
-                    {
-                      name: 'qualificationEndAt',
-                      label: t('timing.qualificationEnd', 'Qualification End'),
-                      rules: [{ validator: validateAdvancedQualEnd }],
-                    },
-                    {
-                      name: 'startTime',
-                      label: t('timing.auctionStart', 'Auction Start'),
-                      rules: [{ validator: validateAdvancedStart }],
-                    },
-                    {
-                      name: 'endTime',
-                      label: t('timing.auctionEnd', 'Auction End'),
-                      rules: [{ validator: validateAdvancedAuctionEnd }],
-                    },
-                  ].map(({ name, label, rules }) => (
-                    <Form.Item key={name} name={name} label={label} rules={rules}>
+                  {state.qualificationOpenMode === 'later' && (
+                    <div style={{ width: '100%', marginTop: 10 }}>
                       <MobileDateTimePicker
+                        value={state.scheduledQualificationStart}
+                        onChange={(val) => patch({ scheduledQualificationStart: val })}
+                        placeholder={t('scheduledQualStartPlaceholder', 'Pick a date and time')}
                         disabledDate={disabledDate}
                         isMobile={isMobile}
-                        label={label}
-                        onAfterChange={handleAdvancedFieldChange}
+                        label={t('whenQualOpen', 'When should qualification open?')}
                       />
-                    </Form.Item>
-                  ))}
+                    </div>
+                  )}
+                </Form.Item>
 
-                  <Form.Item label={t('extensionMinutesLabel', 'Extend by (minutes)')}>
-                    <Flex align="center" gap={10} wrap="wrap">
-                      <Switch
-                        checked={isSealed ? false : state.autoExtend}
-                        disabled={isSealed}
-                        onChange={(val) => {
-                          setState((prev) => ({ ...prev, autoExtend: val }))
-                          form.setFieldValue('autoExtend', val)
+                {/* 2. Qualification phase lasts */}
+                <Form.Item
+                  label={
+                    <Text className="oio-label" style={{ marginBottom: 4, display: 'block' }}>
+                      {t('qualDurationLabel', 'Qualification phase lasts')}
+                    </Text>
+                  }
+                >
+                  <PresetButtons
+                    options={QUAL_DURATION_OPTIONS}
+                    value={state.qualificationDurationPreset}
+                    onChange={(v) => patch({ qualificationDurationPreset: v })}
+                    customLabel={t('durationCustom', 'Custom…')}
+                  />
+                  {state.qualificationDurationPreset === 'custom' && (
+                    <CustomDurationPicker
+                      value={state.qualificationDurationCustom}
+                      onChange={(v) => patch({ qualificationDurationCustom: v })}
+                      placeholder="60"
+                    />
+                  )}
+                </Form.Item>
+
+                {/* 3. Bidding starts after qualification closes */}
+                <Form.Item
+                  label={
+                    <Text className="oio-label" style={{ marginBottom: 4, display: 'block' }}>
+                      {t('biddingGapLabel', 'Bidding starts after qualification closes')}
+                    </Text>
+                  }
+                  help={
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      {t(
+                        'biddingGapHelp',
+                        'Gap between qualification closing and bidding opening. Minimum 1 minute.',
+                      )}
+                    </Text>
+                  }
+                >
+                  <PresetButtons
+                    options={BIDDING_GAP_OPTIONS}
+                    value={state.biddingGapPreset}
+                    onChange={(v) => patch({ biddingGapPreset: v })}
+                    customLabel={t('durationCustom', 'Custom…')}
+                  />
+                  {state.biddingGapPreset === 'custom' && (
+                    <CustomDurationPicker
+                      value={state.biddingGapCustom}
+                      onChange={(v) => patch({ biddingGapCustom: v })}
+                      placeholder="60"
+                    />
+                  )}
+                </Form.Item>
+
+                {/* 4. Auction duration */}
+                <Form.Item
+                  label={
+                    <Text className="oio-label" style={{ marginBottom: 4, display: 'block' }}>
+                      {t('auctionDurationLabel', 'Auction duration')}
+                    </Text>
+                  }
+                >
+                  <PresetButtons
+                    options={AUCTION_DURATION_OPTIONS}
+                    value={state.auctionDurationPreset}
+                    onChange={(v) => patch({ auctionDurationPreset: v })}
+                    customLabel={t('durationCustom', 'Custom…')}
+                  />
+                  {state.auctionDurationPreset === 'custom' && (
+                    <CustomDurationPicker
+                      value={state.auctionDurationCustom}
+                      onChange={(v) => patch({ auctionDurationCustom: v })}
+                      placeholder="1440"
+                    />
+                  )}
+                </Form.Item>
+
+                {/* 5. Auto-extend */}
+                <Form.Item
+                  label={
+                    <Text strong style={{ fontSize: 13 }}>
+                      {t('autoExtendTitle', 'Auto-extend')}
+                    </Text>
+                  }
+                >
+                  <Flex align="flex-start" gap={10} wrap="wrap">
+                    <Switch
+                      checked={isSealed ? false : state.autoExtend}
+                      onChange={(val) => patch({ autoExtend: val })}
+                      disabled={isSealed}
+                      style={{ marginTop: 2, flexShrink: 0 }}
+                    />
+                    <Text style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+                      {isSealed
+                        ? t(
+                            'autoExtendSealedDisabled',
+                            'Auto-extend is not available for sealed auctions.',
+                          )
+                        : t(
+                            'autoExtendDesc',
+                            "If someone bids near the end, the auction gets a few extra minutes.",
+                          )}
+                    </Text>
+                  </Flex>
+                  {state.autoExtend && (
+                    <Flex align="center" gap={8} style={{ marginTop: 10 }} wrap="wrap">
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          color: 'var(--color-text-secondary)',
+                          whiteSpace: 'nowrap',
                         }}
-                      />
-                      <Text style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
-                        {t('autoExtendTitle', 'Auto-extend')}
+                      >
+                        {t('extensionMinutesLabel', 'Extend by (minutes):')}
                       </Text>
-                    </Flex>
-                    {state.autoExtend && (
                       <InputNumber
                         min={1}
                         max={30}
                         value={state.extensionMinutes}
-                        onChange={(val) => {
-                          setState((prev) => ({ ...prev, extensionMinutes: val }))
-                          form.setFieldValue('extensionMinutes', val)
-                        }}
-                        style={{ width: 80, marginTop: 8 }}
+                        onChange={(val) => patch({ extensionMinutes: val })}
+                        style={{ width: 80 }}
                       />
-                    )}
-                  </Form.Item>
-
-                  {state.advancedOverride && (
-                    <Button type="link" onClick={handleResetToSimple} style={{ padding: 0 }}>
-                      {t('resetToSimple', 'Reset to simple')}
-                    </Button>
+                    </Flex>
                   )}
+                </Form.Item>
+              </>
+            )}
+
+            {/* ── Advanced override active notice ──────────────────────────── */}
+            {state.advancedOverride && (
+              <Alert
+                type="info"
+                showIcon
+                style={{ marginBottom: 14, borderRadius: 8 }}
+                message={t('advancedTimingActive', 'Advanced timing in use.')}
+                description={t(
+                  'advancedTimingActiveDesc',
+                  'Simple mode is paused. Click Reset to return to simple mode.',
+                )}
+                action={
+                  <Button size="small" type="link" onClick={handleResetToSimple}>
+                    {t('resetToSimple', 'Reset to simple')}
+                  </Button>
+                }
+              />
+            )}
+          </div>
+
+          {/* RIGHT COLUMN: Summary & Advanced */}
+          <div style={{ width: isMobile ? '100%' : 320, flexShrink: 0 }}>
+            {/* ── Live summary card ─────────────────────────────────────────── */}
+            {hasDerived &&
+              derived.startTime &&
+              derived.endTime &&
+              derived.qualificationStartAt &&
+              derived.qualificationEndAt && (
+                <div
+                  className="oio-widget"
+                  style={{
+                    background: 'var(--color-bg-surface)',
+                    marginBottom: 14,
+                    padding: '16px 20px',
+                    border: '1px solid var(--color-border-light)',
+                    borderRadius: 12,
+                    position: isMobile ? undefined : 'sticky',
+                    top: 20,
+                  }}
+                >
+                  <Text
+                    className="oio-label"
+                    style={{
+                      display: 'block',
+                      marginBottom: 12,
+                      color: 'var(--color-accent)',
+                      fontSize: 10,
+                    }}
+                  >
+                    {t('liveSummaryHeader', 'Schedule Summary')}
+                  </Text>
+                  {!state.advancedOverride && (
+                    <Text
+                      style={{
+                        display: 'block',
+                        fontSize: 13,
+                        color: 'var(--color-text-primary)',
+                        marginBottom: 16,
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {formatNaturalSummary(state, derived.qualificationStartAt, t)}
+                    </Text>
+                  )}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {[
+                      {
+                        label: t('qualOpens', 'Qualification opens'),
+                        value: derived.qualificationStartAt.format(DISPLAY_FORMAT),
+                      },
+                      {
+                        label: t('qualCloses', 'Qualification closes'),
+                        value: derived.qualificationEndAt.format(DISPLAY_FORMAT),
+                      },
+                      {
+                        label: t('biddingStarts', 'Bidding starts'),
+                        value: derived.startTime.format(DISPLAY_FORMAT),
+                      },
+                      {
+                        label: t('auctionEnds', 'Auction ends'),
+                        value: derived.endTime.format(DISPLAY_FORMAT),
+                      },
+                      {
+                        label: t('autoExtendTitle', 'Auto-extend'),
+                        value: state.autoExtend ? t('timing.autoExtendOn', { minutes: state.extensionMinutes, defaultValue: `ON (${state.extensionMinutes} MIN)` }) : t('timing.autoExtendOff', 'OFF'),
+                      },
+                    ].map(({ label, value }) => (
+                      <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <Text className="oio-label" style={{ fontSize: 9, opacity: 0.6 }}>{label}</Text>
+                        <Text style={{ 
+                          fontSize: 13, 
+                          fontFamily: 'var(--font-mono)', 
+                          fontWeight: 500,
+                          color: 'var(--color-text-primary)' 
+                        }}>
+                          {value}
+                        </Text>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ),
-            },
-          ]}
-        />
+              )}
+
+            {/* ── Advanced timing toggle ────────────────────────────────────── */}
+            <Collapse
+              ghost
+              activeKey={state.showAdvanced ? ['adv'] : []}
+              onChange={(keys) =>
+                setState((prev) => ({
+                  ...prev,
+                  showAdvanced: Array.isArray(keys) ? keys.includes('adv') : keys === 'adv',
+                }))
+              }
+              style={{ marginBottom: 8 }}
+              items={[
+                {
+                  key: 'adv',
+                  label: (
+                    <Button type="link" style={{ padding: 0, height: 'auto', fontSize: 13 }}>
+                      {t('advancedTiming', 'Advanced timing')}
+                    </Button>
+                  ),
+                  children: (
+                    <div>
+                      {/* Advanced DatePickers */}
+                      {[
+                        {
+                          name: 'qualificationStartAt',
+                          label: t('timing.qualificationStart', 'Qualification Start'),
+                          rules: [{ validator: validateAdvancedStart }],
+                        },
+                        {
+                          name: 'qualificationEndAt',
+                          label: t('timing.qualificationEnd', 'Qualification End'),
+                          rules: [{ validator: validateAdvancedQualEnd }],
+                        },
+                        {
+                          name: 'startTime',
+                          label: t('timing.auctionStart', 'Auction Start'),
+                          rules: [{ validator: validateAdvancedStart }],
+                        },
+                        {
+                          name: 'endTime',
+                          label: t('timing.auctionEnd', 'Auction End'),
+                          rules: [{ validator: validateAdvancedAuctionEnd }],
+                        },
+                      ].map(({ name, label, rules }) => (
+                        <Form.Item key={name} name={name} label={label} rules={rules}>
+                          <MobileDateTimePicker
+                            disabledDate={disabledDate}
+                            isMobile={isMobile}
+                            label={label}
+                            onAfterChange={handleAdvancedFieldChange}
+                          />
+                        </Form.Item>
+                      ))}
+
+                      <Form.Item label={t('extensionMinutesLabel', 'Extend by (minutes)')}>
+                        <Flex align="center" gap={10} wrap="wrap">
+                          <Switch
+                            checked={isSealed ? false : state.autoExtend}
+                            disabled={isSealed}
+                            onChange={(val) => {
+                              setState((prev) => ({ ...prev, autoExtend: val }))
+                              form.setFieldValue('autoExtend', val)
+                            }}
+                          />
+                          <Text style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
+                            {t('autoExtendTitle', 'Auto-extend')}
+                          </Text>
+                        </Flex>
+                        {state.autoExtend && (
+                          <InputNumber
+                            min={1}
+                            max={30}
+                            value={state.extensionMinutes}
+                            onChange={(val) => {
+                              setState((prev) => ({ ...prev, extensionMinutes: val }))
+                              form.setFieldValue('extensionMinutes', val)
+                            }}
+                            style={{ width: 80, marginTop: 8 }}
+                          />
+                        )}
+                      </Form.Item>
+
+                      {state.advancedOverride && (
+                        <Button type="link" onClick={handleResetToSimple} style={{ padding: 0 }}>
+                          {t('resetToSimple', 'Reset to simple')}
+                        </Button>
+                      )}
+                    </div>
+                  ),
+                },
+              ]}
+            />
+          </div>
+        </Flex>
       </div>
     </div>
   )

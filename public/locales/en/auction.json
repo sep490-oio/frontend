@@ -230,7 +230,8 @@
   },
   "bidStatusLeading": "Leading",
   "bidStatusLost": "Lost",
-  "relist": {
+  "relist": "Relist",
+  "relistFields": {
     "qualificationStart": "Qualification start *",
     "qualificationStartPlaceholder": "Select qualification start time",
     "qualificationEnd": "Qualification end *",

@@ -21,6 +21,7 @@ import { getServerNowMs } from '@/utils/time'
 import { useCurrentUser } from '@/features/user/api'
 import { useNotifications } from '@/features/notification/api'
 import { BidderPositionBlock } from '@/features/auction/components/BidderPositionBlock'
+import { QuickBidModal } from '@/features/auction/components/QuickBidModal'
 import { MONO_FONT, SANS_FONT } from '@/styles/tokens'
 
 
@@ -40,9 +41,11 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
   const userId = currentUser?.id
 
   // Fetch detailed data and subscribe to SignalR for real-time updates
-  const { data: detailData, isLoading } = useAuctionDetail(bid.auctionId, userId)
+  const { data: detailData, isLoading, refetch } = useAuctionDetail(bid.auctionId, userId)
   useAuctionHub(bid.auctionId, undefined, userId)
   useUserHub(bid.auctionId, userId)
+
+  const [bidModalOpen, setBidModalOpen] = useState(false)
 
   const priceHistory = detailData?.priceHistory ?? []
   const auction = detailData?.auction
@@ -68,7 +71,8 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
   }
 
   return (
-    <div
+    <>
+      <div
       className="oio-press group"
       onClick={() => navigate(`/auctions/${bid.auctionId}`, { state: navState })}
       tabIndex={0}
@@ -295,7 +299,7 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
                 type="primary"
                 size="large"
                 icon={<ThunderboltOutlined />}
-                onClick={(e: React.MouseEvent) => { e.stopPropagation(); navigate(`/auctions/${bid.auctionId}`, { state: navState }) }}
+                onClick={(e: React.MouseEvent) => { e.stopPropagation(); setBidModalOpen(true) }}
                 style={{
                   background: 'var(--color-accent)',
                   borderColor: 'var(--color-accent)',
@@ -360,7 +364,7 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
               size="large"
               block
               icon={<ThunderboltOutlined />}
-              onClick={(e: React.MouseEvent) => { e.stopPropagation(); navigate(`/auctions/${bid.auctionId}`, { state: navState }) }}
+              onClick={(e: React.MouseEvent) => { e.stopPropagation(); setBidModalOpen(true) }}
               style={{
                 background: 'var(--color-accent)',
                 borderColor: 'var(--color-accent)',
@@ -382,7 +386,15 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
           </Button>
         </div>
       )}
-    </div>
+      </div>
+      <QuickBidModal 
+        open={bidModalOpen} 
+        onCancel={() => setBidModalOpen(false)} 
+        detailData={detailData} 
+        auctionId={bid.auctionId}
+        onSuccess={() => refetch()}
+      />
+    </>
   )
 }
 

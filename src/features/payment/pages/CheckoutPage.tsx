@@ -39,6 +39,7 @@ import { useOrderById, useUpdateOrderShipping } from '@/features/order/api'
 import { OrderItemSummary } from '@/features/order/components/OrderItemSummary'
 import { usePaymentMethods, useCheckout, useCreateVnPayUrl, useWallet } from '@/features/payment/api'
 import { useAddresses, useCurrentUser, useCurrentUserProfile } from '@/features/user/api'
+import { useAuctionDetail } from '@/features/auction/auctionApi'
 import type { UpdateOrderShippingRequest, PaymentMethodDto } from '@/types'
 import { CountdownTimer } from '@/components/ui/CountdownTimer'
 import { PaymentMethodType } from '@/types/enums'
@@ -69,12 +70,15 @@ export default function CheckoutPage() {
   const [cardType, setCardType] = useState<string>('01') // 01=ATM/domestic, 02=international
   const bidderTerms = useTermsGate('bidder')
 
+  const { data: currentUser } = useCurrentUser()
+  const { data: currentProfile } = useCurrentUserProfile()
   const { data: order, isLoading: orderLoading, refetch } = useOrderById(orderId)
+  const { data: auctionData } = useAuctionDetail(order?.auctionId || '', currentUser?.id, {
+    enabled: !!order?.auctionId && !!currentUser?.id,
+  })
   const { data: methods, isLoading: methodsLoading } = usePaymentMethods()
   const { data: wallet, isLoading: walletLoading } = useWallet()
   const { data: addresses } = useAddresses()
-  const { data: currentUser } = useCurrentUser()
-  const { data: currentProfile } = useCurrentUserProfile()
   const checkout = useCheckout()
   const createVnPayUrl = useCreateVnPayUrl()
   const updateShipping = useUpdateOrderShipping()
@@ -141,7 +145,19 @@ export default function CheckoutPage() {
   const isWalletSelected = selectedMethodId === WALLET_METHOD_ID
 
   const grossAmount = order?.totalAmount ?? 0
-  const depositApplied = order?.depositAppliedAmount ?? 0
+  const depositApplied = useMemo(() => {
+    if (order?.depositAppliedAmount != null && order.depositAppliedAmount > 0) {
+      return order.depositAppliedAmount
+    }
+    // Fallback: If backend didn't set depositAppliedAmount, use the participant's deposit
+    // but only if this is an auction win context (the user is the winner).
+    const isWinner = auctionData?.auction?.currentWinnerId === currentUser?.id
+    if (isWinner && auctionData?.currentUserParticipant?.depositAmount) {
+      return auctionData.currentUserParticipant.depositAmount
+    }
+    return 0
+  }, [order?.depositAppliedAmount, auctionData, currentUser?.id])
+
   const orderAmount = Math.max(0, grossAmount - depositApplied)
   const walletBalance = wallet?.availableBalance ?? 0
   const walletCoversAll = walletBalance >= orderAmount

@@ -78,7 +78,7 @@ export function SellerActionBar({
 }: SellerActionBarProps) {
   const { t } = useTranslation('auction')
 
-  const actions = getSellerActions({ status, verifyByPlatform, canOfferRunnerUp })
+  const actions = getSellerActions({ status, verifyByPlatform, canOfferRunnerUp, itemStatus })
   if (actions.length === 0) return null
 
   const handlers: Record<SellerAction, (() => void) | undefined> = {

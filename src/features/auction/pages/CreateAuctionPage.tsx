@@ -61,25 +61,31 @@ interface FormValues {
 
 function SectionHeader({ number, title, isMobile }: { number: number; title: string, isMobile?: boolean }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, marginBottom: 16 }}>
-      <span
-        style={{
-          width: isMobile ? 24 : 28,
-          height: isMobile ? 24 : 28,
-          borderRadius: '50%',
-          background: 'var(--color-accent)',
-          color: '#fff',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontWeight: 600,
-          fontSize: isMobile ? 12 : 13,
-          flexShrink: 0,
-        }}
-      >
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+      <div style={{
+        fontSize: 11,
+        fontWeight: 600,
+        color: 'var(--color-accent)',
+        letterSpacing: '0.1em',
+        textTransform: 'uppercase',
+        border: '1px solid var(--color-accent)',
+        borderRadius: '50%',
+        width: 24,
+        height: 24,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        opacity: 0.8
+      }}>
         {number}
-      </span>
-      <h3 style={{ fontFamily: SERIF_FONT, margin: 0, fontSize: isMobile ? 16 : 17, color: 'var(--color-text-primary)' }}>
+      </div>
+      <h3 style={{
+        fontFamily: SERIF_FONT,
+        margin: 0,
+        fontSize: isMobile ? 18 : 20,
+        color: 'var(--color-text-primary)',
+        letterSpacing: '-0.01em'
+      }}>
         {title}
       </h3>
     </div>
@@ -441,7 +447,7 @@ export default function CreateAuctionPage() {
 
   if ((itemId && itemLoading) || (editLoading && isEditMode)) {
     return (
-      <div style={{ maxWidth: 720, margin: '0 auto', paddingTop: 40, paddingInline: isMobile ? 16 : 0 }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', paddingTop: 40, paddingInline: isMobile ? 16 : 0 }}>
         <Skeleton active paragraph={{ rows: 6 }} />
       </div>
     )
@@ -449,7 +455,7 @@ export default function CreateAuctionPage() {
 
   if (itemId && itemError) {
     return (
-      <div style={{ maxWidth: 720, margin: '0 auto', paddingTop: 40, paddingInline: isMobile ? 16 : 0 }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', paddingTop: 40, paddingInline: isMobile ? 16 : 0 }}>
         <Alert
           type="error"
           showIcon
@@ -467,101 +473,123 @@ export default function CreateAuctionPage() {
   return (
     <div
       style={{
-        maxWidth: 720,
+        maxWidth: 1200,
         margin: '0 auto',
         paddingInline: isMobile ? 16 : 0,
         paddingBottom: isMobile ? 80 : 40,
       }}
     >
       {/* Back button */}
-      <Space style={{ marginBottom: 12 }}>
-        <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate(`${prefix}/auctions`)}>
-          {tc('action.back', 'Back')}
+      <div style={{ marginBottom: 24 }}>
+        <Button
+          type="text"
+          icon={<ArrowLeftOutlined />}
+          onClick={() => navigate(`${prefix}/auctions`)}
+          style={{ paddingInline: 0, color: 'var(--color-text-secondary)' }}
+          className="oio-link"
+        >
+          {tc('action.back', 'Back to Auctions')}
         </Button>
-      </Space>
+      </div>
 
       <Typography.Title
         level={isMobile ? 3 : 2}
         className="oio-serif"
         style={{
           color: 'var(--color-text-primary)',
-          marginBottom: 20,
-          fontSize: isMobile ? 24 : 32,
+          marginBottom: 32,
+          fontSize: isMobile ? 24 : 36,
         }}
       >
         {isEditMode ? t('editAuction', 'Edit Auction') : t('createAuction', 'Tạo đấu giá mới')}
       </Typography.Title>
 
-      {/* Steps Progress */}
-      <div className="oio-widget" style={{ marginBottom: 16 }}>
-        <Steps
-          size="small"
-          items={stepsItems}
-          style={{ padding: '4px 0' }}
-          direction={isMobile && !hideItemFields ? 'vertical' : 'horizontal'}
-        />
-        {isSubmitting && submissionStep && stepStatusText[submissionStep] && (
-          <div style={{ textAlign: 'center', marginTop: 12, fontSize: 13, color: 'var(--color-text-secondary)', fontWeight: 500 }}>
-            <LoadingOutlined style={{ marginRight: 8, color: 'var(--color-accent)' }} />
-            {stepStatusText[submissionStep]}
-          </div>
-        )}
-      </div>
+      <Form<FormValues>
+        form={form}
+        layout="vertical"
+        onFinish={onFinish}
+        initialValues={{
+          auctionType: AuctionType.Regular,
+          bidIncrement: 10000,
+          extensionMinutes: 5,
+          quantity: 1,
+          currency: DEFAULT_CURRENCY,
+        }}
+        requiredMark={false}
+      >
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: 32,
+          alignItems: 'flex-start'
+        }}>
+          {/* Left Column: Form Details */}
+          <div style={{ flex: 1, minWidth: 0 }}>
 
-      {/* Partial Failure Alert */}
-      {submissionError && (
-        <Alert
-          type="warning"
-          showIcon
-          message={t('partialFailureTitle', 'Submission partially completed')}
-          description={submissionError}
-          style={{ marginBottom: 16, borderRadius: 8 }}
-          action={
-            partialAuctionId && submissionStep === null ? (
-              <Space direction="vertical" size={4}>
-                <Button size="small" type="primary" onClick={handleRetry} style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}>
-                  {t('retry', 'Retry')}
-                </Button>
-                <Button size="small" onClick={() => navigate(`${prefix}/auctions`)}>
-                  {t('goToMyAuctions', 'Go to My Auctions')}
-                </Button>
-              </Space>
-            ) : (
-              <Button size="small" onClick={() => navigate(`${prefix}/auctions`)}>
-                {t('goToMyAuctions', 'Go to My Auctions')}
-              </Button>
-            )
-          }
-        />
-      )}
+            {/* Partial Failure Alert */}
+            {submissionError && (
+              <Alert
+                type="warning"
+                showIcon
+                message={t('partialFailureTitle', 'Submission partially completed')}
+                description={submissionError}
+                style={{ marginBottom: 24, borderRadius: 8 }}
+                action={
+                  partialAuctionId && submissionStep === null ? (
+                    <Space direction="vertical" size={4}>
+                      <Button size="small" type="primary" onClick={handleRetry} style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}>
+                        {t('retry', 'Retry')}
+                      </Button>
+                      <Button size="small" onClick={() => navigate(`${prefix}/auctions`)}>
+                        {t('goToMyAuctions', 'Go to My Auctions')}
+                      </Button>
+                    </Space>
+                  ) : (
+                    <Button size="small" onClick={() => navigate(`${prefix}/auctions`)}>
+                      {t('goToMyAuctions', 'Go to My Auctions')}
+                    </Button>
+                  )
+                }
+              />
+            )}
 
       {/* Item Preview */}
       {(isFromItem || (isEditMode && existingItemForPreview)) && existingItemForPreview && (
-        <div className="oio-widget" style={{ marginBottom: 16 }}>
-          <SectionHeader number={1} title={t('selectedItem', 'Vật phẩm đã chọn')} isMobile={isMobile} />
-          <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+        <div className="oio-widget" style={{ marginBottom: 24, overflow: 'hidden' }}>
+          <SectionHeader number={1} title={t('selectedItem', 'Selected Item')} isMobile={isMobile} />
+          <div style={{
+            display: 'flex',
+            gap: 20,
+            alignItems: 'stretch',
+            background: 'var(--color-bg-surface)',
+            padding: 16,
+            borderRadius: 12,
+            border: '1px solid var(--color-border-light)'
+          }}>
             {existingItemForPreview.images && existingItemForPreview.images.length > 0 && (
-              <div style={{ flexShrink: 0 }}>
+              <div style={{ flexShrink: 0 }} className="oio-image-zoom">
                 <Image
                   src={existingItemForPreview.images[0].thumbnailUrl ?? existingItemForPreview.images[0].url}
-                  width={isMobile ? 80 : 96}
-                  height={isMobile ? 80 : 96}
-                  style={{ objectFit: 'cover', borderRadius: 8, border: '1px solid var(--color-border-light)' }}
+                  width={isMobile ? 100 : 120}
+                  height={isMobile ? 100 : 120}
+                  style={{ objectFit: 'cover', borderRadius: 8 }}
                 />
               </div>
             )}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <Typography.Title level={5} style={{ margin: 0, fontFamily: SERIF_FONT, fontSize: isMobile ? 14 : undefined }}>
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <Typography.Title level={5} className="oio-serif" style={{ margin: 0, fontSize: isMobile ? 16 : 18 }}>
                 {existingItemForPreview.title}
               </Typography.Title>
-              <div style={{ marginTop: 4, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <StatusBadge status={existingItemForPreview.condition} />
                 {existingItemForPreview.quantity > 1 && (
-                  <Tag>{t('quantityLabel', 'Qty')}: {existingItemForPreview.quantity}</Tag>
+                  <Tag style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
+                    {t('quantityLabel', 'Qty')}: {existingItemForPreview.quantity}
+                  </Tag>
                 )}
                 {(existingItemForPreview as any).requiresPlatformInspection === true && (
-                  <Tag icon={<SafetyCertificateOutlined />} color="blue">
-                    {t('verifiedByPlatform', 'Verified by platform')}
+                  <Tag icon={<SafetyCertificateOutlined />} color="blue" style={{ borderRadius: 4 }}>
+                    {t('verifiedByPlatform', 'Verified')}
                   </Tag>
                 )}
               </div>
@@ -569,7 +597,7 @@ export default function CreateAuctionPage() {
                 <Typography.Paragraph
                   type="secondary"
                   ellipsis={{ rows: 2 }}
-                  style={{ margin: '6px 0 0', fontSize: 13 }}
+                  style={{ margin: '12px 0 0', fontSize: 13, lineHeight: 1.5 }}
                 >
                   {htmlToPlainTextExcerpt(existingItemForPreview.description)}
                 </Typography.Paragraph>
@@ -581,42 +609,28 @@ export default function CreateAuctionPage() {
 
       {/* Main Form */}
       <div className="oio-widget">
-        <SectionHeader number={pricingSectionNumber} title={t('pricingAndTiming', 'Pricing & Time')} isMobile={isMobile} />
-        <Form<FormValues>
-          form={form}
-          layout="vertical"
-          onFinish={onFinish}
-          initialValues={{
-            auctionType: AuctionType.Regular,
-            bidIncrement: 10000,
-            extensionMinutes: 5,
-            quantity: 1,
-            currency: DEFAULT_CURRENCY,
-          }}
-        >
-          {/* Section 1: Item Info */}
+          {/* Section 1: Item Info (if not from existing item) */}
           {!hideItemFields && (
-            <>
-              <SectionHeader number={1} title={t('itemInfo', 'Item Info')} isMobile={isMobile} />
+            <div style={{ marginBottom: 40 }}>
+              <SectionHeader number={1} title={t('itemInfo', 'Item Information')} isMobile={isMobile} />
 
               <Form.Item
                 name="title"
-                label={t('itemTitle', 'Title')}
+                label={<span className="oio-label">{t('itemTitle', 'Title')}</span>}
                 rules={[
                   { required: !hideItemFields, message: t('titleRequired', 'Please enter item title') },
                   { max: 255, message: t('titleMax', 'Title must not exceed 255 characters') },
                 ]}
               >
-                <Input placeholder={t('titlePlaceholder', 'Enter item title')} style={{ height: 44, fontSize: 16 }} />
+                <Input placeholder={t('titlePlaceholder', 'Enter item title')} style={{ height: 48, fontSize: 16 }} />
               </Form.Item>
 
-              {/* Condition pills */}
               <Form.Item
                 name="condition"
-                label={t('condition', 'Condition')}
+                label={<span className="oio-label">{t('condition', 'Condition')}</span>}
                 rules={[{ required: !hideItemFields, message: t('conditionRequired', 'Please select condition') }]}
               >
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
                   {CONDITION_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
@@ -625,17 +639,18 @@ export default function CreateAuctionPage() {
                         setSelectedCondition(opt.value)
                         form.setFieldsValue({ condition: opt.value })
                       }}
+                      className="oio-card-hover"
                       style={{
-                        padding: isMobile ? '8px 14px' : '8px 20px',
-                        borderRadius: 20,
-                        border: `1.5px solid ${selectedCondition === opt.value ? 'var(--color-accent)' : 'var(--color-border)'}`,
+                        padding: isMobile ? '8px 16px' : '10px 24px',
+                        borderRadius: 4,
+                        border: `1px solid ${selectedCondition === opt.value ? 'var(--color-accent)' : 'var(--color-border)'}`,
                         background: selectedCondition === opt.value ? 'var(--color-accent)' : 'var(--color-bg-card)',
-                        color: selectedCondition === opt.value ? '#fff' : 'var(--color-text-secondary)',
-                        fontWeight: 500,
+                        color: selectedCondition === opt.value ? '#fff' : 'var(--color-text-primary)',
+                        fontWeight: 600,
                         fontSize: 13,
                         cursor: 'pointer',
-                        minHeight: 36,
                         transition: 'all 0.2s',
+                        boxShadow: selectedCondition === opt.value ? 'var(--shadow-sm)' : 'none'
                       }}
                     >
                       {opt.label}
@@ -644,169 +659,182 @@ export default function CreateAuctionPage() {
                 </div>
               </Form.Item>
 
-              <Form.Item name="categoryId" label={t('category', 'Category')}>
-                <Select
-                  options={categoryOptions}
-                  placeholder={t('selectCategory', 'Select category')}
-                  allowClear
-                  showSearch
-                  optionFilterProp="label"
-                  style={{ width: '100%' }}
-                  size="large"
-                />
-              </Form.Item>
+              <Space direction={isMobile ? 'vertical' : 'horizontal'} style={{ width: '100%', display: 'flex' }} size="large">
+                <Form.Item name="categoryId" label={<span className="oio-label">{t('category', 'Category')}</span>} style={{ flex: 1 }}>
+                  <Select
+                    options={categoryOptions}
+                    placeholder={t('selectCategory', 'Select category')}
+                    allowClear
+                    showSearch
+                    optionFilterProp="label"
+                    style={{ width: '100%' }}
+                    size="large"
+                  />
+                </Form.Item>
 
-              <Form.Item name="description" label={t('description', 'Description')}>
+                <Form.Item name="quantity" label={<span className="oio-label">{t('quantity', 'Quantity')}</span>} style={{ flex: 1 }}>
+                  <InputNumber style={{ width: '100%' }} size="large" min={1} />
+                </Form.Item>
+              </Space>
+
+              <Form.Item name="description" label={<span className="oio-label">{t('description', 'Description')}</span>}>
                 <Input.TextArea rows={4} placeholder={t('descriptionPlaceholder', 'Describe your item')} style={{ fontSize: 16 }} />
               </Form.Item>
 
-              <Form.Item name="quantity" label={t('quantity', 'Quantity')}>
-                <InputNumber style={{ width: '100%', height: 44, fontSize: 16 }} min={1} />
-              </Form.Item>
-
               {/* Section 2: Photos */}
-              <div style={{ borderTop: '1px solid var(--color-border-light)', margin: '24px 0', paddingTop: 24 }}>
-                <SectionHeader number={2} title={t('photos', 'Photos')} isMobile={isMobile} />
+              <div style={{ borderTop: '1px solid var(--color-border-light)', margin: '40px 0 32px', paddingTop: 40 }}>
+                <SectionHeader number={2} title={t('photos', 'Item Photos')} isMobile={isMobile} />
+                <Form.Item required>
+                  <div style={{ marginTop: 8 }}>
+                    <MultiCaptureUploader
+                      maxPhotos={10}
+                      step="item_photo"
+                      facingMode="environment"
+                      onPhotosChange={setCapturedPhotos}
+                    />
+                  </div>
+                </Form.Item>
               </div>
 
-              <Form.Item label={t('photos', 'Photos')} required>
-                <MultiCaptureUploader
-                  maxPhotos={10}
-                  step="item_photo"
-                  facingMode="environment"
-                  onPhotosChange={setCapturedPhotos}
-                />
-              </Form.Item>
-
-              <div style={{ borderTop: '1px solid var(--color-border-light)', margin: '24px 0', paddingTop: 24 }} />
-            </>
+              <div style={{ borderTop: '1px solid var(--color-border-light)', margin: '40px 0 32px', paddingTop: 40 }} />
+            </div>
           )}
+
+          {/* Pricing & Timing */}
+          <SectionHeader number={pricingSectionNumber} title={t('pricingAndTiming', 'Pricing & Timing')} isMobile={isMobile} />
 
           <Form.Item
             name="auctionType"
-            label={t('auctionType', 'Auction Type')}
+            label={<span className="oio-label">{t('auctionType', 'Auction Type')}</span>}
             rules={[{ required: true, message: t('typeRequired', 'Please select auction type') }]}
           >
             <Select options={AUCTION_TYPE_OPTIONS} style={{ width: '100%' }} size="large" />
           </Form.Item>
 
-          <Form.Item
-            name="startingPrice"
-            label={t('startingPrice', 'Starting Price')}
-            rules={[
-              { required: true, message: t('startingPriceRequired', 'Please enter starting price') },
-              { type: 'number', min: 0, message: t('startingPriceMin', 'Starting price must be >= 0') },
-            ]}
-          >
-            <InputNumber
-              style={{ width: '100%', fontSize: 16 }}
-              size="large"
-              min={0}
-              step={1000}
-              addonAfter={DEFAULT_CURRENCY}
-              placeholder="0"
-              formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
-              parser={(v) => {
-                const parsed = (v ?? '').replace(/\$\s?|(,*)/g, '')
-                return parsed ? Number(parsed) : null as any
-              }}
-            />
-          </Form.Item>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 0 : 24 }}>
+            <Form.Item
+              name="startingPrice"
+              label={<span className="oio-label">{t('startingPrice', 'Starting Price')}</span>}
+              rules={[
+                { required: true, message: t('startingPriceRequired', 'Please enter starting price') },
+                { type: 'number', min: 0, message: t('startingPriceMin', 'Starting price must be >= 0') },
+              ]}
+            >
+              <InputNumber
+                style={{ width: '100%', fontSize: 16 }}
+                size="large"
+                min={0}
+                step={1000}
+                addonAfter={DEFAULT_CURRENCY}
+                placeholder="0"
+                formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+                parser={(v) => {
+                  const parsed = (v ?? '').replace(/\$\s?|(,*)/g, '')
+                  return parsed ? Number(parsed) : null as any
+                }}
+              />
+            </Form.Item>
 
-          <Form.Item
-            name="bidIncrement"
-            label={t('bidIncrement', 'Bid Increment')}
-            rules={[
-              { required: true, message: t('bidIncrementRequired', 'Please enter bid increment') },
-              { type: 'number', min: 1, message: t('bidIncrementMin', 'Bid increment must be > 0') },
-            ]}
-          >
-            <InputNumber
-              style={{ width: '100%' }}
-              min={1000}
-              step={1000}
-              addonAfter={DEFAULT_CURRENCY}
-              formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
-              parser={(v) => {
-                const parsed = (v ?? '').replace(/\$\s?|(,*)/g, '')
-                return parsed ? Number(parsed) : null as any
-              }}
-            />
-          </Form.Item>
+            <Form.Item
+              name="bidIncrement"
+              label={<span className="oio-label">{t('bidIncrement', 'Bid Increment')}</span>}
+              rules={[
+                { required: true, message: t('bidIncrementRequired', 'Please enter bid increment') },
+                { type: 'number', min: 1, message: t('bidIncrementMin', 'Bid increment must be > 0') },
+              ]}
+            >
+              <InputNumber
+                style={{ width: '100%' }}
+                size="large"
+                min={1000}
+                step={1000}
+                addonAfter={DEFAULT_CURRENCY}
+                formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+                parser={(v) => {
+                  const parsed = (v ?? '').replace(/\$\s?|(,*)/g, '')
+                  return parsed ? Number(parsed) : null as any
+                }}
+              />
+            </Form.Item>
+          </div>
 
-          <Form.Item name="reservePrice" label={t('reservePrice', 'Reserve Price')}>
-            <InputNumber
-              style={{ width: '100%', fontSize: 16 }}
-              size="large"
-              min={0}
-              step={1000}
-              addonAfter={DEFAULT_CURRENCY}
-              placeholder={t('reservePricePlaceholder', 'Optional - minimum price to sell')}
-              formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
-              parser={(v) => {
-                const parsed = (v ?? '').replace(/\$\s?|(,*)/g, '')
-                return parsed ? Number(parsed) : null as any
-              }}
-            />
-          </Form.Item>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 0 : 24 }}>
+            <Form.Item name="reservePrice" label={<span className="oio-label">{t('reservePrice', 'Reserve Price')}</span>}>
+              <InputNumber
+                style={{ width: '100%', fontSize: 16 }}
+                size="large"
+                min={0}
+                step={1000}
+                addonAfter={DEFAULT_CURRENCY}
+                placeholder={t('reservePricePlaceholder', 'Optional')}
+                formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+                parser={(v) => {
+                  const parsed = (v ?? '').replace(/\$\s?|(,*)/g, '')
+                  return parsed ? Number(parsed) : null as any
+                }}
+              />
+            </Form.Item>
 
-          <Form.Item name="buyNowPrice" label={t('buyNowPrice', 'Buy Now Price')}>
-            <InputNumber
-              style={{ width: '100%', fontSize: 16 }}
-              size="large"
-              min={0}
-              step={1000}
-              addonAfter={DEFAULT_CURRENCY}
-              placeholder={t('buyNowPricePlaceholder', 'Optional - instant purchase price')}
-              formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
-              parser={(v) => {
-                const parsed = (v ?? '').replace(/\$\s?|(,*)/g, '')
-                return parsed ? Number(parsed) : null as any
-              }}
-            />
-          </Form.Item>
+            <Form.Item name="buyNowPrice" label={<span className="oio-label">{t('buyNowPrice', 'Buy Now Price')}</span>}>
+              <InputNumber
+                style={{ width: '100%', fontSize: 16 }}
+                size="large"
+                min={0}
+                step={1000}
+                addonAfter={DEFAULT_CURRENCY}
+                placeholder={t('buyNowPricePlaceholder', 'Optional')}
+                formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+                parser={(v) => {
+                  const parsed = (v ?? '').replace(/\$\s?|(,*)/g, '')
+                  return parsed ? Number(parsed) : null as any
+                }}
+              />
+            </Form.Item>
+          </div>
 
           <Form.Item name="currency" hidden>
             <Input />
           </Form.Item>
 
-          {/* Timing Section */}
-          <AuctionTimingSection
-            form={form}
-            itemApproved={
-              isEditMode
-                ? true
-                : isFromItem
-                  ? existingItem?.status === ItemStatus.Approved ||
-                    existingItem?.status === ItemStatus.Active ||
-                    existingItem?.status === ItemStatus.InAuction
-                  : true
-            }
-          />
+          <div style={{ marginTop: 16 }}>
+            <AuctionTimingSection
+              form={form}
+              itemApproved={
+                isEditMode
+                  ? true
+                  : isFromItem
+                    ? existingItem?.status === ItemStatus.Approved ||
+                      existingItem?.status === ItemStatus.Active ||
+                      existingItem?.status === ItemStatus.InAuction
+                    : true
+              }
+            />
+          </div>
 
           {/* Verification Toggle */}
           {!isFromItem && !isDraftEdit && (
-            <div style={{ borderTop: '1px solid var(--color-border-light)', margin: '24px 0 20px', paddingTop: 24 }}>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: isMobile ? '14px 16px' : '16px 20px',
-                  borderRadius: 12,
-                  background: 'var(--color-accent-light)',
-                  border: '1px solid var(--color-border-light)',
-                  gap: 12,
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
-                  <SafetyCertificateOutlined style={{ fontSize: 20, color: 'var(--color-accent)', flexShrink: 0 }} />
+            <div style={{ marginTop: 40, padding: 24, borderRadius: 12, background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-light)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16, flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: '50%',
+                    background: 'var(--color-bg-card)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: 'var(--shadow-sm)',
+                    flexShrink: 0
+                  }}>
+                    <SafetyCertificateOutlined style={{ fontSize: 20, color: 'var(--color-accent)' }} />
+                  </div>
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-text-primary)' }}>
-                      {t('verifiedByPlatformTitle', 'Xác thực bởi Nền tảng')}
+                    <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--color-text-primary)' }}>
+                      {t('verifiedByPlatformTitle', 'Platform Verification')}
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 2 }}>
-                      {t('verifiedByPlatformDesc', 'Yêu cầu chuyên gia oio.vn kiểm định vật phẩm trước khi đấu giá.')}
+                      {t('verifiedByPlatformDesc', 'Request experts to verify the item authenticity before auction.')}
                     </div>
                   </div>
                 </div>
@@ -815,84 +843,137 @@ export default function CreateAuctionPage() {
             </div>
           )}
 
-          {/* Submit Buttons */}
-          <Form.Item style={{ marginTop: 24, marginBottom: 0 }}>
-            {isMobile ? (
-              /* Mobile: stacked buttons */
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          </div>
+        </div>
+
+        {/* Right Column: Sidebar */}
+          <div style={{
+            width: isMobile ? '100%' : 380,
+            flexShrink: 0,
+            position: isMobile ? 'static' : 'sticky',
+            top: 100
+          }}>
+            {/* Steps Progress */}
+            <div className="oio-widget" style={{ marginBottom: 24, padding: '20px 24px' }}>
+              <div style={{ marginBottom: 16 }}>
+                <span className="oio-label">{t('submissionProgress', 'Submission Progress')}</span>
+              </div>
+              <Steps
+                size="small"
+                items={stepsItems}
+                direction="vertical"
+              />
+              {isSubmitting && submissionStep && stepStatusText[submissionStep] && (
+                <div style={{
+                  marginTop: 16,
+                  paddingTop: 16,
+                  borderTop: '1px solid var(--color-border-light)',
+                  fontSize: 12,
+                  color: 'var(--color-accent)',
+                  fontWeight: 500,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8
+                }}>
+                  <LoadingOutlined />
+                  {stepStatusText[submissionStep]}
+                </div>
+              )}
+            </div>
+
+            {/* Item Preview */}
+            {(isFromItem || (isEditMode && existingItemForPreview)) && existingItemForPreview && (
+              <div className="oio-widget" style={{ marginBottom: 24, overflow: 'hidden' }}>
+                <div style={{ marginBottom: 16 }}>
+                  <span className="oio-label">{t('selectedItem', 'Item Preview')}</span>
+                </div>
+                <div style={{
+                  background: 'var(--color-bg-surface)',
+                  padding: 12,
+                  borderRadius: 12,
+                  border: '1px solid var(--color-border-light)'
+                }}>
+                  {existingItemForPreview.images && existingItemForPreview.images.length > 0 && (
+                    <div style={{ width: '100%', aspectRatio: '1/1', marginBottom: 12 }} className="oio-image-zoom">
+                      <Image
+                        src={existingItemForPreview.images[0].url}
+                        width="100%"
+                        height="100%"
+                        style={{ objectFit: 'cover', borderRadius: 8 }}
+                      />
+                    </div>
+                  )}
+                  <Typography.Title level={5} className="oio-serif" style={{ margin: 0, fontSize: 15 }}>
+                    {existingItemForPreview.title}
+                  </Typography.Title>
+                  <div style={{ marginTop: 8, display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <StatusBadge status={existingItemForPreview.condition} />
+                    {(existingItemForPreview as any).requiresPlatformInspection === true && (
+                      <Tag icon={<SafetyCertificateOutlined />} color="blue" style={{ borderRadius: 4, margin: 0 }}>
+                        {t('verified', 'Verified')}
+                      </Tag>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Verification Toggle */}
+            {!isFromItem && !isDraftEdit && (
+              <div className="oio-widget" style={{ marginBottom: 24, padding: '20px 24px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <SafetyCertificateOutlined style={{ fontSize: 18, color: 'var(--color-accent)' }} />
+                    <span style={{ fontWeight: 600, fontSize: 14 }}>{t('platformVerification', 'Verification')}</span>
+                  </div>
+                  <Switch size="small" checked={requireVerification} onChange={setRequireVerification} />
+                </div>
+                <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 12, marginInline: 0 }}>
+                  {t('verificationHint', 'Experts will verify the item before the auction starts.')}
+                </p>
+              </div>
+            )}
+
+            {/* Action Bar */}
+            <div className="oio-widget" style={{ padding: 20 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <Button
+                  type="primary"
+                  size="large"
+                  htmlType="submit"
+                  loading={isSubmitting}
+                  style={{ width: '100%', height: 48 }}
+                >
+                  {isEditMode ? t('updateAuction', 'Update Auction') : t('submitForReview', 'Submit for Review')}
+                </Button>
+
                 {!isDraftEdit && (
-                  <Button
-                    type="primary"
-                    size="large"
-                    htmlType="submit"
-                    loading={!savingDraft && (createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending)}
-                    disabled={(!hideItemFields && capturedPhotos.length === 0) || createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending}
-                    style={{
-                      background: 'var(--color-accent)',
-                      borderColor: 'var(--color-accent)',
-                      borderRadius: 8,
-                      fontWeight: 600,
-                      height: 48,
-                    }}
-                  >
-                    {t('create', 'Tạo phiên đấu giá')}
-                  </Button>
-                )}
-                <div style={{ display: 'flex', gap: 10 }}>
                   <Button
                     size="large"
                     onClick={handleSaveDraft}
-                    loading={savingDraft && (createAuction.isPending || createAuctionFromItem.isPending || updateAuction.isPending)}
-                    disabled={(!hideItemFields && capturedPhotos.length === 0) || createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending}
-                    style={{ flex: 1, borderRadius: 8, borderColor: 'var(--color-accent)', color: 'var(--color-accent)', height: 44 }}
+                    loading={savingDraft}
+                    disabled={isSubmitting}
+                    style={{ width: '100%', height: 44, color: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
                   >
-                    {t('saveDraft', 'Lưu nháp')}
+                    {t('saveDraft', 'Save Draft')}
                   </Button>
-                  <Button
-                    size="large"
-                    onClick={() => navigate(`${prefix}/auctions`)}
-                    style={{ flex: 1, borderRadius: 8, borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)', height: 44 }}
-                  >
-                    {tc('action.cancel', 'Cancel')}
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              /* Desktop: inline buttons */
-              <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+                )}
+
                 <Button
+                  type="text"
                   size="large"
                   onClick={() => navigate(`${prefix}/auctions`)}
-                  style={{ borderRadius: 8, borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
+                  style={{ width: '100%', height: 44, color: 'var(--color-text-secondary)' }}
                 >
                   {tc('action.cancel', 'Cancel')}
                 </Button>
-                <Button
-                  size="large"
-                  onClick={handleSaveDraft}
-                  loading={savingDraft && (createAuction.isPending || createAuctionFromItem.isPending || updateAuction.isPending)}
-                  disabled={(!hideItemFields && capturedPhotos.length === 0) || createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending}
-                  style={{ borderRadius: 8, borderColor: 'var(--color-accent)', color: 'var(--color-accent)' }}
-                >
-                  {t('saveDraft', 'Lưu bản nháp')}
-                </Button>
-                {!isDraftEdit && (
-                  <Button
-                    type="primary"
-                    size="large"
-                    htmlType="submit"
-                    loading={!savingDraft && (createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending)}
-                    disabled={(!hideItemFields && capturedPhotos.length === 0) || createAuction.isPending || createAuctionFromItem.isPending || submitItemMutation.isPending || updateAuction.isPending || submitAuction.isPending}
-                    style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)', borderRadius: 8, fontWeight: 600 }}
-                  >
-                    {t('create', 'Tạo phiên đấu giá')}
-                  </Button>
-                )}
               </div>
-            )}
-          </Form.Item>
-        </Form>
-      </div>
+            </div>
+          </div>
+        </div>
+      </Form>
     </div>
   )
 }

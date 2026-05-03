@@ -125,6 +125,7 @@ export default function MyOrdersPage() {
     {
       title: t('product', 'Product'),
       key: 'product',
+      width: 450,
       render: (_: unknown, record: OrderDto) =>
         record.item ? (
           <OrderItemSummary item={record.item} variant="row" />
@@ -353,6 +354,7 @@ export default function MyOrdersPage() {
             rowKey="id"
             columns={columns}
             dataSource={displayItems}
+            scroll={{ x: 1000 }}
             pagination={{
               current: data?.metadata?.currentPage ?? page,
               pageSize: data?.metadata?.pageSize ?? pageSize,
