@@ -1,0 +1,32 @@
+{
+  "title": "OIO Assistant",
+  "openTooltip": "Ask the OIO assistant",
+  "placeholder": "Type your question…",
+  "send": "Send",
+  "thinking": "Thinking…",
+  "emptyHint": "Ask me about auctions, orders, or your wallet…",
+  "guestNotice": "You're chatting as a guest. Sign in to ask about your own orders or wallet.",
+  "errorCreate": "Could not start a new conversation.",
+  "errorSend": "Failed to send your message. Please try again.",
+  "needsHumanSupport": "You may want to contact human support for full help.",
+  "quickPrompts": {
+    "auctionHowItWorks": "How does this auction work?",
+    "autoBid": "What is auto-bid?",
+    "sealedBid": "What is a sealed bid?",
+    "orderStatus": "Where is this order in the flow?",
+    "orderPayout": "When will I get paid?",
+    "orderReturn": "Can I return this item?",
+    "disputeEvidence": "What evidence do I need to provide?",
+    "disputeFlow": "How does the dispute process work?",
+    "shipmentStatus": "What does this shipment status mean?",
+    "shipmentDelay": "What if delivery is delayed?",
+    "walletFlow": "How is this amount calculated?",
+    "walletWithdraw": "How do I withdraw money?",
+    "itemAuction": "When will this item go to auction?",
+    "verificationRequired": "What do I need to prepare for verification?",
+    "verificationTime": "How long does verification take?",
+    "howOio": "How does OIO work?",
+    "fees": "What are the transaction fees?",
+    "escrow": "How is my money protected?"
+  }
+}

@@ -28,6 +28,7 @@ import { useTheme } from '@/hooks/useTheme'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { SellerProfileStatus } from '@/types/enums'
 import { SERIF_FONT, SANS_FONT } from '@/styles/tokens'
+import { AssistantWidget } from '@/features/assistant'
 
 const { Content } = Layout
 
@@ -524,6 +525,7 @@ export function SellerLayout() {
           <Outlet />
         </Content>
       </main>
+      <AssistantWidget />
     </div>
   )
 }

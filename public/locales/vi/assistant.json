@@ -1,0 +1,32 @@
+{
+  "title": "Trợ lý OIO",
+  "openTooltip": "Hỏi trợ lý OIO",
+  "placeholder": "Nhập câu hỏi…",
+  "send": "Gửi",
+  "thinking": "Đang trả lời…",
+  "emptyHint": "Hỏi tôi về phiên đấu giá, đơn hàng, dòng tiền…",
+  "guestNotice": "Bạn đang sử dụng ở chế độ khách. Đăng nhập để hỏi về đơn hàng/dòng tiền của bạn.",
+  "errorCreate": "Không khởi tạo được cuộc hội thoại.",
+  "errorSend": "Không gửi được tin nhắn. Vui lòng thử lại.",
+  "needsHumanSupport": "Bạn có thể cần liên hệ hỗ trợ con người để nhận trợ giúp đầy đủ.",
+  "quickPrompts": {
+    "auctionHowItWorks": "Phiên này hoạt động thế nào?",
+    "autoBid": "Auto-bid là gì?",
+    "sealedBid": "Bid kín là gì?",
+    "orderStatus": "Đơn này đang ở bước nào?",
+    "orderPayout": "Khi nào tôi được nhận tiền?",
+    "orderReturn": "Tôi có thể trả hàng không?",
+    "disputeEvidence": "Tôi cần cung cấp bằng chứng gì?",
+    "disputeFlow": "Quy trình tranh chấp diễn ra thế nào?",
+    "shipmentStatus": "Trạng thái giao hàng nghĩa là gì?",
+    "shipmentDelay": "Hàng giao trễ thì sao?",
+    "walletFlow": "Dòng tiền này được tính như thế nào?",
+    "walletWithdraw": "Làm sao để rút tiền?",
+    "itemAuction": "Khi nào item này được lên đấu giá?",
+    "verificationRequired": "Tôi cần chuẩn bị gì để xác minh?",
+    "verificationTime": "Bao lâu thì xác minh xong?",
+    "howOio": "OIO hoạt động thế nào?",
+    "fees": "Phí giao dịch là bao nhiêu?",
+    "escrow": "Tiền của tôi được bảo vệ ra sao?"
+  }
+}

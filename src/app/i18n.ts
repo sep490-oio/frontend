@@ -11,7 +11,7 @@ i18n
     fallbackLng: 'vi',
     supportedLngs: ['vi', 'en'],
     defaultNS: 'common',
-    ns: ['common', 'auth', 'auction', 'item', 'order', 'payment', 'seller', 'warehouse', 'notification', 'dispute', 'admin', 'validation', 'user'],
+    ns: ['common', 'auth', 'auction', 'item', 'order', 'payment', 'seller', 'warehouse', 'notification', 'dispute', 'admin', 'validation', 'user', 'assistant'],
     backend: {
       loadPath: '/locales/{{lng}}/{{ns}}.json',
     },

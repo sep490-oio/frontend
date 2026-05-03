@@ -19,6 +19,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/hooks/useTheme'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { SERIF_FONT, SANS_FONT } from '@/styles/tokens'
+import { AssistantWidget } from '@/features/assistant'
 
 const { Content } = Layout
 
@@ -400,6 +401,7 @@ export function InspectorLayout() {
           <Outlet />
         </Content>
       </main>
+      <AssistantWidget />
     </div>
   )
 }
