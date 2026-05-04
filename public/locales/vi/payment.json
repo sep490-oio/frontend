@@ -164,6 +164,26 @@
   "statusFailed": "Thất bại",
   "statusRefunded": "Đã hoàn tiền",
   "statusUnknown": "Không xác định",
+  "ledgerStatus": {
+    "posted": "Đã ghi nhận",
+    "pending": "Đang xử lý",
+    "failed": "Thất bại",
+    "reversed": "Đã đảo giao dịch"
+  },
+  "event": {
+    "wallet_top_up": "Nạp tiền vào ví",
+    "auction_deposit_hold": "Đặt cọc đấu giá",
+    "auction_deposit_refund": "Hoàn cọc đấu giá",
+    "order_payment": "Thanh toán đơn hàng",
+    "order_refund": "Hoàn tiền đơn hàng",
+    "withdrawal_hold": "Giữ tiền chờ rút",
+    "withdrawal_release": "Rút tiền",
+    "seller_payout": "Nhận thanh toán bán hàng",
+    "fee": "Phí giao dịch"
+  },
+  "availableBalanceHelp": "Số tiền có thể sử dụng ngay.",
+  "reservedFundsHelpShort": "Số tiền đang bị giữ do cọc đấu giá, rút tiền hoặc giao dịch đang xử lý.",
+  "refOpenDetail": "Mở chi tiết",
   "checkoutSubtitle": "Hoàn tất thông tin giao hàng và thanh toán để kết thúc đơn hàng",
   "shippingInformation": "Thông tin giao hàng",
   "buyerProtectionTitle": "Đang bảo vệ người mua",

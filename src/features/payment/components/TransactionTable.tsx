@@ -3,11 +3,30 @@ import type { ColumnsType, TablePaginationConfig } from 'antd/es/table'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { formatDateTime, formatCurrency } from '@/utils/format'
 import { WalletTransactionType } from '@/types/enums'
-import type { WalletTransactionDto } from '@/types'
+import type { WalletTransactionDto, WalletEventType, WalletLedgerStatus } from '@/types'
 import { Tag, Typography, Space, Tooltip, Flex } from 'antd'
 import { MONO_FONT } from '@/styles/tokens'
 import { useState, useMemo } from 'react'
 import { FilterOutlined } from '@ant-design/icons'
+
+const LEDGER_STATUS_CONFIG: Record<WalletLedgerStatus, { color: string; key: string; fallback: string }> = {
+  posted: { color: 'success', key: 'ledgerStatus.posted', fallback: 'Đã ghi nhận' },
+  pending: { color: 'warning', key: 'ledgerStatus.pending', fallback: 'Đang xử lý' },
+  failed: { color: 'error', key: 'ledgerStatus.failed', fallback: 'Thất bại' },
+  reversed: { color: 'processing', key: 'ledgerStatus.reversed', fallback: 'Đã đảo giao dịch' },
+}
+
+const EVENT_TYPE_CONFIG: Record<WalletEventType, { fallback: string }> = {
+  wallet_top_up: { fallback: 'Nạp tiền vào ví' },
+  auction_deposit_hold: { fallback: 'Đặt cọc đấu giá' },
+  auction_deposit_refund: { fallback: 'Hoàn cọc đấu giá' },
+  order_payment: { fallback: 'Thanh toán đơn hàng' },
+  order_refund: { fallback: 'Hoàn tiền đơn hàng' },
+  withdrawal_hold: { fallback: 'Giữ tiền chờ rút' },
+  withdrawal_release: { fallback: 'Rút tiền' },
+  seller_payout: { fallback: 'Nhận thanh toán bán hàng' },
+  fee: { fallback: 'Phí giao dịch' },
+}
 
 export interface TransactionTableProps {
   data: WalletTransactionDto[]
@@ -103,11 +122,20 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
       render: (description: string | undefined, record) => {
         const isRelatedToAuction = record.referenceType === 'deposit' || record.referenceType === 'escrow' || record.referenceType === 'order';
         const isHighlighted = record.referenceId && record.referenceId === hoveredRefId;
-        
+
+        // Prefer the server-provided eventType i18n key; fall back to the
+        // original description string for legacy rows that predate the new
+        // enrichment fields.
+        let label: string = description ?? '-'
+        if (record.eventType) {
+          const cfg = EVENT_TYPE_CONFIG[record.eventType]
+          label = t(`event.${record.eventType}`, cfg?.fallback ?? description ?? record.eventType)
+        }
+
         return (
           <Space direction="vertical" size={0}>
             <span style={{ color: 'var(--color-text-primary)', fontSize: 14, fontWeight: 600 }}>
-              {description ?? '-'}
+              {label}
             </span>
             {record.referenceId && (
               <Tooltip title={t('filterByThis', 'Filter by this reference')}>
@@ -127,7 +155,7 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
                 >
                   <FilterOutlined style={{ marginRight: 4, fontSize: 10 }} />
                   {record.referenceType ? t(`refType.${record.referenceType}`, record.referenceType) : ''}
-                  {` • ${record.referenceId.split('-')[0].toUpperCase()}`}
+                  {` • ${(record.referenceNumber ?? record.referenceId.split('-')[0]).toUpperCase()}`}
                 </Tag>
               </Tooltip>
             )}
@@ -181,30 +209,23 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
     },
     {
       title: t('txStatus', 'Status'),
-      dataIndex: 'status',
       key: 'status',
       width: 140,
       align: 'right',
-      render: (status: string) => {
-        const s = status?.toLowerCase()
-        let color = 'default'
-        let label = status || t('statusUnknown', 'Unknown')
-
-        if (s === 'completed' || s === 'success') {
-          color = 'success'
-          label = t('statusCompleted', 'Completed')
-        } else if (s === 'pending' || s === 'processing') {
-          color = 'warning'
-          label = t('statusPending', 'Pending')
-        } else if (s === 'failed' || s === 'cancelled' || s === 'error') {
-          color = 'error'
-          label = t('statusFailed', 'Failed')
-        } else if (s === 'refunded') {
-          color = 'processing'
-          label = t('statusRefunded', 'Refunded')
-        }
-
-        return <Tag color={color} bordered={false}>{label}</Tag>
+      render: (_v, record) => {
+        // Prefer the never-null ledgerStatus the new mapper emits. Fall back to
+        // the legacy `status` string only if the server hasn't been redeployed yet.
+        const ledger: WalletLedgerStatus = record.ledgerStatus ?? (() => {
+          const s = (record.status as string | undefined)?.toLowerCase()
+          if (s === 'completed' || s === 'success' || s === 'released') return 'posted'
+          if (s === 'pending' || s === 'processing' || s === 'initiated') return 'pending'
+          if (s === 'failed' || s === 'cancelled' || s === 'error' || s === 'rejected' || s === 'expired') return 'failed'
+          if (s === 'refunded' || s === 'reversed') return 'reversed'
+          // Wallet ledger entries that exist in the table are by definition posted.
+          return 'posted'
+        })()
+        const cfg = LEDGER_STATUS_CONFIG[ledger]
+        return <Tag color={cfg.color} bordered={false}>{t(cfg.key, cfg.fallback)}</Tag>
       },
     },
   ]
@@ -222,12 +243,15 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
         const color = isDeduction ? 'var(--color-danger)' : 'var(--color-success)';
         const sign = isDeduction ? '-' : '+';
         
-        const s = record.status?.toLowerCase()
-        let statusColor = 'default'
-        if (s === 'completed' || s === 'success') statusColor = 'success'
-        else if (s === 'pending' || s === 'processing') statusColor = 'warning'
-        else if (s === 'failed' || s === 'cancelled' || s === 'error') statusColor = 'error'
-        else if (s === 'refunded') statusColor = 'processing'
+        const ledger: WalletLedgerStatus = record.ledgerStatus ?? (() => {
+          const s = (record.status as string | undefined)?.toLowerCase()
+          if (s === 'completed' || s === 'success' || s === 'released') return 'posted'
+          if (s === 'pending' || s === 'processing' || s === 'initiated') return 'pending'
+          if (s === 'failed' || s === 'cancelled' || s === 'error' || s === 'rejected' || s === 'expired') return 'failed'
+          if (s === 'refunded' || s === 'reversed') return 'reversed'
+          return 'posted'
+        })()
+        const ledgerCfg = LEDGER_STATUS_CONFIG[ledger]
 
         return (
           <Flex vertical gap={12} style={{ padding: '4px 0' }}>
@@ -251,8 +275,8 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
             </Flex>
             
             <Flex justify="space-between" align="center" style={{ paddingTop: 8, borderTop: '1px solid var(--color-border-light)' }}>
-              <Tag color={statusColor} bordered={false} style={{ fontSize: 10, borderRadius: 4, margin: 0 }}>
-                {t(`status${record.status?.charAt(0).toUpperCase()}${record.status?.slice(1)}`, record.status)}
+              <Tag color={ledgerCfg.color} bordered={false} style={{ fontSize: 10, borderRadius: 4, margin: 0 }}>
+                {t(ledgerCfg.key, ledgerCfg.fallback)}
               </Tag>
               <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
                 <span style={{ fontSize: 10, color: 'var(--color-text-tertiary)', marginRight: 4 }}>Balance:</span>
