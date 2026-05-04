@@ -35,6 +35,8 @@ export interface WalletTransactionDto {
   description?: string
   referenceType?: WalletTransactionReferenceType
   referenceId?: string | null
+  auctionTitle?: string | null
+  itemTitle?: string | null
   createdAt: string
 }
 

@@ -7,6 +7,7 @@ import type { WalletTransactionDto } from '@/types'
 import { Tag, Typography, Space, Tooltip, Flex } from 'antd'
 import { MONO_FONT } from '@/styles/tokens'
 import { useState, useMemo } from 'react'
+import { ReferenceTitle } from './ReferenceTitle'
 import { FilterOutlined } from '@ant-design/icons'
 
 export interface TransactionTableProps {
@@ -99,16 +100,23 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
       title: t('txDescription', 'Description'),
       dataIndex: 'description',
       key: 'description',
+      width: 350,
       ellipsis: true,
       render: (description: string | undefined, record) => {
         const isRelatedToAuction = record.referenceType === 'deposit' || record.referenceType === 'escrow' || record.referenceType === 'order';
         const isHighlighted = record.referenceId && record.referenceId === hoveredRefId;
         
+        const displayDescription = description && description.length > 80 ? `${description.slice(0, 80)}...` : (description ?? '-');
+        
         return (
-          <Space direction="vertical" size={0}>
-            <span style={{ color: 'var(--color-text-primary)', fontSize: 14, fontWeight: 600 }}>
-              {description ?? '-'}
-            </span>
+          <div style={{ maxWidth: 350, minWidth: 0 }}>
+            <ReferenceTitle referenceId={record.referenceId} referenceType={record.referenceType} />
+            <Typography.Text
+              style={{ color: 'var(--color-text-primary)', fontSize: 14, fontWeight: 600, display: 'block' }}
+              ellipsis={{ tooltip: description }}
+            >
+              {displayDescription}
+            </Typography.Text>
             {record.referenceId && (
               <Tooltip title={t('filterByThis', 'Filter by this reference')}>
                 <Tag
@@ -131,7 +139,7 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
                 </Tag>
               </Tooltip>
             )}
-          </Space>
+          </div>
         )
       },
     },

@@ -12,7 +12,8 @@ import { PriceDisplay } from '@/components/ui/PriceDisplay'
 import { WalletTransactionType } from '@/types/enums'
 import { formatDateTime, formatCurrency } from '@/utils/format'
 import type { WalletTransactionDto } from '@/types'
-import type { ColumnsType } from 'antd/es/table'
+import { ReferenceTitle } from '../components/ReferenceTitle'
+import { CheckCircleFilled, ClockCircleOutlined, CloseCircleOutlined } from '@ant-design/icons'
 import { SANS_FONT, MONO_FONT } from '@/styles/tokens'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 
@@ -89,12 +90,19 @@ export default function WalletPage() {
       title: t('txReason', 'Reason'),
       dataIndex: 'reason',
       key: 'reason',
-      ellipsis: true,
-      render: (reason: string | undefined) => (
-        <span style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
-          {reason ?? '-'}
-        </span>
-      ),
+      render: (reason: string | undefined, record: WalletTransactionDto) => {
+        return (
+          <div style={{ minWidth: 0 }}>
+            <ReferenceTitle referenceId={record.referenceId} referenceType={record.referenceType} />
+            <Typography.Text
+              style={{ color: 'var(--color-text-secondary)', fontSize: 13, display: 'block' }}
+              ellipsis={{ tooltip: reason }}
+            >
+              {reason ?? '-'}
+            </Typography.Text>
+          </div>
+        )
+      },
     },
     {
       title: t('txDate', 'Date'),
