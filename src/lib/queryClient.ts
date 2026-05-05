@@ -126,7 +126,7 @@ export const queryKeys = {
     all: ['disputes'] as const,
     list: (params?: unknown) => [...queryKeys.disputes.all, 'list', params] as const,
     detail: (id: string) => [...queryKeys.disputes.all, 'detail', id] as const,
-    messages: (disputeId: string, params?: unknown) => [...queryKeys.disputes.all, 'messages', disputeId, params] as const,
+    messages: (disputeId: string, params?: unknown) => params ? [...queryKeys.disputes.all, 'messages', disputeId, params] as const : [...queryKeys.disputes.all, 'messages', disputeId] as const,
     myList: (params?: unknown) => [...queryKeys.disputes.all, 'my', params] as const,
     myDetail: (id: string) => [...queryKeys.disputes.all, 'my', 'detail', id] as const,
   },

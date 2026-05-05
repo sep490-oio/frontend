@@ -60,7 +60,10 @@ export function useDisputeHub(disputeId: string) {
         connected: true,
         messages: [...prev.messages, data],
       }))
-      qc.invalidateQueries({ queryKey: queryKeys.disputes.messages(disputeId) })
+      qc.refetchQueries({ queryKey: queryKeys.disputes.messages(disputeId) })
+      qc.refetchQueries({ queryKey: queryKeys.disputes.detail(disputeId) })
+      qc.refetchQueries({ queryKey: queryKeys.admin.disputeDetail(disputeId) })
+      qc.refetchQueries({ queryKey: queryKeys.disputes.myDetail(disputeId) })
     }
 
     const readStateUpdatedHandler = (data: DisputeParticipantReadStateDto) => {
@@ -69,7 +72,9 @@ export function useDisputeHub(disputeId: string) {
 
     const disputeUpdatedHandler = (data: DisputeThreadMetaDto) => {
       setState((prev) => ({ ...prev, connected: true, disputeMeta: data }))
-      qc.invalidateQueries({ queryKey: queryKeys.disputes.detail(disputeId) })
+      qc.refetchQueries({ queryKey: queryKeys.disputes.detail(disputeId) })
+      qc.refetchQueries({ queryKey: queryKeys.admin.disputeDetail(disputeId) })
+      qc.refetchQueries({ queryKey: queryKeys.disputes.myDetail(disputeId) })
     }
 
     const disputeUnreadUpdatedHandler = (data: DisputeUnreadUpdateDto) => {

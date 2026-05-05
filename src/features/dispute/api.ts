@@ -134,7 +134,7 @@ export function useAdminDisputesList(params?: DisputeFilterParams) {
   })
 }
 
-export function useAdminDisputeDetail(id: string) {
+export function useAdminDisputeDetail(id: string, options?: { refetchInterval?: number | false }) {
   return useQuery({
     queryKey: queryKeys.admin.disputeDetail(id),
     queryFn: async () => {
@@ -142,6 +142,7 @@ export function useAdminDisputeDetail(id: string) {
       return res.data
     },
     enabled: !!id,
+    ...options,
   })
 }
 
@@ -293,6 +294,7 @@ export function useAddBuyerDisputeMessage() {
     },
     onSuccess: async (_data, { id }) => {
       qc.invalidateQueries({ queryKey: queryKeys.disputes.myDetail(id) })
+      qc.invalidateQueries({ queryKey: queryKeys.disputes.messages(id) })
     },
   })
 }
@@ -301,11 +303,12 @@ export function useAddBuyerDisputeEvidence() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, mediaUploadId }: { id: string; mediaUploadId: string }) => {
-      const res = await apiClient.post(`/me/disputes/${id}/evidence`, { mediaUploadId })
+      const res = await idempotentPost(`/me/disputes/${id}/evidence`, { mediaUploadId })
       return res.data
     },
     onSuccess: async (_data, { id }) => {
       qc.invalidateQueries({ queryKey: queryKeys.disputes.myDetail(id) })
+      qc.invalidateQueries({ queryKey: queryKeys.disputes.messages(id) })
     },
   })
 }

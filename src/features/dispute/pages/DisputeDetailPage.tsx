@@ -111,21 +111,23 @@ export default function DisputeDetailPage() {
     setUploadedFiles((prev) => prev.filter((f) => f.id !== fileId))
   }
 
-  const handleSend = () => {
+  const handleSend = async () => {
     const trimmed = messageText.trim()
     if (!trimmed || !disputeId) return
 
     const attachmentIds = uploadedFiles.map((f) => f.id)
-    sendMessage.mutate(
-      { disputeId, message: trimmed, attachments: attachmentIds.length > 0 ? attachmentIds : undefined },
-      {
-        onSuccess: () => {
-          setMessageText('')
-          setUploadedFiles([])
-          mediaUpload.reset()
-        },
-      },
-    )
+    try {
+      await sendMessage.mutateAsync({
+        disputeId,
+        message: trimmed,
+        attachments: attachmentIds.length > 0 ? attachmentIds : undefined,
+      })
+      setMessageText('')
+      setUploadedFiles([])
+      mediaUpload.reset()
+    } catch {
+      // Error handling is managed by the mutation or can be added here
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -279,9 +281,9 @@ export default function DisputeDetailPage() {
                         {dayjs(msg.createdAt).format('HH:mm')}
                       </Typography.Text>
                     </div>
-                    {msg.message && (
+                    {(msg.message || (msg as any).content) && (
                       <Typography.Paragraph style={{ marginBottom: 0, whiteSpace: 'pre-wrap', fontSize: 13 }}>
-                        {msg.message}
+                        {msg.message || (msg as any).content}
                       </Typography.Paragraph>
                     )}
                     {msg.attachments && msg.attachments.length > 0 && (

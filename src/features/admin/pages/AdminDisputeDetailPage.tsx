@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import {
   Typography, Card, Tag, Space, Spin, Empty, Button, Input,
   Modal, Select, Image, Popconfirm, Row, Col, App, Result, Tabs, Drawer, Collapse, Tooltip, Alert,
@@ -24,11 +24,13 @@ import {
   useRejectDispute,
   useAddAdminDisputeMessage,
 } from '@/features/dispute/api'
+import { useCurrentUser } from '@/features/user/api'
+import { useDisputeHub } from '@/features/dispute/hooks/useDisputeHub'
 import ResolutionActionBuilder, { getPresetForOutcome, validateActionSet } from '@/features/admin/components/ResolutionActionBuilder'
 import type { ResolutionActionSet } from '@/features/dispute/api'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { DisputeStatus } from '@/types/enums'
-import type { DisputeMessageV2Dto, DisputeFindingDto } from '@/types'
+import type { DisputeFindingDto } from '@/types'
 import dayjs from 'dayjs'
 
 const TERMINAL_STATUSES = [DisputeStatus.Resolved, DisputeStatus.Rejected, DisputeStatus.Cancelled] as string[]
@@ -60,8 +62,15 @@ export default function AdminDisputeDetailPage() {
   const { message: msg } = App.useApp()
   const disputeId = id ?? ''
 
-  const { data: dispute, isLoading } = useAdminDisputeDetail(disputeId)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  const hub = useDisputeHub(disputeId)
+
+  const { data: dispute, isLoading } = useAdminDisputeDetail(disputeId, {
+    refetchInterval: hub.connected ? 10000 : 3000, // Fallback polling if SignalR is disconnected, otherwise poll slowly
+  })
   const { data: assignableUsers } = useDisputeAssignableUsers(disputeId)
+  const { data: currentUser } = useCurrentUser()
 
   // Mutations
   const assignMutation = useAssignDispute()
@@ -99,7 +108,7 @@ export default function AdminDisputeDetailPage() {
       const preset = getPresetForOutcome(resolveOutcome, dispute?.domain)
       setResolveActionSet((prev) => ({ ...prev, ...preset }))
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resolveOutcome, dispute?.domain])
 
   // Validate action set
@@ -208,15 +217,31 @@ export default function AdminDisputeDetailPage() {
     return <Typography.Text style={{ fontSize: 12 }}>{formatContextValue(key, value)}</Typography.Text>
   }
 
-  // Split messages
-  const externalMessages = useMemo(
-    () => (dispute?.messages ?? []).filter((m) => m.visibility === 'external'),
-    [dispute?.messages],
-  )
-  const internalMessages = useMemo(
-    () => (dispute?.messages ?? []).filter((m) => m.visibility === 'internal'),
-    [dispute?.messages],
-  )
+  // Split messages by merging API and Hub
+  const externalMessages = useMemo(() => {
+    const apiMsgs = dispute?.messages ?? []
+    const hubIds = new Set(hub.messages.map((m) => m.id))
+    const merged: any[] = [
+      ...apiMsgs.filter((m) => !hubIds.has(m.id)),
+      ...hub.messages,
+    ].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+    return merged.filter((m) => m.visibility === 'external' || (!m.visibility && m.isInternal !== true))
+  }, [dispute?.messages, hub.messages])
+
+  const internalMessages = useMemo(() => {
+    const apiMsgs = dispute?.messages ?? []
+    const hubIds = new Set(hub.messages.map((m) => m.id))
+    const merged: any[] = [
+      ...apiMsgs.filter((m) => !hubIds.has(m.id)),
+      ...hub.messages,
+    ].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+    return merged.filter((m) => m.visibility === 'internal' || m.isInternal === true)
+  }, [dispute?.messages, hub.messages])
+
+  // Auto-scroll to bottom on new messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [externalMessages.length, internalMessages.length])
 
   // All attachments merged
   const allAttachments = useMemo(
@@ -383,25 +408,81 @@ export default function AdminDisputeDetailPage() {
     msg.success(t('toastCopied'))
   }
 
-  const renderMessage = (m: DisputeMessageV2Dto, borderColor: string) => (
-    <div key={m.id} style={{ marginBottom: 12, padding: '8px 12px', background: 'var(--color-bg-primary)', borderRadius: 8, borderLeft: `3px solid ${borderColor}` }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-        <Typography.Text strong style={{ fontSize: 12 }}>
-          <UserOutlined style={{ marginRight: 4 }} />
-          {m.authorDisplayName}
-        </Typography.Text>
-        <Typography.Text type="secondary" style={{ fontSize: 10 }}>
-          {dayjs(m.createdAt).format('DD/MM/YYYY HH:mm')}
-        </Typography.Text>
+  const renderMessage = (m: any) => {
+    let authorName = m.authorDisplayName
+    if (!authorName) {
+      if (currentUser?.id && m.senderId === currentUser.id) {
+        authorName = currentUser.profile?.displayName || currentUser.userName || 'admin'
+      } else if (contextSnapshot?.buyerId && m.senderId === contextSnapshot.buyerId) {
+        authorName = dispute?.complainantDisplayName || 'Buyer'
+      } else if (contextSnapshot?.sellerId && m.senderId === contextSnapshot.sellerId) {
+        authorName = dispute?.respondentDisplayName || 'Seller'
+      } else {
+        authorName = m.senderRole || m.senderId?.slice(0, 8)
+      }
+    }
+
+    const isAnyAdmin =
+      m.senderRole === 'Admin' ||
+      (currentUser?.id && m.senderId === currentUser.id) ||
+      (m.authorId && m.authorId === currentUser?.id) ||
+      (m.visibility === 'internal') ||
+      (m.authorDisplayName?.toLowerCase().includes('admin')) ||
+      (dispute?.assignedToDisplayName && m.authorDisplayName === dispute.assignedToDisplayName)
+    const bubbleColor = isAnyAdmin ? 'var(--color-accent-light, #e6f7ff)' : 'var(--color-bg-card, #f5f5f5)'
+
+    return (
+      <div
+        key={m.id}
+        style={{
+          marginBottom: 12,
+          display: 'flex',
+          flexDirection: isAnyAdmin ? 'row-reverse' : 'row',
+          gap: 8,
+          alignItems: 'flex-start',
+        }}
+      >
+        <span style={{ flexShrink: 0 }}>
+          <UserOutlined style={{ fontSize: 18, color: 'var(--color-text-secondary)' }} />
+        </span>
+        <div
+          style={{
+            maxWidth: '85%',
+            background: bubbleColor,
+            borderRadius: 12,
+            borderTopRightRadius: isAnyAdmin ? 4 : 12,
+            borderTopLeftRadius: isAnyAdmin ? 12 : 4,
+            padding: '8px 12px',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+            border: isAnyAdmin ? '1px solid var(--color-accent-border, #91caff)' : '1px solid var(--color-border, #d9d9d9)',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+            <Typography.Text strong style={{ fontSize: 12, color: isAnyAdmin ? 'var(--color-accent)' : 'var(--color-text-primary)' }}>
+              {authorName}
+            </Typography.Text>
+            <Typography.Text type="secondary" style={{ fontSize: 10, whiteSpace: 'nowrap' }}>
+              {dayjs(m.createdAt).format('HH:mm')}
+            </Typography.Text>
+          </div>
+          <Typography.Paragraph style={{ marginBottom: 0, whiteSpace: 'pre-wrap', fontSize: 13 }}>
+            {m.content || m.message}
+          </Typography.Paragraph>
+          {m.attachments && m.attachments.length > 0 && (
+            <div style={{ marginTop: 6 }}>
+              <Image.PreviewGroup>
+                <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                  {m.attachments.filter((a: any) => a.secureUrl).map((att: any, i: number) => (
+                    <DisputeAttachmentRenderer key={i} {...att} />
+                  ))}
+                </Space>
+              </Image.PreviewGroup>
+            </div>
+          )}
+        </div>
       </div>
-      <Typography.Paragraph style={{ marginBottom: 0, whiteSpace: 'pre-wrap', fontSize: 13 }}>
-        {m.content}
-      </Typography.Paragraph>
-      {m.attachments?.filter(a => a.secureUrl).map((att, i) => (
-        <DisputeAttachmentRenderer key={i} {...att} />
-      ))}
-    </div>
-  )
+    )
+  }
 
   const renderFindingRefIcon = (ref: { referenceType: string; resourceType?: string }) => {
     if (ref.referenceType === 'message') return <MessageOutlined />
@@ -700,47 +781,47 @@ export default function AdminDisputeDetailPage() {
         dispute.status !== DisputeStatus.UnderReview &&
         dispute.status !== DisputeStatus.AwaitingInternalReview &&
         dispute.status !== DisputeStatus.AwaitingResolutionApproval && (
-        <Space wrap>
-          {dispute.canRequestEvidence && (
-            <Button icon={<ExclamationCircleOutlined />} onClick={() => setEvidenceModalOpen(true)}>
-              {t('requestEvidenceFromParties')}
-            </Button>
-          )}
-          {dispute.canAddFinding && (
-            <Button
-              icon={<FileTextOutlined />}
-              onClick={() => {
-                setFindingDomain(dispute.domain ?? '')
-                setFindingModalOpen(true)
-              }}
-            >
-              {t('addInternalFinding')}
-            </Button>
-          )}
-          {dispute.canResolve && (
-            <Button type="primary" icon={<CheckCircleOutlined />} onClick={() => setResolveDrawerOpen(true)}>
-              {t('resolveCase')}
-            </Button>
-          )}
-          {dispute.canReject && (
-            <Popconfirm
-              title={t('rejectDisputeConfirm')}
-              description={
-                <Input.TextArea
-                  rows={2}
-                  value={rejectReason}
-                  onChange={(e) => setRejectReason(e.target.value)}
-                  placeholder={t('rejectReason')}
-                />
-              }
-              onConfirm={handleReject}
-              okButtonProps={{ loading: rejectMutation.isPending, disabled: !rejectReason.trim(), danger: true }}
-            >
-              <Button danger icon={<CloseCircleOutlined />}>{t('rejectCase')}</Button>
-            </Popconfirm>
-          )}
-        </Space>
-      )}
+          <Space wrap>
+            {dispute.canRequestEvidence && (
+              <Button icon={<ExclamationCircleOutlined />} onClick={() => setEvidenceModalOpen(true)}>
+                {t('requestEvidenceFromParties')}
+              </Button>
+            )}
+            {dispute.canAddFinding && (
+              <Button
+                icon={<FileTextOutlined />}
+                onClick={() => {
+                  setFindingDomain(dispute.domain ?? '')
+                  setFindingModalOpen(true)
+                }}
+              >
+                {t('addInternalFinding')}
+              </Button>
+            )}
+            {dispute.canResolve && (
+              <Button type="primary" icon={<CheckCircleOutlined />} onClick={() => setResolveDrawerOpen(true)}>
+                {t('resolveCase')}
+              </Button>
+            )}
+            {dispute.canReject && (
+              <Popconfirm
+                title={t('rejectDisputeConfirm')}
+                description={
+                  <Input.TextArea
+                    rows={2}
+                    value={rejectReason}
+                    onChange={(e) => setRejectReason(e.target.value)}
+                    placeholder={t('rejectReason')}
+                  />
+                }
+                onConfirm={handleReject}
+                okButtonProps={{ loading: rejectMutation.isPending, disabled: !rejectReason.trim(), danger: true }}
+              >
+                <Button danger icon={<CloseCircleOutlined />}>{t('rejectCase')}</Button>
+              </Popconfirm>
+            )}
+          </Space>
+        )}
     </Space>
   )
 
@@ -846,8 +927,9 @@ export default function AdminDisputeDetailPage() {
               {externalMessages.length === 0 ? (
                 <Empty description={t('noMessages')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
               ) : (
-                externalMessages.map((m) => renderMessage(m, 'var(--color-accent, #1677ff)'))
+                externalMessages.map((m) => renderMessage(m))
               )}
+              <div ref={messagesEndRef} />
             </div>
             {!isTerminal && (
               <Space.Compact style={{ width: '100%' }}>
@@ -898,7 +980,7 @@ export default function AdminDisputeDetailPage() {
                         {internalMessages.length === 0 ? (
                           <Empty description={t('noInternalNotes')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
                         ) : (
-                          internalMessages.map((m) => renderMessage(m, 'var(--color-warning, orange)'))
+                          internalMessages.map((m) => renderMessage(m))
                         )}
                       </div>
                       {!isTerminal && (

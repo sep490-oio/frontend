@@ -12,7 +12,8 @@ import { useParams } from 'react-router'
 import {
   useDisputeThread,
   useDisputeMessages,
-  useSendDisputeMessage,
+  useAddBuyerDisputeMessage,
+  useAddBuyerDisputeEvidence,
   useMarkDisputeRead,
 } from '@/features/dispute/api'
 import { useDisputeHub } from '@/features/dispute/hooks/useDisputeHub'
@@ -54,7 +55,8 @@ export default function BuyerDisputeThreadPage() {
   const { data: messagesData, isLoading: isLoadingMessages } = useDisputeMessages(disputeId, {
     pageSize: 100,
   })
-  const sendMessage = useSendDisputeMessage()
+  const addMessage = useAddBuyerDisputeMessage()
+  const addEvidence = useAddBuyerDisputeEvidence()
   const markRead = useMarkDisputeRead()
   const hub = useDisputeHub(disputeId)
   const { data: currentUser } = useCurrentUser()
@@ -68,11 +70,11 @@ export default function BuyerDisputeThreadPage() {
   // Combine API messages with hub real-time messages, filter external only
   const apiMessages = messagesData?.messages ?? []
   const hubMessageIds = new Set(hub.messages.map((m) => m.id))
-  const allMessages: DisputeMessageDto[] = [
+  const allMessages: any[] = [
     ...apiMessages.filter((m) => !hubMessageIds.has(m.id)),
     ...hub.messages,
   ]
-    .filter((m) => !m.isInternal)
+    .filter((m: any) => m.isInternal !== true && m.visibility !== 'internal')
     .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
 
   // Track other participants' read states
@@ -136,20 +138,29 @@ export default function BuyerDisputeThreadPage() {
     setUploadedFiles((prev) => prev.filter((f) => f.id !== fileId))
   }
 
-  const handleSend = () => {
+  const handleSend = async () => {
     const trimmed = messageText.trim()
-    if (!trimmed || !disputeId) return
     const attachmentIds = uploadedFiles.map((f) => f.id)
-    sendMessage.mutate(
-      { disputeId, message: trimmed, attachments: attachmentIds.length > 0 ? attachmentIds : undefined },
-      {
-        onSuccess: () => {
-          setMessageText('')
-          setUploadedFiles([])
-          mediaUpload.reset()
-        },
-      },
-    )
+    if (!trimmed && attachmentIds.length === 0) return
+    if (!disputeId) return
+
+    try {
+      if (attachmentIds.length > 0) {
+        await Promise.all(
+          attachmentIds.map((mediaId) => addEvidence.mutateAsync({ id: disputeId, mediaUploadId: mediaId }))
+        )
+      }
+
+      if (trimmed) {
+        await addMessage.mutateAsync({ id: disputeId, content: trimmed })
+      }
+
+      setMessageText('')
+      setUploadedFiles([])
+      mediaUpload.reset()
+    } catch {
+      msg.error(t('toastError', 'Failed to send message or evidence'))
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -242,8 +253,8 @@ export default function BuyerDisputeThreadPage() {
         ) : (
           <List
             dataSource={allMessages}
-            renderItem={(m: DisputeMessageDto) => {
-              const isSender = m.senderId === currentUser?.id
+            renderItem={(m: any) => {
+              const isSender = m.senderId === currentUser?.id || m.authorId === currentUser?.id
               return (
                 <div style={{
                   marginBottom: 12,
@@ -265,22 +276,22 @@ export default function BuyerDisputeThreadPage() {
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                       <Typography.Text strong style={{ fontSize: 12, color: isSender ? 'var(--color-accent)' : 'var(--color-text-primary)' }}>
-                        {m.senderDisplayName || m.senderId.slice(0, 8)}
+                        {m.senderDisplayName || m.authorDisplayName || m.senderId?.slice(0, 8) || 'System'}
                       </Typography.Text>
                       <Typography.Text type="secondary" style={{ fontSize: 10, whiteSpace: 'nowrap' }}>
                         {dayjs(m.createdAt).format('HH:mm')}
                       </Typography.Text>
                     </div>
-                    {m.message && (
+                    {(m.message || m.content) && (
                       <Typography.Paragraph style={{ marginBottom: 0, whiteSpace: 'pre-wrap', fontSize: 13 }}>
-                        {m.message}
+                        {m.message || m.content}
                       </Typography.Paragraph>
                     )}
                     {m.attachments && m.attachments.length > 0 && (
                       <div style={{ marginTop: 6 }}>
                         <Image.PreviewGroup>
                           <Space direction="vertical" size={4}>
-                            {m.attachments.map((att) => (
+                            {m.attachments.map((att: any) => (
                               <DisputeAttachmentRenderer
                                 key={att.id}
                                 resourceType={att.resourceType}
@@ -370,8 +381,8 @@ export default function BuyerDisputeThreadPage() {
               type="primary"
               icon={<SendOutlined />}
               onClick={handleSend}
-              loading={sendMessage.isPending}
-              disabled={!messageText.trim() || isTerminal}
+              loading={addMessage.isPending || addEvidence.isPending}
+              disabled={(!messageText.trim() && uploadedFiles.length === 0) || isTerminal}
             >
               {t('send', 'Send')}
             </Button>

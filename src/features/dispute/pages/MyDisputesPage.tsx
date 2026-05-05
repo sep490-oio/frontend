@@ -159,12 +159,12 @@ export default function MyDisputesPage() {
       </div>
 
       {/* Pill Filters */}
-      <div style={{ 
-        display: 'flex', 
-        gap: 8, 
-        marginBottom: 24, 
-        overflowX: 'auto', 
-        scrollbarWidth: 'none', 
+      <div style={{
+        display: 'flex',
+        gap: 8,
+        marginBottom: 24,
+        overflowX: 'auto',
+        scrollbarWidth: 'none',
         paddingBottom: isMobile ? 4 : 0,
         msOverflowStyle: 'none'
       }}>

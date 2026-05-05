@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import {
   Typography, Card, Tag, Space, Spin, Empty, Button, Input, Image,
   Upload, Tooltip, Progress, Alert, App,
 } from 'antd'
 import {
   SendOutlined, PaperClipOutlined, CheckCircleOutlined,
-  CloseCircleOutlined,
+  CloseCircleOutlined, UserOutlined,
 } from '@ant-design/icons'
 import DisputeAttachmentRenderer from '@/components/ui/DisputeAttachmentRenderer'
 import { useTranslation } from 'react-i18next'
@@ -18,7 +18,7 @@ import {
 import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { DisputeStatus } from '@/types/enums'
-import type { DisputeMessageV2Dto } from '@/types'
+import { useDisputeHub } from '@/features/dispute/hooks/useDisputeHub'
 import dayjs from 'dayjs'
 
 const STATUS_COLOR_MAP: Record<string, string> = {
@@ -43,6 +43,7 @@ export default function MyDisputeDetailPage() {
   const disputeId = id ?? ''
 
   const { data: dispute, isLoading } = useMyDisputeDetail(disputeId)
+  const hub = useDisputeHub(disputeId)
   const addMessage = useAddBuyerDisputeMessage()
   const addEvidence = useAddBuyerDisputeEvidence()
   const mediaUpload = useMediaUpload('dispute_attachment')
@@ -50,6 +51,16 @@ export default function MyDisputeDetailPage() {
   const [messageText, setMessageText] = useState('')
 
   const isTerminal = TERMINAL_STATUSES.includes(dispute?.status ?? '')
+
+  // Combine API messages with hub real-time messages
+  const allMessages = useMemo(() => {
+    const apiMsgs = dispute?.messages ?? []
+    const hubIds = new Set(hub.messages.map((m) => m.id))
+    return [
+      ...apiMsgs.filter((m) => !hubIds.has(m.id)),
+      ...hub.messages,
+    ].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+  }, [dispute?.messages, hub.messages])
 
   const handleSendMessage = async () => {
     const trimmed = messageText.trim()
@@ -85,21 +96,24 @@ export default function MyDisputeDetailPage() {
     return <Empty description={t('notFound', 'Dispute not found')} />
   }
 
-  const renderMessage = (m: DisputeMessageV2Dto) => (
-    <div key={m.id} style={{ marginBottom: 12, padding: '8px 12px', background: 'var(--color-bg-primary)', borderRadius: 8, borderLeft: '3px solid var(--color-accent, #1677ff)' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-        <Typography.Text strong style={{ fontSize: 12 }}>
-          {m.authorDisplayName}
-        </Typography.Text>
-        <Typography.Text type="secondary" style={{ fontSize: 10 }}>
-          {dayjs(m.createdAt).format('DD/MM/YYYY HH:mm')}
-        </Typography.Text>
+  const renderMessage = (m: any) => {
+    return (
+      <div key={m.id} style={{ marginBottom: 12, padding: '8px 12px', background: 'var(--color-bg-primary)', borderRadius: 8, borderLeft: '3px solid var(--color-accent, #1677ff)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+          <Typography.Text strong style={{ fontSize: 12 }}>
+            <UserOutlined style={{ marginRight: 4 }} />
+            {m.authorDisplayName || m.senderDisplayName || m.senderRole || m.senderId?.slice(0, 8)}
+          </Typography.Text>
+          <Typography.Text type="secondary" style={{ fontSize: 10 }}>
+            {dayjs(m.createdAt).format('DD/MM/YYYY HH:mm')}
+          </Typography.Text>
+        </div>
+        <Typography.Paragraph style={{ marginBottom: 0, whiteSpace: 'pre-wrap', fontSize: 13 }}>
+          {m.content || m.message}
+        </Typography.Paragraph>
       </div>
-      <Typography.Paragraph style={{ marginBottom: 0, whiteSpace: 'pre-wrap', fontSize: 13 }}>
-        {m.content}
-      </Typography.Paragraph>
-    </div>
-  )
+    )
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: isMobile ? 16 : 0 }}>
@@ -147,10 +161,10 @@ export default function MyDisputeDetailPage() {
         style={{ flex: 1 }}
         styles={{ body: { maxHeight: 500, overflow: 'auto' } }}
       >
-        {(dispute.messages ?? []).length === 0 ? (
+        {allMessages.length === 0 ? (
           <Empty description={t('noMessages', 'No messages yet')} />
         ) : (
-          dispute.messages.map(renderMessage)
+          allMessages.map(renderMessage)
         )}
       </Card>
 
