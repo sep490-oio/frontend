@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Typography, Row, Col, Button, Select, Modal, InputNumber, App, Flex } from 'antd'
+import type { ColumnsType } from 'antd/es/table'
 const { Text } = Typography
 import { WalletOutlined, ArrowDownOutlined, PlusOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
@@ -13,7 +14,6 @@ import { WalletTransactionType } from '@/types/enums'
 import { formatDateTime, formatCurrency } from '@/utils/format'
 import type { WalletTransactionDto } from '@/types'
 import { ReferenceTitle } from '../components/ReferenceTitle'
-import { CheckCircleFilled, ClockCircleOutlined, CloseCircleOutlined } from '@ant-design/icons'
 import { SANS_FONT, MONO_FONT } from '@/styles/tokens'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 
@@ -70,7 +70,7 @@ export default function WalletPage() {
       dataIndex: 'amount',
       key: 'amount',
       width: 160,
-      render: (amount: number, record) => (
+      render: (amount: number, record: WalletTransactionDto) => (
         <PriceDisplay
           amount={amount}
           currency={record.currency}
