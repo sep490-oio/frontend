@@ -164,6 +164,26 @@
   "statusFailed": "Failed",
   "statusRefunded": "Refunded",
   "statusUnknown": "Unknown",
+  "ledgerStatus": {
+    "posted": "Posted",
+    "pending": "Pending",
+    "failed": "Failed",
+    "reversed": "Reversed"
+  },
+  "event": {
+    "wallet_top_up": "Wallet top-up",
+    "auction_deposit_hold": "Auction deposit hold",
+    "auction_deposit_refund": "Auction deposit refund",
+    "order_payment": "Order payment",
+    "order_refund": "Order refund",
+    "withdrawal_hold": "Withdrawal hold",
+    "withdrawal_release": "Withdrawal payout",
+    "seller_payout": "Seller payout",
+    "fee": "Fee"
+  },
+  "availableBalanceHelp": "Funds available for immediate use.",
+  "reservedFundsHelpShort": "Funds held by auction deposits, pending withdrawals, or in-progress transactions.",
+  "refOpenDetail": "Open detail",
   "checkoutSubtitle": "Finalize your shipment details and payment to complete your order",
   "shippingInformation": "Shipping Details",
   "buyerProtectionTitle": "Buyer Protection Active",

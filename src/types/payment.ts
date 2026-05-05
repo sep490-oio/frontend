@@ -24,11 +24,35 @@ export type WalletTransactionReferenceType =
   | 'transaction'
   | null
 
+/**
+ * Ledger-side status — always non-null. <c>posted</c> for already-recorded
+ * rows; only switches to <c>pending|failed|reversed</c> when the originating
+ * payment transaction is in the matching upstream state.
+ */
+export type WalletLedgerStatus = 'posted' | 'pending' | 'failed' | 'reversed'
+
+/**
+ * Canonical business-event taxonomy for a wallet ledger row. The FE picks
+ * its description string and reference link off this — never off the
+ * server-supplied free-text description.
+ */
+export type WalletEventType =
+  | 'wallet_top_up'
+  | 'auction_deposit_hold'
+  | 'auction_deposit_refund'
+  | 'order_payment'
+  | 'order_refund'
+  | 'withdrawal_hold'
+  | 'withdrawal_release'
+  | 'seller_payout'
+  | 'fee'
+
 export interface WalletTransactionDto {
   id: string
   type: WalletTransactionType
   amount: number
   currency: string
+  /** @deprecated Use sourceStatus (same value) or ledgerStatus (never null). */
   status: TransactionStatus
   balanceBefore: number
   balanceAfter: number
@@ -38,6 +62,15 @@ export interface WalletTransactionDto {
   auctionTitle?: string | null
   itemTitle?: string | null
   createdAt: string
+  // Phase-1 enrichment fields. All non-null on rows produced by the new
+  // mapper; older cached rows from before deploy may still arrive without
+  // them, so consumers must default-handle.
+  ledgerStatus?: WalletLedgerStatus
+  sourceStatus?: TransactionStatus | null
+  eventType?: WalletEventType
+  reasonCode?: string
+  referenceNumber?: string | null
+  referenceTitle?: string | null
 }
 
 export interface SellerWalletOverviewDto {

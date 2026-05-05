@@ -1,9 +1,10 @@
-import { Navigate, Outlet } from 'react-router'
+import { Navigate, Outlet, useLocation } from 'react-router'
 import { Spin, Flex, Result } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
 import { useCurrentUser } from '@/features/user/api'
 import { STORAGE_KEYS } from '@/utils/constants'
+import { buildLoginRedirect } from '@/utils/returnTo'
 
 interface RoleGuardProps {
   roles: string[]
@@ -25,9 +26,15 @@ export function RoleGuard({ roles }: RoleGuardProps) {
   const { t } = useTranslation('common')
   const { isAuthenticated } = useAuth()
   const { isLoading } = useCurrentUser()
+  const location = useLocation()
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />
+    return (
+      <Navigate
+        to={buildLoginRedirect(location.pathname, location.search, location.hash)}
+        replace
+      />
+    )
   }
 
   if (isLoading) {
