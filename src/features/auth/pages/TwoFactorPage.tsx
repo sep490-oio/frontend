@@ -11,6 +11,7 @@ import { STORAGE_KEYS } from '@/utils/constants'
 import { MONO_FONT } from '@/styles/tokens'
 import type { AxiosError } from 'axios'
 import type { ApiError } from '@/types'
+import { getServerNowMs } from '@/utils/time'
 
 function getRedirectPath(token: string): string {
   try {
@@ -33,7 +34,7 @@ function getTokenRemainingSeconds(): number {
     if (!token) return 0
     const payload = JSON.parse(atob(token.split('.')[1]))
     const exp = payload.exp as number
-    return Math.max(0, exp - Math.floor(Date.now() / 1000))
+    return Math.max(0, exp - Math.floor(getServerNowMs() / 1000))
   } catch {
     return 0
   }

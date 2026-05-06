@@ -587,7 +587,7 @@ export default function CreateAuctionPage() {
                     {t('quantityLabel', 'Qty')}: {existingItemForPreview.quantity}
                   </Tag>
                 )}
-                {(existingItemForPreview as any).requiresPlatformInspection === true && (
+                {(existingItemForPreview as any).hasInboundShipment === true && (
                   <Tag icon={<SafetyCertificateOutlined />} color="blue" style={{ borderRadius: 4 }}>
                     {t('verifiedByPlatform', 'Verified')}
                   </Tag>
@@ -910,7 +910,7 @@ export default function CreateAuctionPage() {
                   </Typography.Title>
                   <div style={{ marginTop: 8, display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                     <StatusBadge status={existingItemForPreview.condition} />
-                    {(existingItemForPreview as any).requiresPlatformInspection === true && (
+                    {(existingItemForPreview as any).hasInboundShipment === true && (
                       <Tag icon={<SafetyCertificateOutlined />} color="blue" style={{ borderRadius: 4, margin: 0 }}>
                         {t('verified', 'Verified')}
                       </Tag>

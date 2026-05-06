@@ -535,9 +535,9 @@ export default function SellerWalletPage() {
                     data={transactions?.items ?? []}
                     loading={txLoading}
                     pagination={{
-                      current: transactions?.metadata?.currentPage ?? page,
-                      pageSize: transactions?.metadata?.pageSize ?? pageSize,
-                      total: transactions?.metadata?.totalCount ?? 0,
+                      current: transactions?.metadata?.currentPage ?? (transactions as any)?.pageNumber ?? page,
+                      pageSize: transactions?.metadata?.pageSize ?? (transactions as any)?.pageSize ?? pageSize,
+                      total: transactions?.metadata?.totalCount ?? (transactions as any)?.totalCount ?? 0,
                       showSizeChanger: true,
                       showTotal: (total) => tc('pagination.total', { total }),
                       onChange: (p, ps) => {

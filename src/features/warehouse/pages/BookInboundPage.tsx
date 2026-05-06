@@ -56,7 +56,6 @@ export default function BookInboundPage() {
     pageSize: 100,
     sortBy: 'CreatedAt Desc',
     status: 'pending_verify',
-    requiresPlatformInspection: true,
     hasActiveInbound: false,
   })
 

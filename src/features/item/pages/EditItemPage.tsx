@@ -111,7 +111,7 @@ export default function EditItemPage() {
     )
   }
 
-  const isWarehouseBound = item.requiresPlatformInspection || !!item.warehouseItemId
+  const isWarehouseBound = item.hasInboundShipment || !!item.warehouseItemId
   const canResubmitOnline = (item.status === 'rejected' || item.status === 'draft') && !isWarehouseBound
   const canRequestReinspection = item.status === 'rejected' && isWarehouseBound
   const maxPhotos = 10 - existingImages.length

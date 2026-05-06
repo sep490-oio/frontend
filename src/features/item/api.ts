@@ -17,7 +17,7 @@ import type {
 export function useMyItems(
   params?: PaginationParams & {
     status?: string
-    requiresPlatformInspection?: boolean
+    hasInboundShipment?: boolean
     sortBy?: string
     isDescending?: boolean
     /**

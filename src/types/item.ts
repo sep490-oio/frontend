@@ -23,10 +23,10 @@ export interface ItemDto {
     endTime: string
   }
   /**
-   * True when the item's latest auction has VerifyByPlatform = true. Source
-   * of truth is Auction.VerifyByPlatform, NOT item.status.
+   * Indicates if the item currently has an active or completed inbound shipment record.
+   * Use this to hide UI elements like "Send to floor".
    */
-  requiresPlatformInspection?: boolean
+  hasInboundShipment?: boolean
   /** Set when the item is linked to a warehouse item (platform inspection flow). */
   warehouseItemId?: string | null
 }

@@ -16,11 +16,12 @@ import { formatDateTime } from '@/utils/format'
 import type { OrderDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
 import { MONO_FONT, SANS_FONT } from '@/styles/tokens'
+import { getServerNowMs } from '@/utils/time'
 
 const { Title, Text } = Typography
 
 function formatCountdown(targetDate: string, expiredLabel: string): string {
-  const diff = new Date(targetDate).getTime() - Date.now()
+  const diff = new Date(targetDate).getTime() - getServerNowMs()
   if (diff <= 0) return expiredLabel
   const hours = Math.floor(diff / (1000 * 60 * 60))
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
@@ -43,7 +44,7 @@ function DecisionCountdown({ endsAt }: { endsAt: string }) {
     return () => clearInterval(interval)
   }, [endsAt, expiredLabel])
 
-  const isExpired = new Date(endsAt).getTime() <= Date.now()
+  const isExpired = new Date(endsAt).getTime() <= getServerNowMs()
 
   return (
     <Tooltip title={t('decisionWindowEnds', { date: formatDateTime(endsAt) })}>

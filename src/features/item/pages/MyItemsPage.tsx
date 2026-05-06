@@ -116,9 +116,9 @@ export default function MyItemsPage() {
     sortBy: 'CreatedAt Desc',
     ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
     ...(verifyFilter === 'platform'
-      ? { requiresPlatformInspection: true }
+      ? { hasInboundShipment: true }
       : verifyFilter === 'no_platform'
-      ? { requiresPlatformInspection: false }
+      ? { hasInboundShipment: false }
       : {}),
   }
 
@@ -291,7 +291,7 @@ export default function MyItemsPage() {
 
         {/* Rejected: gate by warehouse vs online flow */}
         {s === ItemStatus.Rejected && (() => {
-          const isWarehouseBound = record.requiresPlatformInspection || !!record.warehouseItemId
+          const isWarehouseBound = record.hasInboundShipment || !!record.warehouseItemId
           const canResubmitOnline = !isWarehouseBound
           const canRequestReinspection = isWarehouseBound
           return (

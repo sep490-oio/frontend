@@ -38,10 +38,13 @@ const apiClient = axios.create({
 apiClient.defaults.transformResponse = [
   (data) => {
     if (typeof data === 'string' && data.length > 0) {
-      // Find large numbers (12+ digits) that are not already in quotes
+      // Find large numbers (15+ digits) that are not already in quotes
       // and wrap them in quotes. This targets numeric IDs in JSON.
-      // We check for numbers following :, [, or , to catch IDs in objects and arrays.
-      return data.replace(/([:\[,]\s*)(\d{12,})/g, '$1"$2"')
+      // We safely consume string literals first to avoid corrupting strings containing numbers.
+      return data.replace(/"(?:[^"\\]|\\.)*"|([:\[,]\s*)(-?\d{15,})(?=\s*[,}\]])/g, (match, p1, p2) => {
+        if (p1) return `${p1}"${p2}"`
+        return match
+      })
     }
     return data
   },
@@ -212,6 +215,28 @@ export function extractArray<T>(data: unknown): T[] {
     return (data as { items: T[] }).items
   }
   return []
+}
+
+/**
+ * Normalizes flat pagination responses (where page properties are at the root)
+ * into the expected PagedList<T> shape containing `{ items, metadata }`.
+ */
+export function normalizePagedList<T>(data: any): { items: T[]; metadata: any } {
+  if (!data) return { items: [], metadata: { currentPage: 1, totalPages: 1, pageSize: 10, totalCount: 0, hasPrevious: false, hasNext: false } }
+  
+  if (data.metadata) return data
+
+  return {
+    items: data.items ?? [],
+    metadata: {
+      currentPage: data.pageNumber ?? 1,
+      totalPages: data.totalPages ?? 1,
+      pageSize: data.pageSize ?? 10,
+      totalCount: data.totalCount ?? 0,
+      hasPrevious: data.hasPreviousPage ?? false,
+      hasNext: data.hasNextPage ?? false,
+    }
+  }
 }
 
 export default apiClient

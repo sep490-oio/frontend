@@ -345,9 +345,9 @@ export default function WithdrawPage() {
             dataSource={withdrawals?.items ?? []}
             loading={wdLoading}
             pagination={{
-              current: withdrawals?.metadata?.currentPage ?? page,
-              pageSize: withdrawals?.metadata?.pageSize ?? pageSize,
-              total: withdrawals?.metadata?.totalCount ?? 0,
+              current: withdrawals?.metadata?.currentPage ?? (withdrawals as any)?.pageNumber ?? page,
+              pageSize: withdrawals?.metadata?.pageSize ?? (withdrawals as any)?.pageSize ?? pageSize,
+              total: withdrawals?.metadata?.totalCount ?? (withdrawals as any)?.totalCount ?? 0,
               showSizeChanger: true,
               showTotal: isMobile ? undefined : (total) => tc('pagination.total', { total }),
               size: 'small',

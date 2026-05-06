@@ -64,7 +64,7 @@ export interface InspectionEvidenceDto {
 
 // ── Inspection Queue ─────────────────────────────────────────────────
 
-export function useInspectionQueue(params?: { pageNumber?: number; pageSize?: number; status?: string; requiresPlatformInspection?: boolean }) {
+export function useInspectionQueue(params?: { pageNumber?: number; pageSize?: number; status?: string }) {
   return useQuery({
     queryKey: [...queryKeys.warehouse.all, 'inspectionQueue', params],
     queryFn: async () => {

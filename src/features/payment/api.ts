@@ -1,4 +1,4 @@
-import apiClient, { extractArray } from '@/lib/axios'
+import apiClient, { extractArray, normalizePagedList } from '@/lib/axios'
 import { queryKeys } from '@/lib/queryClient'
 import { invalidateAndRefetchActive } from '@/lib/mutationFreshness'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -74,8 +74,8 @@ export function useWalletTransactions(params?: PaginationParams & { type?: strin
   return useQuery({
     queryKey: queryKeys.wallet.transactions(params),
     queryFn: async () => {
-      const res = await apiClient.get<PagedList<WalletTransactionDto>>('/me/wallet/transactions', { params })
-      return res.data
+      const res = await apiClient.get<any>('/me/wallet/transactions', { params })
+      return normalizePagedList<WalletTransactionDto>(res.data) as PagedList<WalletTransactionDto>
     },
     ...options,
   })
@@ -231,8 +231,8 @@ export function useMyWithdrawals(params?: PaginationParams) {
   return useQuery({
     queryKey: queryKeys.wallet.withdrawals(params),
     queryFn: async () => {
-      const res = await apiClient.get<PagedList<WithdrawalRequestDto>>('/me/wallet/withdrawals', { params })
-      return res.data
+      const res = await apiClient.get<any>('/me/wallet/withdrawals', { params })
+      return normalizePagedList<WithdrawalRequestDto>(res.data) as PagedList<WithdrawalRequestDto>
     },
   })
 }

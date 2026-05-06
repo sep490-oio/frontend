@@ -345,9 +345,15 @@ export default function AuctionDetailPage() {
     const isRecentlyDeposited = (getServerNowMs() - lastDepositTs) < 30000 || hasJustDeposited.current
 
     if (isDataForCurrentUser && !isLoading && !isFetching && !data.currentUserParticipant && !isRecentlyDeposited) {
-      localStorage.removeItem(storageKey)
-      localStorage.removeItem(`${storageKey}_ts`)
-      setIsQualified(false)
+      // Aggressively clearing the storage key when participant data is missing can cause 
+      // race condition bugs if a refetch drops the info momentarily. 
+      // We only clear if they weren't already explicitly qualified in storage.
+      const isQualifiedNow = localStorage.getItem(storageKey) === 'true'
+      if (!isQualifiedNow) {
+        localStorage.removeItem(storageKey)
+        localStorage.removeItem(`${storageKey}_ts`)
+        setIsQualified(false)
+      }
       return
     }
 
@@ -606,23 +612,31 @@ export default function AuctionDetailPage() {
       // If server says they are clearly not qualified (pending, rejected, etc.), return a boundary state
       if (
         (serverQualStatus as any) === 'rejected' ||
-        (serverQualStatus as any) === 'expired' ||
-        (serverQualStatus as any) === 'none' ||
-        (serverQualStatus as any) === 'pending'
+        (serverQualStatus as any) === 'expired'
       ) {
         // Fall back to window calculation but NOT to 'qualified'
         const base = auction
           ? computeQualificationState(
             { ...auction, sellerId: item?.sellerId ?? auction.sellerId ?? '' },
             currentUser?.id,
-            false, // Don't use local storage qualified flag if server has a participant record
+            false, // Don't use local storage qualified flag if server explicitly rejected them
           )
           : 'before_window'
         return base === 'qualified' ? 'window_open' : base // Ensure we don't return 'qualified'
       }
-      
-      // Trust the optimistic flag to mask caching/webhook delays right after deposit
+
+      // If they were already qualified locally but the server returned 'none' or 'pending' momentarily 
+      // (due to cache delays or race conditions), trust the local storage.
       if (isQualifiedInStorage) return 'qualified' as QualificationState
+
+      // If they are not qualified locally and server returned 'none' or 'pending', restrict access.
+      if ((serverQualStatus as any) === 'none' || (serverQualStatus as any) === 'pending') {
+        const base = auction
+          ? computeQualificationState({ ...auction, sellerId: item?.sellerId ?? auction.sellerId ?? '' }, currentUser?.id, false)
+          : 'before_window'
+        return base === 'qualified' ? 'window_open' : base
+      }
+
     }
 
     // 3. Fallback for guests or initial loads: trust localStorage ONLY for guests or very early loads
