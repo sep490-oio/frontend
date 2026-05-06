@@ -412,8 +412,18 @@ export function useResolveEmergency() {
 export function useCancelBid() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ auctionId, bidId, reason }: { auctionId: string; bidId: string; reason?: string }) => {
-      const res = await apiClient.post(`/admin/auctions/${auctionId}/bids/${bidId}/cancel`, { reason })
+    // Reason is REQUIRED by the BE endpoint
+    // (CancelInvalidBidEndpoint.Request marks `reason` with [Required]).
+    // We type it as a non-nullable string here so callers can't accidentally
+    // submit `{ reason: undefined }` which would 400 with a validation error.
+    mutationFn: async ({ auctionId, bidId, reason }: { auctionId: string; bidId: string; reason: string }) => {
+      const trimmed = reason.trim()
+      if (!trimmed) {
+        // Defensive guard — UI should already block this, but if a caller
+        // bypasses it we fail fast in-process instead of round-tripping a 400.
+        throw new Error('Cancel reason is required.')
+      }
+      const res = await apiClient.post(`/admin/auctions/${auctionId}/bids/${bidId}/cancel`, { reason: trimmed })
       return res.data
     },
     onSuccess: async (_data, variables) => {
@@ -483,21 +493,37 @@ export function useEscalateReportToDispute() {
 
 // ── Monitoring ───────────────────────────────────────────────────────
 
-export function useMonitoringAlerts(params?: PaginationParams & { severity?: string; status?: string }) {
+export interface MonitoringAlertsParams extends PaginationParams {
+  status?: string
+  severity?: string
+  alertType?: string
+  entityType?: string
+  entityId?: string
+  assignedTo?: string
+  createdFrom?: string
+  createdTo?: string
+  minScore?: number
+  keyword?: string
+  sortBy?: string
+}
+
+export async function fetchMonitoringAlerts(params?: MonitoringAlertsParams) {
+  const res = await apiClient.get<PagedList<MonitoringAlertDto>>('/admin/monitoring-alerts', { params })
+  return res.data
+}
+
+export function useMonitoringAlerts(params?: MonitoringAlertsParams) {
   return useQuery({
     queryKey: queryKeys.admin.alerts(params),
-    queryFn: async () => {
-      const res = await apiClient.get<MonitoringAlertDto[]>('/admin/monitoring-alerts', { params })
-      return extractArray<MonitoringAlertDto>(res.data)
-    },
+    queryFn: () => fetchMonitoringAlerts(params),
   })
 }
 
 export function useAcknowledgeAlert() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, notes }: { id: string; notes?: string }) => {
-      const res = await apiClient.post(`/admin/monitoring-alerts/${id}/acknowledge`, { notes })
+    mutationFn: async ({ id, notes, assignToMe }: { id: string; notes?: string; assignToMe?: boolean }) => {
+      const res = await apiClient.post(`/admin/monitoring-alerts/${id}/acknowledge`, { notes, assignToMe })
       return res.data
     },
     onSuccess: async () => {
@@ -509,8 +535,51 @@ export function useAcknowledgeAlert() {
 export function useResolveAlert() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, notes, ignored }: { id: string; notes?: string; ignored: boolean }) => {
-      const res = await apiClient.post(`/admin/monitoring-alerts/${id}/resolve`, { notes, ignored })
+    mutationFn: async ({
+      id,
+      notes,
+      ignored,
+      resolutionOutcome,
+      resolutionReason,
+    }: {
+      id: string
+      notes?: string
+      ignored: boolean
+      resolutionOutcome?: string
+      resolutionReason?: string
+    }) => {
+      const res = await apiClient.post(`/admin/monitoring-alerts/${id}/resolve`, {
+        notes,
+        ignored,
+        resolutionOutcome,
+        resolutionReason,
+      })
+      return res.data
+    },
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.alertsRoot()])
+    },
+  })
+}
+
+export function useAssignMonitoringAlert() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, assignToUserId }: { id: string; assignToUserId: string }) => {
+      const res = await apiClient.post<MonitoringAlertDto>(`/admin/monitoring-alerts/${id}/assign`, { assignToUserId })
+      return res.data
+    },
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [queryKeys.admin.alertsRoot()])
+    },
+  })
+}
+
+export function useUnassignMonitoringAlert() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiClient.delete<MonitoringAlertDto>(`/admin/monitoring-alerts/${id}/assign`)
       return res.data
     },
     onSuccess: async () => {

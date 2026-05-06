@@ -7,9 +7,10 @@ import type { MonitoringAlertDto } from '@/types'
 
 interface MonitoringDashboardProps {
   alerts: MonitoringAlertDto[]
+  loading?: boolean
 }
 
-export function MonitoringDashboard({ alerts }: MonitoringDashboardProps) {
+export function MonitoringDashboard({ alerts, loading = false }: MonitoringDashboardProps) {
   const { t } = useTranslation('admin')
   const stats = useMemo(() => {
     const open = alerts.filter((a) => a.status === AlertStatus.Open).length
@@ -23,7 +24,7 @@ export function MonitoringDashboard({ alerts }: MonitoringDashboardProps) {
   return (
     <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
       <Col xs={24} sm={8}>
-        <Card size="small" style={{ borderLeft: '3px solid #1677ff' }}>
+        <Card size="small" loading={loading} style={{ borderLeft: '3px solid #1677ff' }}>
           <Statistic
             title={<span style={{ fontSize: 12 }}>{t('monitoring.stats.openAlerts', 'Open Alerts')}</span>}
             value={stats.open}
@@ -37,7 +38,7 @@ export function MonitoringDashboard({ alerts }: MonitoringDashboardProps) {
         </Card>
       </Col>
       <Col xs={24} sm={8}>
-        <Card size="small" style={{ borderLeft: '3px solid #ff4d4f' }}>
+        <Card size="small" loading={loading} style={{ borderLeft: '3px solid #ff4d4f' }}>
           <Statistic
             title={<span style={{ fontSize: 12 }}>{t('monitoring.stats.critical', 'Critical')}</span>}
             value={stats.critical}
@@ -51,7 +52,7 @@ export function MonitoringDashboard({ alerts }: MonitoringDashboardProps) {
         </Card>
       </Col>
       <Col xs={24} sm={8}>
-        <Card size="small" style={{ borderLeft: '3px solid #fa8c16' }}>
+        <Card size="small" loading={loading} style={{ borderLeft: '3px solid #fa8c16' }}>
           <Statistic
             title={<span style={{ fontSize: 12 }}>{t('monitoring.stats.unacknowledged', 'Unacknowledged')}</span>}
             value={stats.unacknowledged}

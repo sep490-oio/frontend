@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router'
-import { Typography, Card, Button, Space, Spin, Switch, InputNumber, Input, App, Popconfirm, Select } from 'antd'
+import { Typography, Card, Button, Space, Spin, Switch, InputNumber, Input, App, Select, Modal, Tooltip, Alert } from 'antd'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
-import { ArrowLeftOutlined, ThunderboltOutlined } from '@ant-design/icons'
+import { ArrowLeftOutlined, ThunderboltOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useAuctionDetail, useAuctionBids } from '@/features/auction/auctionApi.ts'
 import { useSetCuration, useTriggerEmergency, useResolveEmergency, useCancelBid, useFlagAuction } from '@/features/admin/api'
@@ -11,7 +11,9 @@ import { formatDateTime, formatCurrency } from '@/utils/format'
 import type { BidDto } from '@/types'
 import { AdminErrorState } from '@/features/admin/components/AdminErrorState'
 import type { ColumnsType } from 'antd/es/table'
+import type { AxiosError } from 'axios'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { isBidCancellable } from '@/features/admin/utils/monitoringFormat'
 
 export default function AdminAuctionControlPage() {
   const { id } = useParams<{ id: string }>()
@@ -43,6 +45,13 @@ export default function AdminAuctionControlPage() {
   const [resolveEmStatus, setResolveEmStatus] = useState<string>('')
   const [resolveEmPayload, setResolveEmPayload] = useState('')
   const [resolveEmId, setResolveEmId] = useState('')
+
+  // Cancel-bid modal state. Tracks which bid the admin clicked "Cancel" on
+  // and the required reason they entered. Reason is required by the BE
+  // ([Required] string Reason on CancelInvalidBidEndpoint.Request) — submitting
+  // without it returned 400 in the previous version.
+  const [cancelBidTarget, setCancelBidTarget] = useState<BidDto | null>(null)
+  const [cancelBidReason, setCancelBidReason] = useState('')
 
   const auction = detail?.auction
 
@@ -128,13 +137,35 @@ export default function AdminAuctionControlPage() {
     }
   }
 
-  const handleCancelBid = async (bidId: string) => {
+  const handleConfirmCancelBid = async () => {
+    if (!cancelBidTarget) return
+    const reason = cancelBidReason.trim()
+    if (!reason) return
     try {
-      await cancelBid.mutateAsync({ auctionId: id!, bidId })
+      await cancelBid.mutateAsync({ auctionId: id!, bidId: cancelBidTarget.id, reason })
       message.success(t('auctionControl.cancelBidSuccess'))
-    } catch {
-      message.error(t('common.error'))
+      setCancelBidTarget(null)
+      setCancelBidReason('')
+    } catch (err) {
+      // Surface server-side validation messages so admins get a real reason
+      // instead of the generic "An error occurred" toast.
+      const axiosErr = err as AxiosError<{ detail?: string; title?: string; errors?: Record<string, string[]> }>
+      const apiData = axiosErr?.response?.data
+      const fieldErrors = apiData?.errors
+      const reasonError = fieldErrors?.['reason'] ?? fieldErrors?.['Reason']
+      const detail =
+        (Array.isArray(reasonError) && reasonError[0]) ||
+        apiData?.detail ||
+        apiData?.title ||
+        t('common.error')
+      message.error(detail)
     }
+  }
+
+  const closeCancelBidModal = () => {
+    if (cancelBid.isPending) return
+    setCancelBidTarget(null)
+    setCancelBidReason('')
   }
 
   const bidColumns: ColumnsType<BidDto> = [
@@ -174,17 +205,35 @@ export default function AdminAuctionControlPage() {
     {
       title: t('reviewQueue.actions'),
       key: 'actions',
-      width: 110,
-      render: (_, record) => (
-        <Popconfirm
-          title={t('auctionControl.cancelBidConfirm')}
-          onConfirm={() => handleCancelBid(record.id)}
-        >
-          <Button type="link" size="small" danger>
+      width: 130,
+      render: (_, record) => {
+        const cancellable = isBidCancellable(record.status)
+        if (!cancellable) {
+          return (
+            <Tooltip title={t('auctionControl.cancelBidNotAllowed', 'Bid này không thể hủy ở trạng thái hiện tại.')}>
+              {/* span wrapper so the disabled Button still receives Tooltip events */}
+              <span>
+                <Button type="link" size="small" danger disabled>
+                  {t('auctionControl.cancelBid')}
+                </Button>
+              </span>
+            </Tooltip>
+          )
+        }
+        return (
+          <Button
+            type="link"
+            size="small"
+            danger
+            onClick={() => {
+              setCancelBidTarget(record)
+              setCancelBidReason('')
+            }}
+          >
             {t('auctionControl.cancelBid')}
           </Button>
-        </Popconfirm>
-      ),
+        )
+      },
     },
   ]
 
@@ -388,6 +437,90 @@ export default function AdminAuctionControlPage() {
           />
         </div>
       </Card>
+
+      {/* Cancel-bid confirmation modal — replaces the old inline Popconfirm.
+          Reason is required by the BE; submit button stays disabled until the
+          admin enters a non-blank reason. */}
+      <Modal
+        title={t('auctionControl.cancelBidConfirm', 'Hủy đặt giá')}
+        open={!!cancelBidTarget}
+        onCancel={closeCancelBidModal}
+        onOk={handleConfirmCancelBid}
+        okText={t('auctionControl.confirmCancelBid', 'Xác nhận hủy bid')}
+        cancelText={tc('common.cancel', 'Cancel')}
+        okButtonProps={{
+          danger: true,
+          loading: cancelBid.isPending,
+          disabled: !cancelBidReason.trim() || cancelBid.isPending,
+        }}
+        cancelButtonProps={{ disabled: cancelBid.isPending }}
+        maskClosable={!cancelBid.isPending}
+        destroyOnClose
+        width={520}
+      >
+        {cancelBidTarget && (
+          <Space direction="vertical" size={12} style={{ width: '100%' }}>
+            <Alert
+              type="warning"
+              showIcon
+              icon={<ExclamationCircleOutlined />}
+              message={t(
+                'auctionControl.cancelBidAuditWarning',
+                'Hành động này sẽ hủy bid và được ghi audit. Lý do hủy sẽ được lưu lại.',
+              )}
+            />
+            <Space direction="vertical" size={4} style={{ width: '100%' }}>
+              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                {t('auctionControl.bidder', 'Bidder')}
+              </Typography.Text>
+              <Typography.Text copyable={{ text: cancelBidTarget.bidderId }} style={{ fontFamily: 'var(--font-mono, monospace)' }}>
+                {cancelBidTarget.bidderId.length > 12
+                  ? `${cancelBidTarget.bidderId.slice(0, 8)}…`
+                  : cancelBidTarget.bidderId}
+              </Typography.Text>
+            </Space>
+            <Space direction="vertical" size={4} style={{ width: '100%' }}>
+              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                {t('auctionControl.amount', 'Amount')}
+              </Typography.Text>
+              <Typography.Text strong>
+                {(() => {
+                  const amt = cancelBidTarget.amount as unknown
+                  if (amt != null && typeof amt === 'object' && 'amount' in amt) {
+                    const m = amt as { amount: number; currency: string }
+                    return formatCurrency(m.amount, m.currency)
+                  }
+                  return formatCurrency(amt as number, auction?.currency ?? 'VND')
+                })()}
+              </Typography.Text>
+            </Space>
+            <Space direction="vertical" size={4} style={{ width: '100%' }}>
+              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                {t('auctionControl.bidStatus', 'Status')}
+              </Typography.Text>
+              <StatusBadge status={cancelBidTarget.status} />
+            </Space>
+            <div>
+              <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 6 }}>
+                {t('auctionControl.cancelReasonLabel', 'Lý do hủy')}{' '}
+                <span style={{ color: 'var(--color-danger)' }}>*</span>
+              </Typography.Text>
+              <Input.TextArea
+                rows={4}
+                value={cancelBidReason}
+                onChange={(e) => setCancelBidReason(e.target.value)}
+                placeholder={t(
+                  'auctionControl.cancelReasonPlaceholder',
+                  'Nhập lý do hủy bid (sẽ lưu vào audit log)…',
+                )}
+                disabled={cancelBid.isPending}
+                maxLength={500}
+                showCount
+              />
+            </div>
+          </Space>
+        )}
+      </Modal>
     </div>
   )
 }
