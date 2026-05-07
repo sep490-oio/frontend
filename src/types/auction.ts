@@ -100,6 +100,8 @@ export interface AuctionItemDto {
   quantity: number
   images: AuctionItemMediaDto[]
   createdAt: string
+  /** Indicates if the item has an active/completed inbound shipment. Used to hide "Send to floor" UI. */
+  hasInboundShipment?: boolean
 }
 
 export interface AuctionItemMediaDto {

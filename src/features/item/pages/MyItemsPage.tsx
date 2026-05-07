@@ -204,10 +204,20 @@ export default function MyItemsPage() {
           </span>
         )}
 
-        {/* Pending Verify: waiting */}
-        {s === ItemStatus.PendingVerify && (
-          <span style={{ color: 'var(--color-text-secondary)', fontSize: 12, fontStyle: 'italic' }}>
+        {/* Pending Verify: show ship link if no active shipment, else show waiting */}
+        {s === ItemStatus.PendingVerify && !record.hasInboundShipment && (
+          <Button
+            type="link"
+            size="small"
+            style={{ padding: 0 }}
+            onClick={() => navigate(`/items/${record.id}`)}
+          >
             {t('waitingVerify', 'Ship to warehouse')}
+          </Button>
+        )}
+        {s === ItemStatus.PendingVerify && record.hasInboundShipment && (
+          <span style={{ color: 'var(--color-text-secondary)', fontSize: 12, fontStyle: 'italic' }}>
+            {t('shipmentInProgress', 'Awaiting inspection...')}
           </span>
         )}
 
