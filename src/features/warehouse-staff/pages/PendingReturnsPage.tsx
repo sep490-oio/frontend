@@ -79,14 +79,21 @@ export default function PendingReturnsPage() {
     {
       title: t('staffReturns.columns.item', 'Item'),
       key: 'item',
-      render: (_: unknown, record) => (
-        <div>
-          <Typography.Text strong>{record.itemTitle ?? '—'}</Typography.Text>
-          <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', fontFamily: 'var(--font-mono)' }}>
-            {record.warehouseItemId.slice(0, 8)}…
+      render: (_: unknown, sourceRecord) => {
+        const record = {
+          ...sourceRecord,
+          itemTitle: sourceRecord.item?.itemTitle ?? sourceRecord.itemTitle,
+        }
+
+        return (
+          <div>
+            <Typography.Text strong>{record.itemTitle ?? '—'}</Typography.Text>
+            <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', fontFamily: 'var(--font-mono)' }}>
+              {record.warehouseItemId.slice(0, 8)}…
+            </div>
           </div>
-        </div>
-      ),
+        )
+      },
     },
     {
       title: t('staffReturns.columns.seller', 'Seller'),
@@ -207,7 +214,7 @@ export default function PendingReturnsPage() {
                 scroll={{ x: isMobile ? 'max-content' : undefined }}
                 locale={{
                   emptyText: (
-                    <Empty description={t('staffReturns.emptyPending', 'No pending returns.')} />
+                    <Empty description={t('staffReturns.emptyPending', 'No return shipments ready to ship.')} />
                   ),
                 }}
               />

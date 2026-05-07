@@ -13,11 +13,45 @@ export type PermissionName = string
 export interface MonitoringAlertDto {
   id: string
   alertType: string
+  alertTitle?: string
   severity: AlertSeverity
   status: AlertStatus
   payload: string
   entityType: string
   entityId: string
+  score?: number
+  summary?: string
+  ageSeconds?: number
+  primaryEntity?: {
+    type: string
+    id: string
+    displayName?: string
+    url?: string
+  }
+  participants?: Array<{
+    role: string
+    userId: string
+    displayName?: string
+  }>
+  evidenceRefs?: Array<{
+    type: 'bid' | 'user' | 'auction' | 'order' | 'device' | 'ip'
+    idOrValue: string
+    label: string
+    route?: string
+    copyValue: string
+    group: 'primary_entity' | 'participants' | 'evidence' | 'related'
+    description: string
+  }>
+  windowLabel?: string
+  recommendedNextStep?: string
+  rawPayloadAvailable?: boolean
+  assignedTo?: string
+  assignedAt?: string
+  slaDueAt?: string
+  isOverdue?: boolean
+  resolutionOutcome?: string
+  resolutionReason?: string
+  fingerprint?: string
   notes?: string
   acknowledgedBy?: string
   acknowledgedAt?: string
