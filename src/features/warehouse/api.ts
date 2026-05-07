@@ -146,7 +146,12 @@ export function useSetExternalTracking() {
 
 // ── Inbound Packages (package-level receiving) ─────────────────────
 
-export function useInboundPackages(params?: PaginationParams & { packageState?: string; search?: string }) {
+export function useInboundPackages(params?: PaginationParams & {
+  packageState?: string
+  search?: string
+  sortBy?: string
+  isDescending?: boolean
+}) {
   return useQuery({
     queryKey: [...queryKeys.warehouse.all, 'packages', 'list', params] as const,
     queryFn: async () => {

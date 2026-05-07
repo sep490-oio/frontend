@@ -23,6 +23,8 @@ export default function ReceivingPage() {
     packageState: activeTab === 'all' ? undefined : activeTab,
     pageNumber,
     pageSize,
+    sortBy: 'createdAt',
+    isDescending: true,
   })
 
   const tabItems = [
@@ -100,6 +102,12 @@ export default function ReceivingPage() {
                       {t('table.expectedArrival', 'Expected')}: {formatDateTime(record.expectedArrivalAt)}
                     </Typography.Text>
                   )}
+                  <Typography.Text
+                    type="secondary"
+                    style={{ fontSize: 11, display: 'block', marginTop: 2 }}
+                  >
+                    {t('table.createdAt', 'Created')}: {formatDateTime(record.createdAt)}
+                  </Typography.Text>
                 </div>
                 <Button
                   type="text"
@@ -193,6 +201,13 @@ export default function ReceivingPage() {
       key: 'expectedArrivalAt',
       width: 150,
       render: (val?: string) => (val ? formatDateTime(val) : '—'),
+    },
+    {
+      title: t('table.createdAt', 'Created'),
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      width: 150,
+      render: (val: string) => formatDateTime(val),
     },
     {
       title: t('table.actions', 'Actions'),

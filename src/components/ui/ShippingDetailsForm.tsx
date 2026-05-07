@@ -79,16 +79,18 @@ export default function ShippingDetailsForm({ form }: ShippingDetailsFormProps) 
           </Typography.Text>
 
           <Row gutter={12}>
-            <Col span={12}>
+            <Col span={shippingMode === 'platform' ? 12 : 24}>
               <Form.Item name="weightGrams" label={t('weightGrams', 'Weight (grams)')} rules={[{ required: true, message: t('weightGramsRequired', 'Required') }]}>
                 <InputNumber min={1} style={{ width: '100%' }} placeholder={t('weightPlaceholder', '500')} />
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item name="insuranceValue" label={t('insuranceValueLabel', 'Insurance Value (VND)')} rules={[{ required: true, message: t('insuranceValueRequired', 'Required') }]}>
-                <InputNumber min={0} style={{ width: '100%' }} placeholder={t('insurancePlaceholder', '1000000')} addonAfter="VND" />
-              </Form.Item>
-            </Col>
+            {shippingMode === 'platform' && (
+              <Col span={12}>
+                <Form.Item name="insuranceValue" label={t('insuranceValueLabel', 'Insurance Value (VND)')} rules={[{ required: true, message: t('insuranceValueRequired', 'Required') }]}>
+                  <InputNumber min={0} style={{ width: '100%' }} placeholder={t('insurancePlaceholder', '1000000')} addonAfter="VND" />
+                </Form.Item>
+              </Col>
+            )}
           </Row>
 
           <Row gutter={12}>
@@ -123,7 +125,7 @@ export default function ShippingDetailsForm({ form }: ShippingDetailsFormProps) 
                 if (v === 'platform') {
                   form.setFieldsValue({ providerCode: 'ghn', externalTrackingNumber: undefined, externalCarrierName: undefined })
                 } else {
-                  form.setFieldsValue({ providerCode: undefined })
+                  form.setFieldsValue({ providerCode: undefined, insuranceValue: 0 })
                 }
               }}
               options={SHIPPING_MODE_OPTIONS_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey, o.value === 'platform' ? 'GHN (Giao Hang Nhanh)' : 'Self-delivery / Other carrier') }))}

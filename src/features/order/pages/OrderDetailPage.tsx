@@ -557,9 +557,18 @@ export default function OrderDetailPage() {
                   </Typography.Text>
                 </div>
                 <div style={{ marginTop: 8 }}>
-                  <Button type="link" style={{ paddingLeft: 0 }} onClick={() => navigate(`/me/outbound-shipments/${ws.shipmentId}`)}>
-                    {t('warehouseOutbound.viewShipmentTracking', 'View shipment tracking')}
-                  </Button>
+                  <Space wrap>
+                    <Button 
+                      type="primary" 
+                      icon={<QrcodeOutlined />} 
+                      onClick={() => navigate('/me/shipments/scan')}
+                    >
+                      {t('warehouseOutbound.scanParcelQr', 'Scan Parcel QR')}
+                    </Button>
+                    <Button type="link" style={{ paddingLeft: 0 }} onClick={() => navigate(`/me/outbound-shipments/${ws.shipmentId}`)}>
+                      {t('warehouseOutbound.viewShipmentTracking', 'View shipment tracking')}
+                    </Button>
+                  </Space>
                 </div>
               </>
             )}
