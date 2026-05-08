@@ -410,6 +410,201 @@ export interface EvidencePhotoDto {
 }
 
 /**
+  id: string
+  status: string
+  receivedAt?: string
+  createdAt: string
+  modifiedAt?: string
+  storageLocationId?: string
+  storageLocationLabel?: string
+  inboundShipmentId: string
+  inboundShipmentCode?: string
+  itemId: string
+  itemTitle?: string
+  itemImageUrl?: string
+  condition?: string
+  description?: string
+  sellerId?: string
+  sellerName?: string
+  media: WarehouseItemMediaDto[]
+  canAssignOrMoveLocation?: boolean
+  canBookOutbound?: boolean
+  outboundBookingOrderId?: string
+  canViewOutboundShipment?: boolean
+  outboundShipmentId?: string
+}
+
+export interface StorageLocationDto {
+  id: string
+  zone: string
+  aisle: string
+  shelf: string
+  bin: string
+  label: string
+  isOccupied: boolean
+  createdAt: string
+}
+
+export interface ShipmentTrackingEventDto {
+  id?: string
+  providerCode?: string
+  carrierStatusRaw?: string
+  carrierStatusDesc?: string
+  normalizedStatus?: string
+  location?: string
+  reasonCode?: string
+  reasonDescription?: string
+  eventTime?: string
+  createdAt?: string
+  // Legacy fields for backward compatibility
+  timestamp?: string
+  status?: string
+  notes?: string
+}
+
+export interface TrackingEventDto {
+  id?: string
+  providerCode?: string
+  carrierStatusRaw?: string
+  carrierStatusDesc?: string
+  normalizedStatus?: string
+  location?: string
+  reasonCode?: string
+  reasonDescription?: string
+  eventTime?: string
+  createdAt?: string
+  // Legacy fields for backward compatibility
+  timestamp?: string
+  status?: string
+  notes?: string
+}
+
+// ── Warehouse Staff Outbound Queue ──────────────────────────────────
+
+export interface WarehouseStaffOutboundQueueItemDto {
+  orderId: string
+  orderNumber: string
+  orderStatus: string
+  orderPaidAt?: string | null
+  auctionId: string
+  warehouseItemId: string
+  itemTitle: string
+  itemPrimaryImageUrl?: string | null
+  buyerRecipientName?: string | null
+  buyerShippingAddress?: string | null
+  sellerDisplayName?: string | null
+  storageLocationLabel?: string | null
+}
+
+/**
+ * Full detail payload for the warehouse-staff outbound booking screen.
+ * Mirrors WarehouseStaffOutboundOrderDetailDto on the BE.
+ */
+export interface WarehouseStaffOutboundOrderDetailDto {
+  orderId: string
+  orderNumber: string
+  orderStatus: string
+  orderPaidAt?: string | null
+
+  warehouseItemId: string
+  warehouseItemStatus: string
+  storageLocationLabel?: string | null
+
+  itemTitle?: string | null
+  itemPrimaryImageUrl?: string | null
+  itemPriceDefault: number
+
+  recipientName?: string | null
+  recipientPhone?: string | null
+  street?: string | null
+  ward?: string | null
+  district?: string | null
+  province?: string | null
+  postalCode?: string | null
+  composedAddress?: string | null
+
+  sellerDisplayName?: string | null
+
+  weightGrams: number
+  lengthCm: number
+  widthCm: number
+  heightCm: number
+  insuranceValueDefault: number
+  codAmountDefault: number
+  defaultProviderCode?: string | null
+  defaultProviderLabel?: string | null
+}
+
+// ── Warehouse Staff Outbound Shipment (shipment-centric) ────────────
+
+export interface WarehouseStaffOutboundShipmentListItemDto {
+  shipmentId: string
+  orderId: string
+  orderNumber: string
+  status: string
+  shipmentMode: string
+  providerCode: string
+  externalCarrierName?: string | null
+  carrierTrackingNumber?: string | null
+  itemTitle?: string | null
+  itemPrimaryImageUrl?: string | null
+  storageLocationLabel?: string | null
+  recipientName?: string | null
+  createdAt: string
+  dispatchedAt?: string | null
+}
+
+export interface OutboundShipmentTimelineEvent {
+  code: string
+  label: string
+  occurredAt: string
+  source: 'system' | 'manual' | 'carrier'
+  note?: string | null
+}
+
+export interface WarehouseStaffOutboundShipmentDetailDto {
+  shipmentId: string
+  orderId: string
+  orderNumber: string
+  status: string
+  shipmentMode: string
+  providerCode: string
+  externalCarrierName?: string | null
+  carrierTrackingNumber?: string | null
+  shippingLabelUrl?: string | null
+  createdAt: string
+  packedAt?: string | null
+  dispatchedAt?: string | null
+  deliveredAt?: string | null
+
+  warehouseItemId?: string | null
+  itemId: string
+  itemTitle?: string | null
+  itemPrimaryImageUrl?: string | null
+  storageLocationLabel?: string | null
+
+  recipientName?: string | null
+  recipientPhone?: string | null
+  composedAddress?: string | null
+
+  events: OutboundShipmentTimelineEvent[]
+  allowedManualStatuses: string[]
+
+  // QR token (external-carrier only; null for platform-managed)
+  qrPayload?: string | null
+  qrCodeUrl?: string | null
+  qrTokenVersion: number
+  qrTokenIssuedAt?: string | null
+  qrTokenRevokedAt?: string | null
+}
+
+export interface EvidencePhotoDto {
+  id: string
+  url: string
+  createdAt: string
+}
+
+/**
  * Warehouse -> Seller return shipment (created when a warehouse inspector
  * rejects an item and the platform routes it back to the seller).
  * Mirrors `WarehouseToSellerShipmentDto` on the BE.
@@ -419,30 +614,24 @@ export interface EvidencePhotoDto {
  * may still use seller default address (`source: "user_default_address"`).
  * FE must not assume `userAddressId` is always present.
  */
-/**
- * Nested media info on a WarehouseToSellerShipmentEvidence row. Mirrors
- * the BE `MediaUploadDto` projection inside `WarehouseToSellerShipmentEvidenceDto`.
- */
-export interface WarehouseToSellerShipmentEvidenceMediaDto {
-  id: string
-  secureUrl: string
-  publicId?: string | null
-  resourceType?: string | null
-  fileName?: string | null
-}
 
 /**
  * Chain-of-custody photo attached to a warehouse->seller return shipment.
  * Category discriminates staff-uploaded pickup shots vs seller-uploaded
- * receipt shots.
+ * receipt shots. Flat projection matching BE `WarehouseToSellerShipmentEvidenceDto`.
  */
 export interface WarehouseToSellerShipmentEvidenceDto {
   id: string
   shipmentId: string
   category: WarehouseReturnEvidenceCategory
-  mediaUpload: WarehouseToSellerShipmentEvidenceMediaDto
+  mediaUploadId: string
+  secureUrl?: string | null
+  fileName?: string | null
+  resourceType: string
   createdAt: string
   createdBy: string
+  /** Nested alias used by ReturnEvidenceUploader — built client-side from flat fields. */
+  mediaUpload?: { secureUrl: string }
 }
 
 export interface WarehouseToSellerShipmentItemSummaryDto {
@@ -479,6 +668,8 @@ export interface WarehouseToSellerShipmentDto {
   qrToken?: string | null
   /** Chain-of-custody photos attached to this shipment. */
   evidence?: WarehouseToSellerShipmentEvidenceDto[]
+  /** True when at least one ReceiptBySeller evidence photo exists (computed by BE). */
+  hasReceiptEvidence?: boolean
 }
 
 export interface BuyerOutboundShipmentDetailDto {

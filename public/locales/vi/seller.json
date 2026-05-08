@@ -201,5 +201,31 @@
   "identityVerified": "Đã xác minh danh tính",
   "verifyIdentity": "Xác minh danh tính của bạn",
   "verifiedDesc": "Danh tính của bạn đã được xác minh. Bạn có thể tạo hồ sơ người bán và tham gia tất cả các phiên đấu giá.",
-  "reVerifyAtStore": "Yêu cầu xác minh lại"
+  "reVerifyAtStore": "Yêu cầu xác minh lại",
+  "returns": {
+    "columns": {
+      "item": "Sản phẩm",
+      "reason": "Lý do",
+      "carrier": "Đơn vị / Mã vận đơn",
+      "status": "Trạng thái",
+      "delivered": "Đã giao",
+      "action": "Thao tác"
+    },
+    "confirmed": "Đã xác nhận",
+    "scanQr": "Quét QR",
+    "uploadPhoto": "Tải ảnh lên",
+    "confirmReceipt": "Xác nhận nhận hàng",
+    "confirmPrompt": "Xác nhận bạn đã nhận sản phẩm trả về?",
+    "confirmSuccess": "Xác nhận nhận hàng thành công",
+    "confirmError": "Không thể xác nhận nhận hàng",
+    "scanTitle": "Quét QR trả hàng từ kho",
+    "scanSubtitle": "Hướng camera vào mã QR trên kiện hàng để xác nhận đã nhận.",
+    "scanSuccess": "Đã đánh dấu đã nhận",
+    "scanError": "Không thể quét QR",
+    "uploadReceipt": "Tải ảnh nhận hàng",
+    "receiptUploadHint": "Chụp ảnh sản phẩm trả về để xác minh tình trạng, sau đó xác nhận nhận hàng.",
+    "waitingDelivery": "Kiện hàng vẫn đang vận chuyển. Bạn có thể tải ảnh nhận hàng khi kiện hàng đến.",
+    "alreadyConfirmed": "Bạn đã xác nhận nhận sản phẩm này rồi.",
+    "emptyWarehouse": "Chưa có hàng trả về từ kho."
+  }
 }

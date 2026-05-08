@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Typography, Tabs, Tag, Button, Popconfirm, App, Alert, Empty, Space, Divider, Flex } from 'antd'
-import { ScanOutlined } from '@ant-design/icons'
+import { Typography, Tabs, Tag, Button, Popconfirm, App, Alert, Empty, Space, Divider, Flex, Image, Modal } from 'antd'
+import { ScanOutlined, InboxOutlined, SendOutlined, CameraOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import { useSearchParams, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -30,12 +30,15 @@ import { useMyOrders } from '@/features/order/api'
 import type { OrderDto } from '@/types'
 import { ReturnEvidenceUploader } from '@/features/order/components/ReturnEvidenceUploader'
 import { ReturnQrScanModal } from '@/features/order/components/ReturnQrScanModal'
+import { SERIF_FONT } from '@/styles/tokens'
 
 type TabKey = 'warehouse' | 'order'
 
 function WarehouseReturnsTab() {
   const { t } = useTranslation('seller')
+  const { t: tc } = useTranslation('common')
   const { message } = App.useApp()
+  const { isMobile } = useBreakpoint()
   const { data, isLoading } = useSellerWarehouseReturns()
   const confirmReceipt = useConfirmWarehouseReturnReceipt()
   const addEvidence = useAddWarehouseReturnEvidenceSeller()
@@ -43,6 +46,7 @@ function WarehouseReturnsTab() {
 
   const [scanOpen, setScanOpen] = useState(false)
   const [scanShipmentId, setScanShipmentId] = useState<string | null>(null)
+  const [uploadModalRecord, setUploadModalRecord] = useState<WarehouseToSellerShipmentDto | null>(null)
 
   const handleConfirm = async (id: string) => {
     try {
@@ -72,26 +76,54 @@ function WarehouseReturnsTab() {
     {
       title: t('returns.columns.item', 'Item'),
       key: 'item',
-      render: (_: unknown, record) => (
-        <Flex vertical gap={4} style={{ maxWidth: '100%' }}>
-          <Typography.Text strong ellipsis style={{ maxWidth: '100%' }}>
-            {record.itemTitle ?? record.warehouseItemId.slice(0, 8) + '…'}
-          </Typography.Text>
-          <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', fontFamily: 'var(--font-mono)' }}>
-            {record.warehouseItemId.slice(0, 8)}…
-          </div>
-        </Flex>
-      ),
-    },
-    {
-      title: t('returns.columns.reason', 'Reason'),
-      dataIndex: 'rejectionReason',
-      key: 'rejectionReason',
-      ellipsis: true,
+      render: (_: unknown, record) => {
+        const img = record.item?.primaryImageUrl ?? record.itemImageUrl
+        const title = record.item?.itemTitle ?? record.itemTitle
+        return (
+          <Flex gap={10} align="center">
+            {img ? (
+              <Image
+                src={img}
+                alt={title ?? ''}
+                width={40}
+                height={40}
+                style={{ objectFit: 'cover', borderRadius: 6, flexShrink: 0 }}
+                preview={false}
+              />
+            ) : (
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 6,
+                  background: 'var(--color-bg-surface, #f0f0f0)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 16,
+                  color: 'var(--color-text-secondary)',
+                  flexShrink: 0,
+                }}
+              >
+                <InboxOutlined />
+              </div>
+            )}
+            <div style={{ minWidth: 0 }}>
+              <Typography.Text strong ellipsis style={{ display: 'block', maxWidth: 180 }}>
+                {title ?? record.warehouseItemId.slice(0, 8) + '…'}
+              </Typography.Text>
+              <Typography.Text type="secondary" style={{ fontSize: 11, display: 'block' }}>
+                {record.rejectionReason ?? ''}
+              </Typography.Text>
+            </div>
+          </Flex>
+        )
+      },
     },
     {
       title: t('returns.columns.carrier', 'Carrier / Tracking'),
       key: 'carrier',
+      responsive: ['md'] as ('md')[],
       render: (_: unknown, record) => (
         <div style={{ fontSize: 12 }}>
           <div>{record.providerCode ?? '—'}</div>
@@ -107,34 +139,30 @@ function WarehouseReturnsTab() {
       title: t('returns.columns.status', 'Status'),
       dataIndex: 'status',
       key: 'status',
+      width: 120,
       render: (status: string) => <StatusBadge status={status} />,
-    },
-    {
-      title: t('returns.columns.delivered', 'Delivered'),
-      dataIndex: 'deliveredAt',
-      key: 'deliveredAt',
-      render: (value: string | null | undefined) => (value ? formatDateTime(value) : '—'),
     },
     {
       title: t('returns.columns.action', 'Action'),
       key: 'action',
+      width: isMobile ? 90 : 160,
       render: (_: unknown, record) => {
         const canScan = record.status === WarehouseToSellerShipmentStatus.InTransit
         const canConfirm =
           record.status === WarehouseToSellerShipmentStatus.Delivered && !record.sellerConfirmedAt
-        const receiptPhotos = (record.evidence ?? []).filter(
-          (e) => e.category === WarehouseReturnEvidenceCategory.ReceiptBySeller,
-        )
-        const hasReceiptEvidence = receiptPhotos.length >= 1
+        const hasReceiptEvidence = !!record.hasReceiptEvidence
 
         if (record.sellerConfirmedAt) {
           return <Tag color="green">{t('returns.confirmed', 'Confirmed')}</Tag>
         }
+
         return (
-          <Space direction="vertical" size={4}>
+          <Space direction="vertical" size={4} style={{ width: '100%' }}>
             {canScan && (
               <Button
                 size="small"
+                type="primary"
+                block={isMobile}
                 icon={<ScanOutlined />}
                 onClick={() => {
                   setScanShipmentId(record.id)
@@ -144,26 +172,38 @@ function WarehouseReturnsTab() {
                 {t('returns.scanQr', 'Scan QR')}
               </Button>
             )}
+            {canConfirm && isMobile && (
+              <Button
+                size="small"
+                block
+                icon={<CameraOutlined />}
+                onClick={() => setUploadModalRecord(record)}
+              >
+                {t('returns.uploadPhoto', 'Upload photo')}
+              </Button>
+            )}
             {canConfirm && (
               <Popconfirm
                 title={t('returns.confirmPrompt', 'Confirm you received this returned item?')}
                 onConfirm={() => handleConfirm(record.id)}
                 disabled={!hasReceiptEvidence}
+                okText={tc('action.confirm', 'Confirm')}
+                cancelText={tc('action.cancel', 'Cancel')}
               >
                 <Button
                   type="primary"
                   size="small"
+                  block={isMobile}
                   loading={confirmReceipt.isPending}
                   disabled={!hasReceiptEvidence}
+                  style={{
+                    background: hasReceiptEvidence ? 'var(--color-success, #52c41a)' : undefined,
+                    borderColor: hasReceiptEvidence ? 'var(--color-success, #52c41a)' : undefined,
+                  }}
                 >
                   {t('returns.confirmReceipt', 'Confirm receipt')}
                 </Button>
               </Popconfirm>
-            )}
-            {canConfirm && !hasReceiptEvidence && (
-              <Typography.Text type="secondary" style={{ fontSize: 11 }}>
-                {t('returns.receiptPhotoRequired', 'Receipt photo required')}
-              </Typography.Text>
             )}
           </Space>
         )
@@ -184,25 +224,67 @@ function WarehouseReturnsTab() {
             const receiptPhotos = (record.evidence ?? []).filter(
               (e) => e.category === WarehouseReturnEvidenceCategory.ReceiptBySeller,
             )
+            const isDelivered = record.status === WarehouseToSellerShipmentStatus.Delivered
+            const isClosed = !!record.sellerConfirmedAt
+
+            if (isClosed) {
+              return (
+                <div style={{ padding: 16, textAlign: 'center', color: 'var(--color-text-secondary)' }}>
+                  {t('returns.alreadyConfirmed', 'You have already confirmed receipt of this item.')}
+                </div>
+              )
+            }
+
             return (
-              <div style={{ padding: '8px 0' }}>
-                <ReturnEvidenceUploader
-                  existingEvidence={receiptPhotos.map((e) => ({
-                    id: e.id,
-                    mediaUpload: { secureUrl: e.mediaUpload.secureUrl },
-                  }))}
-                  category={WarehouseReturnEvidenceCategory.ReceiptBySeller}
-                  minRequired={1}
-                  maxPhotos={5}
-                  disabled={addEvidence.isPending}
-                  onUpload={async (mediaUploadId) => {
-                    await addEvidence.mutateAsync({
-                      id: record.id,
-                      mediaUploadId,
-                      category: WarehouseReturnEvidenceCategory.ReceiptBySeller,
-                    })
-                  }}
-                />
+              <div style={{
+                padding: isMobile ? 12 : 16,
+                maxWidth: 480,
+                margin: isMobile ? undefined : '0 auto',
+              }}>
+                {/* Receipt evidence section */}
+                <div style={{
+                  background: 'var(--color-bg-surface, #fafafa)',
+                  borderRadius: 10,
+                  padding: isMobile ? 12 : 16,
+                  border: '1px solid var(--color-border, #f0f0f0)',
+                }}>
+                  <Flex align="center" gap={8} style={{ marginBottom: 12 }}>
+                    <SendOutlined style={{ color: 'var(--color-accent)' }} />
+                    <Typography.Text strong style={{ fontSize: 13 }}>
+                      {t('returns.uploadReceipt', 'Upload receipt photos')}
+                    </Typography.Text>
+                  </Flex>
+
+                  <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 12 }}>
+                    {isDelivered
+                      ? t(
+                          'returns.receiptUploadHint',
+                          'Take a photo of the returned item to verify its condition, then confirm receipt.',
+                        )
+                      : t(
+                          'returns.waitingDelivery',
+                          'This shipment is still in transit. You can upload receipt photos once it arrives.',
+                        )}
+                  </Typography.Text>
+
+                  <ReturnEvidenceUploader
+                    existingEvidence={receiptPhotos.map((e) => ({
+                      id: e.id,
+                      mediaUpload: { secureUrl: e.secureUrl ?? '' },
+                    }))}
+                    category={WarehouseReturnEvidenceCategory.ReceiptBySeller}
+                    minRequired={1}
+                    maxPhotos={5}
+                    disabled={addEvidence.isPending || !isDelivered}
+                    onUpload={async (mediaUploadId) => {
+                      await addEvidence.mutateAsync({
+                        id: record.id,
+                        mediaUploadId,
+                        category: WarehouseReturnEvidenceCategory.ReceiptBySeller,
+                      })
+                    }}
+                  />
+                </div>
               </div>
             )
           },
@@ -215,6 +297,69 @@ function WarehouseReturnsTab() {
         }}
         pagination={false}
       />
+
+      {/* Receipt photo upload modal (replaces expand on mobile) */}
+      <Modal
+        open={!!uploadModalRecord}
+        onCancel={() => setUploadModalRecord(null)}
+        footer={null}
+        title={t('returns.uploadReceipt', 'Upload receipt photos')}
+        centered
+        destroyOnClose
+        width={isMobile ? '100%' : 520}
+      >
+        {uploadModalRecord && (() => {
+          const record = uploadModalRecord
+          const receiptPhotos = (record.evidence ?? []).filter(
+            (e) => e.category === WarehouseReturnEvidenceCategory.ReceiptBySeller,
+          )
+          return (
+            <div style={{ paddingTop: 8 }}>
+              <Flex gap={10} align="center" style={{ marginBottom: 16 }}>
+                {(record.item?.primaryImageUrl ?? record.itemImageUrl) ? (
+                  <Image
+                    src={record.item?.primaryImageUrl ?? record.itemImageUrl ?? ''}
+                    alt=""
+                    width={40}
+                    height={40}
+                    style={{ objectFit: 'cover', borderRadius: 6, flexShrink: 0 }}
+                    preview={false}
+                  />
+                ) : (
+                  <InboxOutlined style={{ fontSize: 24, color: 'var(--color-text-secondary)' }} />
+                )}
+                <div>
+                  <Typography.Text strong>
+                    {record.item?.itemTitle ?? record.itemTitle ?? '—'}
+                  </Typography.Text>
+                  <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
+                    {record.rejectionReason}
+                  </Typography.Text>
+                </div>
+              </Flex>
+
+              <ReturnEvidenceUploader
+                existingEvidence={receiptPhotos.map((e) => ({
+                  id: e.id,
+                  mediaUpload: { secureUrl: e.secureUrl ?? '' },
+                }))}
+                category={WarehouseReturnEvidenceCategory.ReceiptBySeller}
+                minRequired={1}
+                maxPhotos={5}
+                disabled={addEvidence.isPending}
+                onUpload={async (mediaUploadId) => {
+                  await addEvidence.mutateAsync({
+                    id: record.id,
+                    mediaUploadId,
+                    category: WarehouseReturnEvidenceCategory.ReceiptBySeller,
+                  })
+                }}
+              />
+            </div>
+          )
+        })()}
+      </Modal>
+
       <ReturnQrScanModal
         open={scanOpen}
         onClose={() => {
@@ -401,7 +546,7 @@ function OrderReturnsTab() {
                 <ReturnEvidenceUploader
                   existingEvidence={receiptPhotos.map((e) => ({
                     id: e.id,
-                    mediaUpload: { secureUrl: e.mediaUpload.secureUrl },
+                    mediaUpload: { secureUrl: e.secureUrl ?? '' },
                   }))}
                   category={OrderReturnEvidenceCategory.ReceiptBySeller}
                   minRequired={1}
@@ -475,11 +620,11 @@ export default function SellerReturnsPage() {
   }
 
   return (
-    <div style={{ padding: isMobile ? '0 12px' : undefined }}>
-      <Typography.Title level={isMobile ? 3 : 2} className="oio-serif" style={{ marginBottom: 8, fontWeight: 400 }}>
+    <div style={{ maxWidth: 1000, margin: '0 auto', padding: isMobile ? '0 8px' : '0 16px' }}>
+      <Typography.Title level={isMobile ? 4 : 3} style={{ marginBottom: 4, fontFamily: SERIF_FONT }}>
         {t('returns.pageTitle', 'Returns')}
       </Typography.Title>
-      <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
+      <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 16, fontSize: 13 }}>
         {t(
           'returns.pageSubtitle',
           'Track items coming back from the warehouse and buyer-initiated returns.',
