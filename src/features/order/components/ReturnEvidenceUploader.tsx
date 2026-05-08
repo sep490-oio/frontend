@@ -179,7 +179,11 @@ export function ReturnEvidenceUploader({
       </Flex>
 
       {showCamera && !atMax && (
-        <div style={{ marginTop: 8 }}>
+        <div style={{
+          marginTop: 8,
+          borderRadius: 8,
+          overflow: 'hidden',
+        }}>
           <SecureCaptureUploader
             step="item_photo"
             facingMode="environment"
@@ -190,14 +194,16 @@ export function ReturnEvidenceUploader({
               'Capture a clear photo — camera only (live capture)',
             )}
           />
-          <Button
-            size="small"
-            style={{ marginTop: 8 }}
-            onClick={() => setShowCamera(false)}
-            disabled={isUploading}
-          >
-            {t('returnEvidence.closeCamera', 'Close camera')}
-          </Button>
+          <div style={{ padding: '8px 0' }}>
+            <Button
+              size="small"
+              onClick={() => setShowCamera(false)}
+              disabled={isUploading}
+              block
+            >
+              {t('returnEvidence.closeCamera', 'Close camera')}
+            </Button>
+          </div>
         </div>
       )}
     </div>

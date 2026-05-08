@@ -3,6 +3,7 @@ import { Button, Typography, Alert, Upload, Flex, Tooltip } from 'antd'
 import { CameraOutlined, ReloadOutlined, CheckOutlined, UploadOutlined, AimOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useCamera } from '@/hooks/useCamera'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { validateCaptureQuality } from '@/components/ui/CaptureQualityValidator'
 import { LivenessChallengeOverlay } from '@/components/ui/LivenessChallenge'
 import type {
@@ -74,6 +75,7 @@ export function SecureCaptureUploader({
   children,
 }: SecureCaptureUploaderProps) {
   const { t } = useTranslation('common')
+  const { isMobile } = useBreakpoint()
   const { videoRef, isSupported, isActive, error, focusSupported, startCamera, stopCamera, refocus, focusAt } = useCamera()
   const [focusRing, setFocusRing] = useState<{ x: number; y: number; key: number } | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
@@ -242,7 +244,7 @@ export function SecureCaptureUploader({
   if (preview) {
     const showWarningBanner = qualityResult?.decision === 'warning'
     return (
-      <div style={{ textAlign: 'center' }}>
+      <div style={{ textAlign: 'center', padding: isMobile ? 8 : 0 }}>
         {showWarningBanner && (
           <Alert
             type="warning"
@@ -251,8 +253,18 @@ export function SecureCaptureUploader({
             style={{ marginBottom: 12, textAlign: 'left' }}
           />
         )}
-        <img src={preview} alt="Captured" style={{ width: '100%', maxHeight: 400, objectFit: 'contain', borderRadius: 8, marginBottom: 12 }} />
-        <Flex justify="center" gap={12}>
+        <img
+          src={preview}
+          alt="Captured"
+          style={{
+            width: '100%',
+            maxHeight: isMobile ? '60vh' : 400,
+            objectFit: 'contain',
+            borderRadius: 8,
+            marginBottom: 12,
+          }}
+        />
+        <Flex justify="center" gap={12} wrap="wrap">
           <Button icon={<ReloadOutlined />} onClick={handleRetake}>{t('capture.retake')}</Button>
           <Button type="primary" icon={<CheckOutlined />} onClick={handleUse} style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}>
             {t('capture.useThisPhoto')}
@@ -272,17 +284,17 @@ export function SecureCaptureUploader({
           alignItems: 'center',
           justifyContent: 'center',
           gap: 12,
-          padding: 32,
+          padding: isMobile ? 24 : 32,
           background: 'var(--color-bg-surface)',
           borderRadius: 8,
           border: '2px dashed var(--color-border)',
-          minHeight: 200,
+          minHeight: isMobile ? 160 : 200,
           cursor: 'pointer',
         }}
         onClick={handleStartCamera}
       >
-        <CameraOutlined style={{ fontSize: 48, color: 'var(--color-accent)' }} />
-        <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-text-primary)' }}>
+        <CameraOutlined style={{ fontSize: isMobile ? 36 : 48, color: 'var(--color-accent)' }} />
+        <span style={{ fontSize: isMobile ? 13 : 14, fontWeight: 500, color: 'var(--color-text-primary)', textAlign: 'center', padding: '0 8px' }}>
           {instruction || t(STEP_INSTRUCTION_KEYS[step] || 'capture.tapToOpenCamera')}
         </span>
         <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
@@ -302,8 +314,21 @@ export function SecureCaptureUploader({
       ? t('capture.shutterDisabled')
       : ''
 
+  // Responsive control sizing
+  const shutterSize = isMobile ? 56 : 64
+  const refocusSize = isMobile ? 38 : 44
+  const bottomBarHeight = isMobile ? 64 : 80
+  const instructionBottom = bottomBarHeight + (isMobile ? 8 : 16)
+
   return (
-    <div style={{ position: 'relative', background: '#000', borderRadius: 8, overflow: 'hidden' }}>
+    <div style={{
+      position: 'relative',
+      background: '#000',
+      borderRadius: isMobile ? 0 : 8,
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column',
+    }}>
       {/* Camera viewfinder — click/tap to focus */}
       <video
         ref={videoRef}
@@ -322,11 +347,16 @@ export function SecureCaptureUploader({
         }}
         style={{
           width: '100%',
-          maxHeight: step === 'selfie' ? '70vh' : 400,
-          minHeight: step === 'selfie' ? 400 : undefined,
+          maxHeight: isMobile
+            ? (step === 'selfie' ? '75dvh' : '65dvh')
+            : (step === 'selfie' ? '70vh' : 480),
+          minHeight: isMobile
+            ? (step === 'selfie' ? 300 : 260)
+            : (step === 'selfie' ? 400 : 320),
           objectFit: 'cover',
           display: 'block',
           cursor: focusSupported ? 'crosshair' : 'default',
+          flex: '1 1 auto',
         }}
       />
 
@@ -374,28 +404,52 @@ export function SecureCaptureUploader({
       {children}
 
       {/* Instruction */}
-      <div style={{ position: 'absolute', bottom: 80, left: 0, right: 0, textAlign: 'center', padding: '0 16px' }}>
-        <Typography.Text style={{ color: '#fff', fontSize: 14, background: 'rgba(0,0,0,0.5)', padding: '6px 16px', borderRadius: 20 }}>
+      <div style={{
+        position: 'absolute',
+        bottom: instructionBottom,
+        left: 0,
+        right: 0,
+        textAlign: 'center',
+        padding: '0 16px',
+      }}>
+        <Typography.Text style={{
+          color: '#fff',
+          fontSize: isMobile ? 12 : 14,
+          background: 'rgba(0,0,0,0.5)',
+          padding: isMobile ? '4px 12px' : '6px 16px',
+          borderRadius: 20,
+          lineHeight: 1.4,
+          display: 'inline-block',
+          maxWidth: '90%',
+        }}>
           {instruction || t(STEP_INSTRUCTION_KEYS[step] || 'capture.takePhoto')}
         </Typography.Text>
       </div>
 
       {/* Hard rejection — block accept, prompt tap-to-focus */}
       {rejectionKey && (
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+        <div style={{
+          position: 'absolute',
+          top: 0, left: 0, right: 0, bottom: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          pointerEvents: 'none',
+          padding: 16,
+        }}>
           <div
             style={{
               background: 'rgba(0,0,0,0.78)',
               color: '#fff',
-              padding: '14px 22px',
+              padding: isMobile ? '12px 16px' : '14px 22px',
               borderRadius: 12,
               textAlign: 'center',
-              maxWidth: '80%',
+              maxWidth: isMobile ? '90%' : '80%',
               boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
             }}
           >
-            <AimOutlined style={{ fontSize: 32, color: '#ffd666', display: 'block', marginBottom: 6 }} />
-            <Typography.Text style={{ color: '#fff', fontSize: 14, fontWeight: 600, display: 'block' }}>
+            <AimOutlined style={{ fontSize: isMobile ? 28 : 32, color: '#ffd666', display: 'block', marginBottom: 6 }} />
+            <Typography.Text style={{ color: '#fff', fontSize: isMobile ? 13 : 14, fontWeight: 600, display: 'block' }}>
               {t(rejectionKey)}
             </Typography.Text>
             <Typography.Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, display: 'block', marginTop: 4 }}>
@@ -407,15 +461,25 @@ export function SecureCaptureUploader({
 
       {/* Error */}
       {error && (
-        <Alert type="error" message={error} style={{ position: 'absolute', top: 8, left: 8, right: 8 }} />
+        <Alert type="error" message={error} style={{ position: 'absolute', top: 8, left: 8, right: 8, fontSize: 12 }} />
       )}
 
       {/* Capture button + Refocus */}
-      <div style={{ position: 'absolute', bottom: 16, left: 0, right: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 24 }}>
+      <div style={{
+        position: 'absolute',
+        bottom: isMobile ? 12 : 16,
+        left: 0,
+        right: 0,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: isMobile ? 16 : 24,
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      }}>
         {focusSupported && (
           <Button
             shape="circle"
-            icon={<AimOutlined style={{ fontSize: 18 }} />}
+            icon={<AimOutlined style={{ fontSize: isMobile ? 16 : 18 }} />}
             onClick={() => {
               void refocus()
               setCameraReadyTime(Date.now())
@@ -424,7 +488,8 @@ export function SecureCaptureUploader({
             disabled={!isActive}
             title={t('capture.refocus', 'Re-focus camera')}
             style={{
-              width: 44, height: 44,
+              width: refocusSize,
+              height: refocusSize,
               background: 'rgba(0,0,0,0.5)',
               borderColor: 'rgba(255,255,255,0.6)',
               color: '#fff',
@@ -435,12 +500,13 @@ export function SecureCaptureUploader({
           <Button
             shape="circle"
             size="large"
-            icon={<CameraOutlined style={{ fontSize: 24 }} />}
+            icon={<CameraOutlined style={{ fontSize: isMobile ? 20 : 24 }} />}
             onClick={handleCapture}
             disabled={shutterDisabled}
             loading={isCapturing}
             style={{
-              width: 64, height: 64,
+              width: shutterSize,
+              height: shutterSize,
               background: shutterDisabled ? 'rgba(180,180,180,0.85)' : 'rgba(255,255,255,0.9)',
               border: '3px solid #fff',
               boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
@@ -448,12 +514,21 @@ export function SecureCaptureUploader({
             }}
           />
         </Tooltip>
-        {focusSupported && <div style={{ width: 44 }} /> /* spacer to keep shutter centered */}
+        {focusSupported && <div style={{ width: refocusSize }} /> /* spacer to keep shutter centered */}
       </div>
 
       {/* Tap-to-focus hint (first session only) */}
       {focusSupported && isActive && !focusRing && (
-        <div style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 11, padding: '4px 10px', borderRadius: 12 }}>
+        <div style={{
+          position: 'absolute',
+          top: 8,
+          right: 8,
+          background: 'rgba(0,0,0,0.5)',
+          color: '#fff',
+          fontSize: 11,
+          padding: '4px 10px',
+          borderRadius: 12,
+        }}>
           {t('capture.tapToFocus', 'Tap to focus')}
         </div>
       )}
