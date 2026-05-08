@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { Steps, Card, Button, Radio, Space, Typography, Flex, App, Spin } from 'antd'
-import { IdcardOutlined, CameraOutlined, ShopOutlined, FileProtectOutlined, SendOutlined } from '@ant-design/icons'
+import { IdcardOutlined, CameraOutlined, SendOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useCreateVerification, useSubmitVerification, useUploadVerificationDocument, useDeleteVerificationDocument, useVerificationById } from '@/features/seller/api'
 import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { VerificationDocumentSlots, getRequiredSlots } from '@/features/seller/components/VerificationDocumentSlots'
 import { VerificationType } from '@/types/enums'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 
 interface VerificationWizardProps {
   onComplete: () => void
@@ -23,29 +24,11 @@ export function VerificationWizard({ onComplete, onCancel }: VerificationWizardP
       title: t('verification.typeGovernmentId.title'),
       description: t('verification.typeGovernmentId.description'),
     },
-    {
-      value: VerificationType.Passport,
-      icon: <FileProtectOutlined style={{ fontSize: 28 }} />,
-      title: t('verification.typePassport.title'),
-      description: t('verification.typePassport.description'),
-    },
-    {
-      value: VerificationType.BusinessOwner,
-      icon: <ShopOutlined style={{ fontSize: 28 }} />,
-      title: t('verification.typeBusinessOwner.title'),
-      description: t('verification.typeBusinessOwner.description'),
-    },
-    {
-      value: VerificationType.Manual,
-      icon: <ShopOutlined style={{ fontSize: 28 }} />,
-      title: t('verification.typeManual.title', 'In-Person (at Shop)'),
-      description: t('verification.typeManual.description', 'Visit our store for physical document verification'),
-    },
   ]
   const { message } = App.useApp()
 
   const [currentStep, setCurrentStep] = useState(0)
-  const [selectedType, setSelectedType] = useState<string>('')
+  const [selectedType, setSelectedType] = useState<string>(VerificationType.GovernmentId)
   const [verificationId, setVerificationId] = useState<string>('')
   const [creating, setCreating] = useState(false)
 
@@ -111,8 +94,10 @@ export function VerificationWizard({ onComplete, onCancel }: VerificationWizardP
   const filledSlots = new Set(verification?.documents?.map((d) => d.documentType) ?? [])
   const allRequiredFilled = requiredSlots.every((s) => filledSlots.has(s))
 
+  const { isMobile } = useBreakpoint()
+
   return (
-    <Card>
+    <Card styles={{ body: { padding: isMobile ? '16px' : '24px' } }}>
       <Steps
         current={currentStep}
         style={{ marginBottom: 32 }}

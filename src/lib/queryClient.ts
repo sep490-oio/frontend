@@ -161,6 +161,7 @@ export const queryKeys = {
     termsRoot: () => ['admin', 'terms'] as const,
     users: (params?: unknown) => ['admin', 'users', params] as const,
     userDetail: (id: string) => ['admin', 'users', id] as const,
+    userRiskFlags: (id: string) => ['admin', 'users', id, 'riskFlags'] as const,
     roles: () => ['admin', 'roles'] as const,
     permissions: () => ['admin', 'permissions'] as const,
     verifications: (params?: unknown) => ['admin', 'verifications', params] as const,

@@ -95,10 +95,15 @@ export function VerificationDocumentSlots({
 
   const handleCaptured = (blob: Blob) => {
     const file = new File([blob], `${currentSlot.type}.jpg`, { type: 'image/jpeg' })
-    setCameraOpen(false)
+    
+    // Find next incomplete slot (excluding the current one since it will be fulfilled by onUpload)
+    const nextIncomplete = slots.findIndex((s, i) => i > activeStep && s.type !== currentSlot.type && !getDocForSlot(s.type))
+    
+    if (nextIncomplete === -1) {
+      setCameraOpen(false)
+    }
+
     void onUpload(file, currentSlot.type).then(() => {
-      // Auto-advance to next incomplete slot
-      const nextIncomplete = slots.findIndex((s, i) => i > activeStep && !getDocForSlot(s.type))
       if (nextIncomplete !== -1) {
         setActiveStep(nextIncomplete)
       }
@@ -261,19 +266,18 @@ export function VerificationDocumentSlots({
               <Typography.Text style={{ color: '#fff', fontSize: 15, fontWeight: 600, display: 'block' }}>
                 {t(`docSlot.${currentSlot.labelKey}`, currentSlot.labelKey)}
               </Typography.Text>
-              <Typography.Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12 }}>
-                {guide.tips[0]}
-              </Typography.Text>
             </div>
 
             <div style={{ flex: 1, overflow: 'hidden' }}>
               <SecureCaptureUploader
+                key={currentSlot.type}
                 step={currentSlot.type as 'id_front' | 'id_back' | 'selfie'}
                 facingMode={currentSlot.type === 'selfie' ? 'user' : 'environment'}
                 overlayType={currentSlot.type === 'selfie' ? 'face' : 'document'}
                 qualityProfile={currentSlot.type === 'selfie' ? 'face' : 'strict_document'}
                 onCapture={(blob) => handleCaptured(blob)}
                 instruction={guide.tips[0]}
+                autoStart={true}
               />
             </div>
           </div>

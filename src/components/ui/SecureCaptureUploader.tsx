@@ -23,6 +23,7 @@ interface SecureCaptureUploaderProps {
   onCapture: (blob: Blob, metadata: Partial<CaptureMetadata>) => void
   instruction?: string
   children?: React.ReactNode // Liveness challenge overlay
+  autoStart?: boolean
 }
 
 const OVERLAY_STYLES: Record<OverlayType, React.CSSProperties> = {
@@ -73,6 +74,7 @@ export function SecureCaptureUploader({
   onCapture,
   instruction,
   children,
+  autoStart,
 }: SecureCaptureUploaderProps) {
   const { t } = useTranslation('common')
   const { isMobile } = useBreakpoint()
@@ -98,6 +100,12 @@ export function SecureCaptureUploader({
       setCameraReadyTime(null)
     }
   }, [isActive, cameraReadyTime])
+
+  useEffect(() => {
+    if (autoStart && isSupported && !cameraStarted && !preview && !isActive) {
+      handleStartCamera()
+    }
+  }, [autoStart, isSupported, cameraStarted, preview, isActive])
 
   // Re-evaluate canCapture each second so the disabled state flips off without user interaction.
   useEffect(() => {
@@ -285,19 +293,19 @@ export function SecureCaptureUploader({
           justifyContent: 'center',
           gap: 12,
           padding: isMobile ? 24 : 32,
-          background: 'var(--color-bg-surface)',
+          background: 'transparent',
+          border: '2px dashed rgba(255,255,255,0.4)',
           borderRadius: 8,
-          border: '2px dashed var(--color-border)',
-          minHeight: isMobile ? 160 : 200,
+          minHeight: isMobile ? '70dvh' : 400,
           cursor: 'pointer',
         }}
         onClick={handleStartCamera}
       >
-        <CameraOutlined style={{ fontSize: isMobile ? 36 : 48, color: 'var(--color-accent)' }} />
-        <span style={{ fontSize: isMobile ? 13 : 14, fontWeight: 500, color: 'var(--color-text-primary)', textAlign: 'center', padding: '0 8px' }}>
+        <CameraOutlined style={{ fontSize: isMobile ? 36 : 48, color: '#fff' }} />
+        <span style={{ fontSize: isMobile ? 13 : 14, fontWeight: 500, color: '#fff', textAlign: 'center', padding: '0 8px' }}>
           {instruction || t(STEP_INSTRUCTION_KEYS[step] || 'capture.tapToOpenCamera')}
         </span>
-        <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+        <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>
           {t('capture.tapToActivate')}
         </span>
       </div>
@@ -328,6 +336,7 @@ export function SecureCaptureUploader({
       overflow: 'hidden',
       display: 'flex',
       flexDirection: 'column',
+      height: '100%',
     }}>
       {/* Camera viewfinder — click/tap to focus */}
       <video
@@ -347,12 +356,7 @@ export function SecureCaptureUploader({
         }}
         style={{
           width: '100%',
-          maxHeight: isMobile
-            ? (step === 'selfie' ? '75dvh' : '65dvh')
-            : (step === 'selfie' ? '70vh' : 480),
-          minHeight: isMobile
-            ? (step === 'selfie' ? 300 : 260)
-            : (step === 'selfie' ? 400 : 320),
+          height: '100%',
           objectFit: 'cover',
           display: 'block',
           cursor: focusSupported ? 'crosshair' : 'default',

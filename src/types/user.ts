@@ -14,6 +14,7 @@ export interface UserDto {
   status: UserStatus
   createdAt: string
   profile?: UserProfileDto
+  roles?: string[]
 }
 
 export interface UserProfileDto {

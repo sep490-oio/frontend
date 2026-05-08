@@ -53,6 +53,17 @@ export function useAdminUserDetail(id: string) {
   })
 }
 
+export function useAdminUserRiskFlags(id: string) {
+  return useQuery({
+    queryKey: queryKeys.admin.userRiskFlags(id),
+    queryFn: async () => {
+      const res = await apiClient.get<UserRiskFlagDto[]>(`/admin/users/${id}/risk-flags`)
+      return res.data
+    },
+    enabled: !!id,
+  })
+}
+
 export function useAdminCreateUser() {
   const qc = useQueryClient()
   return useMutation({

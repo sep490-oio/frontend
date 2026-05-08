@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import '@/styles/admin-tokens.css'
 import { Outlet, useNavigate, useLocation, Link } from 'react-router'
 import { Layout, Avatar, Tooltip, Drawer } from 'antd'
 import {
@@ -84,7 +85,7 @@ export function AdminLayout() {
 
   const isActive = (key: string) => {
     if (key === '/admin') return location.pathname === '/admin'
-    return location.pathname.startsWith(key)
+    return location.pathname === key || location.pathname.startsWith(key + '/')
   }
 
   const toggleLanguage = () => {
@@ -263,11 +264,81 @@ export function AdminLayout() {
         onClose={() => setMobileDrawerOpen(false)}
         open={mobileDrawerOpen}
         width={Math.min(280, window.innerWidth * 0.85)}
-        styles={{ body: { padding: 0 } }}
+        styles={{ body: { padding: 0, display: 'flex', flexDirection: 'column', height: '100%' } }}
+        maskClosable={true}
+        zIndex={1010}
       >
-        <nav style={{ padding: '8px 0' }} aria-label="Admin navigation (mobile)">
+        <nav style={{ padding: '8px 0', flex: 1, overflowY: 'auto' }} aria-label="Admin navigation (mobile)">
           {renderMenuItems(true)}
         </nav>
+
+        {/* ── Drawer footer: relocated controls from mobile header ── */}
+        <div
+          style={{
+            padding: '12px 16px',
+            borderTop: '1px solid var(--color-border)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+            flexShrink: 0,
+          }}
+        >
+          <button
+            onClick={() => { navigate('/'); setMobileDrawerOpen(false) }}
+            style={{
+              background: 'none',
+              border: '1px solid var(--color-border)',
+              borderRadius: 8,
+              cursor: 'pointer',
+              padding: '10px 16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              fontFamily: SANS_FONT,
+              fontSize: 13,
+              color: 'var(--color-text-secondary)',
+              width: '100%',
+            }}
+          >
+            <ArrowLeftOutlined style={{ fontSize: 12 }} />
+            {tc('layout.backToPlatform')}
+          </button>
+
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={toggleTheme}
+              style={{
+                ...iconBtnStyle(),
+                flex: 1,
+                border: '1px solid var(--color-border)',
+                borderRadius: 8,
+                padding: '8px 0',
+                gap: 8,
+                fontSize: 13,
+              }}
+            >
+              {isDark ? <SunOutlined /> : <MoonOutlined />}
+              <span style={{ fontFamily: SANS_FONT, fontSize: 12 }}>{isDark ? tc('layout.lightMode') : tc('layout.darkMode')}</span>
+            </button>
+
+            <button
+              onClick={toggleLanguage}
+              style={{
+                ...iconBtnStyle(),
+                flex: 1,
+                border: '1px solid var(--color-border)',
+                borderRadius: 8,
+                padding: '8px 0',
+                gap: 8,
+                fontSize: 13,
+              }}
+            >
+              <GlobalOutlined style={{ fontSize: 14 }} />
+              <span style={{ fontFamily: SANS_FONT, fontSize: 12 }}>{i18n.language === 'vi' ? 'English' : 'Tiếng Việt'}</span>
+            </button>
+          </div>
+        </div>
       </Drawer>
 
       {/* ── Header ── */}
@@ -325,63 +396,68 @@ export function AdminLayout() {
           </span>
         </div>
 
-        {/* Right: back, theme, lang, user */}
+        {/* Right: controls — on mobile only show avatar; full controls on desktop */}
         <div className="hide-scrollbar" style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 2 : 8, flexShrink: 0, flex: 1, minWidth: 0, overflowX: 'auto', justifyContent: 'flex-end' }}>
-          <button
-            onClick={() => navigate('/')}
-            style={{
-              background: 'none',
-              border: '1px solid var(--color-border)',
-              borderRadius: 6,
-              cursor: 'pointer',
-              padding: isMobile ? '6px 10px' : '6px 12px',
-              minHeight: 36,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              fontFamily: SANS_FONT,
-              fontSize: 12,
-              color: 'var(--color-text-secondary)',
-              transition: 'all 150ms ease',
-              whiteSpace: 'nowrap',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = 'var(--color-accent)'
-              e.currentTarget.style.color = 'var(--color-accent)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'var(--color-border)'
-              e.currentTarget.style.color = 'var(--color-text-secondary)'
-            }}
-          >
-            <ArrowLeftOutlined style={{ fontSize: 11 }} />
-            {!isMobile && tc('layout.backToPlatform')}
-          </button>
+          {/* Desktop-only: Back, Theme, Language */}
+          {!isMobile && (
+            <>
+              <button
+                onClick={() => navigate('/')}
+                style={{
+                  background: 'none',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                  padding: '6px 12px',
+                  minHeight: 36,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  fontFamily: SANS_FONT,
+                  fontSize: 12,
+                  color: 'var(--color-text-secondary)',
+                  transition: 'all 150ms ease',
+                  whiteSpace: 'nowrap',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--color-accent)'
+                  e.currentTarget.style.color = 'var(--color-accent)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--color-border)'
+                  e.currentTarget.style.color = 'var(--color-text-secondary)'
+                }}
+              >
+                <ArrowLeftOutlined style={{ fontSize: 11 }} />
+                {tc('layout.backToPlatform')}
+              </button>
 
-          <Tooltip title={isDark ? tc('layout.lightMode') : tc('layout.darkMode')}>
-            <button
-              onClick={toggleTheme}
-              style={iconBtnStyle()}
-              onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-accent)' }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-secondary)' }}
-            >
-              {isDark ? <SunOutlined /> : <MoonOutlined />}
-            </button>
-          </Tooltip>
+              <Tooltip title={isDark ? tc('layout.lightMode') : tc('layout.darkMode')}>
+                <button
+                  onClick={toggleTheme}
+                  style={iconBtnStyle()}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-accent)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-secondary)' }}
+                >
+                  {isDark ? <SunOutlined /> : <MoonOutlined />}
+                </button>
+              </Tooltip>
 
-          <Tooltip title={tc('layout.switchLanguage')}>
-            <button
-              onClick={toggleLanguage}
-              style={{ ...iconBtnStyle(), gap: 4, fontSize: 12, fontFamily: SANS_FONT, fontWeight: 500 }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-accent)' }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-secondary)' }}
-            >
-              <GlobalOutlined style={{ fontSize: 14 }} />
-              {!isMobile && (i18n.language === 'vi' ? 'EN' : 'VI')}
-            </button>
-          </Tooltip>
+              <Tooltip title={tc('layout.switchLanguage')}>
+                <button
+                  onClick={toggleLanguage}
+                  style={{ ...iconBtnStyle(), gap: 4, fontSize: 12, fontFamily: SANS_FONT, fontWeight: 500 }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-accent)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-secondary)' }}
+                >
+                  <GlobalOutlined style={{ fontSize: 14 }} />
+                  {i18n.language === 'vi' ? 'EN' : 'VI'}
+                </button>
+              </Tooltip>
 
-          <div style={{ width: 1, height: 24, background: 'var(--color-border)', margin: '0 4px', flexShrink: 0 }} />
+              <div style={{ width: 1, height: 24, background: 'var(--color-border)', margin: '0 4px', flexShrink: 0 }} />
+            </>
+          )}
 
           <div
             style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 4px', borderRadius: 8 }}

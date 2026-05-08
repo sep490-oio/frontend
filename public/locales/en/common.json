@@ -238,7 +238,19 @@
     "readyCapture": "I'm ready — Capture now",
     "attempt": "Attempt {{current}}/{{total}}",
     "capturing": "Capturing... Hold still",
-    "livenessComplete": "Liveness check complete"
+    "livenessComplete": "Liveness check complete",
+    "error": {
+      "resolutionTooLow": "Resolution too low",
+      "tooDark": "Too dark",
+      "tooBright": "Too bright",
+      "blurSevere": "Image is blurry"
+    },
+    "cta": {
+      "tapToFocusAndRetake": "Tap to focus and retake"
+    },
+    "warning": {
+      "borderlineBlur": "Image might be slightly blurry. Please ensure details are readable."
+    }
   },
   "emptyState": {
     "title": "Nothing here yet"
