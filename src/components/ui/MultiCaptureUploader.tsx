@@ -4,6 +4,7 @@ import { CameraOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icon
 import { useTranslation } from 'react-i18next'
 import { SecureCaptureUploader } from '@/components/ui/SecureCaptureUploader'
 import { LiveCapturedBadge } from '@/components/ui/LiveCapturedBadge'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import type { CaptureMetadata, CaptureQualityProfile, CaptureStep } from '@/types/capture'
 
 const ALLOW_UPLOAD = String(import.meta.env.VITE_ALLOW_UPLOAD).trim() === 'true'
@@ -33,6 +34,7 @@ export function MultiCaptureUploader({
   instruction,
 }: MultiCaptureUploaderProps) {
   const { t } = useTranslation('common')
+  const { isMobile } = useBreakpoint()
   const [photos, setPhotos] = useState<CapturedPhoto[]>([])
   const [showCamera, setShowCamera] = useState(true)
 
@@ -93,14 +95,21 @@ export function MultiCaptureUploader({
 
       {/* Captured photos grid */}
       {photos.length > 0 && (
-        <Flex wrap="wrap" gap={12}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile
+              ? 'repeat(auto-fill, minmax(80px, 1fr))'
+              : 'repeat(auto-fill, minmax(110px, 1fr))',
+            gap: isMobile ? 8 : 12,
+          }}
+        >
           {photos.map((photo, index) => (
             <div
               key={index}
               style={{
                 position: 'relative',
-                width: 120,
-                height: 90,
+                aspectRatio: '4/3',
                 borderRadius: 8,
                 overflow: 'hidden',
                 border: '2px solid var(--color-success)',
@@ -150,7 +159,7 @@ export function MultiCaptureUploader({
               </div>
             </div>
           ))}
-        </Flex>
+        </div>
       )}
 
       {/* Camera viewfinder or upload option */}

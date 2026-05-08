@@ -4,6 +4,7 @@ import { CameraOutlined, ReloadOutlined, UploadOutlined } from '@ant-design/icon
 import { useTranslation } from 'react-i18next'
 import { SecureCaptureUploader } from '@/components/ui/SecureCaptureUploader'
 import { LiveCapturedBadge } from '@/components/ui/LiveCapturedBadge'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import type { CaptureQualityProfile } from '@/types/capture'
 
 interface SingleCaptureUploaderProps {
@@ -29,6 +30,7 @@ export function SingleCaptureUploader({
   qualityProfile = 'item_or_package',
 }: SingleCaptureUploaderProps) {
   const { t } = useTranslation('warehouse')
+  const { isMobile } = useBreakpoint()
   const [open, setOpen] = useState(false)
   const [isLiveCapture, setIsLiveCapture] = useState(false)
 
@@ -78,7 +80,7 @@ export function SingleCaptureUploader({
             alt={label}
             style={{
               width: '100%',
-              maxHeight: 180,
+              maxHeight: isMobile ? '50vh' : 180,
               objectFit: 'cover',
               borderRadius: 6,
               marginBottom: 8,
@@ -151,17 +153,49 @@ export function SingleCaptureUploader({
         onCancel={() => setOpen(false)}
         footer={null}
         destroyOnHidden
-        width={640}
-        title={label}
+        centered={!isMobile}
+        width={isMobile ? '100vw' : 640}
+        styles={{
+          body: { padding: isMobile ? 0 : undefined, overflow: 'hidden' },
+          wrapper: isMobile ? { overflow: 'hidden' } : undefined,
+        }}
+        style={isMobile
+          ? { top: 0, maxWidth: '100vw', margin: 0, padding: 0, height: '100dvh' }
+          : { borderRadius: 12, overflow: 'hidden' }
+        }
+        title={isMobile ? undefined : label}
       >
-        <SecureCaptureUploader
-          step="item_photo"
-          facingMode="environment"
-          overlayType="document"
-          qualityProfile={qualityProfile}
-          instruction={label}
-          onCapture={(blob) => handleCapture(blob)}
-        />
+        <div style={{
+          background: '#000',
+          height: isMobile ? '100dvh' : 'auto',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+        }}>
+          {isMobile && (
+            <div style={{
+              padding: '10px 16px',
+              background: 'rgba(0,0,0,0.8)',
+              color: '#fff',
+              textAlign: 'center',
+              flexShrink: 0,
+            }}>
+              <Typography.Text style={{ color: '#fff', fontSize: 15, fontWeight: 600 }}>
+                {label}
+              </Typography.Text>
+            </div>
+          )}
+          <div style={{ flex: 1, overflow: 'hidden' }}>
+            <SecureCaptureUploader
+              step="item_photo"
+              facingMode="environment"
+              overlayType="document"
+              qualityProfile={qualityProfile}
+              instruction={label}
+              onCapture={(blob) => handleCapture(blob)}
+            />
+          </div>
+        </div>
       </Modal>
     </div>
   )

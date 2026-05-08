@@ -414,9 +414,10 @@ export interface EvidencePhotoDto {
  * rejects an item and the platform routes it back to the seller).
  * Mirrors `WarehouseToSellerShipmentDto` on the BE.
  *
- * `sellerAddressSnapshot` is a JSON string captured from the seller's
- * default UserAddress at creation time; FE renders it as-is or parses it
- * when needed.
+ * `sellerAddressSnapshot` is a JSON string. New rows prefer the original
+ * inbound shipment sender address (`source: "inbound_sender"`); legacy rows
+ * may still use seller default address (`source: "user_default_address"`).
+ * FE must not assume `userAddressId` is always present.
  */
 /**
  * Nested media info on a WarehouseToSellerShipmentEvidence row. Mirrors
