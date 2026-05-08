@@ -546,7 +546,7 @@ function OrderReturnsTab() {
                 <ReturnEvidenceUploader
                   existingEvidence={receiptPhotos.map((e) => ({
                     id: e.id,
-                    mediaUpload: { secureUrl: e.secureUrl ?? '' },
+                    mediaUpload: { secureUrl: e.mediaUpload?.secureUrl ?? '' },
                   }))}
                   category={OrderReturnEvidenceCategory.ReceiptBySeller}
                   minRequired={1}

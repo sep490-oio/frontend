@@ -250,7 +250,7 @@ export function MarkReturnShippedModal({ open, shipmentId, onClose }: Props) {
               {pickupEvidence.map((e) => (
                 <div key={e.id} style={{ position: 'relative' }}>
                   <Image
-                    src={e.mediaUpload.secureUrl}
+                    src={e.secureUrl ?? ''}
                     width={72}
                     height={72}
                     style={{
@@ -258,7 +258,7 @@ export function MarkReturnShippedModal({ open, shipmentId, onClose }: Props) {
                       borderRadius: 6,
                       border: '2px solid var(--color-success, #52c41a)',
                     }}
-                    preview={{ src: e.mediaUpload.secureUrl }}
+                    preview={{ src: e.secureUrl ?? '' }}
                   />
                   <div style={{ position: 'absolute', top: 2, left: 2 }}>
                     <LiveCapturedBadge size="small" />
