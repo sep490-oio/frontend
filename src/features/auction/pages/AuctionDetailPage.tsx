@@ -286,6 +286,10 @@ export default function AuctionDetailPage() {
   })
   const [submitPendingTiming, setSubmitPendingTiming] = useState(false)
   const [pendingActivation, setPendingActivation] = useState(false)
+  // Client-side flag: set to true when the local countdown timer reaches zero
+  // for an Active auction. Immediately disables bid/buy-now UI while we wait
+  // for the server to process the EndAuction command and broadcast AuctionEnded.
+  const [countdownExpired, setCountdownExpired] = useState(false)
   const hasJustDeposited = useRef(false)
   // Report/dispute modal uses CreateDisputeModal — no inline hook needed
 
@@ -530,6 +534,8 @@ export default function AuctionDetailPage() {
     if (hub.auctionEnded && storageKey) {
       localStorage.removeItem(storageKey)
       setIsQualified(false)
+      // Ensure bid/buy-now UI is locked (belt-and-suspenders with countdownExpired)
+      setCountdownExpired(true)
 
       const isWinner = currentUser?.id && hub.auctionEnded.winnerId === currentUser.id
       if (isWinner) {
@@ -671,6 +677,11 @@ export default function AuctionDetailPage() {
     if (!ensureTermsAccepted()) return
     if (isSeller) return
     if (!id || !bidAmount) return
+    // Client-side guard: if the local countdown has expired, reject immediately.
+    if (countdownExpired) {
+      message.warning(t('auctionEndedCannotBid', 'Auction has ended. Bids are no longer accepted.'))
+      return
+    }
     const rawBid = bidAmount
     try {
       let result: Partial<import('@/types').PlaceBidResultDto> = {}
@@ -1308,8 +1319,8 @@ export default function AuctionDetailPage() {
                 ? () => navigate(`/checkout/${winnerPayNowOrderId}`)
                 : undefined
             }
-            canBid={isActive && isAuthenticated && qualState === 'qualified' && !isSeller && !isAdmin}
-            canBuyNow={isAuthenticated && !isSeller && !isAdmin && !isTerminal && (auction?.status !== AuctionStatus.Active || qualState === 'qualified')}
+            canBid={isActive && !countdownExpired && isAuthenticated && qualState === 'qualified' && !isSeller && !isAdmin}
+            canBuyNow={isAuthenticated && !isSeller && !isAdmin && !isTerminal && !countdownExpired && (auction?.status !== AuctionStatus.Active || qualState === 'qualified')}
             currentBuyerOrder={data?.currentBuyerOrder}
             onViewOrderClick={(orderId) => navigate(`/me/orders/${orderId}`)}
             isOrderProvisioning={pollingForOrder}
@@ -1326,6 +1337,10 @@ export default function AuctionDetailPage() {
                 queryClient.setQueryData(queryKeys.auctions.detailFor(id!, detailUserScope), (old: import('@/types').AuctionDetailDto | undefined) =>
                   old ? { ...old, auction: { ...old.auction, status: AuctionStatus.Active } } : old,
                 )
+              } else if (auction?.status === AuctionStatus.Active) {
+                // Timer hit zero for an active auction — immediately disable bidding
+                // while the server processes the EndAuction command.
+                setCountdownExpired(true)
               }
               queryClient.invalidateQueries({ queryKey: queryKeys.auctions.detail(id!) })
               refetch()

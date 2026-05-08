@@ -108,6 +108,28 @@ export interface WithdrawalRequestDto {
   accountNumberMasked?: string
   accountHolder?: string
   rejectionReason?: string
+  transferProofUrl?: string
+  transferNote?: string
+  createdAt: string
+  processedAt?: string
+}
+
+/** Admin-facing DTO — includes unmasked account number + transfer proof */
+export interface AdminWithdrawalDto {
+  id: string
+  userId: string
+  walletId: string
+  amount: number
+  fee: number
+  netAmount: number
+  status: WithdrawalStatus
+  bankName?: string
+  accountNumber?: string
+  accountHolder?: string
+  rejectionReason?: string
+  transferProofUrl?: string
+  transferNote?: string
+  processedBy?: string
   createdAt: string
   processedAt?: string
 }

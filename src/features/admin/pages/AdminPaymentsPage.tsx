@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Typography, Tabs, Card, Statistic, Row, Col, Select, Space, Button, Modal, Input, App, Popconfirm } from 'antd'
+import { Typography, Tabs, Card, Statistic, Row, Col, Select, Space, Button, Modal, Input, App, Upload, Image, Descriptions } from 'antd'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
-import { DollarOutlined } from '@ant-design/icons'
+import { DollarOutlined, UploadOutlined, PictureOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import {
   usePaymentSummary,
@@ -16,7 +16,8 @@ import {
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime, formatCurrency } from '@/utils/format'
 import { WithdrawalStatus } from '@/types/enums'
-import type { WithdrawalRequestDto, PaymentTransactionDto, EscrowDto } from '@/types'
+import { useMediaUpload } from '@/hooks/useMediaUpload'
+import type { AdminWithdrawalDto, PaymentTransactionDto, EscrowDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 
@@ -70,6 +71,12 @@ export default function AdminPaymentsPage() {
   const [rejectId, setRejectId] = useState('')
   const [rejectReason, setRejectReason] = useState('')
 
+  // Complete withdrawal modal state
+  const [completeModalOpen, setCompleteModalOpen] = useState(false)
+  const [completeRecord, setCompleteRecord] = useState<AdminWithdrawalDto | null>(null)
+  const [transferNote, setTransferNote] = useState('')
+  const mediaUpload = useMediaUpload('withdrawal_transfer_proof')
+
   const handleApprove = async (id: string) => {
     try {
       await approveWithdrawal.mutateAsync(id)
@@ -79,10 +86,27 @@ export default function AdminPaymentsPage() {
     }
   }
 
-  const handleComplete = async (id: string) => {
+  const openCompleteModal = (record: AdminWithdrawalDto) => {
+    setCompleteRecord(record)
+    setTransferNote('')
+    mediaUpload.reset()
+    setCompleteModalOpen(true)
+  }
+
+  const handleComplete = async () => {
+    if (!completeRecord) return
+    if (!mediaUpload.uploadedFiles.length) {
+      message.error(t('payments.transferProofRequired', 'Please upload transfer proof screenshot'))
+      return
+    }
     try {
-      await completeWithdrawal.mutateAsync(id)
+      await completeWithdrawal.mutateAsync({
+        id: completeRecord.id,
+        transferProofUrl: mediaUpload.uploadedFiles[0].secureUrl,
+        transferNote: transferNote || undefined,
+      })
       message.success(t('payments.completeSuccess', 'Withdrawal completed'))
+      setCompleteModalOpen(false)
     } catch {
       message.error(t('common.error'))
     }
@@ -100,7 +124,7 @@ export default function AdminPaymentsPage() {
     }
   }
 
-  const withdrawalColumns: ColumnsType<WithdrawalRequestDto> = [
+  const withdrawalColumns: ColumnsType<AdminWithdrawalDto> = [
     {
       title: t('payments.amount'),
       dataIndex: 'amount',
@@ -119,19 +143,42 @@ export default function AdminPaymentsPage() {
       title: t('payments.bankName'),
       dataIndex: 'bankName',
       key: 'bankName',
-      width: 100,
+      width: 120,
     },
     {
       title: t('payments.accountNumber'),
-      dataIndex: 'accountNumberMasked',
-      key: 'accountNumberMasked',
-      width: 150,
+      dataIndex: 'accountNumber',
+      key: 'accountNumber',
+      width: 180,
+      render: (val: string) => (
+        <Typography.Text copyable style={{ fontFamily: 'monospace', fontSize: 13 }}>
+          {val}
+        </Typography.Text>
+      ),
     },
     {
       title: t('payments.accountHolder'),
       dataIndex: 'accountHolder',
       key: 'accountHolder',
       ellipsis: true,
+    },
+    {
+      title: t('payments.transferProof', 'Proof'),
+      key: 'transferProof',
+      width: 80,
+      render: (_, record) => {
+        if (!record.transferProofUrl) return null
+        return (
+          <Image
+            src={record.transferProofUrl}
+            alt="Transfer proof"
+            width={40}
+            height={40}
+            style={{ borderRadius: 4, objectFit: 'cover', cursor: 'pointer' }}
+            preview={{ mask: <PictureOutlined /> }}
+          />
+        )
+      },
     },
     {
       title: t('payments.createdAt'),
@@ -170,14 +217,14 @@ export default function AdminPaymentsPage() {
         }
         if (record.status === 'approved') {
           return (
-            <Popconfirm
-              title={t('payments.completeConfirm')}
-              onConfirm={() => handleComplete(record.id)}
+            <Button
+              type="link"
+              size="small"
+              onClick={() => openCompleteModal(record)}
+              style={{ color: 'var(--color-success)' }}
             >
-              <Button type="link" size="small" loading={completeWithdrawal.isPending} style={{ color: 'var(--color-success)' }}>
-                {t('payments.complete')}
-              </Button>
-            </Popconfirm>
+              {t('payments.complete')}
+            </Button>
           )
         }
         return null
@@ -409,10 +456,10 @@ export default function AdminPaymentsPage() {
             ]}
           />
           <div style={{ overflowX: 'auto' }}>
-            <ResponsiveTable<WithdrawalRequestDto>
+            <ResponsiveTable<AdminWithdrawalDto>
               rowKey="id"
               columns={withdrawalColumns}
-              dataSource={withdrawals?.items ?? []}
+              dataSource={(withdrawals?.items ?? []) as AdminWithdrawalDto[]}
               loading={wLoading}
               mobileMode="list"
               pagination={{
@@ -539,6 +586,92 @@ export default function AdminPaymentsPage() {
           onChange={(e) => setRejectReason(e.target.value)}
           placeholder={t('payments.rejectReasonPlaceholder')}
           style={{ marginTop: 8 }}
+        />
+      </Modal>
+
+      {/* Complete withdrawal modal — requires transfer proof upload */}
+      <Modal
+        title={t('payments.completeWithdrawal', 'Complete Withdrawal')}
+        open={completeModalOpen}
+        onOk={handleComplete}
+        onCancel={() => { setCompleteModalOpen(false); mediaUpload.reset() }}
+        confirmLoading={completeWithdrawal.isPending}
+        okButtonProps={{ disabled: !mediaUpload.uploadedFiles.length }}
+        okText={t('payments.confirmComplete', 'Confirm Transfer')}
+        centered={isMobile}
+        width={520}
+      >
+        {completeRecord && (
+          <div style={{ marginBottom: 16 }}>
+            <Descriptions column={1} size="small" bordered>
+              <Descriptions.Item label={t('payments.bankName')}>
+                {completeRecord.bankName}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('payments.accountNumber')}>
+                <Typography.Text copyable style={{ fontFamily: 'monospace' }}>
+                  {completeRecord.accountNumber}
+                </Typography.Text>
+              </Descriptions.Item>
+              <Descriptions.Item label={t('payments.accountHolder')}>
+                {completeRecord.accountHolder}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('payments.amount')}>
+                <Typography.Text strong style={{ color: 'var(--color-success)' }}>
+                  {formatCurrency(completeRecord.netAmount)}
+                </Typography.Text>
+              </Descriptions.Item>
+            </Descriptions>
+          </div>
+        )}
+
+        <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>
+          {t('payments.transferProofLabel', 'Upload transfer proof screenshot')} *
+        </Typography.Text>
+
+        {mediaUpload.uploadedFiles.length > 0 ? (
+          <div style={{ marginBottom: 12 }}>
+            <Image
+              src={mediaUpload.uploadedFiles[0].secureUrl}
+              alt="Transfer proof"
+              width={200}
+              style={{ borderRadius: 8 }}
+            />
+            <div style={{ marginTop: 4 }}>
+              <Button size="small" danger onClick={() => mediaUpload.reset()}>
+                {t('common:action.remove', 'Remove')}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Upload
+            accept="image/*"
+            maxCount={1}
+            showUploadList={false}
+            customRequest={async ({ file, onSuccess, onError }) => {
+              try {
+                await mediaUpload.upload(file as File)
+                onSuccess?.(null)
+              } catch (err) {
+                onError?.(err as Error)
+              }
+            }}
+          >
+            <Button
+              icon={<UploadOutlined />}
+              loading={mediaUpload.uploading}
+              style={{ width: '100%', height: 80 }}
+            >
+              {t('payments.uploadProof', 'Click to upload screenshot')}
+            </Button>
+          </Upload>
+        )}
+
+        <Input.TextArea
+          rows={2}
+          value={transferNote}
+          onChange={(e) => setTransferNote(e.target.value)}
+          placeholder={t('payments.transferNotePlaceholder', 'Optional: transfer reference number or note')}
+          style={{ marginTop: 12 }}
         />
       </Modal>
     </div>

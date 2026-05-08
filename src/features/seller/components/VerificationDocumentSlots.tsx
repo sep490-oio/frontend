@@ -112,22 +112,26 @@ export function VerificationDocumentSlots({
 
   return (
     <Flex vertical gap={20}>
-      {/* Step indicator */}
+      {/* Step indicator — always horizontal, compact on mobile */}
       <Steps
         current={activeStep}
         size="small"
-        direction={isMobile ? 'vertical' : 'horizontal'}
+        direction="horizontal"
         items={slots.map((slot, idx) => {
           const doc = getDocForSlot(slot.type)
           return {
-            title: t(`docSlot.${slot.labelKey}`, slot.labelKey),
-            description: doc ? t('captured', 'Captured') : slot.required ? t('required', 'Required') : t('optional', 'Optional'),
+            title: isMobile
+              ? t(`docSlot.${slot.labelKey}`, slot.labelKey).split(' ').slice(0, 2).join(' ')
+              : t(`docSlot.${slot.labelKey}`, slot.labelKey),
+            description: isMobile
+              ? undefined
+              : doc ? t('captured', 'Captured') : slot.required ? t('required', 'Required') : t('optional', 'Optional'),
             status: doc ? 'finish' as const : idx === activeStep ? 'process' as const : 'wait' as const,
             icon: doc ? <CheckCircleOutlined style={{ color: 'var(--color-success)' }} /> : undefined,
           }
         })}
         onChange={(step) => setActiveStep(step)}
-        style={{ maxWidth: isMobile ? undefined : 500 }}
+        style={{ maxWidth: isMobile ? undefined : 500, margin: '0 auto' }}
       />
 
       {/* Active document slot */}
@@ -135,6 +139,7 @@ export function VerificationDocumentSlots({
         <Card
           style={{
             maxWidth: isMobile ? undefined : 480,
+            margin: '0 auto',
             borderColor: currentDoc ? 'rgba(74, 124, 89, 0.3)' : currentSlot.required ? 'rgba(196, 146, 61, 0.3)' : 'var(--color-border)',
             background: currentDoc ? 'rgba(74, 124, 89, 0.04)' : undefined,
           }}

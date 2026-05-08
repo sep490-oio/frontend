@@ -1,6 +1,6 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { API_URL, STORAGE_KEYS, uuid } from '@/utils/constants'
-import { refreshToken, isTokenExpired, handleRefreshFailure } from '@/lib/tokenRefresh'
+import { refreshToken, isTokenExpired } from '@/lib/tokenRefresh'
 
 // ── Terms-gate 409 interceptor ────────────────────────────────────────────────
 // When BE returns 409 with code "Terms.PendingAcceptance", the interceptor calls
@@ -130,9 +130,6 @@ apiClient.interceptors.response.use(
     }
 
     if (error.response?.status !== 401 || originalRequest._retry) {
-      if (error.response?.status === 401 && originalRequest._retry) {
-        handleRefreshFailure()
-      }
       return Promise.reject(error)
     }
 

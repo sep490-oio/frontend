@@ -693,8 +693,11 @@ export function useRejectWithdrawal() {
 export function useCompleteWithdrawal() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (id: string) => {
-      await apiClient.post(`/admin/payments/withdrawals/${id}/complete`)
+    mutationFn: async ({ id, transferProofUrl, transferNote }: { id: string; transferProofUrl: string; transferNote?: string }) => {
+      await apiClient.post(`/admin/payments/withdrawals/${id}/complete`, {
+        transferProofUrl,
+        transferNote,
+      })
     },
     onSuccess: async () => {
       await invalidateAndRefetchActive(qc, [

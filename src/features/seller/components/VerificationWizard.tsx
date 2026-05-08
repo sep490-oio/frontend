@@ -100,7 +100,7 @@ export function VerificationWizard({ onComplete, onCancel }: VerificationWizardP
     <Card styles={{ body: { padding: isMobile ? '16px' : '24px' } }}>
       <Steps
         current={currentStep}
-        style={{ marginBottom: 32 }}
+        style={{ marginBottom: 32, maxWidth: 560, marginLeft: 'auto', marginRight: 'auto' }}
         items={[
           { title: t('stepType', 'Choose Type') },
           { title: t('stepDocuments', 'Upload Documents') },
@@ -110,7 +110,7 @@ export function VerificationWizard({ onComplete, onCancel }: VerificationWizardP
 
       {/* Step 0: Choose Type */}
       {currentStep === 0 && (
-        <div>
+        <div style={{ maxWidth: 520, margin: '0 auto' }}>
           <Typography.Title level={4} style={{ marginBottom: 16 }}>
             {t('selectVerificationType', 'Select Verification Type')}
           </Typography.Title>
@@ -153,7 +153,7 @@ export function VerificationWizard({ onComplete, onCancel }: VerificationWizardP
 
       {/* Step 1: Upload Documents */}
       {currentStep === 1 && (
-        <div>
+        <div style={{ maxWidth: 520, margin: '0 auto' }}>
           <Typography.Title level={4} style={{ marginBottom: 8 }}>
             {t('uploadDocuments', 'Upload Documents')}
           </Typography.Title>
@@ -191,7 +191,7 @@ export function VerificationWizard({ onComplete, onCancel }: VerificationWizardP
 
       {/* Step 2: Review & Submit */}
       {currentStep === 2 && (
-        <div>
+        <div style={{ maxWidth: 520, margin: '0 auto' }}>
           <Typography.Title level={4} style={{ marginBottom: 16 }}>
             {t('reviewAndSubmit', 'Review & Submit')}
           </Typography.Title>

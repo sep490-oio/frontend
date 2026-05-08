@@ -144,10 +144,24 @@ export async function refreshToken(failedToken?: string | null): Promise<string>
 
 /**
  * Central logout on refresh failure.
- * Clears tokens and redirects to login.
+ * Clears tokens and redirects to login with returnTo so the user
+ * can resume their work after re-authentication.
  */
 export function handleRefreshFailure(): void {
   localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN)
   localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
-  window.location.href = '/login'
+
+  // Preserve current path as returnTo, excluding auth pages and external URLs
+  const current = window.location.pathname + window.location.search + window.location.hash
+  const isAuthPage =
+    current.startsWith('/login') ||
+    current.startsWith('/2fa') ||
+    current.startsWith('/register') ||
+    current === '/'
+
+  if (isAuthPage) {
+    window.location.href = '/login'
+  } else {
+    window.location.href = `/login?returnTo=${encodeURIComponent(current)}`
+  }
 }

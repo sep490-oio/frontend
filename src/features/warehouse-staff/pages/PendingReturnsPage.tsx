@@ -21,7 +21,6 @@ import {
   useRecordWarehouseReturnDeliveryFailure,
 } from '@/features/warehouse-staff/api'
 import type { WarehouseToSellerShipmentDto } from '@/types'
-import { WarehouseToSellerShipmentStatus } from '@/types/enums'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
@@ -180,9 +179,9 @@ export default function PendingReturnsPage() {
 
   const rowsForTab = (tab: TabKey): WarehouseToSellerShipmentDto[] => {
     if (tab === 'pending') {
-      return (pendingData ?? []).filter((r) => r.status === WarehouseToSellerShipmentStatus.Pending)
+      return pendingData ?? []
     }
-    return (inTransitData ?? []).filter((r) => r.status === WarehouseToSellerShipmentStatus.InTransit)
+    return inTransitData ?? []
   }
 
   return (

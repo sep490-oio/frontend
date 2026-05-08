@@ -94,7 +94,7 @@ export default function VerificationPage() {
   }
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: isMobile ? '12px 16px 48px' : '0 24px 48px' }}>
+    <div style={{ maxWidth: 800, margin: '0 auto', padding: isMobile ? '12px 16px 48px' : '0 24px 48px', width: '100%', boxSizing: 'border-box' }}>
       {/* ── Header ──────────────────────────────────────────────────── */}
       <div style={{ marginBottom: isMobile ? 24 : 32 }}>
         <Button
