@@ -228,7 +228,7 @@ export function VerificationWizard({ onComplete, onCancel }: VerificationWizardP
               loading={submitVerification.isPending}
               style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
             >
-              {t('submitForReview', 'Submit for Review')}
+              {tc('action.submit', 'Submit')}
             </Button>
           </Flex>
         </div>
