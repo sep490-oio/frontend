@@ -946,7 +946,7 @@ export default function CreateAuctionPage() {
                   loading={isSubmitting}
                   style={{ width: '100%', height: 48 }}
                 >
-                  {isEditMode ? t('updateAuction', 'Update Auction') : t('submitForReview', 'Submit for Review')}
+                  {isEditMode ? t('updateAuction', 'Update Auction') : tc('action.submit', 'Submit')}
                 </Button>
 
                 {!isDraftEdit && (
