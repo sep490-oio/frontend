@@ -298,6 +298,7 @@ export default function SellerDashboardPage() {
           { icon: <AppstoreOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />, label: t('dashboard.totalItems'), value: totalItems },
           { icon: <ThunderboltOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />, label: t('dashboard.activeAuctions'), value: activeAuctions },
           { icon: <ClockCircleOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />, label: t('dashboard.pendingReview'), value: pendingReview },
+          { icon: <CheckCircleOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />, label: t('dashboard.rating', 'Rating'), value: (profile.averageRating ?? profile.rating) > 0 ? (profile.averageRating ?? profile.rating).toFixed(1) : '—' },
           { icon: <DollarOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />, label: t('dashboard.sold'), value: soldAuctions },
         ].map((stat) => (
           <Col key={stat.label} xs={12} sm={6}>

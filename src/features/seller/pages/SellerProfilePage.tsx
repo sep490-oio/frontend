@@ -219,7 +219,7 @@ export default function SellerProfilePage() {
                 <InfoRow label={t('storeName', 'Store Name')}>{profile.storeName}</InfoRow>
                 <InfoRow label={t('status', 'Status')}><StatusBadge status={profile.status} /></InfoRow>
                 <InfoRow label={t('rating', 'Rating')}>
-                  {profile.rating} / 5 ({profile.reviewCount} {t('reviews', 'reviews')})
+                  {(profile.averageRating ?? profile.rating) > 0 ? (profile.averageRating ?? profile.rating).toFixed(1) : '0'} / 5 ({profile.reviewCount} {t('reviews', 'reviews')})
                 </InfoRow>
                 <InfoRow label={t('createdAt', 'Created')}>{formatDateTime(profile.createdAt)}</InfoRow>
                 {profile.approvedAt && (
@@ -236,7 +236,7 @@ export default function SellerProfilePage() {
                   {[
                     { label: t('storeName', 'Store Name'), value: profile.storeName },
                     { label: t('status', 'Status'), value: <StatusBadge status={profile.status} /> },
-                    { label: t('rating', 'Rating'), value: `${profile.rating} / 5 (${profile.reviewCount} ${t('reviews', 'reviews')})` },
+                    { label: t('rating', 'Rating'), value: `${(profile.averageRating ?? profile.rating) > 0 ? (profile.averageRating ?? profile.rating).toFixed(1) : '0'} / 5 (${profile.reviewCount} ${t('reviews', 'reviews')})` },
                     { label: t('createdAt', 'Created'), value: formatDateTime(profile.createdAt) },
                     ...(profile.approvedAt ? [{ label: t('approvedAt', 'Approved'), value: formatDateTime(profile.approvedAt) }] : []),
                   ].map((item, idx) => (

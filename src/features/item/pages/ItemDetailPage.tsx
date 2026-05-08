@@ -108,8 +108,8 @@ export default function ItemDetailPage() {
             />
           </div>
 
-          {/* Shipping Config — Seller only */}
-          {isSeller && item.status === ItemStatus.PendingVerify && (
+          {/* Shipping Config — Seller only, hidden when shipment already exists */}
+          {isSeller && item.status === ItemStatus.PendingVerify && !item.hasInboundShipment && (
             <div className="glass-card p-8 space-y-6">
               <h3 style={{
                 color: 'var(--color-text-primary)',

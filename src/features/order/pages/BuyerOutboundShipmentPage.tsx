@@ -14,6 +14,7 @@ import {
 import {
   ArrowLeftOutlined,
   PictureOutlined,
+  QrcodeOutlined,
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import dayjs from 'dayjs'
@@ -113,6 +114,16 @@ export default function BuyerOutboundShipmentPage() {
               'order:buyerOutboundShipment.scanQrGuidance',
               'Scan the parcel QR code to confirm receipt and accept the item.',
             )}
+            action={
+              <Button 
+                type="primary" 
+                size="small" 
+                icon={<QrcodeOutlined />} 
+                onClick={() => navigate('/me/shipments/scan')}
+              >
+                {t('order:directShipment.scanParcelQr', 'Scan Parcel QR')}
+              </Button>
+            }
           />
         </Col>
 

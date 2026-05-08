@@ -320,5 +320,23 @@
   "lengthCm": "Chiều dài (cm)",
   "widthCm": "Chiều rộng (cm)",
   "heightCm": "Chiều cao (cm)",
-  "genericError": "Đã có lỗi xảy ra. Vui lòng thử lại sau."
+  "genericError": "Đã có lỗi xảy ra. Vui lòng thử lại sau.",
+  "warehouseOutbound": {
+    "title": "Chi tiết vận đơn kho",
+    "shipmentId": "Mã vận đơn",
+    "internalTracking": "Mã theo dõi nội bộ",
+    "carrierTracking": "Mã vận đơn hãng",
+    "carrier": "Đơn vị vận chuyển",
+    "provider": "Nhà cung cấp",
+    "dispatchedAt": "Đã gửi lúc",
+    "deliveredAt": "Đã giao lúc",
+    "buyerReceivedAt": "Người mua nhận lúc",
+    "buyerAcceptedAt": "Người mua chấp nhận lúc",
+    "activeDispute": "Đơn hàng đang có tranh chấp mở",
+    "scanQrGuidance": "Khi nhận được hàng, hãy quét mã QR trên nhãn để xác nhận đã nhận.",
+    "viewShipmentTracking": "Xem theo dõi vận đơn",
+    "acceptItem": "Đã kiểm tra và chấp nhận hàng",
+    "reportIssue": "Báo cáo sự cố / Mở tranh chấp",
+    "scanParcelQr": "Quét mã QR kiện hàng"
+  }
 }
