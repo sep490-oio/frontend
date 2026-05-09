@@ -26,6 +26,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useMySellerProfile } from '@/features/seller/api'
 import { useTheme } from '@/hooks/useTheme'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { NotificationDropdown } from '@/features/notification/components/NotificationDropdown'
 import { SellerProfileStatus } from '@/types/enums'
 import { SERIF_FONT, SANS_FONT } from '@/styles/tokens'
 
@@ -478,6 +479,8 @@ export function SellerLayout() {
           </Tooltip>
 
           <div style={{ width: 1, height: 24, background: 'var(--color-border)', margin: '0 4px', flexShrink: 0 }} />
+
+          <NotificationDropdown />
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 4px', borderRadius: 8 }}>
             <Avatar

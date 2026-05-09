@@ -299,15 +299,24 @@ export default function MyItemsPage() {
           </Tooltip>
         )}
 
-        {/* Rejected: gate by warehouse vs online flow */}
+        {/* Rejected: Edit first, then resubmit from edit page */}
         {s === ItemStatus.Rejected && (() => {
           const isWarehouseBound = record.hasInboundShipment || !!record.warehouseItemId
           const canResubmitOnline = !isWarehouseBound
           const canRequestReinspection = isWarehouseBound
           return (
             <>
+              {/* Edit button — available for both flows so seller can update photos */}
+              <Tooltip title={tc('action.edit', 'Edit')}>
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<EditOutlined />}
+                  onClick={() => navigate(`${prefix}/items/${record.id}/edit`)}
+                />
+              </Tooltip>
               {canResubmitOnline && (
-                <Tooltip title={t('resubmit', 'Resubmit')}>
+                <Tooltip title={t('resubmit', 'Resubmit for Review')}>
                   <Button
                     type="text"
                     size="small"
