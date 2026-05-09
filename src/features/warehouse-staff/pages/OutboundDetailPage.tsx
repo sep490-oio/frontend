@@ -78,7 +78,7 @@ export default function OutboundDetailPage() {
       heightCm: detail.heightCm,
       insuranceValue: detail.insuranceValueDefault,
       codAmount: detail.codAmountDefault,
-      shipmentMode: 'platform_managed',
+      shipmentMode: 'external_carrier',
     } as BookOutboundRequest)
   }, [detail, form])
 
@@ -269,12 +269,12 @@ export default function OutboundDetailPage() {
               block
               options={[
                 {
-                  label: t('shipmentModePlatform', 'Platform Managed'),
-                  value: 'platform_managed',
-                },
-                {
                   label: t('shipmentModeExternal', 'External Carrier'),
                   value: 'external_carrier',
+                },
+                {
+                  label: t('shipmentModePlatform', 'Platform Managed'),
+                  value: 'platform_managed',
                 },
               ]}
             />

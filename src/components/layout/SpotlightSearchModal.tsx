@@ -359,10 +359,16 @@ export const SpotlightSearchModal: React.FC = () => {
       keywords: ['terms', 'chính sách', 'điều khoản', 'policy', 'tos'], auth: ['admin']
     },
     {
-      id: 'admin_auctions', path: '/admin/auctions/completed', icon: <TrophyOutlined />,
-      title: t('common:spotlight.title.adminAuctions', 'Completed Auctions'),
-      desc: t('common:spotlight.desc.adminAuctions', 'View and manage finished auction records'),
-      keywords: ['auctions', 'phiên', 'đấu giá', 'completed', 'đã kết thúc'], auth: ['admin']
+      id: 'admin_auctions', path: '/admin/auctions', icon: <AppstoreOutlined />,
+      title: t('common:spotlight.title.adminAuctions', 'All Auctions'),
+      desc: t('common:spotlight.desc.adminAuctions', 'Browse and manage all platform auctions'),
+      keywords: ['auctions', 'phiên', 'đấu giá', 'all', 'tất cả', 'quản lý'], auth: ['admin']
+    },
+    {
+      id: 'admin_completed_auctions', path: '/admin/auctions/completed', icon: <TrophyOutlined />,
+      title: t('common:spotlight.title.adminCompletedAuctions', 'Completed Auctions'),
+      desc: t('common:spotlight.desc.adminCompletedAuctions', 'View post-sale auction records and order fulfillment'),
+      keywords: ['completed', 'đã kết thúc', 'hoàn thành', 'post-sale'], auth: ['admin']
     },
     {
       id: 'admin_items', path: '/admin/items/review', icon: <AuditOutlined />,

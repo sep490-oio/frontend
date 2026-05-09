@@ -224,22 +224,20 @@ export default function CheckoutPage() {
     }
 
     if (selectedMethod?.type === PaymentMethodType.VnPay || selectedMethodId === '__vnpay_new__') {
-      const isNewVnPay = selectedMethodId === '__vnpay_new__'
-      createVnPayUrl.mutate(
-        {
-          amount: order.totalAmount,
-          currency: order.currency,
-          purpose: 'order_payment',
-          description: `Payment for order ${order.orderNumber}`,
-          orderId: order.id,
-          paymentMethodId: isNewVnPay ? undefined : selectedMethodId || undefined,
-          saveCard: isNewVnPay ? saveCard : undefined,
-          cardType: isNewVnPay && saveCard ? cardType : undefined,
-          clientReturnPath: `/me/orders/${order.id}`,
-        },
+      // Route through the checkout endpoint so the backend's CheckoutOrderCommand
+      // correctly deducts the winner's auction deposit before creating the VNPay URL.
+      // Previously this called createVnPayUrl directly with order.totalAmount,
+      // which bypassed deposit deduction entirely.
+      checkout.mutate(
+        { orderId: order.id, paymentMethod: 'vnpay' },
         {
           onSuccess: (data) => {
-            window.location.href = data.paymentUrl
+            if (data.paymentUrl) {
+              window.location.href = data.paymentUrl
+            } else {
+              message.success(t('paymentSuccess', 'Payment successful'))
+              navigate(`/me/orders/${order.id}`)
+            }
           },
           onError: (err: unknown) => {
             message.error(normalizeErrorMessage(err, t('paymentError', 'Failed to create payment')))

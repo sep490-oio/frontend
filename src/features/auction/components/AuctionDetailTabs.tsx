@@ -49,6 +49,7 @@ export interface AuctionDetailTabsProps {
   qaConnected?: boolean
   qaLastSyncedAt?: number | null
   currentUserId?: string
+  isPlatformVerified?: boolean
 }
 
 function SellerIdentity({
@@ -171,6 +172,7 @@ export function AuctionDetailTabs({
   qaConnected = false,
   qaLastSyncedAt = null,
   currentUserId,
+  isPlatformVerified = false,
 }: AuctionDetailTabsProps) {
   const { t } = useTranslation('auction')
   const { t: tc } = useTranslation('common')
@@ -457,11 +459,11 @@ export function AuctionDetailTabs({
             <div style={{ paddingTop: 4 }}>
               <div
                 style={{
-                  background: auction.verifyByPlatform
+                  background: isPlatformVerified
                     ? 'var(--color-success-soft)'
                     : 'var(--color-warning-soft)',
                   border: `1px solid ${
-                    auction.verifyByPlatform
+                    isPlatformVerified
                       ? 'var(--color-success)'
                       : 'var(--color-warning)'
                   }`,
@@ -480,7 +482,7 @@ export function AuctionDetailTabs({
                 >
                   <SafetyOutlined
                     style={{
-                      color: auction.verifyByPlatform
+                      color: isPlatformVerified
                         ? 'var(--color-success)'
                         : 'var(--color-text-secondary)',
                       fontSize: 18,
@@ -496,7 +498,7 @@ export function AuctionDetailTabs({
                       }}
                     >
                       {t('inspectionStatus', 'Trạng thái kiểm định')}:{' '}
-                      {auction.verifyByPlatform ? (
+                      {isPlatformVerified ? (
                         <span style={{ color: 'var(--color-success)' }}>
                           {t('approved', 'Đã phê duyệt')} <CheckCircleOutlined />
                         </span>
@@ -517,7 +519,7 @@ export function AuctionDetailTabs({
                   }}
                 >
                   <div>
-                    {auction.verifyByPlatform
+                    {isPlatformVerified
                       ? t(
                           'verifiedByPlatformNote',
                           'OIO đã xác minh listing này trước khi mở đấu giá.',

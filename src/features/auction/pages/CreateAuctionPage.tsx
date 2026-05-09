@@ -112,6 +112,8 @@ export default function CreateAuctionPage() {
   const { data: existingItem, isLoading: itemLoading, isError: itemError } = useItemById(itemId ?? '')
 
   const [form] = Form.useForm<FormValues>()
+  const watchedAuctionType = Form.useWatch('auctionType', form)
+  const isSealed = watchedAuctionType === AuctionType.Sealed
   const createAuction = useCreateAuction()
   const createAuctionFromItem = useCreateAuctionFromItem()
   const mediaUpload = useMediaUpload('item_image')
@@ -181,22 +183,25 @@ export default function CreateAuctionPage() {
     return mediaUpload.uploadMultiple(files)
   }
 
-  const buildPayload = (values: FormValues, uploadedImages?: { mediaUploadId: string }[]): CreateAuctionRequest => ({
-    title: values.title,
-    condition: values.condition,
-    categoryId: values.categoryId,
-    description: values.description,
-    quantity: values.quantity,
-    auctionType: values.auctionType,
-    startingPrice: values.startingPrice,
-    bidIncrement: values.bidIncrement,
-    reservePrice: values.reservePrice,
-    buyNowPrice: values.buyNowPrice,
-    extensionMinutes: values.auctionType === AuctionType.Sealed ? undefined : values.extensionMinutes,
-    currency: values.currency,
-    images: uploadedImages?.map((img, i) => ({ mediaUploadId: img.mediaUploadId, isPrimary: i === 0, sortOrder: i })),
-    verifyByPlatform: requireVerification,
-  }) as any as CreateAuctionRequest
+  const buildPayload = (values: FormValues, uploadedImages?: { mediaUploadId: string }[]): CreateAuctionRequest => {
+    const isSealedType = values.auctionType === AuctionType.Sealed
+    return {
+      title: values.title,
+      condition: values.condition,
+      categoryId: values.categoryId,
+      description: values.description,
+      quantity: values.quantity,
+      auctionType: values.auctionType,
+      startingPrice: isSealedType ? 0 : values.startingPrice,
+      bidIncrement: isSealedType ? 0 : values.bidIncrement,
+      reservePrice: values.reservePrice,
+      buyNowPrice: values.buyNowPrice,
+      extensionMinutes: isSealedType ? undefined : values.extensionMinutes,
+      currency: values.currency,
+      images: uploadedImages?.map((img, i) => ({ mediaUploadId: img.mediaUploadId, isPrimary: i === 0, sortOrder: i })),
+      verifyByPlatform: requireVerification,
+    } as any as CreateAuctionRequest
+  }
 
   const handleSaveDraft = async () => {
     try {
@@ -205,8 +210,8 @@ export default function CreateAuctionPage() {
       if (isEditMode) {
         const pricingFields = {
           auctionId: editId!,
-          startingPrice: values.startingPrice,
-          bidIncrement: values.bidIncrement,
+          startingPrice: values.auctionType === AuctionType.Sealed ? 0 : values.startingPrice,
+          bidIncrement: values.auctionType === AuctionType.Sealed ? 0 : values.bidIncrement,
           reservePrice: values.reservePrice,
           buyNowPrice: values.buyNowPrice,
           extensionMinutes: values.auctionType === AuctionType.Sealed ? undefined : values.extensionMinutes,
@@ -221,8 +226,8 @@ export default function CreateAuctionPage() {
         if (isFromItem) {
           result = await createAuctionFromItem.mutateAsync({
             itemId: itemId!,
-            startingPrice: values.startingPrice,
-            bidIncrement: values.bidIncrement,
+            startingPrice: values.auctionType === AuctionType.Sealed ? 0 : values.startingPrice,
+            bidIncrement: values.auctionType === AuctionType.Sealed ? 0 : values.bidIncrement,
             reservePrice: values.reservePrice,
             buyNowPrice: values.buyNowPrice,
             extensionMinutes: values.auctionType === AuctionType.Sealed ? undefined : values.extensionMinutes,
@@ -295,8 +300,8 @@ export default function CreateAuctionPage() {
         setSubmissionStep('updating')
         const pricingFields = {
           auctionId: editId!,
-          startingPrice: values.startingPrice,
-          bidIncrement: values.bidIncrement,
+          startingPrice: values.auctionType === AuctionType.Sealed ? 0 : values.startingPrice,
+          bidIncrement: values.auctionType === AuctionType.Sealed ? 0 : values.bidIncrement,
           reservePrice: values.reservePrice,
           buyNowPrice: values.buyNowPrice,
           extensionMinutes: values.auctionType === AuctionType.Sealed ? undefined : values.extensionMinutes,
@@ -330,8 +335,8 @@ export default function CreateAuctionPage() {
         setSubmissionStep('creating')
         const result = await createAuctionFromItem.mutateAsync({
           itemId: itemId!,
-          startingPrice: values.startingPrice,
-          bidIncrement: values.bidIncrement,
+          startingPrice: values.auctionType === AuctionType.Sealed ? 0 : values.startingPrice,
+          bidIncrement: values.auctionType === AuctionType.Sealed ? 0 : values.bidIncrement,
           reservePrice: values.reservePrice,
           buyNowPrice: values.buyNowPrice,
           extensionMinutes: values.auctionType === AuctionType.Sealed ? undefined : values.extensionMinutes,
@@ -699,12 +704,13 @@ export default function CreateAuctionPage() {
             <Select options={AUCTION_TYPE_OPTIONS} style={{ width: '100%' }} size="large" />
           </Form.Item>
 
+          {!isSealed && (
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 0 : 24 }}>
             <Form.Item
               name="startingPrice"
               label={<span className="oio-label">{t('startingPrice', 'Starting Price')}</span>}
               rules={[
-                { required: true, message: t('startingPriceRequired', 'Please enter starting price') },
+                { required: !isSealed, message: t('startingPriceRequired', 'Please enter starting price') },
                 { type: 'number', min: 1, message: t('startingPriceMin', 'Starting price must be greater than 0') },
               ]}
             >
@@ -727,7 +733,7 @@ export default function CreateAuctionPage() {
               name="bidIncrement"
               label={<span className="oio-label">{t('bidIncrement', 'Bid Increment')}</span>}
               rules={[
-                { required: true, message: t('bidIncrementRequired', 'Please enter bid increment') },
+                { required: !isSealed, message: t('bidIncrementRequired', 'Please enter bid increment') },
                 { type: 'number', min: 1, message: t('bidIncrementMin', 'Bid increment must be > 0') },
               ]}
             >
@@ -745,6 +751,7 @@ export default function CreateAuctionPage() {
               />
             </Form.Item>
           </div>
+          )}
 
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 0 : 24 }}>
             <Form.Item name="reservePrice" label={<span className="oio-label">{t('reservePrice', 'Reserve Price')}</span>}>

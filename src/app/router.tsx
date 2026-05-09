@@ -184,6 +184,7 @@ const AdminVerificationDetailPage = lazy(() => import('@/features/admin/pages/Ad
 const AdminSellerProfilesPage = lazy(() => import('@/features/admin/pages/AdminSellerProfilesPage'))
 const AdminReviewQueuePage = lazy(() => import('@/features/admin/pages/AdminReviewQueuePage'))
 const AdminItemDetailPage = lazy(() => import('@/features/admin/pages/AdminItemDetailPage'))
+const AdminAuctionsPage = lazy(() => import('@/features/admin/pages/AdminAuctionsPage'))
 const AdminAuctionControlPage = lazy(() => import('@/features/admin/pages/AdminAuctionControlPage'))
 const AdminMonitoringPage = lazy(() => import('@/features/admin/pages/AdminMonitoringPage'))
 const AdminModerationPage = lazy(() => import('@/features/admin/pages/AdminModerationPage'))
@@ -367,6 +368,7 @@ export const router = createBrowserRouter([
           { path: '/admin/sellers', element: withSuspense(AdminSellerProfilesPage) },
           { path: '/admin/items/review', element: withSuspense(AdminReviewQueuePage) },
           { path: '/admin/items/:id', element: withSuspense(AdminItemDetailPage) },
+          { path: '/admin/auctions', element: withSuspense(AdminAuctionsPage) },
           { path: '/admin/auctions/completed', element: withSuspense(AdminCompletedAuctionsPage) },
           { path: '/admin/auctions/completed/:auctionId', element: withSuspense(AdminCompletedAuctionDetailPage) },
           { path: '/admin/auctions/:id', element: withSuspense(AdminAuctionControlPage) },

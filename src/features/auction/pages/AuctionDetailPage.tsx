@@ -573,6 +573,10 @@ export default function AuctionDetailPage() {
     if (!pendingActivation || !id) return
     if (auction?.status === AuctionStatus.Active) {
       setPendingActivation(false)
+      // Ensure countdownExpired is cleared — it may have been incorrectly set
+      // during the Scheduled→Active race (start-time countdown firing after
+      // SignalR patched status to Active).
+      setCountdownExpired(false)
       return
     }
     const interval = setInterval(() => {
@@ -1056,6 +1060,13 @@ export default function AuctionDetailPage() {
   const images = item.images ?? []
   const endTime = auction.endTime
 
+  // Platform-verified = item has been through the warehouse inspection pipeline
+  // (has an inbound shipment) AND is no longer awaiting inspection (status !== pending_verify).
+  // We also accept the seller's request flag as a secondary indicator.
+  const isPlatformVerified = !!(
+    (item.hasInboundShipment || auction.verifyByPlatform) && item.status !== 'pending_verify'
+  )
+
   return (
     <div className="oio-fade-in" style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px 12px 100px' : isTablet ? '20px 16px 80px' : '24px 24px 80px' }}>
       {/* Breadcrumb — segment before detail reflects navigation origin (returnTo/returnLabel) */}
@@ -1181,7 +1192,7 @@ export default function AuctionDetailPage() {
               images={images}
               alt={item.title}
               showOverlayBadges
-              isVerified={auction.verifyByPlatform}
+              isVerified={isPlatformVerified}
               viewCount={viewCount}
               maxThumbnails={isMobile ? 3 : 5}
             />
@@ -1220,6 +1231,7 @@ export default function AuctionDetailPage() {
               qaConnected={hub.connected}
               qaLastSyncedAt={hub.lastSyncedAt}
               currentUserId={currentUser?.id}
+              isPlatformVerified={isPlatformVerified}
             />
           </div>
         </Col>
@@ -1320,9 +1332,20 @@ export default function AuctionDetailPage() {
                   old ? { ...old, auction: { ...old.auction, status: AuctionStatus.Active } } : old,
                 )
               } else if (auction?.status === AuctionStatus.Active) {
-                // Timer hit zero for an active auction — immediately disable bidding
-                // while the server processes the EndAuction command.
-                setCountdownExpired(true)
+                // Guard: if pendingActivation is still true, this onEnd was fired by
+                // the "Starts In" countdown that re-rendered momentarily after a
+                // SignalR AuctionStateChanged patched status to Active before our
+                // optimistic update ran. In that case we must NOT mark the auction
+                // as countdown-expired — the end-time countdown hasn't even started.
+                // Belt-and-suspenders: also verify endTime is genuinely near zero.
+                const endMs = endTime ? new Date(endTime).getTime() : 0
+                const nowMs = getServerNowMs()
+                const isEndTimeNear = endMs > 0 && (endMs - nowMs) < 60_000
+                if (!pendingActivation && isEndTimeNear) {
+                  // Timer hit zero for an active auction — immediately disable bidding
+                  // while the server processes the EndAuction command.
+                  setCountdownExpired(true)
+                }
               }
               queryClient.invalidateQueries({ queryKey: queryKeys.auctions.detail(id!) })
               refetch()
