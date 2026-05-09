@@ -813,7 +813,7 @@ export default function AuctionDetailPage() {
     if (!ensureTermsAccepted()) return
     if (!id || !auction) return
     try {
-      const depositAmount = auction.startingPrice?.amount ?? 0
+      const depositAmount = auction.requiredDepositAmount ?? auction.startingPrice?.amount ?? 0
       const result = await depositMutation.mutateAsync({
         amount: depositAmount,
         currency,
@@ -833,7 +833,7 @@ export default function AuctionDetailPage() {
   const handleWalletDeposit = async () => {
     if (bidderTerms.hasPending) { bidderTerms.openModal(); return }
     if (!id || !auction) return
-    const depositAmount = auction.startingPrice?.amount ?? 0
+    const depositAmount = auction.requiredDepositAmount ?? auction.startingPrice?.amount ?? 0
 
     modal.confirm({
       title: t('confirmDeposit', 'Confirm Deposit'),
@@ -869,7 +869,7 @@ export default function AuctionDetailPage() {
   // Keep original VnPay deposit handler (redirects to external gateway)
   const _handleWalletDepositDirect = async () => {
     if (!id || !auction) return
-    const depositAmount = auction.startingPrice?.amount ?? 0
+    const depositAmount = auction.requiredDepositAmount ?? auction.startingPrice?.amount ?? 0
     try {
       await walletDepositMutation.mutateAsync({ auctionId: id, amount: depositAmount, currency })
       if (storageKey) {
@@ -880,8 +880,7 @@ export default function AuctionDetailPage() {
       queryClient.invalidateQueries({ queryKey: queryKeys.auctions.detail(id) })
     } catch (err) {
 
-      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      message.error(detail ?? t('depositError', 'Deposit failed'))
+      message.error(normalizeErrorMessage(err, t('depositError', 'Deposit failed')))
     }
   }
   void _handleWalletDepositDirect
@@ -915,20 +914,7 @@ export default function AuctionDetailPage() {
         setCancelModalOpen(false)
       },
       onError: (err: unknown) => {
-        const apiErr = err as { response?: { data?: { code?: string; detail?: string } } }
-        const code = apiErr?.response?.data?.code
-        if (code === 'Auction.CancelBlocked.ActiveBids') {
-          message.warning(
-            t(
-              'cancelBlockedActiveBids',
-              'Không thể hủy phiên đấu giá khi đã có người đặt giá. Vui lòng liên hệ admin nếu cần xử lý khẩn cấp.',
-            ),
-          )
-          return
-        }
-        // fallback to BE detail or generic message — let global error handler log the rest
-        const detail = apiErr?.response?.data?.detail
-        if (detail) message.error(detail)
+        message.error(normalizeErrorMessage(err, t('cancelError', 'Failed to cancel auction')))
       },
     })
   }
@@ -957,9 +943,7 @@ export default function AuctionDetailPage() {
         setAdminRejectReason('')
       },
       onError: (err: unknown) => {
-        const apiErr = err as { response?: { data?: { detail?: string } } }
-        const detail = apiErr?.response?.data?.detail
-        if (detail) message.error(detail)
+        message.error(normalizeErrorMessage(err, t('adminRejectError', 'Failed to reject auction')))
       },
     })
   }
@@ -977,9 +961,7 @@ export default function AuctionDetailPage() {
         setAdminRemoveItemReason('')
       },
       onError: (err: unknown) => {
-        const apiErr = err as { response?: { data?: { detail?: string } } }
-        const detail = apiErr?.response?.data?.detail
-        if (detail) message.error(detail)
+        message.error(normalizeErrorMessage(err, t('adminRemoveItemError', 'Failed to remove item')))
       },
     })
   }
@@ -1306,7 +1288,7 @@ export default function AuctionDetailPage() {
             onExpandChart={() => setChartModalOpen(true)}
             qualificationStatus={isQualified ? 'qualified' : data?.currentUserParticipant?.qualificationStatus}
             depositStatus={data?.currentUserParticipant?.depositStatus}
-            depositAmount={data?.currentUserParticipant?.depositAmount ?? auction.startingPrice?.amount}
+            depositAmount={data?.currentUserParticipant?.depositAmount ?? auction.requiredDepositAmount ?? auction.startingPrice?.amount}
             onDeposit={() => {
               if (!ensureTermsAccepted()) return
               setDepositModalOpen(true)
@@ -1413,7 +1395,7 @@ export default function AuctionDetailPage() {
         onOk={handleAutoBid}
         confirmLoading={autoBidMutation.isPending}
         okText={t('confirmAutoBid', 'Confirm Auto-Bid')}
-        okButtonProps={{ disabled: !autoBidMax || autoBidMax <= currentPrice }}
+        okButtonProps={{ disabled: !autoBidMax || autoBidMax <= currentPrice || autoBidMax > walletBalance }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Typography.Paragraph style={{ margin: 0, fontSize: 13, color: 'var(--color-text-secondary)' }}>
@@ -1433,16 +1415,23 @@ export default function AuctionDetailPage() {
               style={{ width: '100%' }}
               size="large"
               min={minBid}
+              max={walletBalance > 0 ? walletBalance : undefined}
               step={auction?.bidIncrement?.amount ?? 0}
               value={autoBidMax}
               onChange={(v) => setAutoBidMax(v)}
               addonAfter={currency}
+              status={autoBidMax && autoBidMax > walletBalance ? 'error' : undefined}
               formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
               parser={(v) => (v ?? '').replace(/\$\s?|(,*)/g, '') as any}
             />
             <Typography.Text style={{ fontSize: 12, color: 'var(--color-text-secondary)', display: 'block', marginTop: 4 }}>
               {t('autoBidMinHelp', 'Must be higher than current price')}: {formatCurrency(currentPrice, currency)}
             </Typography.Text>
+            {autoBidMax != null && autoBidMax > walletBalance && (
+              <Typography.Text type="danger" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>
+                {t('autoBidExceedsBalance', 'Maximum amount cannot exceed your wallet balance')} ({formatCurrency(walletBalance, currency)})
+              </Typography.Text>
+            )}
           </div>
           <div>
             <span className="oio-label" style={{ display: 'block', marginBottom: 6 }}>
@@ -1537,7 +1526,7 @@ export default function AuctionDetailPage() {
             }
           }}
           auctionId={id}
-          requiredDepositAmount={auction.startingPrice?.amount ?? 0}
+          requiredDepositAmount={auction.requiredDepositAmount ?? auction.startingPrice?.amount ?? 0}
           currency={currency}
         />
       )}

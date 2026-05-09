@@ -36,6 +36,7 @@ import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { MarkReturnShippedModal } from '@/features/warehouse-staff/components/MarkReturnShippedModal'
 import { ReturnQrDisplayModal } from '@/features/order/components/ReturnQrDisplayModal'
 import { SERIF_FONT } from '@/styles/tokens'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 
 type TabKey = 'pending' | 'in_transit'
 
@@ -81,8 +82,9 @@ export default function PendingReturnsPage() {
       message.success(t('staffReturns.failureRecorded', 'Delivery failure recorded'))
       setFailureOpen(false)
     } catch (err) {
-      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      if (detail) message.error(detail)
+      if ((err as { errorFields?: unknown[] })?.errorFields === undefined) {
+        message.error(normalizeErrorMessage(err, t('staffReturns.failureError', 'Failed to record delivery failure')))
+      }
     }
   }
 

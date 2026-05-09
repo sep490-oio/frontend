@@ -149,20 +149,18 @@ export function EscrowTimeline({ order, isSeller, onAcceptRelease, onDispute, hi
             {order.totalAmount != null ? formatCurrency(order.totalAmount, currency) : '—'}
           </Typography.Text>
         </Descriptions.Item>
-        {order.depositAppliedAmount != null && (
+        {order.depositAppliedAmount != null && order.depositAppliedAmount > 0 && (
           <Descriptions.Item label={t('escrow.depositOffset', 'Deposit Offset')}>
             <Typography.Text>
               −{formatCurrency(order.depositAppliedAmount, currency)}
             </Typography.Text>
           </Descriptions.Item>
         )}
-        <Descriptions.Item label={t('escrow.amountPaid', 'Amount Paid')}>
+        <Descriptions.Item label={t('escrow.amountDue', 'Amount Due')}>
           <Typography.Text strong style={{ color: 'var(--color-success)' }}>
             {order.paidAt
               ? formatCurrency(
-                  order.amountPaid != null
-                    ? order.amountPaid
-                    : (order.totalAmount ?? 0) - (order.depositAppliedAmount ?? 0),
+                  (order.totalAmount ?? 0) - (order.depositAppliedAmount ?? 0),
                   currency,
                 )
               : '—'}

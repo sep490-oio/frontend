@@ -17,6 +17,7 @@
   "conditionRequired": "Please select condition",
   "conditionPlaceholder": "Select condition",
   "categoryPlaceholder": "Select category",
+  "categoryRequired": "Please select a category",
   "quantityRequired": "Please enter quantity",
   "mediaUploadPlaceholder": "Media upload will be available here",
   "createSuccess": "Item created successfully",

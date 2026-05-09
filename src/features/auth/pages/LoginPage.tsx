@@ -9,8 +9,8 @@ import { useAppDispatch, setCredentials, set2FARequired } from '@/app/store'
 import { useLogin, useResendConfirmEmail } from '@/features/auth/api'
 import { STORAGE_KEYS, uuid } from '@/utils/constants'
 import { getReturnToFromSearch } from '@/utils/returnTo'
-import type { AxiosError } from 'axios'
-import type { ApiError } from '@/types'
+
+import { normalizeErrorMessage, getErrorCode } from '@/lib/errorNormalizer'
 
 function getRedirectPath(token: string): string {
   try {
@@ -18,7 +18,8 @@ function getRedirectPath(token: string): string {
     const roles: string[] = Array.isArray(payload.role) ? payload.role : payload.role ? [payload.role] : []
     const lowerRoles = roles.map((r) => r.toLowerCase())
     if (lowerRoles.includes('admin')) return '/admin'
-    if (lowerRoles.includes('inspector') || lowerRoles.includes('warehousemanager')) return '/inspector'
+    if (lowerRoles.includes('warehouse_staff') || lowerRoles.includes('warehousemanager')) return '/warehouse-staff'
+    if (lowerRoles.includes('inspector')) return '/inspector'
     if (lowerRoles.includes('seller')) return '/seller'
     return '/'
   } catch {
@@ -91,15 +92,13 @@ export default function LoginPage() {
           }
         },
         onError: (error) => {
-          const axiosError = error as AxiosError<ApiError>
-          const detail = axiosError.response?.data?.detail ?? ''
-          const code = axiosError.response?.data?.code ?? ''
+          const code = getErrorCode(error) ?? ''
           // Detect email-not-confirmed error (BE code: "User.Email.NotConfirmed")
           if (code === 'User.Email.NotConfirmed' || code.includes('EmailNotConfirmed')) {
             setEmailNotConfirmed(values.account)
           } else {
             setEmailNotConfirmed(null)
-            message.error(detail || t('login.error'))
+            message.error(normalizeErrorMessage(error, t('login.error')))
           }
         },
       },

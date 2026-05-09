@@ -271,6 +271,7 @@ export default function CreateItemPage() {
               <Form.Item
                 name="categoryId"
                 label={t('category', 'Category')}
+                rules={[{ required: true, message: t('categoryRequired', 'Please select a category') }]}
               >
                 <Select
                   size="large"

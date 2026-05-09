@@ -230,6 +230,12 @@ export function AuctionDepositModal({
           >
             {formatCurrency(requiredDepositAmount, currency)}
           </Typography.Text>
+          <Typography.Text
+            type="secondary"
+            style={{ display: 'block', marginTop: 4, fontSize: 12 }}
+          >
+            {t('depositPolicyInfo', 'Tiền cọc = 10% giá khởi điểm (tối thiểu 10.000₫)')}
+          </Typography.Text>
         </div>
 
         <Divider style={{ margin: '4px 0' }} />

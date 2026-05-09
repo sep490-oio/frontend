@@ -35,6 +35,7 @@ import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { WarehouseReturnEvidenceCategory } from '@/types/enums'
 import type { WarehouseToSellerShipmentDto } from '@/types'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 
 interface FormValues {
   providerCode: string
@@ -127,8 +128,7 @@ export function MarkReturnShippedModal({ open, shipmentId, onClose }: Props) {
           setLocalUploadCount((c) => c + 1)
           message.success(t('staffReturns.pickupAdded', 'Pickup photo added'))
         } catch (err) {
-          const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-          message.error(detail ?? t('staffReturns.uploadError', 'Photo upload failed'))
+          message.error(normalizeErrorMessage(err, t('staffReturns.uploadError', 'Photo upload failed')))
           uploadedBlobs.current.delete(photo.blob)
         } finally {
           setUploading(false)
@@ -165,9 +165,8 @@ export function MarkReturnShippedModal({ open, shipmentId, onClose }: Props) {
         onClose()
       }
     } catch (err) {
-      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      if (detail) {
-        message.error(detail)
+      if ((err as { errorFields?: unknown[] })?.errorFields === undefined) {
+        message.error(normalizeErrorMessage(err, t('staffReturns.shipError', 'Failed to mark as shipped')))
       }
     }
   }
@@ -250,7 +249,7 @@ export function MarkReturnShippedModal({ open, shipmentId, onClose }: Props) {
               {pickupEvidence.map((e) => (
                 <div key={e.id} style={{ position: 'relative' }}>
                   <Image
-                    src={e.mediaUpload.secureUrl}
+                    src={e.mediaUpload?.secureUrl}
                     width={72}
                     height={72}
                     style={{
@@ -258,7 +257,7 @@ export function MarkReturnShippedModal({ open, shipmentId, onClose }: Props) {
                       borderRadius: 6,
                       border: '2px solid var(--color-success, #52c41a)',
                     }}
-                    preview={{ src: e.mediaUpload.secureUrl }}
+                    preview={{ src: e.mediaUpload?.secureUrl }}
                   />
                   <div style={{ position: 'absolute', top: 2, left: 2 }}>
                     <LiveCapturedBadge size="small" />

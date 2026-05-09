@@ -979,7 +979,10 @@
     "validation": {
       "refundAmountRequired": "Refund amount must be greater than 0 when partial refund is selected.",
       "conflictReleaseAndRefund": "Cannot release to seller and refund buyer simultaneously.",
-      "noActionsWarning": "No resolution actions selected. Are you sure?"
+      "conflictDoubleRefund": "Cannot request buyer refund through both Escrow and Refund actions. Use one or the other.",
+      "noActionsWarning": "No resolution actions selected. Are you sure?",
+      "returnToSellerNeedsOpenReturn": "Item \"Return to Seller\" requires Shipment \"Open Return\" to trigger the buyer return flow. Without it, the return is manual only.",
+      "refundWithoutReturnWarning": "Refund will fire immediately without waiting for the buyer to return the item. Select Shipment \"Open Return\" to defer the refund until the seller confirms receipt."
     }
   },
   "disputeList": {
@@ -1000,3 +1003,4 @@
     }
   }
 }
+

@@ -18,8 +18,7 @@ import {
 import { useRegister } from '@/features/auth/api'
 import { createEmailSchema, createPasswordSchema, createUsernameSchema } from '@/utils/validation'
 import { DEFAULT_CURRENCY } from '@/utils/constants'
-import type { AxiosError } from 'axios'
-import type { ApiError } from '@/types'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 
 type RegisterFormValues = {
   userName: string
@@ -161,9 +160,7 @@ export default function RegisterPage() {
           navigate('/login')
         },
         onError: (error) => {
-          const axiosError = error as AxiosError<ApiError>
-          const detail = axiosError.response?.data?.detail
-          message.error(detail ?? t('register.error'))
+          message.error(normalizeErrorMessage(error, t('register.error')))
         },
       },
     )

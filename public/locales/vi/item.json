@@ -17,6 +17,7 @@
   "conditionRequired": "Vui lòng chọn tình trạng",
   "conditionPlaceholder": "Chọn tình trạng",
   "categoryPlaceholder": "Chọn danh mục",
+  "categoryRequired": "Vui lòng chọn danh mục",
   "quantityRequired": "Vui lòng nhập số lượng",
   "mediaUploadPlaceholder": "Chức năng tải ảnh sẽ có tại đây",
   "createSuccess": "Tạo sản phẩm thành công",

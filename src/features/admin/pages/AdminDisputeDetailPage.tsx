@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import {
   Typography, Card, Tag, Space, Spin, Empty, Button, Input,
   Modal, Select, Image, Popconfirm, Row, Col, App, Result, Tabs, Drawer, Collapse, Tooltip, Alert,
@@ -24,6 +24,7 @@ import {
   useRejectDispute,
   useAddAdminDisputeMessage,
 } from '@/features/dispute/api'
+import { useAdminDisputeHub } from '@/features/dispute/hooks/useAdminDisputeHub'
 import ResolutionActionBuilder, { getPresetForOutcome, validateActionSet } from '@/features/admin/components/ResolutionActionBuilder'
 import type { ResolutionActionSet } from '@/features/dispute/api'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
@@ -62,6 +63,7 @@ export default function AdminDisputeDetailPage() {
 
   const { data: dispute, isLoading } = useAdminDisputeDetail(disputeId)
   const { data: assignableUsers } = useDisputeAssignableUsers(disputeId)
+  const hub = useAdminDisputeHub(disputeId)
 
   // Mutations
   const assignMutation = useAssignDispute()
@@ -92,6 +94,30 @@ export default function AdminDisputeDetailPage() {
   const [mobileActionsOpen, setMobileActionsOpen] = useState(false)
 
   const isTerminal = TERMINAL_STATUSES.includes(dispute?.status ?? '')
+
+  // ── Polling fallback when SignalR is disconnected ──────────────────
+  useEffect(() => {
+    if (hub.connected || isTerminal || !disputeId) return
+    const interval = setInterval(() => {
+      hub.invalidateDetail()
+    }, 10_000)
+    return () => clearInterval(interval)
+  }, [hub.connected, isTerminal, disputeId, hub.invalidateDetail])
+
+  // ── Auto-scroll to latest message on real-time update ──────────────
+  const externalThreadRef = useRef<HTMLDivElement>(null)
+  const internalThreadRef = useRef<HTMLDivElement>(null)
+  const prevMsgCountRef = useRef(dispute?.messages?.length ?? 0)
+
+  useEffect(() => {
+    const currentCount = dispute?.messages?.length ?? 0
+    if (currentCount > prevMsgCountRef.current) {
+      // Scroll both threads to bottom on new messages
+      externalThreadRef.current?.scrollTo({ top: externalThreadRef.current.scrollHeight, behavior: 'smooth' })
+      internalThreadRef.current?.scrollTo({ top: internalThreadRef.current.scrollHeight, behavior: 'smooth' })
+    }
+    prevMsgCountRef.current = currentCount
+  }, [dispute?.messages?.length])
 
   // Auto-fill action set presets when outcome changes
   useEffect(() => {
@@ -785,6 +811,9 @@ export default function AdminDisputeDetailPage() {
           ) : (
             <Tag>{t('unassigned')}</Tag>
           )}
+          <Tag color={hub.connected ? 'success' : 'default'} style={{ fontSize: 10 }}>
+            {hub.connected ? '● Live' : '○ Polling'}
+          </Tag>
           {isAwaitingEvidence && (
             <Tag color="warning">
               {t('awaitingEvidenceSince')} {dayjs(dispute.requestedEvidenceAt).format('DD/MM/YYYY HH:mm')}
@@ -842,7 +871,7 @@ export default function AdminDisputeDetailPage() {
             style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
             styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column' } }}
           >
-            <div style={{ flex: 1, maxHeight: 400, overflow: 'auto', marginBottom: 12 }}>
+            <div ref={externalThreadRef} style={{ flex: 1, maxHeight: 400, overflow: 'auto', marginBottom: 12 }}>
               {externalMessages.length === 0 ? (
                 <Empty description={t('noMessages')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
               ) : (
@@ -894,7 +923,7 @@ export default function AdminDisputeDetailPage() {
                   label: t('internalNotes'),
                   children: (
                     <div style={{ padding: '0 0 12px' }}>
-                      <div style={{ maxHeight: 400, overflow: 'auto', marginBottom: 12 }}>
+                      <div ref={internalThreadRef} style={{ maxHeight: 400, overflow: 'auto', marginBottom: 12 }}>
                         {internalMessages.length === 0 ? (
                           <Empty description={t('noInternalNotes')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
                         ) : (

@@ -38,6 +38,7 @@ import type { CreateAuctionRequest } from '@/features/auction/auctionApi'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { SERIF_FONT } from '@/styles/tokens'
 import { htmlToPlainTextExcerpt } from '@/components/ui/SafeHtmlRenderer'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 
 interface FormValues {
   title: string
@@ -236,9 +237,8 @@ export default function CreateAuctionPage() {
           try {
             await applyTiming(result.id, values)
           } catch (err: any) {
-            const detail = err?.response?.data?.detail
-            const msg = t('draftSavedTimingFailed', 'Draft saved but timing not set. You can configure timing later.')
-            message.warning(detail ? `${msg} - ${detail}` : msg)
+            const detail = normalizeErrorMessage(err, t('draftSavedTimingFailed', 'Draft saved but timing not set. You can configure timing later.'))
+            message.warning(detail)
             navigate(`${prefix}/auctions`)
             return
           }
@@ -248,7 +248,7 @@ export default function CreateAuctionPage() {
       }
     } catch (err: any) {
       if (err && typeof err === 'object' && 'errorFields' in err) return
-      message.error(err?.response?.data?.detail || t('createError', 'Failed to save draft'))
+      message.error(normalizeErrorMessage(err, t('createError', 'Failed to save draft')))
     } finally {
       setSavingDraft(false)
     }
@@ -275,9 +275,8 @@ export default function CreateAuctionPage() {
         navigate(`${prefix}/auctions`)
       }
     } catch (err: any) {
-      const detail = err?.response?.data?.detail
-      const msg = t('retryFailed', 'Retry failed. Please try again or go to My Auctions.')
-      setSubmissionError(detail ? `${msg} - ${detail}` : msg)
+      const errMsg = normalizeErrorMessage(err, t('retryFailed', 'Retry failed. Please try again or go to My Auctions.'))
+      setSubmissionError(errMsg)
     }
   }
 
@@ -311,9 +310,7 @@ export default function CreateAuctionPage() {
             await applyTiming(editId!, values)
           } catch (err: any) {
             setSubmissionStep(null)
-            const detail = err?.response?.data?.detail
-            const msg = t('updatedTimingFailed', 'Auction updated but timing not set. You can configure timing later.')
-            setSubmissionError(detail ? `${msg} - ${detail}` : msg)
+            setSubmissionError(normalizeErrorMessage(err, t('updatedTimingFailed', 'Auction updated but timing not set. You can configure timing later.')))
             setPartialAuctionId(editId!)
             return
           }
@@ -325,9 +322,7 @@ export default function CreateAuctionPage() {
           setSubmissionStep(null)
         } catch (err: any) {
           setSubmissionStep(null)
-          const detail = err?.response?.data?.detail
-          const msg = t('updatedSubmitFailed', 'Auction updated but submission failed. Submit from My Auctions.')
-          setSubmissionError(detail ? `${msg} - ${detail}` : msg)
+          setSubmissionError(normalizeErrorMessage(err, t('updatedSubmitFailed', 'Auction updated but submission failed. Submit from My Auctions.')))
           setPartialAuctionId(editId!)
           return
         }
@@ -350,9 +345,7 @@ export default function CreateAuctionPage() {
             await applyTiming(result.id, values)
           } catch (err: any) {
             setSubmissionStep(null)
-            const detail = err?.response?.data?.detail
-            const msg = t('createdTimingFailed', 'Auction created but timing not set. Configure timing in My Auctions.')
-            setSubmissionError(detail ? `${msg} - ${detail}` : msg)
+            setSubmissionError(normalizeErrorMessage(err, t('createdTimingFailed', 'Auction created but timing not set. Configure timing in My Auctions.')))
             return
           }
           setSubmissionStep('submitting')
@@ -362,9 +355,7 @@ export default function CreateAuctionPage() {
             setSubmissionStep(null)
           } catch (err: any) {
             setSubmissionStep(null)
-            const detail = err?.response?.data?.detail
-            const msg = t('timingSetSubmitFailed', 'Auction created with timing but submission failed. Submit from My Auctions.')
-            setSubmissionError(detail ? `${msg} - ${detail}` : msg)
+            setSubmissionError(normalizeErrorMessage(err, t('timingSetSubmitFailed', 'Auction created with timing but submission failed. Submit from My Auctions.')))
             return
           }
         } else {
@@ -388,17 +379,14 @@ export default function CreateAuctionPage() {
           setSubmissionStep(null)
         } catch (err: any) {
           setSubmissionStep(null)
-          const detail = err?.response?.data?.detail
-          const msg = t('draftSavedSubmitFailed', 'Draft saved but item submission failed. You can submit from My Auctions.')
-          setSubmissionError(detail ? `${msg} - ${detail}` : msg)
+          setSubmissionError(normalizeErrorMessage(err, t('draftSavedSubmitFailed', 'Draft saved but item submission failed. You can submit from My Auctions.')))
           return
         }
       }
       navigate(`${prefix}/auctions`)
     } catch (err: any) {
       setSubmissionStep(null)
-      const detail = err?.response?.data?.detail
-      message.error(detail || t('createError', 'Failed to create auction'))
+      message.error(normalizeErrorMessage(err, t('createError', 'Failed to create auction')))
     }
   }
 
@@ -660,7 +648,7 @@ export default function CreateAuctionPage() {
               </Form.Item>
 
               <Space direction={isMobile ? 'vertical' : 'horizontal'} style={{ width: '100%', display: 'flex' }} size="large">
-                <Form.Item name="categoryId" label={<span className="oio-label">{t('category', 'Category')}</span>} style={{ flex: 1 }}>
+                <Form.Item name="categoryId" label={<span className="oio-label">{t('category', 'Category')}</span>} style={{ flex: 1 }} rules={[{ required: true, message: t('categoryRequired', 'Please select a category') }]}>
                   <Select
                     options={categoryOptions}
                     placeholder={t('selectCategory', 'Select category')}
@@ -717,13 +705,13 @@ export default function CreateAuctionPage() {
               label={<span className="oio-label">{t('startingPrice', 'Starting Price')}</span>}
               rules={[
                 { required: true, message: t('startingPriceRequired', 'Please enter starting price') },
-                { type: 'number', min: 0, message: t('startingPriceMin', 'Starting price must be >= 0') },
+                { type: 'number', min: 1, message: t('startingPriceMin', 'Starting price must be greater than 0') },
               ]}
             >
               <InputNumber
                 style={{ width: '100%', fontSize: 16 }}
                 size="large"
-                min={0}
+                min={1}
                 step={1000}
                 addonAfter={DEFAULT_CURRENCY}
                 placeholder="0"
@@ -775,11 +763,24 @@ export default function CreateAuctionPage() {
               />
             </Form.Item>
 
-            <Form.Item name="buyNowPrice" label={<span className="oio-label">{t('buyNowPrice', 'Buy Now Price')}</span>}>
+            <Form.Item
+              name="buyNowPrice"
+              label={<span className="oio-label">{t('buyNowPrice', 'Buy Now Price')}</span>}
+              rules={[
+                {
+                  validator: (_, value) => {
+                    if (value != null && value <= 0) {
+                      return Promise.reject(t('buyNowPriceMin', 'Buy now price must be greater than 0'))
+                    }
+                    return Promise.resolve()
+                  },
+                },
+              ]}
+            >
               <InputNumber
                 style={{ width: '100%', fontSize: 16 }}
                 size="large"
-                min={0}
+                min={1}
                 step={1000}
                 addonAfter={DEFAULT_CURRENCY}
                 placeholder={t('buyNowPricePlaceholder', 'Optional')}

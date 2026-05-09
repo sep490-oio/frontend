@@ -35,7 +35,7 @@ import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useTermsGate } from '@/features/user/hooks/useTermsGate'
 import { TermsAcceptanceModal } from '@/components/terms/TermsAcceptanceModal'
-import { useOrderById, useUpdateOrderShipping } from '@/features/order/api'
+import { useOrderById, useUpdateOrderShipping, useCancelOrderPayment } from '@/features/order/api'
 import { OrderItemSummary } from '@/features/order/components/OrderItemSummary'
 import { usePaymentMethods, useCheckout, useCreateVnPayUrl, useWallet } from '@/features/payment/api'
 import { useAddresses, useCurrentUser, useCurrentUserProfile } from '@/features/user/api'
@@ -46,6 +46,7 @@ import { PaymentMethodType } from '@/types/enums'
 import { formatCurrency } from '@/utils/format'
 import { SANS_FONT, MONO_FONT } from '@/styles/tokens'
 import GhnAddressSelect from '@/components/ui/GhnAddressSelect'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 
 const WALLET_METHOD_ID = '__wallet__'
 
@@ -82,6 +83,10 @@ export default function CheckoutPage() {
   const checkout = useCheckout()
   const createVnPayUrl = useCreateVnPayUrl()
   const updateShipping = useUpdateOrderShipping()
+  const cancelPayment = useCancelOrderPayment()
+
+  // Detect buy-now vs auction-win for cancel warning text
+  const isBuyNowOrder = !!auctionData?.auction?.isBuyNowReserved
 
   const [shippingForm] = Form.useForm<UpdateOrderShippingRequest>()
   const [shippingSaved, setShippingSaved] = useState(false)
@@ -181,12 +186,11 @@ export default function CheckoutPage() {
       setShippingSaved(true)
       return true
     } catch (err) {
-      const apiDetail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      if (apiDetail) {
-        message.error(apiDetail)
-      } else if ((err as { errorFields?: unknown[] })?.errorFields === undefined) {
-        message.error(t('shippingSaveError', 'Failed to save shipping information'))
+      if ((err as { errorFields?: unknown[] })?.errorFields !== undefined) {
+        // Ant Design form validation error — don't show toast
+        return false
       }
+      message.error(normalizeErrorMessage(err, t('shippingSaveError', 'Failed to save shipping information')))
       return false
     }
   }
@@ -211,8 +215,8 @@ export default function CheckoutPage() {
               navigate(`/me/orders/${order.id}`)
             }
           },
-          onError: () => {
-            message.error(t('paymentError', 'Failed to process payment'))
+          onError: (err: unknown) => {
+            message.error(normalizeErrorMessage(err, t('paymentError', 'Failed to process payment')))
           },
         },
       )
@@ -237,8 +241,8 @@ export default function CheckoutPage() {
           onSuccess: (data) => {
             window.location.href = data.paymentUrl
           },
-          onError: () => {
-            message.error(t('paymentError', 'Failed to create payment'))
+          onError: (err: unknown) => {
+            message.error(normalizeErrorMessage(err, t('paymentError', 'Failed to create payment')))
           },
         },
       )
@@ -252,8 +256,8 @@ export default function CheckoutPage() {
           message.success(t('paymentSuccess', 'Payment successful'))
           navigate(`/me/orders/${order.id}`)
         },
-        onError: () => {
-          message.error(t('paymentError', 'Failed to process payment'))
+        onError: (err: unknown) => {
+          message.error(normalizeErrorMessage(err, t('paymentError', 'Failed to process payment')))
         },
       },
     )
@@ -780,6 +784,64 @@ export default function CheckoutPage() {
                     {t('secureCheckout', 'Secure encrypted checkout')}
                   </Typography.Text>
                 </div>
+
+                {/* ── Cancel Payment ────────────────────────────── */}
+                {order?.status === 'pending_payment' && (
+                  <div style={{ marginTop: 20, textAlign: 'center' }}>
+                    <Popconfirm
+                      title={t('cancelPaymentTitle', 'Cancel Payment?')}
+                      description={
+                        isBuyNowOrder
+                          ? t('cancelBuyNowWarning', 'Cancelling releases the reservation. Other buyers may purchase this item. Your deposit will be fully refunded.')
+                          : t('cancelAuctionWinWarning', 'Cancelling forfeits 50% of your deposit. The item will be offered to the next bidder.')
+                      }
+                      okText={t('confirmCancel', 'Yes, Cancel')}
+                      cancelText={t('keepPayment', 'Keep')}
+                      okButtonProps={{
+                        danger: true,
+                        loading: cancelPayment.isPending,
+                      }}
+                      onConfirm={() => {
+                        cancelPayment.mutate(
+                          { orderId },
+                          {
+                            onSuccess: () => {
+                              message.success(t('paymentCancelled', 'Payment has been cancelled.'))
+                              navigate(`/me/orders`, { replace: true })
+                            },
+                            onError: (err: any) => {
+                              message.error(normalizeErrorMessage(err, t('cancelFailed', 'Failed to cancel payment.')))
+                            },
+                          },
+                        )
+                      }}
+                    >
+                      <Button
+                        id="cancel-payment-btn"
+                        type="text"
+                        danger
+                        block
+                        disabled={checkout.isPending || createVnPayUrl.isPending || cancelPayment.isPending}
+                        style={{ fontSize: 13 }}
+                      >
+                        {t('cancelPaymentBtn', 'Cancel Payment')}
+                      </Button>
+                    </Popconfirm>
+                    <Typography.Text
+                      type="secondary"
+                      style={{
+                        fontSize: 11,
+                        display: 'block',
+                        marginTop: 4,
+                        color: isBuyNowOrder ? 'var(--color-text-tertiary)' : 'var(--color-warning)',
+                      }}
+                    >
+                      {isBuyNowOrder
+                        ? t('cancelBuyNowHint', 'Your deposit will be fully refunded.')
+                        : t('cancelAuctionHint', '⚠ You will lose 50% of your deposit.')}
+                    </Typography.Text>
+                  </div>
+                )}
               </div>
             </Space>
           </div>

@@ -21,6 +21,7 @@ import { OrderStatus, EscrowStatus } from '@/types/enums'
 import type { OrderDto } from '@/types'
 import { SANS_FONT } from '@/styles/tokens'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 
 /**
  * Seller direct-ship orders page.
@@ -76,7 +77,7 @@ export default function SellerOrdersPage() {
       await mutation.mutateAsync({ orderId: order.id })
       message.success(t(successKey, successKey))
     } catch (err) {
-      message.error((err as Error)?.message ?? t('genericError', 'Something went wrong'))
+      message.error(normalizeErrorMessage(err, t('genericError', 'Something went wrong')))
     }
   }
 
@@ -109,8 +110,7 @@ export default function SellerOrdersPage() {
       setBookModalOrder(null)
     } catch (err) {
       if ((err as { errorFields?: unknown[] })?.errorFields === undefined) {
-        const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-        message.error(detail ?? t('shipmentFailed', 'Failed to create shipment'))
+        message.error(normalizeErrorMessage(err, t('shipmentFailed', 'Failed to create shipment')))
       }
     }
   }
@@ -145,8 +145,7 @@ export default function SellerOrdersPage() {
       setShipModalOrder(null)
     } catch (err) {
       if ((err as { errorFields?: unknown[] })?.errorFields === undefined) {
-        const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-        message.error(detail ?? t('shipmentFailed', 'Failed to create shipment'))
+        message.error(normalizeErrorMessage(err, t('shipmentFailed', 'Failed to create shipment')))
       }
     }
   }
@@ -298,7 +297,7 @@ export default function SellerOrdersPage() {
                           message.success(t('directShipment.createShipmentSuccess', 'Shipment created'))
                           navigate(`/seller/shipments/${created.id}`)
                         } catch (e) {
-                          message.error((e as Error)?.message ?? t('genericError', 'Something went wrong'))
+                          message.error(normalizeErrorMessage(e, t('genericError', 'Something went wrong')))
                         }
                       }}
                     >

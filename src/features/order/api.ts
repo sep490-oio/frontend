@@ -154,6 +154,27 @@ export function useSellerShippingProviderOptions() {
 
 // ── Mutations ────────────────────────────────────────────────────────
 
+/**
+ * POST /api/orders/{orderId}/cancel-payment
+ * Buyer cancels payment for a pending order.
+ * Auction-win: 50% deposit penalty + runner-up flow.
+ * Buy-now: releases reservation with time compensation.
+ */
+export function useCancelOrderPayment() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ orderId, reason }: { orderId: string; reason?: string }) => {
+      await apiClient.post(`/orders/${orderId}/cancel-payment`, { reason: reason || undefined })
+    },
+    onSuccess: async (_data, variables) => {
+      await invalidateAndRefetchActive(qc, [
+        queryKeys.orders.detail(variables.orderId),
+        queryKeys.orders.all,
+      ])
+    },
+  })
+}
+
 export function useCreateReturn() {
   const qc = useQueryClient()
   return useMutation({

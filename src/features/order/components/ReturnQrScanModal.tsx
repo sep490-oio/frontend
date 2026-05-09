@@ -3,6 +3,7 @@ import { Alert, App, Input, Modal, Segmented, Space, Typography } from 'antd'
 import { CameraOutlined, EditOutlined } from '@ant-design/icons'
 import jsQR from 'jsqr'
 import { useTranslation } from 'react-i18next'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 
 /**
  * Camera-based QR scanner for return-shipment flows. Mirrors the scanner
@@ -70,9 +71,7 @@ export function ReturnQrScanModal({
     try {
       await onScanned(rawPayload)
     } catch (err) {
-      const detail =
-        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      message.error(detail ?? t('returnScan.invalidQr', 'Invalid QR code'))
+      message.error(normalizeErrorMessage(err, t('returnScan.invalidQr', 'Invalid QR code')))
       // Allow retry if it failed — re-arm so the camera reopens on next mount.
       handledRef.current = false
     } finally {

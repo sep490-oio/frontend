@@ -13,6 +13,7 @@ import { getReturnToFromSearch } from '@/utils/returnTo'
 import type { AxiosError } from 'axios'
 import type { ApiError } from '@/types'
 import { getServerNowMs } from '@/utils/time'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 
 function getRedirectPath(token: string): string {
   try {
@@ -20,7 +21,8 @@ function getRedirectPath(token: string): string {
     const roles: string[] = Array.isArray(payload.role) ? payload.role : payload.role ? [payload.role] : []
     const lowerRoles = roles.map((r) => r.toLowerCase())
     if (lowerRoles.includes('admin')) return '/admin'
-    if (lowerRoles.includes('inspector') || lowerRoles.includes('warehousemanager')) return '/inspector'
+    if (lowerRoles.includes('warehouse_staff') || lowerRoles.includes('warehousemanager')) return '/warehouse-staff'
+    if (lowerRoles.includes('inspector')) return '/inspector'
     if (lowerRoles.includes('seller')) return '/seller'
     return '/'
   } catch {
@@ -128,14 +130,13 @@ export default function TwoFactorPage() {
         onError: (error) => {
           const axiosError = error as AxiosError<ApiError>
           const status = axiosError.response?.status
-          const detail = axiosError.response?.data?.detail
 
           if (status === 401) {
             // Token expired or invalid
             message.error(t('twoFactor.tokenExpired', 'Session expired. Please login again.'))
             handleExpiredRedirect()
           } else {
-            message.error(detail ?? t('twoFactor.invalidCode', 'Invalid verification code'))
+            message.error(normalizeErrorMessage(error, t('twoFactor.invalidCode', 'Invalid verification code')))
           }
         },
       },

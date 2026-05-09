@@ -6,6 +6,7 @@ import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { formatCurrency, formatDateTime } from '@/utils/format'
 import apiClient from '@/lib/axios'
 import { SANS_FONT, MONO_FONT } from '@/styles/tokens'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 
 interface VnPayCallbackResponse {
   transactionRef: string
@@ -66,9 +67,7 @@ export default function VnPayReturnPage() {
         setResult(res.data)
       })
       .catch((err) => {
-        // Try to extract error detail
-        const detail = err?.response?.data?.detail || err?.response?.data?.message || t('payment:vnpayReturn.verificationFailed', 'Payment verification failed')
-        setError(detail)
+        setError(normalizeErrorMessage(err, t('payment:vnpayReturn.verificationFailed', 'Payment verification failed')))
       })
       .finally(() => {
         setLoading(false)

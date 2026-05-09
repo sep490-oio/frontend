@@ -42,6 +42,7 @@ export interface AuctionDto {
   createdAt: string
   isOnWatchList?: boolean
   canOfferRunnerUp?: boolean
+  requiredDepositAmount?: number
 }
 
 export interface ParticipantInfoDto {

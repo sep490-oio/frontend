@@ -6,6 +6,7 @@ import BidForm from './BidForm'
 import { BidderPositionBlock } from './BidderPositionBlock'
 import { PriceDisplay } from '@/components/ui/PriceDisplay'
 import { formatCurrency } from '@/utils/format'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 import { usePlaceBid, useConfigureAutoBid, usePauseAutoBid, useResumeAutoBid, useCancelAutoBid, useMyAutoBid } from '@/features/auction/auctionApi'
 import { useWallet } from '@/features/payment/api'
 import { MONO_FONT } from '@/styles/tokens'
@@ -60,7 +61,7 @@ export function QuickBidModal({ open, onCancel, detailData, auctionId, onSuccess
       onSuccess?.()
       onCancel()
     } catch (err: any) {
-      message.error(err?.response?.data?.detail || t('bidError', 'Failed to place bid'))
+      message.error(normalizeErrorMessage(err, t('bidError', 'Failed to place bid')))
     }
   }
 
@@ -186,7 +187,7 @@ export function QuickBidModal({ open, onCancel, detailData, auctionId, onSuccess
         confirmLoading={autoBidMutation.isPending}
         okText={t('confirmAutoBid', 'Confirm Auto-Bid')}
         okButtonProps={{ 
-          disabled: !autoBidMax || autoBidMax <= currentPrice,
+          disabled: !autoBidMax || autoBidMax <= currentPrice || autoBidMax > walletBalance,
           style: { borderRadius: 8, background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }
         }}
         cancelButtonProps={{ style: { borderRadius: 8 } }}
@@ -209,10 +210,12 @@ export function QuickBidModal({ open, onCancel, detailData, auctionId, onSuccess
               style={{ width: '100%', height: 44, borderRadius: 8 }}
               size="large"
               min={minBid}
+              max={walletBalance > 0 ? walletBalance : undefined}
               step={bidIncrement}
               value={autoBidMax}
               onChange={(v) => setAutoBidMax(v)}
               addonAfter={currency}
+              status={autoBidMax && autoBidMax > walletBalance ? 'error' : undefined}
               placeholder={formatCurrency(minBid, currency)}
               formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
               parser={(v) => {
@@ -223,6 +226,11 @@ export function QuickBidModal({ open, onCancel, detailData, auctionId, onSuccess
             <Text type="secondary" style={{ fontSize: 11, marginTop: 4, display: 'block' }}>
               {t('mustBeHigherThan', 'Must be higher than current price')}: {formatCurrency(currentPrice, currency)}
             </Text>
+            {autoBidMax != null && autoBidMax > walletBalance && (
+              <Text type="danger" style={{ fontSize: 11, display: 'block', marginTop: 4 }}>
+                {t('autoBidExceedsBalance', 'Maximum amount cannot exceed your wallet balance')} ({formatCurrency(walletBalance, currency)})
+              </Text>
+            )}
           </div>
         </div>
       </Modal>

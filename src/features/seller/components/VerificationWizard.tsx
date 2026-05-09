@@ -7,6 +7,7 @@ import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { VerificationDocumentSlots, getRequiredSlots } from '@/features/seller/components/VerificationDocumentSlots'
 import { VerificationType } from '@/types/enums'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 
 interface VerificationWizardProps {
   onComplete: () => void
@@ -49,12 +50,12 @@ export function VerificationWizard({ onComplete, onCancel }: VerificationWizardP
       setCurrentStep(1)
     } catch (err: unknown) {
       // If user already has a pending verification, exit wizard and show management view
-      const errMsg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? ''
-      if (errMsg.includes('pending') || errMsg.includes('submitted') || errMsg.includes('already')) {
+      const errMsg = normalizeErrorMessage(err, '')
+      if (errMsg.includes('pending') || errMsg.includes('submitted') || errMsg.includes('already') || errMsg.includes('đang chờ')) {
         message.warning(t('alreadyHasPending', 'You already have a verification in progress. Returning to management view.'))
         onComplete() // exits wizard, invalidates queries → page shows existing verification
       } else {
-        message.error(t('verificationCreateError', 'Failed to create verification'))
+        message.error(errMsg || t('verificationCreateError', 'Failed to create verification'))
       }
     } finally {
       setCreating(false)

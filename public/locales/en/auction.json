@@ -501,6 +501,7 @@
   "titlePlaceholder": "Enter item title",
   "conditionRequired": "Please select condition",
   "selectCategory": "Select category",
+  "categoryRequired": "Please select a category",
   "description": "Description",
   "descriptionPlaceholder": "Describe your item",
   "photos": "Photos",

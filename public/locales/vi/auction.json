@@ -502,6 +502,7 @@
   "titlePlaceholder": "Nhập tiêu đề vật phẩm",
   "conditionRequired": "Vui lòng chọn tình trạng",
   "selectCategory": "Chọn danh mục",
+  "categoryRequired": "Vui lòng chọn danh mục",
   "description": "Mô tả",
   "descriptionPlaceholder": "Mô tả vật phẩm của bạn",
   "photos": "Hình ảnh",

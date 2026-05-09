@@ -66,6 +66,7 @@ import { OrderStatus, OrderReturnStatus } from '@/types/enums'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { formatDateTime, formatCurrency, formatDateTimeVn } from '@/utils/format'
 import { SANS_FONT, MONO_FONT } from '@/styles/tokens'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 
 const RETURN_ELIGIBLE_STATUSES = new Set<string>([
   OrderStatus.Delivered,
@@ -1179,8 +1180,7 @@ export default function OrderDetailPage() {
                   message.success(t('shippingSaved', 'Shipping information saved'))
                 } catch (err) {
                   if ((err as { errorFields?: unknown[] })?.errorFields === undefined) {
-                    const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-                    message.error(detail ?? t('shippingSaveError', 'Failed to save shipping information'))
+                    message.error(normalizeErrorMessage(err, t('shippingSaveError', 'Failed to save shipping information')))
                   }
                 }
               }}

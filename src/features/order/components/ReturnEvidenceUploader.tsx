@@ -6,6 +6,7 @@ import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { SecureCaptureUploader } from '@/components/ui/SecureCaptureUploader'
 import { LiveCapturedBadge } from '@/components/ui/LiveCapturedBadge'
 import type { CaptureMetadata } from '@/types/capture'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 
 /**
  * Shared chain-of-custody photo uploader used by both OrderReturn and
@@ -88,9 +89,7 @@ export function ReturnEvidenceUploader({
         message.success(t('returnEvidence.uploadSuccess', 'Photo uploaded'))
         setShowCamera(false)
       } catch (err) {
-        const detail =
-          (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-        message.error(detail ?? t('returnEvidence.uploadError', 'Upload failed'))
+        message.error(normalizeErrorMessage(err, t('returnEvidence.uploadError', 'Upload failed')))
       } finally {
         setSubmitting(false)
       }

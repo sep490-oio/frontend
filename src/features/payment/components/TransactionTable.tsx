@@ -144,6 +144,15 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
             >
               {displayDescription}
             </Typography.Text>
+            {description && record.eventType && description !== label && (
+              <Typography.Text
+                type="secondary"
+                style={{ fontSize: 12, display: 'block', marginTop: 2 }}
+                ellipsis={{ tooltip: description }}
+              >
+                {description}
+              </Typography.Text>
+            )}
               {record.referenceId && (
                 <Tooltip title={t('filterByThis', 'Filter by this reference')}>
                   <Tag
@@ -264,9 +273,14 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
           <Flex vertical gap={12} style={{ padding: '4px 0' }}>
             <Flex justify="space-between" align="flex-start">
               <div style={{ flex: 1, paddingRight: 12 }}>
-                <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--color-text-primary)', marginBottom: 4, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {record.description || '-'}
+                <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--color-text-primary)', marginBottom: 2, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {record.eventType ? t(`event.${record.eventType}`, EVENT_TYPE_CONFIG[record.eventType]?.fallback ?? record.description ?? record.eventType) : (record.description || '-')}
                 </div>
+                {record.description && record.eventType && (
+                  <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 2, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {record.description}
+                  </div>
+                )}
                 <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)', fontFamily: MONO_FONT }}>
                   {formatDateTime(record.createdAt)} • #{record.id.split('-')[0].toUpperCase()}
                 </div>

@@ -970,7 +970,10 @@
     "validation": {
       "refundAmountRequired": "Số tiền hoàn phải lớn hơn 0 khi chọn hoàn tiền một phần.",
       "conflictReleaseAndRefund": "Không thể giải phóng cho người bán và hoàn tiền người mua cùng lúc.",
-      "noActionsWarning": "Chưa chọn hành động giải quyết nào. Bạn có chắc không?"
+      "conflictDoubleRefund": "Không thể yêu cầu hoàn tiền người mua qua cả Ký quỹ và Hoàn tiền. Chỉ chọn một trong hai.",
+      "noActionsWarning": "Chưa chọn hành động giải quyết nào. Bạn có chắc không?",
+      "returnToSellerNeedsOpenReturn": "Mục \"Trả về người bán\" yêu cầu Vận chuyển \"Mở đơn trả hàng\" để kích hoạt quy trình trả hàng. Nếu không, việc trả hàng chỉ là thủ công.",
+      "refundWithoutReturnWarning": "Hoàn tiền sẽ được thực hiện ngay lập tức mà không chờ người mua trả hàng. Chọn Vận chuyển \"Mở đơn trả hàng\" để hoãn hoàn tiền cho đến khi người bán xác nhận đã nhận hàng."
     }
   },
   "disputeList": {

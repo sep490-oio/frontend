@@ -31,6 +31,7 @@ import type { OrderDto } from '@/types'
 import { ReturnEvidenceUploader } from '@/features/order/components/ReturnEvidenceUploader'
 import { ReturnQrScanModal } from '@/features/order/components/ReturnQrScanModal'
 import { SERIF_FONT } from '@/styles/tokens'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 
 type TabKey = 'warehouse' | 'order'
 
@@ -53,8 +54,7 @@ function WarehouseReturnsTab() {
       await confirmReceipt.mutateAsync({ id })
       message.success(t('returns.confirmSuccess', 'Receipt confirmed'))
     } catch (err) {
-      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      message.error(detail ?? t('returns.confirmError', 'Failed to confirm receipt'))
+      message.error(normalizeErrorMessage(err, t('returns.confirmError', 'Failed to confirm receipt')))
     }
   }
 
@@ -66,8 +66,7 @@ function WarehouseReturnsTab() {
       setScanOpen(false)
       setScanShipmentId(null)
     } catch (err) {
-      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      message.error(detail ?? t('returns.scanError', 'Failed to scan QR'))
+      message.error(normalizeErrorMessage(err, t('returns.scanError', 'Failed to scan QR')))
       throw err
     }
   }
@@ -409,8 +408,7 @@ function OrderReturnsTab() {
       setScanOpen(false)
       setScanOrder(null)
     } catch (err) {
-      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      message.error(detail ?? t('returns.scanError', 'Failed to scan QR'))
+      message.error(normalizeErrorMessage(err, t('returns.scanError', 'Failed to scan QR')))
       throw err
     }
   }
@@ -420,8 +418,7 @@ function OrderReturnsTab() {
       await confirmReceived.mutateAsync({ orderId, returnId })
       message.success(t('returns.confirmSuccess', 'Receipt confirmed'))
     } catch (err) {
-      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      message.error(detail ?? t('returns.confirmError', 'Failed to confirm receipt'))
+      message.error(normalizeErrorMessage(err, t('returns.confirmError', 'Failed to confirm receipt')))
     }
   }
 
@@ -546,7 +543,7 @@ function OrderReturnsTab() {
                 <ReturnEvidenceUploader
                   existingEvidence={receiptPhotos.map((e) => ({
                     id: e.id,
-                    mediaUpload: { secureUrl: e.secureUrl ?? '' },
+                    mediaUpload: { secureUrl: e.mediaUpload?.secureUrl ?? '' },
                   }))}
                   category={OrderReturnEvidenceCategory.ReceiptBySeller}
                   minRequired={1}
