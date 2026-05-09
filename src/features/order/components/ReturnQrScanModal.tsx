@@ -110,8 +110,27 @@ export function ReturnQrScanModal({
           return
         }
         streamRef.current = stream
-        const video = videoRef.current
-        if (!video) return
+
+        // The Modal with destroyOnClose renders its content portal
+        // asynchronously. When camera permission is pre-granted,
+        // getUserMedia resolves before the <video> element mounts,
+        // causing videoRef.current to be null. Poll until the element
+        // is available (up to 2 s) before attaching the stream.
+        let video = videoRef.current
+        if (!video) {
+          for (let i = 0; i < 20 && !aborted; i++) {
+            await new Promise((r) => setTimeout(r, 100))
+            video = videoRef.current
+            if (video) break
+          }
+        }
+        if (!video || aborted) {
+          // Still no video element — clean up the stream.
+          stream.getTracks().forEach((tr) => tr.stop())
+          streamRef.current = null
+          return
+        }
+
         video.srcObject = stream
         try {
           await video.play()
@@ -126,6 +145,8 @@ export function ReturnQrScanModal({
           const v = videoRef.current
           const c = canvasRef.current
           if (!v || !c || v.readyState !== 4) return
+          // Guard against 0-dimension frames during camera warm-up.
+          if (v.videoWidth === 0 || v.videoHeight === 0) return
           const ctx = c.getContext('2d')
           if (!ctx) return
           c.width = v.videoWidth
@@ -133,12 +154,12 @@ export function ReturnQrScanModal({
           ctx.drawImage(v, 0, 0, c.width, c.height)
           const imageData = ctx.getImageData(0, 0, c.width, c.height)
           const code = jsQR(imageData.data, imageData.width, imageData.height, {
-            inversionAttempts: 'dontInvert',
+            inversionAttempts: 'attemptBoth',
           })
           if (code?.data) {
             void handlePayload(code.data)
           }
-        }, 300)
+        }, 250)
       } catch (err) {
         if (aborted) return
         setCameraError(err instanceof Error ? err.message : 'Unknown error')
