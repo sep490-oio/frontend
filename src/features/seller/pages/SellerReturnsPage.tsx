@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Typography, Tabs, Tag, Button, Popconfirm, App, Alert, Empty, Space, Divider, Flex, Image, Modal } from 'antd'
 import { ScanOutlined, InboxOutlined, SendOutlined, CameraOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
@@ -400,10 +400,20 @@ function OrderReturnsTab() {
         o.return.status === OrderReturnStatus.SellerReceived),
   )
 
-  const handleScan = async (qrToken: string) => {
-    if (!scanOrder) return
+  // Ref mirrors state so the scan callback always reads the latest value,
+  // regardless of which render cycle the ReturnQrScanModal's setInterval
+  // captured the onScanned prop from (stale-closure prevention).
+  const scanOrderRef = useRef(scanOrder)
+  useEffect(() => { scanOrderRef.current = scanOrder }, [scanOrder])
+
+  const handleScan = useCallback(async (qrToken: string) => {
+    const current = scanOrderRef.current
+    if (!current) {
+      message.warning(t('returns.scanError', 'Failed to scan QR'))
+      return
+    }
     try {
-      await scanReturn.mutateAsync({ ...scanOrder, qrToken })
+      await scanReturn.mutateAsync({ ...current, qrToken })
       message.success(t('returns.scanSuccess', 'Shipment marked as received'))
       setScanOpen(false)
       setScanOrder(null)
@@ -411,7 +421,7 @@ function OrderReturnsTab() {
       message.error(normalizeErrorMessage(err, t('returns.scanError', 'Failed to scan QR')))
       throw err
     }
-  }
+  }, [scanReturn, message, t])
 
   const handleConfirmReceived = async (orderId: string, returnId: string) => {
     try {

@@ -94,6 +94,30 @@ export function useWalletTransactions(params?: PaginationParams & { type?: strin
   })
 }
 
+// ── Active Deposits (authoritative, from AuctionDeposit entities) ────
+
+export interface ActiveDepositDto {
+  depositId: string
+  auctionId: string
+  auctionTitle?: string
+  amount: number
+  currency: string
+  status: string
+  createdAt: string
+}
+
+export function useActiveDeposits(options?: { refetchInterval?: number; enabled?: boolean }) {
+  return useQuery({
+    queryKey: queryKeys.wallet.activeDeposits(),
+    queryFn: async () => {
+      const res = await apiClient.get<ActiveDepositDto[]>('/me/deposits/active')
+      return extractArray<ActiveDepositDto>(res.data)
+    },
+    staleTime: 30_000,
+    ...options,
+  })
+}
+
 export function useWalletTransactionById(id: string) {
   return useQuery({
     queryKey: [...queryKeys.wallet.transactions(), 'detail', id],

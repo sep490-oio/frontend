@@ -84,6 +84,7 @@ export const queryKeys = {
     sellerOverview: () => [...queryKeys.wallet.all, 'sellerOverview'] as const,
     transactions: (params?: unknown) => [...queryKeys.wallet.all, 'transactions', params] as const,
     withdrawals: (params?: unknown) => [...queryKeys.wallet.all, 'withdrawals', params] as const,
+    activeDeposits: () => [...queryKeys.wallet.all, 'activeDeposits'] as const,
   },
   sellerFinance: {
     all: ['sellerFinance'] as const,

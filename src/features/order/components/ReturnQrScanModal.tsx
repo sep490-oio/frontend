@@ -47,6 +47,11 @@ export function ReturnQrScanModal({
   // Guard against multiple concurrent `onScanned` invocations once a frame
   // decodes — jsQR may fire again before React commits the stop.
   const handledRef = useRef(false)
+  // Keep onScanned in a ref so the setInterval callback always calls the
+  // latest version, even if the parent re-renders with a new handler between
+  // the effect setup and the QR decode event.
+  const onScannedRef = useRef(onScanned)
+  useEffect(() => { onScannedRef.current = onScanned }, [onScanned])
 
   const stopCamera = () => {
     if (intervalRef.current) {
@@ -69,7 +74,7 @@ export function ReturnQrScanModal({
     stopCamera()
     setSubmitting(true)
     try {
-      await onScanned(rawPayload)
+      await onScannedRef.current(rawPayload)
     } catch (err) {
       message.error(normalizeErrorMessage(err, t('returnScan.invalidQr', 'Invalid QR code')))
       // Allow retry if it failed — re-arm so the camera reopens on next mount.
