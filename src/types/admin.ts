@@ -207,3 +207,33 @@ export interface AdminCompletedAuctionDetailDto {
   outboundShipment?: OutboundShipmentDto | null
   monitoringAlerts: MonitoringAlertDto[]
 }
+// -- Admin Orders -----------------------------------------------------
+
+export interface AdminOrderListItemDto {
+  id: string
+  orderNumber: string
+  auctionId: string
+  status: string
+  totalAmount: number
+  currency: string
+  buyerDisplayName?: string | null
+  sellerDisplayName?: string | null
+  itemTitle?: string | null
+  itemPrimaryImageUrl?: string | null
+  createdAt: string
+  paidAt?: string | null
+  completedAt?: string | null
+  cancelledAt?: string | null
+}
+
+export interface AdminOrderDetailDto {
+  order: OrderDto
+  outboundShipment?: OutboundShipmentDto | null
+  monitoringAlerts: MonitoringAlertDto[]
+  escrowSummary?: {
+    totalHeld: number
+    totalReleased: number
+    totalRefunded: number
+    currency: string
+  } | null
+}

@@ -194,6 +194,8 @@ const AdminCompletedAuctionsPage = lazy(() => import('@/features/admin/pages/Adm
 const AdminCompletedAuctionDetailPage = lazy(() => import('@/features/admin/pages/AdminCompletedAuctionDetailPage'))
 const AdminDisputeListPage = lazy(() => import('@/features/admin/pages/AdminDisputeListPage'))
 const AdminDisputeDetailPage = lazy(() => import('@/features/admin/pages/AdminDisputeDetailPage'))
+const AdminOrdersPage = lazy(() => import('@/features/admin/pages/AdminOrdersPage'))
+const AdminOrderDetailPage = lazy(() => import('@/features/admin/pages/AdminOrderDetailPage'))
 
 // Inspector pages
 const InspectorDashboardPage = lazy(() => import('@/features/inspector/pages/InspectorDashboardPage'))
@@ -373,6 +375,8 @@ export const router = createBrowserRouter([
           { path: '/admin/monitoring', element: withSuspense(AdminMonitoringPage) },
           { path: '/admin/disputes', element: withSuspense(AdminDisputeListPage) },
           { path: '/admin/disputes/:id', element: withSuspense(AdminDisputeDetailPage) },
+          { path: '/admin/orders', element: withSuspense(AdminOrdersPage) },
+          { path: '/admin/orders/:orderId', element: withSuspense(AdminOrderDetailPage) },
           { path: '/admin/payments', element: withSuspense(AdminPaymentsPage) },
           { path: '/admin/terms', element: withSuspense(AdminTermsPage) },
           { path: '/admin/roles', element: withSuspense(AdminRolesPage) },

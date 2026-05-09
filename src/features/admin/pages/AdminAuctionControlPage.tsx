@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router'
-import { Typography, Card, Button, Space, Spin, Switch, InputNumber, Input, App, Select, Modal, Tooltip, Alert } from 'antd'
+import { Typography, Card, Button, Space, Spin, Switch, InputNumber, Input, App, Select, Modal, Tooltip, Alert, DatePicker, Divider } from 'antd'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
-import { ArrowLeftOutlined, ThunderboltOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
+import { ArrowLeftOutlined, ThunderboltOutlined, ExclamationCircleOutlined, StopOutlined, ClockCircleOutlined, SwapOutlined, PoweroffOutlined, RedoOutlined, DeleteOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useAuctionDetail, useAuctionBids } from '@/features/auction/auctionApi.ts'
-import { useSetCuration, useTriggerEmergency, useResolveEmergency, useCancelBid, useFlagAuction } from '@/features/admin/api'
+import { useSetCuration, useTriggerEmergency, useResolveEmergency, useCancelBid, useFlagAuction, useAdminForceCancelAuction, useAdminTerminateAuction, useAdminExtendAuctionTime, useAdminOverrideAuctionStatus, useAdminForceEndAuction, useAdminRelistAuction, useAdminRemoveBidWithRefund } from '@/features/admin/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime, formatCurrency } from '@/utils/format'
 import type { BidDto } from '@/types'
@@ -14,6 +14,7 @@ import type { ColumnsType } from 'antd/es/table'
 import type { AxiosError } from 'axios'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { isBidCancellable } from '@/features/admin/utils/monitoringFormat'
+import dayjs from 'dayjs'
 
 export default function AdminAuctionControlPage() {
   const { id } = useParams<{ id: string }>()
@@ -31,6 +32,13 @@ export default function AdminAuctionControlPage() {
   const resolveEmergency = useResolveEmergency()
   const flagAuction = useFlagAuction()
   const cancelBid = useCancelBid()
+  const forceCancelAuction = useAdminForceCancelAuction()
+  const terminateAuction = useAdminTerminateAuction()
+  const extendAuctionTime = useAdminExtendAuctionTime()
+  const overrideAuctionStatus = useAdminOverrideAuctionStatus()
+  const forceEndAuction = useAdminForceEndAuction()
+  const relistAuction = useAdminRelistAuction()
+  const removeBidWithRefund = useAdminRemoveBidWithRefund()
 
   const [featured, setFeatured] = useState(false)
   const [priority, setPriority] = useState(0)
@@ -46,12 +54,32 @@ export default function AdminAuctionControlPage() {
   const [resolveEmPayload, setResolveEmPayload] = useState('')
   const [resolveEmId, setResolveEmId] = useState('')
 
-  // Cancel-bid modal state. Tracks which bid the admin clicked "Cancel" on
-  // and the required reason they entered. Reason is required by the BE
-  // ([Required] string Reason on CancelInvalidBidEndpoint.Request) — submitting
-  // without it returned 400 in the previous version.
   const [cancelBidTarget, setCancelBidTarget] = useState<BidDto | null>(null)
   const [cancelBidReason, setCancelBidReason] = useState('')
+
+  // Admin lifecycle action modals
+  const [lifecycleModal, setLifecycleModal] = useState<'forceCancel' | 'terminate' | 'forceEnd' | null>(null)
+  const [lifecycleReason, setLifecycleReason] = useState('')
+
+  // Extend time
+  const [extendMinutes, setExtendMinutes] = useState(30)
+  const [extendReason, setExtendReason] = useState('')
+
+  // Override status
+  const [overrideStatus, setOverrideStatus] = useState<string>('')
+  const [overrideReason, setOverrideReason] = useState('')
+
+  // Relist
+  const [relistModalOpen, setRelistModalOpen] = useState(false)
+  const [relistQualStart, setRelistQualStart] = useState<dayjs.Dayjs | null>(null)
+  const [relistQualEnd, setRelistQualEnd] = useState<dayjs.Dayjs | null>(null)
+  const [relistStart, setRelistStart] = useState<dayjs.Dayjs | null>(null)
+  const [relistEnd, setRelistEnd] = useState<dayjs.Dayjs | null>(null)
+  const [relistReason, setRelistReason] = useState('')
+
+  // Remove bid with refund
+  const [removeBidTarget, setRemoveBidTarget] = useState<BidDto | null>(null)
+  const [removeBidReason, setRemoveBidReason] = useState('')
 
   const auction = detail?.auction
 
@@ -168,6 +196,72 @@ export default function AdminAuctionControlPage() {
     setCancelBidReason('')
   }
 
+  const handleLifecycleAction = async () => {
+    if (!lifecycleModal || !lifecycleReason.trim()) return
+    try {
+      const payload = { auctionId: id!, reason: lifecycleReason.trim() }
+      if (lifecycleModal === 'forceCancel') await forceCancelAuction.mutateAsync(payload)
+      else if (lifecycleModal === 'terminate') await terminateAuction.mutateAsync(payload)
+      else if (lifecycleModal === 'forceEnd') await forceEndAuction.mutateAsync(payload)
+      message.success('Action completed successfully')
+      setLifecycleModal(null)
+      setLifecycleReason('')
+      refetch()
+    } catch { message.error(t('common.error')) }
+  }
+
+  const handleExtendTime = async () => {
+    if (!extendReason.trim() || extendMinutes <= 0) return
+    try {
+      await extendAuctionTime.mutateAsync({ auctionId: id!, extensionMinutes: extendMinutes, reason: extendReason.trim() })
+      message.success('Auction time extended')
+      setExtendReason('')
+      refetch()
+    } catch { message.error(t('common.error')) }
+  }
+
+  const handleOverrideStatus = async () => {
+    if (!overrideStatus || !overrideReason.trim()) return
+    try {
+      await overrideAuctionStatus.mutateAsync({ auctionId: id!, newStatus: overrideStatus, reason: overrideReason.trim() })
+      message.success('Status overridden')
+      setOverrideStatus('')
+      setOverrideReason('')
+      refetch()
+    } catch { message.error(t('common.error')) }
+  }
+
+  const handleRelist = async () => {
+    if (!relistQualStart || !relistQualEnd || !relistStart || !relistEnd) return
+    try {
+      await relistAuction.mutateAsync({
+        auctionId: id!,
+        qualificationStartAt: relistQualStart.toISOString(),
+        qualificationEndAt: relistQualEnd.toISOString(),
+        startAt: relistStart.toISOString(),
+        endAt: relistEnd.toISOString(),
+        reason: relistReason || undefined,
+      })
+      message.success('Auction relisted')
+      setRelistModalOpen(false)
+      setRelistReason('')
+      refetch()
+    } catch { message.error(t('common.error')) }
+  }
+
+  const handleRemoveBidWithRefund = async () => {
+    if (!removeBidTarget || !removeBidReason.trim()) return
+    try {
+      await removeBidWithRefund.mutateAsync({ auctionId: id!, bidId: removeBidTarget.id, reason: removeBidReason.trim() })
+      message.success('Bid removed and deposit refunded')
+      setRemoveBidTarget(null)
+      setRemoveBidReason('')
+      refetch()
+    } catch { message.error(t('common.error')) }
+  }
+
+  const lifecycleLoading = forceCancelAuction.isPending || terminateAuction.isPending || forceEndAuction.isPending
+
   const bidColumns: ColumnsType<BidDto> = [
     {
       title: t('auctionControl.bidder'),
@@ -205,33 +299,28 @@ export default function AdminAuctionControlPage() {
     {
       title: t('reviewQueue.actions'),
       key: 'actions',
-      width: 130,
+      width: 200,
       render: (_, record) => {
         const cancellable = isBidCancellable(record.status)
-        if (!cancellable) {
-          return (
-            <Tooltip title={t('auctionControl.cancelBidNotAllowed', 'Bid này không thể hủy ở trạng thái hiện tại.')}>
-              {/* span wrapper so the disabled Button still receives Tooltip events */}
-              <span>
-                <Button type="link" size="small" danger disabled>
+        return (
+          <Space size={4} direction="vertical">
+            {cancellable ? (
+              <>
+                <Button type="link" size="small" danger onClick={() => { setCancelBidTarget(record); setCancelBidReason('') }}>
                   {t('auctionControl.cancelBid')}
                 </Button>
-              </span>
-            </Tooltip>
-          )
-        }
-        return (
-          <Button
-            type="link"
-            size="small"
-            danger
-            onClick={() => {
-              setCancelBidTarget(record)
-              setCancelBidReason('')
-            }}
-          >
-            {t('auctionControl.cancelBid')}
-          </Button>
+                <Button type="link" size="small" onClick={() => { setRemoveBidTarget(record); setRemoveBidReason('') }} icon={<DeleteOutlined />}>
+                  Remove + Refund
+                </Button>
+              </>
+            ) : (
+              <Tooltip title={t('auctionControl.cancelBidNotAllowed', 'Bid này không thể hủy ở trạng thái hiện tại.')}>
+                <span>
+                  <Button type="link" size="small" danger disabled>{t('auctionControl.cancelBid')}</Button>
+                </span>
+              </Tooltip>
+            )}
+          </Space>
         )
       },
     },
@@ -425,6 +514,79 @@ export default function AdminAuctionControlPage() {
         </Space>
       </Card>
 
+      {/* Admin Lifecycle Actions */}
+      <Card title={<><PoweroffOutlined /> Admin Lifecycle Actions</>} style={{ marginBottom: 16, borderRadius: 12 }}>
+        <Alert type="warning" showIcon message="These actions are irreversible and affect all bidders, deposits, and orders." style={{ marginBottom: 16 }} />
+        <Space wrap size={12}>
+          <Button danger icon={<StopOutlined />} onClick={() => { setLifecycleModal('forceCancel'); setLifecycleReason('') }} style={{ minHeight: 44 }}>
+            Force Cancel
+          </Button>
+          <Button danger type="primary" icon={<PoweroffOutlined />} onClick={() => { setLifecycleModal('terminate'); setLifecycleReason('') }} style={{ minHeight: 44 }}>
+            Terminate
+          </Button>
+          <Button type="primary" icon={<StopOutlined />} onClick={() => { setLifecycleModal('forceEnd'); setLifecycleReason('') }} style={{ minHeight: 44 }}>
+            Force End
+          </Button>
+        </Space>
+      </Card>
+
+      {/* Extend Time */}
+      <Card title={<><ClockCircleOutlined /> Extend Auction Time</>} style={{ marginBottom: 16, borderRadius: 12 }}>
+        <Space direction="vertical" size={fieldSpacing} style={{ width: '100%' }}>
+          <div>
+            <Typography.Text strong style={{ display: 'block', marginBottom: 6 }}>Extension (minutes):</Typography.Text>
+            <InputNumber min={1} max={1440} value={extendMinutes} onChange={(v) => setExtendMinutes(v ?? 30)} style={{ width: '100%', minHeight: 44 }} />
+          </div>
+          <div>
+            <Typography.Text strong style={{ display: 'block', marginBottom: 6 }}>Reason:</Typography.Text>
+            <Input.TextArea rows={2} value={extendReason} onChange={(e) => setExtendReason(e.target.value)} placeholder="Reason for extending..." />
+          </div>
+          <Button type="primary" onClick={handleExtendTime} loading={extendAuctionTime.isPending} disabled={!extendReason.trim()} block={isMobile} style={{ minHeight: 44 }}>
+            Extend Time
+          </Button>
+        </Space>
+      </Card>
+
+      {/* Override Status */}
+      <Card title={<><SwapOutlined /> Override Auction Status</>} style={{ marginBottom: 16, borderRadius: 12 }}>
+        <Alert type="error" showIcon message="Status override bypasses normal state machine. No domain events are raised." style={{ marginBottom: 16 }} />
+        <Space direction="vertical" size={fieldSpacing} style={{ width: '100%' }}>
+          <div>
+            <Typography.Text strong style={{ display: 'block', marginBottom: 6 }}>New Status:</Typography.Text>
+            <Select style={{ width: '100%' }} value={overrideStatus || undefined} onChange={setOverrideStatus} placeholder="Select new status" options={[
+              { value: 'draft', label: 'Draft' },
+              { value: 'pending', label: 'Pending' },
+              { value: 'approved', label: 'Approved' },
+              { value: 'scheduled', label: 'Scheduled' },
+              { value: 'active', label: 'Active' },
+              { value: 'ended', label: 'Ended' },
+              { value: 'sold', label: 'Sold' },
+              { value: 'completed', label: 'Completed' },
+              { value: 'payment_defaulted', label: 'Payment Defaulted' },
+              { value: 'cancelled', label: 'Cancelled' },
+              { value: 'failed', label: 'Failed' },
+              { value: 'terminated', label: 'Terminated' },
+            ]} />
+          </div>
+          <div>
+            <Typography.Text strong style={{ display: 'block', marginBottom: 6 }}>Reason:</Typography.Text>
+            <Input.TextArea rows={2} value={overrideReason} onChange={(e) => setOverrideReason(e.target.value)} placeholder="Reason for status override..." />
+          </div>
+          <Button type="primary" danger onClick={handleOverrideStatus} loading={overrideAuctionStatus.isPending} disabled={!overrideStatus || !overrideReason.trim()} block={isMobile} style={{ minHeight: 44 }}>
+            Override Status
+          </Button>
+        </Space>
+      </Card>
+
+      {/* Relist Auction */}
+      <Card title={<><RedoOutlined /> Relist Auction</>} style={{ marginBottom: 16, borderRadius: 12 }}>
+        <Typography.Text type="secondary">Create a new auction from this one (for failed/cancelled/terminated auctions).</Typography.Text>
+        <Divider style={{ margin: '12px 0' }} />
+        <Button type="primary" onClick={() => setRelistModalOpen(true)} block={isMobile} style={{ minHeight: 44 }}>
+          Open Relist Form
+        </Button>
+      </Card>
+
       {/* Recent bids */}
       <Card title={t('auctionControl.recentBids')} style={{ borderRadius: 12 }}>
         <div style={{ overflowX: 'auto' }}>
@@ -517,6 +679,105 @@ export default function AdminAuctionControlPage() {
                 maxLength={500}
                 showCount
               />
+            </div>
+          </Space>
+        )}
+      </Modal>
+
+      {/* Lifecycle Action Modal (shared for force cancel / terminate / force end) */}
+      <Modal
+        title={lifecycleModal === 'forceCancel' ? 'Force Cancel Auction' : lifecycleModal === 'terminate' ? 'Terminate Auction' : 'Force End Auction'}
+        open={!!lifecycleModal}
+        onCancel={() => { if (!lifecycleLoading) { setLifecycleModal(null); setLifecycleReason('') } }}
+        onOk={handleLifecycleAction}
+        okText="Confirm"
+        okButtonProps={{ danger: lifecycleModal !== 'forceEnd', loading: lifecycleLoading, disabled: !lifecycleReason.trim() }}
+        cancelButtonProps={{ disabled: lifecycleLoading }}
+        destroyOnClose
+        width={520}
+      >
+        <Alert
+          type={lifecycleModal === 'terminate' ? 'error' : 'warning'}
+          showIcon
+          message={
+            lifecycleModal === 'forceCancel' ? 'This will cancel the auction, release all bids, return deposits, and release the item back to active.'
+            : lifecycleModal === 'terminate' ? 'This will permanently terminate the auction. All bids are cancelled, winner is cleared, and the item cannot be relisted from this auction.'
+            : 'This will immediately end the auction and resolve the winner (if any).'
+          }
+          style={{ marginBottom: 16 }}
+        />
+        <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>
+          Reason <span style={{ color: 'var(--color-danger)' }}>*</span>
+        </Typography.Text>
+        <Input.TextArea
+          rows={4}
+          value={lifecycleReason}
+          onChange={(e) => setLifecycleReason(e.target.value)}
+          placeholder="Enter the reason for this action..."
+          maxLength={500}
+          showCount
+          disabled={lifecycleLoading}
+        />
+      </Modal>
+
+      {/* Relist Modal */}
+      <Modal
+        title="Relist Auction"
+        open={relistModalOpen}
+        onCancel={() => { if (!relistAuction.isPending) setRelistModalOpen(false) }}
+        onOk={handleRelist}
+        okText="Create Relisted Auction"
+        okButtonProps={{ loading: relistAuction.isPending, disabled: !relistQualStart || !relistQualEnd || !relistStart || !relistEnd }}
+        cancelButtonProps={{ disabled: relistAuction.isPending }}
+        destroyOnClose
+        width={600}
+      >
+        <Space direction="vertical" size={12} style={{ width: '100%' }}>
+          <div>
+            <Typography.Text strong style={{ display: 'block', marginBottom: 6 }}>Qualification Start:</Typography.Text>
+            <DatePicker showTime style={{ width: '100%' }} value={relistQualStart} onChange={setRelistQualStart} />
+          </div>
+          <div>
+            <Typography.Text strong style={{ display: 'block', marginBottom: 6 }}>Qualification End:</Typography.Text>
+            <DatePicker showTime style={{ width: '100%' }} value={relistQualEnd} onChange={setRelistQualEnd} />
+          </div>
+          <div>
+            <Typography.Text strong style={{ display: 'block', marginBottom: 6 }}>Auction Start:</Typography.Text>
+            <DatePicker showTime style={{ width: '100%' }} value={relistStart} onChange={setRelistStart} />
+          </div>
+          <div>
+            <Typography.Text strong style={{ display: 'block', marginBottom: 6 }}>Auction End:</Typography.Text>
+            <DatePicker showTime style={{ width: '100%' }} value={relistEnd} onChange={setRelistEnd} />
+          </div>
+          <div>
+            <Typography.Text strong style={{ display: 'block', marginBottom: 6 }}>Reason (optional):</Typography.Text>
+            <Input.TextArea rows={2} value={relistReason} onChange={(e) => setRelistReason(e.target.value)} placeholder="Reason for relisting..." />
+          </div>
+        </Space>
+      </Modal>
+
+      {/* Remove Bid + Refund Modal */}
+      <Modal
+        title="Remove Bid + Refund Deposit"
+        open={!!removeBidTarget}
+        onCancel={() => { if (!removeBidWithRefund.isPending) { setRemoveBidTarget(null); setRemoveBidReason('') } }}
+        onOk={handleRemoveBidWithRefund}
+        okText="Remove & Refund"
+        okButtonProps={{ danger: true, loading: removeBidWithRefund.isPending, disabled: !removeBidReason.trim() }}
+        cancelButtonProps={{ disabled: removeBidWithRefund.isPending }}
+        destroyOnClose
+        width={520}
+      >
+        <Alert type="warning" showIcon icon={<ExclamationCircleOutlined />} message="This will cancel the bid AND return the bidder's held deposit to their wallet." style={{ marginBottom: 16 }} />
+        {removeBidTarget && (
+          <Space direction="vertical" size={8} style={{ width: '100%' }}>
+            <Typography.Text type="secondary">Bidder: <Typography.Text copyable={{ text: removeBidTarget.bidderId }} code>{removeBidTarget.bidderId.slice(0, 8)}…</Typography.Text></Typography.Text>
+            <Typography.Text type="secondary">Status: <StatusBadge status={removeBidTarget.status} /></Typography.Text>
+            <div>
+              <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>
+                Reason <span style={{ color: 'var(--color-danger)' }}>*</span>
+              </Typography.Text>
+              <Input.TextArea rows={3} value={removeBidReason} onChange={(e) => setRemoveBidReason(e.target.value)} placeholder="Reason for removing bid and refunding deposit..." maxLength={500} showCount disabled={removeBidWithRefund.isPending} />
             </div>
           </Space>
         )}

@@ -229,3 +229,70 @@ export interface SellerEscrowLedgerRowDto {
   disputeId: string | null
   disputeStatus: string | null
 }
+
+// ── Seller Auction Deposit Overview ──────────────────────────────────
+
+export interface DepositDetailDto {
+  depositId: string
+  bidderId: string
+  bidderDisplayName: string
+  amount: number
+  currency: string
+  status: string // held | returned | forfeited | converted_to_payment
+  createdAt: string
+  releasedAt: string | null
+}
+
+export interface SellerAuctionDepositRowDto {
+  auctionId: string
+  itemTitle: string
+  auctionStatus: string
+  totalDeposits: number
+  activeDeposits: number
+  totalHeldAmount: number
+  currency: string
+  auctionEndTime: string | null
+  deposits: DepositDetailDto[]
+}
+
+// ── Platform Revenue ─────────────────────────────────────────────────
+
+export interface PlatformRevenueDataPointDto {
+  date: string
+  commission: number
+  inspectionFees: number
+  forfeitIncome: number
+  refunds: number
+  netRevenue: number
+}
+
+export interface PlatformRevenueHistoryDto {
+  totalRevenue: number
+  totalCommission: number
+  totalInspectionFees: number
+  totalForfeitIncome: number
+  totalRefunds: number
+  currency: string
+  dataPoints: PlatformRevenueDataPointDto[]
+}
+
+// ── Platform Wallet Transactions ─────────────────────────────────────
+
+export interface PlatformWalletTransactionDto {
+  id: string
+  type: string
+  amount: number
+  balanceBefore: number
+  balanceAfter: number
+  description: string | null
+  category: string | null
+  createdAt: string
+}
+
+export interface PlatformWalletTransactionsResultDto {
+  items: PlatformWalletTransactionDto[]
+  totalCount: number
+  pageNumber: number
+  pageSize: number
+  currency: string
+}

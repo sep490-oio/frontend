@@ -89,6 +89,7 @@ export const queryKeys = {
     all: ['sellerFinance'] as const,
     overview: () => [...queryKeys.sellerFinance.all, 'overview'] as const,
     escrowLedger: () => [...queryKeys.sellerFinance.all, 'escrowLedger'] as const,
+    auctionDeposits: () => [...queryKeys.sellerFinance.all, 'auctionDeposits'] as const,
   },
   paymentMethods: {
     all: ['paymentMethods'] as const,
@@ -179,5 +180,10 @@ export const queryKeys = {
     completedAuctionsRoot: () => ['admin', 'completedAuctions'] as const,
     completedAuctions: (params?: unknown) => ['admin', 'completedAuctions', params] as const,
     completedAuctionDetail: (auctionId: string) => ['admin', 'completedAuctions', 'detail', auctionId] as const,
+    revenueHistory: (params?: unknown) => ['admin', 'revenueHistory', params] as const,
+    platformWalletTransactions: (params?: unknown) => ['admin', 'platformWalletTransactions', params] as const,
+    ordersRoot: () => ['admin', 'orders'] as const,
+    orders: (params?: unknown) => ['admin', 'orders', params] as const,
+    orderDetail: (orderId: string) => ['admin', 'orders', 'detail', orderId] as const,
   },
 } as const

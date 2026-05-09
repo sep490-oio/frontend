@@ -26,6 +26,10 @@ import type {
   AdminCompletedAuctionDetailDto,
   AdminAuctionPaymentStatus,
   AdminAuctionFulfillmentStatus,
+  PlatformRevenueHistoryDto,
+  PlatformWalletTransactionsResultDto,
+  AdminOrderListItemDto,
+  AdminOrderDetailDto,
   PagedList,
   PaginationParams,
 } from '@/types'
@@ -1014,6 +1018,201 @@ export function useRefundVnPay() {
     },
     onSuccess: async () => {
       await invalidateAndRefetchActive(qc, [queryKeys.admin.transactionsRoot()])
+    },
+  })
+}
+
+// ── Platform Revenue & Income ────────────────────────────────────────
+
+export interface PlatformRevenueParams {
+  from?: string
+  to?: string
+  granularity?: 'day' | 'week' | 'month'
+}
+
+export function usePlatformRevenueHistory(params?: PlatformRevenueParams) {
+  return useQuery({
+    queryKey: queryKeys.admin.revenueHistory(params),
+    queryFn: async () => {
+      const res = await apiClient.get<PlatformRevenueHistoryDto>('/admin/payments/revenue-history', { params })
+      return res.data
+    },
+  })
+}
+
+export function usePlatformWalletTransactions(params?: PaginationParams & { type?: string }) {
+  return useQuery({
+    queryKey: queryKeys.admin.platformWalletTransactions(params),
+    queryFn: async () => {
+      const res = await apiClient.get<PlatformWalletTransactionsResultDto>('/admin/payments/platform-wallet/transactions', { params })
+      return res.data
+    },
+  })
+}
+
+// ── Admin Orders ─────────────────────────────────────────────────────
+
+export interface AdminOrdersParams extends PaginationParams {
+  status?: string
+  search?: string
+  fromDate?: string
+  toDate?: string
+}
+
+export function useAdminOrders(params?: AdminOrdersParams) {
+  return useQuery({
+    queryKey: queryKeys.admin.orders(params),
+    queryFn: async () => {
+      const res = await apiClient.get<PagedList<AdminOrderListItemDto>>('/admin/orders', { params })
+      return res.data
+    },
+  })
+}
+
+export function useAdminOrderDetail(orderId: string) {
+  return useQuery({
+    queryKey: queryKeys.admin.orderDetail(orderId),
+    queryFn: async () => {
+      const res = await apiClient.get<AdminOrderDetailDto>(`/admin/orders/${orderId}`)
+      return res.data
+    },
+    enabled: !!orderId,
+  })
+}
+
+export function useAdminForceCancelOrder() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ orderId, reason }: { orderId: string; reason: string }) => {
+      await apiClient.post(`/admin/orders/${orderId}/force-cancel`, { reason })
+    },
+    onSuccess: () => {
+      invalidateAndRefetchActive(qc, [queryKeys.admin.ordersRoot()])
+    },
+  })
+}
+
+export function useAdminForceRefundOrder() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ orderId, reason }: { orderId: string; reason: string }) => {
+      await apiClient.post(`/admin/orders/${orderId}/force-refund`, { reason })
+    },
+    onSuccess: () => {
+      invalidateAndRefetchActive(qc, [queryKeys.admin.ordersRoot()])
+    },
+  })
+}
+
+export function useAdminOverrideOrderStatus() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ orderId, newStatus, reason }: { orderId: string; newStatus: string; reason: string }) => {
+      await apiClient.post(`/admin/orders/${orderId}/override-status`, { newStatus, reason })
+    },
+    onSuccess: () => {
+      invalidateAndRefetchActive(qc, [queryKeys.admin.ordersRoot()])
+    },
+  })
+}
+
+// ── Admin Auction Actions ─────────────────────────────────────────────
+
+export function useAdminForceCancelAuction() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ auctionId, reason }: { auctionId: string; reason: string }) => {
+      await apiClient.post(`/admin/auctions/${auctionId}/force-cancel`, { reason })
+    },
+    onSuccess: () => {
+      invalidateAndRefetchActive(qc, [queryKeys.auctions.all])
+    },
+  })
+}
+
+export function useAdminTerminateAuction() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ auctionId, reason }: { auctionId: string; reason: string }) => {
+      await apiClient.post(`/admin/auctions/${auctionId}/terminate`, { reason })
+    },
+    onSuccess: () => {
+      invalidateAndRefetchActive(qc, [queryKeys.auctions.all])
+    },
+  })
+}
+
+export function useAdminExtendAuctionTime() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ auctionId, extensionMinutes, reason }: { auctionId: string; extensionMinutes: number; reason: string }) => {
+      await apiClient.post(`/admin/auctions/${auctionId}/extend-time`, { extensionMinutes, reason })
+    },
+    onSuccess: () => {
+      invalidateAndRefetchActive(qc, [queryKeys.auctions.all])
+    },
+  })
+}
+
+export function useAdminOverrideAuctionStatus() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ auctionId, newStatus, reason }: { auctionId: string; newStatus: string; reason: string }) => {
+      await apiClient.post(`/admin/auctions/${auctionId}/override-status`, { newStatus, reason })
+    },
+    onSuccess: () => {
+      invalidateAndRefetchActive(qc, [queryKeys.auctions.all])
+    },
+  })
+}
+
+export function useAdminForceEndAuction() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ auctionId, reason }: { auctionId: string; reason: string }) => {
+      await apiClient.post(`/admin/auctions/${auctionId}/force-end`, { reason })
+    },
+    onSuccess: () => {
+      invalidateAndRefetchActive(qc, [queryKeys.auctions.all])
+    },
+  })
+}
+
+export function useAdminRelistAuction() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: {
+      auctionId: string
+      qualificationStartAt: string
+      qualificationEndAt: string
+      startAt: string
+      endAt: string
+      startingPrice?: number
+      bidIncrement?: number
+      reservePrice?: number
+      buyNowPrice?: number
+      currency?: string
+      reason?: string
+    }) => {
+      const { auctionId, ...body } = data
+      const res = await apiClient.post(`/admin/auctions/${auctionId}/relist`, body)
+      return res.data
+    },
+    onSuccess: () => {
+      invalidateAndRefetchActive(qc, [queryKeys.auctions.all])
+    },
+  })
+}
+
+export function useAdminRemoveBidWithRefund() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ auctionId, bidId, reason }: { auctionId: string; bidId: string; reason: string }) => {
+      const res = await apiClient.post(`/admin/auctions/${auctionId}/bids/${bidId}/remove`, { reason })
+      return res.data
+    },
+    onSuccess: () => {
+      invalidateAndRefetchActive(qc, [queryKeys.auctions.all])
     },
   })
 }

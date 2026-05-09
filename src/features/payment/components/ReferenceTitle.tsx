@@ -1,4 +1,6 @@
 import { Typography } from 'antd'
+import { Link } from 'react-router'
+import { LinkOutlined } from '@ant-design/icons'
 import { useAuctionDetail } from '@/features/auction/auctionApi'
 import { useOrderById } from '@/features/order/api'
 
@@ -32,13 +34,26 @@ const AuctionTitle = ({ id }: { id: string }) => {
   if (!title) return null
 
   return (
-    <Typography.Text
-      strong
-      style={{ color: 'var(--color-accent)', fontSize: 13, display: 'block', marginBottom: 2 }}
-      ellipsis={{ tooltip: title }}
+    <Link
+      to={`/auctions/${id}`}
+      style={{ textDecoration: 'none', display: 'block', marginBottom: 2 }}
     >
-      {title}
-    </Typography.Text>
+      <Typography.Text
+        strong
+        style={{
+          color: 'var(--color-accent)',
+          fontSize: 13,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 4,
+          cursor: 'pointer',
+        }}
+        ellipsis={{ tooltip: title }}
+      >
+        <LinkOutlined style={{ fontSize: 11 }} />
+        {title}
+      </Typography.Text>
+    </Link>
   )
 }
 
@@ -51,12 +66,25 @@ const OrderTitle = ({ id }: { id: string }) => {
   if (!title) return null
 
   return (
-    <Typography.Text
-      strong
-      style={{ color: 'var(--color-accent)', fontSize: 13, display: 'block', marginBottom: 2 }}
-      ellipsis={{ tooltip: title }}
+    <Link
+      to={`/me/orders/${id}`}
+      style={{ textDecoration: 'none', display: 'block', marginBottom: 2 }}
     >
-      {title}
-    </Typography.Text>
+      <Typography.Text
+        strong
+        style={{
+          color: 'var(--color-accent)',
+          fontSize: 13,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 4,
+          cursor: 'pointer',
+        }}
+        ellipsis={{ tooltip: title }}
+      >
+        <LinkOutlined style={{ fontSize: 11 }} />
+        {title}
+      </Typography.Text>
+    </Link>
   )
 }

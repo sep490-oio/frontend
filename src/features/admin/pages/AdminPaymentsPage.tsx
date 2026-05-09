@@ -1,8 +1,11 @@
 import { useState } from 'react'
-import { Typography, Tabs, Card, Statistic, Row, Col, Select, Space, Button, Modal, Input, App, Upload, Image, Descriptions } from 'antd'
+import { useNavigate } from 'react-router'
+import { Typography, Tabs, Card, Statistic, Row, Col, Select, Space, Button, Modal, Input, App, Upload, Image, Descriptions, Tooltip } from 'antd'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
-import { DollarOutlined, UploadOutlined, PictureOutlined } from '@ant-design/icons'
+import { DollarOutlined, UploadOutlined, PictureOutlined, RiseOutlined, BankOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
+import { PlatformRevenueChart } from '@/features/admin/components/PlatformRevenueChart'
+import { PlatformIncomeTable } from '@/features/admin/components/PlatformIncomeTable'
 import {
   usePaymentSummary,
   usePlatformWallet,
@@ -26,6 +29,7 @@ export default function AdminPaymentsPage() {
   const { t: tc } = useTranslation('common')
   const { message } = App.useApp()
   const { isMobile } = useBreakpoint()
+  const navigate = useNavigate()
 
   const [activeTab, setActiveTab] = useState('overview')
 
@@ -264,9 +268,22 @@ export default function AdminPaymentsPage() {
       title: t('payments.orderId'),
       dataIndex: 'orderId',
       key: 'orderId',
-      width: 180,
-      ellipsis: true,
-      render: (val: string | undefined) => val ?? '-',
+      width: 200,
+      render: (val: string | undefined) => val ? (
+        <Typography.Text
+          copyable={{ text: val, tooltips: ['Copy ID', 'Copied!'] }}
+          style={{ fontFamily: 'monospace', fontSize: 12 }}
+        >
+          <Tooltip title={t('payments.viewOrderTip', 'View Order Detail')}>
+            <a
+              onClick={(e) => { e.stopPropagation(); navigate(`/admin/orders/${val}`) }}
+              style={{ color: 'var(--color-accent)', cursor: 'pointer' }}
+            >
+              {val.slice(0, 8)}…
+            </a>
+          </Tooltip>
+        </Typography.Text>
+      ) : '-',
     },
     {
       title: t('payments.createdAt'),
@@ -289,8 +306,22 @@ export default function AdminPaymentsPage() {
       title: t('payments.orderId'),
       dataIndex: 'orderId',
       key: 'orderId',
-      width: 180,
-      ellipsis: true,
+      width: 200,
+      render: (val: string) => (
+        <Typography.Text
+          copyable={{ text: val, tooltips: ['Copy ID', 'Copied!'] }}
+          style={{ fontFamily: 'monospace', fontSize: 12 }}
+        >
+          <Tooltip title={t('payments.viewOrderTip', 'View Order Detail')}>
+            <a
+              onClick={(e) => { e.stopPropagation(); navigate(`/admin/orders/${val}`) }}
+              style={{ color: 'var(--color-accent)', cursor: 'pointer' }}
+            >
+              {val.slice(0, 8)}…
+            </a>
+          </Tooltip>
+        </Typography.Text>
+      ),
     },
     {
       title: t('payments.amount'),
@@ -556,6 +587,16 @@ export default function AdminPaymentsPage() {
           </div>
         </>
       ),
+    },
+    {
+      key: 'revenue',
+      label: <span><RiseOutlined /> {t('revenue.tabTitle', 'Revenue')}</span>,
+      children: <PlatformRevenueChart />,
+    },
+    {
+      key: 'platformIncome',
+      label: <span><BankOutlined /> {t('revenue.incomeTabTitle', 'Platform Income')}</span>,
+      children: <PlatformIncomeTable />,
     },
   ]
 

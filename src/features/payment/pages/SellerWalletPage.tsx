@@ -19,6 +19,8 @@ import {
   ArrowDownOutlined,
   InfoCircleOutlined,
   WarningOutlined,
+  LockOutlined,
+  SafetyCertificateOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -34,6 +36,8 @@ import { formatDateTime, formatCurrency } from '@/utils/format'
 import { BalanceCard } from '@/features/payment/components/BalanceCard'
 import { TransactionTable } from '@/features/payment/components/TransactionTable'
 import { WithdrawalSnapshot } from '@/features/payment/components/WithdrawalSnapshot'
+import { SellerDepositsPanel } from '@/features/payment/components/SellerDepositsPanel'
+import { MoneyFlowExplainer } from '@/features/payment/components/MoneyFlowExplainer'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
@@ -79,7 +83,7 @@ export default function SellerWalletPage() {
   const navigate = useNavigate()
   const { isMobile } = useBreakpoint()
 
-  const [activeTab, setActiveTab] = useState<'escrow' | 'fees' | 'transactions'>('escrow')
+  const [activeTab, setActiveTab] = useState<'escrow' | 'fees' | 'transactions' | 'deposits' | 'flow'>('escrow')
 
   // Transactions tab paging state — kept identical to the previous wallet page
   // so refactor doesn't change behaviour for that tab.
@@ -548,6 +552,26 @@ export default function SellerWalletPage() {
                   />
                 </div>
               ),
+            },
+            {
+              key: 'deposits',
+              label: (
+                <span style={{ fontFamily: SERIF_FONT, fontSize: 16 }}>
+                  <LockOutlined style={{ marginRight: 6 }} />
+                  {t('sellerFinance.tabs.deposits', 'Auction Deposits')}
+                </span>
+              ),
+              children: <SellerDepositsPanel />,
+            },
+            {
+              key: 'flow',
+              label: (
+                <span style={{ fontFamily: SERIF_FONT, fontSize: 16 }}>
+                  <SafetyCertificateOutlined style={{ marginRight: 6 }} />
+                  {t('moneyFlowTab', 'Money Flow')}
+                </span>
+              ),
+              children: <MoneyFlowExplainer />,
             },
           ]}
         />

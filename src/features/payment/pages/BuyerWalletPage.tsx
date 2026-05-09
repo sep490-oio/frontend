@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Typography, Row, Col, Button, Card, Flex } from 'antd'
+import { Typography, Row, Col, Button, Card, Flex, Tabs } from 'antd'
 import {
   WalletOutlined,
   ArrowDownOutlined,
@@ -18,6 +18,8 @@ import { formatDateTime } from '@/utils/format'
 import { BalanceCard } from '@/features/payment/components/BalanceCard'
 import { TransactionTable } from '@/features/payment/components/TransactionTable'
 import { TopUpWalletModal } from '@/features/payment/components/TopUpWalletModal'
+import { ActiveDepositsPanel } from '@/features/payment/components/ActiveDepositsPanel'
+import { MoneyFlowExplainer } from '@/features/payment/components/MoneyFlowExplainer'
 import { SANS_FONT } from '@/styles/tokens'
 
 import { useBreakpoint } from '@/hooks/useBreakpoint'
@@ -42,6 +44,7 @@ export default function BuyerWalletPage() {
   const [pageSize, setPageSize] = useState(10)
   const [typeFilter, setTypeFilter] = useState<string>('')
   const [topupModalOpen, setTopupModalOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState('transactions')
 
   const userRoles = useMemo(() => {
     try {
@@ -200,107 +203,135 @@ export default function BuyerWalletPage() {
         )}
       </Row>
 
-      {/* Transaction History Section */}
-      <div style={{ marginBottom: 24 }}>
-        <Flex 
-          justify="space-between" 
-          align={isMobile ? 'stretch' : 'center'} 
-          vertical={isMobile}
-          gap={isMobile ? 16 : 20}
-          style={{ marginBottom: 20 }}
-        >
-          <Title level={3} style={{ margin: 0, fontFamily: SANS_FONT, fontWeight: 600, fontSize: isMobile ? 20 : 24 }}>
-            {t('transactionHistory', 'Transaction History')}
-          </Title>
+      {/* Tabbed Content Section */}
+      <Tabs
+        activeKey={activeTab}
+        onChange={setActiveTab}
+        size="large"
+        style={{ marginBottom: 24 }}
+        items={[
+          {
+            key: 'transactions',
+            label: (
+              <span style={{ fontWeight: 600, fontSize: 15 }}>
+                <HistoryOutlined style={{ marginRight: 6 }} />
+                {t('transactionHistory', 'Transaction History')}
+              </span>
+            ),
+            children: (
+              <div>
+                {/* Pill Filters */}
+                <div style={{
+                  display: 'flex',
+                  gap: 8,
+                  overflowX: 'auto',
+                  scrollbarWidth: 'none',
+                  paddingBottom: isMobile ? 4 : 0,
+                  msOverflowStyle: 'none',
+                  marginBottom: 20,
+                }}>
+                  {TX_TYPE_KEYS.map((opt) => {
+                    const isActive = typeFilter === opt.value
+                    return (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        onClick={() => {
+                          setTypeFilter(opt.value)
+                          setPage(1)
+                        }}
+                        style={{
+                          padding: '8px 20px',
+                          borderRadius: 100,
+                          fontSize: 12,
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                          border: isActive ? '1px solid var(--color-accent)' : '1px solid var(--color-border)',
+                          background: isActive ? 'var(--color-accent)' : 'var(--color-bg-card)',
+                          color: isActive ? '#fff' : 'var(--color-text-secondary)',
+                          transition: 'all 0.2s ease',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {t(`txTypeLabel.${opt.key}`, opt.key)}
+                      </button>
+                    )
+                  })}
+                </div>
 
-          {/* Pill Filters */}
-          <div style={{ 
-            display: 'flex', 
-            gap: 8, 
-            overflowX: 'auto', 
-            scrollbarWidth: 'none', 
-            paddingBottom: isMobile ? 4 : 0,
-            msOverflowStyle: 'none'
-          }}>
-            {TX_TYPE_KEYS.map((opt) => {
-              const isActive = typeFilter === opt.value
-              return (
-                <button
-                  key={opt.key}
-                  type="button"
-                  onClick={() => {
-                    setTypeFilter(opt.value)
-                    setPage(1)
-                  }}
-                  style={{
-                    padding: '8px 20px',
-                    borderRadius: 100,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap',
-                    border: isActive ? '1px solid var(--color-accent)' : '1px solid var(--color-border)',
-                    background: isActive ? 'var(--color-accent)' : 'var(--color-bg-card)',
-                    color: isActive ? '#fff' : 'var(--color-text-secondary)',
-                    transition: 'all 0.2s ease',
-                    flexShrink: 0
-                  }}
-                >
-                  {t(`txTypeLabel.${opt.key}`, opt.key)}
-                </button>
-              )
-            })}
-          </div>
-        </Flex>
-
-        {isMobile ? (
-          <div style={{ marginBottom: 32 }}>
-            <TransactionTable
-              data={transactions?.items ?? []}
-              loading={txLoading}
-              pagination={{
-                current: transactions?.metadata?.currentPage ?? (transactions as any)?.pageNumber ?? page,
-                pageSize: transactions?.metadata?.pageSize ?? (transactions as any)?.pageSize ?? pageSize,
-                total: transactions?.metadata?.totalCount ?? (transactions as any)?.totalCount ?? 0,
-                showSizeChanger: false,
-                size: 'small',
-                onChange: (p, ps) => {
-                  setPage(p)
-                  setPageSize(ps)
-                  window.scrollTo({ top: 0, behavior: 'smooth' })
-                },
-              }}
-            />
-          </div>
-        ) : (
-          <Card
-            styles={{ body: { padding: 0 } }}
-            style={{
-              background: 'var(--color-bg-card)',
-              border: '1px solid var(--color-border)',
-              borderRadius: 24,
-              overflow: 'hidden',
-              boxShadow: 'var(--shadow-sm)'
-            }}
-          >
-            <TransactionTable
-              data={transactions?.items ?? []}
-              loading={txLoading}
-              pagination={{
-                current: transactions?.metadata?.currentPage ?? (transactions as any)?.pageNumber ?? page,
-                pageSize: transactions?.metadata?.pageSize ?? (transactions as any)?.pageSize ?? pageSize,
-                total: transactions?.metadata?.totalCount ?? (transactions as any)?.totalCount ?? 0,
-                showSizeChanger: true,
-                showTotal: (total) => tc('pagination.total', { total }),
-                onChange: (p, ps) => {
-                  setPage(p)
-                  setPageSize(ps)
-                },
-              }}
-            />
-          </Card>
-        )}
-      </div>
+                {isMobile ? (
+                  <div style={{ marginBottom: 32 }}>
+                    <TransactionTable
+                      data={transactions?.items ?? []}
+                      loading={txLoading}
+                      pagination={{
+                        current: transactions?.metadata?.currentPage ?? (transactions as any)?.pageNumber ?? page,
+                        pageSize: transactions?.metadata?.pageSize ?? (transactions as any)?.pageSize ?? pageSize,
+                        total: transactions?.metadata?.totalCount ?? (transactions as any)?.totalCount ?? 0,
+                        showSizeChanger: false,
+                        size: 'small',
+                        onChange: (p, ps) => {
+                          setPage(p)
+                          setPageSize(ps)
+                          window.scrollTo({ top: 0, behavior: 'smooth' })
+                        },
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <Card
+                    styles={{ body: { padding: 0 } }}
+                    style={{
+                      background: 'var(--color-bg-card)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 24,
+                      overflow: 'hidden',
+                      boxShadow: 'var(--shadow-sm)',
+                    }}
+                  >
+                    <TransactionTable
+                      data={transactions?.items ?? []}
+                      loading={txLoading}
+                      pagination={{
+                        current: transactions?.metadata?.currentPage ?? (transactions as any)?.pageNumber ?? page,
+                        pageSize: transactions?.metadata?.pageSize ?? (transactions as any)?.pageSize ?? pageSize,
+                        total: transactions?.metadata?.totalCount ?? (transactions as any)?.totalCount ?? 0,
+                        showSizeChanger: true,
+                        showTotal: (total) => tc('pagination.total', { total }),
+                        onChange: (p, ps) => {
+                          setPage(p)
+                          setPageSize(ps)
+                        },
+                      }}
+                    />
+                  </Card>
+                )}
+              </div>
+            ),
+          },
+          {
+            key: 'deposits',
+            label: (
+              <span style={{ fontWeight: 600, fontSize: 15 }}>
+                <LockOutlined style={{ marginRight: 6 }} />
+                {t('activeDepositsTab', 'Active Deposits')}
+              </span>
+            ),
+            children: <ActiveDepositsPanel />,
+          },
+          {
+            key: 'flow',
+            label: (
+              <span style={{ fontWeight: 600, fontSize: 15 }}>
+                <SafetyCertificateOutlined style={{ marginRight: 6 }} />
+                {t('moneyFlowTab', 'Money Flow')}
+              </span>
+            ),
+            children: <MoneyFlowExplainer />,
+          },
+        ]}
+      />
 
       <TopUpWalletModal
         open={topupModalOpen}

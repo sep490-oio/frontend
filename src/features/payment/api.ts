@@ -6,6 +6,7 @@ import type {
   SellerWalletOverviewDto,
   SellerFinanceOverviewDto,
   SellerEscrowLedgerRowDto,
+  SellerAuctionDepositRowDto,
   WalletSummaryDto,
   WalletTransactionDto,
   PaymentMethodDto,
@@ -64,6 +65,18 @@ export function useSellerEscrowLedger(options?: { refetchInterval?: number; enab
     queryFn: async () => {
       const res = await apiClient.get<SellerEscrowLedgerRowDto[]>('/seller/finance/escrow-ledger')
       return extractArray<SellerEscrowLedgerRowDto>(res.data)
+    },
+    staleTime: 30_000,
+    ...options,
+  })
+}
+
+export function useSellerAuctionDeposits(options?: { refetchInterval?: number; enabled?: boolean }) {
+  return useQuery({
+    queryKey: queryKeys.sellerFinance.auctionDeposits(),
+    queryFn: async () => {
+      const res = await apiClient.get<SellerAuctionDepositRowDto[]>('/seller/finance/auction-deposits')
+      return extractArray<SellerAuctionDepositRowDto>(res.data)
     },
     staleTime: 30_000,
     ...options,
