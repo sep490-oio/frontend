@@ -111,15 +111,23 @@ async function doRefresh(): Promise<string> {
  * NOTE: If auth migrates to httpOnly cookies (see axios.ts TODO),
  * this module is the single place that must change.
  */
-export async function refreshToken(): Promise<string> {
+export async function refreshToken(failedToken?: string | null): Promise<string> {
   // Cross-tab serialization via Web Locks API (Chrome 69+, FF 96+, Safari 15.4+, Edge 79+)
   if (typeof navigator !== 'undefined' && typeof navigator.locks?.request === 'function') {
     return navigator.locks.request(LOCK_NAME, async () => {
       // Post-lock re-check: another tab may have refreshed while we waited.
-      // If the stored access token is still valid (within the 60s buffer),
-      // use it instead of burning another BE rotation.
       const current = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
-      if (current && !isTokenExpired()) return current
+      
+      if (failedToken) {
+        // We know `failedToken` resulted in a 401. If `current` is different, 
+        // another tab already refreshed it successfully.
+        if (current && current !== failedToken) return current
+      } else {
+        // Proactive refresh (e.g., from request interceptor or SignalR factory).
+        // If the stored access token is still valid (within the 60s buffer), skip BE rotation.
+        if (current && !isTokenExpired()) return current
+      }
+      
       return doRefresh()
     })
   }
@@ -136,10 +144,24 @@ export async function refreshToken(): Promise<string> {
 
 /**
  * Central logout on refresh failure.
- * Clears tokens and redirects to login.
+ * Clears tokens and redirects to login with returnTo so the user
+ * can resume their work after re-authentication.
  */
-function handleRefreshFailure(): void {
+export function handleRefreshFailure(): void {
   localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN)
   localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
-  window.location.href = '/login'
+
+  // Preserve current path as returnTo, excluding auth pages and external URLs
+  const current = window.location.pathname + window.location.search + window.location.hash
+  const isAuthPage =
+    current.startsWith('/login') ||
+    current.startsWith('/2fa') ||
+    current.startsWith('/register') ||
+    current === '/'
+
+  if (isAuthPage) {
+    window.location.href = '/login'
+  } else {
+    window.location.href = `/login?returnTo=${encodeURIComponent(current)}`
+  }
 }

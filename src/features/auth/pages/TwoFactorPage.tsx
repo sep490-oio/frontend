@@ -4,11 +4,12 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useTranslation } from 'react-i18next'
 import { App, Input, Button, Form, Alert } from 'antd'
-import { Link, useNavigate } from 'react-router'
+import { Link, useNavigate, useSearchParams } from 'react-router'
 import { useAppDispatch, useAppSelector, setCredentials, logout } from '@/app/store'
 import { useVerifyTotp } from '@/features/auth/api'
 import { STORAGE_KEYS } from '@/utils/constants'
 import { MONO_FONT } from '@/styles/tokens'
+import { getReturnToFromSearch } from '@/utils/returnTo'
 import type { AxiosError } from 'axios'
 import type { ApiError } from '@/types'
 import { getServerNowMs } from '@/utils/time'
@@ -55,6 +56,8 @@ export default function TwoFactorPage() {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const verifyMutation = useVerifyTotp()
+  const [searchParams] = useSearchParams()
+  const returnTo = getReturnToFromSearch(searchParams.toString())
 
   const requires2FA = useAppSelector((state) => state.auth.requires2FA)
   const [remaining, setRemaining] = useState(getTokenRemainingSeconds)
@@ -117,7 +120,7 @@ export default function TwoFactorPage() {
           if (data.accessToken && data.refreshToken) {
             dispatch(setCredentials(data))
             message.success(t('login.success', 'Login successful'))
-            navigate(getRedirectPath(data.accessToken))
+            navigate(returnTo ?? getRedirectPath(data.accessToken))
           } else {
             message.error(t('twoFactor.error', 'Verification failed'))
           }

@@ -71,8 +71,8 @@ export default function BuyerOutboundReceivePage() {
   const submitReceiptProof = useSubmitReceiptProof()
 
   if (!isAuthenticated) {
-    const returnUrl = `/orders/${orderId}/outbound-shipment/receive?token=${encodeURIComponent(token)}`
-    return <Navigate to={`/login?returnUrl=${encodeURIComponent(returnUrl)}`} replace />
+    const returnTo = `/orders/${orderId}/outbound-shipment/receive?token=${encodeURIComponent(token)}`
+    return <Navigate to={`/login?returnTo=${encodeURIComponent(returnTo)}`} replace />
   }
 
   if (!token) {

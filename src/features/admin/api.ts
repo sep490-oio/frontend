@@ -53,6 +53,17 @@ export function useAdminUserDetail(id: string) {
   })
 }
 
+export function useAdminUserRiskFlags(id: string) {
+  return useQuery({
+    queryKey: queryKeys.admin.userRiskFlags(id),
+    queryFn: async () => {
+      const res = await apiClient.get<UserRiskFlagDto[]>(`/admin/users/${id}/risk-flags`)
+      return res.data
+    },
+    enabled: !!id,
+  })
+}
+
 export function useAdminCreateUser() {
   const qc = useQueryClient()
   return useMutation({
@@ -682,8 +693,11 @@ export function useRejectWithdrawal() {
 export function useCompleteWithdrawal() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (id: string) => {
-      await apiClient.post(`/admin/payments/withdrawals/${id}/complete`)
+    mutationFn: async ({ id, transferProofUrl, transferNote }: { id: string; transferProofUrl: string; transferNote?: string }) => {
+      await apiClient.post(`/admin/payments/withdrawals/${id}/complete`, {
+        transferProofUrl,
+        transferNote,
+      })
     },
     onSuccess: async () => {
       await invalidateAndRefetchActive(qc, [

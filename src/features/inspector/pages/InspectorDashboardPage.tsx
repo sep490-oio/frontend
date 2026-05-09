@@ -221,7 +221,7 @@ export default function InspectorDashboardPage() {
                     e.currentTarget.style.boxShadow = 'none'
                   }}
                 >
-                  {/* Image placeholder */}
+                  {/* Item image or placeholder */}
                   <div
                     style={{
                       position: 'relative',
@@ -233,9 +233,22 @@ export default function InspectorDashboardPage() {
                       justifyContent: 'center',
                       color: 'var(--color-text-secondary)',
                       fontSize: 32,
+                      overflow: 'hidden',
                     }}
                   >
-                    <DatabaseOutlined />
+                    {item.itemImageUrl ? (
+                      <img
+                        src={item.itemImageUrl}
+                        alt={item.itemTitle}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                        }}
+                      />
+                    ) : (
+                      <DatabaseOutlined />
+                    )}
                     {/* Category badge */}
                     <span
                       style={{

@@ -55,7 +55,12 @@ export function ReturnEvidenceUploader({
   const [submitting, setSubmitting] = useState(false)
   const [showCamera, setShowCamera] = useState(false)
 
-  const photosCount = existingEvidence.length
+  // BUG FIX: track locally uploaded count to avoid stale server data.
+  // After onUpload succeeds the parent invalidates queries, but React Query
+  // cache may not have refreshed yet — so existingEvidence.length is stale.
+  const [localUploadCount, setLocalUploadCount] = useState(0)
+
+  const photosCount = existingEvidence.length + localUploadCount
   const atMax = photosCount >= maxPhotos
   const needsMore = photosCount < minRequired
 
@@ -79,6 +84,7 @@ export function ReturnEvidenceUploader({
         )
         const result = await mediaUpload.upload(file)
         await onUpload(result.mediaUploadId)
+        setLocalUploadCount((c) => c + 1)
         message.success(t('returnEvidence.uploadSuccess', 'Photo uploaded'))
         setShowCamera(false)
       } catch (err) {

@@ -130,8 +130,21 @@ export async function startConnection(connection: signalR.HubConnection): Promis
     // healed, e.g. user re-authenticated in another tab) can come back.
     terminallyStopped.delete(connection)
     return true
-  } catch (err) {
+  } catch (err: any) {
     console.error('SignalR connection error:', err)
+    
+    // If it's a 401 Unauthorized, force refresh
+    if (err?.statusCode === 401 || err?.message?.includes('401')) {
+      const currentToken = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
+      try {
+        await refreshToken(currentToken)
+        // Note: startConnection will naturally retry after the timeout below
+      } catch {
+        terminallyStopped.set(connection, true)
+        return false // don't loop
+      }
+    }
+
     // Retry after 5 seconds
     const existing = retryTimeouts.get(connection)
     if (existing) clearTimeout(existing)

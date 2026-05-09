@@ -11,6 +11,7 @@ import {
   useUnlockUser,
   useFlagUser,
   useRoles,
+  useAdminUserRiskFlags,
 } from '@/features/admin/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
@@ -26,6 +27,7 @@ export default function AdminUserDetailPage() {
 
   const { data: user, isLoading, error, refetch } = useAdminUserDetail(id!)
   const { data: roles } = useRoles()
+  const { data: riskFlags, isLoading: isLoadingRiskFlags } = useAdminUserRiskFlags(id!)
 
   const assignRole = useAssignRole()
   const revokeRole = useRevokeRole()
@@ -93,8 +95,8 @@ export default function AdminUserDetailPage() {
     }
   }
 
-  // Extract roles from the user object (may be present via admin detail endpoint)
-  const userRoles: string[] = (user as unknown as { roles?: string[] }).roles ?? []
+  // Extract roles from the user object
+  const userRoles: string[] = user.roles ?? []
 
   return (
     <div>
@@ -193,7 +195,27 @@ export default function AdminUserDetailPage() {
           </Button>
         }
       >
-        <Typography.Text type="secondary">{t('common.noData')}</Typography.Text>
+        {isLoadingRiskFlags ? (
+          <div style={{ textAlign: 'center', padding: 20 }}><Spin /></div>
+        ) : riskFlags && riskFlags.length > 0 ? (
+          <Space direction="vertical" style={{ width: '100%' }}>
+            {riskFlags.map((flag) => (
+              <Card type="inner" key={flag.id} size="small">
+                <Descriptions column={1} size="small">
+                  <Descriptions.Item label={t('userDetail.severity')}>
+                    <Tag color={flag.severity === AlertSeverity.High || flag.severity === AlertSeverity.Critical ? 'red' : 'orange'}>
+                      {flag.severity}
+                    </Tag>
+                  </Descriptions.Item>
+                  <Descriptions.Item label={t('userDetail.reason')}>{flag.reason || t('common.noData')}</Descriptions.Item>
+                  <Descriptions.Item label={t('userDetail.createdAt')}>{formatDateTime(flag.createdAt)}</Descriptions.Item>
+                </Descriptions>
+              </Card>
+            ))}
+          </Space>
+        ) : (
+          <Typography.Text type="secondary">{t('common.noData')}</Typography.Text>
+        )}
       </Card>
 
       {/* Add role modal */}

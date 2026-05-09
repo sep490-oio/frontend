@@ -13,20 +13,24 @@ import type {
  */
 export const QUALITY_PROFILE_THRESHOLDS = {
   strict_document: {
-    blurReject: 35,
-    blurWarning: 80,
-    blurAccept: 90,
-    brightnessMin: 60,
-    brightnessMax: 220,
-    minResolution: { width: 800, height: 600 },
+    // Relaxed for web — webcam feeds are inherently softer than native mobile cameras.
+    // Old values: blurReject 35 / blurWarning 80 / blurAccept 90
+    blurReject: 15,
+    blurWarning: 40,
+    blurAccept: 60,
+    brightnessMin: 45,
+    brightnessMax: 230,
+    minResolution: { width: 640, height: 480 },
   },
   face: {
-    blurReject: 25,
-    blurWarning: 55,
-    blurAccept: 65,
-    brightnessMin: 50,
-    brightnessMax: 230,
-    minResolution: { width: 480, height: 480 },
+    // Relaxed for web — selfie via webcam is inherently lower quality.
+    // Old values: blurReject 25 / blurWarning 55 / blurAccept 65
+    blurReject: 12,
+    blurWarning: 30,
+    blurAccept: 50,
+    brightnessMin: 40,
+    brightnessMax: 235,
+    minResolution: { width: 320, height: 320 },
   },
   item_or_package: {
     // Very lenient — only block extremely blurry frames.
@@ -138,10 +142,13 @@ function computeMultiRegionBlurScore(
   imageData: ImageData,
   profile: CaptureQualityProfile,
 ): number {
+  // Use multi-region sampling for all profiles so the BEST region counts.
+  // For documents/faces, also sample corners — useful on web where autofocus
+  // may lock onto a non-center region.
   const regions: RegionKey[] =
     profile === 'item_or_package'
       ? ['center', 'top-left', 'top-right', 'bottom-left', 'bottom-right']
-      : ['center']
+      : ['center', 'top-left', 'top-right', 'bottom-left', 'bottom-right']
 
   // 200x200 regions (or proportional if image is small).
   const regionSize = Math.min(200, Math.floor(imageData.width / 2), Math.floor(imageData.height / 2))

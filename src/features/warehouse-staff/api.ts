@@ -88,6 +88,23 @@ export function useRecordWarehouseReturnDeliveryFailure() {
 }
 
 /**
+ * Warehouse staff manually marks a return shipment as delivered.
+ * Used for manual / self-delivery carriers where there is no external
+ * webhook to automatically transition InTransit → Delivered.
+ */
+export function useMarkWarehouseReturnDelivered() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await apiClient.post(`/warehouse-staff/returns/${id}/mark-delivered`)
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: warehouseReturnsQueryKey })
+    },
+  })
+}
+
+/**
  * Staff uploads a PickupByWarehouseStaff photo on a return shipment.
  * Required before POST /warehouse-staff/returns/{id}/ship will succeed —
  * BE enforces the guard on MarkShipped.

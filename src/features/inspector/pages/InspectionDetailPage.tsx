@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import {
   Typography,
-  Card,
-  Descriptions,
   Select,
   Input,
   Button,
@@ -14,8 +12,23 @@ import {
   Modal,
   Form,
   Alert,
+  Grid,
+  Tooltip,
 } from 'antd'
-import { CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined, WarningOutlined } from '@ant-design/icons'
+import {
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  ClockCircleOutlined,
+  WarningOutlined,
+  ArrowLeftOutlined,
+  CopyOutlined,
+  EnvironmentOutlined,
+  PhoneOutlined,
+  UserOutlined,
+  CalendarOutlined,
+  InboxOutlined,
+  TagOutlined,
+} from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useParams, useNavigate } from 'react-router'
 import { useInboundShipmentById } from '@/features/warehouse/api'
@@ -35,11 +48,63 @@ type TerminalState =
   | { kind: 'pending_seller_confirmation' }
   | { kind: 'review_failed'; inspection: WarehouseInspectionDto }
 
+// ── Helpers ──────────────────────────────────────────────────────────
+
+function CopyableId({ id, length = 12 }: { id: string; length?: number }) {
+  const short = id.length > length ? `${id.slice(0, length)}…` : id
+  return (
+    <Tooltip title={id}>
+      <code
+        style={{
+          fontSize: 12,
+          color: 'var(--color-text-secondary)',
+          cursor: 'pointer',
+          background: 'var(--color-bg-surface)',
+          padding: '2px 6px',
+          borderRadius: 4,
+          wordBreak: 'break-all',
+        }}
+        onClick={() => {
+          void navigator.clipboard.writeText(id)
+          message.success('Copied')
+        }}
+      >
+        {short} <CopyOutlined style={{ fontSize: 10, opacity: 0.6 }} />
+      </code>
+    </Tooltip>
+  )
+}
+
+interface InfoFieldProps {
+  icon: React.ReactNode
+  label: string
+  children: React.ReactNode
+}
+
+function InfoField({ icon, label, children }: InfoFieldProps) {
+  return (
+    <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+      <span style={{ color: 'var(--color-text-secondary)', fontSize: 16, marginTop: 1, flexShrink: 0 }}>{icon}</span>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 500, marginBottom: 2 }}>
+          {label}
+        </div>
+        <div style={{ fontSize: 13, color: 'var(--color-text-primary)', wordBreak: 'break-word' }}>
+          {children}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Main Component ───────────────────────────────────────────────────
+
 export default function InspectionDetailPage() {
   const { shipmentId } = useParams<{ shipmentId: string }>()
   const navigate = useNavigate()
   const { t } = useTranslation('inspector')
   const { isMobile } = useBreakpoint()
+  const screens = Grid.useBreakpoint()
 
   const CONDITION_OPTIONS = [
     { value: 'new', label: t('inspector:inspectionDetail.conditionNew', 'New') },
@@ -117,13 +182,6 @@ export default function InspectionDetailPage() {
 
     setSubmitting(true)
     try {
-      // 1. Either submit as a single multipart call (file uploads + JSON in one
-      //    request) OR pre-upload each photo via the media upload endpoint and
-      //    pass back the confirmed mediaUploadIds to the legacy JSON route.
-      //
-      //    The multipart path requires the BE endpoint registered at
-      //    `/warehouse/inbound-shipments/{id}/inspect/multipart`; gated by the
-      //    `USE_MULTIPART_INSPECTION` feature flag until BE ships the handler.
       let inspection: WarehouseInspectionDto
       if (USE_MULTIPART_INSPECTION && capturedPhotos.length > 0) {
         const files = capturedPhotos.map(
@@ -153,9 +211,6 @@ export default function InspectionDetailPage() {
       }
       setLastInspection(inspection)
 
-      // Detect condition-confirmation-required branch from inspect response.
-      // Signal: decisionStatus indicates the server is waiting on the seller
-      // (e.g. "pending_seller_confirmation" / "condition_confirmation_required").
       const status = (inspection.decisionStatus ?? '').toLowerCase()
       const needsSellerConfirmation =
         status.includes('seller') ||
@@ -168,7 +223,6 @@ export default function InspectionDetailPage() {
         return
       }
 
-      // 3. Review
       try {
         await reviewMutation.mutateAsync({
           shipmentId,
@@ -200,6 +254,7 @@ export default function InspectionDetailPage() {
     }
   }
 
+  // ── Terminal states (unchanged logic, refined styling) ──────────
   if (terminal) {
     if (terminal.kind === 'approved') {
       return (
@@ -280,91 +335,181 @@ export default function InspectionDetailPage() {
     )
   }
 
-  const thumbnailSize = 96
+  // ── Layout values ──────────────────────────────────────────────────
+  const isDesktop = !!screens.md
   const itemImage = shipment.itemImageUrl
+  const canSubmit = !!condition && capturedPhotos.length > 0
 
   return (
-    <div style={{ padding: isMobile ? 16 : 0 }}>
-      <Typography.Title
-        level={2}
-        style={{ marginBottom: isMobile ? 16 : 24, fontFamily: SERIF_FONT, color: 'var(--color-text-primary)', fontSize: isMobile ? 22 : undefined }}
-      >
-        {t('inspector:inspectionDetail.title', 'Inspect Shipment')}
-      </Typography.Title>
+    <div style={{
+      maxWidth: 840,
+      margin: '0 auto',
+      padding: isMobile ? '0 12px' : '0 16px',
+      paddingBottom: isMobile ? 80 : 32,
+    }}>
+      {/* ── Header ── */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        marginBottom: isMobile ? 16 : 24,
+        paddingTop: isMobile ? 12 : 0,
+      }}>
+        <Button
+          type="text"
+          icon={<ArrowLeftOutlined />}
+          onClick={() => navigate('/inspector/queue')}
+          style={{ color: 'var(--color-text-secondary)', padding: 4 }}
+        />
+        <Typography.Title
+          level={isMobile ? 4 : 3}
+          style={{ margin: 0, fontFamily: SERIF_FONT, color: 'var(--color-text-primary)' }}
+        >
+          {t('inspector:inspectionDetail.title', 'Inspect Shipment')}
+        </Typography.Title>
+      </div>
 
-      {/* Item summary card */}
-      <Card style={{ marginBottom: isMobile ? 16 : 24 }}>
-        <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-          {itemImage ? (
-            <Image
-              src={itemImage}
-              alt={shipment.itemTitle}
-              width={thumbnailSize}
-              height={thumbnailSize}
-              style={{ objectFit: 'cover', borderRadius: 6, background: 'var(--color-surface-muted, #f0f0f0)' }}
-            />
-          ) : (
-            <div
-              style={{
-                width: thumbnailSize,
-                height: thumbnailSize,
-                borderRadius: 6,
-                background: 'var(--color-surface-muted, #f0f0f0)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--color-text-secondary, #999)',
-                fontSize: 12,
-              }}
-            >
-              {t('inspector:inspectionDetail.noImage', 'No image')}
-            </div>
-          )}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Typography.Title level={4} style={{ margin: 0, fontFamily: SERIF_FONT }}>
-              {shipment.itemTitle ?? t('inspector:inspectionDetail.untitledItem', 'Untitled item')}
-            </Typography.Title>
-            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-              {shipment.itemId}
-            </Typography.Text>
-            <div style={{ marginTop: 8 }}>
-              <Space wrap size="small">
-                {/* declaredCondition isn't on the shipment DTO; fall back to shipment.status for context */}
-                <StatusBadge status={shipment.status} />
-                {/* storage location is not on shipment DTO; omit if not available */}
-              </Space>
-            </div>
+      {/* ── Item Summary Card ── */}
+      <div
+        className="oio-widget"
+        style={{
+          display: 'flex',
+          gap: isMobile ? 12 : 20,
+          alignItems: 'center',
+          padding: isMobile ? 12 : 20,
+          marginBottom: isMobile ? 12 : 20,
+        }}
+      >
+        {itemImage ? (
+          <Image
+            src={itemImage}
+            alt={shipment.itemTitle}
+            width={isMobile ? 72 : 110}
+            height={isMobile ? 72 : 110}
+            style={{ objectFit: 'cover', borderRadius: 8, flexShrink: 0 }}
+          />
+        ) : (
+          <div
+            style={{
+              width: isMobile ? 72 : 110,
+              height: isMobile ? 72 : 110,
+              borderRadius: 8,
+              background: 'var(--color-bg-surface)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--color-text-secondary)',
+              fontSize: isMobile ? 24 : 32,
+              flexShrink: 0,
+            }}
+          >
+            <InboxOutlined />
+          </div>
+        )}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <Typography.Title level={isMobile ? 5 : 4} style={{ margin: 0, fontFamily: SERIF_FONT, marginBottom: 4 }}>
+            {shipment.itemTitle ?? t('inspector:inspectionDetail.untitledItem', 'Untitled item')}
+          </Typography.Title>
+          <CopyableId id={shipment.itemId} />
+          <div style={{ marginTop: 8 }}>
+            <StatusBadge status={shipment.status} />
           </div>
         </div>
-      </Card>
+      </div>
 
-      {/* Shipment info */}
-      <Card title={t('inspector:inspectionDetail.shipmentInfo', 'Shipment Information')} style={{ marginBottom: isMobile ? 16 : 24 }}>
-        <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
-          <Descriptions.Item label={t('inspector:inspectionDetail.shipmentId', 'Shipment ID')}>{shipment.id}</Descriptions.Item>
-          <Descriptions.Item label={t('inspector:inspectionDetail.status', 'Status')}>
-            <StatusBadge status={shipment.status} />
-          </Descriptions.Item>
-          <Descriptions.Item label={t('inspector:inspectionDetail.itemId', 'Item ID')}>{shipment.itemId}</Descriptions.Item>
-          <Descriptions.Item label={t('inspector:inspectionDetail.provider', 'Provider')}>{shipment.providerCode}</Descriptions.Item>
-          <Descriptions.Item label={t('inspector:inspectionDetail.sender', 'Sender')}>{shipment.senderName}</Descriptions.Item>
-          <Descriptions.Item label={t('inspector:inspectionDetail.phone', 'Phone')}>{shipment.senderPhone}</Descriptions.Item>
-          <Descriptions.Item label={t('inspector:inspectionDetail.weight', 'Weight')}>{shipment.weightGrams}g</Descriptions.Item>
-          <Descriptions.Item label={t('inspector:inspectionDetail.arrived', 'Arrived')}>
-            {shipment.arrivedAt ? formatDateTime(shipment.arrivedAt) : 'N/A'}
-          </Descriptions.Item>
-          <Descriptions.Item label={t('inspector:inspectionDetail.created', 'Created')}>{formatDateTime(shipment.createdAt)}</Descriptions.Item>
-          {shipment.notes && (
-            <Descriptions.Item label={t('inspector:inspectionDetail.notes', 'Notes')} span={2}>{shipment.notes}</Descriptions.Item>
+      {/* ── Shipment Information Grid ── */}
+      <div
+        className="oio-widget"
+        style={{
+          padding: isMobile ? 12 : 20,
+          marginBottom: isMobile ? 12 : 20,
+        }}
+      >
+        <Typography.Text strong style={{
+          display: 'block',
+          fontSize: 13,
+          textTransform: 'uppercase',
+          letterSpacing: '0.06em',
+          color: 'var(--color-text-secondary)',
+          marginBottom: 16,
+        }}>
+          {t('inspector:inspectionDetail.shipmentInfo', 'Shipment Information')}
+        </Typography.Text>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isDesktop ? 'repeat(3, 1fr)' : isMobile ? '1fr' : 'repeat(2, 1fr)',
+          gap: isMobile ? 14 : 18,
+        }}>
+          <InfoField icon={<TagOutlined />} label={t('inspector:inspectionDetail.shipmentId', 'Shipment ID')}>
+            <CopyableId id={shipment.id} />
+          </InfoField>
+          <InfoField icon={<EnvironmentOutlined />} label={t('inspector:inspectionDetail.provider', 'Provider')}>
+            {shipment.providerCode}
+          </InfoField>
+          <InfoField icon={<UserOutlined />} label={t('inspector:inspectionDetail.sender', 'Sender')}>
+            {shipment.senderName}
+          </InfoField>
+          <InfoField icon={<PhoneOutlined />} label={t('inspector:inspectionDetail.phone', 'Phone')}>
+            {shipment.senderPhone}
+          </InfoField>
+          <InfoField icon={<InboxOutlined />} label={t('inspector:inspectionDetail.weight', 'Weight')}>
+            {shipment.weightGrams}g
+          </InfoField>
+          <InfoField icon={<CalendarOutlined />} label={t('inspector:inspectionDetail.arrived', 'Arrived')}>
+            {shipment.arrivedAt ? formatDateTime(shipment.arrivedAt) : '—'}
+          </InfoField>
+          {shipment.carrierTrackingNumber && (
+            <InfoField icon={<TagOutlined />} label="Tracking">
+              <CopyableId id={shipment.carrierTrackingNumber} length={20} />
+            </InfoField>
           )}
-        </Descriptions>
-      </Card>
+          <InfoField icon={<CalendarOutlined />} label={t('inspector:inspectionDetail.created', 'Created')}>
+            {formatDateTime(shipment.createdAt)}
+          </InfoField>
+        </div>
+        {shipment.notes && (
+          <div style={{
+            marginTop: 16,
+            padding: '10px 12px',
+            background: 'var(--color-bg-surface)',
+            borderRadius: 8,
+            fontSize: 13,
+            color: 'var(--color-text-secondary)',
+          }}>
+            <strong>{t('inspector:inspectionDetail.notes', 'Notes')}:</strong> {shipment.notes}
+          </div>
+        )}
+      </div>
 
-      {/* Inspection form */}
-      <Card title={t('inspector:inspectionDetail.inspectionForm', 'Inspection Form')}>
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+      {/* ── Inspection Form ── */}
+      <div
+        className="oio-widget"
+        style={{
+          padding: isMobile ? 12 : 20,
+          marginBottom: isMobile ? 12 : 20,
+        }}
+      >
+        <Typography.Text strong style={{
+          display: 'block',
+          fontSize: 13,
+          textTransform: 'uppercase',
+          letterSpacing: '0.06em',
+          color: 'var(--color-text-secondary)',
+          marginBottom: 16,
+        }}>
+          {t('inspector:inspectionDetail.inspectionForm', 'Inspection Form')}
+        </Typography.Text>
+
+        {/* Condition + Notes — side by side on desktop */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isDesktop ? '1fr 1fr' : '1fr',
+          gap: isMobile ? 16 : 20,
+          marginBottom: isMobile ? 16 : 24,
+        }}>
           <div>
-            <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>
+            <Typography.Text strong style={{ display: 'block', marginBottom: 8, fontSize: 13 }}>
               {t('inspector:inspectionDetail.conditionLabel', 'Condition on Arrival')} *
             </Typography.Text>
             <Select
@@ -372,28 +517,30 @@ export default function InspectionDetailPage() {
               onChange={setCondition}
               options={CONDITION_OPTIONS}
               placeholder={t('inspector:inspectionDetail.selectCondition', 'Select condition')}
-              style={{ width: '100%', maxWidth: isMobile ? '100%' : 400 }}
+              style={{ width: '100%' }}
               size="large"
             />
           </div>
-
           <div>
-            <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>
+            <Typography.Text strong style={{ display: 'block', marginBottom: 8, fontSize: 13 }}>
               {t('inspector:inspectionDetail.notesLabel', 'Inspection Notes')}
             </Typography.Text>
             <Input.TextArea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder={t('inspector:inspectionDetail.notesPlaceholder', 'Add any notes about the item condition, packaging, etc.')}
-              rows={4}
-              style={{ maxWidth: isMobile ? '100%' : 600 }}
+              rows={isMobile ? 3 : 4}
+              style={{ resize: 'vertical' }}
             />
           </div>
+        </div>
 
-          <div>
-            <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>
-              {t('inspector:inspectionDetail.photos', 'Evidence Photos')} *
-            </Typography.Text>
+        {/* Evidence Photos */}
+        <div>
+          <Typography.Text strong style={{ display: 'block', marginBottom: 8, fontSize: 13 }}>
+            {t('inspector:inspectionDetail.photos', 'Evidence Photos')} *
+          </Typography.Text>
+          <div style={{ maxWidth: isDesktop ? 560 : '100%' }}>
             <MultiCaptureUploader
               maxPhotos={10}
               step="item_photo"
@@ -402,21 +549,74 @@ export default function InspectionDetailPage() {
               instruction={t('inspector:inspectionDetail.captureInstruction', 'Take clear photos of the item from multiple angles')}
             />
           </div>
+        </div>
 
-          <div>
+        {/* Desktop submit button */}
+        {!isMobile && (
+          <div style={{ marginTop: 24, display: 'flex', justifyContent: 'flex-end' }}>
             <Button
               type="primary"
               size="large"
               onClick={openDecisionModal}
-              style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
+              disabled={!canSubmit}
+              style={{
+                background: canSubmit ? 'var(--color-accent)' : undefined,
+                borderColor: canSubmit ? 'var(--color-accent)' : undefined,
+                minWidth: 200,
+                height: 48,
+                fontSize: 15,
+                fontWeight: 600,
+              }}
             >
               {t('inspector:inspectionDetail.submitInspection', 'Submit Inspection')}
             </Button>
           </div>
-        </Space>
-      </Card>
+        )}
+      </div>
 
-      {/* Decision modal */}
+      {/* ── Mobile Sticky Bottom CTA ── */}
+      {isMobile && (
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 100,
+          padding: '12px 16px',
+          paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
+          background: 'var(--color-bg-container)',
+          backdropFilter: 'blur(12px)',
+          borderTop: '1px solid var(--color-border)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+        }}>
+          <span style={{
+            fontSize: 12,
+            color: 'var(--color-text-secondary)',
+            whiteSpace: 'nowrap',
+          }}>
+            📷 {capturedPhotos.length}/10
+          </span>
+          <Button
+            type="primary"
+            size="large"
+            block
+            onClick={openDecisionModal}
+            disabled={!canSubmit}
+            style={{
+              background: canSubmit ? 'var(--color-accent)' : undefined,
+              borderColor: canSubmit ? 'var(--color-accent)' : undefined,
+              height: 44,
+              fontWeight: 600,
+            }}
+          >
+            {t('inspector:inspectionDetail.submitInspection', 'Submit Inspection')}
+          </Button>
+        </div>
+      )}
+
+      {/* ── Decision modal ── */}
       <Modal
         title={t('inspector:inspectionDetail.decisionTitle', 'Inspection Decision')}
         open={decisionModalOpen}

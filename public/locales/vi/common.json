@@ -240,7 +240,19 @@
     "readyCapture": "Tôi sẵn sàng — Chụp ngay",
     "attempt": "Lần thử {{current}}/{{total}}",
     "capturing": "Đang chụp... Giữ yên",
-    "livenessComplete": "Kiểm tra hoàn tất"
+    "livenessComplete": "Kiểm tra hoàn tất",
+    "error": {
+      "resolutionTooLow": "Độ phân giải quá thấp",
+      "tooDark": "Ảnh quá tối",
+      "tooBright": "Ảnh quá sáng",
+      "blurSevere": "Ảnh bị mờ"
+    },
+    "cta": {
+      "tapToFocusAndRetake": "Chạm vào vùng cần lấy nét và chụp lại"
+    },
+    "warning": {
+      "borderlineBlur": "Ảnh có vẻ hơi mờ. Vui lòng đảm bảo các chi tiết có thể đọc được."
+    }
   },
   "emptyState": {
     "title": "Chưa có gì ở đây"

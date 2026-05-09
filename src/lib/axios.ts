@@ -161,7 +161,8 @@ apiClient.interceptors.response.use(
     isRefreshing = true
 
     try {
-      const newAccessToken = await refreshToken()
+      const failedToken = originalRequest.headers.Authorization?.toString().replace('Bearer ', '')
+      const newAccessToken = await refreshToken(failedToken)
       processQueue(null, newAccessToken)
       originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
       return apiClient(originalRequest)
