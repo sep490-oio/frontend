@@ -488,5 +488,9 @@
   "noEligibleInboundItemsPlaceholder": "No eligible items to ship",
   "selectedItems": "Selected Items",
   "externalDimensionsNote": "Enter the total package dimensions for all items.",
-  "weightMinPerItem": "Total weight must be at least {{count}}g (1g per selected item)."
+  "weightMinPerItem": "Total weight must be at least {{count}}g (1g per selected item).",
+  "carriers": {
+    "ghn": "GHN - Express Delivery",
+    "ghtk": "GHTK - Economy Delivery"
+  }
 }

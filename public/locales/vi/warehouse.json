@@ -488,5 +488,9 @@
   "noEligibleInboundItemsPlaceholder": "Không có sản phẩm đủ điều kiện để gửi",
   "selectedItems": "Sản phẩm đã chọn",
   "externalDimensionsNote": "Nhập tổng kích thước kiện hàng cho tất cả các sản phẩm.",
-  "weightMinPerItem": "Tổng trọng lượng phải ít nhất là {{count}}g (1g cho mỗi sản phẩm đã chọn)."
+  "weightMinPerItem": "Tổng trọng lượng phải ít nhất là {{count}}g (1g cho mỗi sản phẩm đã chọn).",
+  "carriers": {
+    "ghn": "GHN - Giao Hàng Nhanh",
+    "ghtk": "GHTK - Giao Hàng Tiết Kiệm"
+  }
 }

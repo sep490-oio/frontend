@@ -227,5 +227,8 @@
     "waitingDelivery": "Kiện hàng vẫn đang vận chuyển. Bạn có thể tải ảnh nhận hàng khi kiện hàng đến.",
     "alreadyConfirmed": "Bạn đã xác nhận nhận sản phẩm này rồi.",
     "emptyWarehouse": "Chưa có hàng trả về từ kho."
+  },
+  "verificationWizard": {
+    "pending": "đang chờ"
   }
 }

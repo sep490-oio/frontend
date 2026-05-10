@@ -31,7 +31,7 @@ export function MoneyFlowExplainer() {
       tagColor: 'warning',
       desc: t(
         'flow.deposit.desc',
-        'Khi tham gia đấu giá, bạn đặt cọc từ ví. Số tiền này bị tạm giữ (hold) — không thể rút hay sử dụng cho đến khi phiên đấu giá kết thúc.',
+        'When joining an auction, you place a deposit from your wallet. This amount is held — it cannot be spent elsewhere until refunded.',
       ),
     },
     {
@@ -42,7 +42,7 @@ export function MoneyFlowExplainer() {
       tagColor: 'processing',
       desc: t(
         'flow.bid.desc',
-        'Bạn đấu giá hoặc mua ngay. Deposit vẫn bị giữ trong suốt phiên đấu giá. Nếu bạn không thắng, deposit sẽ được hoàn lại 100%.',
+        'You bid or buy now. The deposit remains held throughout the auction. If you lose, the deposit is refunded in full.',
       ),
     },
     {
@@ -53,7 +53,7 @@ export function MoneyFlowExplainer() {
       tagColor: 'success',
       desc: t(
         'flow.win.desc',
-        'Nếu thắng, deposit được trừ vào giá thanh toán. Bạn chỉ cần thanh toán phần còn lại. Nếu hủy thanh toán, bạn mất 50% deposit.',
+        'If you win, the deposit is deducted from the payment. You only need to pay the remaining difference. Cancelling forfeits 50% of the deposit.',
       ),
     },
     {
@@ -64,7 +64,7 @@ export function MoneyFlowExplainer() {
       tagColor: 'error',
       desc: t(
         'flow.payment.desc',
-        'Thanh toán phần chênh lệch (giá cuối − deposit). Tiền được trừ từ ví hoặc qua VNPay. Sau thanh toán, đơn hàng chuyển sang trạng thái xử lý.',
+        'Pay the difference (final price − deposit). Funds are deducted from your wallet or paid via VNPay. The order then moves to processing.',
       ),
     },
     {
@@ -75,7 +75,7 @@ export function MoneyFlowExplainer() {
       tagColor: 'warning',
       desc: t(
         'flow.escrow.desc',
-        'Tiền thanh toán được giữ trong ký quỹ (escrow) — chưa chuyển cho seller. Bảo vệ buyer trong trường hợp cần hoàn tiền hoặc khiếu nại.',
+        'Payment is held in escrow — not transferred to the seller yet. This protects the buyer in case a refund or dispute is needed.',
       ),
     },
     {
@@ -86,7 +86,7 @@ export function MoneyFlowExplainer() {
       tagColor: 'success',
       desc: t(
         'flow.release.desc',
-        'Sau khi buyer xác nhận nhận hàng (hoặc hết hạn khiếu nại), tiền escrow được giải ngân cho seller. Giao dịch hoàn tất.',
+        'After the buyer confirms receipt (or the dispute window expires), escrow funds are released to the seller. Transaction complete.',
       ),
     },
   ]
@@ -103,7 +103,7 @@ export function MoneyFlowExplainer() {
     >
       <Title level={5} style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
         <SafetyCertificateOutlined style={{ color: 'var(--color-accent)' }} />
-        {t('flow.title', 'Dòng tiền đấu giá')}
+        {t('flow.title', 'Auction Money Flow')}
       </Title>
 
       {/* Visual flow bar */}

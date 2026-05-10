@@ -402,7 +402,7 @@ export function AuctionSidebar({
               {!currentBuyerOrder && isOrderProvisioning && (
                 <Button block disabled style={{ height: 48, borderRadius: 8 }}>
                   <Spin size="small" indicator={<LoadingOutlined spin style={{ marginRight: 8 }} />} />
-                  {t('orderBeingPrepared', 'Đang chuẩn bị đơn hàng...')}
+                  {t('orderBeingPrepared', 'Preparing order...')}
                 </Button>
               )}
               {!currentBuyerOrder && !isOrderProvisioning && (
@@ -410,7 +410,7 @@ export function AuctionSidebar({
                   <Typography.Text
                     style={{ color: 'var(--color-text-secondary)', fontSize: 13, textAlign: 'center' }}
                   >
-                    {t('orderBeingCreated', 'Đơn hàng đang được tạo, vui lòng tải lại sau')}
+                    {t('orderBeingCreated', 'Order is being created, please reload later')}
                   </Typography.Text>
                   {onReloadOrder && (
                     <Button

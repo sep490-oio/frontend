@@ -529,5 +529,20 @@
   "selectedItem": "Vật phẩm đã chọn",
   "pricingAndTiming": "Giá & Thời gian",
   "verifiedByPlatformTitle": "Xác thực bởi Nền tảng",
-  "verifiedByPlatformDesc": "Yêu cầu chuyên gia oio.vn kiểm định vật phẩm trước khi đấu giá."
+  "verifiedByPlatformDesc": "Yêu cầu chuyên gia oio.vn kiểm định vật phẩm trước khi đấu giá.",
+  "reload": "Tải lại",
+  "buyNowReservedUntil": "Giữ chỗ đến",
+  "verification": {
+    "verifiedNote": "OIO đã xác minh listing này trước khi mở đấu giá.",
+    "noVerification": "Listing này không có chứng chỉ hoặc biên bản kiểm định công khai."
+  },
+  "sidebar": {
+    "preparingOrder": "Đang chuẩn bị đơn hàng...",
+    "orderBeingCreated": "Đơn hàng đang được tạo, vui lòng tải lại sau"
+  },
+  "manage": {
+    "closeConfirm": "Đóng phiên đấu giá?",
+    "relistTitle": "Đăng lại phiên đấu giá",
+    "relistBtn": "Đăng lại"
+  }
 }

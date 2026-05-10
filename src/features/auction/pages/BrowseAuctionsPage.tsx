@@ -346,6 +346,7 @@ export default function BrowseAuctionsPage() {
         <InputNumber
           placeholder={t('min')}
           min={0}
+          step={1000}
           value={minPrice}
           addonAfter="₫"
           style={{ flex: 1 }}
@@ -358,6 +359,7 @@ export default function BrowseAuctionsPage() {
         <InputNumber
           placeholder={t('max')}
           min={0}
+          step={1000}
           value={maxPrice}
           addonAfter="₫"
           style={{ flex: 1 }}

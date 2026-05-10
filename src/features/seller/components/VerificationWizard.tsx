@@ -51,7 +51,7 @@ export function VerificationWizard({ onComplete, onCancel }: VerificationWizardP
     } catch (err: unknown) {
       // If user already has a pending verification, exit wizard and show management view
       const errMsg = normalizeErrorMessage(err, '')
-      if (errMsg.includes('pending') || errMsg.includes('submitted') || errMsg.includes('already') || errMsg.includes('đang chờ')) {
+      if (errMsg.includes('pending') || errMsg.includes('submitted') || errMsg.includes('already') || errMsg.includes('pending')) {
         message.warning(t('alreadyHasPending', 'You already have a verification in progress. Returning to management view.'))
         onComplete() // exits wizard, invalidates queries → page shows existing verification
       } else {

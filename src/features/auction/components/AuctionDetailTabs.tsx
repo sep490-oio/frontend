@@ -522,11 +522,11 @@ export function AuctionDetailTabs({
                     {isPlatformVerified
                       ? t(
                           'verifiedByPlatformNote',
-                          'OIO đã xác minh listing này trước khi mở đấu giá.',
+                          'OIO has verified this listing before opening the auction.',
                         )
                       : t(
                           'noCertificateAvailable',
-                          'Listing này không có chứng chỉ hoặc biên bản kiểm định công khai.',
+                          'This listing has no public verification certificate or report.',
                         )}
                   </div>
                   {/* Review-owner row hidden: DTO exposes only the admin's UUID, not a display name.

@@ -76,9 +76,8 @@ export interface SetPhoneNumberRequest {
 }
 
 export interface SetupTotpResponse {
-  secret: string
-  qrCodeUri: string
-  recoveryCodesCount: number
+  sharedKey: string
+  qrCodeBase64: string
 }
 
 export interface UserNotificationPreferenceDto {

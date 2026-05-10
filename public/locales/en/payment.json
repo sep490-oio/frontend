@@ -171,15 +171,15 @@
     "reversed": "Reversed"
   },
   "event": {
-    "wallet_top_up": "Wallet top-up",
-    "auction_deposit_hold": "Auction deposit hold",
-    "auction_deposit_refund": "Auction deposit refund",
-    "order_payment": "Order payment",
-    "order_refund": "Order refund",
-    "withdrawal_hold": "Withdrawal hold",
-    "withdrawal_release": "Withdrawal payout",
-    "seller_payout": "Seller payout",
-    "fee": "Fee"
+    "wallet_top_up": "Wallet Top-up",
+    "auction_deposit_hold": "Auction Deposit",
+    "auction_deposit_refund": "Deposit Refund",
+    "order_payment": "Order Payment",
+    "order_refund": "Order Refund",
+    "withdrawal_hold": "Withdrawal Hold",
+    "withdrawal_release": "Withdrawal",
+    "seller_payout": "Seller Payout",
+    "fee": "Transaction Fee"
   },
   "availableBalanceHelp": "Funds available for immediate use.",
   "reservedFundsHelpShort": "Funds held by auction deposits, pending withdrawals, or in-progress transactions.",
@@ -290,5 +290,31 @@
     },
     "disputeFrozen": "Frozen by dispute"
   },
-  "finalPrice": "Final Price"
+  "finalPrice": "Final Price",
+  "escrowCard": {
+    "title": "Payment & Escrow",
+    "notPaid": "Buyer has not paid for this order yet. Once paid, escrow details will appear here.",
+    "disputeHeld": "Funds are held due to an active dispute.",
+    "buyerPaid": "Buyer Paid?",
+    "escrowStatus": "Escrow Status",
+    "whyLocked": "Why can't I withdraw?",
+    "buyerGross": "Buyer Paid (gross)",
+    "released": "Released",
+    "estimatedPayout": "Estimated Seller Payout",
+    "platformFee": "Platform Fee 10%",
+    "inspectionFee": "Inspection Fee 3%",
+    "estimatedRelease": "Estimated Release",
+    "decisionWindowEnds": "Decision Window Ends"
+  },
+  "deposits": {
+    "auctionDeposit": "Auction Deposit"
+  },
+  "moneyFlow": {
+    "step1Desc": "When joining an auction, you place a deposit from your wallet. This amount is held — it cannot be spent elsewhere until refunded.",
+    "step2Desc": "You bid or buy now. The deposit remains held throughout the auction. If you lose, the deposit is refunded immediately.",
+    "step3Desc": "If you win, the deposit is deducted from the winning price. You only need to pay the remaining difference.",
+    "step4Desc": "Pay the difference (final price − deposit). Funds are deducted from your wallet or paid via VNPay. The full amount enters escrow.",
+    "step5Desc": "Payment is held in escrow — not transferred to the seller yet. This protects buyers during the inspection and dispute window.",
+    "step6Desc": "After the buyer confirms receipt (or the dispute window expires), escrow funds are released to the seller, minus platform fees."
+  }
 }

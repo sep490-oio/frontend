@@ -23,7 +23,7 @@ export default function ResetPasswordPage() {
   const resetPasswordSchema = useMemo(() => z
     .object({
       newPassword: createPasswordSchema(tv),
-      confirmPassword: z.string().min(1, tv('required', 'Trường này là bắt buộc')),
+      confirmPassword: z.string().min(1, tv('required', 'This field is required')),
     })
     .refine((data) => data.newPassword === data.confirmPassword, {
       message: t('passwordMismatch', 'Mật khẩu không khớp'),

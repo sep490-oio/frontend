@@ -11,22 +11,22 @@ import { ReferenceTitle } from './ReferenceTitle'
 import { FilterOutlined } from '@ant-design/icons'
 
 const LEDGER_STATUS_CONFIG: Record<WalletLedgerStatus, { color: string; key: string; fallback: string }> = {
-  posted: { color: 'success', key: 'ledgerStatus.posted', fallback: 'Đã ghi nhận' },
-  pending: { color: 'warning', key: 'ledgerStatus.pending', fallback: 'Đang xử lý' },
-  failed: { color: 'error', key: 'ledgerStatus.failed', fallback: 'Thất bại' },
-  reversed: { color: 'processing', key: 'ledgerStatus.reversed', fallback: 'Đã đảo giao dịch' },
+  posted: { color: 'success', key: 'ledgerStatus.posted', fallback: 'Posted' },
+  pending: { color: 'warning', key: 'ledgerStatus.pending', fallback: 'Pending' },
+  failed: { color: 'error', key: 'ledgerStatus.failed', fallback: 'Failed' },
+  reversed: { color: 'processing', key: 'ledgerStatus.reversed', fallback: 'Reversed' },
 }
 
 const EVENT_TYPE_CONFIG: Record<WalletEventType, { fallback: string }> = {
-  wallet_top_up: { fallback: 'Nạp tiền vào ví' },
-  auction_deposit_hold: { fallback: 'Đặt cọc đấu giá' },
-  auction_deposit_refund: { fallback: 'Hoàn cọc đấu giá' },
-  order_payment: { fallback: 'Thanh toán đơn hàng' },
-  order_refund: { fallback: 'Hoàn tiền đơn hàng' },
-  withdrawal_hold: { fallback: 'Giữ tiền chờ rút' },
-  withdrawal_release: { fallback: 'Rút tiền' },
-  seller_payout: { fallback: 'Nhận thanh toán bán hàng' },
-  fee: { fallback: 'Phí giao dịch' },
+  wallet_top_up: { fallback: 'Wallet Top-up' },
+  auction_deposit_hold: { fallback: 'Auction Deposit' },
+  auction_deposit_refund: { fallback: 'Deposit Refund' },
+  order_payment: { fallback: 'Order Payment' },
+  order_refund: { fallback: 'Order Refund' },
+  withdrawal_hold: { fallback: 'Withdrawal Hold' },
+  withdrawal_release: { fallback: 'Withdrawal' },
+  seller_payout: { fallback: 'Seller Payout' },
+  fee: { fallback: 'Transaction Fee' },
 }
 
 export interface TransactionTableProps {

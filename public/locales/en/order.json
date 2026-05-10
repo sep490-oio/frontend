@@ -338,5 +338,11 @@
     "acceptItem": "Inspected and Accept Item",
     "reportIssue": "Report Issue / Open Dispute",
     "scanParcelQr": "Scan Parcel QR"
+  },
+  "detail": {
+    "manualReview": "Order is under manual review",
+    "receivedPackage": "Package received",
+    "inspectedAccepted": "Inspected and accepted",
+    "confirmAccept": "Confirm that you have inspected and accepted the item? Funds will be released to the seller."
   }
 }

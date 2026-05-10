@@ -113,6 +113,7 @@ export default function CreateAuctionPage() {
 
   const [form] = Form.useForm<FormValues>()
   const watchedAuctionType = Form.useWatch('auctionType', form)
+  const watchedStartingPrice = Form.useWatch('startingPrice', form)
   const isSealed = watchedAuctionType === AuctionType.Sealed
   const createAuction = useCreateAuction()
   const createAuctionFromItem = useCreateAuctionFromItem()
@@ -709,15 +710,18 @@ export default function CreateAuctionPage() {
             <Form.Item
               name="startingPrice"
               label={<span className="oio-label">{t('startingPrice', 'Starting Price')}</span>}
-              rules={[
-                { required: !isSealed, message: t('startingPriceRequired', 'Please enter starting price') },
-                { type: 'number', min: 1, message: t('startingPriceMin', 'Starting price must be greater than 0') },
-              ]}
+              rules={[{
+                validator: (_, value) => {
+                  if (isSealed) return Promise.resolve()
+                  if (value == null || value < 1000) return Promise.reject(t('startingPriceMin1000', 'Starting price must be at least 1,000'))
+                  return Promise.resolve()
+                },
+              }]}
             >
               <InputNumber
                 style={{ width: '100%', fontSize: 16 }}
                 size="large"
-                min={1}
+                min={1000}
                 step={1000}
                 addonAfter={DEFAULT_CURRENCY}
                 placeholder="0"
@@ -732,10 +736,13 @@ export default function CreateAuctionPage() {
             <Form.Item
               name="bidIncrement"
               label={<span className="oio-label">{t('bidIncrement', 'Bid Increment')}</span>}
-              rules={[
-                { required: !isSealed, message: t('bidIncrementRequired', 'Please enter bid increment') },
-                { type: 'number', min: 1, message: t('bidIncrementMin', 'Bid increment must be > 0') },
-              ]}
+              rules={[{
+                validator: (_, value) => {
+                  if (isSealed) return Promise.resolve()
+                  if (value == null || value < 1000) return Promise.reject(t('bidIncrementMin1000', 'Bid increment must be at least 1,000'))
+                  return Promise.resolve()
+                },
+              }]}
             >
               <InputNumber
                 style={{ width: '100%' }}
@@ -754,7 +761,20 @@ export default function CreateAuctionPage() {
           )}
 
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 0 : 24 }}>
-            <Form.Item name="reservePrice" label={<span className="oio-label">{t('reservePrice', 'Reserve Price')}</span>}>
+            <Form.Item
+              name="reservePrice"
+              label={<span className="oio-label">{t('reservePrice', 'Reserve Price')}</span>}
+              extra={t('reservePriceHelp', 'Auction only succeeds if this price is met.')}
+              rules={[{
+                validator: (_, value) => {
+                  if (value == null || value === 0) return Promise.resolve()
+                  if (value < 1000) return Promise.reject(t('reservePriceMin1000', 'Reserve price must be at least 1,000'))
+                  const sp = watchedStartingPrice ?? 0
+                  if (value < sp) return Promise.reject(t('reservePriceGteStarting', 'Reserve price must be ≥ starting price'))
+                  return Promise.resolve()
+                },
+              }]}
+            >
               <InputNumber
                 style={{ width: '100%', fontSize: 16 }}
                 size="large"
@@ -773,21 +793,23 @@ export default function CreateAuctionPage() {
             <Form.Item
               name="buyNowPrice"
               label={<span className="oio-label">{t('buyNowPrice', 'Buy Now Price')}</span>}
-              rules={[
-                {
-                  validator: (_, value) => {
-                    if (value != null && value <= 0) {
-                      return Promise.reject(t('buyNowPriceMin', 'Buy now price must be greater than 0'))
-                    }
-                    return Promise.resolve()
-                  },
+              extra={t('buyNowPriceHelp', 'Allows buyers to purchase instantly and end the auction.')}
+              rules={[{
+                validator: (_, value) => {
+                  if (value == null || value === 0) return Promise.resolve()
+                  if (value < 1000) return Promise.reject(t('buyNowPriceMin1000', 'Buy now price must be at least 1,000'))
+                  if (!isSealed) {
+                    const sp = watchedStartingPrice ?? 0
+                    if (value <= sp) return Promise.reject(t('buyNowPriceGtStarting', 'Buy now price must be greater than starting price'))
+                  }
+                  return Promise.resolve()
                 },
-              ]}
+              }]}
             >
               <InputNumber
                 style={{ width: '100%', fontSize: 16 }}
                 size="large"
-                min={1}
+                min={1000}
                 step={1000}
                 addonAfter={DEFAULT_CURRENCY}
                 placeholder={t('buyNowPricePlaceholder', 'Optional')}

@@ -53,10 +53,10 @@ import type { ColumnsType } from 'antd/es/table'
 function holdReasonLabel(t: ReturnType<typeof useTranslation>['t'], reason: string | null): string {
   if (!reason) return ''
   const known: Record<string, string> = {
-    awaiting_delivery: t('sellerFinance.holdReason.awaitingDelivery', 'Đang chờ giao hàng'),
-    awaiting_acceptance: t('sellerFinance.holdReason.awaitingAcceptance', 'Đang chờ buyer xác nhận'),
-    frozen_by_dispute: t('sellerFinance.holdReason.frozenByDispute', 'Tạm khóa do tranh chấp'),
-    inspection_in_progress: t('sellerFinance.holdReason.inspectionInProgress', 'Đang kiểm định'),
+    awaiting_delivery: t('sellerFinance.holdReason.awaitingDelivery', 'Awaiting delivery'),
+    awaiting_acceptance: t('sellerFinance.holdReason.awaitingAcceptance', 'Awaiting buyer confirmation'),
+    frozen_by_dispute: t('sellerFinance.holdReason.frozenByDispute', 'Frozen by dispute'),
+    inspection_in_progress: t('sellerFinance.holdReason.inspectionInProgress', 'Inspection in progress'),
   }
   return known[reason] ?? reason
 }
@@ -223,7 +223,7 @@ export default function SellerWalletPage() {
       title: (
         <Space size={4}>
           {t('sellerFinance.col.netPayout', 'Net payout')}
-          <Tooltip title={t('sellerFinance.tooltip.estimate', 'Đây là số ước tính. Số thực tế sẽ được hiển thị sau khi giao dịch hoàn tất.')}>
+          <Tooltip title={t('sellerFinance.tooltip.estimate', 'This is an estimate. Actual amounts will be shown after the transaction is finalized.')}>
             <InfoCircleOutlined style={{ fontSize: 11, color: 'var(--color-text-tertiary)' }} />
           </Tooltip>
         </Space>
@@ -242,7 +242,7 @@ export default function SellerWalletPage() {
             </span>
             <Typography.Text type="secondary" style={{ fontSize: 10 }}>
               {isReleased
-                ? t('sellerFinance.label.released', 'Đã release')
+                ? t('sellerFinance.label.released', 'Released')
                 : t('sellerFinance.label.estimate', '(estimate)')}
             </Typography.Text>
           </Space>
@@ -303,41 +303,41 @@ export default function SellerWalletPage() {
         <Col xs={24} sm={12} md={6}>
           <BalanceCard
             loading={overviewLoading}
-            title={t('sellerFinance.cards.withdrawable', 'Có thể rút')}
+            title={t('sellerFinance.cards.withdrawable', 'Withdrawable')}
             value={overview?.withdrawableBalance ?? 0}
             currency={currency}
             color="var(--color-success)"
-            helpText={t('sellerFinance.cards.withdrawableHelp', 'Số tiền có thể rút về tài khoản ngân hàng.')}
+            helpText={t('sellerFinance.cards.withdrawableHelp', 'Amount available to withdraw to your bank account.')}
           />
         </Col>
         <Col xs={24} sm={12} md={6}>
           <BalanceCard
             loading={overviewLoading}
-            title={t('sellerFinance.cards.holding', 'Sàn đang giữ')}
+            title={t('sellerFinance.cards.holding', 'Platform Holding')}
             value={overview?.grossEscrowHolding ?? 0}
             currency={currency}
             color="#d48806"
-            helpText={t('sellerFinance.cards.holdingHelp', 'Buyer đã thanh toán nhưng chưa được release sang ví.')}
+            helpText={t('sellerFinance.cards.holdingHelp', 'Buyer has paid but funds are not yet released to your wallet.')}
           />
         </Col>
         <Col xs={24} sm={12} md={6}>
           <BalanceCard
             loading={overviewLoading}
-            title={t('sellerFinance.cards.expected', 'Dự kiến nhận (estimate)')}
+            title={t('sellerFinance.cards.expected', 'Expected Payout (estimate)')}
             value={overview?.estimatedSellerNetPayout ?? 0}
             currency={currency}
             color="var(--color-text-primary)"
-            helpText={t('sellerFinance.cards.expectedHelp', '= gross − phí sàn 10% − phí kiểm định 3% (nếu có).')}
+            helpText={t('sellerFinance.cards.expectedHelp', '= gross − 10% platform fee − 3% inspection fee (if applicable).')}
           />
         </Col>
         <Col xs={24} sm={12} md={6}>
           <BalanceCard
             loading={overviewLoading}
-            title={t('sellerFinance.cards.pendingFees', 'Phí/khấu trừ đang chờ')}
+            title={t('sellerFinance.cards.pendingFees', 'Pending Fees/Deductions')}
             value={pendingFees}
             currency={currency}
             color="var(--color-danger)"
-            helpText={t('sellerFinance.cards.pendingFeesHelp', 'Tổng phí sàn + phí kiểm định + phí seller đang chờ.')}
+            helpText={t('sellerFinance.cards.pendingFeesHelp', 'Total platform + inspection + pending seller fees.')}
           />
         </Col>
       </Row>
@@ -382,10 +382,10 @@ export default function SellerWalletPage() {
               children:
                 ledgerRows.length === 0 && !ledgerLoading ? (
                   <EmptyState
-                    title={t('sellerFinance.empty.noEscrowTitle', 'Chưa có giao dịch escrow')}
+                    title={t('sellerFinance.empty.noEscrowTitle', 'No escrow transactions yet')}
                     description={t(
                       'sellerFinance.empty.noEscrow',
-                      'Chưa có giao dịch escrow nào — khi buyer thanh toán đơn hàng đầu tiên, tiền sẽ hiển thị tại đây.',
+                      'No escrow transactions yet — when a buyer pays for your first order, funds will appear here.',
                     )}
                   />
                 ) : (
@@ -430,7 +430,7 @@ export default function SellerWalletPage() {
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                             <Typography.Text type="secondary" style={{ fontSize: 11 }}>
                               {isReleased
-                                ? t('sellerFinance.label.released', 'Đã release')
+                                ? t('sellerFinance.label.released', 'Released')
                                 : t('sellerFinance.label.estimate', '(estimate)')}
                             </Typography.Text>
                             <span style={{ fontFamily: MONO_FONT, fontWeight: 700 }}>
@@ -463,10 +463,10 @@ export default function SellerWalletPage() {
                   <Alert
                     type="info"
                     showIcon
-                    message={t('sellerFinance.fees.explainTitle', 'Cách tính phí')}
+                    message={t('sellerFinance.fees.explainTitle', 'Fee Calculation')}
                     description={t(
                       'sellerFinance.fees.explainBody',
-                      'Phí sàn 10% áp dụng cho mọi đơn hàng. Phí kiểm định 3% chỉ áp dụng cho item đã được sàn xác minh, và được giới hạn tối đa 625.000 VND/đơn.',
+                      'Platform fee of 10% applies to all orders. Inspection fee of 3% only applies to platform-verified items, capped at 625,000 VND/order.',
                     )}
                   />
                   <Descriptions
@@ -475,12 +475,12 @@ export default function SellerWalletPage() {
                     size="small"
                     styles={{ label: { width: 280 } }}
                   >
-                    <Descriptions.Item label={t('sellerFinance.fees.platform', 'Tổng phí sàn 10% pending')}>
+                    <Descriptions.Item label={t('sellerFinance.fees.platform', 'Total 10% Platform Fee (pending)')}>
                       <span style={{ fontFamily: MONO_FONT, fontWeight: 600 }}>
                         {formatCurrency(overview.estimatedPlatformCommission, overview.currency)}
                       </span>
                     </Descriptions.Item>
-                    <Descriptions.Item label={t('sellerFinance.fees.inspection', 'Tổng phí kiểm định 3%')}>
+                    <Descriptions.Item label={t('sellerFinance.fees.inspection', 'Total 3% Inspection Fee')}>
                       <span style={{ fontFamily: MONO_FONT, fontWeight: 600 }}>
                         {formatCurrency(overview.estimatedInspectionFee, overview.currency)}
                       </span>
@@ -490,21 +490,21 @@ export default function SellerWalletPage() {
                       >
                         {t(
                           'sellerFinance.fees.inspectionNote',
-                          'Chỉ áp dụng cho item có "Sàn xác minh".',
+                          'Only applies to platform-verified items.',
                         )}
                       </Typography.Text>
                     </Descriptions.Item>
-                    <Descriptions.Item label={t('sellerFinance.fees.pendingCharges', 'Phí seller đang chờ')}>
+                    <Descriptions.Item label={t('sellerFinance.fees.pendingCharges', 'Pending Seller Fees')}>
                       <span style={{ fontFamily: MONO_FONT, fontWeight: 600 }}>
                         {formatCurrency(overview.pendingSellerFeeCharges, overview.currency)}
                       </span>
                     </Descriptions.Item>
-                    <Descriptions.Item label={t('sellerFinance.fees.disputed', 'Đang tranh chấp')}>
+                    <Descriptions.Item label={t('sellerFinance.fees.disputed', 'In Dispute')}>
                       <span style={{ fontFamily: MONO_FONT, fontWeight: 600 }}>
                         {formatCurrency(overview.disputedEscrowAmount, overview.currency)}
                       </span>
                     </Descriptions.Item>
-                    <Descriptions.Item label={t('sellerFinance.fees.readyToRelease', 'Sẵn sàng release')}>
+                    <Descriptions.Item label={t('sellerFinance.fees.readyToRelease', 'Ready to Release')}>
                       <span style={{ fontFamily: MONO_FONT, fontWeight: 600 }}>
                         {formatCurrency(overview.readyToReleaseAmount, overview.currency)}
                       </span>
@@ -622,13 +622,13 @@ export default function SellerWalletPage() {
                   {formatCurrency(activeRow.grossPaidAmount, activeRow.currency)}
                 </span>
               </Descriptions.Item>
-              <Descriptions.Item label={t('sellerFinance.drawer.platformCommission', 'Phí sàn 10%')}>
+              <Descriptions.Item label={t('sellerFinance.drawer.platformCommission', 'Platform Fee 10%')}>
                 <span style={{ fontFamily: MONO_FONT, fontWeight: 600 }}>
                   −{formatCurrency(activeRow.platformCommissionAmount, activeRow.currency)}
                 </span>
               </Descriptions.Item>
               {activeRow.isPlatformVerifiedItem && (
-                <Descriptions.Item label={t('sellerFinance.drawer.inspectionFee', 'Phí kiểm định 3%')}>
+                <Descriptions.Item label={t('sellerFinance.drawer.inspectionFee', 'Inspection Fee 3%')}>
                   <span style={{ fontFamily: MONO_FONT, fontWeight: 600 }}>
                     −{formatCurrency(activeRow.inspectionFeeAmount, activeRow.currency)}
                   </span>
@@ -645,7 +645,7 @@ export default function SellerWalletPage() {
                 </span>
                 <Typography.Text type="secondary" style={{ display: 'block', fontSize: 11 }}>
                   {activeRow.escrowStatus === 'ReleasedToSeller'
-                    ? t('sellerFinance.label.released', 'Đã release')
+                    ? t('sellerFinance.label.released', 'Released')
                     : t('sellerFinance.label.estimate', '(estimate)')}
                 </Typography.Text>
               </Descriptions.Item>
@@ -676,7 +676,7 @@ export default function SellerWalletPage() {
               onClick={() => navigate(`/seller/orders/${activeRow.orderId}`)}
               style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
             >
-              {t('sellerFinance.action.openOrder', 'Mở chi tiết đơn hàng')}
+              {t('sellerFinance.action.openOrder', 'Open Order Details')}
             </Button>
           </div>
         )}

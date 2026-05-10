@@ -244,7 +244,9 @@
     "resolutionStatus": {
       "resolved": "Đã giải quyết",
       "dismissed": "Đã bác bỏ"
-    }
+    },
+    "cancelBidWarning": "Hành động này sẽ hủy bid và được ghi audit. Lý do hủy sẽ được lưu lại.",
+    "cancelBidPlaceholder": "Nhập lý do hủy bid (sẽ lưu vào audit log)…"
   },
   "reports": {
     "title": "Báo cáo vi phạm",
@@ -496,178 +498,424 @@
     },
     "users": {
       "me": {
-        "read": { "label": "Xem tài khoản của tôi", "description": "Đọc thông tin tài khoản cơ bản" },
+        "read": {
+          "label": "Xem tài khoản của tôi",
+          "description": "Đọc thông tin tài khoản cơ bản"
+        },
         "profile": {
-          "read": { "label": "Xem hồ sơ của tôi", "description": "Đọc chi tiết hồ sơ cá nhân" },
-          "update": { "label": "Cập nhật hồ sơ của tôi", "description": "Chỉnh sửa thông tin hồ sơ cá nhân" }
+          "read": {
+            "label": "Xem hồ sơ của tôi",
+            "description": "Đọc chi tiết hồ sơ cá nhân"
+          },
+          "update": {
+            "label": "Cập nhật hồ sơ của tôi",
+            "description": "Chỉnh sửa thông tin hồ sơ cá nhân"
+          }
         },
         "password": {
-          "change": { "label": "Đổi mật khẩu", "description": "Cập nhật mật khẩu tài khoản" }
+          "change": {
+            "label": "Đổi mật khẩu",
+            "description": "Cập nhật mật khẩu tài khoản"
+          }
         },
         "sessions": {
-          "read": { "label": "Xem phiên đăng nhập", "description": "Xem các phiên đăng nhập đang hoạt động" }
+          "read": {
+            "label": "Xem phiên đăng nhập",
+            "description": "Xem các phiên đăng nhập đang hoạt động"
+          }
         },
-        "login-history": { "label": "Xem lịch sử đăng nhập", "description": "Xem hoạt động đăng nhập gần đây" },
+        "login-history": {
+          "label": "Xem lịch sử đăng nhập",
+          "description": "Xem hoạt động đăng nhập gần đây"
+        },
         "2fa": {
-          "manage": { "label": "Quản lý xác thực 2 lớp", "description": "Bật hoặc tắt xác thực hai yếu tố" }
+          "manage": {
+            "label": "Quản lý xác thực 2 lớp",
+            "description": "Bật hoặc tắt xác thực hai yếu tố"
+          }
         },
         "phone": {
-          "manage": { "label": "Quản lý số điện thoại", "description": "Thêm hoặc xác minh số điện thoại" }
+          "manage": {
+            "label": "Quản lý số điện thoại",
+            "description": "Thêm hoặc xác minh số điện thoại"
+          }
         },
         "address": {
-          "read": { "label": "Xem địa chỉ của tôi", "description": "Xem các địa chỉ giao hàng đã lưu" },
-          "manage": { "label": "Quản lý địa chỉ của tôi", "description": "Thêm hoặc chỉnh sửa địa chỉ giao hàng" }
+          "read": {
+            "label": "Xem địa chỉ của tôi",
+            "description": "Xem các địa chỉ giao hàng đã lưu"
+          },
+          "manage": {
+            "label": "Quản lý địa chỉ của tôi",
+            "description": "Thêm hoặc chỉnh sửa địa chỉ giao hàng"
+          }
         },
         "terms": {
-          "read": { "label": "Xem điều khoản", "description": "Đọc điều khoản dịch vụ hiện hành" },
-          "accept": { "label": "Chấp nhận điều khoản", "description": "Xác nhận đồng ý với điều khoản nền tảng" }
+          "read": {
+            "label": "Xem điều khoản",
+            "description": "Đọc điều khoản dịch vụ hiện hành"
+          },
+          "accept": {
+            "label": "Chấp nhận điều khoản",
+            "description": "Xác nhận đồng ý với điều khoản nền tảng"
+          }
         },
         "verification": {
-          "read": { "label": "Xem xác minh của tôi", "description": "Xem trạng thái xác minh danh tính" },
-          "manage": { "label": "Quản lý xác minh của tôi", "description": "Gửi hoặc cập nhật giấy tờ xác minh" }
+          "read": {
+            "label": "Xem xác minh của tôi",
+            "description": "Xem trạng thái xác minh danh tính"
+          },
+          "manage": {
+            "label": "Quản lý xác minh của tôi",
+            "description": "Gửi hoặc cập nhật giấy tờ xác minh"
+          }
         },
         "seller-profile": {
-          "read": { "label": "Xem hồ sơ người bán của tôi", "description": "Xem chi tiết hồ sơ người bán" },
-          "manage": { "label": "Quản lý hồ sơ người bán của tôi", "description": "Tạo hoặc cập nhật hồ sơ người bán" }
+          "read": {
+            "label": "Xem hồ sơ người bán của tôi",
+            "description": "Xem chi tiết hồ sơ người bán"
+          },
+          "manage": {
+            "label": "Quản lý hồ sơ người bán của tôi",
+            "description": "Tạo hoặc cập nhật hồ sơ người bán"
+          }
         },
         "notification-preferences": {
-          "read": { "label": "Xem thiết lập thông báo", "description": "Xem tùy chọn thông báo cá nhân" },
-          "manage": { "label": "Quản lý thiết lập thông báo", "description": "Cập nhật tùy chọn thông báo" }
+          "read": {
+            "label": "Xem thiết lập thông báo",
+            "description": "Xem tùy chọn thông báo cá nhân"
+          },
+          "manage": {
+            "label": "Quản lý thiết lập thông báo",
+            "description": "Cập nhật tùy chọn thông báo"
+          }
         }
       }
     },
     "me": {
       "auctions": {
-        "read": { "label": "Xem phiên đấu giá của tôi", "description": "Xem các phiên đấu giá do tôi tạo" }
+        "read": {
+          "label": "Xem phiên đấu giá của tôi",
+          "description": "Xem các phiên đấu giá do tôi tạo"
+        }
       },
       "bids": {
-        "read": { "label": "Xem lượt đặt giá của tôi", "description": "Xem lịch sử đặt giá" }
+        "read": {
+          "label": "Xem lượt đặt giá của tôi",
+          "description": "Xem lịch sử đặt giá"
+        }
       },
       "watchlist": {
-        "read": { "label": "Xem danh sách theo dõi", "description": "Xem các phiên đấu giá đang theo dõi" }
+        "read": {
+          "label": "Xem danh sách theo dõi",
+          "description": "Xem các phiên đấu giá đang theo dõi"
+        }
       },
       "orders": {
         "direct-ship": {
-          "read": { "label": "Xem đơn giao trực tiếp", "description": "Xem các đơn giao trực tiếp của tôi" }
+          "read": {
+            "label": "Xem đơn giao trực tiếp",
+            "description": "Xem các đơn giao trực tiếp của tôi"
+          }
         }
       },
       "shipments": {
         "outbound": {
-          "read": { "label": "Xem vận đơn xuất", "description": "Xem các vận đơn xuất của tôi" }
+          "read": {
+            "label": "Xem vận đơn xuất",
+            "description": "Xem các vận đơn xuất của tôi"
+          }
         },
         "inbound": {
-          "read": { "label": "Xem vận đơn nhập", "description": "Xem các vận đơn nhập của tôi" }
+          "read": {
+            "label": "Xem vận đơn nhập",
+            "description": "Xem các vận đơn nhập của tôi"
+          }
         }
       }
     },
     "items": {
-      "create": { "label": "Tạo sản phẩm", "description": "Đăng sản phẩm mới" },
-      "activate": { "label": "Kích hoạt sản phẩm", "description": "Xuất bản sản phẩm ra danh mục" },
-      "resubmit": { "label": "Gửi lại sản phẩm bị từ chối", "description": "Gửi lại sản phẩm bị từ chối để duyệt" },
+      "create": {
+        "label": "Tạo sản phẩm",
+        "description": "Đăng sản phẩm mới"
+      },
+      "activate": {
+        "label": "Kích hoạt sản phẩm",
+        "description": "Xuất bản sản phẩm ra danh mục"
+      },
+      "resubmit": {
+        "label": "Gửi lại sản phẩm bị từ chối",
+        "description": "Gửi lại sản phẩm bị từ chối để duyệt"
+      },
       "my": {
-        "read": { "label": "Xem sản phẩm của tôi", "description": "Xem các sản phẩm do tôi đăng" }
+        "read": {
+          "label": "Xem sản phẩm của tôi",
+          "description": "Xem các sản phẩm do tôi đăng"
+        }
       },
       "media": {
-        "manage": { "label": "Quản lý ảnh sản phẩm", "description": "Tải lên hoặc xóa ảnh sản phẩm" }
+        "manage": {
+          "label": "Quản lý ảnh sản phẩm",
+          "description": "Tải lên hoặc xóa ảnh sản phẩm"
+        }
       },
       "questions": {
-        "ask": { "label": "Đặt câu hỏi sản phẩm", "description": "Đăng câu hỏi trên trang sản phẩm" },
-        "answer": { "label": "Trả lời câu hỏi sản phẩm", "description": "Trả lời câu hỏi với vai trò người bán" }
+        "ask": {
+          "label": "Đặt câu hỏi sản phẩm",
+          "description": "Đăng câu hỏi trên trang sản phẩm"
+        },
+        "answer": {
+          "label": "Trả lời câu hỏi sản phẩm",
+          "description": "Trả lời câu hỏi với vai trò người bán"
+        }
       }
     },
     "auctions": {
-      "create": { "label": "Tạo phiên đấu giá", "description": "Thiết lập phiên đấu giá mới" },
-      "submit": { "label": "Gửi phiên đấu giá", "description": "Gửi phiên đấu giá để duyệt" },
-      "cancel": { "label": "Hủy phiên đấu giá của mình", "description": "Hủy phiên đấu giá do mình tạo" },
-      "bid": { "label": "Đặt giá", "description": "Tham gia đấu giá với vai trò người mua" },
-      "buy-now": { "label": "Mua ngay", "description": "Mua sản phẩm đấu giá ngay lập tức" },
-      "auto-bid": { "label": "Đặt giá tự động", "description": "Bật đặt giá tự động tới mức tối đa" },
-      "auto-bid:read": { "label": "Xem đặt giá tự động", "description": "Xem cấu hình đặt giá tự động" },
-      "watch": { "label": "Theo dõi phiên đấu giá", "description": "Thêm phiên đấu giá vào danh sách theo dõi" },
-      "unwatch": { "label": "Bỏ theo dõi phiên đấu giá", "description": "Xóa khỏi danh sách theo dõi" }
+      "create": {
+        "label": "Tạo phiên đấu giá",
+        "description": "Thiết lập phiên đấu giá mới"
+      },
+      "submit": {
+        "label": "Gửi phiên đấu giá",
+        "description": "Gửi phiên đấu giá để duyệt"
+      },
+      "cancel": {
+        "label": "Hủy phiên đấu giá của mình",
+        "description": "Hủy phiên đấu giá do mình tạo"
+      },
+      "bid": {
+        "label": "Đặt giá",
+        "description": "Tham gia đấu giá với vai trò người mua"
+      },
+      "buy-now": {
+        "label": "Mua ngay",
+        "description": "Mua sản phẩm đấu giá ngay lập tức"
+      },
+      "auto-bid": {
+        "label": "Đặt giá tự động",
+        "description": "Bật đặt giá tự động tới mức tối đa"
+      },
+      "auto-bid:read": {
+        "label": "Xem đặt giá tự động",
+        "description": "Xem cấu hình đặt giá tự động"
+      },
+      "watch": {
+        "label": "Theo dõi phiên đấu giá",
+        "description": "Thêm phiên đấu giá vào danh sách theo dõi"
+      },
+      "unwatch": {
+        "label": "Bỏ theo dõi phiên đấu giá",
+        "description": "Xóa khỏi danh sách theo dõi"
+      }
     },
     "warehouse": {
       "inbound": {
-        "book": { "label": "Đặt nhập kho", "description": "Lên lịch nhập kiện hàng vào kho" },
-        "update-external-status": { "label": "Cập nhật trạng thái nhập bên ngoài", "description": "Thủ công cập nhật trạng thái nhà vận chuyển bên ngoài" }
+        "book": {
+          "label": "Đặt nhập kho",
+          "description": "Lên lịch nhập kiện hàng vào kho"
+        },
+        "update-external-status": {
+          "label": "Cập nhật trạng thái nhập bên ngoài",
+          "description": "Thủ công cập nhật trạng thái nhà vận chuyển bên ngoài"
+        }
       },
       "outbound": {
-        "book": { "label": "Đặt xuất kho", "description": "Lên lịch kiện hàng rời kho" },
-        "self-ship": { "label": "Tự vận chuyển xuất kho", "description": "Xuất kho bằng vận chuyển bên ngoài" },
-        "cancel": { "label": "Hủy xuất kho", "description": "Hủy vận đơn xuất đang chờ" }
+        "book": {
+          "label": "Đặt xuất kho",
+          "description": "Lên lịch kiện hàng rời kho"
+        },
+        "self-ship": {
+          "label": "Tự vận chuyển xuất kho",
+          "description": "Xuất kho bằng vận chuyển bên ngoài"
+        },
+        "cancel": {
+          "label": "Hủy xuất kho",
+          "description": "Hủy vận đơn xuất đang chờ"
+        }
       },
       "item": {
-        "inspect": { "label": "Kiểm tra hàng trong kho", "description": "Xem xét và kiểm tra hàng lưu kho" },
-        "store": { "label": "Lưu hàng vào kho", "description": "Gán hàng vào vị trí lưu kho" },
-        "move": { "label": "Chuyển hàng", "description": "Chuyển hàng giữa các vị trí lưu kho" },
-        "adjust": { "label": "Điều chỉnh hàng", "description": "Sửa thông tin hoặc ghi chú tình trạng hàng" }
+        "inspect": {
+          "label": "Kiểm tra hàng trong kho",
+          "description": "Xem xét và kiểm tra hàng lưu kho"
+        },
+        "store": {
+          "label": "Lưu hàng vào kho",
+          "description": "Gán hàng vào vị trí lưu kho"
+        },
+        "move": {
+          "label": "Chuyển hàng",
+          "description": "Chuyển hàng giữa các vị trí lưu kho"
+        },
+        "adjust": {
+          "label": "Điều chỉnh hàng",
+          "description": "Sửa thông tin hoặc ghi chú tình trạng hàng"
+        }
       },
       "locations": {
-        "manage": { "label": "Quản lý vị trí lưu kho", "description": "Tạo hoặc xóa vị trí lưu kho" }
+        "manage": {
+          "label": "Quản lý vị trí lưu kho",
+          "description": "Tạo hoặc xóa vị trí lưu kho"
+        }
       },
       "shipments": {
-        "read": { "label": "Xem vận đơn kho", "description": "Đọc các bản ghi vận đơn nhập/xuất" }
+        "read": {
+          "label": "Xem vận đơn kho",
+          "description": "Đọc các bản ghi vận đơn nhập/xuất"
+        }
       },
       "shipping": {
-        "calculate-fee": { "label": "Tính phí vận chuyển", "description": "Truy vấn cước phí nhà vận chuyển" },
-        "calculate-lead-time": { "label": "Tính thời gian giao", "description": "Truy vấn thời gian giao dự kiến" }
+        "calculate-fee": {
+          "label": "Tính phí vận chuyển",
+          "description": "Truy vấn cước phí nhà vận chuyển"
+        },
+        "calculate-lead-time": {
+          "label": "Tính thời gian giao",
+          "description": "Truy vấn thời gian giao dự kiến"
+        }
       },
       "address": {
-        "sync": { "label": "Đồng bộ địa chỉ nhà vận chuyển", "description": "Đồng bộ dữ liệu địa chỉ với API nhà vận chuyển" }
+        "sync": {
+          "label": "Đồng bộ địa chỉ nhà vận chuyển",
+          "description": "Đồng bộ dữ liệu địa chỉ với API nhà vận chuyển"
+        }
       }
     },
     "media": {
       "contexts": {
-        "read": { "label": "Xem ngữ cảnh tải lên", "description": "Xem các ngữ cảnh tải media khả dụng" }
+        "read": {
+          "label": "Xem ngữ cảnh tải lên",
+          "description": "Xem các ngữ cảnh tải media khả dụng"
+        }
       },
-      "upload": { "label": "Tải tệp lên", "description": "Tải ảnh và tài liệu" },
-      "upload:confirm": { "label": "Xác nhận tải lên", "description": "Hoàn tất quá trình tải media" }
+      "upload": {
+        "label": "Tải tệp lên",
+        "description": "Tải ảnh và tài liệu"
+      },
+      "upload:confirm": {
+        "label": "Xác nhận tải lên",
+        "description": "Hoàn tất quá trình tải media"
+      }
     },
     "categories": {
-      "create": { "label": "Tạo danh mục", "description": "Thêm danh mục sản phẩm mới" },
-      "update": { "label": "Cập nhật danh mục", "description": "Chỉnh sửa danh mục hiện có" }
+      "create": {
+        "label": "Tạo danh mục",
+        "description": "Thêm danh mục sản phẩm mới"
+      },
+      "update": {
+        "label": "Cập nhật danh mục",
+        "description": "Chỉnh sửa danh mục hiện có"
+      }
     },
     "admin": {
       "users": {
-        "read": { "label": "Xem người dùng", "description": "Xem danh sách tất cả tài khoản" },
-        "manage": { "label": "Quản lý người dùng", "description": "Tạo, sửa và khóa tài khoản người dùng" },
-        "delete": { "label": "Xóa người dùng", "description": "Xóa vĩnh viễn tài khoản người dùng" }
+        "read": {
+          "label": "Xem người dùng",
+          "description": "Xem danh sách tất cả tài khoản"
+        },
+        "manage": {
+          "label": "Quản lý người dùng",
+          "description": "Tạo, sửa và khóa tài khoản người dùng"
+        },
+        "delete": {
+          "label": "Xóa người dùng",
+          "description": "Xóa vĩnh viễn tài khoản người dùng"
+        }
       },
       "roles": {
-        "read": { "label": "Xem vai trò", "description": "Xem tất cả vai trò và quyền" },
-        "assign": { "label": "Gán vai trò", "description": "Cấp vai trò cho người dùng" },
-        "revoke": { "label": "Thu hồi vai trò", "description": "Xóa vai trò khỏi người dùng" }
+        "read": {
+          "label": "Xem vai trò",
+          "description": "Xem tất cả vai trò và quyền"
+        },
+        "assign": {
+          "label": "Gán vai trò",
+          "description": "Cấp vai trò cho người dùng"
+        },
+        "revoke": {
+          "label": "Thu hồi vai trò",
+          "description": "Xóa vai trò khỏi người dùng"
+        }
       },
       "permissions": {
-        "read": { "label": "Xem quyền", "description": "Xem định nghĩa tất cả quyền" },
-        "grant": { "label": "Cấp quyền", "description": "Cấp quyền riêng lẻ cho vai trò" },
-        "revoke": { "label": "Thu hồi quyền", "description": "Gỡ quyền khỏi vai trò" },
-        "deny": { "label": "Chặn quyền", "description": "Chặn quyền cụ thể tường minh" },
-        "manage": { "label": "Quản lý quyền", "description": "Toàn quyền với quyền của vai trò" }
+        "read": {
+          "label": "Xem quyền",
+          "description": "Xem định nghĩa tất cả quyền"
+        },
+        "grant": {
+          "label": "Cấp quyền",
+          "description": "Cấp quyền riêng lẻ cho vai trò"
+        },
+        "revoke": {
+          "label": "Thu hồi quyền",
+          "description": "Gỡ quyền khỏi vai trò"
+        },
+        "deny": {
+          "label": "Chặn quyền",
+          "description": "Chặn quyền cụ thể tường minh"
+        },
+        "manage": {
+          "label": "Quản lý quyền",
+          "description": "Toàn quyền với quyền của vai trò"
+        }
       },
       "settings": {
-        "read": { "label": "Xem cấu hình hệ thống", "description": "Đọc cấu hình nền tảng" },
-        "manage": { "label": "Quản lý cấu hình hệ thống", "description": "Cập nhật cấu hình nền tảng" }
+        "read": {
+          "label": "Xem cấu hình hệ thống",
+          "description": "Đọc cấu hình nền tảng"
+        },
+        "manage": {
+          "label": "Quản lý cấu hình hệ thống",
+          "description": "Cập nhật cấu hình nền tảng"
+        }
       },
       "terms": {
-        "read": { "label": "Xem điều khoản nền tảng", "description": "Đọc điều khoản hiện hành và cũ" },
-        "manage": { "label": "Quản lý điều khoản", "description": "Phát hành phiên bản điều khoản mới" }
+        "read": {
+          "label": "Xem điều khoản nền tảng",
+          "description": "Đọc điều khoản hiện hành và cũ"
+        },
+        "manage": {
+          "label": "Quản lý điều khoản",
+          "description": "Phát hành phiên bản điều khoản mới"
+        }
       },
       "verifications": {
-        "read": { "label": "Xem xác minh người dùng", "description": "Xem hàng đợi xác minh danh tính" },
-        "manage": { "label": "Quản lý xác minh người dùng", "description": "Duyệt hoặc từ chối xác minh" }
+        "read": {
+          "label": "Xem xác minh người dùng",
+          "description": "Xem hàng đợi xác minh danh tính"
+        },
+        "manage": {
+          "label": "Quản lý xác minh người dùng",
+          "description": "Duyệt hoặc từ chối xác minh"
+        }
       },
       "seller-profiles": {
-        "read": { "label": "Xem hồ sơ người bán", "description": "Xem tất cả hồ sơ người bán" },
-        "manage": { "label": "Quản lý hồ sơ người bán", "description": "Duyệt hoặc tạm ngưng hồ sơ người bán" }
+        "read": {
+          "label": "Xem hồ sơ người bán",
+          "description": "Xem tất cả hồ sơ người bán"
+        },
+        "manage": {
+          "label": "Quản lý hồ sơ người bán",
+          "description": "Duyệt hoặc tạm ngưng hồ sơ người bán"
+        }
       },
       "items": {
-        "read": { "label": "Xem tất cả sản phẩm", "description": "Xem mọi sản phẩm của tất cả người bán" },
-        "manage": { "label": "Kiểm duyệt sản phẩm", "description": "Duyệt, từ chối hoặc gỡ sản phẩm" }
+        "read": {
+          "label": "Xem tất cả sản phẩm",
+          "description": "Xem mọi sản phẩm của tất cả người bán"
+        },
+        "manage": {
+          "label": "Kiểm duyệt sản phẩm",
+          "description": "Duyệt, từ chối hoặc gỡ sản phẩm"
+        }
       },
       "payments": {
-        "read": { "label": "Xem hoạt động thanh toán", "description": "Xem hoạt động thanh toán nền tảng" },
-        "manage": { "label": "Quản lý hoạt động thanh toán", "description": "Duyệt hoặc hoàn tác thanh toán nền tảng" }
+        "read": {
+          "label": "Xem hoạt động thanh toán",
+          "description": "Xem hoạt động thanh toán nền tảng"
+        },
+        "manage": {
+          "label": "Quản lý hoạt động thanh toán",
+          "description": "Duyệt hoặc hoàn tác thanh toán nền tảng"
+        }
       }
     }
   },
@@ -833,7 +1081,17 @@
         "accepted": "Đã xác nhận",
         "disputed": "Đang tranh chấp",
         "completed": "Hoàn thành"
-      }
+      },
+      "sellerDeclaredShippedAt": "Ngày người bán khai gửi hàng",
+      "sellerPackagePhotos": "Ảnh đóng gói của người bán",
+      "sellerHandoverProofs": "Bằng chứng bàn giao",
+      "buyerDeliveryPhotos": "Ảnh nhận hàng của người mua",
+      "buyerPackageCondition": "Tình trạng kiện hàng",
+      "buyerConditionNotes": "Ghi chú tình trạng",
+      "qrTokenVersion": "Phiên bản mã QR",
+      "qrTokenIssuedAt": "Thời gian phát hành QR",
+      "qrTokenRevokedAt": "Thời gian thu hồi QR",
+      "manualReviewRequired": "Kiện hàng này đã được đánh dấu cần xem xét thủ công"
     }
   },
   "monitoringDrawer": {

@@ -50,8 +50,8 @@ interface Props {
 }
 
 const CARRIER_OPTIONS = [
-  { value: 'ghn', label: 'GHN - Giao Hàng Nhanh' },
-  { value: 'ghtk', label: 'GHTK - Giao Hàng Tiết Kiệm' },
+  { value: 'ghn', label: 'GHN - Express Delivery' },
+  { value: 'ghtk', label: 'GHTK - Economy Delivery' },
   { value: 'viettelpost', label: 'Viettel Post' },
   { value: 'jtexpress', label: 'J&T Express' },
   { value: 'other', label: 'Other / Manual carrier' },

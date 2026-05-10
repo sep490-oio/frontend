@@ -87,7 +87,7 @@ export default function ShippingDetailsForm({ form }: ShippingDetailsFormProps) 
             {shippingMode === 'platform' && (
               <Col span={12}>
                 <Form.Item name="insuranceValue" label={t('insuranceValueLabel', 'Insurance Value (VND)')} rules={[{ required: true, message: t('insuranceValueRequired', 'Required') }]}>
-                  <InputNumber min={0} style={{ width: '100%' }} placeholder={t('insurancePlaceholder', '1000000')} addonAfter="VND" />
+                  <InputNumber min={0} step={1000} style={{ width: '100%' }} placeholder={t('insurancePlaceholder', '1000000')} addonAfter="VND" />
                 </Form.Item>
               </Col>
             )}
@@ -136,7 +136,7 @@ export default function ShippingDetailsForm({ form }: ShippingDetailsFormProps) 
             <Form.Item name="providerCode" label={t('providerCode', 'Carrier')} initialValue="ghn">
               <Select
                 options={[
-                  { value: 'ghn', label: 'GHN - Giao Hàng Nhanh' },
+                  { value: 'ghn', label: 'GHN - Express Delivery' },
                 ]}
               />
             </Form.Item>

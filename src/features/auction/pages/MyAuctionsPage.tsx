@@ -238,7 +238,7 @@ export default function MyAuctionsPage() {
  
   const handleCloseAuction = (id: string) => {
     Modal.confirm({
-      title: t('closeAuctionConfirmTitle', 'Đóng phiên đấu giá?'),
+      title: t('closeAuctionConfirmTitle', 'Close this auction session?'),
       content: t('closeAuctionConfirmDesc', 'Bạn có chắc chắn muốn đóng phiên đấu giá này? Hành động này sẽ kết thúc hoàn toàn quy trình đấu giá.'),
       okText: t('confirm', 'Xác nhận'),
       okType: 'danger',
@@ -673,11 +673,11 @@ export default function MyAuctionsPage() {
       </Modal>
 
       <Modal
-        title={t('relistAuction', 'Đăng lại phiên đấu giá')}
+        title={t('relistAuction', 'Relist auction session')}
         open={relistModalOpen}
         onCancel={() => { setRelistModalOpen(false); setRelistAuctionId(null) }}
         onOk={handleRelistConfirm}
-        okText={t('confirmRelist', 'Đăng lại')}
+        okText={t('confirmRelist', 'Relist')}
         okButtonProps={{
           loading: relistAuction.isPending,
           style: { background: 'var(--color-accent)', borderColor: 'var(--color-accent)', borderRadius: 8 },

@@ -116,9 +116,9 @@ export default function MyItemsPage() {
     sortBy: 'CreatedAt Desc',
     ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
     ...(verifyFilter === 'platform'
-      ? { hasInboundShipment: true }
+      ? { requiresPlatformInspection: true }
       : verifyFilter === 'no_platform'
-      ? { hasInboundShipment: false }
+      ? { requiresPlatformInspection: false }
       : {}),
   }
 

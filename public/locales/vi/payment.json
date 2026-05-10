@@ -290,5 +290,31 @@
     },
     "disputeFrozen": "Frozen by dispute"
   },
-  "finalPrice": "Giá chốt"
+  "finalPrice": "Giá chốt",
+  "escrowCard": {
+    "title": "Thanh toán & Escrow",
+    "notPaid": "Buyer chưa thanh toán đơn hàng này. Khi thanh toán hoàn tất, chi tiết escrow sẽ hiển thị tại đây.",
+    "disputeHeld": "Tiền đang bị giữ do có tranh chấp.",
+    "buyerPaid": "Buyer đã thanh toán?",
+    "escrowStatus": "Trạng thái escrow",
+    "whyLocked": "Vì sao chưa rút được?",
+    "buyerGross": "Buyer trả (gross)",
+    "released": "Đã release",
+    "estimatedPayout": "Dự kiến seller nhận",
+    "platformFee": "Phí sàn 10%",
+    "inspectionFee": "Phí kiểm định 3%",
+    "estimatedRelease": "Dự kiến release",
+    "decisionWindowEnds": "Kết thúc decision window"
+  },
+  "deposits": {
+    "auctionDeposit": "Đặt cọc đấu giá"
+  },
+  "moneyFlow": {
+    "step1Desc": "Khi tham gia đấu giá, bạn đặt cọc từ ví. Số tiền này bị tạm giữ (hold) — không thể dùng cho giao dịch khác cho đến khi hoàn cọc.",
+    "step2Desc": "Bạn đấu giá hoặc mua ngay. Deposit vẫn bị giữ trong suốt phiên đấu giá. Nếu bạn thua, deposit được hoàn ngay.",
+    "step3Desc": "Nếu thắng, deposit được trừ vào giá thanh toán. Bạn chỉ cần thanh toán phần còn lại (chênh lệch).",
+    "step4Desc": "Thanh toán phần chênh lệch (giá cuối − deposit). Tiền được trừ từ ví hoặc qua VNPay. Toàn bộ tiền vào escrow.",
+    "step5Desc": "Tiền thanh toán được giữ trong ký quỹ (escrow) — chưa chuyển cho seller. Bảo vệ buyer trong thời gian kiểm tra và khiếu nại.",
+    "step6Desc": "Sau khi buyer xác nhận nhận hàng (hoặc hết hạn khiếu nại), tiền escrow được giải ngân cho seller, trừ phí sàn."
+  }
 }

@@ -733,8 +733,11 @@ export default function CheckoutPage() {
                   <Flex justify="space-between" align="flex-end">
                     <div>
                       <Typography.Text strong style={{ display: 'block', fontSize: 14 }}>{t('totalToPay', 'Amount Due')}</Typography.Text>
-                      {isWalletSelected && !walletCoversAll && (
+                      {isWalletSelected && !walletCoversAll && walletBalance > 0 && (
                         <Typography.Text type="secondary" style={{ fontSize: 11 }}>{t('payableViaVnpay', 'Payable via VNPay')}</Typography.Text>
+                      )}
+                      {isWalletSelected && walletCoversAll && (
+                        <Typography.Text type="secondary" style={{ fontSize: 11 }}>{t('paidFromWallet', 'Fully covered by wallet')}</Typography.Text>
                       )}
                     </div>
                     <Typography.Text style={{ 
@@ -744,7 +747,12 @@ export default function CheckoutPage() {
                       color: 'var(--color-accent)',
                       lineHeight: 1
                     }}>
-                      {formatCurrency(orderAmount, order.currency)}
+                      {formatCurrency(
+                        isWalletSelected && walletBalance > 0
+                          ? orderAmount - walletPortion
+                          : orderAmount,
+                        order.currency
+                      )}
                     </Typography.Text>
                   </Flex>
                 </Space>

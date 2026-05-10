@@ -15,6 +15,7 @@ import { AuctionType } from '@/types/enums'
 import type { CreateItemRequest } from '@/types'
 import { RichTextEditor } from '@/components/ui/RichTextEditor'
 import { useConditionOptions, useAuctionTypeOptions } from '@/utils/enumLabels'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 
 interface AuctionFields {
   auctionType: string
@@ -62,6 +63,11 @@ export default function CreateItemPage() {
   const canSuggest =
     Boolean((titleValue as string | undefined)?.trim()) &&
     (capturedPhotos.length > 0 || (uploadedMediaIds?.length ?? 0) > 0)
+
+  // Watch auction fields for cross-field validation (mirrors BE AuctionPricing.Create)
+  const watchedAuctionType = Form.useWatch('auctionType', form)
+  const watchedStartingPrice = Form.useWatch('startingPrice', form)
+  const isSealed = watchedAuctionType === AuctionType.Sealed
 
   const categoryOptions = (categories ?? []).map((cat) => ({
     label: tc(`categories.items.${cat.name}`, cat.name),
@@ -142,17 +148,7 @@ export default function CreateItemPage() {
         return
       }
 
-      // Validate auction fields if included
-      if (mode === 'submit' && includeAuction) {
-        if (!values.startingPrice || values.startingPrice <= 0) {
-          message.warning(ta('startingPriceRequired', 'Please enter starting price'))
-          return
-        }
-        if (!values.bidIncrement || values.bidIncrement <= 0) {
-          message.warning(ta('bidIncrementRequired', 'Please enter bid increment'))
-          return
-        }
-      }
+      // Auction field validation is now handled by antd Form rules (mirrors BE logic)
 
       setSubmitting(true)
 
@@ -233,8 +229,7 @@ export default function CreateItemPage() {
     } catch (err: unknown) {
       const errAny = err as Record<string, unknown> | undefined
       if (errAny?.errorFields) return // form validation error
-      const responseData = (errAny?.response as Record<string, unknown> | undefined)?.data as Record<string, unknown> | undefined
-      message.error((responseData?.detail as string | undefined) ?? t('createError', 'Failed to create item'))
+      message.error(normalizeErrorMessage(err, t('createError', 'Failed to create item')))
     } finally {
       setSubmitting(false)
     }
@@ -483,15 +478,33 @@ export default function CreateItemPage() {
                   <Form.Item
                     name="extensionMinutes"
                     label={ta('autoExtend', 'Auto-Extend (minutes)')}
+                    rules={[{
+                      validator: (_, value) => {
+                        if (!includeAuction || value == null) return Promise.resolve()
+                        if (value < 1 || value > 30) return Promise.reject(ta('extensionMinutesRange', 'Must be between 1 and 30 minutes'))
+                        return Promise.resolve()
+                      },
+                    }]}
                   >
-                    <InputNumber size="large" min={1} max={60} style={{ width: '100%' }} />
+                    <InputNumber size="large" min={1} max={30} style={{ width: '100%' }} />
                   </Form.Item>
                 </Col>
+                {/* Starting Price: regular > 0 (Positive), sealed >= 0 (NonNegative) */}
                 <Col xs={24} md={12}>
                   <Form.Item
                     name="startingPrice"
                     label={ta('startingPrice', 'Starting Price')}
-                    rules={[{ required: true, message: ta('startingPriceRequired', 'Please enter starting price') }]}
+                    rules={[{
+                      validator: (_, value) => {
+                        if (!includeAuction) return Promise.resolve()
+                        if (isSealed) {
+                          if (value != null && value < 0) return Promise.reject(ta('startingPriceNonNeg', 'Starting price must be ≥ 0'))
+                          return Promise.resolve()
+                        }
+                        if (value == null || value < 1000) return Promise.reject(ta('startingPriceMin1000', 'Starting price must be at least 1,000'))
+                        return Promise.resolve()
+                      },
+                    }]}
                   >
                     <InputNumber<number>
                       size="large"
@@ -505,15 +518,26 @@ export default function CreateItemPage() {
                     />
                   </Form.Item>
                 </Col>
+                {/* Bid Increment: regular > 0 (Positive), sealed >= 0 (NonNegative) */}
                 <Col xs={24} md={12}>
                   <Form.Item
                     name="bidIncrement"
                     label={ta('bidIncrement', 'Bid Increment')}
-                    rules={[{ required: true, message: ta('bidIncrementRequired', 'Please enter bid increment') }]}
+                    rules={[{
+                      validator: (_, value) => {
+                        if (!includeAuction) return Promise.resolve()
+                        if (isSealed) {
+                          if (value != null && value < 0) return Promise.reject(ta('bidIncrementNonNeg', 'Bid increment must be ≥ 0'))
+                          return Promise.resolve()
+                        }
+                        if (value == null || value < 1000) return Promise.reject(ta('bidIncrementMin1000', 'Bid increment must be at least 1,000'))
+                        return Promise.resolve()
+                      },
+                    }]}
                   >
                     <InputNumber<number>
                       size="large"
-                      min={1000}
+                      min={0}
                       step={1000}
                       style={{ width: '100%' }}
                       addonAfter="VND"
@@ -523,11 +547,21 @@ export default function CreateItemPage() {
                     />
                   </Form.Item>
                 </Col>
+                {/* Reserve Price: optional, must be >= startingPrice */}
                 <Col xs={24} md={12}>
                   <Form.Item
                     name="reservePrice"
                     label={ta('reservePrice', 'Reserve Price')}
-                    help={ta('reservePriceHelp', 'Auction only succeeds if this price is met.')}
+                    extra={ta('reservePriceHelp', 'Auction only succeeds if this price is met.')}
+                    rules={[{
+                      validator: (_, value) => {
+                        if (!includeAuction || value == null || value === 0) return Promise.resolve()
+                        if (value < 1000) return Promise.reject(ta('reservePriceMin1000', 'Reserve price must be at least 1,000'))
+                        const sp = watchedStartingPrice ?? 0
+                        if (value < sp) return Promise.reject(ta('reservePriceMin', 'Reserve price must be ≥ starting price'))
+                        return Promise.resolve()
+                      },
+                    }]}
                   >
                     <InputNumber<number>
                       size="large"
@@ -535,17 +569,29 @@ export default function CreateItemPage() {
                       step={1000}
                       style={{ width: '100%' }}
                       addonAfter="VND"
-                      placeholder={ta('reservePricePlaceholder', 'Optional - minimum price to sell')}
+                      placeholder={ta('reservePricePlaceholder', 'Optional')}
                       formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
                       parser={(v) => Number((v ?? '').replace(/\$\s?|(,*)/g, ''))}
                     />
                   </Form.Item>
                 </Col>
+                {/* Buy Now Price: optional. Regular: must be > startingPrice. Sealed: must be > 0 if set. */}
                 <Col xs={24} md={12}>
                   <Form.Item
                     name="buyNowPrice"
                     label={ta('buyNowPrice', 'Buy Now Price')}
-                    help={ta('buyNowPriceHelp', 'Allows buyers to purchase instantly and end the auction.')}
+                    extra={ta('buyNowPriceHelp', 'Allows buyers to purchase instantly and end the auction.')}
+                    rules={[{
+                      validator: (_, value) => {
+                        if (!includeAuction || value == null || value === 0) return Promise.resolve()
+                        if (value < 1000) return Promise.reject(ta('buyNowPriceMin1000', 'Buy now price must be at least 1,000'))
+                        if (!isSealed) {
+                          const sp = watchedStartingPrice ?? 0
+                          if (value <= sp) return Promise.reject(ta('buyNowPriceGtStarting', 'Buy now price must be greater than starting price'))
+                        }
+                        return Promise.resolve()
+                      },
+                    }]}
                   >
                     <InputNumber<number>
                       size="large"
@@ -553,7 +599,7 @@ export default function CreateItemPage() {
                       step={1000}
                       style={{ width: '100%' }}
                       addonAfter="VND"
-                      placeholder={ta('buyNowPricePlaceholder', 'Optional - instant purchase price')}
+                      placeholder={ta('buyNowPricePlaceholder', 'Optional')}
                       formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
                       parser={(v) => Number((v ?? '').replace(/\$\s?|(,*)/g, ''))}
                     />

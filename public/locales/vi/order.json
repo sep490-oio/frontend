@@ -338,5 +338,11 @@
     "acceptItem": "Đã kiểm tra và chấp nhận hàng",
     "reportIssue": "Báo cáo sự cố / Mở tranh chấp",
     "scanParcelQr": "Quét mã QR kiện hàng"
+  },
+  "detail": {
+    "manualReview": "Đơn hàng đang được xem xét thủ công",
+    "receivedPackage": "Đã nhận kiện",
+    "inspectedAccepted": "Đã kiểm tra và chấp nhận hàng",
+    "confirmAccept": "Xác nhận đã kiểm tra và chấp nhận hàng? Tiền sẽ được giải ngân cho người bán."
   }
 }

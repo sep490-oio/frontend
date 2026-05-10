@@ -625,12 +625,12 @@ export default function OrderDetailPage() {
                 </Descriptions.Item>
                 <Descriptions.Item label={t('directShipment.externalCarrier', 'External Carrier')}>
                   {ds.externalCarrierName ?? (
-                    <Typography.Text type="secondary">{t('notYetAvailable', 'Chưa có')}</Typography.Text>
+                    <Typography.Text type="secondary">{t('notYetAvailable', 'Not yet available')}</Typography.Text>
                   )}
                 </Descriptions.Item>
                 <Descriptions.Item label={t('directShipment.externalTracking', 'External Tracking')}>
                   {ds.externalTrackingCode ?? (
-                    <Typography.Text type="secondary">{t('notYetAvailable', 'Chưa có')}</Typography.Text>
+                    <Typography.Text type="secondary">{t('notYetAvailable', 'Not yet available')}</Typography.Text>
                   )}
                 </Descriptions.Item>
                 {ds.deliveredAt && (
@@ -659,7 +659,7 @@ export default function OrderDetailPage() {
                   type="warning"
                   showIcon
                   style={{ marginTop: 12 }}
-                  message={t('directShipment.manualReview.title', 'Đơn hàng đang được xem xét thủ công')}
+                  message={t('directShipment.manualReview.title', 'Order is under manual review')}
                   description={ds.manualReviewReason ?? undefined}
                 />
               )}
@@ -680,18 +680,18 @@ export default function OrderDetailPage() {
                         size="middle"
                         onClick={() => navigate(`/me/shipments/${ds.id}/receive`)}
                       >
-                        {t('directShipment.acknowledgeReceived', 'Đã nhận kiện')}
+                        {t('directShipment.acknowledgeReceived', 'Package received')}
                       </Button>
                     )}
                     <Popconfirm
                       title={t(
                         'directShipment.confirmAndAcceptConfirm',
-                        'Xác nhận đã kiểm tra và chấp nhận hàng? Tiền sẽ được giải ngân cho người bán.',
+                        'Confirm that you have inspected and accepted the item? Funds will be released to the seller.',
                       )}
                       onConfirm={handleAcceptRelease}
                     >
                       <Button type="primary" size="middle" loading={confirmOrderReceipt.isPending}>
-                        {t('directShipment.confirmAndAccept', 'Đã kiểm tra và chấp nhận hàng')}
+                        {t('directShipment.confirmAndAccept', 'Inspected and accepted')}
                       </Button>
                     </Popconfirm>
                     <Button
@@ -726,12 +726,12 @@ export default function OrderDetailPage() {
               <Popconfirm
                 title={t(
                   'directShipment.confirmAndAcceptConfirm',
-                  'Xác nhận đã kiểm tra và chấp nhận hàng? Tiền sẽ được giải ngân cho người bán.',
+                  'Confirm that you have inspected and accepted the item? Funds will be released to the seller.',
                 )}
                 onConfirm={handleAcceptRelease}
               >
                 <Button type="primary" size="middle" loading={confirmOrderReceipt.isPending}>
-                  {t('directShipment.confirmAndAccept', 'Đã kiểm tra và chấp nhận hàng')}
+                  {t('directShipment.confirmAndAccept', 'Inspected and accepted')}
                 </Button>
               </Popconfirm>
             )}
@@ -927,8 +927,8 @@ export default function OrderDetailPage() {
                     type="error"
                     showIcon
                     style={{ marginTop: 4 }}
-                    message={t('sla.overdue', 'Quá hạn')}
-                    description={sf.escalationReason ?? t('sla.shipBy', 'Hạn giao') + ': ' + dayjs(sf.shipByAt!).format('DD/MM/YYYY HH:mm')}
+                    message={t('sla.overdue', 'Overdue')}
+                    description={sf.escalationReason ?? t('sla.shipBy', 'Ship by') + ': ' + dayjs(sf.shipByAt!).format('DD/MM/YYYY HH:mm')}
                   />
                 ) : (
                   <Alert
@@ -936,8 +936,8 @@ export default function OrderDetailPage() {
                     showIcon
                     style={{ marginTop: 4 }}
                     message={
-                      t('sla.shipBy', 'Hạn giao') + ': ' + dayjs(sf.shipByAt!).format('DD/MM/YYYY HH:mm')
-                      + ' — ' + t('sla.remainingDays', '{{count}} ngày còn lại', { count: daysLeft })
+                      t('sla.shipBy', 'Ship by') + ': ' + dayjs(sf.shipByAt!).format('DD/MM/YYYY HH:mm')
+                      + ' — ' + t('sla.remainingDays', '{{count}} days remaining', { count: daysLeft })
                     }
                   />
                 )
@@ -982,6 +982,20 @@ export default function OrderDetailPage() {
                 </Typography.Text>
               </Descriptions.Item>
             </>
+          )}
+          {order.walletAppliedAmount != null && order.walletAppliedAmount > 0 && (
+            <Descriptions.Item label={t('walletApplied', 'Paid via Wallet')}>
+              <Typography.Text type="success" style={{ fontWeight: 600 }}>
+                {formatCurrency(order.walletAppliedAmount, order.currency)}
+              </Typography.Text>
+            </Descriptions.Item>
+          )}
+          {order.gatewayPaidAmount != null && order.gatewayPaidAmount > 0 && (
+            <Descriptions.Item label={t('gatewayPaid', 'Paid via VNPay')}>
+              <Typography.Text style={{ fontWeight: 600, color: 'var(--color-accent)' }}>
+                {formatCurrency(order.gatewayPaidAmount, order.currency)}
+              </Typography.Text>
+            </Descriptions.Item>
           )}
           <Descriptions.Item label={t('currency', 'Currency')}>
             {order.currency}

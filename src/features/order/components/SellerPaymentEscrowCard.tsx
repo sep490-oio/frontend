@@ -30,10 +30,10 @@ function escrowStatusToken(status: SellerEscrowLedgerRowDto['escrowStatus']): st
 function holdReasonLabel(t: ReturnType<typeof useTranslation>['t'], reason: string | null): string {
   if (!reason) return ''
   const known: Record<string, string> = {
-    awaiting_delivery: t('sellerFinance.holdReason.awaitingDelivery', 'Đang chờ giao hàng'),
-    awaiting_acceptance: t('sellerFinance.holdReason.awaitingAcceptance', 'Đang chờ buyer xác nhận'),
-    frozen_by_dispute: t('sellerFinance.holdReason.frozenByDispute', 'Tạm khóa do tranh chấp'),
-    inspection_in_progress: t('sellerFinance.holdReason.inspectionInProgress', 'Đang kiểm định'),
+    awaiting_delivery: t('sellerFinance.holdReason.awaitingDelivery', 'Awaiting delivery'),
+    awaiting_acceptance: t('sellerFinance.holdReason.awaitingAcceptance', 'Awaiting buyer confirmation'),
+    frozen_by_dispute: t('sellerFinance.holdReason.frozenByDispute', 'Frozen by dispute'),
+    inspection_in_progress: t('sellerFinance.holdReason.inspectionInProgress', 'Inspection in progress'),
   }
   return known[reason] ?? reason
 }
@@ -58,7 +58,7 @@ export function SellerPaymentEscrowCard({ orderId, isMobile }: SellerPaymentEscr
         style={{ marginBottom: isMobile ? 16 : 24 }}
         title={
           <span style={{ fontFamily: SANS_FONT, fontWeight: 600 }}>
-            {torder('sellerOrder.paymentEscrow.title', 'Thanh toán & Escrow')}
+            {torder('sellerOrder.paymentEscrow.title', 'Payment & Escrow')}
           </span>
         }
       >
@@ -75,14 +75,14 @@ export function SellerPaymentEscrowCard({ orderId, isMobile }: SellerPaymentEscr
         style={{ marginBottom: isMobile ? 16 : 24 }}
         title={
           <span style={{ fontFamily: SANS_FONT, fontWeight: 600 }}>
-            {torder('sellerOrder.paymentEscrow.title', 'Thanh toán & Escrow')}
+            {torder('sellerOrder.paymentEscrow.title', 'Payment & Escrow')}
           </span>
         }
       >
         <Typography.Text type="secondary">
           {torder(
             'sellerOrder.paymentEscrow.notYet',
-            'Buyer chưa thanh toán đơn hàng này. Khi thanh toán hoàn tất, chi tiết escrow sẽ hiển thị tại đây.',
+            'Buyer has not paid for this order yet. Escrow details will appear once payment is complete.',
           )}
         </Typography.Text>
       </Card>
@@ -98,7 +98,7 @@ export function SellerPaymentEscrowCard({ orderId, isMobile }: SellerPaymentEscr
       style={{ marginBottom: isMobile ? 16 : 24 }}
       title={
         <span style={{ fontFamily: SANS_FONT, fontWeight: 600 }}>
-          {torder('sellerOrder.paymentEscrow.title', 'Thanh toán & Escrow')}
+           {torder('sellerOrder.paymentEscrow.title', 'Payment & Escrow')}
         </span>
       }
     >
@@ -115,7 +115,7 @@ export function SellerPaymentEscrowCard({ orderId, isMobile }: SellerPaymentEscr
                 </Tag>
                 {torder(
                   'sellerOrder.paymentEscrow.disputeNotice',
-                  'Tiền đang bị giữ do có tranh chấp.',
+                  'Funds are held due to an active dispute.',
                 )}
               </span>
             }
@@ -125,7 +125,7 @@ export function SellerPaymentEscrowCard({ orderId, isMobile }: SellerPaymentEscr
                 type="primary"
                 onClick={() => navigate(`/me/disputes/${row.disputeId}`)}
               >
-                {t('sellerFinance.action.viewDispute', 'Xem dispute')}
+                {t('sellerFinance.action.viewDispute', 'View Dispute')}
               </Button>
             }
           />
@@ -138,27 +138,27 @@ export function SellerPaymentEscrowCard({ orderId, isMobile }: SellerPaymentEscr
           styles={{ label: { width: 200 } }}
         >
           <Descriptions.Item
-            label={torder('sellerOrder.paymentEscrow.buyerPaid', 'Buyer đã thanh toán?')}
+            label={torder('sellerOrder.paymentEscrow.buyerPaid', 'Buyer Paid?')}
           >
             {row.buyerPaidAt ? (
               <Space>
-                <Tag color="success">{t('yes', 'Có')}</Tag>
+                <Tag color="success">{t('yes', 'Yes')}</Tag>
                 <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                   {formatDateTime(row.buyerPaidAt)}
                 </Typography.Text>
               </Space>
             ) : (
-              <Tag>{t('no', 'Chưa')}</Tag>
+              <Tag>{t('no', 'No')}</Tag>
             )}
           </Descriptions.Item>
           <Descriptions.Item
-            label={torder('sellerOrder.paymentEscrow.escrowStatus', 'Trạng thái escrow')}
+            label={torder('sellerOrder.paymentEscrow.escrowStatus', 'Escrow Status')}
           >
             <StatusBadge status={escrowStatusToken(row.escrowStatus)} size="small" />
           </Descriptions.Item>
           {row.holdReason && (
             <Descriptions.Item
-              label={torder('sellerOrder.paymentEscrow.holdReason', 'Vì sao chưa rút được?')}
+              label={torder('sellerOrder.paymentEscrow.holdReason', 'Why can\'t I withdraw?')}
               span={2}
             >
               <Typography.Text>
@@ -168,7 +168,7 @@ export function SellerPaymentEscrowCard({ orderId, isMobile }: SellerPaymentEscr
             </Descriptions.Item>
           )}
           <Descriptions.Item
-            label={torder('sellerOrder.paymentEscrow.grossPaid', 'Buyer trả (gross)')}
+            label={torder('sellerOrder.paymentEscrow.grossPaid', 'Buyer Paid (gross)')}
           >
             <span style={{ fontFamily: MONO_FONT, fontWeight: 600 }}>
               {formatCurrency(row.grossPaidAmount, row.currency)}
@@ -177,8 +177,8 @@ export function SellerPaymentEscrowCard({ orderId, isMobile }: SellerPaymentEscr
           <Descriptions.Item
             label={
               isReleased
-                ? torder('sellerOrder.paymentEscrow.actualReleased', 'Đã release')
-                : torder('sellerOrder.paymentEscrow.expectedNet', 'Dự kiến seller nhận')
+                ? torder('sellerOrder.paymentEscrow.actualReleased', 'Released')
+                : torder('sellerOrder.paymentEscrow.expectedNet', 'Estimated Seller Payout')
             }
           >
             <Space direction="vertical" size={0}>
@@ -187,13 +187,13 @@ export function SellerPaymentEscrowCard({ orderId, isMobile }: SellerPaymentEscr
               </span>
               <Typography.Text type="secondary" style={{ fontSize: 11 }}>
                 {isReleased
-                  ? t('sellerFinance.label.released', 'Đã release')
+                  ? t('sellerFinance.label.released', 'Released')
                   : t('sellerFinance.label.estimate', '(estimate)')}
               </Typography.Text>
             </Space>
           </Descriptions.Item>
           <Descriptions.Item
-            label={torder('sellerOrder.paymentEscrow.platformFee', 'Phí sàn 10%')}
+            label={torder('sellerOrder.paymentEscrow.platformFee', 'Platform Fee 10%')}
           >
             <span style={{ fontFamily: MONO_FONT, fontWeight: 600 }}>
               −{formatCurrency(row.platformCommissionAmount, row.currency)}
@@ -201,7 +201,7 @@ export function SellerPaymentEscrowCard({ orderId, isMobile }: SellerPaymentEscr
           </Descriptions.Item>
           {row.isPlatformVerifiedItem && (
             <Descriptions.Item
-              label={torder('sellerOrder.paymentEscrow.inspectionFee', 'Phí kiểm định 3%')}
+              label={torder('sellerOrder.paymentEscrow.inspectionFee', 'Inspection Fee 3%')}
             >
               <span style={{ fontFamily: MONO_FONT, fontWeight: 600 }}>
                 −{formatCurrency(row.inspectionFeeAmount, row.currency)}
@@ -210,7 +210,7 @@ export function SellerPaymentEscrowCard({ orderId, isMobile }: SellerPaymentEscr
           )}
           {row.expectedReleaseAt && !isReleased && (
             <Descriptions.Item
-              label={torder('sellerOrder.paymentEscrow.expectedRelease', 'Dự kiến release')}
+              label={torder('sellerOrder.paymentEscrow.expectedRelease', 'Estimated Release')}
               span={2}
             >
               {formatDateTime(row.expectedReleaseAt)}
@@ -218,7 +218,7 @@ export function SellerPaymentEscrowCard({ orderId, isMobile }: SellerPaymentEscr
           )}
           {row.decisionWindowEndsAt && (
             <Descriptions.Item
-              label={torder('sellerOrder.paymentEscrow.decisionWindow', 'Kết thúc decision window')}
+              label={torder('sellerOrder.paymentEscrow.decisionWindow', 'Decision Window Ends')}
               span={2}
             >
               {formatDateTime(row.decisionWindowEndsAt)}

@@ -181,7 +181,10 @@
     "summaryTemplate": "Qualification opens {{qualLabel}}, stays open for {{qualDur}}, bidding starts {{gap}} after qualification closes, and the auction runs for {{auctionDur}}.",
     "autoExtendOn": "on ({{minutes}} min)",
     "autoExtendOff": "off",
-    "noImage": "No image"
+    "noImage": "No image",
+    "minutes_count": "{{count}} minutes",
+    "hours_count": "{{count}} hours",
+    "days_count": "{{count}} days"
   },
   "scheduleSectionTitle": "Schedule",
   "scheduleSectionSubtitle": "Set qualification and bidding windows.",
@@ -524,5 +527,22 @@
   "you": "You",
   "closeAuction": "Close Auction",
   "closeAuctionConfirm": "Are you sure you want to close this auction? This will end the auction process and cannot be undone.",
-  "closeAuctionSuccess": "Auction closed successfully"
+  "closeAuctionSuccess": "Auction closed successfully",
+  "selectedItem": "Selected Item",
+  "pricingAndTiming": "Pricing & Timing",
+  "verifiedByPlatformTitle": "Verified by Platform",
+  "verifiedByPlatformDesc": "Request OIO experts to verify the item before auction.",
+  "verification": {
+    "verifiedNote": "OIO has verified this listing before opening the auction.",
+    "noVerification": "This listing has no public verification certificate or report."
+  },
+  "sidebar": {
+    "preparingOrder": "Preparing order...",
+    "orderBeingCreated": "Order is being created, please reload later"
+  },
+  "manage": {
+    "closeConfirm": "Close this auction session?",
+    "relistTitle": "Relist auction session",
+    "relistBtn": "Relist"
+  }
 }

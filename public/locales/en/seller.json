@@ -201,5 +201,34 @@
   "identityVerified": "Identity Verified",
   "verifyIdentity": "Verify Your Identity",
   "verifiedDesc": "Your identity has been verified. You can now create a seller profile and participate in all auctions.",
-  "reVerifyAtStore": "Request Re-verification"
+  "reVerifyAtStore": "Request Re-verification",
+  "returns": {
+    "columns": {
+      "item": "Item",
+      "reason": "Reason",
+      "carrier": "Carrier / Tracking",
+      "status": "Status",
+      "delivered": "Delivered",
+      "action": "Action"
+    },
+    "confirmed": "Confirmed",
+    "scanQr": "Scan QR",
+    "uploadPhoto": "Upload Photo",
+    "confirmReceipt": "Confirm Receipt",
+    "confirmPrompt": "Confirm that you have received the returned item?",
+    "confirmSuccess": "Return receipt confirmed successfully",
+    "confirmError": "Could not confirm receipt",
+    "scanTitle": "Scan Return QR from Warehouse",
+    "scanSubtitle": "Point camera at the QR code on the package to confirm receipt.",
+    "scanSuccess": "Marked as received",
+    "scanError": "Could not scan QR",
+    "uploadReceipt": "Upload Receipt Photo",
+    "receiptUploadHint": "Take a photo of the returned item to verify its condition, then confirm receipt.",
+    "waitingDelivery": "Package is still in transit. You can upload receipt photos when it arrives.",
+    "alreadyConfirmed": "You have already confirmed receipt of this item.",
+    "emptyWarehouse": "No warehouse returns yet."
+  },
+  "verificationWizard": {
+    "pending": "pending"
+  }
 }

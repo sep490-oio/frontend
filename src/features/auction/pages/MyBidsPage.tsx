@@ -423,8 +423,8 @@ function RecentActivityLog({ localActivities = [] }: { localActivities?: any[] }
       .filter(n => n.entityType?.toLowerCase() === 'auction' || n.notificationType?.toLowerCase() === 'auction')
       .filter(n => {
         if (filter === 'all') return true
-        if (filter === 'outbid') return n.eventType?.toLowerCase().includes('outbid') || n.title.includes('vượt giá')
-        if (filter === 'won') return n.eventType?.toLowerCase().includes('won') || n.title.includes('thắng')
+        if (filter === 'outbid') return n.eventType?.toLowerCase().includes('outbid') || n.title.toLowerCase().includes('outbid') || n.title.includes('vượt giá')
+        if (filter === 'won') return n.eventType?.toLowerCase().includes('won') || n.title.toLowerCase().includes('won') || n.title.includes('thắng')
         return true
       })
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -540,7 +540,7 @@ function RecentActivityLog({ localActivities = [] }: { localActivities?: any[] }
                     onClick={() => item.entityId && navigate(`/auctions/${item.entityId}`)}
                   >
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }}>
-                      {item.title.replace('Đặt giá thành công: ', '').replace('Bid Success: ', '').replace('Bạn đã bị vượt giá!', '').replace('Ban da thang phien dau gia', '').trim()}
+                      {item.title.replace(/^(Đặt giá thành công: |Bid Success: |Bạn đã bị vượt giá!|You have been outbid!|Ban da thang phien dau gia|You won the auction)/, '').trim()}
                     </span>
                     <Tag style={{ margin: 0, borderRadius: 4, fontSize: 10 }}>{item.activities.length}</Tag>
                   </div>
@@ -563,8 +563,8 @@ function RecentActivityLog({ localActivities = [] }: { localActivities?: any[] }
 function ActivityItem({ notif, hideTitle = false }: { notif: any, hideTitle?: boolean }) {
   const { t } = useTranslation(['auction', 'common'])
   const navigate = useNavigate()
-  const isOutbid = notif.eventType?.toLowerCase().includes('outbid') || notif.title.includes('vượt giá')
-  const isWon = notif.eventType?.toLowerCase().includes('won') || notif.title.includes('thắng')
+  const isOutbid = notif.eventType?.toLowerCase().includes('outbid') || notif.title.toLowerCase().includes('outbid') || notif.title.includes('vượt giá')
+  const isWon = notif.eventType?.toLowerCase().includes('won') || notif.title.toLowerCase().includes('won') || notif.title.includes('thắng')
   
   return (
     <div
@@ -679,7 +679,7 @@ export default function MyBidsPage() {
             setLocalActivities(prev => [{
               id: `local-bid-${now}-${item.auctionId}`,
               title: item.itemTitle,
-              message: t('bidSuccessMsg', 'Bạn đã đặt giá thành công: {{amount}}đ', { amount: item.myLatestBidAmount.toLocaleString() }),
+              message: t('bidSuccessMsg', 'Bid placed: {{amount}}đ', { amount: item.myLatestBidAmount.toLocaleString() }),
               createdAt: new Date(now).toISOString(),
               eventType: 'AuctionBidSuccess',
               entityType: 'Auction',
@@ -692,7 +692,7 @@ export default function MyBidsPage() {
             setLocalActivities(prev => [{
               id: `local-outbid-${now}-${item.auctionId}`,
               title: item.itemTitle,
-              message: t('outbidMsg', 'Bạn đã bị vượt giá!'),
+              message: t('outbidMsg', 'You have been outbid!'),
               createdAt: new Date(now).toISOString(),
               eventType: 'AuctionOutbid',
               entityType: 'Auction',
@@ -705,7 +705,7 @@ export default function MyBidsPage() {
             setLocalActivities(prev => [{
               id: `local-won-${now}-${item.auctionId}`,
               title: item.itemTitle,
-              message: t('wonMsg', 'Bạn đã thắng phiên đấu giá!'),
+              message: t('wonMsg', 'You won this auction!'),
               createdAt: new Date(now).toISOString(),
               eventType: 'AuctionWon',
               entityType: 'Auction',

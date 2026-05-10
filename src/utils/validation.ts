@@ -26,7 +26,7 @@ export const createPhoneSchema = (t: T) =>
   z.string().regex(/^[0-9]{9,11}$/, t('phoneInvalid', 'Số điện thoại không hợp lệ'))
 
 export const createRequiredString = (t: T) =>
-  z.string().min(1, t('required', 'Trường này là bắt buộc'))
+  z.string().min(1, t('required', 'This field is required'))
 
 export const createPositiveNumber = (t: T) =>
   z.number().positive(t('positiveValue', 'Giá trị phải lớn hơn 0'))

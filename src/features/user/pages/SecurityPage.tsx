@@ -10,7 +10,6 @@ import {
   Tabs,
   Tag,
   App,
-  QRCode,
   Modal,
   Flex,
 } from 'antd'
@@ -195,7 +194,7 @@ function TwoFactorSection() {
   const { message } = App.useApp()
   const { data: user, isLoading } = useCurrentUser()
 
-  const [totpData, setTotpData] = useState<{ secret: string; qrCodeUri: string } | null>(null)
+  const [totpData, setTotpData] = useState<{ sharedKey: string; qrCodeBase64: string } | null>(null)
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null)
 
   const enable2FA = useEnable2FA()
@@ -303,7 +302,71 @@ function TwoFactorSection() {
           </Text>
         </div>
 
-        {is2FAEnabled ? (
+        {/* When totpData is set we're mid-setup → always show the QR setup card,
+             even if enable2FA already flipped twoFactorEnabled to true on refetch. */}
+        {totpData ? (
+          <Card 
+            size="small" 
+            title={<span style={{ fontFamily: SANS_FONT, fontWeight: 600 }}>{t('security.twoFactor.setupTitle')}</span>}
+            style={{ borderRadius: 20, border: '1px solid var(--color-border)' }}
+          >
+            <Space direction="vertical" style={{ width: '100%' }} size={24}>
+              <Paragraph type="secondary">
+                {t('security.twoFactor.setupDesc')}
+              </Paragraph>
+
+              {/* QR Code */}
+              <div style={{ textAlign: 'center', padding: 24, background: '#fff', borderRadius: 16, display: 'inline-block', margin: '0 auto' }}>
+                <img
+                  src={`data:image/png;base64,${totpData.qrCodeBase64}`}
+                  alt="TOTP QR Code"
+                  width={200}
+                  height={200}
+                  style={{ imageRendering: 'pixelated' }}
+                />
+              </div>
+
+              <div style={{ padding: 16, background: 'var(--color-bg-surface)', borderRadius: 12, textAlign: 'center', border: '1px solid var(--color-border)' }}>
+                <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 8 }}>{t('security.twoFactor.manualKey')}</Text>
+                <Text style={{ fontFamily: MONO_FONT, fontSize: 16, fontWeight: 600 }} copyable>{totpData.sharedKey}</Text>
+              </div>
+
+              <form onSubmit={onConfirmTotp}>
+                <Flex gap={12} vertical={isMobile}>
+                  <Controller
+                    name="code"
+                    control={confirmControl}
+                    render={({ field }) => (
+                      <Input
+                        {...field}
+                        placeholder={t('security.twoFactor.codePlaceholder')}
+                        maxLength={6}
+                        status={confirmErrors.code ? 'error' : undefined}
+                        style={{ 
+                          height: 48, 
+                          borderRadius: 12, 
+                          fontFamily: MONO_FONT, 
+                          letterSpacing: '0.2em', 
+                          textAlign: 'center',
+                          fontSize: 18,
+                          flex: 1
+                        }}
+                      />
+                    )}
+                  />
+                  <Button type="primary" size="large" htmlType="submit" loading={confirmTotp.isPending} style={{ height: 48, borderRadius: 12, fontWeight: 600, padding: '0 32px' }}>
+                    {t('security.twoFactor.confirm')}
+                  </Button>
+                </Flex>
+                {confirmErrors.code && (
+                  <div style={{ marginTop: 8 }}>
+                    <Text type="danger" style={{ fontSize: 12 }}>{confirmErrors.code.message}</Text>
+                  </div>
+                )}
+              </form>
+            </Space>
+          </Card>
+        ) : is2FAEnabled ? (
           <>
             <Alert
               type="success"
@@ -436,73 +499,15 @@ function TwoFactorSection() {
               style={{ borderRadius: 16, padding: 16 }}
             />
 
-            {!totpData ? (
-              <Button 
-                type="primary" 
-                size="large"
-                onClick={onStartSetup} 
-                loading={enable2FA.isPending || setupTotp.isPending}
-                style={{ height: 48, borderRadius: 12, fontWeight: 600, padding: '0 40px' }}
-              >
-                {t('security.twoFactor.enable')}
-              </Button>
-            ) : (
-              <Card 
-                size="small" 
-                title={<span style={{ fontFamily: SANS_FONT, fontWeight: 600 }}>{t('security.twoFactor.setupTitle')}</span>}
-                style={{ borderRadius: 20, border: '1px solid var(--color-border)' }}
-              >
-                <Space direction="vertical" style={{ width: '100%' }} size={24}>
-                  <Paragraph type="secondary">
-                    {t('security.twoFactor.setupDesc')}
-                  </Paragraph>
-
-                  {/* QR Code */}
-                  <div style={{ textAlign: 'center', padding: 24, background: '#fff', borderRadius: 16, display: 'inline-block', margin: '0 auto' }}>
-                    <QRCode value={totpData.qrCodeUri} size={200} bordered={false} />
-                  </div>
-
-                  <div style={{ padding: 16, background: 'var(--color-bg-surface)', borderRadius: 12, textAlign: 'center', border: '1px solid var(--color-border)' }}>
-                    <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 8 }}>{t('security.twoFactor.manualKey')}</Text>
-                    <Text style={{ fontFamily: MONO_FONT, fontSize: 16, fontWeight: 600 }} copyable>{totpData.secret}</Text>
-                  </div>
-
-                  <form onSubmit={onConfirmTotp}>
-                    <Flex gap={12} vertical={isMobile}>
-                      <Controller
-                        name="code"
-                        control={confirmControl}
-                        render={({ field }) => (
-                          <Input
-                            {...field}
-                            placeholder={t('security.twoFactor.codePlaceholder')}
-                            maxLength={6}
-                            status={confirmErrors.code ? 'error' : undefined}
-                            style={{ 
-                              height: 48, 
-                              borderRadius: 12, 
-                              fontFamily: MONO_FONT, 
-                              letterSpacing: '0.2em', 
-                              textAlign: 'center',
-                              fontSize: 18,
-                              flex: 1
-                            }}
-                          />
-                        )}
-                      />
-                      <Button type="primary" size="large" htmlType="submit" loading={confirmTotp.isPending} style={{ height: 48, borderRadius: 12, fontWeight: 600, padding: '0 32px' }}>
-                        {t('security.twoFactor.confirm')}
-                      </Button>
-                    </Flex>
-                    {confirmErrors.code && (
-                      <div style={{ marginTop: 8 }}>
-                        <Text type="danger" style={{ fontSize: 12 }}>{confirmErrors.code.message}</Text>
-                      </div>
-                    )}
-                  </form>
-                </Space>
-              </Card>
-            )}
+            <Button 
+              type="primary" 
+              size="large"
+              onClick={onStartSetup} 
+              loading={enable2FA.isPending || setupTotp.isPending}
+              style={{ height: 48, borderRadius: 12, fontWeight: 600, padding: '0 40px' }}
+            >
+              {t('security.twoFactor.enable')}
+            </Button>
           </>
         )}
       </Space>

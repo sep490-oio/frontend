@@ -137,7 +137,7 @@ function DepositCard({ deposit }: { deposit: ActiveDepositDto }) {
 
           {/* Event description */}
           <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 2 }}>
-            {t('event.auction_deposit_hold', 'Đặt cọc đấu giá')}
+            {t('event.auction_deposit_hold', 'Auction Deposit')}
           </Text>
 
           {/* Time + status */}

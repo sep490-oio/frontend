@@ -119,7 +119,7 @@ export default function RegisterPage() {
       userName: createUsernameSchema(tv),
       email: createEmailSchema(tv),
       password: createPasswordSchema(tv),
-      confirmPassword: z.string().min(1, tv('required', 'Trường này là bắt buộc')),
+      confirmPassword: z.string().min(1, tv('required', 'This field is required')),
       firstName: z.string().optional(),
       lastName: z.string().optional(),
     })

@@ -168,7 +168,8 @@
     "becomeSellerDesc": "Turn your items into profit. Join our professional seller community today.",
     "becomeSellerBtn": "Become a Seller",
     "bids": "bids",
-    "currentPrice": "Current Price"
+    "currentPrice": "Current Price",
+    "activeAuctions": "Active Auctions"
   },
   "profile": {
     "title": "My Profile",
@@ -272,13 +273,34 @@
         "rose": "Rose"
       },
       "presets": {
-        "default": { "label": "Deep Ocean", "desc": "Classic blue & navy" },
-        "mint": { "label": "Botanical", "desc": "Organic forest greens" },
-        "ember": { "label": "Sunset", "desc": "Warm amber & earth" },
-        "aurora": { "label": "Twilight", "desc": "Indigo & twilight purples" },
-        "slate": { "label": "Storm", "desc": "Technical blue-grays" },
-        "frosted": { "label": "Steel", "desc": "Clean matte metallics" },
-        "custom": { "label": "Unique", "desc": "Your own HSL formula" }
+        "default": {
+          "label": "Deep Ocean",
+          "desc": "Classic blue & navy"
+        },
+        "mint": {
+          "label": "Botanical",
+          "desc": "Organic forest greens"
+        },
+        "ember": {
+          "label": "Sunset",
+          "desc": "Warm amber & earth"
+        },
+        "aurora": {
+          "label": "Twilight",
+          "desc": "Indigo & twilight purples"
+        },
+        "slate": {
+          "label": "Storm",
+          "desc": "Technical blue-grays"
+        },
+        "frosted": {
+          "label": "Steel",
+          "desc": "Clean matte metallics"
+        },
+        "custom": {
+          "label": "Unique",
+          "desc": "Your own HSL formula"
+        }
       }
     }
   }

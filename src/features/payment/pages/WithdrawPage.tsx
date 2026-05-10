@@ -291,7 +291,7 @@ export default function WithdrawPage() {
                         {...field}
                         style={{ width: '100%', height: 52, borderRadius: 12, display: 'flex', alignItems: 'center' }}
                         size="large"
-                        min={1}
+                        min={1000}
                         max={wallet?.availableBalance ?? 0}
                         formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                         parser={(value) => {

@@ -18,6 +18,11 @@ export function useMyItems(
   params?: PaginationParams & {
     status?: string
     hasInboundShipment?: boolean
+    /**
+     * Filters by the backend's `Item.RequiresPlatformInspection` flag.
+     * true = needs platform verification, false = direct review only.
+     */
+    requiresPlatformInspection?: boolean
     sortBy?: string
     isDescending?: boolean
     /**

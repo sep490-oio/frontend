@@ -628,7 +628,7 @@ export default function AdminAuctionControlPage() {
               icon={<ExclamationCircleOutlined />}
               message={t(
                 'auctionControl.cancelBidAuditWarning',
-                'Hành động này sẽ hủy bid và được ghi audit. Lý do hủy sẽ được lưu lại.',
+                'This action will cancel the bid and be recorded in the audit log. The cancellation reason will be saved.',
               )}
             />
             <Space direction="vertical" size={4} style={{ width: '100%' }}>
@@ -673,7 +673,7 @@ export default function AdminAuctionControlPage() {
                 onChange={(e) => setCancelBidReason(e.target.value)}
                 placeholder={t(
                   'auctionControl.cancelReasonPlaceholder',
-                  'Nhập lý do hủy bid (sẽ lưu vào audit log)…',
+                  'Enter cancellation reason (will be saved to audit log)…',
                 )}
                 disabled={cancelBid.isPending}
                 maxLength={500}
