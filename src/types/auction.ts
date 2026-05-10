@@ -419,6 +419,46 @@ export interface MyBidDto {
   canPayNow?: boolean
 }
 
+export interface MyDepositDto {
+  depositId: string
+  auctionId: string
+  itemId: string
+  itemTitle: string
+  primaryImageUrl?: string
+  auctionStatus: string
+  currentPrice?: MoneyDto
+  depositAmount: number
+  depositCurrency: string
+  depositStatus: string
+  depositedAt: string
+  releasedAt?: string
+  auctionEndTime?: string
+  auctionStartTime?: string
+}
+
+export interface MyParticipationDto {
+  auctionId: string
+  itemId: string
+  itemTitle: string
+  primaryImageUrl?: string
+  auctionStatus: string
+  currentPrice: MoneyDto
+  // Deposit info (always present)
+  depositAmount: number
+  depositCurrency: string
+  depositStatus: string
+  depositedAt: string
+  // Bid info (null if deposit-only)
+  myLatestBidAmount?: MoneyDto | null
+  bidPosition?: string | null
+  lastBidAt?: string | null
+  bidCountForUser: number
+  // Order enrichment
+  orderId?: string | null
+  orderStatus?: string | null
+  canPayNow?: boolean
+}
+
 export interface MyAuctionWatchlistDto {
   auctionId: string
   itemTitle: string

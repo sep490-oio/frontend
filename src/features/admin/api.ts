@@ -754,6 +754,36 @@ export function useAdminEscrowById(id: string) {
   })
 }
 
+export function useAdminForceReleaseEscrow() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
+      await apiClient.post(`/admin/payments/escrows/${id}/force-release`, { reason })
+    },
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [
+        queryKeys.admin.escrowsRoot(),
+        queryKeys.admin.paymentSummary(),
+      ])
+    },
+  })
+}
+
+export function useAdminForceRefundEscrow() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
+      await apiClient.post(`/admin/payments/escrows/${id}/force-refund`, { reason })
+    },
+    onSuccess: async () => {
+      await invalidateAndRefetchActive(qc, [
+        queryKeys.admin.escrowsRoot(),
+        queryKeys.admin.paymentSummary(),
+      ])
+    },
+  })
+}
+
 export function usePaymentSummary() {
   return useQuery({
     queryKey: queryKeys.admin.paymentSummary(),

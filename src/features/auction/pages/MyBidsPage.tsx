@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { Typography, Select, Spin, Empty, Flex, Pagination, Button, Tag, Tooltip } from 'antd'
-import { HistoryOutlined, ThunderboltOutlined, TrophyOutlined, LineChartOutlined, ClockCircleOutlined, ArrowRightOutlined } from '@ant-design/icons'
+import { HistoryOutlined, ThunderboltOutlined, TrophyOutlined, LineChartOutlined, ClockCircleOutlined, ArrowRightOutlined, SafetyOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { useMyBids, useMyPendingWinnerOffers, useRespondRunnerUpOffer, useAuctionDetail } from '@/features/auction/auctionApi.ts'
+import { useMyParticipations, useMyPendingWinnerOffers, useRespondRunnerUpOffer, useAuctionDetail } from '@/features/auction/auctionApi.ts'
 import { useUserHubStatus } from '@/features/user/contexts/UserHubContext'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
-import type { MyBidDto } from '@/features/auction/auctionApi.ts'
+import type { MyParticipationDto } from '@/types/auction'
 import { PriceDisplay } from '@/components/ui/PriceDisplay'
 import { AuctionStatus } from '@/types/enums'
 import { formatDateTime } from '@/utils/format'
@@ -32,13 +32,15 @@ interface StatusPill {
   label: string
 }
 
-function AuctionCell({ bid }: { bid: MyBidDto }) {
+function AuctionCell({ bid }: { bid: MyParticipationDto }) {
   const { t } = useTranslation('auction')
   const navigate = useNavigate()
   const { isMobile, isTablet } = useBreakpoint()
 
   const { data: currentUser } = useCurrentUser()
   const userId = currentUser?.id
+
+  const hasBid = !!bid.bidPosition
 
   // Fetch detailed data and subscribe to SignalR for real-time updates
   const { data: detailData, isLoading, refetch } = useAuctionDetail(bid.auctionId, userId)
@@ -54,7 +56,7 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
   // Prefer real-time patched data from the cache, fallback to the initial list data
   const currentPriceAmount = auction?.currentPrice?.amount ?? bid.currentPrice?.amount
   const currentPriceCurrency = auction?.currentPrice?.currency ?? bid.currentPrice?.currency
-  const position = bidState?.position ?? bid.position
+  const position = bidState?.position ?? bid.bidPosition
   const auctionStatus = (auction?.status ?? bid.auctionStatus) as AuctionStatus
   const myLatestBidAmount = bidState?.latestBidAmount ?? bid.myLatestBidAmount?.amount
   const myLatestBidCurrency = bid.myLatestBidAmount?.currency
@@ -67,7 +69,7 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
   const navState = {
     knownPosition: position,
     returnTo: '/me/bids',
-    returnLabel: t('myBids', 'My Bids'),
+    returnLabel: t('myAuctionActivity', 'My Auction Activity'),
   }
 
   return (
@@ -189,11 +191,44 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
         >
           {bid.itemTitle}
         </h3>
-        <p style={{ color: 'var(--color-text-secondary)', fontSize: 12, marginBottom: isMobile ? 12 : 16 }}>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: 12, marginBottom: 8 }}>
           {t('itemCode')}: <span style={{ fontFamily: MONO_FONT }}>#{bid.auctionId.slice(0, 6)}</span>
         </p>
 
-        {isActive && (position === 'leading' || position === 'outbid') && (
+        {/* Deposit Info Chip — always visible */}
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          padding: '5px 12px', borderRadius: 100,
+          background: bid.depositStatus === 'held' ? 'rgba(59,130,246,0.1)'
+            : bid.depositStatus === 'returned' ? 'rgba(34,197,94,0.1)'
+            : bid.depositStatus === 'forfeited' ? 'rgba(239,68,68,0.1)'
+            : 'rgba(139,92,246,0.1)',
+          marginBottom: isMobile ? 12 : 16,
+        }}>
+          <SafetyOutlined style={{
+            fontSize: 12,
+            color: bid.depositStatus === 'held' ? '#3b82f6'
+              : bid.depositStatus === 'returned' ? '#22c55e'
+              : bid.depositStatus === 'forfeited' ? '#ef4444'
+              : '#8b5cf6',
+          }} />
+          <span style={{
+            fontSize: 12, fontWeight: 600, fontFamily: SANS_FONT,
+            color: bid.depositStatus === 'held' ? '#3b82f6'
+              : bid.depositStatus === 'returned' ? '#22c55e'
+              : bid.depositStatus === 'forfeited' ? '#ef4444'
+              : '#8b5cf6',
+          }}>
+            {t('depositAmount', 'Deposit')}: <PriceDisplay amount={bid.depositAmount} currency={bid.depositCurrency || 'VND'} />
+            {' • '}
+            {bid.depositStatus === 'held' ? t('depositHeld', 'Held')
+              : bid.depositStatus === 'returned' ? t('depositReturned', 'Returned')
+              : bid.depositStatus === 'forfeited' ? t('depositForfeited', 'Forfeited')
+              : t('depositApplied', 'Applied')}
+          </span>
+        </div>
+
+        {isActive && hasBid && (position === 'leading' || position === 'outbid') && (
           <div style={{ marginBottom: 16 }}>
             <BidderPositionBlock position={position as any} />
           </div>
@@ -209,6 +244,7 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
             </div>
           </div>
 
+          {hasBid && (
           <div>
             <p style={{ fontSize: 11, textTransform: 'uppercase', color: 'var(--color-text-tertiary)', margin: '0 0 4px 0', letterSpacing: '0.05em' }}>
               {t('myLatestBid', 'My Bid')}
@@ -219,9 +255,18 @@ function AuctionCell({ bid }: { bid: MyBidDto }) {
               </div>
             </div>
             <p style={{ fontSize: 11, color: 'var(--color-text-tertiary)', marginTop: 4, margin: 0 }}>
-              {formatDateTime(lastBidAt)}
+              {lastBidAt ? formatDateTime(lastBidAt) : '—'}
             </p>
           </div>
+          )}
+
+          {!hasBid && isActive && (
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <Tag color="orange" style={{ fontSize: 12, fontWeight: 600, borderRadius: 8, padding: '4px 12px' }}>
+                {t('depositOnly', 'Deposit Only')} — {t('placeBid', 'Place a Bid')}!
+              </Tag>
+            </div>
+          )}
         </Flex>
 
         {/* Spacer to push items apart if needed, or you can use justifyContent: space-between on the parent */}
@@ -642,6 +687,9 @@ function ActivityItem({ notif, hideTitle = false }: { notif: any, hideTitle?: bo
   )
 }
 
+
+
+
 export default function MyBidsPage() {
   const { t } = useTranslation('auction')
   const { t: tc } = useTranslation('common')
@@ -651,43 +699,43 @@ export default function MyBidsPage() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [statusFilter, setStatusFilter] = useState<string>('')
-  const [sortBy, setSortBy] = useState<string>('LastBidAt Desc')
-  const { connected } = useUserHubStatus()
+  const [sortBy, setSortBy] = useState<string>('DepositedAt Desc')
+  const { connected: _connected } = useUserHubStatus()
 
-  const params = statusFilter
-    ? { pageNumber: page, pageSize: Math.max(pageSize, 50), sortBy }
-    : { pageNumber: page, pageSize, sortBy }
+  const params = {
+    pageNumber: page,
+    pageSize,
+    sortBy,
+    ...(statusFilter ? { status: statusFilter } : {}),
+  }
 
-  const { data, isLoading } = useMyBids({
-    ...params,
-    ...(connected ? {} : { refetchInterval: 30000 }) as any,
-  })
+  const { data, isLoading } = useMyParticipations(params)
 
   // Real-time Activity Sync
   const [localActivities, setLocalActivities] = useState<any[]>([])
-  const prevItemsRef = useRef<MyBidDto[]>([])
+  const prevItemsRef = useRef<MyParticipationDto[]>([])
 
   useEffect(() => {
     const items = data?.items ?? []
     if (items.length > 0 && prevItemsRef.current.length > 0) {
       items.forEach(item => {
         const prevItem = prevItemsRef.current.find(p => p.auctionId === item.auctionId)
-        if (prevItem) {
-          // Detect Bid Success (Price increased)
-          if (item.myLatestBidAmount > prevItem.myLatestBidAmount) {
+        if (prevItem && item.bidPosition && prevItem.bidPosition) {
+          // Detect Bid Success
+          if ((item.myLatestBidAmount?.amount ?? 0) > (prevItem.myLatestBidAmount?.amount ?? 0)) {
             const now = getServerNowMs()
             setLocalActivities(prev => [{
               id: `local-bid-${now}-${item.auctionId}`,
               title: item.itemTitle,
-              message: t('bidSuccessMsg', 'Bid placed: {{amount}}đ', { amount: item.myLatestBidAmount.toLocaleString() }),
+              message: t('bidSuccessMsg', 'Bid placed: {{amount}}đ', { amount: (item.myLatestBidAmount?.amount ?? 0).toLocaleString() }),
               createdAt: new Date(now).toISOString(),
               eventType: 'AuctionBidSuccess',
               entityType: 'Auction',
               entityId: item.auctionId
             }, ...prev].slice(0, 5))
           }
-          // Detect Outbid (Position changed to outbid)
-          else if (item.position === 'outbid' && prevItem.position !== 'outbid') {
+          // Detect Outbid
+          else if (item.bidPosition === 'outbid' && prevItem.bidPosition !== 'outbid') {
             const now = getServerNowMs()
             setLocalActivities(prev => [{
               id: `local-outbid-${now}-${item.auctionId}`,
@@ -699,8 +747,8 @@ export default function MyBidsPage() {
               entityId: item.auctionId
             }, ...prev].slice(0, 5))
           }
-          // Detect Won (Position changed to won)
-          else if (item.position === 'won' && prevItem.position !== 'won') {
+          // Detect Won
+          else if (item.bidPosition === 'won' && prevItem.bidPosition !== 'won') {
             const now = getServerNowMs()
             setLocalActivities(prev => [{
               id: `local-won-${now}-${item.auctionId}`,
@@ -720,22 +768,16 @@ export default function MyBidsPage() {
 
   const STATUS_PILLS: StatusPill[] = [
     { value: '', label: t('bidStatusAll', 'All') },
-    { value: 'leading', label: t('bidStatusLeading', 'Leading') },
-    { value: 'outbid', label: t('bidStatusOutbid', 'Outbid') },
+    { value: 'active', label: t('bidStatusActive', 'Active') },
     { value: 'won', label: t('bidStatusWon', 'Won') },
     { value: 'lost', label: t('bidStatusLost', 'Lost') },
+    { value: 'deposit_only', label: t('depositOnly', 'Deposit Only') },
   ]
 
   const { data: pendingOffers } = useMyPendingWinnerOffers()
   const respondMutation = useRespondRunnerUpOffer()
 
-  const items = data?.items ?? []
-
-  // Client-side filtering because backend MyBids may not support filtering by position
-  const displayItems = statusFilter
-    ? items.filter((bid) => bid.position === statusFilter)
-    : items
-
+  const displayItems = data?.items ?? []
   const totalCount = data?.metadata?.totalCount ?? 0
 
   return (
@@ -759,10 +801,10 @@ export default function MyBidsPage() {
           }}
         >
           <HistoryOutlined style={{ marginRight: 12, color: 'var(--color-accent)' }} />
-          {t('myBids', 'My Bids')}
+          {t('myAuctionActivity', 'My Auction Activity')}
         </Title>
         <Text style={{ fontSize: 16, color: 'var(--color-text-secondary)' }}>
-          {t('myBidsSubtitle', 'Track and manage your auction participation and performance')}
+          {t('myAuctionActivitySubtitle', 'Track all auctions you have participated in — deposits, bids, and results')}
         </Text>
       </div>
 
@@ -810,6 +852,7 @@ export default function MyBidsPage() {
           </div>
         </div>
       )}
+
 
       {/* Filter pills + sort */}
       <Flex
@@ -867,10 +910,8 @@ export default function MyBidsPage() {
           style={{ width: isMobile ? '100%' : 220, height: 40 }}
           className="oio-select"
           options={[
-            { value: 'LastBidAt Desc', label: t('sortNewest', 'Newest First') },
-            { value: 'LastBidAt Asc', label: t('sortOldest', 'Oldest First') },
-            { value: 'MyLatestBidAmount Desc', label: t('sortHighest', 'Highest Bid Amount') },
-            { value: 'MyLatestBidAmount Asc', label: t('sortLowest', 'Lowest Bid Amount') },
+            { value: 'DepositedAt Desc', label: t('sortNewest', 'Newest First') },
+            { value: 'DepositedAt Asc', label: t('sortOldest', 'Oldest First') },
           ]}
         />
       </Flex>
@@ -882,7 +923,7 @@ export default function MyBidsPage() {
         gap: 32,
         alignItems: 'flex-start'
       }}>
-        {/* Left Column (3/4): Bids List */}
+        {/* Left Column (3/4): Participation List */}
         <div style={{ flex: 3, width: '100%', minWidth: 0 }}>
           {isLoading ? (
             <div style={{ textAlign: 'center', padding: 80 }}>
@@ -895,7 +936,7 @@ export default function MyBidsPage() {
             />
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {displayItems.map((bid: MyBidDto) => (
+              {displayItems.map((bid: MyParticipationDto) => (
                 <AuctionCell key={bid.auctionId} bid={bid} />
               ))}
             </div>

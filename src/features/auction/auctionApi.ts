@@ -139,6 +139,28 @@ export function useMyBids(params?: PaginationParams & { status?: string; sortBy?
   })
 }
 
+export function useMyDeposits(params?: PaginationParams & { status?: string; sortBy?: string }) {
+  return useQuery({
+    queryKey: queryKeys.auctions.myDeposits(params),
+    queryFn: async () => {
+      const res = await apiClient.get<PagedList<import('@/types').MyDepositDto>>('/me/deposits', { params })
+      return res.data
+    },
+    staleTime: 0,
+  })
+}
+
+export function useMyParticipations(params?: PaginationParams & { status?: string; sortBy?: string }) {
+  return useQuery({
+    queryKey: queryKeys.auctions.myParticipations(params),
+    queryFn: async () => {
+      const res = await apiClient.get<PagedList<import('@/types').MyParticipationDto>>('/me/participations', { params })
+      return res.data
+    },
+    staleTime: 0,
+  })
+}
+
 // ── Winner Offers ────────────────────────────────────────────────────
 
 export function useMyPendingWinnerOffers() {

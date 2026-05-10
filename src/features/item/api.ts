@@ -52,6 +52,21 @@ export function useItemById(id: string) {
   })
 }
 
+/**
+ * Fetch all auction sessions for a given item (ordered by createdAt DESC).
+ * Returns the full AuctionListItemDto[] — not paged since items rarely have >5 auctions.
+ */
+export function useItemAuctions(itemId: string | undefined) {
+  return useQuery({
+    queryKey: [...queryKeys.items.detail(itemId ?? ''), 'auctions'],
+    queryFn: async () => {
+      const res = await apiClient.get<import('@/types').AuctionListItemDto[]>(`/items/${itemId}/auctions`)
+      return res.data
+    },
+    enabled: !!itemId,
+  })
+}
+
 export function useCreateItem() {
   const qc = useQueryClient()
   return useMutation({

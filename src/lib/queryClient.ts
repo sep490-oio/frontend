@@ -49,6 +49,10 @@ export const queryKeys = {
     myAutoBid: (auctionId: string) => [...queryKeys.auctions.all, 'autoBid', auctionId] as const,
     watchlist: (params?: unknown) => [...queryKeys.auctions.all, 'watchlist', params] as const,
     myBids: (params?: unknown) => ['myBids', params] as const,
+    myDepositsRoot: () => ['myDeposits'] as const,
+    myDeposits: (params?: unknown) => ['myDeposits', params] as const,
+    myParticipationsRoot: () => ['myParticipations'] as const,
+    myParticipations: (params?: unknown) => ['myParticipations', params] as const,
     myPendingWinnerOffers: () => [...queryKeys.auctions.all, 'myPendingWinnerOffers'] as const,
   },
   items: {

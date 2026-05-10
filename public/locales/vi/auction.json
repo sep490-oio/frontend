@@ -544,5 +544,17 @@
     "closeConfirm": "Đóng phiên đấu giá?",
     "relistTitle": "Đăng lại phiên đấu giá",
     "relistBtn": "Đăng lại"
-  }
+  },
+  "myDeposits": "Tiền cọc của tôi",
+  "depositAmount": "Tiền cọc",
+  "depositedAt": "Ngày đặt cọc",
+  "releasedAt": "Ngày giải phóng",
+  "depositReturned": "Đã hoàn trả",
+  "depositForfeited": "Đã bị tịch thu",
+  "depositApplied": "Đã áp dụng thanh toán",
+  "noDepositsYet": "Bạn chưa đặt cọc cho phiên nào",
+  "myAuctionActivity": "Hoạt động đấu giá",
+  "myAuctionActivitySubtitle": "Theo dõi tất cả các phiên đấu giá bạn đã tham gia — cọc, đấu giá và kết quả",
+  "depositOnly": "Chỉ đặt cọc",
+  "depositHeld": "Đang giữ"
 }

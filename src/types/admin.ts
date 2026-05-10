@@ -114,7 +114,11 @@ export interface PaymentTransactionDto {
   id: string
   transactionNumber?: string
   userId?: string
+  userDisplayName?: string | null
   orderId?: string
+  orderNumber?: string | null
+  auctionId?: string | null
+  auctionItemTitle?: string | null
   type: string
   amount: number
   fee?: number

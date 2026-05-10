@@ -175,8 +175,12 @@ export interface PaymentSummaryDto {
 export interface EscrowDto {
   id: string
   orderId: string
+  orderNumber?: string | null
   buyerId?: string
+  buyerDisplayName?: string | null
   sellerId?: string
+  sellerDisplayName?: string | null
+  auctionItemTitle?: string | null
   amount: number
   currency: string
   status: EscrowStatus

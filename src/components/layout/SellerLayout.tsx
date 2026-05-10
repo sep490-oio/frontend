@@ -5,6 +5,7 @@ import {
   DashboardOutlined,
   ShoppingOutlined,
   PlusCircleOutlined,
+  AppstoreOutlined,
   ThunderboltOutlined,
   OrderedListOutlined,
   WalletOutlined,
@@ -99,6 +100,7 @@ export function SellerLayout() {
       label: t('menu.groupAuctions'),
       children: [
         { key: '/seller/auctions', icon: <ThunderboltOutlined />, label: t('menu.myAuctions', 'My Auctions') },
+        { key: '/seller/auction-overview', icon: <AppstoreOutlined />, label: t('menu.auctionOverview', 'Auction Overview') },
       ],
     },
     {

@@ -544,5 +544,17 @@
     "closeConfirm": "Close this auction session?",
     "relistTitle": "Relist auction session",
     "relistBtn": "Relist"
-  }
+  },
+  "myDeposits": "My Deposits",
+  "depositAmount": "Deposit",
+  "depositedAt": "Deposited",
+  "releasedAt": "Released",
+  "depositReturned": "Returned",
+  "depositForfeited": "Forfeited",
+  "depositApplied": "Applied to Payment",
+  "noDepositsYet": "You have not made any deposits yet",
+  "myAuctionActivity": "My Auction Activity",
+  "myAuctionActivitySubtitle": "Track all auctions you have participated in — deposits, bids, and results",
+  "depositOnly": "Deposit Only",
+  "depositHeld": "Held"
 }
