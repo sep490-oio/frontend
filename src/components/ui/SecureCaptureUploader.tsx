@@ -227,23 +227,30 @@ export function SecureCaptureUploader({
 
   // Fallback: file picker when camera not supported
   if (!isSupported) {
+    const allowUpload = String(import.meta.env.VITE_ALLOW_UPLOAD).trim() === 'true'
     return (
       <div style={{ textAlign: 'center', padding: 24 }}>
-        <Alert type="info" message={t('capture.cameraNotAvailable')} style={{ marginBottom: 16 }} />
-        <Upload
-          showUploadList={false}
-          accept="image/*"
-          beforeUpload={(file) => {
-            onCapture(file, {
-              captureSource: 'file_picker',
-              capturedAt: new Date().toISOString(),
-              step,
-            })
-            return false
-          }}
-        >
-          <Button icon={<UploadOutlined />}>{t('capture.uploadFromFiles')}</Button>
-        </Upload>
+        <Alert type={allowUpload ? 'info' : 'error'} message={t('capture.cameraNotAvailable')} style={{ marginBottom: 16 }} />
+        {allowUpload ? (
+          <Upload
+            showUploadList={false}
+            accept="image/*"
+            beforeUpload={(file) => {
+              onCapture(file, {
+                captureSource: 'file_picker',
+                capturedAt: new Date().toISOString(),
+                step,
+              })
+              return false
+            }}
+          >
+            <Button icon={<UploadOutlined />}>{t('capture.uploadFromFiles')}</Button>
+          </Upload>
+        ) : (
+          <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+            {t('capture.cameraRequiredMsg', 'Camera access is required. Please use a device with camera support or enable camera permissions in your browser.')}
+          </Typography.Text>
+        )}
       </div>
     )
   }
