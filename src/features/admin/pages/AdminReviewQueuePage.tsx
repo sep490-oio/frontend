@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Typography, Space, Button, Modal, Input, App, Drawer } from 'antd'
+import { Typography, Space, Button, Modal, Input, App, Drawer, Image } from 'antd'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { FileSearchOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
@@ -66,6 +66,32 @@ export default function AdminReviewQueuePage() {
   }
 
   const columns: ColumnsType<ReviewQueueItemDto> = [
+    {
+      title: '',
+      dataIndex: 'primaryImageUrl',
+      key: 'image',
+      width: 64,
+      render: (url: string | null | undefined) => (
+        <div style={{
+          width: 44, height: 44, borderRadius: 10, overflow: 'hidden',
+          background: 'var(--color-bg-surface)', border: '1px solid var(--color-border)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          flexShrink: 0,
+        }}>
+          {url ? (
+            <Image
+              src={url}
+              width={44}
+              height={44}
+              style={{ objectFit: 'cover', display: 'block' }}
+              preview={{ mask: false }}
+            />
+          ) : (
+            <span style={{ fontSize: 10, color: 'var(--color-text-tertiary)' }}>—</span>
+          )}
+        </div>
+      ),
+    },
     {
       title: t('reviewQueue.itemTitle'),
       dataIndex: 'title',

@@ -87,9 +87,15 @@ export default function AdminSellerProfilesPage() {
       title: t('sellers.description'),
       dataIndex: 'storeDescription',
       key: 'storeDescription',
-      ellipsis: true,
       responsive: ['md'],
-      render: (desc: string) => htmlToPlainTextExcerpt(desc) || '—',
+      render: (desc: string) => (
+        <Typography.Text
+          ellipsis={{ tooltip: htmlToPlainTextExcerpt(desc, 300) }}
+          style={{ maxWidth: 400, display: 'block' }}
+        >
+          {htmlToPlainTextExcerpt(desc) || '—'}
+        </Typography.Text>
+      ),
     },
     {
       title: t('sellers.status'),

@@ -99,11 +99,15 @@ export default function AdminItemDetailPage() {
       <Card title={t('itemDetail.info')} style={{ marginBottom: 16, borderRadius: 12 }}>
         <Descriptions column={{ xs: 1, sm: 2 }} bordered size={isMobile ? 'small' : 'default'}>
           <Descriptions.Item label={t('common.id')}>
-            <Typography.Text copyable style={{ fontSize: isMobile ? 12 : 14 }}>{item.id}</Typography.Text>
+            <Button type="link" onClick={() => navigate(`/items/${item.id}`)} style={{ padding: 0, height: 'auto' }}>
+              {t('itemDetail.viewItem', 'View Item')} →
+            </Button>
           </Descriptions.Item>
           <Descriptions.Item label={t('reviewQueue.itemTitle')}>{item.title}</Descriptions.Item>
           <Descriptions.Item label={t('reviewQueue.seller')}>
-            <Typography.Text ellipsis style={{ maxWidth: isMobile ? 160 : undefined }}>{item.sellerId}</Typography.Text>
+            <Button type="link" onClick={() => navigate(`/sellers/${item.sellerId}`)} style={{ padding: 0, height: 'auto' }}>
+              {item.sellerName || item.sellerId}
+            </Button>
           </Descriptions.Item>
           <Descriptions.Item label={t('itemDetail.condition')}>{item.condition}</Descriptions.Item>
           <Descriptions.Item label={t('itemDetail.quantity')}>{item.quantity}</Descriptions.Item>

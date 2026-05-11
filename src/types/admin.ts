@@ -85,6 +85,7 @@ export interface ReviewQueueItemDto {
   title: string
   sellerId: string
   sellerName: string
+  primaryImageUrl?: string | null
   submittedAt: string
   assignedTo?: string
   status: string
