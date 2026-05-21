@@ -1,6 +1,7 @@
 import apiClient, { extractArray } from '@/lib/axios'
 import { queryKeys } from '@/lib/queryClient'
 import { invalidateAndRefetchActive } from '@/lib/mutationFreshness'
+import { stripEmpty } from '@/lib/stripEmpty'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type {
   UserListItemDto,
@@ -28,6 +29,7 @@ import type {
   AdminAuctionFulfillmentStatus,
   PlatformRevenueHistoryDto,
   PlatformWalletTransactionsResultDto,
+  AdminItemQuestionDto,
   AdminOrderListItemDto,
   AdminOrderDetailDto,
   PagedList,
@@ -271,6 +273,63 @@ export function useRejectSellerProfile() {
 
 // ── Items ────────────────────────────────────────────────────────────
 
+export const useAdminItems = (params: any) => {
+  return useQuery({
+    queryKey: queryKeys.admin.items(params),
+    queryFn: async () => {
+      const { data } = await apiClient.get('/admin/items', { params })
+      return data as { items: ItemDto[], metadata: { totalCount: number, hasNext: boolean } }
+    },
+    placeholderData: (prev) => prev,
+  })
+}
+
+export const useAdminItemQuestions = (itemId: string, params?: any) => {
+  return useQuery({
+    queryKey: [...queryKeys.items.questionsRoot(itemId), 'admin', params],
+    queryFn: async () => {
+      const { data } = await apiClient.get(`/admin/items/${itemId}/questions`, { params })
+      return data as { items: AdminItemQuestionDto[], metadata: { totalCount: number, hasNext: boolean } }
+    },
+    enabled: !!itemId,
+  })
+}
+
+export const useHideItemQuestion = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ itemId, questionId, reason }: { itemId: string; questionId: string; reason: string }) => {
+      await apiClient.post(`/admin/items/${itemId}/questions/${questionId}/hide`, { reason })
+    },
+    onSuccess: (_, { itemId }) => {
+      qc.invalidateQueries({ queryKey: queryKeys.items.questionsRoot(itemId) })
+    }
+  })
+}
+
+export const useShowItemQuestion = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ itemId, questionId }: { itemId: string; questionId: string }) => {
+      await apiClient.post(`/admin/items/${itemId}/questions/${questionId}/show`)
+    },
+    onSuccess: (_, { itemId }) => {
+      qc.invalidateQueries({ queryKey: queryKeys.items.questionsRoot(itemId) })
+    }
+  })
+}
+
+export const useAdminItemLogistics = (itemId: string) => {
+  return useQuery({
+    queryKey: ['admin', 'items', 'logistics', itemId],
+    queryFn: async () => {
+      const { data } = await apiClient.get(`/admin/items/${itemId}/logistics`)
+      return data
+    },
+    enabled: !!itemId,
+  })
+}
+
 export function useReviewQueue(params?: PaginationParams & { status?: string }) {
   return useQuery({
     queryKey: queryKeys.admin.reviewQueue(params),
@@ -285,8 +344,30 @@ export function useAdminItemDetail(id: string) {
   return useQuery({
     queryKey: [...queryKeys.admin.reviewQueueRoot(), 'detail', id],
     queryFn: async () => {
-      const res = await apiClient.get<ItemDto & { reviews?: ItemReviewDto[] }>(`/admin/items/${id}`)
-      return res.data
+      const [itemRes, reviewsRes, auctionsRes] = await Promise.all([
+        apiClient.get<ItemDto>(`/admin/items/${id}`),
+        apiClient.get<ItemReviewDto[]>(`/admin/items/${id}/reviews`).catch(() => ({ data: [] })),
+        apiClient.get<any[]>(`/items/${id}/auctions`).catch(() => ({ data: [] }))
+      ])
+
+      const item = itemRes.data
+      const auctions = auctionsRes.data
+
+      const auction = auctions && auctions.length > 0 ? {
+        auctionId: auctions[0].id,
+        auctionStatus: auctions[0].status,
+        auctionType: auctions[0].type,
+        currentPrice: auctions[0].currentPrice,
+        currency: auctions[0].currency ?? 'VND',
+        startTime: auctions[0].startTime,
+        endTime: auctions[0].endTime,
+      } : undefined
+
+      return {
+        ...item,
+        reviews: reviewsRes.data,
+        auction
+      }
     },
     enabled: !!id,
   })
@@ -384,6 +465,38 @@ export function useAssignReviewer() {
 }
 
 // ── Auctions ─────────────────────────────────────────────────────────
+
+export function useAdminForceStartQualification() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ auctionId }: { auctionId: string }) => {
+      const res = await apiClient.post(`/admin/auctions/${auctionId}/force-start-qualification`)
+      return res.data
+    },
+    onSuccess: async (_data, variables) => {
+      await invalidateAndRefetchActive(qc, [
+        queryKeys.auctions.detail(variables.auctionId),
+        queryKeys.auctions.all,
+      ])
+    },
+  })
+}
+
+export function useAdminForceStartBidding() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ auctionId }: { auctionId: string }) => {
+      const res = await apiClient.post(`/admin/auctions/${auctionId}/force-start-bidding`)
+      return res.data
+    },
+    onSuccess: async (_data, variables) => {
+      await invalidateAndRefetchActive(qc, [
+        queryKeys.auctions.detail(variables.auctionId),
+        queryKeys.auctions.all,
+      ])
+    },
+  })
+}
 
 export function useSetCuration() {
   const qc = useQueryClient()
@@ -644,11 +757,13 @@ export function useAdminDisputes(params?: PaginationParams & { status?: string }
 
 // ── Payments ─────────────────────────────────────────────────────────
 
-export function useAdminWithdrawals(params?: PaginationParams & { status?: string }) {
+export function useAdminWithdrawals(params?: PaginationParams & { status?: string; fromDate?: string; toDate?: string; searchTerm?: string; sortBy?: string }) {
   return useQuery({
     queryKey: queryKeys.admin.withdrawals(params),
     queryFn: async () => {
-      const res = await apiClient.get<PagedList<WithdrawalRequestDto>>('/admin/payments/withdrawals', { params })
+      const res = await apiClient.get<PagedList<WithdrawalRequestDto>>('/admin/payments/withdrawals', { 
+        params: params ? stripEmpty(params as Record<string, unknown>) : undefined 
+      })
       return res.data
     },
   })
@@ -679,6 +794,7 @@ export function useApproveWithdrawal() {
       ])
     },
   })
+
 }
 
 export function useRejectWithdrawal() {
@@ -712,11 +828,13 @@ export function useCompleteWithdrawal() {
   })
 }
 
-export function useAdminTransactions(params?: PaginationParams & { status?: string; type?: string }) {
+export function useAdminTransactions(params?: PaginationParams & { status?: string; type?: string; fromDate?: string; toDate?: string; searchTerm?: string; sortBy?: string }) {
   return useQuery({
     queryKey: queryKeys.admin.transactions(params),
     queryFn: async () => {
-      const res = await apiClient.get<PagedList<PaymentTransactionDto>>('/admin/payments/transactions', { params })
+      const res = await apiClient.get<PagedList<PaymentTransactionDto>>('/admin/payments/transactions', { 
+        params: params ? stripEmpty(params as Record<string, unknown>) : undefined 
+      })
       return res.data
     },
   })
@@ -733,11 +851,13 @@ export function useAdminTransactionById(id: string) {
   })
 }
 
-export function useAdminEscrows(params?: PaginationParams & { status?: string }) {
+export function useAdminEscrows(params?: PaginationParams & { status?: string; fromDate?: string; toDate?: string; searchTerm?: string; sortBy?: string }) {
   return useQuery({
     queryKey: queryKeys.admin.escrows(params),
     queryFn: async () => {
-      const res = await apiClient.get<PagedList<EscrowDto>>('/admin/payments/escrows', { params })
+      const res = await apiClient.get<PagedList<EscrowDto>>('/admin/payments/escrows', { 
+        params: params ? stripEmpty(params as Record<string, unknown>) : undefined 
+      })
       return res.data
     },
   })
@@ -1070,7 +1190,7 @@ export function usePlatformRevenueHistory(params?: PlatformRevenueParams) {
   })
 }
 
-export function usePlatformWalletTransactions(params?: PaginationParams & { type?: string }) {
+export function usePlatformWalletTransactions(params?: PaginationParams & { type?: string; fromDate?: string; toDate?: string; searchTerm?: string; category?: string }) {
   return useQuery({
     queryKey: queryKeys.admin.platformWalletTransactions(params),
     queryFn: async () => {

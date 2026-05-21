@@ -11,7 +11,11 @@
     "monitoring": "Giám sát",
     "payments": "Thanh toán",
     "terms": "Điều khoản",
-    "roles": "Vai trò & Quyền"
+    "roles": "Vai trò & Quyền",
+    "usersManagement": "Quản lý Người dùng",
+    "catalogAndAuctions": "Sản phẩm & Đấu giá",
+    "ordersAndFinances": "Đơn hàng & Tài chính",
+    "systemAndSettings": "Hệ thống & Cài đặt"
   },
   "dashboard": {
     "title": "Bảng điều khiển",

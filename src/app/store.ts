@@ -1,6 +1,6 @@
 import { configureStore, createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import { useDispatch, useSelector } from 'react-redux'
-import type { UserDto, AuthTokenDto } from '@/types'
+import type { UserDto, AuthTokenDto, UserSessionDto } from '@/types'
 import { STORAGE_KEYS } from '@/utils/constants'
 
 // ─── Auth Slice ────────────────────────────────────────────
@@ -8,6 +8,8 @@ interface AuthState {
   user: UserDto | null
   accessToken: string | null
   refreshToken: string | null
+  accessTokenExpiresAt: string | null
+  session: UserSessionDto | null
   isAuthenticated: boolean
   requires2FA: boolean
   twoFactorUserName: string | null
@@ -29,11 +31,19 @@ function getValidToken(key: string): string | null {
 
 const storedAccessToken = getValidToken(STORAGE_KEYS.ACCESS_TOKEN)
 const storedRefreshToken = getValidToken(STORAGE_KEYS.REFRESH_TOKEN)
+const storedAccessTokenExpiresAt = getValidToken(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT)
+const storedSessionStr = getValidToken(STORAGE_KEYS.SESSION)
+let storedSession: UserSessionDto | null = null
+try {
+  if (storedSessionStr) storedSession = JSON.parse(storedSessionStr)
+} catch {}
 
 const initialState: AuthState = {
   user: null,
   accessToken: storedAccessToken,
   refreshToken: storedRefreshToken,
+  accessTokenExpiresAt: storedAccessTokenExpiresAt,
+  session: storedSession,
   isAuthenticated: !!storedAccessToken,
   requires2FA: false,
   twoFactorUserName: null,
@@ -48,18 +58,26 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     setCredentials(state, action: PayloadAction<AuthTokenDto>) {
-      const { accessToken, refreshToken } = action.payload
+      const { accessToken, refreshToken, accessTokenExpiresAt, session } = action.payload
       if (!accessToken) {
         return
       }
       state.accessToken = accessToken
       state.refreshToken = refreshToken
+      state.accessTokenExpiresAt = accessTokenExpiresAt || null
+      state.session = session || null
       state.isAuthenticated = true
       state.requires2FA = false
       state.twoFactorUserName = null
       localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken)
       if (refreshToken) {
         localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken)
+      }
+      if (accessTokenExpiresAt) {
+        localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT, accessTokenExpiresAt)
+      }
+      if (session) {
+        localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session))
       }
     },
     setUser(state, action: PayloadAction<UserDto>) {
@@ -79,11 +97,15 @@ const authSlice = createSlice({
       state.user = null
       state.accessToken = null
       state.refreshToken = null
+      state.accessTokenExpiresAt = null
+      state.session = null
       state.isAuthenticated = false
       state.requires2FA = false
       state.twoFactorUserName = null
       localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN)
       localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
+      localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT)
+      localStorage.removeItem(STORAGE_KEYS.SESSION)
       localStorage.removeItem(STORAGE_KEYS.TWO_FA_TOKEN)
     },
   },

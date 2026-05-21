@@ -154,19 +154,31 @@ export default function AdminOrderDetailPage() {
         <div>
           <Typography.Title level={isMobile ? 3 : 2} style={{ margin: 0 }}>
             <ShoppingCartOutlined style={{ marginRight: 8 }} />
-            Order #{order.orderNumber}
+            Order {order.orderNumber ?? order.id.slice(0, 8)}
+            <Button type="text" icon={<CopyOutlined />} onClick={() => copyToClipboard(order.id)} />
           </Typography.Title>
-          <Flex gap={8} align="center" style={{ marginTop: 8 }}>
+          <Flex gap={12} align="center" wrap="wrap" style={{ marginTop: 8 }}>
             <Tag color={STATUS_COLOR[order.status] ?? 'default'} style={{ fontWeight: 600, fontSize: 13, padding: '2px 12px' }}>
               {order.status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
             </Tag>
-            <Typography.Text
-              type="secondary"
-              style={{ fontSize: 12, cursor: 'pointer' }}
-              onClick={() => copyToClipboard(order.id)}
-            >
-              {order.id.slice(0, 8)}... <CopyOutlined style={{ fontSize: 11 }} />
-            </Typography.Text>
+            
+            <Divider type="vertical" />
+            
+            <Flex align="center" gap={4}>
+              <Typography.Text type="secondary" style={{ fontSize: 13 }}>Buyer:</Typography.Text>
+              <Button type="link" size="small" style={{ padding: 0 }} onClick={() => navigate(`/admin/users/${order.buyerId}`)}>
+                <UserOutlined /> {order.buyerDisplayName || order.buyerId.slice(0, 8)}
+              </Button>
+            </Flex>
+
+            <Divider type="vertical" />
+
+            <Flex align="center" gap={4}>
+              <Typography.Text type="secondary" style={{ fontSize: 13 }}>Seller:</Typography.Text>
+              <Button type="link" size="small" style={{ padding: 0 }} onClick={() => navigate(`/admin/users/${order.sellerId}`)}>
+                <UserOutlined /> {order.sellerDisplayName || order.sellerId.slice(0, 8)}
+              </Button>
+            </Flex>
           </Flex>
         </div>
 
@@ -483,13 +495,21 @@ export default function AdminOrderDetailPage() {
 
       {/* ── Force Cancel Modal ── */}
       <Modal
-        title="Force Cancel Order"
+        title={
+          <Space>
+            <AlertOutlined style={{ color: 'var(--color-error)' }} />
+            <span>Force Cancel Order</span>
+          </Space>
+        }
         open={cancelModal}
         onCancel={() => { setCancelModal(false); setReason('') }}
         onOk={handleForceCancel}
-        okText="Force Cancel"
+        okText="Confirm Cancel"
         okButtonProps={{ danger: true, disabled: !reason.trim(), loading: forceCancel.isPending }}
       >
+        <Typography.Paragraph strong style={{ color: 'var(--color-error, #cf1322)' }}>
+          Hành động này sẽ can thiệp vào luồng tài chính và không thể hoàn tác. Bạn có chắc chắn?
+        </Typography.Paragraph>
         <Typography.Paragraph type="secondary">
           This will cancel the order from any state and refund all held escrows to the buyer.
         </Typography.Paragraph>
@@ -503,13 +523,21 @@ export default function AdminOrderDetailPage() {
 
       {/* ── Force Refund Modal ── */}
       <Modal
-        title="Force Refund Order"
+        title={
+          <Space>
+            <AlertOutlined style={{ color: 'var(--color-error)' }} />
+            <span>Force Refund Order</span>
+          </Space>
+        }
         open={refundModal}
         onCancel={() => { setRefundModal(false); setReason('') }}
         onOk={handleForceRefund}
-        okText="Force Refund"
-        okButtonProps={{ disabled: !reason.trim(), loading: forceRefund.isPending }}
+        okText="Confirm Refund"
+        okButtonProps={{ danger: true, disabled: !reason.trim(), loading: forceRefund.isPending }}
       >
+        <Typography.Paragraph strong style={{ color: 'var(--color-error, #cf1322)' }}>
+          Hành động này sẽ can thiệp vào luồng tài chính và không thể hoàn tác. Bạn có chắc chắn?
+        </Typography.Paragraph>
         <Typography.Paragraph type="secondary">
           This will mark the order as refunded and release all escrows back to the buyer.
         </Typography.Paragraph>
@@ -523,13 +551,21 @@ export default function AdminOrderDetailPage() {
 
       {/* ── Override Status Modal ── */}
       <Modal
-        title="Override Order Status"
+        title={
+          <Space>
+            <AlertOutlined style={{ color: 'var(--color-error)' }} />
+            <span>Override Order Status</span>
+          </Space>
+        }
         open={overrideModal}
         onCancel={() => { setOverrideModal(false); setReason(''); setNewStatus(undefined) }}
         onOk={handleOverrideStatus}
-        okText="Override Status"
-        okButtonProps={{ disabled: !reason.trim() || !newStatus, loading: overrideStatus.isPending }}
+        okText="Confirm Override"
+        okButtonProps={{ danger: true, disabled: !reason.trim() || !newStatus, loading: overrideStatus.isPending }}
       >
+        <Typography.Paragraph strong style={{ color: 'var(--color-error, #cf1322)' }}>
+          Hành động này sẽ can thiệp vào luồng tài chính và không thể hoàn tác. Bạn có chắc chắn?
+        </Typography.Paragraph>
         <Typography.Paragraph type="secondary">
           This will directly change the order status. Use with extreme caution.
         </Typography.Paragraph>

@@ -320,7 +320,7 @@ export default function VnPayReturnPage() {
             <Button
               type="primary"
               size="large"
-              onClick={() => navigate(-1)}
+              onClick={() => { navigate(-1); }}
               style={{
                 height: 52,
                 padding: '0 40px',

@@ -241,7 +241,7 @@ export default function WithdrawPage() {
         </Card>
         <Card style={{ ...cardStyle, borderLeft: '3px solid var(--color-accent)' }} styles={{ body: { padding: '18px 20px' } }}>
           <Text style={{ fontSize: 11, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
-            {t('effectiveBalance', 'After Pending')}
+            {t('remainingBalance', 'Remaining Balance')}
           </Text>
           <div style={{ fontFamily: MONO_FONT, fontSize: isMobile ? 22 : 26, fontWeight: 700, color: 'var(--color-accent)', marginTop: 2 }}>
             {wallet ? formatCurrency(Math.max(0, wallet.availableBalance - pendingTotal), wallet.currency) : '--'}
@@ -301,6 +301,7 @@ export default function WithdrawPage() {
                         addonAfter={wallet?.currency ?? 'VND'}
                         placeholder="0"
                         autoFocus
+                        status={watchedAmount > (wallet?.availableBalance ?? 0) ? 'error' : undefined}
                       />
                     )}
                   />

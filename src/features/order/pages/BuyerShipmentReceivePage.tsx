@@ -76,7 +76,7 @@ export default function BuyerShipmentReceivePage() {
   return (
     <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 12px' }}>
       <Space style={{ marginBottom: 16 }} wrap>
-        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)}>
+        <Button icon={<ArrowLeftOutlined />} onClick={() => { navigate(-1); }}>
           {t('action.back', 'Back', { ns: 'common' })}
         </Button>
       </Space>

@@ -29,7 +29,7 @@ export function AdminErrorState({
       <Space>
         <Button
           icon={<ArrowLeftOutlined />}
-          onClick={() => backPath ? navigate(backPath) : navigate(-1)}
+          onClick={() => { backPath ? navigate(backPath) : navigate(-1); }}
         >
           Back
         </Button>

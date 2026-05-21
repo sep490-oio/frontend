@@ -47,7 +47,7 @@ export default function SellerAuctionDashboardPage() {
     return (
       <Flex vertical align="center" justify="center" style={{ minHeight: 400 }}>
         <Text type="danger">{tc('error.failedToLoad')}</Text>
-        <Button onClick={() => navigate(-1)} style={{ marginTop: 16 }}>
+        <Button onClick={() => { navigate(-1); }} style={{ marginTop: 16 }}>
           {tc('action.back')}
         </Button>
       </Flex>
@@ -94,7 +94,7 @@ export default function SellerAuctionDashboardPage() {
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px' : '24px 24px 80px' }}>
       <Space style={{ marginBottom: 24 }}>
-        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)}>
+        <Button icon={<ArrowLeftOutlined />} onClick={() => { navigate(-1); }}>
           {tc('action.back')}
         </Button>
       </Space>

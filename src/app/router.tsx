@@ -184,16 +184,16 @@ const AdminVerificationsPage = lazy(() => import('@/features/admin/pages/AdminVe
 const AdminVerificationDetailPage = lazy(() => import('@/features/admin/pages/AdminVerificationDetailPage'))
 const AdminSellerProfilesPage = lazy(() => import('@/features/admin/pages/AdminSellerProfilesPage'))
 const AdminReviewQueuePage = lazy(() => import('@/features/admin/pages/AdminReviewQueuePage'))
+const AdminItemsPage = lazy(() => import('@/features/admin/pages/AdminItemsPage'))
 const AdminItemDetailPage = lazy(() => import('@/features/admin/pages/AdminItemDetailPage'))
 const AdminAuctionsPage = lazy(() => import('@/features/admin/pages/AdminAuctionsPage'))
-const AdminAuctionControlPage = lazy(() => import('@/features/admin/pages/AdminAuctionControlPage'))
+const AdminAuctionDetailPage = lazy(() => import('@/features/admin/pages/AdminAuctionDetailPage'))
 const AdminMonitoringPage = lazy(() => import('@/features/admin/pages/AdminMonitoringPage'))
 const AdminModerationPage = lazy(() => import('@/features/admin/pages/AdminModerationPage'))
 const AdminPaymentsPage = lazy(() => import('@/features/admin/pages/AdminPaymentsPage'))
 const AdminTermsPage = lazy(() => import('@/features/admin/pages/AdminTermsPage'))
 const AdminRolesPage = lazy(() => import('@/features/admin/pages/AdminRolesPage'))
-const AdminCompletedAuctionsPage = lazy(() => import('@/features/admin/pages/AdminCompletedAuctionsPage'))
-const AdminCompletedAuctionDetailPage = lazy(() => import('@/features/admin/pages/AdminCompletedAuctionDetailPage'))
+
 const AdminDisputeListPage = lazy(() => import('@/features/admin/pages/AdminDisputeListPage'))
 const AdminDisputeDetailPage = lazy(() => import('@/features/admin/pages/AdminDisputeDetailPage'))
 const AdminOrdersPage = lazy(() => import('@/features/admin/pages/AdminOrdersPage'))
@@ -368,12 +368,11 @@ export const router = createBrowserRouter([
           { path: '/admin/verifications', element: withSuspense(AdminVerificationsPage) },
           { path: '/admin/verifications/:id', element: withSuspense(AdminVerificationDetailPage) },
           { path: '/admin/sellers', element: withSuspense(AdminSellerProfilesPage) },
+          { path: '/admin/items', element: withSuspense(AdminItemsPage) },
           { path: '/admin/items/review', element: withSuspense(AdminReviewQueuePage) },
           { path: '/admin/items/:id', element: withSuspense(AdminItemDetailPage) },
           { path: '/admin/auctions', element: withSuspense(AdminAuctionsPage) },
-          { path: '/admin/auctions/completed', element: withSuspense(AdminCompletedAuctionsPage) },
-          { path: '/admin/auctions/completed/:auctionId', element: withSuspense(AdminCompletedAuctionDetailPage) },
-          { path: '/admin/auctions/:id', element: withSuspense(AdminAuctionControlPage) },
+          { path: '/admin/auctions/:id', element: withSuspense(AdminAuctionDetailPage) },
           { path: '/admin/moderation', element: withSuspense(AdminModerationPage) },
           { path: '/admin/reports', element: <Navigate to="/admin/moderation" replace /> },
           { path: '/admin/monitoring', element: withSuspense(AdminMonitoringPage) },

@@ -137,6 +137,7 @@ export default function AdminOrdersPage() {
       dataIndex: 'totalAmount',
       key: 'totalAmount',
       width: 120,
+      align: 'right',
       render: (amount: number) => (
         <Typography.Text strong style={{ fontSize: 13 }}>
           {formatCurrency(amount)}
@@ -161,6 +162,21 @@ export default function AdminOrdersPage() {
       width: 160,
       render: (date: string) => (
         <Typography.Text style={{ fontSize: 12 }}>{formatDateTime(date)}</Typography.Text>
+      ),
+    },
+    {
+      title: 'Action',
+      key: 'action',
+      width: 100,
+      render: (_, record) => (
+        <Button
+          type="link"
+          size="small"
+          onClick={(e) => { e.stopPropagation(); navigate(`/admin/orders/${record.id}`) }}
+          style={{ padding: 0 }}
+        >
+          {t('common:action.viewDetail', 'View Detail')}
+        </Button>
       ),
     },
   ]

@@ -60,13 +60,20 @@ export interface CreateItemRequest {
 export interface ItemQuestionDto {
   id: string
   itemId: string
-  questionerId: string
+  askerId: string
   question: string
   answer?: string
   createdAt: string
   answeredAt?: string
   askerDisplayName?: string
   answererDisplayName?: string
+  isPublic?: boolean
+}
+
+export interface AdminItemQuestionDto extends ItemQuestionDto {
+  hiddenByAdminId?: string
+  hiddenAt?: string
+  hiddenReason?: string
 }
 
 export interface CategoryDto {

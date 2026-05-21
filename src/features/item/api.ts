@@ -269,23 +269,27 @@ function toItemQuestionDto(
   incoming: ItemQuestionDto | ItemQuestionNotification,
   existing?: ItemQuestionDto,
 ): ItemQuestionDto {
-  if ('questionerId' in incoming) {
-    return incoming
+  if ('askerId' in incoming && 'questionId' in incoming) {
+    // It's a notification, map it to DTO
+    return {
+      id: incoming.questionId,
+      itemId: incoming.itemId,
+      askerId: incoming.askerId,
+      question: incoming.question,
+      answer: incoming.answer ?? existing?.answer,
+      createdAt: incoming.createdAt,
+      answeredAt:
+        incoming.answer != null
+          ? existing?.answeredAt ?? new Date().toISOString()
+          : existing?.answeredAt,
+    }
   }
 
-  return {
-    id: incoming.questionId,
-    itemId: incoming.itemId,
-    questionerId: incoming.askerId,
-    question: incoming.question,
-    answer: incoming.answer ?? existing?.answer,
-    createdAt: incoming.createdAt,
-    answeredAt:
-      incoming.answer != null
-        ? existing?.answeredAt ?? new Date().toISOString()
-        : existing?.answeredAt,
-  }
+  // It's already a DTO
+  return incoming as ItemQuestionDto
 }
+
+
 
 function upsertQuestionPage(
   current: PagedList<ItemQuestionDto> | undefined,

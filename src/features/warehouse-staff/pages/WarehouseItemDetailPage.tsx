@@ -78,7 +78,7 @@ export default function WarehouseItemDetailPage() {
     return (
       <div style={{ maxWidth: 720, margin: '0 auto' }}>
         <Space style={{ marginBottom: 16 }}>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)} style={{ minHeight: 44 }}>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => { navigate(-1); }} style={{ minHeight: 44 }}>
             {t('back', 'Back')}
           </Button>
         </Space>
@@ -102,7 +102,7 @@ export default function WarehouseItemDetailPage() {
       <Space style={{ marginBottom: 16 }}>
         <Button
           icon={<ArrowLeftOutlined />}
-          onClick={() => navigate(-1)}
+          onClick={() => { navigate(-1); }}
           size={buttonSize}
           style={{ minHeight: 44 }}
         >

@@ -109,6 +109,7 @@ export default function AdminSellerProfilesPage() {
       dataIndex: 'trustScore',
       key: 'trustScore',
       width: 100,
+      align: 'right',
       responsive: ['sm'],
       render: (score: number) => (
         <span style={{ fontFamily: MONO_FONT, fontSize: 13 }}>
@@ -135,7 +136,7 @@ export default function AdminSellerProfilesPage() {
           direction={isMobile ? 'vertical' : 'horizontal'}
           style={{ width: isMobile ? '100%' : undefined }}
         >
-          {record.status === SellerProfileStatus.Pending && (
+          {record.status === SellerProfileStatus.Pending ? (
             <>
               <Button
                 type="link"
@@ -158,6 +159,21 @@ export default function AdminSellerProfilesPage() {
                 {t('sellers.reject')}
               </Button>
             </>
+          ) : (
+            <Button
+              type="link"
+              size="small"
+              style={actionBtnStyle}
+              onClick={() => {
+                // Navigate or open modal depending on implementation.
+                // Assuming navigate to user detail for now if userId exists, else no-op.
+                if ((record as any).userId) {
+                  window.location.href = `/admin/users/${(record as any).userId}`;
+                }
+              }}
+            >
+              {t('common:action.viewDetail', 'View Detail')}
+            </Button>
           )}
         </Space>
       ),

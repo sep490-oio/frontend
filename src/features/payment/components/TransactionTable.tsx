@@ -4,7 +4,7 @@ import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { formatDateTime, formatCurrency } from '@/utils/format'
 import { WalletTransactionType } from '@/types/enums'
 import type { WalletTransactionDto, WalletEventType, WalletLedgerStatus } from '@/types'
-import { Tag, Typography, Space, Tooltip, Flex } from 'antd'
+import { Tag, Typography, Space, Tooltip, Flex, Drawer, Descriptions } from 'antd'
 import { MONO_FONT } from '@/styles/tokens'
 import { useState, useMemo } from 'react'
 import { ReferenceTitle } from './ReferenceTitle'
@@ -38,15 +38,25 @@ export interface TransactionTableProps {
 export function TransactionTable({ data, loading, pagination }: TransactionTableProps) {
   const { t } = useTranslation('payment')
   const [hoveredRefId, setHoveredRefId] = useState<string | null>(null)
+  const [selectedTx, setSelectedTx] = useState<WalletTransactionDto | null>(null)
 
   const processedData = useMemo(() => {
     if (!data) return data;
+
+    // Filter out withdrawal_hold if there's a withdrawal_release with the same reference
+    const releaseRefIds = new Set(data.filter(item => item.eventType === 'withdrawal_release').map(item => item.referenceId));
+    const filteredData = data.filter(item => {
+      if (item.eventType === 'withdrawal_hold' && item.referenceId && releaseRefIds.has(item.referenceId)) {
+        return false; // hide hold if release exists
+      }
+      return true;
+    });
 
     // Group by referenceId (only for certain types that make sense to group)
     const groups: Record<string, WalletTransactionDto[]> = {};
     const others: WalletTransactionDto[] = [];
 
-    data.forEach(item => {
+    filteredData.forEach(item => {
       const canGroup = item.referenceId && (
         item.referenceType === 'deposit' ||
         item.referenceType === 'escrow' ||
@@ -128,7 +138,13 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
         // original description string for legacy rows that predate the new
         // enrichment fields.
         let label: string = description ?? '-'
-        if (record.eventType) {
+        if (record.eventType === 'seller_payout') {
+          label = `Tiền bán đơn hàng ${record.referenceNumber ?? record.referenceId?.split('-')[0].toUpperCase() ?? ''}`
+        } else if (record.eventType === 'auction_deposit_hold') {
+          label = 'Đặt cọc phiên đấu giá'
+        } else if (record.eventType === 'withdrawal_hold' || record.eventType === 'withdrawal_release') {
+          label = 'Rút tiền về ngân hàng'
+        } else if (record.eventType) {
           const cfg = EVENT_TYPE_CONFIG[record.eventType]
           label = t(`event.${record.eventType}`, cfg?.fallback ?? description ?? record.eventType)
         }
@@ -184,6 +200,7 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
       dataIndex: 'amount',
       key: 'amount',
       width: 160,
+      align: 'right',
       render: (amount: number, record) => {
         const isDeduction = record.type === WalletTransactionType.Debit || record.type === WalletTransactionType.Hold;
         const color = isDeduction ? 'var(--color-danger)' : 'var(--color-success)';
@@ -219,6 +236,7 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
       dataIndex: 'balanceAfter',
       key: 'balanceAfter',
       width: 140,
+      align: 'right',
       render: (value: number, record) => (
         <span style={{ fontSize: 13, fontWeight: 500 }}>{formatCurrency(value, record.currency)}</span>
       ),
@@ -247,6 +265,7 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
   ]
 
   return (
+    <>
     <ResponsiveTable<WalletTransactionDto>
       mobileMode="card"
       rowKey="id"
@@ -308,9 +327,11 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
         )
       }}
       onRow={(record) => ({
+        onClick: () => setSelectedTx(record),
         onMouseEnter: () => record.referenceId && setHoveredRefId(record.referenceId),
         onMouseLeave: () => setHoveredRefId(null),
         style: {
+          cursor: 'pointer',
           transition: 'all 0.3s ease',
           background: record.referenceId && record.referenceId === hoveredRefId
             ? getReferenceColor(record.referenceId)
@@ -322,6 +343,62 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
         }
       })}
     />
+
+    <Drawer
+      title={t('receiptDetails', 'Detailed Receipt')}
+      placement="right"
+      width={400}
+      onClose={() => setSelectedTx(null)}
+      open={!!selectedTx}
+    >
+      {selectedTx && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <Flex justify="center" align="center" style={{ marginBottom: 8, padding: '24px 0', background: 'var(--color-bg-surface)', borderRadius: 16 }}>
+            <div style={{ textAlign: 'center' }}>
+              <Typography.Text type="secondary" style={{ display: 'block', fontSize: 13, marginBottom: 8 }}>
+                {t('txAmount', 'Amount')}
+              </Typography.Text>
+              <Typography.Title level={2} style={{ margin: 0, color: selectedTx.type === WalletTransactionType.Debit || selectedTx.type === WalletTransactionType.Hold ? 'var(--color-danger)' : 'var(--color-success)', fontFamily: MONO_FONT }}>
+                {selectedTx.type === WalletTransactionType.Debit || selectedTx.type === WalletTransactionType.Hold ? '-' : '+'}
+                {formatCurrency(selectedTx.amount, selectedTx.currency)}
+              </Typography.Title>
+            </div>
+          </Flex>
+
+          <Descriptions column={1} bordered size="small" labelStyle={{ width: 140, color: 'var(--color-text-secondary)' }}>
+            <Descriptions.Item label={t('txId', 'Transaction ID')}>
+              <Typography.Text copyable style={{ fontFamily: MONO_FONT }}>{selectedTx.id}</Typography.Text>
+            </Descriptions.Item>
+            <Descriptions.Item label={t('txDate', 'Date & Time')}>
+              {formatDateTime(selectedTx.createdAt)}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('txType', 'Transaction Type')}>
+              {selectedTx.eventType ? t(`event.${selectedTx.eventType}`, EVENT_TYPE_CONFIG[selectedTx.eventType]?.fallback ?? selectedTx.eventType) : t(`txTypeLabel.${selectedTx.type}`, selectedTx.type)}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('txStatus', 'Status')}>
+              <Tag color={LEDGER_STATUS_CONFIG[selectedTx.ledgerStatus ?? 'posted'].color}>
+                {t(LEDGER_STATUS_CONFIG[selectedTx.ledgerStatus ?? 'posted'].key, LEDGER_STATUS_CONFIG[selectedTx.ledgerStatus ?? 'posted'].fallback)}
+              </Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label={t('txBalanceAfter', 'Balance After')}>
+              <Typography.Text strong style={{ fontFamily: MONO_FONT }}>
+                {formatCurrency(selectedTx.balanceAfter, selectedTx.currency)}
+              </Typography.Text>
+            </Descriptions.Item>
+          </Descriptions>
+
+          {selectedTx.description && (
+            <div>
+              <Typography.Text type="secondary" style={{ fontSize: 12 }}>{t('txDescription', 'Description')}</Typography.Text>
+              <div style={{ marginTop: 4, padding: 12, background: 'var(--color-bg-surface)', borderRadius: 8, fontSize: 14 }}>
+                {selectedTx.description}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </Drawer>
+    </>
   )
 }
 

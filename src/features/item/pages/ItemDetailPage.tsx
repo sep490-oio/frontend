@@ -66,7 +66,7 @@ export default function ItemDetailPage() {
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: isMobile ? '0 12px' : undefined }}>
       <Space style={{ marginBottom: 16 }}>
-        <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)}>
+        <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => { navigate(-1); }}>
           {tc('action.back', 'Back')}
         </Button>
       </Space>

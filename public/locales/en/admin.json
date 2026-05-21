@@ -11,7 +11,11 @@
     "monitoring": "Monitoring",
     "payments": "Payments",
     "terms": "Terms",
-    "roles": "Roles & Permissions"
+    "roles": "Roles & Permissions",
+    "usersManagement": "Users Management",
+    "catalogAndAuctions": "Catalog & Auctions",
+    "ordersAndFinances": "Orders & Finances",
+    "systemAndSettings": "System & Settings"
   },
   "dashboard": {
     "title": "Dashboard",

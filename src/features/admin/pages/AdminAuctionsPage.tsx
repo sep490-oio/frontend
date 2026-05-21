@@ -132,6 +132,7 @@ export default function AdminAuctionsPage() {
       title: 'Price',
       key: 'price',
       width: 130,
+      align: 'right' as const,
       render: (_, record) => (
         <div>
           <Typography.Text strong style={{ fontSize: 13 }}>

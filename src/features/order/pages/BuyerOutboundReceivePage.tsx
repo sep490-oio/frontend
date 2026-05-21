@@ -100,7 +100,7 @@ export default function BuyerOutboundReceivePage() {
     return (
       <div style={{ maxWidth: 720, margin: '24px auto', padding: '0 12px' }}>
         <Space style={{ marginBottom: 16 }}>
-          <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)}>
+          <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => { navigate(-1); }}>
             {t('common:action.back', 'Back')}
           </Button>
         </Space>
@@ -122,7 +122,7 @@ export default function BuyerOutboundReceivePage() {
     return (
       <div style={{ maxWidth: 720, margin: '24px auto', padding: '0 12px' }}>
         <Space style={{ marginBottom: 16 }}>
-          <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)}>
+          <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => { navigate(-1); }}>
             {t('common:action.back', 'Back')}
           </Button>
         </Space>
@@ -154,7 +154,7 @@ export default function BuyerOutboundReceivePage() {
   return (
     <div style={{ maxWidth: 720, margin: '24px auto', padding: '0 12px' }}>
       <Space style={{ marginBottom: 16 }}>
-        <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)}>
+        <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => { navigate(-1); }}>
           {t('common:action.back', 'Back')}
         </Button>
       </Space>

@@ -463,7 +463,7 @@ export default function AdminDashboardPage() {
                       title={<span style={{ fontSize: 13 }}>{formatCurrency(item.amount)}</span>}
                       description={<span style={{ fontSize: 12 }}>{`${item.accountHolder ?? ''} - ${formatDateTime(item.createdAt)}`}</span>}
                     />
-                    <StatusBadge status={item.status} />
+                    <Tag color="processing" style={{ margin: 0 }}>{t('statusLabel.pending', { ns: 'common', defaultValue: 'Chờ xử lý' })}</Tag>
                   </List.Item>
                 )}
               />

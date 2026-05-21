@@ -1,14 +1,18 @@
 import { useState } from 'react'
-import { Select, Tag, Typography, Space } from 'antd'
+import { Select, Tag, Typography, Flex, DatePicker, Input, Space, Statistic, Card } from 'antd'
 import {
   DollarOutlined,
   SafetyCertificateOutlined,
   WarningOutlined,
   RollbackOutlined,
+  ArrowUpOutlined,
+  ArrowDownOutlined,
 } from '@ant-design/icons'
+import dayjs from 'dayjs'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
-import { formatCurrency, formatDateTime } from '@/utils/format'
+import { formatCurrency } from '@/utils/format'
 import { usePlatformWalletTransactions } from '@/features/admin/api'
 import type { PlatformWalletTransactionDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
@@ -45,11 +49,17 @@ export function PlatformIncomeTable() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   const [typeFilter, setTypeFilter] = useState<string | undefined>(undefined)
+  const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null)
 
   const { data, isLoading } = usePlatformWalletTransactions({
     pageNumber: page,
     pageSize,
     ...(typeFilter ? { type: typeFilter } : {}),
+    ...(categoryFilter ? { category: categoryFilter } : {}),
+    ...(searchTerm ? { searchTerm } : {}),
+    ...(dateRange ? { fromDate: dateRange[0].startOf('day').toISOString(), toDate: dateRange[1].endOf('day').toISOString() } : {}),
   })
 
   const columns: ColumnsType<PlatformWalletTransactionDto> = [
@@ -58,11 +68,19 @@ export function PlatformIncomeTable() {
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 160,
-      render: (date: string) => (
-        <Typography.Text style={{ fontSize: 13, whiteSpace: 'nowrap' }}>
-          {formatDateTime(date)}
-        </Typography.Text>
-      ),
+      render: (date: string) => {
+        const d = dayjs(date)
+        return (
+          <Flex vertical>
+            <Typography.Text strong style={{ fontSize: 13, whiteSpace: 'nowrap' }}>
+              {d.format('DD/MM/YYYY')}
+            </Typography.Text>
+            <Typography.Text type="secondary" style={{ fontSize: 12, whiteSpace: 'nowrap' }}>
+              {d.format('HH:mm')}
+            </Typography.Text>
+          </Flex>
+        )
+      },
     },
     {
       title: t('revenue.category', 'Category'),
@@ -87,11 +105,18 @@ export function PlatformIncomeTable() {
       dataIndex: 'type',
       key: 'type',
       width: 80,
-      render: (type: string) => (
-        <Tag color={type === 'credit' ? 'green' : 'red'} style={{ borderRadius: 4, textTransform: 'uppercase', fontSize: 11 }}>
-          {type}
-        </Tag>
-      ),
+      render: (type: string) => {
+        const isCredit = type === 'credit'
+        return (
+          <Tag 
+            color={isCredit ? 'green' : 'red'} 
+            icon={isCredit ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
+            style={{ borderRadius: 4, textTransform: 'uppercase', fontSize: 11 }}
+          >
+            {type}
+          </Tag>
+        )
+      },
     },
     {
       title: t('revenue.amount', 'Amount'),
@@ -130,33 +155,104 @@ export function PlatformIncomeTable() {
       dataIndex: 'description',
       key: 'description',
       ellipsis: true,
-      render: (desc: string | null) => (
-        <Typography.Text
-          style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}
-          ellipsis={{ tooltip: desc ?? '' }}
-        >
-          {desc ?? '—'}
-        </Typography.Text>
-      ),
+      render: (desc: string | null) => {
+        if (!desc) return <Typography.Text style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>—</Typography.Text>
+        
+        const uuidRegex = /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/gi
+        const parts = desc.split(uuidRegex)
+        
+        return (
+          <Typography.Paragraph
+            style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 0 }}
+            ellipsis={{ rows: 2, tooltip: desc }}
+          >
+            {parts.map((part, i) => {
+              if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(part)) {
+                return (
+                  <Link key={i} style={{ fontFamily: 'monospace' }} to={`/admin/orders/${part}`}>
+                    ORD-{part.slice(0, 4)}...{part.slice(-4)}
+                  </Link>
+                )
+              }
+              return <span key={i}>{part}</span>
+            })}
+          </Typography.Paragraph>
+        )
+      },
     },
   ]
 
   return (
     <div>
-      <Space style={{ marginBottom: 16 }} wrap>
-        <Select
-          placeholder={t('revenue.filterCategory', 'Filter by category')}
-          value={typeFilter}
-          onChange={(val) => { setTypeFilter(val); setPage(1) }}
-          style={{ width: isMobile ? '100%' : 200 }}
-          allowClear
-          onClear={() => setTypeFilter(undefined)}
-          options={[
-            { value: 'credit', label: '📈 Credit (Income)' },
-            { value: 'debit', label: '📉 Debit (Outflow)' },
-          ]}
-        />
-      </Space>
+      <Flex justify="space-between" align="center" wrap="wrap" gap={16} style={{ marginBottom: 16 }}>
+        <Flex gap={16} align="center" wrap="wrap">
+          <Input.Search
+            placeholder="Search descriptions..."
+            allowClear
+            onSearch={(val) => { setSearchTerm(val); setPage(1) }}
+            style={{ width: isMobile ? '100%' : 250 }}
+          />
+          <DatePicker.RangePicker
+            onChange={(dates) => { setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null); setPage(1) }}
+            style={{ width: 250 }}
+          />
+        </Flex>
+        
+        <Space wrap>
+          <Select
+            placeholder="Filter by Category"
+            value={categoryFilter}
+            onChange={(val) => { setCategoryFilter(val); setPage(1) }}
+            style={{ width: isMobile ? '100%' : 180 }}
+            allowClear
+            onClear={() => setCategoryFilter(undefined)}
+            options={[
+              { value: 'commission', label: 'Commission' },
+              { value: 'inspection_fee', label: 'Inspection Fee' },
+              { value: 'forfeit', label: 'Forfeit' },
+              { value: 'refund', label: 'Refund' },
+            ]}
+          />
+          <Select
+            placeholder={t('revenue.filterType', 'Filter by Type')}
+            value={typeFilter}
+            onChange={(val) => { setTypeFilter(val); setPage(1) }}
+            style={{ width: isMobile ? '100%' : 180 }}
+            allowClear
+            onClear={() => setTypeFilter(undefined)}
+            options={[
+              { value: 'credit', label: '📈 Credit (Income)' },
+              { value: 'debit', label: '📉 Debit (Outflow)' },
+            ]}
+          />
+        </Space>
+      </Flex>
+
+      {/* Summary Metrics */}
+      {!isLoading && (data?.totalCreditAmount !== undefined || data?.totalDebitAmount !== undefined) && (
+        <Flex gap={16} style={{ marginBottom: 16 }} wrap="wrap">
+          <Card size="small" style={{ minWidth: 200, borderColor: 'var(--color-success, #52c41a)' }}>
+            <Statistic
+              title={<span style={{ color: 'var(--color-text-secondary)' }}>Total Credit</span>}
+              value={data?.totalCreditAmount ?? 0}
+              precision={0}
+              valueStyle={{ color: 'var(--color-success, #52c41a)', fontWeight: 'bold' }}
+              prefix={<ArrowUpOutlined />}
+              suffix={data?.currency ?? '₫'}
+            />
+          </Card>
+          <Card size="small" style={{ minWidth: 200, borderColor: 'var(--color-error, #ff4d4f)' }}>
+            <Statistic
+              title={<span style={{ color: 'var(--color-text-secondary)' }}>Total Debit</span>}
+              value={data?.totalDebitAmount ?? 0}
+              precision={0}
+              valueStyle={{ color: 'var(--color-error, #ff4d4f)', fontWeight: 'bold' }}
+              prefix={<ArrowDownOutlined />}
+              suffix={data?.currency ?? '₫'}
+            />
+          </Card>
+        </Flex>
+      )}
 
       <ResponsiveTable<PlatformWalletTransactionDto>
         rowKey="id"

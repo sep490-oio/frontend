@@ -52,7 +52,7 @@ export default function MyDirectShipmentDetailPage() {
           shipment.status === 'delivered' && !shipment.buyerReceivedPackageAt
         return (
           <Space style={{ marginBottom: 16 }} wrap>
-            <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)}>
+            <Button icon={<ArrowLeftOutlined />} onClick={() => { navigate(-1); }}>
               {tc('action.back', 'Back')}
             </Button>
             {awaitingReceipt ? (

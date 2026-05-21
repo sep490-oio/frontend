@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Card, Segmented, Row, Col, Statistic, Spin, Empty, DatePicker, Space, Typography } from 'antd'
+import { Segmented, Statistic, Spin, Empty, DatePicker, Space, Typography } from 'antd'
 import {
   RiseOutlined,
   DollarOutlined,
@@ -115,94 +115,72 @@ export function PlatformRevenueChart() {
   ]
 
   return (
-    <div>
-      {/* Summary cards */}
-      <Row gutter={[12, 12]} style={{ marginBottom: 20 }}>
-        <Col xs={12} sm={6}>
-          <Card styles={{ body: { padding: '16px' } }}>
-            <Statistic
-              title={<span style={{ fontSize: 12 }}><DollarOutlined /> {t('revenue.totalRevenue', 'Net Revenue')}</span>}
-              value={data?.totalRevenue ?? 0}
-              formatter={v => formatCurrency(v as number, data?.currency)}
-              valueStyle={{ color: COLORS.netRevenue, fontSize: 18, fontWeight: 700 }}
-              loading={isLoading}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card styles={{ body: { padding: '16px' } }}>
-            <Statistic
-              title={<span style={{ fontSize: 12 }}><RiseOutlined /> {t('revenue.commission', 'Commission')}</span>}
-              value={data?.totalCommission ?? 0}
-              formatter={v => formatCurrency(v as number, data?.currency)}
-              valueStyle={{ color: COLORS.commission, fontSize: 18, fontWeight: 700 }}
-              loading={isLoading}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card styles={{ body: { padding: '16px' } }}>
-            <Statistic
-              title={<span style={{ fontSize: 12 }}><SafetyCertificateOutlined /> {t('revenue.inspectionFees', 'Inspection Fees')}</span>}
-              value={data?.totalInspectionFees ?? 0}
-              formatter={v => formatCurrency(v as number, data?.currency)}
-              valueStyle={{ color: COLORS.inspectionFees, fontSize: 18, fontWeight: 700 }}
-              loading={isLoading}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card styles={{ body: { padding: '16px' } }}>
-            <Statistic
-              title={<span style={{ fontSize: 12 }}><WarningOutlined /> {t('revenue.forfeitIncome', 'Forfeit')}</span>}
-              value={data?.totalForfeitIncome ?? 0}
-              formatter={v => formatCurrency(v as number, data?.currency)}
-              valueStyle={{ color: COLORS.forfeitIncome, fontSize: 18, fontWeight: 700 }}
-              loading={isLoading}
-            />
-          </Card>
-        </Col>
-      </Row>
-
+    <>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Controls */}
-      <Card
-        title={
-          <Space>
-            <RiseOutlined />
-            <span>{t('revenue.chartTitle', 'Revenue Over Time')}</span>
-          </Space>
-        }
-        extra={
-          <Space wrap>
-            {presets.map(p => (
-              <Typography.Link
-                key={p.value}
-                onClick={() => setDateRange([dayjs().subtract(p.value, 'day'), dayjs()])}
-                style={{ fontSize: 12 }}
-              >
-                {p.label}
-              </Typography.Link>
-            ))}
-            <RangePicker
-              size="small"
-              value={dateRange}
-              onChange={val => setDateRange(val as [dayjs.Dayjs, dayjs.Dayjs] | null)}
-              style={{ width: 220 }}
-            />
-            <Segmented
-              size="small"
-              value={granularity}
-              onChange={v => setGranularity(v as 'day' | 'week' | 'month')}
-              options={[
-                { label: t('revenue.day', 'Day'), value: 'day' },
-                { label: t('revenue.week', 'Week'), value: 'week' },
-                { label: t('revenue.month', 'Month'), value: 'month' },
-              ]}
-            />
-          </Space>
-        }
-        styles={{ body: { padding: '16px 8px' } }}
-      >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <Typography.Text strong><RiseOutlined /> {t('revenue.chartTitle', 'Revenue Over Time')}</Typography.Text>
+        <Space wrap>
+          {presets.map(p => (
+            <Typography.Link
+              key={p.value}
+              onClick={() => setDateRange([dayjs().subtract(p.value, 'day'), dayjs()])}
+              style={{ fontSize: 12 }}
+            >
+              {p.label}
+            </Typography.Link>
+          ))}
+          <RangePicker
+            size="small"
+            value={dateRange}
+            onChange={val => setDateRange(val as [dayjs.Dayjs, dayjs.Dayjs] | null)}
+            style={{ width: 220 }}
+          />
+          <Segmented
+            size="small"
+            value={granularity}
+            onChange={v => setGranularity(v as 'day' | 'week' | 'month')}
+            options={[
+              { label: t('revenue.day', 'Day'), value: 'day' },
+              { label: t('revenue.week', 'Week'), value: 'week' },
+              { label: t('revenue.month', 'Month'), value: 'month' },
+            ]}
+          />
+        </Space>
+      </div>
+      
+      {/* Metrics Row */}
+      <div style={{ display: 'flex', gap: 32, marginBottom: 24, flexWrap: 'wrap' }}>
+          <Statistic
+            title={<span style={{ fontSize: 12 }}><DollarOutlined /> {t('revenue.totalRevenue', 'Net Revenue')}</span>}
+            value={data?.totalRevenue ?? 0}
+            formatter={v => formatCurrency(v as number, data?.currency)}
+            valueStyle={{ color: COLORS.netRevenue, fontSize: 24, fontWeight: 700 }}
+            loading={isLoading}
+          />
+          <Statistic
+            title={<span style={{ fontSize: 12 }}><RiseOutlined /> {t('revenue.commission', 'Commission')}</span>}
+            value={data?.totalCommission ?? 0}
+            formatter={v => formatCurrency(v as number, data?.currency)}
+            valueStyle={{ color: COLORS.commission, fontSize: 18, fontWeight: 600 }}
+            loading={isLoading}
+          />
+          <Statistic
+            title={<span style={{ fontSize: 12 }}><SafetyCertificateOutlined /> {t('revenue.inspectionFees', 'Inspection')}</span>}
+            value={data?.totalInspectionFees ?? 0}
+            formatter={v => formatCurrency(v as number, data?.currency)}
+            valueStyle={{ color: COLORS.inspectionFees, fontSize: 18, fontWeight: 600 }}
+            loading={isLoading}
+          />
+          <Statistic
+            title={<span style={{ fontSize: 12 }}><WarningOutlined /> {t('revenue.forfeitIncome', 'Forfeit')}</span>}
+            value={data?.totalForfeitIncome ?? 0}
+            formatter={v => formatCurrency(v as number, data?.currency)}
+            valueStyle={{ color: COLORS.forfeitIncome, fontSize: 18, fontWeight: 600 }}
+            loading={isLoading}
+          />
+        </div>
+
         {isLoading ? (
           <div style={{ textAlign: 'center', padding: 80 }}>
             <Spin size="large" />
@@ -357,8 +335,8 @@ export function PlatformRevenueChart() {
             </div>
           </div>
         )}
-      </Card>
-    </div>
+      </div>
+    </>
   )
 }
 

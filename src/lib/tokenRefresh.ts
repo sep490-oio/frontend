@@ -21,6 +21,15 @@ export function isTokenExpired(): boolean {
   const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
   if (!token) return true
   
+  const explicitExpiryStr = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT)
+  if (explicitExpiryStr) {
+    const expMs = new Date(explicitExpiryStr).getTime()
+    if (!isNaN(expMs)) {
+      return Date.now() >= expMs - TOKEN_EXPIRY_BUFFER_MS
+    }
+  }
+
+  // Fallback to JWT parsing if explicit expiry is missing
   if (token === cachedToken) {
     return Date.now() >= cachedExpMs - TOKEN_EXPIRY_BUFFER_MS
   }
@@ -77,8 +86,17 @@ async function doRefresh(): Promise<string> {
   }).then(({ data }) => {
     const newAccessToken = data.accessToken as string
     const newRefreshToken = data.refreshToken as string
+    const newAccessTokenExpiresAt = data.accessTokenExpiresAt as string | undefined
+    const newSession = data.session
+
     localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, newAccessToken)
     localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, newRefreshToken)
+    if (newAccessTokenExpiresAt) {
+      localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT, newAccessTokenExpiresAt)
+    }
+    if (newSession) {
+      localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(newSession))
+    }
     return newAccessToken
   }).catch((error) => {
     handleRefreshFailure()
@@ -150,6 +168,8 @@ export async function refreshToken(failedToken?: string | null): Promise<string>
 export function handleRefreshFailure(): void {
   localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN)
   localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
+  localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT)
+  localStorage.removeItem(STORAGE_KEYS.SESSION)
 
   // Preserve current path as returnTo, excluding auth pages and external URLs
   const current = window.location.pathname + window.location.search + window.location.hash

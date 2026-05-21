@@ -1,6 +1,6 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { API_URL, STORAGE_KEYS, uuid } from '@/utils/constants'
-import { refreshToken, isTokenExpired } from '@/lib/tokenRefresh'
+import { refreshToken } from '@/lib/tokenRefresh'
 
 // ── Terms-gate 409 interceptor ────────────────────────────────────────────────
 // When BE returns 409 with code "Terms.PendingAcceptance", the interceptor calls
@@ -83,15 +83,9 @@ apiClient.interceptors.request.use(async (config: InternalAxiosRequestConfig) =>
   } else if (!config.url?.includes('/auth/login') && !config.url?.includes('/auth/refresh')) {
     let token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
     if (token) {
-      if (isTokenExpired()) {
-        try {
-          token = await refreshToken()
-        } catch (error) {
-          // If proactive refresh fails, proceed with the expired token.
-          // The response interceptor will catch the 401 or handleRefreshFailure will redirect.
-        }
-      }
-      if (token) {
+      if (typeof config.headers.set === 'function') {
+        config.headers.set('Authorization', `Bearer ${token}`)
+      } else {
         config.headers.Authorization = `Bearer ${token}`
       }
     }
@@ -152,7 +146,12 @@ apiClient.interceptors.response.use(
       return new Promise<string>((resolve, reject) => {
         failedQueue.push({ resolve, reject })
       }).then((token) => {
-        originalRequest.headers.Authorization = `Bearer ${token}`
+        originalRequest._retry = true
+        if (typeof originalRequest.headers.set === 'function') {
+          originalRequest.headers.set('Authorization', `Bearer ${token}`)
+        } else {
+          originalRequest.headers.Authorization = `Bearer ${token}`
+        }
         return apiClient(originalRequest)
       })
     }
@@ -164,7 +163,11 @@ apiClient.interceptors.response.use(
       const failedToken = originalRequest.headers.Authorization?.toString().replace('Bearer ', '')
       const newAccessToken = await refreshToken(failedToken)
       processQueue(null, newAccessToken)
-      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
+      if (typeof originalRequest.headers.set === 'function') {
+        originalRequest.headers.set('Authorization', `Bearer ${newAccessToken}`)
+      } else {
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
+      }
       return apiClient(originalRequest)
     } catch (refreshError) {
       processQueue(refreshError, null)

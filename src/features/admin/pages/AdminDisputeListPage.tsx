@@ -155,6 +155,21 @@ export default function AdminDisputeListPage() {
       width: 180,
       render: (v: string) => formatDateTime(v),
     },
+    {
+      title: t('action', 'Action'),
+      key: 'action',
+      width: 100,
+      render: (_: any, record: any) => (
+        <Button
+          type="link"
+          size="small"
+          onClick={(e) => { e.stopPropagation(); navigate(`/admin/disputes/${record.id}`) }}
+          style={{ padding: 0 }}
+        >
+          {tc('action.viewDetail', 'View Detail')}
+        </Button>
+      ),
+    },
   ]
 
   const activeFiltersCount = [filters.status, filters.domain].filter(Boolean).length

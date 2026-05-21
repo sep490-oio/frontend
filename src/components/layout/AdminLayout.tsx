@@ -1,20 +1,14 @@
 import { useState } from 'react'
 import '@/styles/admin-tokens.css'
 import { Outlet, useNavigate, useLocation, Link } from 'react-router'
-import { Layout, Avatar, Tooltip, Drawer } from 'antd'
+import { Layout, Avatar, Tooltip, Drawer, Menu } from 'antd'
+import type { MenuProps } from 'antd'
 import {
   DashboardOutlined,
   TeamOutlined,
   SafetyCertificateOutlined,
   ShopOutlined,
-  AuditOutlined,
-  AlertOutlined,
-  MonitorOutlined,
   DollarOutlined,
-  FileTextOutlined,
-  LockOutlined,
-  TrophyOutlined,
-  AppstoreOutlined,
   ArrowLeftOutlined,
   SunOutlined,
   MoonOutlined,
@@ -23,8 +17,7 @@ import {
   MenuOutlined,
   UserOutlined,
   GlobalOutlined,
-  ExceptionOutlined,
-  ShoppingCartOutlined,
+  SettingOutlined,
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
@@ -71,26 +64,68 @@ export function AdminLayout() {
   const effectiveCollapsed = isTablet ? true : collapsed
   const sidebarWidth = effectiveCollapsed ? SIDEBAR_COLLAPSED : SIDEBAR_WIDTH
 
-  const menuItems = [
+  const menuItems: MenuProps['items'] = [
     { key: '/admin', icon: <DashboardOutlined />, label: t('menu.dashboard', 'Dashboard') },
-    { key: '/admin/users', icon: <TeamOutlined />, label: t('menu.users', 'Users') },
-    { key: '/admin/verifications', icon: <SafetyCertificateOutlined />, label: t('menu.verifications', 'Verifications') },
-    { key: '/admin/sellers', icon: <ShopOutlined />, label: t('menu.sellers', 'Sellers') },
-    { key: '/admin/items/review', icon: <AuditOutlined />, label: t('menu.itemReview', 'Item Review') },
-    { key: '/admin/moderation', icon: <AlertOutlined />, label: t('menu.moderation', 'Moderation') },
-    { key: '/admin/disputes', icon: <ExceptionOutlined />, label: t('menu.disputes', 'Disputes') },
-    { key: '/admin/auctions', icon: <AppstoreOutlined />, label: t('menu.auctions', 'Auctions') },
-    { key: '/admin/auctions/completed', icon: <TrophyOutlined />, label: t('menu.completedAuctions', 'Completed Auctions') },
-    { key: '/admin/orders', icon: <ShoppingCartOutlined />, label: t('menu.orders', 'Orders') },
-    { key: '/admin/monitoring', icon: <MonitorOutlined />, label: t('menu.monitoring', 'Monitoring') },
-    { key: '/admin/payments', icon: <DollarOutlined />, label: t('menu.payments', 'Payments') },
-    { key: '/admin/terms', icon: <FileTextOutlined />, label: t('menu.terms', 'Terms') },
-    { key: '/admin/roles', icon: <LockOutlined />, label: t('menu.roles', 'Roles & Permissions') },
+    {
+      key: 'users',
+      label: t('menu.usersManagement', 'Users Management'),
+      icon: <TeamOutlined />,
+      children: [
+        { key: '/admin/users', label: t('menu.users', 'Users') },
+        { key: '/admin/sellers', label: t('menu.sellers', 'Sellers') },
+        { key: '/admin/verifications', label: t('menu.verifications', 'Verifications') },
+      ],
+    },
+    {
+      key: 'catalog',
+      label: t('menu.catalogAndAuctions', 'Catalog & Auctions'),
+      icon: <ShopOutlined />,
+      children: [
+        { key: '/admin/items', label: t('menu.items', 'Items') },
+        { key: '/admin/auctions', label: t('menu.auctions', 'Auctions') },
+      ],
+    },
+    {
+      key: 'moderation',
+      label: t('menu.moderation', 'Moderation'),
+      icon: <SafetyCertificateOutlined />,
+      children: [
+        { key: '/admin/items/review', label: t('menu.itemReview', 'Item Review') },
+        { key: '/admin/moderation', label: t('menu.reportedContent', 'Reported Content') },
+        { key: '/admin/disputes', label: t('menu.disputes', 'Disputes') },
+      ],
+    },
+    {
+      key: 'orders',
+      label: t('menu.ordersAndFinances', 'Orders & Finances'),
+      icon: <DollarOutlined />,
+      children: [
+        { key: '/admin/orders', label: t('menu.orders', 'Orders') },
+        { key: '/admin/payments', label: t('menu.payments', 'Payments') },
+      ],
+    },
+    {
+      key: 'system',
+      label: t('menu.systemAndSettings', 'System & Settings'),
+      icon: <SettingOutlined />,
+      children: [
+        { key: '/admin/roles', label: t('menu.roles', 'Roles & Permissions') },
+        { key: '/admin/monitoring', label: t('menu.monitoring', 'Monitoring') },
+        { key: '/admin/terms', label: t('menu.terms', 'Terms') },
+      ],
+    },
   ]
 
-  const isActive = (key: string) => {
-    if (key === '/admin') return location.pathname === '/admin'
-    return location.pathname === key || location.pathname.startsWith(key + '/')
+  // Find which group contains the active item
+  const activeKey = location.pathname === '/admin' ? '/admin' : location.pathname
+  const openKeys = ['users', 'catalog', 'moderation', 'orders', 'system'].filter(key => {
+    const group = menuItems.find(i => i?.key === key) as any
+    return group?.children?.some((child: any) => location.pathname.startsWith(child.key))
+  })
+
+  const handleMenuClick: MenuProps['onClick'] = (e) => {
+    navigate(e.key)
+    if (mobileDrawerOpen) setMobileDrawerOpen(false)
   }
 
   const toggleLanguage = () => {
@@ -101,55 +136,21 @@ export function AdminLayout() {
   const displayName = user?.profile?.displayName || user?.profile?.firstName || user?.userName || 'Admin'
   const avatarUrl = user?.profile?.avatarUrl
 
-  const renderMenuItems = (inDrawer = false) =>
-    menuItems.map((item) => {
-      const active = isActive(item.key)
-      const isIconOnly = !inDrawer && effectiveCollapsed
-      const menuItem = (
-        <div
-          key={item.key}
-          onClick={() => { navigate(item.key); if (inDrawer) setMobileDrawerOpen(false) }}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => e.key === 'Enter' && navigate(item.key)}
-          style={{
-            height: 44,
-            display: 'flex',
-            alignItems: 'center',
-            padding: isIconOnly ? '0' : '0 16px',
-            justifyContent: isIconOnly ? 'center' : 'flex-start',
-            margin: '2px 8px',
-            borderRadius: 8,
-            cursor: 'pointer',
-            fontFamily: SANS_FONT,
-            fontSize: 13,
-            fontWeight: active ? 500 : 400,
-            color: active ? 'var(--color-accent)' : 'var(--color-text-secondary)',
-            background: active ? 'var(--color-accent-light)' : 'transparent',
-            borderLeft: active ? '3px solid var(--color-accent)' : '3px solid transparent',
-            transition: 'all 150ms ease',
-            whiteSpace: 'nowrap',
-            gap: isIconOnly ? 0 : 12,
-          }}
-          onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = 'var(--color-accent-light)' }}
-          onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent' }}
-        >
-          <span style={{ fontSize: 16, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-            {item.icon}
-          </span>
-          {!isIconOnly && <span>{item.label}</span>}
-        </div>
-      )
-
-      if (isIconOnly) {
-        return (
-          <Tooltip key={item.key} title={item.label} placement="right">
-            {menuItem}
-          </Tooltip>
-        )
-      }
-      return menuItem
-    })
+  const renderMenuItems = (inDrawer = false) => (
+    <Menu
+      mode="inline"
+      selectedKeys={[activeKey]}
+      defaultOpenKeys={effectiveCollapsed && !inDrawer ? [] : openKeys}
+      inlineCollapsed={effectiveCollapsed && !inDrawer}
+      items={menuItems}
+      onClick={handleMenuClick}
+      style={{
+        borderRight: 0,
+        background: 'transparent',
+        fontFamily: SANS_FONT,
+      }}
+    />
+  )
 
   return (
     <div style={{

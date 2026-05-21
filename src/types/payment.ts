@@ -130,6 +130,8 @@ export interface AdminWithdrawalDto {
   transferProofUrl?: string
   transferNote?: string
   processedBy?: string
+  processedByDisplayName?: string
+  userDisplayName?: string
   createdAt: string
   processedAt?: string
 }
@@ -170,6 +172,8 @@ export interface PaymentSummaryDto {
   holdingEscrowCount?: number
   releasedEscrowTotal?: number
   refundedEscrowTotal?: number
+  totalRevenue?: number
+  totalSystemBalance?: number
 }
 
 export interface EscrowDto {
@@ -188,6 +192,8 @@ export interface EscrowDto {
   createdAt: string
   releasedAt?: string
   refundedAt?: string
+  releaseEvents?: any[]
+  isDisputed?: boolean
 }
 
 // ── Seller Finance Transparency ───────────────────────────────────────
@@ -299,4 +305,6 @@ export interface PlatformWalletTransactionsResultDto {
   pageNumber: number
   pageSize: number
   currency: string
+  totalCreditAmount: number
+  totalDebitAmount: number
 }
