@@ -91,7 +91,7 @@ export default function DashboardPage() {
             label: t('dashboard.activeBids', 'Active Bids'), 
             value: activeBidsCount, 
             icon: <ThunderboltOutlined />, 
-            path: '/me/bids', 
+            path: '/me/auctions?tab=bids', 
             color: 'var(--color-accent)' 
           },
           { 
@@ -169,7 +169,7 @@ export default function DashboardPage() {
               <Title level={4} style={{ margin: 0, fontFamily: SANS_FONT, fontWeight: 600, fontSize: 18 }}>
                 {t('dashboard.activeBidsTitle', 'Active Bids')}
               </Title>
-              <Button type="link" onClick={() => navigate('/me/bids')} style={{ color: 'var(--color-accent)', fontWeight: 600, paddingRight: 0 }}>
+              <Button type="link" onClick={() => navigate('/me/auctions?tab=bids')} style={{ color: 'var(--color-accent)', fontWeight: 600, paddingRight: 0 }}>
                 {t('dashboard.viewAll', 'View All')} <RightOutlined style={{ fontSize: 10 }} />
               </Button>
             </Flex>
@@ -237,7 +237,7 @@ export default function DashboardPage() {
               <Title level={4} style={{ margin: 0, fontFamily: SANS_FONT, fontWeight: 600, fontSize: 18 }}>
                 {t('dashboard.watchlistTitle', 'Watchlist')}
               </Title>
-              <Button type="link" onClick={() => navigate('/me/watchlist')} style={{ color: 'var(--color-accent)', fontWeight: 600, paddingRight: 0 }}>
+              <Button type="link" onClick={() => navigate('/me/auctions?tab=watchlist')} style={{ color: 'var(--color-accent)', fontWeight: 600, paddingRight: 0 }}>
                 {t('dashboard.viewAll', 'View All')} <RightOutlined style={{ fontSize: 10 }} />
               </Button>
             </Flex>

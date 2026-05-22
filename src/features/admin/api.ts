@@ -23,6 +23,7 @@ import type {
   WalletSummaryDto,
   EscrowDto,
   TermsDocumentDto,
+  AuctionListItemDto,
   AdminCompletedAuctionListItemDto,
   AdminCompletedAuctionDetailDto,
   AdminAuctionPaymentStatus,
@@ -368,6 +369,17 @@ export function useAdminItemDetail(id: string) {
         reviews: reviewsRes.data,
         auction
       }
+    },
+    enabled: !!id,
+  })
+}
+
+export function useAdminItemAuctions(id: string) {
+  return useQuery({
+    queryKey: [...queryKeys.admin.reviewQueueRoot(), 'detail', id, 'auctions'],
+    queryFn: async () => {
+      const res = await apiClient.get<AuctionListItemDto[]>(`/admin/items/${id}/auctions`)
+      return res.data
     },
     enabled: !!id,
   })

@@ -8,7 +8,6 @@ import {
   UserOutlined,
   WalletOutlined,
   BookOutlined,
-  HeartOutlined,
   ShoppingOutlined,
   CarOutlined,
   CommentOutlined,
@@ -217,16 +216,10 @@ export const SpotlightSearchModal: React.FC = () => {
       keywords: ['settings', 'cài đặt', 'preferences', 'tùy chỉnh'], auth: ['user']
     },
     {
-      id: 'bids', path: '/me/bids', icon: <BookOutlined />,
-      title: t('common:spotlight.title.myBids', 'My Bids'),
-      desc: t('common:spotlight.desc.myBids', 'Track your participating auctions'),
-      keywords: ['bids', 'đấu giá', 'đặt giá', 'lịch sử', 'history'], auth: ['user']
-    },
-    {
-      id: 'watchlist', path: '/me/watchlist', icon: <HeartOutlined />,
-      title: t('common:spotlight.title.watchlist', 'Watchlist'),
-      desc: t('common:spotlight.desc.watchlist', 'Items you are watching'),
-      keywords: ['watchlist', 'theo dõi', 'yêu thích', 'favorite', 'heart', 'tim'], auth: ['user']
+      id: 'auctions', path: '/me/auctions', icon: <BookOutlined />,
+      title: t('common:spotlight.title.myAuctions', 'My Auctions'),
+      desc: t('common:spotlight.desc.myAuctions', 'Track your participating auctions and watchlist'),
+      keywords: ['auctions', 'bids', 'watchlist', 'đấu giá', 'đặt giá', 'theo dõi', 'yêu thích', 'lịch sử', 'history'], auth: ['user']
     },
     {
       id: 'orders', path: '/me/orders', icon: <ShoppingOutlined />,

@@ -123,8 +123,6 @@ const EditItemPage = lazy(() => import('@/features/item/pages/EditItemPage'))
 // Auction pages
 const CreateAuctionPage = lazy(() => import('@/features/auction/pages/CreateAuctionPage'))
 const MyAuctionsPage = lazy(() => import('@/features/auction/pages/MyAuctionsPage'))
-const WatchlistPage = lazy(() => import('@/features/auction/pages/WatchlistPage'))
-const MyBidsPage = lazy(() => import('@/features/auction/pages/MyBidsPage'))
 
 // Order pages
 const MyOrdersPage = lazy(() => import('@/features/order/pages/MyOrdersPage'))
@@ -284,8 +282,8 @@ export const router = createBrowserRouter([
           { path: '/me/auctions', element: withSuspense(MyAuctionsPage) },
           { path: '/me/auctions/create', element: withSuspense(CreateAuctionPage) },
           { path: '/me/auctions/:id/edit', element: withSuspense(CreateAuctionPage) },
-          { path: '/me/watchlist', element: withSuspense(WatchlistPage) },
-          { path: '/me/bids', element: withSuspense(MyBidsPage) },
+          { path: '/me/watchlist', element: <Navigate to="/me/auctions?tab=watchlist" replace /> },
+          { path: '/me/bids', element: <Navigate to="/me/auctions?tab=bids" replace /> },
           // Orders
           { path: '/me/orders', element: withSuspense(MyOrdersPage) },
           { path: '/me/orders/:id', element: withSuspense(OrderDetailPage) },

@@ -1,7 +1,7 @@
 import { Timeline, Spin, Empty, Typography, Space } from 'antd'
 import { ClockCircleOutlined, CheckCircleOutlined, SyncOutlined } from '@ant-design/icons'
 import { useAdminItemLogistics } from '@/features/admin/api'
-import { formatDateTime } from '@/utils/format'
+import { formatDateTime, formatEnumText } from '@/utils/format'
 
 const { Text } = Typography
 
@@ -38,13 +38,11 @@ export default function AdminItemLogisticsTab({ itemId }: AdminItemLogisticsTabP
           if (!desc) return desc
           if (desc === 'awaiting_seller_return') return 'Awaiting Seller Return (Chờ hoàn trả Seller)'
           if (desc === 'inspected') return 'Inspected & Inbound (Đã nhập kho & Kiểm định)'
-          if (desc.includes('_') || desc === desc.toLowerCase()) {
-            return desc
-              .split('_')
-              .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-              .join(' ')
-          }
-          return desc
+          if (desc === 'awaiting_pickup') return 'Awaiting Pickup'
+          if (desc === 'in_transit') return 'In Transit'
+          if (desc === 'seller_claims_arrived') return 'Seller Claims Arrived'
+          if (desc === 'arrived') return 'Arrived at Warehouse'
+          return formatEnumText(desc)
         }
 
         return {

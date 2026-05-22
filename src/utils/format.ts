@@ -52,3 +52,14 @@ export function formatFileSize(bytes: number): string {
   const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1)
   return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`
 }
+
+/**
+ * Format enum values (e.g. 'like_new' -> 'Like New', 'regular' -> 'Regular')
+ */
+export function formatEnumText(value: string | undefined | null): string {
+  if (!value) return ''
+  return value
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ')
+}

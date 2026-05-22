@@ -150,7 +150,7 @@ export function useMyDeposits(params?: PaginationParams & { status?: string; sor
   })
 }
 
-export function useMyParticipations(params?: PaginationParams & { status?: string; sortBy?: string }) {
+export function useMyParticipations(params?: PaginationParams & { status?: string; sortBy?: string; search?: string }) {
   return useQuery({
     queryKey: queryKeys.auctions.myParticipations(params),
     queryFn: async () => {

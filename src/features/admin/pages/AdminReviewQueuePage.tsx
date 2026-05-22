@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { Typography, Space, Button, Modal, Input, App, Drawer, Image } from 'antd'
+import { Typography, Space, Button, Modal, Input, App, Drawer, Image, Select } from 'antd'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { FileSearchOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { useReviewQueue, useApproveItem, useRejectItem, useAssignReviewer } from '@/features/admin/api'
+import { useReviewQueue, useApproveItem, useRejectItem, useAssignReviewer, useAdminUsers } from '@/features/admin/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
 import type { ReviewQueueItemDto } from '@/types'
@@ -28,6 +28,7 @@ export default function AdminReviewQueuePage() {
   const [rejectReason, setRejectReason] = useState('')
 
   const { data, isLoading } = useReviewQueue({ pageNumber: page, pageSize })
+  const { data: usersData, isLoading: isLoadingUsers } = useAdminUsers({ pageNumber: 1, pageSize: 100 })
   const approveItem = useApproveItem()
   const rejectItem = useRejectItem()
   const assignReviewer = useAssignReviewer()
@@ -161,13 +162,13 @@ export default function AdminReviewQueuePage() {
                 >
                   {t('reviewQueue.reject')}
                 </Button>
-                <Button
+                {/* <Button
                   type="link"
                   size="small"
                   onClick={() => { setAssignItemId(record.itemId); setAssignModalOpen(true) }}
                 >
                   {t('reviewQueue.assign')}
-                </Button>
+                </Button> */}
               </>
             )}
           </Space>
@@ -208,16 +209,25 @@ export default function AdminReviewQueuePage() {
         title={t('reviewQueue.assignReviewer')}
         open={assignModalOpen}
         onOk={handleAssign}
-        onCancel={() => { setAssignModalOpen(false); setReviewerId('') }}
+        onCancel={() => { setAssignModalOpen(false); setReviewerId(''); setAssignItemId('') }}
         confirmLoading={assignReviewer.isPending}
         centered={isMobile}
       >
         <Typography.Text strong>{t('reviewQueue.reviewerId')}</Typography.Text>
-        <Input
-          value={reviewerId}
-          onChange={(e) => setReviewerId(e.target.value)}
-          placeholder={t('reviewQueue.reviewerIdPlaceholder')}
-          style={{ marginTop: 8, minHeight: 44 }}
+        <Select
+          showSearch
+          value={reviewerId || undefined}
+          onChange={(val) => setReviewerId(val)}
+          placeholder={t('reviewQueue.reviewerIdPlaceholder', 'Select reviewer...')}
+          style={{ marginTop: 8, width: '100%', minHeight: 44 }}
+          options={(usersData?.items || [])
+            .filter(u => u.roles?.includes('Admin') || u.roles?.includes('Staff'))
+            .map(u => ({
+              label: `${u.userName} (${u.email})`,
+              value: u.id
+            }))}
+          optionFilterProp="label"
+          loading={isLoadingUsers}
         />
       </Modal>
 

@@ -90,33 +90,38 @@ export default function AdminItemQATab({ itemId }: AdminItemQATabProps) {
   return (
     <div>
       {/* Stats Header */}
-      <Card bordered={false} style={{ marginBottom: 16, borderRadius: 12 }}>
-        <Row gutter={[16, 16]}>
-          <Col xs={8}>
+      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+        <Col xs={24} sm={8}>
+          <Card bordered={false} style={{ borderRadius: 12, background: '#e6f4ff' }} bodyStyle={{ padding: 16 }}>
             <Statistic
               title="Total Questions"
               value={totalCount}
-              prefix={<QuestionCircleOutlined style={{ color: '#1890ff' }} />}
+              prefix={<QuestionCircleOutlined />}
+              valueStyle={{ color: '#1677ff' }}
             />
-          </Col>
-          <Col xs={8}>
+          </Card>
+        </Col>
+        <Col xs={24} sm={8}>
+          <Card bordered={false} style={{ borderRadius: 12, background: '#f6ffed' }} bodyStyle={{ padding: 16 }}>
             <Statistic
               title="Answered"
               value={answeredCount}
-              prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
+              prefix={<CheckCircleOutlined />}
               valueStyle={{ color: '#52c41a' }}
             />
-          </Col>
-          <Col xs={8}>
+          </Card>
+        </Col>
+        <Col xs={24} sm={8}>
+          <Card bordered={false} style={{ borderRadius: 12, background: hiddenCount > 0 ? '#fff2f0' : '#f5f5f5' }} bodyStyle={{ padding: 16 }}>
             <Statistic
               title="Hidden"
               value={hiddenCount}
-              prefix={<EyeInvisibleOutlined style={{ color: '#ff4d4f' }} />}
-              valueStyle={{ color: hiddenCount > 0 ? '#ff4d4f' : undefined }}
+              prefix={<EyeInvisibleOutlined />}
+              valueStyle={{ color: hiddenCount > 0 ? '#ff4d4f' : '#8c8c8c' }}
             />
-          </Col>
-        </Row>
-      </Card>
+          </Card>
+        </Col>
+      </Row>
 
       {/* Q&A Threads */}
       {questions.length === 0 ? (

@@ -1,20 +1,34 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
-import { Typography, Descriptions, Card, Button, Space, Spin, Modal, Input, App, Image, Tabs, Empty, Tag } from 'antd'
+import { Typography, Descriptions, Card, Button, Space, Spin, Modal, Input, App, Image, Tabs, Tag, Tooltip } from 'antd'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import AdminItemQATab from '@/features/admin/components/items/AdminItemQATab'
 import AdminItemLogisticsTab from '@/features/admin/components/items/AdminItemLogisticsTab'
 import { useTranslation } from 'react-i18next'
-import { useAdminItemDetail, useApproveItem, useRejectItem } from '@/features/admin/api'
+import { useAdminItemDetail, useApproveItem, useRejectItem, useAdminItemAuctions, useAdminUserDetail } from '@/features/admin/api'
 import { useCategories } from '@/features/item/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
+import { Popconfirm, Flex } from 'antd'
 import { SafeHtmlRenderer } from '@/components/ui/SafeHtmlRenderer'
-import { formatDateTime, formatCurrency } from '@/utils/format'
+import { formatDateTime, formatCurrency, formatEnumText } from '@/utils/format'
 import type { ItemReviewDto } from '@/types'
+import { ItemStatus } from '@/types'
 import { AdminErrorState } from '@/features/admin/components/AdminErrorState'
 import type { ColumnsType } from 'antd/es/table'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
+
+function ReviewerNameCell({ reviewerId, fallbackName }: { reviewerId: string, fallbackName?: string }) {
+  const { data: user } = useAdminUserDetail(reviewerId)
+  const name = user?.profile?.fullName || user?.userName || fallbackName
+
+  if (name) return <span>{name}</span>
+  return (
+    <Tooltip title={`ID: ${reviewerId}`}>
+      <span>System Admin</span>
+    </Tooltip>
+  )
+}
 
 export default function AdminItemDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -27,6 +41,8 @@ export default function AdminItemDetailPage() {
   const approveItem = useApproveItem()
   const rejectItem = useRejectItem()
   const { data: categories } = useCategories()
+  const { data: auctions, isLoading: isLoadingAuctions } = useAdminItemAuctions(id!)
+  const { data: seller } = useAdminUserDetail(item?.sellerId ?? '')
 
   const [rejectModalOpen, setRejectModalOpen] = useState(false)
   const [rejectReason, setRejectReason] = useState('')
@@ -62,7 +78,9 @@ export default function AdminItemDetailPage() {
       dataIndex: 'reviewerId',
       key: 'reviewerId',
       ellipsis: true,
-      render: (reviewerId: string, record: any) => record.reviewerName || `Admin (ID: ...${reviewerId.substring(reviewerId.length - 6)})`,
+      render: (reviewerId: string, record: any) => (
+        <ReviewerNameCell reviewerId={reviewerId} fallbackName={record.reviewerName || record.adminName} />
+      ),
     },
     {
       title: t('itemDetail.action'),
@@ -95,36 +113,47 @@ export default function AdminItemDetailPage() {
         </Button>
       </Space>
 
-      <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap' }}>
-        <Image
-          src={item.images?.[0]?.url}
-          fallback="/placeholder.png"
-          width={80}
-          height={80}
-          style={{ objectFit: 'cover', borderRadius: 8 }}
-          preview={{ mask: 'View' }}
-        />
-        <div style={{ flex: 1, minWidth: 250 }}>
-          <Typography.Title level={isMobile ? 4 : 3} style={{ margin: 0 }}>
-            {item.title}
-          </Typography.Title>
-          <Space style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap' }}>
-            <Button type="link" onClick={() => navigate(`/admin/users/${item.sellerId}`)} style={{ padding: 0 }}>
-              {item.sellerName || `Seller (ID: ...${item.sellerId.substring(item.sellerId.length - 6)})`}
-            </Button>
-            <StatusBadge status={item.status} />
-            {item.hasInboundShipment && <Tag color="purple">🏠 WAREHOUSE</Tag>}
-          </Space>
-        </div>
-        <Space style={{ flexShrink: 0 }}>
-          <Button type="primary" onClick={handleApprove} loading={approveItem.isPending}>
-            {t('reviewQueue.approve', 'Approve')}
-          </Button>
-          <Button danger onClick={() => setRejectModalOpen(true)}>
-            {t('reviewQueue.reject', 'Reject')}
-          </Button>
-        </Space>
-      </div>
+      <Card style={{ marginBottom: 24, borderRadius: 12 }}>
+        <Flex gap={16} align="flex-start" wrap="wrap">
+          <Image
+            src={item.images?.[0]?.url}
+            fallback="/placeholder.png"
+            width={80}
+            height={80}
+            style={{ objectFit: 'cover', borderRadius: 8 }}
+            preview={{ mask: 'View' }}
+          />
+          <div style={{ flex: 1, minWidth: 250 }}>
+            <Typography.Title level={isMobile ? 4 : 3} style={{ margin: 0 }}>
+              {item.title}
+            </Typography.Title>
+            <Space style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap' }}>
+              <Button type="link" onClick={() => navigate(`/admin/users/${item.sellerId}`)} style={{ padding: 0 }}>
+                {seller?.profile?.fullName || seller?.userName || item.sellerName || 'Unknown Seller'}
+              </Button>
+              <StatusBadge status={item.status} />
+              {item.hasInboundShipment && <Tag color="purple">🏠 WAREHOUSE</Tag>}
+            </Space>
+          </div>
+          {item.status === ItemStatus.PendingReview && (
+            <Space style={{ flexShrink: 0 }}>
+              <Popconfirm
+                title={t('reviewQueue.confirmApprove', 'Are you sure you want to approve this item?')}
+                onConfirm={handleApprove}
+                okText={t('common.yes', 'Yes')}
+                cancelText={t('common.no', 'No')}
+              >
+                <Button type="primary" loading={approveItem.isPending}>
+                  {t('reviewQueue.approve', 'Approve')}
+                </Button>
+              </Popconfirm>
+              <Button danger onClick={() => setRejectModalOpen(true)}>
+                {t('reviewQueue.reject', 'Reject')}
+              </Button>
+            </Space>
+          )}
+        </Flex>
+      </Card>
 
       <Card style={{ borderRadius: 12 }} bodyStyle={{ padding: 0 }}>
         <Tabs
@@ -135,34 +164,36 @@ export default function AdminItemDetailPage() {
               label: t('itemDetail.overview', 'Overview'),
               children: (
                 <div style={{ padding: 24 }}>
-                  <Descriptions column={{ xs: 1, sm: 2 }} bordered size={isMobile ? 'small' : 'default'}>
+                  <Descriptions column={{ xs: 1, sm: 2, md: 3 }} size={isMobile ? 'small' : 'middle'} layout="vertical">
                     <Descriptions.Item label={t('common.id')}>
                       <Typography.Text copyable={{ text: item.id }}>
                         {item.id.substring(0, 8)}...
                       </Typography.Text>
                     </Descriptions.Item>
-                    <Descriptions.Item label={t('itemDetail.condition')}>{item.condition}</Descriptions.Item>
+                    <Descriptions.Item label={t('itemDetail.condition')}>
+                      <Tag color="blue">{formatEnumText(item.condition)}</Tag>
+                    </Descriptions.Item>
                     <Descriptions.Item label={t('itemDetail.quantity')}>{item.quantity}</Descriptions.Item>
+                    <Descriptions.Item label={t('itemDetail.category')}>
+                      {item.categoryId ? (categories?.find((c) => c.id === item.categoryId)?.name ?? item.categoryId) : '-'}
+                    </Descriptions.Item>
                     <Descriptions.Item label={t('users.createdAt')}>{formatDateTime(item.createdAt)}</Descriptions.Item>
-                    {item.categoryId && (
-                      <Descriptions.Item label={t('itemDetail.category')}>
-                        {categories?.find((c) => c.id === item.categoryId)?.name ?? item.categoryId}
-                      </Descriptions.Item>
-                    )}
                   </Descriptions>
 
                   {item.description && (
                     <div style={{ marginTop: 24 }}>
-                      <Typography.Text strong>Description:</Typography.Text>
-                      <SafeHtmlRenderer html={item.description} style={{ marginTop: 8 }} />
+                      <Typography.Text strong style={{ fontSize: 16, display: 'block', marginBottom: 8 }}>{t('itemDetail.description', 'Description')}</Typography.Text>
+                      <Card size="small" variant="borderless" style={{ background: 'var(--color-bg-layout)', borderRadius: 8 }}>
+                        <SafeHtmlRenderer html={item.description} />
+                      </Card>
                     </div>
                   )}
 
                   {item.images && item.images.length > 0 && (
                     <div style={{ marginTop: 24 }}>
-                      <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>Gallery:</Typography.Text>
+                      <Typography.Text strong style={{ fontSize: 16, display: 'block', marginBottom: 12 }}>{t('itemDetail.gallery', 'Gallery')}</Typography.Text>
                       <Image.PreviewGroup>
-                        <Space wrap size={8}>
+                        <Space wrap size="middle">
                           {item.images.map((img) => (
                             <Image
                               key={img.id}
@@ -190,28 +221,81 @@ export default function AdminItemDetailPage() {
               label: t('itemDetail.auctionHistory', 'Auction History'),
               children: (
                 <div style={{ padding: 24 }}>
-                  {item.auction ? (
-                    <Descriptions bordered column={1} size="small" labelStyle={{ width: 140 }}>
-                      <Descriptions.Item label="Auction ID">
-                        <Typography.Text copyable={{ text: item.auction.auctionId }}>
-                          {item.auction.auctionId.substring(0, 8)}...
-                        </Typography.Text>
-                      </Descriptions.Item>
-                      <Descriptions.Item label="Status">{item.auction.auctionStatus}</Descriptions.Item>
-                      <Descriptions.Item label="Type">{item.auction.auctionType}</Descriptions.Item>
-                      <Descriptions.Item label="Current Price" style={{ textAlign: 'right' }}>
-                        <Typography.Text strong>
-                          {typeof item.auction.currentPrice === 'object' 
-                            ? formatCurrency((item.auction.currentPrice as any)?.amount, (item.auction.currentPrice as any)?.currency || item.auction.currency) 
-                            : formatCurrency(Number(item.auction.currentPrice), item.auction.currency)}
-                        </Typography.Text>
-                      </Descriptions.Item>
-                      <Descriptions.Item label="Start Time">{formatDateTime(item.auction.startTime)}</Descriptions.Item>
-                      <Descriptions.Item label="End Time">{formatDateTime(item.auction.endTime)}</Descriptions.Item>
-                    </Descriptions>
-                  ) : (
-                    <Empty description="No auction history found" />
-                  )}
+                  <ResponsiveTable
+                    rowKey="id"
+                    loading={isLoadingAuctions}
+                    columns={[
+                      {
+                        title: 'ID',
+                        dataIndex: 'id',
+                        key: 'id',
+                        render: (id) => (
+                          <Space size="small">
+                            <Button type="link" onClick={() => navigate(`/admin/auctions/${id}`)} style={{ padding: 0 }}>
+                              {id.substring(0, 8)}...
+                            </Button>
+                            <Typography.Text copyable={{ text: id }} />
+                          </Space>
+                        ),
+                      },
+                      {
+                        title: 'Type',
+                        dataIndex: 'auctionType',
+                        key: 'auctionType',
+                        render: (type) => formatEnumText(type),
+                      },
+                      {
+                        title: 'Status',
+                        dataIndex: 'status',
+                        key: 'status',
+                        render: (status) => <StatusBadge status={status} size="small" />,
+                      },
+                      {
+                        title: 'Starting Price',
+                        dataIndex: 'startingPrice',
+                        key: 'startingPrice',
+                        align: 'right',
+                        render: (price: any, record: any) => (
+                          <Typography.Text>
+                            {formatCurrency(price?.amount ?? Number(price), price?.currency ?? record.currency)}
+                          </Typography.Text>
+                        ),
+                      },
+                      {
+                        title: 'Current Price',
+                        dataIndex: 'currentPrice',
+                        key: 'currentPrice',
+                        align: 'right',
+                        render: (price: any, record: any) => (
+                          <Typography.Text strong style={{ color: '#1677ff' }}>
+                            {formatCurrency(price?.amount ?? Number(price), price?.currency ?? record.currency)}
+                          </Typography.Text>
+                        ),
+                      },
+                      {
+                        title: 'Bids',
+                        dataIndex: 'bidCount',
+                        key: 'bidCount',
+                        align: 'center',
+                        render: (val) => val ?? 0,
+                      },
+                      {
+                        title: 'Start Time',
+                        dataIndex: 'startTime',
+                        key: 'startTime',
+                        render: (val) => formatDateTime(val),
+                      },
+                      {
+                        title: 'End Time',
+                        dataIndex: 'endTime',
+                        key: 'endTime',
+                        render: (val) => formatDateTime(val),
+                      },
+                    ]}
+                    dataSource={auctions ?? []}
+                    pagination={false}
+                    mobileMode="list"
+                  />
                 </div>
               ),
             },
@@ -229,13 +313,15 @@ export default function AdminItemDetailPage() {
               label: t('itemDetail.moderation', 'Moderation & Inspection'),
               children: (
                 <div style={{ padding: 24 }}>
-                  <ResponsiveTable<ItemReviewDto>
-                    rowKey="id"
-                    columns={reviewColumns}
-                    dataSource={item.reviews ?? []}
-                    pagination={false}
-                    mobileMode="list"
-                  />
+                  <Card bordered size="small" bodyStyle={{ padding: 0 }}>
+                    <ResponsiveTable<ItemReviewDto>
+                      rowKey="id"
+                      columns={reviewColumns}
+                      dataSource={item.reviews ?? []}
+                      pagination={false}
+                      mobileMode="list"
+                    />
+                  </Card>
                 </div>
               ),
             },

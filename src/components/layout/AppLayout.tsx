@@ -9,7 +9,6 @@ import {
   HistoryOutlined,
   SunOutlined,
   MoonOutlined,
-  HeartOutlined,
   WalletOutlined,
   CreditCardOutlined,
   ShoppingOutlined,
@@ -89,8 +88,7 @@ export function AppLayout() {
   const userMenuItems = [
     { key: 'dashboard', icon: <UserOutlined />, label: t('common:menu.home', 'Dashboard') },
     { key: 'profile', icon: <UserOutlined />, label: t('common:menu.profile', 'Profile') },
-    { key: 'bids', icon: <HistoryOutlined />, label: t('common:menu.bids', 'My Bids') },
-    { key: 'watchlist', icon: <HeartOutlined />, label: t('common:menu.watchlist', 'Watchlist') },
+    { key: 'auctions', icon: <HistoryOutlined />, label: t('common:menu.myAuctions', 'My Auctions') },
     { key: 'orders', icon: <ShoppingOutlined />, label: t('common:menu.myOrders', 'Orders') },
     { key: 'shipments', icon: <ShoppingOutlined />, label: t('common:menu.myShipments', 'My Shipments') },
     { key: 'wallet', icon: <WalletOutlined />, label: t('common:menu.wallet', 'Wallet') },
@@ -108,8 +106,7 @@ export function AppLayout() {
     switch (key) {
       case 'dashboard': navigate('/me/dashboard'); break
       case 'profile': navigate('/me/profile'); break
-      case 'bids': navigate('/me/bids'); break
-      case 'watchlist': navigate('/me/watchlist'); break
+      case 'auctions': navigate('/me/auctions'); break
       case 'orders': navigate('/me/orders'); break
       case 'shipments': navigate('/me/shipments'); break
       case 'wallet': navigate('/me/wallet'); break
