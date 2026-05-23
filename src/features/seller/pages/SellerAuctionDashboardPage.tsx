@@ -1,12 +1,12 @@
 import { useParams, useNavigate } from 'react-router'
-import { Typography, Card, Row, Col, Space, Spin, Button, Statistic, Flex, Tag } from 'antd'
+import { Typography, Card, Row, Col, Space, Spin, Button, Statistic, Flex, Tag, Badge, Progress } from 'antd'
 import {
   ArrowLeftOutlined,
   DashboardOutlined,
-  EyeOutlined,
   TeamOutlined,
   ThunderboltOutlined,
   DollarOutlined,
+  ClockCircleOutlined,
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useAuctionDetail } from '@/features/auction/auctionApi.ts'
@@ -19,9 +19,10 @@ import { SERIF_FONT } from '@/styles/tokens'
 import { ItemQA } from '@/features/item/components/ItemQA'
 import { useAuctionHub } from '@/features/auction/hooks/useAuctionHub'
 import { useCurrentUser } from '@/features/user/api'
-
+import { ParticipantsTable } from '@/features/auction/components/ParticipantsTable'
 
 const { Title, Text } = Typography
+const { Countdown } = Statistic
 
 export default function SellerAuctionDashboardPage() {
   const { id } = useParams<{ id: string }>()
@@ -61,11 +62,13 @@ export default function SellerAuctionDashboardPage() {
       title: t('bidder', 'Bidder'),
       dataIndex: 'bidderDisplayName',
       key: 'bidder',
-      render: (text: string) => (
-        <Typography.Text strong ellipsis style={{ maxWidth: 120 }}>
-          {text || 'Anonymous'}
-        </Typography.Text>
-      ),
+      render: (text: string) => {
+        return (
+          <Typography.Text strong ellipsis style={{ maxWidth: 120 }}>
+            {text || 'Anonymous'}
+          </Typography.Text>
+        )
+      },
     },
     {
       title: t('amount', 'Amount'),
@@ -122,6 +125,42 @@ export default function SellerAuctionDashboardPage() {
               formatter={(val) => formatCurrency(Number(val), auction.currency)}
               prefix={<DollarOutlined style={{ color: 'var(--color-success)' }} />}
             />
+            {auction.reservePrice && (
+              <div style={{ marginTop: 12 }}>
+                <Flex justify="space-between" align="center" style={{ marginBottom: 4 }}>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    {t('reservePrice', 'Reserve Price')}: {formatCurrency(auction.reservePrice.amount, auction.currency)}
+                  </Text>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    {Math.min(100, Math.round((auction.currentPrice.amount / auction.reservePrice.amount) * 100))}%
+                  </Text>
+                </Flex>
+                <Progress 
+                  percent={Math.min(100, Math.round((auction.currentPrice.amount / auction.reservePrice.amount) * 100))} 
+                  size="small" 
+                  showInfo={false} 
+                  strokeColor={auction.currentPrice.amount >= auction.reservePrice.amount ? 'var(--color-success)' : 'var(--color-accent)'} 
+                />
+              </div>
+            )}
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card bordered={false} className="oio-glass" style={{ borderRadius: 16 }}>
+            {auction.status === 'active' && auction.endTime ? (
+              <Countdown
+                title={t('timeRemaining', 'Time Remaining')}
+                value={new Date(auction.endTime).getTime()}
+                format="D [days] HH:mm:ss"
+                prefix={<ClockCircleOutlined style={{ color: 'var(--color-warning)' }} />}
+              />
+            ) : (
+              <Statistic
+                title={t('status', 'Status')}
+                value={auction.status.toUpperCase()}
+                prefix={<ClockCircleOutlined style={{ color: 'var(--color-info)' }} />}
+              />
+            )}
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
@@ -130,15 +169,6 @@ export default function SellerAuctionDashboardPage() {
               title={t('totalBids', 'Total Bids')}
               value={auction.bidCount}
               prefix={<ThunderboltOutlined style={{ color: 'var(--color-accent)' }} />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false} className="oio-glass" style={{ borderRadius: 16 }}>
-            <Statistic
-              title={t('views', 'Total Views')}
-              value={auction.viewCount}
-              prefix={<EyeOutlined style={{ color: 'var(--color-info)' }} />}
             />
           </Card>
         </Col>
@@ -173,7 +203,14 @@ export default function SellerAuctionDashboardPage() {
 
           {/* Bid History Table */}
           <Card
-            title={t('recentBids', 'Bid Activity')}
+            title={
+              <Flex align="center" gap={8}>
+                {t('recentBids', 'Bid Activity')}
+                {hub.connected && (
+                  <Badge status="processing" text={<Text type="secondary" style={{ fontSize: 12 }}>Live</Text>} />
+                )}
+              </Flex>
+            }
             bordered={false}
             style={{ borderRadius: 20, boxShadow: 'var(--shadow-sm)', marginTop: 24 }}
           >
@@ -186,6 +223,11 @@ export default function SellerAuctionDashboardPage() {
               size={isMobile ? 'small' : 'middle'}
             />
           </Card>
+
+          {/* Participants Table */}
+          <div style={{ marginTop: 24 }}>
+            <ParticipantsTable auctionId={auction.id} currency={auction.currency} />
+          </div>
         </Col>
 
         <Col xs={24} lg={8}>

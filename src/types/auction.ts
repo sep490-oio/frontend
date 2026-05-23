@@ -140,6 +140,18 @@ export interface AuctionListItemDto {
   canOfferRunnerUp?: boolean
 }
 
+export interface AuctionParticipantListItemDto {
+  auctionId: string
+  userId: string
+  displayName: string
+  joinStatus: ParticipantJoinStatus
+  qualificationStatus: ParticipantQualificationStatus
+  registeredAt: string
+  qualifiedAt?: string
+  depositAmount?: number
+  depositCurrency?: string
+}
+
 export interface BidDto {
   id: string
   auctionId: string

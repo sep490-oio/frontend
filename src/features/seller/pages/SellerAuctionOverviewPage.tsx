@@ -151,14 +151,20 @@ function ItemAuctionRows({ item }: { item: ItemDto }) {
   }
 
   return (
-    <Table<AuctionListItemDto>
-      rowKey="id"
-      columns={cols}
-      dataSource={auctions}
-      pagination={false}
-      size="small"
-      style={{ margin: isMobile ? '0' : '0 16px 16px 48px' }}
-    />
+    <div style={{ margin: isMobile ? '8px 0' : '16px 24px 16px 48px', padding: 12, background: 'var(--color-bg-layout)', borderRadius: 12, border: '1px solid var(--color-border-secondary)' }}>
+      <Text strong style={{ display: 'block', marginBottom: 12, fontSize: 13, color: 'var(--color-text-secondary)' }}>
+        AUCTION SESSIONS
+      </Text>
+      <Table<AuctionListItemDto>
+        rowKey="id"
+        columns={cols}
+        dataSource={auctions}
+        pagination={false}
+        size="small"
+        bordered
+        style={{ background: 'var(--color-bg-container)', borderRadius: 8, overflow: 'hidden' }}
+      />
+    </div>
   )
 }
 
@@ -257,8 +263,8 @@ export default function SellerAuctionOverviewPage() {
       },
     },
     {
-      title: 'Auction Sessions',
-      key: 'sessions',
+      title: 'Actions',
+      key: 'actions',
       width: 130,
       align: 'center',
       render: (_, record) => {

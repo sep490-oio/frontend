@@ -17,9 +17,30 @@ import type {
   PaginationParams,
   MyBidDto,
   MyAuctionWatchlistDto as WatchlistItemDto,
+  AuctionParticipantListItemDto,
+  ParticipantJoinStatus,
+  ParticipantQualificationStatus,
 } from '@/types'
 
 export type { MyBidDto, WatchlistItemDto }
+
+export interface GetAuctionParticipantsParams extends PaginationParams {
+  sortBy?: string
+  joinStatus?: ParticipantJoinStatus
+  qualificationStatus?: ParticipantQualificationStatus
+}
+
+export function useAuctionParticipants(auctionId: string, params?: GetAuctionParticipantsParams) {
+  return useQuery({
+    queryKey: ['auctions', auctionId, 'participants', params],
+    queryFn: async () => {
+      const res = await apiClient.get<PagedList<AuctionParticipantListItemDto>>(`/auctions/${auctionId}/participants`, { params })
+      return res.data
+    },
+    enabled: !!auctionId,
+    staleTime: 0,
+  })
+}
 
 // ── Auctions ─────────────────────────────────────────────────────────
 
