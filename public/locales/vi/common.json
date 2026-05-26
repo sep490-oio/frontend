@@ -26,7 +26,15 @@
     "watchlist": "Theo dõi",
     "myShipments": "Vận đơn",
     "disputes": "Tranh chấp",
-    "paymentMethods": "Phương thức thanh toán"
+    "paymentMethods": "Phương thức thanh toán",
+    "group": {
+      "portals": "Cổng quản trị",
+      "personal": "Tài khoản cá nhân",
+      "buyer": "Tài khoản người mua",
+      "buying": "Mua sắm & Đấu giá",
+      "account": "Tài khoản & Ví",
+      "settings": "Bảo mật & Cài đặt"
+    }
   },
   "action": {
     "login": "Đăng nhập",

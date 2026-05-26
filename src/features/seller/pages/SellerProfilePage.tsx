@@ -66,7 +66,7 @@ export default function SellerProfilePage() {
     if (profile) {
       form.setFieldsValue({
         storeName: profile.storeName,
-        storeDescription: profile.description ?? '',
+        storeDescription: profile.storeDescription ?? '',
       })
     }
     setEditing(true)
@@ -162,14 +162,6 @@ export default function SellerProfilePage() {
               />
             </Form.Item>
 
-            {/* Logo upload placeholder */}
-            <Form.Item label={t('logo', 'Logo')}>
-              <Card style={{ borderStyle: 'dashed', textAlign: 'center', padding: isMobile ? 16 : 24 }}>
-                <Typography.Text type="secondary">
-                  {t('logoUploadPlaceholder', 'Logo upload will be available here')}
-                </Typography.Text>
-              </Card>
-            </Form.Item>
 
             <Form.Item style={{ marginBottom: 0 }}>
               {isMobile ? (
@@ -219,14 +211,20 @@ export default function SellerProfilePage() {
                 <InfoRow label={t('storeName', 'Store Name')}>{profile.storeName}</InfoRow>
                 <InfoRow label={t('status', 'Status')}><StatusBadge status={profile.status} /></InfoRow>
                 <InfoRow label={t('rating', 'Rating')}>
-                  {(profile.averageRating ?? profile.rating) > 0 ? (profile.averageRating ?? profile.rating).toFixed(1) : '0'} / 5 ({profile.reviewCount} {t('reviews', 'reviews')})
+                  {(profile.averageRating ?? 0) > 0 ? (profile.averageRating ?? 0).toFixed(1) : '0'} / 5 ({profile.ratingCount ?? 0} {t('reviews', 'reviews')})
+                </InfoRow>
+                <InfoRow label={t('totalSales', 'Total Sales')}>
+                  {profile.totalSalesCount ?? 0} {tc('menu.orders', 'orders')} ({new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(profile.totalSalesAmount ?? 0)})
+                </InfoRow>
+                <InfoRow label={t('trustScore', 'Trust Score')}>
+                  {profile.trustScore?.toFixed(2) ?? 'N/A'}
                 </InfoRow>
                 <InfoRow label={t('createdAt', 'Created')}>{formatDateTime(profile.createdAt)}</InfoRow>
-                {profile.approvedAt && (
-                  <InfoRow label={t('approvedAt', 'Approved')}>{formatDateTime(profile.approvedAt)}</InfoRow>
+                {(profile.verifiedAt) && (
+                  <InfoRow label={t('verifiedAt', 'Verified')}>{formatDateTime(profile.verifiedAt ?? '')}</InfoRow>
                 )}
                 <InfoRow label={t('storeDescription', 'Description')} fullWidth>
-                  {profile.description ? <SafeHtmlRenderer html={profile.description} /> : '-'}
+                  {(profile.storeDescription) ? <SafeHtmlRenderer html={profile.storeDescription ?? ''} /> : '-'}
                 </InfoRow>
               </div>
             ) : (
@@ -236,9 +234,11 @@ export default function SellerProfilePage() {
                   {[
                     { label: t('storeName', 'Store Name'), value: profile.storeName },
                     { label: t('status', 'Status'), value: <StatusBadge status={profile.status} /> },
-                    { label: t('rating', 'Rating'), value: `${(profile.averageRating ?? profile.rating) > 0 ? (profile.averageRating ?? profile.rating).toFixed(1) : '0'} / 5 (${profile.reviewCount} ${t('reviews', 'reviews')})` },
+                    { label: t('rating', 'Rating'), value: `${(profile.averageRating ?? 0) > 0 ? (profile.averageRating ?? 0).toFixed(1) : '0'} / 5 (${profile.ratingCount ?? 0} ${t('reviews', 'reviews')})` },
+                    { label: t('totalSales', 'Total Sales'), value: `${profile.totalSalesCount ?? 0} ${tc('menu.orders', 'orders')} (${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(profile.totalSalesAmount ?? 0)})` },
+                    { label: t('trustScore', 'Trust Score'), value: profile.trustScore?.toFixed(2) ?? 'N/A' },
                     { label: t('createdAt', 'Created'), value: formatDateTime(profile.createdAt) },
-                    ...(profile.approvedAt ? [{ label: t('approvedAt', 'Approved'), value: formatDateTime(profile.approvedAt) }] : []),
+                    ...((profile.verifiedAt) ? [{ label: t('verifiedAt', 'Verified'), value: formatDateTime(profile.verifiedAt ?? '') }] : []),
                   ].map((item, idx) => (
                     <Col key={idx} xs={24} sm={12}>
                       <div style={{ padding: '14px 0', borderBottom: '0px solid var(--color-border-light)', paddingRight: 24 }}>
@@ -250,7 +250,7 @@ export default function SellerProfilePage() {
                   <Col xs={24}>
                     <div style={{ padding: '14px 0' }}>
                       <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 4 }}>{t('storeDescription', 'Description')}</div>
-                      <div style={{ fontSize: 14, color: 'var(--color-text-primary)' }}>{profile.description ? <SafeHtmlRenderer html={profile.description} /> : '-'}</div>
+                      <div style={{ fontSize: 14, color: 'var(--color-text-primary)' }}>{(profile.storeDescription) ? <SafeHtmlRenderer html={profile.storeDescription ?? ''} /> : '-'}</div>
                     </div>
                   </Col>
                 </Row>
@@ -258,31 +258,6 @@ export default function SellerProfilePage() {
             )}
           </Card>
 
-          {/* Logo card */}
-          <Card 
-            title={<span className="oio-serif" style={{ fontWeight: 600 }}>{t('logo', 'Logo')}</span>} 
-            style={{ 
-              borderRadius: 24, 
-              background: 'var(--color-bg-container)', 
-              backdropFilter: 'var(--oio-blur)',
-              WebkitBackdropFilter: 'var(--oio-blur)',
-              border: '1px solid var(--color-border)',
-              boxShadow: 'var(--shadow-sm)'
-            }}
-            styles={{ body: { padding: isMobile ? 16 : 24 } }}
-          >
-            {profile.logo ? (
-              <img
-                src={profile.logo}
-                alt={profile.storeName}
-                style={{ maxWidth: isMobile ? 120 : 200, maxHeight: isMobile ? 120 : 200, objectFit: 'contain' }}
-              />
-            ) : (
-              <Typography.Text type="secondary">
-                {t('noLogo', 'No logo uploaded')}
-              </Typography.Text>
-            )}
-          </Card>
         </>
       )}
     </div>

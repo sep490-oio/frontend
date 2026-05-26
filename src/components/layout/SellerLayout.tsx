@@ -12,7 +12,6 @@ import {
   ExportOutlined,
   DatabaseOutlined,
   UserOutlined,
-  SafetyCertificateOutlined,
   ArrowLeftOutlined,
   SunOutlined,
   MoonOutlined,
@@ -27,6 +26,7 @@ import { useMySellerProfile } from '@/features/seller/api'
 import { useTheme } from '@/hooks/useTheme'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { NotificationDropdown } from '@/features/notification/components/NotificationDropdown'
+import { UserDropdown } from './UserDropdown'
 import { SellerProfileStatus } from '@/types/enums'
 import { SERIF_FONT, SANS_FONT } from '@/styles/tokens'
 
@@ -124,25 +124,24 @@ export function SellerLayout() {
       type: 'group',
       label: t('menu.groupSettings'),
       children: [
-        { key: '/seller/profile', icon: <UserOutlined />, label: t('menu.profile', 'Profile') },
-        { key: '/seller/verification', icon: <SafetyCertificateOutlined />, label: t('menu.verification', 'Verification') },
+        { key: '/seller/profile', icon: <UserOutlined />, label: t('menu.profile', 'Store Profile') },
       ],
     },
   ]
 
-  // If not verified, only show Verification and Profile
+  // If not verified, only show Profile in sidebar
   const menuEntries = isVerified
     ? allMenuEntries
     : allMenuEntries
       .map((entry) => {
         if ('type' in entry && entry.type === 'group') {
           const filteredChildren = entry.children.filter(
-            (child) => child.key === '/seller/verification' || child.key === '/seller/profile'
+            (child) => child.key === '/seller/profile'
           )
           return filteredChildren.length > 0 ? { ...entry, children: filteredChildren } : null
         }
         const item = entry as MenuItem
-        return item.key === '/seller/verification' || item.key === '/seller/profile' ? entry : null
+        return item.key === '/seller/profile' ? entry : null
       })
       .filter((entry): entry is MenuEntry => entry !== null)
 
@@ -483,32 +482,36 @@ export function SellerLayout() {
           <NotificationDropdown />
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 4px', borderRadius: 8 }}>
-            <Avatar
-              size={32}
-              src={avatarUrl}
-              icon={!avatarUrl ? <UserOutlined /> : undefined}
-              style={{
-                backgroundColor: avatarUrl ? undefined : 'var(--color-accent-light)',
-                color: avatarUrl ? undefined : 'var(--color-accent)',
-                flexShrink: 0,
-              }}
-            />
-            {!isMobile && !isTablet && (
-              <span
-                style={{
-                  fontFamily: SANS_FONT,
-                  fontSize: 13,
-                  fontWeight: 500,
-                  color: 'var(--color-text-primary)',
-                  maxWidth: 200,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                <span>{displayName}</span> <span style={{ opacity: 0.6, fontSize: 11, fontWeight: 400 }}>(@{user?.userName})</span>
-              </span>
-            )}
+            <UserDropdown mode="portal">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                <Avatar
+                  size={32}
+                  src={avatarUrl}
+                  icon={!avatarUrl ? <UserOutlined /> : undefined}
+                  style={{
+                    backgroundColor: avatarUrl ? undefined : 'var(--color-accent-light)',
+                    color: avatarUrl ? undefined : 'var(--color-accent)',
+                    flexShrink: 0,
+                  }}
+                />
+                {!isMobile && !isTablet && (
+                  <span
+                    style={{
+                      fontFamily: SANS_FONT,
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: 'var(--color-text-primary)',
+                      maxWidth: 200,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    <span>{displayName}</span> <span style={{ opacity: 0.6, fontSize: 11, fontWeight: 400 }}>(@{user?.userName})</span>
+                  </span>
+                )}
+              </div>
+            </UserDropdown>
           </div>
         </div>
       </header>

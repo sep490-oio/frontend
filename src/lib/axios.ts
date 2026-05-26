@@ -83,10 +83,18 @@ apiClient.interceptors.request.use(async (config: InternalAxiosRequestConfig) =>
   } else if (!config.url?.includes('/auth/login') && !config.url?.includes('/auth/refresh')) {
     let token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
     if (token) {
-      if (typeof config.headers.set === 'function') {
+      // Remove any surrounding quotes or literal string "undefined" / "null"
+      token = token.replace(/^["']|["']$/g, '').trim()
+      if (token === 'undefined' || token === 'null' || token === '') {
+        token = null
+      }
+    }
+    
+    if (token) {
+      if (config.headers && typeof config.headers.set === 'function') {
         config.headers.set('Authorization', `Bearer ${token}`)
-      } else {
-        config.headers.Authorization = `Bearer ${token}`
+      } else if (config.headers) {
+        config.headers['Authorization'] = `Bearer ${token}`
       }
     }
   }
@@ -149,9 +157,8 @@ apiClient.interceptors.response.use(
         originalRequest._retry = true
         if (typeof originalRequest.headers.set === 'function') {
           originalRequest.headers.set('Authorization', `Bearer ${token}`)
-        } else {
-          originalRequest.headers.Authorization = `Bearer ${token}`
         }
+        originalRequest.headers.Authorization = `Bearer ${token}`
         return apiClient(originalRequest)
       })
     }
@@ -160,14 +167,21 @@ apiClient.interceptors.response.use(
     isRefreshing = true
 
     try {
-      const failedToken = originalRequest.headers.Authorization?.toString().replace('Bearer ', '')
+      let failedToken = typeof originalRequest.headers.get === 'function'
+        ? originalRequest.headers.get('Authorization')
+        : originalRequest.headers.Authorization
+      
+      if (typeof failedToken !== 'string') {
+        failedToken = failedToken?.toString()
+      }
+      failedToken = failedToken?.replace('Bearer ', '')
+
       const newAccessToken = await refreshToken(failedToken)
       processQueue(null, newAccessToken)
       if (typeof originalRequest.headers.set === 'function') {
         originalRequest.headers.set('Authorization', `Bearer ${newAccessToken}`)
-      } else {
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
       }
+      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
       return apiClient(originalRequest)
     } catch (refreshError) {
       processQueue(refreshError, null)

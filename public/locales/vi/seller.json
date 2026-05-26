@@ -38,6 +38,7 @@
   "totalItems": "Tổng sản phẩm",
   "activeAuctions": "Phiên đấu giá đang diễn ra",
   "totalSales": "Tổng doanh số",
+  "trustScore": "Điểm uy tín",
   "quickActions": "Thao tác nhanh",
   "newItem": "Sản phẩm mới",
   "manageItems": "Quản lý sản phẩm",
@@ -108,7 +109,7 @@
     "outbound": "Hàng xuất kho",
     "warehouseItems": "Hàng trong kho",
     "groupSettings": "Cài đặt",
-    "profile": "Hồ sơ",
+    "profile": "Hồ sơ cửa hàng",
     "verification": "Xác minh",
     "directShipments": "Vận đơn trực tiếp"
   },

@@ -23,7 +23,9 @@ export function isTokenExpired(): boolean {
   
   const explicitExpiryStr = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT)
   if (explicitExpiryStr) {
-    const expMs = new Date(explicitExpiryStr).getTime()
+    // Append 'Z' if missing to force UTC parsing, as the backend returns UTC without Z
+    const normalizedStr = explicitExpiryStr.endsWith('Z') ? explicitExpiryStr : `${explicitExpiryStr}Z`
+    const expMs = new Date(normalizedStr).getTime()
     if (!isNaN(expMs)) {
       return Date.now() >= expMs - TOKEN_EXPIRY_BUFFER_MS
     }
@@ -52,11 +54,12 @@ export function isTokenExpired(): boolean {
  * fallback path retains its original in-tab de-duplication behavior.
  */
 async function doRefresh(): Promise<string> {
-  const refreshTokenStr = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
+  let refreshTokenStr = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
   if (!refreshTokenStr) {
     handleRefreshFailure()
     throw new Error('No refresh token')
   }
+  refreshTokenStr = refreshTokenStr.replace(/^["']|["']$/g, '').trim()
 
   const deviceId = getDeviceId() ?? localStorage.getItem(STORAGE_KEYS.DEVICE_ID)
   if (!deviceId) {
@@ -64,7 +67,10 @@ async function doRefresh(): Promise<string> {
     throw new Error('No device ID for refresh')
   }
 
-  const expiredAccessToken = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
+  let expiredAccessToken = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
+  if (expiredAccessToken) {
+    expiredAccessToken = expiredAccessToken.replace(/^["']|["']$/g, '').trim()
+  }
 
   // AbortController to cancel the HTTP request if timeout fires
   const controller = new AbortController()

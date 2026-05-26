@@ -8,8 +8,14 @@ function createHubConnection(hubPath: string): signalR.HubConnection {
   const connection = new signalR.HubConnectionBuilder()
     .withUrl(`${SIGNALR_URL}${hubPath}`, {
       accessTokenFactory: async () => {
-        const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
+        let token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
         if (!token) throw new Error('No access token available')
+        
+        token = token.replace(/^["']|["']$/g, '').trim()
+        if (token === 'undefined' || token === 'null' || token === '') {
+          throw new Error('No access token available')
+        }
+        
         lastAttemptedToken = token
         return token
       },

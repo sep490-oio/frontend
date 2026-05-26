@@ -482,6 +482,61 @@ export default function InspectionDetailPage() {
         )}
       </div>
 
+      {/* ── Package Information (from Warehouse Receipt) ── */}
+      {shipment.warehousePackage && (
+        <div
+          className="oio-widget"
+          style={{
+            padding: isMobile ? 12 : 20,
+            marginBottom: isMobile ? 12 : 20,
+          }}
+        >
+          <Typography.Text strong style={{
+            display: 'block',
+            fontSize: 13,
+            textTransform: 'uppercase',
+            letterSpacing: '0.06em',
+            color: 'var(--color-text-secondary)',
+            marginBottom: 16,
+          }}>
+            {t('inspector:inspectionDetail.warehousePackageInfo', 'Warehouse Package Info')}
+          </Typography.Text>
+
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16, marginBottom: 16 }}>
+            <InfoField icon={<InboxOutlined />} label={t('inspector:inspectionDetail.packageStatus', 'Package Status')}>
+              <StatusBadge status={shipment.warehousePackage.status} />
+            </InfoField>
+            {shipment.warehousePackage.storageLocationLabel && (
+              <InfoField icon={<EnvironmentOutlined />} label={t('inspector:inspectionDetail.storageLocation', 'Storage Location')}>
+                {shipment.warehousePackage.storageLocationLabel}
+              </InfoField>
+            )}
+          </div>
+
+          {shipment.warehousePackage.media && shipment.warehousePackage.media.length > 0 && (
+            <div>
+              <Typography.Text strong style={{ display: 'block', fontSize: 13, marginBottom: 8 }}>
+                {t('inspector:inspectionDetail.warehousePhotos', 'Warehouse Photos')}
+              </Typography.Text>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                <Image.PreviewGroup>
+                  {shipment.warehousePackage.media.map(m => (
+                    <Image
+                      key={m.id}
+                      src={m.secureUrl}
+                      alt={m.fileName || 'Warehouse Photo'}
+                      width={80}
+                      height={80}
+                      style={{ objectFit: 'cover', borderRadius: 8 }}
+                    />
+                  ))}
+                </Image.PreviewGroup>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── Inspection Form ── */}
       <div
         className="oio-widget"

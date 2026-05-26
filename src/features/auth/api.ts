@@ -8,6 +8,7 @@ import type {
   ForgotPasswordRequest,
   ResetPasswordRequest,
   ConfirmEmailRequest,
+  LogoutRequest,
 } from '@/types'
 
 export function useLogin() {
@@ -30,8 +31,8 @@ export function useRegister() {
 
 export function useLogout() {
   return useMutation({
-    mutationFn: async () => {
-      await apiClient.post('/auth/logout')
+    mutationFn: async (data: LogoutRequest) => {
+      await apiClient.post('/auth/logout', data)
     },
   })
 }

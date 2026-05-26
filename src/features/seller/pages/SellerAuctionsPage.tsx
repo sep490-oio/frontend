@@ -10,17 +10,22 @@ import {
   Card,
   Row,
   Col,
+  Input,
+  Select,
+  Dropdown,
 } from 'antd'
-import { PlusOutlined, EyeOutlined } from '@ant-design/icons'
+import type { MenuProps } from 'antd'
+import { PlusOutlined, SearchOutlined, MoreOutlined, GlobalOutlined, AppstoreOutlined, ShoppingCartOutlined, EditOutlined } from '@ant-design/icons'
 import { useNavigate, useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { useMyAuctions } from '@/features/auction/auctionApi'
+import { useMyAuctions, useMyAuctionStats } from '@/features/auction/auctionApi'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime, formatCurrency } from '@/utils/format'
 import { AuctionStatus } from '@/types/enums'
 import type { AuctionListItemDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
+import { useDebounce } from '@/hooks/useDebounce'
 
 const { Title, Text } = Typography
 
@@ -30,30 +35,87 @@ export default function SellerAuctionsPage() {
   const { t: ta } = useTranslation('auction')
   const navigate = useNavigate()
   const prefix = useRoutePrefix()
-  const [searchParams] = useSearchParams()
+  
+  const [searchParams, setSearchParams] = useSearchParams()
   const [page, setPage] = useState(Number(searchParams.get('page')) || 1)
   const [pageSize, setPageSize] = useState(10)
+  
   const activeTab = searchParams.get('tab') || 'all'
+  const [searchTerm, setSearchTerm] = useState('')
+  const debouncedSearch = useDebounce(searchTerm, 500)
+  const [sortBy, setSortBy] = useState('CreatedAt desc')
 
   const getStatusFilter = (tab: string) => {
     if (tab === 'active') return AuctionStatus.Active
-    if (tab === 'ended') return `${AuctionStatus.Ended},${AuctionStatus.Sold},${AuctionStatus.Failed},${AuctionStatus.Cancelled}`
+    if (tab === 'ended') return `${AuctionStatus.Ended},${AuctionStatus.Sold},${AuctionStatus.Failed},${AuctionStatus.Cancelled},${AuctionStatus.Completed}`
     return undefined
   }
+
+  const { data: stats } = useMyAuctionStats()
 
   const { data, isLoading } = useMyAuctions({
     pageNumber: page,
     pageSize,
-    sortBy: 'CreatedAt desc',
+    sortBy: sortBy,
     status: getStatusFilter(activeTab),
+    search: debouncedSearch || undefined,
   })
 
   const handleTabChange = (key: string) => {
     setPage(1)
-    const nextParams = new URLSearchParams(searchParams)
-    nextParams.set('tab', key)
-    nextParams.delete('page')
-    navigate({ search: nextParams.toString() })
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev)
+      next.set('tab', key)
+      next.delete('page')
+      return next
+    })
+  }
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value)
+    setPage(1)
+  }
+
+  const getActionMenu = (record: AuctionListItemDto): MenuProps => {
+    const items: MenuProps['items'] = []
+
+    if (record.status === AuctionStatus.Draft) {
+      items.push({
+        key: 'edit',
+        icon: <EditOutlined />,
+        label: tc('action.edit', 'Edit'),
+        onClick: () => navigate(`${prefix}/auctions/create?mode=edit&id=${record.id}`)
+      })
+    }
+
+    if (record.status !== AuctionStatus.Draft) {
+      items.push({
+        key: 'dashboard',
+        icon: <AppstoreOutlined />,
+        label: t('viewDashboard', 'View Dashboard'),
+        onClick: () => navigate(`${prefix}/auctions/${record.id}/dashboard`)
+      })
+    }
+
+    if (record.status === AuctionStatus.Active) {
+      items.push({
+        key: 'public',
+        icon: <GlobalOutlined />,
+        label: t('viewPublic', 'View Public Page'),
+        onClick: () => window.open(`/auctions/${record.id}`, '_blank')
+      })
+    }
+
+    if ([AuctionStatus.Sold, AuctionStatus.Ended, AuctionStatus.Completed].includes(record.status as any)) {
+      items.push({
+        key: 'order',
+        icon: <ShoppingCartOutlined />,
+        label: t('viewOrder', 'View Order'),
+        onClick: () => navigate(`${prefix}/orders?auctionId=${record.id}`)
+      })
+    }
+
+    return { items }
   }
 
   const columns: ColumnsType<AuctionListItemDto> = [
@@ -62,15 +124,22 @@ export default function SellerAuctionsPage() {
       dataIndex: 'itemTitle',
       key: 'itemTitle',
       render: (_, record) => (
-        <Space align="center">
-          {record.primaryImageUrl && (
+        <Space align="center" size={16}>
+          {record.primaryImageUrl ? (
             <img
               src={record.primaryImageUrl}
               alt=""
-              style={{ width: 48, height: 48, borderRadius: 6, objectFit: 'cover' }}
+              style={{ width: 64, height: 64, borderRadius: 8, objectFit: 'cover', boxShadow: 'var(--shadow-sm)' }}
             />
+          ) : (
+            <div style={{ width: 64, height: 64, borderRadius: 8, background: 'var(--color-bg-layout)', border: '1px solid var(--color-border)' }} />
           )}
-          <Text strong>{record.itemTitle}</Text>
+          <Flex vertical gap={4}>
+            <Text strong style={{ fontSize: 16 }}>{record.itemTitle}</Text>
+            {record.itemStatus && (
+               <Text type="secondary" style={{ fontSize: 13 }}>Condition: {record.itemStatus}</Text>
+            )}
+          </Flex>
         </Space>
       ),
     },
@@ -86,7 +155,7 @@ export default function SellerAuctionsPage() {
       dataIndex: 'currentPrice',
       key: 'currentPrice',
       width: 140,
-      render: (val) => formatCurrency(val.amount, val.currency),
+      render: (val) => formatCurrency(val?.amount || 0, val?.currency || 'VND'),
     },
     {
       title: ta('bidCount', 'Bids'),
@@ -104,14 +173,12 @@ export default function SellerAuctionsPage() {
     {
       title: tc('action.actions', 'Actions'),
       key: 'actions',
-      width: 100,
+      width: 80,
+      align: 'center',
       render: (_, record) => (
-        <Button
-          type="text"
-          icon={<EyeOutlined />}
-          onClick={() => navigate(`${prefix}/auctions/${record.id}/dashboard`)}
-          title={t('viewDashboard', 'View Dashboard')}
-        />
+        <Dropdown menu={getActionMenu(record)} trigger={['click']} placement="bottomRight">
+          <Button type="text" icon={<MoreOutlined />} />
+        </Dropdown>
       ),
     },
   ]
@@ -132,32 +199,56 @@ export default function SellerAuctionsPage() {
         </Button>
       </Flex>
 
-      <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col span={8}>
-          <Card size="small" bordered={false} style={{ boxShadow: 'var(--shadow-sm)' }}>
+      {/* Stats Cards */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col xs={12} sm={6}>
+          <Card className="oio-glass" size="small" bordered={false} style={{ borderRadius: 12 }}>
             <Text type="secondary">{t('totalAuctions', 'Total Auctions')}</Text>
-            <Title level={3} style={{ margin: 0 }}>
-              {activeTab === 'all' ? (data?.metadata?.totalCount || 0) : '-'}
-            </Title>
+            <Title level={3} style={{ margin: 0 }}>{stats?.totalAuctions ?? '-'}</Title>
           </Card>
         </Col>
-        <Col span={8}>
-          <Card size="small" bordered={false} style={{ boxShadow: 'var(--shadow-sm)' }}>
+        <Col xs={12} sm={6}>
+          <Card className="oio-glass" size="small" bordered={false} style={{ borderRadius: 12 }}>
             <Text type="secondary">{t('activeAuctions', 'Active')}</Text>
-            <Title level={3} style={{ margin: 0 }}>
-              {activeTab === 'active' ? (data?.metadata?.totalCount || 0) : '-'}
-            </Title>
+            <Title level={3} style={{ margin: 0 }}>{stats?.activeAuctions ?? '-'}</Title>
           </Card>
         </Col>
-        <Col span={8}>
-          <Card size="small" bordered={false} style={{ boxShadow: 'var(--shadow-sm)' }}>
-            <Text type="secondary">{t('endedAuctions', 'Ended')}</Text>
-            <Title level={3} style={{ margin: 0 }}>
-              {activeTab === 'ended' ? (data?.metadata?.totalCount || 0) : '-'}
-            </Title>
+        <Col xs={12} sm={6}>
+          <Card className="oio-glass" size="small" bordered={false} style={{ borderRadius: 12 }}>
+            <Text type="secondary">{t('endedAuctions', 'Ended / Sold')}</Text>
+            <Title level={3} style={{ margin: 0 }}>{stats?.endedAuctions ?? '-'}</Title>
+          </Card>
+        </Col>
+        <Col xs={12} sm={6}>
+          <Card className="oio-glass" size="small" bordered={false} style={{ borderRadius: 12 }}>
+            <Text type="secondary">{t('draftAuctions', 'Draft')}</Text>
+            <Title level={3} style={{ margin: 0 }}>{stats?.draftAuctions ?? '-'}</Title>
           </Card>
         </Col>
       </Row>
+
+      {/* Search & Filters */}
+      <Flex gap={16} wrap="wrap" style={{ marginBottom: 16 }}>
+        <Input
+          placeholder={tc('search', 'Search...')}
+          prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
+          value={searchTerm}
+          onChange={handleSearchChange}
+          style={{ maxWidth: 300, borderRadius: 8 }}
+          allowClear
+        />
+        <Select
+          value={sortBy}
+          onChange={(val) => { setSortBy(val); setPage(1); }}
+          style={{ width: 200 }}
+          options={[
+            { value: 'CreatedAt desc', label: tc('sort.newest', 'Newest first') },
+            { value: 'EndTime asc', label: tc('sort.endingSoon', 'Ending soon') },
+            { value: 'CurrentPrice desc', label: tc('sort.highestPrice', 'Highest price') },
+            { value: 'CurrentPrice asc', label: tc('sort.lowestPrice', 'Lowest price') },
+          ]}
+        />
+      </Flex>
 
       <Tabs
         activeKey={activeTab}
@@ -170,10 +261,8 @@ export default function SellerAuctionsPage() {
         style={{ marginBottom: 16 }}
       />
 
-      {!isLoading && data?.items.length === 0 ? (
-        <Empty
-          description={t('noAuctionsYet', "You haven't created any auctions yet.")}
-        />
+      {!isLoading && data?.items.length === 0 && !debouncedSearch ? (
+        <Empty description={t('noAuctionsYet', "You haven't created any auctions yet.")} />
       ) : (
         <Table<AuctionListItemDto>
           rowKey="id"

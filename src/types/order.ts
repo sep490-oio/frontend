@@ -363,3 +363,9 @@ export interface CreateReturnRequest {
   reasonCode: string
   description?: string
 }
+
+export interface SellerOrderStats {
+  ordersAwaitingShipment: number
+  orderReturns: number
+}
+

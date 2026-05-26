@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router'
-import { Typography, Card, Row, Col, Space, Spin, Button, Statistic, Flex, Tag, Badge, Progress } from 'antd'
+import { useState } from 'react'
+import { Typography, Card, Row, Col, Space, Spin, Button, Statistic, Flex, Tag, Badge, Progress, Modal, Input, message } from 'antd'
 import {
   ArrowLeftOutlined,
   DashboardOutlined,
@@ -7,9 +8,16 @@ import {
   ThunderboltOutlined,
   DollarOutlined,
   ClockCircleOutlined,
+  EyeOutlined,
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
-import { useAuctionDetail } from '@/features/auction/auctionApi.ts'
+import { 
+  useAuctionDetail,
+  useSubmitAuction,
+  useCancelAuction,
+  useOfferRunnerUp,
+  useCloseAuction
+} from '@/features/auction/auctionApi.ts'
 import { PriceHistoryChart } from '@/features/auction/components/PriceHistoryChart'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
@@ -20,6 +28,8 @@ import { ItemQA } from '@/features/item/components/ItemQA'
 import { useAuctionHub } from '@/features/auction/hooks/useAuctionHub'
 import { useCurrentUser } from '@/features/user/api'
 import { ParticipantsTable } from '@/features/auction/components/ParticipantsTable'
+import { SellerActionBar } from '@/features/auction/components/SellerActionBar'
+import { SetAuctionTimingModal } from '@/features/auction/components/SetAuctionTimingModal'
 
 const { Title, Text } = Typography
 const { Countdown } = Statistic
@@ -34,7 +44,33 @@ export default function SellerAuctionDashboardPage() {
   const { data: currentUser } = useCurrentUser()
   const { data: detail, isLoading, error } = useAuctionDetail(id!)
 
+  const { mutate: submitAuction, isPending: isSubmitLoading } = useSubmitAuction()
+  const { mutate: cancelAuction, isPending: isCancelLoading } = useCancelAuction()
+  const { mutate: offerRunnerUp, isPending: isOfferRunnerUpLoading } = useOfferRunnerUp()
+  const { mutate: closeAuction, isPending: isCloseLoading } = useCloseAuction()
+
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false)
+  const [isTimingModalOpen, setIsTimingModalOpen] = useState(false)
+  const [cancelReason, setCancelReason] = useState('')
+
   const hub = useAuctionHub(detail?.auction?.id, detail?.item?.id, currentUser?.id)
+
+  const handleCancel = () => {
+    if (!cancelReason.trim()) {
+      message.error(tc('validation.required', 'Vui lòng nhập lý do'))
+      return
+    }
+    cancelAuction(
+      { auctionId: detail!.auction.id, reason: cancelReason },
+      {
+        onSuccess: () => {
+          setIsCancelModalOpen(false)
+          setCancelReason('')
+          message.success(tc('success.saved', 'Thành công'))
+        },
+      }
+    )
+  }
 
   if (isLoading) {
     return (
@@ -108,12 +144,39 @@ export default function SellerAuctionDashboardPage() {
             <DashboardOutlined style={{ marginRight: 12, color: 'var(--color-accent)' }} />
             {t('sellerDashboard.title', 'Auction Analytics')}
           </Title>
-          <Text type="secondary" style={{ display: 'block', maxWidth: isMobile ? '80vw' : '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {item.title}
-          </Text>
+          <Flex align="center" gap={8} style={{ marginTop: 8 }}>
+            <Text type="secondary" style={{ display: 'block', maxWidth: isMobile ? '80vw' : '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {item.title}
+            </Text>
+            {auction.isFeatured && <Tag color="gold">{t('featured', 'Featured')}</Tag>}
+            {auction.verifyByPlatform && <Tag color="blue">{t('verified', 'Verified')}</Tag>}
+          </Flex>
         </div>
         <StatusBadge status={auction.status} />
       </Flex>
+
+      <SellerActionBar
+        status={auction.status}
+        verifyByPlatform={auction.verifyByPlatform}
+        itemStatus={item.status}
+        isMobile={isMobile}
+        onEdit={() => navigate(`/seller/auctions/${auction.id}/edit`)}
+        onSetTiming={() => setIsTimingModalOpen(true)}
+        onSubmit={() => submitAuction(auction.id, {
+          onSuccess: () => message.success(tc('success.saved', 'Thành công'))
+        })}
+        onCancel={() => setIsCancelModalOpen(true)}
+        onOfferRunnerUp={() => offerRunnerUp(auction.id, {
+          onSuccess: () => message.success(tc('success.saved', 'Thành công'))
+        })}
+        onClose={() => closeAuction(auction.id, {
+          onSuccess: () => message.success(tc('success.saved', 'Thành công'))
+        })}
+        isSubmitLoading={isSubmitLoading}
+        isCancelLoading={isCancelLoading}
+        isOfferRunnerUpLoading={isOfferRunnerUpLoading}
+        isCloseLoading={isCloseLoading}
+      />
 
       {/* Stats Row */}
       <Row gutter={[16, 16]} style={{ marginBottom: 32 }}>
@@ -163,7 +226,7 @@ export default function SellerAuctionDashboardPage() {
             )}
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
+        <Col xs={24} sm={8} lg={4}>
           <Card bordered={false} className="oio-glass" style={{ borderRadius: 16 }}>
             <Statistic
               title={t('totalBids', 'Total Bids')}
@@ -172,12 +235,21 @@ export default function SellerAuctionDashboardPage() {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
+        <Col xs={12} sm={8} lg={4}>
           <Card bordered={false} className="oio-glass" style={{ borderRadius: 16 }}>
             <Statistic
               title={t('watchers', 'Watchers')}
               value={auction.watchCount}
               prefix={<TeamOutlined style={{ color: 'var(--color-warning)' }} />}
+            />
+          </Card>
+        </Col>
+        <Col xs={12} sm={8} lg={4}>
+          <Card bordered={false} className="oio-glass" style={{ borderRadius: 16 }}>
+            <Statistic
+              title={t('views', 'Views')}
+              value={auction.viewCount}
+              prefix={<EyeOutlined style={{ color: 'var(--color-info)' }} />}
             />
           </Card>
         </Col>
@@ -231,6 +303,28 @@ export default function SellerAuctionDashboardPage() {
         </Col>
 
         <Col xs={24} lg={8}>
+          {/* Item Summary */}
+          <Card
+            title={tc('item.summary', 'Item Summary')}
+            bordered={false}
+            style={{ borderRadius: 20, boxShadow: 'var(--shadow-sm)', marginBottom: 24 }}
+          >
+            <Flex gap={16}>
+              {item.images?.[0] && (
+                <img
+                  src={item.images[0].url}
+                  alt={item.title}
+                  style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8 }}
+                />
+              )}
+              <Flex vertical justify="center" gap={4}>
+                <Text strong>{item.title}</Text>
+                <Tag color="blue" style={{ width: 'fit-content' }}>{tc(`condition.${item.condition}`, item.condition)}</Tag>
+                <Text type="secondary">{tc('quantity', 'Quantity')}: {item.quantity}</Text>
+              </Flex>
+            </Flex>
+          </Card>
+
           {/* Auction Info */}
           <Card
             title={t('auctionDetails', 'Auction Details')}
@@ -257,8 +351,20 @@ export default function SellerAuctionDashboardPage() {
                 </Flex>
               )}
               <Flex justify="space-between">
+                <Text type="secondary">{t('buyNowPrice', 'Buy Now Price')}</Text>
+                <Text strong>{auction.hasBuyNow && auction.buyNowPrice ? formatCurrency(auction.buyNowPrice.amount, auction.currency) : '-'}</Text>
+              </Flex>
+              <Flex justify="space-between">
                 <Text type="secondary">{t('bidIncrement', 'Increment')}</Text>
                 <Text strong>{formatCurrency(auction.bidIncrement.amount, auction.currency)}</Text>
+              </Flex>
+              <Flex justify="space-between">
+                <Text type="secondary">{t('requiredDeposit', 'Required Deposit')}</Text>
+                <Text strong>{formatCurrency(auction.requiredDepositAmount || 0, auction.currency)}</Text>
+              </Flex>
+              <Flex justify="space-between">
+                <Text type="secondary">{t('autoExtend', 'Auto Extend')}</Text>
+                <Text strong>{auction.autoExtend ? `${t('yes', 'Yes')} (${auction.extensionMinutes} mins)` : t('no', 'No')}</Text>
               </Flex>
               <Flex justify="space-between">
                 <Text type="secondary">{t('auctionType', 'Type')}</Text>
@@ -307,6 +413,33 @@ export default function SellerAuctionDashboardPage() {
         </Col>
       </Row>
 
+      <Modal
+        title={t('cancelAuction', 'Hủy phiên đấu giá')}
+        open={isCancelModalOpen}
+        onOk={handleCancel}
+        onCancel={() => {
+          setIsCancelModalOpen(false)
+          setCancelReason('')
+        }}
+        confirmLoading={isCancelLoading}
+        okButtonProps={{ danger: true }}
+      >
+        <Space direction="vertical" style={{ width: '100%' }}>
+          <Text>{t('cancelReasonPrompt', 'Vui lòng cho biết lý do hủy phiên đấu giá này:')}</Text>
+          <Input.TextArea
+            rows={4}
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+            placeholder={t('cancelReasonPlaceholder', 'Ví dụ: Sản phẩm bị hỏng...')}
+          />
+        </Space>
+      </Modal>
+
+      <SetAuctionTimingModal
+        open={isTimingModalOpen}
+        auctionId={auction.id}
+        onClose={() => setIsTimingModalOpen(false)}
+      />
     </div>
   )
 }

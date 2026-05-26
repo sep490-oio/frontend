@@ -228,9 +228,9 @@ export default function PublicSellerPage() {
               </span>
             </div>
 
-            {seller.description && (
+            {seller.storeDescription && (
               <div style={{ maxWidth: 600 }}>
-                <SafeHtmlRenderer html={seller.description} style={{ fontFamily: SANS_FONT }} />
+                <SafeHtmlRenderer html={seller.storeDescription} style={{ fontFamily: SANS_FONT }} />
               </div>
             )}
           </div>
@@ -253,9 +253,9 @@ export default function PublicSellerPage() {
             label: t('public.totalItems'),
           },
           {
-            value: (seller.averageRating ?? seller.rating) > 0 ? (seller.averageRating ?? seller.rating).toFixed(1) : '—',
+            value: seller.averageRating && seller.averageRating > 0 ? seller.averageRating.toFixed(1) : '—',
             label: t('public.rating'),
-            sublabel: seller.reviewCount > 0 ? `(${formatNumber(seller.reviewCount)} ${t('public.reviews')})` : undefined,
+            sublabel: (seller.ratingCount ?? 0) > 0 ? `(${formatNumber(seller.ratingCount ?? 0)} ${t('public.reviews')})` : undefined,
           },
           {
             value: seller.status,
@@ -484,15 +484,15 @@ export default function PublicSellerPage() {
           >
             {t('public.reviewsTitle')}
           </h2>
-          {seller.reviewCount > 0 && (
+          {(seller.ratingCount ?? 0) > 0 && (
             <span style={{ fontFamily: SANS_FONT, fontSize: 13, color: 'var(--color-text-tertiary)', whiteSpace: 'nowrap' }}>
-              {formatNumber(seller.reviewCount)} {t('public.reviews')}
+              {formatNumber(seller.ratingCount ?? 0)} {t('public.reviews')}
             </span>
           )}
         </div>
 
         {/* Average rating breakdown */}
-        {(seller.averageRating ?? seller.rating) > 0 && (
+        {seller.averageRating && seller.averageRating > 0 && (
           <div
             style={{
               display: 'flex',
@@ -514,12 +514,12 @@ export default function PublicSellerPage() {
                 color: 'var(--color-text-primary)',
               }}
             >
-              {(seller.averageRating ?? seller.rating).toFixed(1)}
+              {seller.averageRating.toFixed(1)}
             </div>
             <div>
-              <Rate disabled allowHalf value={seller.averageRating ?? seller.rating} style={{ fontSize: isMobile ? 14 : 18 }} />
+              <Rate disabled allowHalf value={seller.averageRating} style={{ fontSize: isMobile ? 14 : 18 }} />
               <div style={{ fontFamily: SANS_FONT, fontSize: 13, color: 'var(--color-text-tertiary)', marginTop: 4 }}>
-                {t('public.basedOn')} {formatNumber(seller.reviewCount)} {t('public.reviews')}
+                {t('public.basedOn')} {formatNumber(seller.ratingCount ?? 0)} {t('public.reviews')}
               </div>
             </div>
           </div>

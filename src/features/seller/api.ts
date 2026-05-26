@@ -13,6 +13,7 @@ import type {
   PaginationParams,
   WarehouseToSellerShipmentDto,
   WarehouseToSellerShipmentEvidenceDto,
+  SellerDashboardStats,
 } from '@/types'
 import type { WarehouseReturnEvidenceCategory } from '@/types/enums'
 
@@ -309,6 +310,16 @@ export function useScanWarehouseReturn() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: warehouseReturnsQueryKey })
+    },
+  })
+}
+
+export function useSellerDashboardStats() {
+  return useQuery({
+    queryKey: [...queryKeys.seller.all, 'dashboard-stats'] as const,
+    queryFn: async () => {
+      const res = await apiClient.get<SellerDashboardStats>('/me/seller-profile/dashboard-stats')
+      return res.data
     },
   })
 }

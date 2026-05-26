@@ -130,9 +130,10 @@ export default function CreateAuctionPage() {
   const isFromItem = !!itemId && !!existingItem && !itemError
   const hideItemFields = isFromItem || isEditMode
   const existingItemForPreview = isEditMode ? editAuction?.item : existingItem
-  // Draft-edit mode: hide "Verify by platform" toggle + "Create auction" submit button.
-  // Drafts can't configure timing, so the submit-for-review flow doesn't apply here —
-  // sellers should only save-draft or cancel.
+  
+  // A draft auction is either a new auction (not edit mode, or from item) 
+  // or an existing auction that is still in draft status.
+  const isDraft = !isEditMode || editAuction?.auction?.status === 'draft'
   const isDraftEdit = isEditMode && editAuction?.auction?.status === 'draft'
 
   useEffect(() => {
@@ -167,10 +168,10 @@ export default function CreateAuctionPage() {
     if (!hasTimingValues(values)) return
     await updateAuction.mutateAsync({
       auctionId,
-      startTime: values.startTime,
-      endTime: values.endTime,
-      qualificationStartAt: values.qualificationStartAt,
-      qualificationEndAt: values.qualificationEndAt,
+      startTime: (values.startTime as any)?.toISOString?.() ?? values.startTime,
+      endTime: (values.endTime as any)?.toISOString?.() ?? values.endTime,
+      qualificationStartAt: (values.qualificationStartAt as any)?.toISOString?.() ?? values.qualificationStartAt,
+      qualificationEndAt: (values.qualificationEndAt as any)?.toISOString?.() ?? values.qualificationEndAt,
       autoExtend: values.auctionType === AuctionType.Sealed ? false : (values.autoExtend ?? false),
       extensionMinutes: values.extensionMinutes ?? 5,
     })
@@ -321,16 +322,22 @@ export default function CreateAuctionPage() {
             return
           }
         }
-        setSubmissionStep('submitting')
-        try {
-          await submitAuction.mutateAsync(editId!)
-          message.success(t('auctionUpdatedAndSubmitted', 'Auction updated and submitted successfully!'))
+        
+        if (isDraft) {
+          setSubmissionStep('submitting')
+          try {
+            await submitAuction.mutateAsync(editId!)
+            message.success(t('auctionUpdatedAndSubmitted', 'Auction updated and submitted successfully!'))
+            setSubmissionStep(null)
+          } catch (err: any) {
+            setSubmissionStep(null)
+            setSubmissionError(normalizeErrorMessage(err, t('updatedSubmitFailed', 'Auction updated but submission failed. Submit from My Auctions.')))
+            setPartialAuctionId(editId!)
+            return
+          }
+        } else {
+          message.success(t('auctionUpdated', 'Auction updated successfully!'))
           setSubmissionStep(null)
-        } catch (err: any) {
-          setSubmissionStep(null)
-          setSubmissionError(normalizeErrorMessage(err, t('updatedSubmitFailed', 'Auction updated but submission failed. Submit from My Auctions.')))
-          setPartialAuctionId(editId!)
-          return
         }
       } else if (isFromItem) {
         setSubmissionStep('creating')
@@ -826,20 +833,22 @@ export default function CreateAuctionPage() {
             <Input />
           </Form.Item>
 
-          <div style={{ marginTop: 16 }}>
-            <AuctionTimingSection
-              form={form}
-              itemApproved={
-                isEditMode
-                  ? true
-                  : isFromItem
-                    ? existingItem?.status === ItemStatus.Approved ||
-                      existingItem?.status === ItemStatus.Active ||
-                      existingItem?.status === ItemStatus.InAuction
-                    : true
-              }
-            />
-          </div>
+          {!isDraftEdit && (
+            <div style={{ marginTop: 16 }}>
+              <AuctionTimingSection
+                form={form}
+                itemApproved={
+                  isEditMode
+                    ? true
+                    : isFromItem
+                      ? existingItem?.status === ItemStatus.Approved ||
+                        existingItem?.status === ItemStatus.Active ||
+                        existingItem?.status === ItemStatus.InAuction
+                      : true
+                }
+              />
+            </div>
+          )}
 
           {/* Verification Toggle */}
           {!isFromItem && !isDraftEdit && (
@@ -976,10 +985,10 @@ export default function CreateAuctionPage() {
                   loading={isSubmitting}
                   style={{ width: '100%', height: 48 }}
                 >
-                  {isEditMode ? t('updateAuction', 'Update Auction') : tc('action.submit', 'Submit')}
+                  {isEditMode ? (isDraft ? tc('action.submit', 'Submit') : t('updateAuction', 'Update Auction')) : tc('action.submit', 'Submit')}
                 </Button>
 
-                {!isDraftEdit && (
+                {isDraft && (
                   <Button
                     size="large"
                     onClick={handleSaveDraft}

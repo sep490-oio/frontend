@@ -22,6 +22,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/hooks/useTheme'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { NotificationDropdown } from '@/features/notification/components/NotificationDropdown'
+import { UserDropdown } from './UserDropdown'
 import { SERIF_FONT, SANS_FONT } from '@/styles/tokens'
 
 const { Content } = Layout
@@ -367,32 +368,36 @@ export function WarehouseStaffLayout() {
           <NotificationDropdown />
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 4px', borderRadius: 8 }}>
-            <Avatar
-              size={32}
-              src={avatarUrl}
-              icon={!avatarUrl ? <UserOutlined /> : undefined}
-              style={{
-                backgroundColor: avatarUrl ? undefined : 'var(--color-accent-light)',
-                color: avatarUrl ? undefined : 'var(--color-accent)',
-                flexShrink: 0,
-              }}
-            />
-            {!isMobile && !isTablet && (
-              <span
-                style={{
-                  fontFamily: SANS_FONT,
-                  fontSize: 13,
-                  fontWeight: 500,
-                  color: 'var(--color-text-primary)',
-                  maxWidth: 120,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {displayName}
-              </span>
-            )}
+            <UserDropdown mode="portal">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                <Avatar
+                  size={32}
+                  src={avatarUrl}
+                  icon={!avatarUrl ? <UserOutlined /> : undefined}
+                  style={{
+                    backgroundColor: avatarUrl ? undefined : 'var(--color-accent-light)',
+                    color: avatarUrl ? undefined : 'var(--color-accent)',
+                    flexShrink: 0,
+                  }}
+                />
+                {!isMobile && !isTablet && (
+                  <span
+                    style={{
+                      fontFamily: SANS_FONT,
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: 'var(--color-text-primary)',
+                      maxWidth: 120,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {displayName}
+                  </span>
+                )}
+              </div>
+            </UserDropdown>
           </div>
         </div>
       </header>

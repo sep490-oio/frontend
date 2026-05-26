@@ -1,4 +1,4 @@
-import apiClient, { extractArray } from '@/lib/axios'
+import apiClient, { extractArray, idempotentPost } from '@/lib/axios'
 import { queryKeys } from '@/lib/queryClient'
 import { invalidateAndRefetchActive } from '@/lib/mutationFreshness'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -20,6 +20,7 @@ import type {
   PagedList,
   PaginationParams,
   GhnMetadata,
+  SellerWarehouseReturnStats,
 } from '@/types'
 
 // ── Inbound Shipments ───────────────────────────────────────────────
@@ -780,6 +781,44 @@ export function useStoreWarehouseItem() {
   })
 }
 
+export interface UpdateWarehouseItemTrackingNumberRequest {
+  trackingNumber: string
+}
+
+export function useUpdateWarehouseItemTrackingNumber(
+  warehouseItemId: string,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (body: UpdateWarehouseItemTrackingNumberRequest) => {
+      const res = await idempotentPost(
+        `/api/warehouse/items/${warehouseItemId}/tracking-number`,
+        body,
+      )
+      return res.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.warehouse.itemsRoot(), 'detail', warehouseItemId] as const,
+      })
+    },
+  })
+}
+
+export function useGetSellerWarehouseReturnStats(sellerId: string) {
+  return useQuery({
+    queryKey: queryKeys.warehouse.sellerReturnStats(sellerId),
+    queryFn: async ({ signal }) => {
+      const res = await apiClient.get<SellerWarehouseReturnStats>(
+        `/api/warehouse/stats/seller-warehouse-return/${sellerId}`,
+        { signal },
+      )
+      return res.data
+    },
+    enabled: !!sellerId,
+  })
+}
+
 export function useRequestWarehouseReinspection() {
   const qc = useQueryClient()
   return useMutation({
@@ -796,3 +835,14 @@ export function useRequestWarehouseReinspection() {
     },
   })
 }
+
+export function useSellerWarehouseReturnStats() {
+  return useQuery({
+    queryKey: queryKeys.warehouse.sellerReturnStats('me'),
+    queryFn: async ({ signal }) => {
+      const res = await apiClient.get<SellerWarehouseReturnStats>('/api/warehouse-returns/me/stats', { signal })
+      return res.data
+    }
+  })
+}
+

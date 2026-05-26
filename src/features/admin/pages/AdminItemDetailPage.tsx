@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
-import { Typography, Descriptions, Card, Button, Space, Spin, Modal, Input, App, Image, Tabs, Tag, Tooltip } from 'antd'
+import { Typography, Descriptions, Card, Button, Space, Spin, Modal, Input, App, Image, Tabs, Tag, Timeline } from 'antd'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import AdminItemQATab from '@/features/admin/components/items/AdminItemQATab'
@@ -15,18 +15,35 @@ import { formatDateTime, formatCurrency, formatEnumText } from '@/utils/format'
 import type { ItemReviewDto } from '@/types'
 import { ItemStatus } from '@/types'
 import { AdminErrorState } from '@/features/admin/components/AdminErrorState'
-import type { ColumnsType } from 'antd/es/table'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 
-function ReviewerNameCell({ reviewerId, fallbackName }: { reviewerId: string, fallbackName?: string }) {
-  const { data: user } = useAdminUserDetail(reviewerId)
-  const name = user?.profile?.fullName || user?.userName || fallbackName
+function ModerationTimelineNode({ review, sellerId }: { review: ItemReviewDto, sellerId: string }) {
+  const { data: user } = useAdminUserDetail(review.reviewerId)
+  const isSeller = review.reviewerId === sellerId
+  const name = user?.profile?.fullName || user?.userName || (review as any).reviewerName || (review as any).adminName || 'System'
 
-  if (name) return <span>{name}</span>
   return (
-    <Tooltip title={`ID: ${reviewerId}`}>
-      <span>System Admin</span>
-    </Tooltip>
+    <div>
+      <Flex gap={8} align="baseline" wrap="wrap">
+        <Typography.Text strong>
+          {name} {isSeller ? <Tag color="green" style={{ marginLeft: 4 }}>Seller</Tag> : <Tag color="blue" style={{ marginLeft: 4 }}>Admin/Inspector</Tag>}
+        </Typography.Text>
+        <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+          {formatDateTime(review.createdAt)}
+        </Typography.Text>
+      </Flex>
+      <div style={{ marginTop: 4 }}>
+        <Space wrap>
+          <Typography.Text>Performed action:</Typography.Text>
+          <StatusBadge status={review.action} size="small" />
+        </Space>
+      </div>
+      {review.reason && (
+        <div style={{ background: 'var(--color-bg-layout)', marginTop: 8, padding: '8px 12px', borderRadius: 6 }}>
+          <Typography.Text type="secondary">{review.reason}</Typography.Text>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -72,38 +89,14 @@ export default function AdminItemDetailPage() {
     }
   }
 
-  const reviewColumns: ColumnsType<ItemReviewDto> = [
-    {
-      title: t('itemDetail.reviewer'),
-      dataIndex: 'reviewerId',
-      key: 'reviewerId',
-      ellipsis: true,
-      render: (reviewerId: string, record: any) => (
-        <ReviewerNameCell reviewerId={reviewerId} fallbackName={record.reviewerName || record.adminName} />
-      ),
-    },
-    {
-      title: t('itemDetail.action'),
-      dataIndex: 'action',
-      key: 'action',
-      width: 110,
-      render: (action: string) => <StatusBadge status={action} size="small" />,
-    },
-    {
-      title: t('itemDetail.reason'),
-      dataIndex: 'reason',
-      key: 'reason',
-      ellipsis: true,
-      render: (reason: string | undefined) => reason ?? '-',
-    },
-    {
-      title: t('itemDetail.date'),
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      width: 150,
-      render: (date: string) => formatDateTime(date),
-    },
-  ]
+  const timelineItems = item.reviews?.map(review => {
+    const isSeller = review.reviewerId === item.sellerId
+    const color = isSeller ? 'green' : (review.action === 'Rejected' ? 'red' : 'blue')
+    return {
+      color,
+      children: <ModerationTimelineNode review={review} sellerId={item.sellerId} />,
+    }
+  }) || []
 
   return (
     <div style={{ padding: isMobile ? '0 0 100px' : undefined }}>
@@ -312,16 +305,12 @@ export default function AdminItemDetailPage() {
               key: 'moderation',
               label: t('itemDetail.moderation', 'Moderation & Inspection'),
               children: (
-                <div style={{ padding: 24 }}>
-                  <Card bordered size="small" bodyStyle={{ padding: 0 }}>
-                    <ResponsiveTable<ItemReviewDto>
-                      rowKey="id"
-                      columns={reviewColumns}
-                      dataSource={item.reviews ?? []}
-                      pagination={false}
-                      mobileMode="list"
-                    />
-                  </Card>
+                <div style={{ padding: 24, paddingTop: 32 }}>
+                  {timelineItems.length > 0 ? (
+                    <Timeline items={timelineItems} />
+                  ) : (
+                    <Typography.Text type="secondary">No moderation history available.</Typography.Text>
+                  )}
                 </div>
               ),
             },

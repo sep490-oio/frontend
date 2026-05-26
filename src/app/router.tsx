@@ -110,7 +110,6 @@ const BrowseItemsPage = lazy(() => import('@/features/item/pages/BrowseItemsPage
 // User pages (auth required)
 const ProfilePage = lazy(() => import('@/features/user/pages/ProfilePage'))
 const AddressesPage = lazy(() => import('@/features/user/pages/AddressesPage'))
-const SecurityPage = lazy(() => import('@/features/user/pages/SecurityPage'))
 const NotificationPrefsPage = lazy(() => import('@/features/user/pages/NotificationPrefsPage'))
 const SettingsPage = lazy(() => import('@/features/user/pages/SettingsPage'))
 const TermsPage = lazy(() => import('@/features/user/pages/TermsPage'))
@@ -270,7 +269,7 @@ export const router = createBrowserRouter([
           { path: '/me/dashboard', element: withSuspense(UserDashboardPage) },
           { path: '/me/profile', element: withSuspense(ProfilePage) },
           { path: '/me/addresses', element: withSuspense(AddressesPage) },
-          { path: '/me/security', element: withSuspense(SecurityPage) },
+          { path: '/me/security', element: <Navigate to="/me/settings" replace /> },
           { path: '/me/settings', element: withSuspense(SettingsPage) },
           { path: '/me/notifications', element: withSuspense(NotificationsPage) },
           { path: '/me/notifications/settings', element: withSuspense(NotificationPrefsPage) },

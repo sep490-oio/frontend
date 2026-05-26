@@ -485,3 +485,10 @@ export interface MyAuctionWatchlistDto {
   notifyOnEnd: boolean
   watchedAt: string
 }
+
+export interface SellerAuctionStats {
+  totalAuctions: number
+  activeAuctions: number
+  draftAuctions: number
+  endedAuctions: number
+}

@@ -26,7 +26,15 @@
     "watchlist": "Watchlist",
     "myShipments": "My Shipments",
     "disputes": "Disputes",
-    "paymentMethods": "Payment Methods"
+    "paymentMethods": "Payment Methods",
+    "group": {
+      "portals": "Portals",
+      "personal": "Personal Account",
+      "buyer": "Buyer Account",
+      "buying": "Buying & Auctions",
+      "account": "Account & Wallet",
+      "settings": "Security & Settings"
+    }
   },
   "action": {
     "login": "Login",

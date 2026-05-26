@@ -1,33 +1,32 @@
-import { Row, Col, Card, Button, Space, Spin, Empty, Tag, Typography } from 'antd'
+import { Row, Col, Card, Button, Space, Spin, Empty, Typography, List } from 'antd'
 import {
-  ShoppingOutlined,
   ThunderboltOutlined,
   DollarOutlined,
-  PlusOutlined,
-  AppstoreOutlined,
   ClockCircleOutlined,
   WalletOutlined,
-  OrderedListOutlined,
   CheckCircleOutlined,
   HistoryOutlined,
   SendOutlined,
+  RollbackOutlined,
+  WarningOutlined,
+  EditOutlined,
+  RightOutlined,
+  EyeOutlined
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useMemo } from 'react'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
-import { useMySellerProfile, useSellerWarehouseReturns } from '@/features/seller/api'
-import { useMyAuctions } from '@/features/auction/auctionApi.ts'
-import { useMyItems } from '@/features/item/api'
+import { useMySellerProfile, useSellerDashboardStats } from '@/features/seller/api'
+import { useMyAuctions } from '@/features/auction/auctionApi'
 import { useWallet } from '@/features/payment/api'
 import { useMyOrders } from '@/features/order/api'
-import { WarehouseToSellerShipmentStatus, OrderReturnStatus } from '@/types/enums'
-import { RollbackOutlined } from '@ant-design/icons'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatCurrency, formatDateTime } from '@/utils/format'
 import { SellerProfileStatus } from '@/types/enums'
-import type { AuctionListItemDto } from '@/types'
+import type { AuctionListItemDto, OrderDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
+import { Tabs } from 'antd'
 import { SERIF_FONT as serifFont, MONO_FONT as monoFont } from '@/styles/tokens'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 
@@ -49,117 +48,95 @@ const sectionTitleStyle: React.CSSProperties = {
   fontSize: 18,
 }
 
-const outlinedBtnStyle: React.CSSProperties = {
-  borderColor: 'var(--color-accent)',
-  color: 'var(--color-accent)',
-  fontWeight: 500,
-  transition: 'all 200ms ease',
-  minHeight: 44,
-}
-
-const touchBtnStyle: React.CSSProperties = {
-  minHeight: 44,
-  display: 'flex',
-  alignItems: 'center',
-}
-
-/* ── Helper: count items by status from array ────────────────────────── */
-
-function countByStatus<T extends { status: string }>(
-  items: T[] | undefined,
-  statuses: string[],
-): Record<string, number> {
-  const counts: Record<string, number> = {}
-  for (const s of statuses) counts[s] = 0
-  if (!items) return counts
-  for (const item of items) {
-    const st = item.status?.toLowerCase()
-    if (st in counts) counts[st]++
-  }
-  return counts
-}
-
 /* ── Component ───────────────────────────────────────────────────────── */
 
 export default function SellerDashboardPage() {
   const { t } = useTranslation('seller')
-  const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
   const { isMobile } = useBreakpoint()
 
   const { data: profile, isLoading: profileLoading } = useMySellerProfile()
   const { data: wallet } = useWallet()
 
-  // Fetch all items (large page to get status counts)
-  const { data: itemsData } = useMyItems({ pageNumber: 1, pageSize: 200 })
-  // Fetch all auctions
-  const { data: auctionsData, isLoading: auctionsLoading } = useMyAuctions({ pageNumber: 1, pageSize: 200 })
+  // Fetch recent auctions and orders for the table
+  const { data: recentAuctionsData, isLoading: auctionsLoading } = useMyAuctions({ pageNumber: 1, pageSize: 5 })
+  const recentAuctions = recentAuctionsData?.items ?? []
+  
+  const { data: recentOrdersData, isLoading: ordersLoading } = useMyOrders({ pageNumber: 1, pageSize: 5, role: 'seller' })
+  const recentOrders = recentOrdersData?.items ?? []
 
-  // Returns widgets — active warehouse-returns coming back from inspection-reject,
-  // and buyer-initiated order-returns currently in flight.
-  const { data: warehouseReturnsAll } = useSellerWarehouseReturns({ status: 'all' })
-  const activeWarehouseReturnCount = (warehouseReturnsAll ?? []).filter(
-    (r) =>
-      r.status === WarehouseToSellerShipmentStatus.Pending ||
-      r.status === WarehouseToSellerShipmentStatus.InTransit ||
-      r.status === WarehouseToSellerShipmentStatus.Delivered,
-  ).length
-
-  // Seller-visible orders include the 1:1 OrderReturn nav; filter for active.
-  const { data: ordersForReturns } = useMyOrders({ pageNumber: 1, pageSize: 100 })
-  const activeOrderReturnCount = (ordersForReturns?.items ?? []).filter(
-    (o) =>
-      o.return &&
-      (o.return.status === OrderReturnStatus.Approved ||
-        o.return.status === OrderReturnStatus.ReturnInTransit ||
-        o.return.status === OrderReturnStatus.SellerReceived),
-  ).length
+  // Fetch dashboard stats
+  const { data: dashboardStats, isLoading: isStatsLoading } = useSellerDashboardStats()
 
   /* ── Derived data ────────────────────────────────────────────────── */
 
-  const itemStatuses = [
-    'draft',
-    'pending_verify',
-    'pending_review',
-    'pending_condition_confirmation',
-    'approved',
-    'active',
-    'in_auction',
-    'sold',
-    'rejected',
-  ]
-  const auctionStatuses = ['draft', 'pending', 'scheduled', 'active', 'ended', 'sold', 'cancelled']
+  const activeAuctions = dashboardStats?.activeAuctions ?? 0
+  const ordersAwaitingShipment = dashboardStats?.ordersAwaitingShipment ?? 0
+  const pendingReviewItems = dashboardStats?.pendingReviewItems ?? 0
+  const soldAuctions = dashboardStats?.soldAuctions ?? 0
 
-  const itemCounts = useMemo(
-    () => countByStatus(itemsData?.items, itemStatuses),
-    [itemsData?.items],
-  )
+  // Action Center To-Dos
+  const toDos = useMemo(() => {
+    const list = []
+    
+    if (ordersAwaitingShipment > 0) {
+      list.push({
+        key: 'orders',
+        icon: <SendOutlined style={{ color: 'var(--color-info)' }} />,
+        title: t('dashboard.ordersAwaitingShipment', 'Orders awaiting shipment'),
+        count: ordersAwaitingShipment,
+        path: '/seller/orders?status=paid'
+      })
+    }
 
-  const auctionCounts = useMemo(
-    () => countByStatus(auctionsData?.items, auctionStatuses),
-    [auctionsData?.items],
-  )
+    if (dashboardStats?.rejectedItems && dashboardStats.rejectedItems > 0) {
+      list.push({
+        key: 'rejectedItems',
+        icon: <WarningOutlined style={{ color: 'var(--color-error)' }} />,
+        title: t('dashboard.rejectedItems', 'Rejected items need fix'),
+        count: dashboardStats.rejectedItems,
+        path: '/seller/items?status=rejected'
+      })
+    }
 
-  const totalItems = itemsData?.metadata?.totalCount ?? 0
-  const activeAuctions = auctionCounts['active']
-  const soldAuctions = auctionCounts['sold'] ?? 0
-  const pendingReview =
-    (itemCounts['pending_verify'] ?? 0) +
-    (itemCounts['pending_review'] ?? 0) +
-    (itemCounts['pending_condition_confirmation'] ?? 0)
+    if (dashboardStats?.draftAuctions && dashboardStats.draftAuctions > 0) {
+      list.push({
+        key: 'draftAuctions',
+        icon: <EditOutlined style={{ color: 'var(--color-warning)' }} />,
+        title: t('draftAuctionsNeedSubmission', { count: dashboardStats.draftAuctions }),
+        count: dashboardStats.draftAuctions,
+        path: '/seller/auctions?status=draft'
+      })
+    }
 
-  const recentAuctions = useMemo(
-    () => (auctionsData?.items ?? []).filter(Boolean).slice(0, 5),
-    [auctionsData?.items],
-  )
+    if (dashboardStats?.activeWarehouseReturns && dashboardStats.activeWarehouseReturns > 0) {
+      list.push({
+        key: 'warehouseReturns',
+        icon: <RollbackOutlined style={{ color: 'var(--color-error)' }} />,
+        title: t('dashboard.warehouseReturns', 'Items being returned by warehouse'),
+        count: dashboardStats.activeWarehouseReturns,
+        path: '/seller/returns?tab=warehouse'
+      })
+    }
 
-  // Pending actions
-  const draftAuctions = auctionCounts['draft'] ?? 0
-  const pendingItems =
-    (itemCounts['pending_verify'] ?? 0) +
-    (itemCounts['pending_review'] ?? 0) +
-    (itemCounts['pending_condition_confirmation'] ?? 0)
-  const hasPendingActions = draftAuctions > 0 || pendingItems > 0
+    if (dashboardStats?.orderReturns && dashboardStats.orderReturns > 0) {
+      list.push({
+        key: 'orderReturns',
+        icon: <RollbackOutlined style={{ color: 'var(--color-error)' }} />,
+        title: t('dashboard.orderReturns', 'Items buyer is returning after dispute'),
+        count: dashboardStats.orderReturns,
+        path: '/seller/returns?tab=order'
+      })
+    }
+
+    if (list.length === 0) {
+      // Return empty array to show Empty state
+      return []
+    }
+    
+    return list
+  }, [ordersAwaitingShipment, dashboardStats, t])
+
 
   /* ── Loading / empty ─────────────────────────────────────────────── */
 
@@ -194,28 +171,48 @@ export default function SellerDashboardPage() {
       key: 'itemTitle',
       ellipsis: true,
       render: (text: string, record) => (
-        <Button
-          type="link"
-          onClick={() => navigate(`/auctions/${record.id}`)}
-          style={{
-            padding: 0,
-            fontWeight: 500,
-            maxWidth: '100%',
-            height: 'auto',
-            textAlign: isMobile ? 'right' : 'left',
-          }}
-        >
-          <Typography.Text
-            ellipsis
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {record.primaryImageUrl ? (
+            <img
+              src={record.primaryImageUrl}
+              alt=""
+              style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6, flexShrink: 0, border: '1px solid var(--color-border-secondary)' }}
+            />
+          ) : (
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 6,
+                background: 'var(--color-fill-tertiary)',
+                flexShrink: 0
+              }}
+            />
+          )}
+          <Button
+            type="link"
+            onClick={() => navigate(`/auctions/${record.id}`)}
             style={{
+              padding: 0,
+              fontWeight: 500,
               maxWidth: '100%',
-              color: 'inherit',
-              display: 'block',
+              height: 'auto',
+              textAlign: isMobile ? 'right' : 'left',
+              whiteSpace: 'normal',
             }}
           >
-            {text ?? '-'}
-          </Typography.Text>
-        </Button>
+            <Typography.Text
+              ellipsis
+              style={{
+                maxWidth: '100%',
+                color: 'inherit',
+                display: 'block',
+              }}
+            >
+              {text ?? '-'}
+            </Typography.Text>
+          </Button>
+        </div>
       ),
     },
     {
@@ -238,302 +235,246 @@ export default function SellerDashboardPage() {
       },
     },
     {
-      title: t('bids'),
-      dataIndex: 'bidCount',
-      key: 'bidCount',
-      width: 80,
-      responsive: ['md'],
-      render: (count: number) => (
-        <span style={{ fontFamily: monoFont, fontSize: 13 }}>{count ?? 0}</span>
-      ),
-    },
-    {
       title: t('status'),
       dataIndex: 'status',
       key: 'status',
       width: 130,
       render: (status: string) => <StatusBadge status={status} size="small" />,
     },
-    {
-      title: t('endTime'),
-      dataIndex: 'endTime',
-      key: 'endTime',
-      width: 160,
-      responsive: ['lg'],
-      render: (date: string) => (
-        <span style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
-          {date ? formatDateTime(date) : '-'}
-        </span>
-      ),
-    },
   ]
 
-
-  const statusColorMap: Record<string, string> = {
-    // Item
-    draft: 'default',
-    pending_verify: 'gold',
-    pending_review: 'orange',
-    pending_condition_confirmation: 'volcano',
-    approved: 'green',
-    active: 'blue',
-    in_auction: 'cyan',
-    sold: 'purple',
-    rejected: 'red',
-
-    // Auction
-    pending: 'gold',
-    scheduled: 'geekblue',
-    ended: 'default',
-    cancelled: 'red',
-  }
+  const orderColumns: ColumnsType<OrderDto> = [
+    {
+      title: t('orderNumber', 'Order ID'),
+      dataIndex: 'orderNumber',
+      key: 'orderNumber',
+      render: (text: string, record) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {record.item?.primaryImageUrl ? (
+            <img
+              src={record.item.primaryImageUrl}
+              alt=""
+              style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6, flexShrink: 0, border: '1px solid var(--color-border-secondary)' }}
+            />
+          ) : (
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 6,
+                background: 'var(--color-fill-tertiary)',
+                flexShrink: 0
+              }}
+            />
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <Button
+              type="link"
+              onClick={() => navigate(`/seller/orders/${record.id}`)}
+              style={{ padding: 0, fontWeight: 500, fontFamily: monoFont, height: 'auto', textAlign: 'left' }}
+            >
+              {text}
+            </Button>
+            {record.item?.itemTitle && (
+              <Typography.Text type="secondary" ellipsis style={{ fontSize: 12, maxWidth: 200, lineHeight: 1.2 }}>
+                {record.item.itemTitle}
+              </Typography.Text>
+            )}
+          </div>
+        </div>
+      )
+    },
+    {
+      title: t('amount', 'Amount'),
+      dataIndex: 'totalAmount',
+      key: 'totalAmount',
+      render: (price: unknown) => {
+        const money = price && typeof price === 'object' && 'amount' in price
+          ? (price as { amount: number; currency: string })
+          : null
+        const amount = money?.amount ?? (typeof price === 'number' ? price : 0)
+        const currency = money?.currency ?? 'VND'
+        return (
+          <span style={{ fontFamily: monoFont, fontWeight: 500, fontSize: 13 }}>
+            {formatCurrency(amount, currency)}
+          </span>
+        )
+      },
+    },
+    {
+      title: t('createdAt', 'Date'),
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      render: (date: string) => (
+        <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+          {formatDateTime(date)}
+        </Typography.Text>
+      )
+    },
+    {
+      title: t('status', 'Status'),
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: string) => <StatusBadge status={status} size="small" />,
+    },
+  ]
 
   /* ── Dashboard content ──────────────────────────────────────────── */
 
   const dashboardContent = (
     <>
-      {/* ── Stats Row ──────────────────────────────────────────────── */}
-      <Row gutter={[isMobile ? 12 : 16, isMobile ? 12 : 16]} style={{ marginBottom: isMobile ? 20 : 32 }}>
-        {[
-          { icon: <AppstoreOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />, label: t('dashboard.totalItems'), value: totalItems },
-          { icon: <ThunderboltOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />, label: t('dashboard.activeAuctions'), value: activeAuctions },
-          { icon: <ClockCircleOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />, label: t('dashboard.pendingReview'), value: pendingReview },
-          { icon: <CheckCircleOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />, label: t('dashboard.rating', 'Rating'), value: (profile.averageRating ?? profile.rating) > 0 ? (profile.averageRating ?? profile.rating).toFixed(1) : '—' },
-          { icon: <DollarOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />, label: t('dashboard.sold'), value: soldAuctions },
-        ].map((stat) => (
-          <Col key={stat.label} xs={12} sm={6}>
-            <Card style={statCardStyle} styles={{ body: { padding: isMobile ? '12px 14px' : '20px 24px' } }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                {stat.icon}
-                <span style={{ color: 'var(--color-text-secondary)', fontSize: isMobile ? 11 : 13, lineHeight: 1.3 }}>
-                  {stat.label}
-                </span>
-              </div>
-              <div style={{ fontFamily: monoFont, fontSize: isMobile ? 20 : 24, fontWeight: 500, color: 'var(--color-text-primary)' }}>
-                {stat.value}
-              </div>
-            </Card>
-          </Col>
-        ))}
-      </Row>
-
-      {/* ── Returns Widgets (warehouse + order) ────────────────────── */}
-      <Row gutter={[isMobile ? 12 : 16, isMobile ? 12 : 16]} style={{ marginBottom: isMobile ? 20 : 24 }}>
-        <Col xs={24} sm={12}>
-          <Card
-            hoverable
-            onClick={() => navigate('/seller/returns?tab=warehouse')}
-            style={{ ...statCardStyle, cursor: 'pointer' }}
-            styles={{ body: { padding: isMobile ? '12px 14px' : '20px 24px' } }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-              <RollbackOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />
-              <span style={{ color: 'var(--color-text-secondary)', fontSize: isMobile ? 11 : 13, lineHeight: 1.3 }}>
-                {t('dashboard.warehouseReturns', 'Items being returned by warehouse')}
-              </span>
-            </div>
-            <div style={{ fontFamily: monoFont, fontSize: isMobile ? 20 : 24, fontWeight: 500, color: 'var(--color-text-primary)' }}>
-              {activeWarehouseReturnCount}
-            </div>
-          </Card>
-        </Col>
-        <Col xs={24} sm={12}>
-          <Card
-            hoverable
-            onClick={() => navigate('/seller/returns?tab=order')}
-            style={{ ...statCardStyle, cursor: 'pointer' }}
-            styles={{ body: { padding: isMobile ? '12px 14px' : '20px 24px' } }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-              <RollbackOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />
-              <span style={{ color: 'var(--color-text-secondary)', fontSize: isMobile ? 11 : 13, lineHeight: 1.3 }}>
-                {t('dashboard.orderReturns', 'Items buyer is returning after dispute')}
-              </span>
-            </div>
-            <div style={{ fontFamily: monoFont, fontSize: isMobile ? 20 : 24, fontWeight: 500, color: 'var(--color-text-primary)' }}>
-              {activeOrderReturnCount}
-            </div>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* ── Item Status Overview ───────────────────────────────────── */}
-      <Card
-        title={<span style={sectionTitleStyle}>{t('dashboard.itemOverview')}</span>}
-        style={{ ...statCardStyle, marginBottom: isMobile ? 16 : 24 }}
-        styles={{ body: { padding: isMobile ? '12px 16px' : '20px 24px' } }}
-      >
-        <Space wrap size={[8, 8]}>
-          {itemStatuses.map((s) => (
-            <Tag
-              key={s}
-              color={statusColorMap[s] || 'default'}
-              style={{
-                cursor: 'pointer',
-                borderRadius: 100,
-                padding: '4px 12px',
-                fontSize: 12,
-                minHeight: 28,
-                display: 'inline-flex',
-                alignItems: 'center',
-              }}
-              onClick={() => navigate(`/seller/items?status=${s}`)}
-            >
-              {tc(`statusLabel.${s}`, s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()))}
-              {': '}
-              <strong style={{ marginLeft: 2 }}>{itemCounts[s] ?? 0}</strong>
-            </Tag>
-          ))}
-        </Space>
-
-      </Card>
-
-      {/* ── Auction Status Overview ────────────────────────────────── */}
-      <Card
-        title={<span style={sectionTitleStyle}>{t('dashboard.auctionOverview')}</span>}
-        style={{ ...statCardStyle, marginBottom: isMobile ? 16 : 24 }}
-        styles={{ body: { padding: isMobile ? '12px 16px' : '20px 24px' } }}
-      >
-        <Space wrap size={[8, 8]}>
-          {auctionStatuses.map((s) => (
-            <Tag
-              key={s}
-              color={statusColorMap[s] || 'default'}
-              style={{ cursor: 'pointer', borderRadius: 100, padding: '4px 12px', fontSize: 12, minHeight: 28, display: 'inline-flex', alignItems: 'center' }}
-              onClick={() => navigate(`/seller/auctions?status=${s}`)}
-            >
-              {tc(`statusLabel.${s}`, s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()))}
-              {': '}
-              <strong style={{ marginLeft: 2 }}>{auctionCounts[s] ?? 0}</strong>
-            </Tag>
-          ))}
-        </Space>
-      </Card>
-
-      {/* ── Quick Actions ──────────────────────────────────────────── */}
-      <Card
-        title={<span style={sectionTitleStyle}>{t('dashboard.quickActions')}</span>}
-        style={{ ...statCardStyle, marginBottom: isMobile ? 16 : 24 }}
-        styles={{ body: { padding: isMobile ? '12px 16px' : '20px 24px' } }}
-      >
-        {isMobile ? (
-          <Row gutter={[8, 8]}>
+      {/* ── Key Metrics Row ──────────────────────────────────────────── */}
+      <Spin spinning={isStatsLoading}>
+        <Row gutter={[isMobile ? 12 : 16, isMobile ? 12 : 16]} style={{ marginBottom: isMobile ? 20 : 32 }}>
             {[
-              { icon: <PlusOutlined />, label: t('dashboard.createItem'), onClick: () => navigate('/seller/items/create'), type: 'primary' as const },
-              { icon: <ShoppingOutlined />, label: t('dashboard.manageItems'), onClick: () => navigate('/seller/items') },
-              { icon: <OrderedListOutlined />, label: t('dashboard.orders'), onClick: () => navigate('/seller/orders') },
-              { icon: <WalletOutlined />, label: t('dashboard.wallet'), onClick: () => navigate('/seller/wallet') },
-              { icon: <SendOutlined />, label: t('dashboard.ordersAwaitingShipment'), onClick: () => navigate('/seller/orders?status=paid') },
-            ].map((action) => (
-              <Col key={action.label} xs={12}>
-                <Button
-                  type={action.type}
-                  icon={action.icon}
-                  block
-                  onClick={action.onClick}
-                  style={{
-                    ...(action.type === 'primary'
-                      ? { background: 'var(--color-accent)', borderColor: 'var(--color-accent)', fontWeight: 500 }
-                      : outlinedBtnStyle),
-                    minHeight: 44,
-                    fontSize: 13,
-                  }}
-                >
-                  {action.label}
-                </Button>
+              { icon: <DollarOutlined style={{ color: 'var(--color-success)', fontSize: 18 }} />, label: t('dashboard.totalRevenue', 'Total Revenue'), value: formatCurrency(dashboardStats?.totalRevenue ?? 0, 'VND') },
+              { icon: <ThunderboltOutlined style={{ color: 'var(--color-accent)', fontSize: 18 }} />, label: t('dashboard.activeAuctions', 'Active Auctions'), value: activeAuctions },
+              { icon: <CheckCircleOutlined style={{ color: 'var(--color-success)', fontSize: 18 }} />, label: t('dashboard.soldAuctions', 'Sold Auctions'), value: soldAuctions },
+              { icon: <EditOutlined style={{ color: 'var(--color-text-secondary)', fontSize: 18 }} />, label: t('dashboard.draftAuctions', 'Draft Auctions'), value: dashboardStats?.draftAuctions ?? 0 },
+              { icon: <ClockCircleOutlined style={{ color: 'var(--color-warning)', fontSize: 18 }} />, label: t('dashboard.pendingReview', 'Pending Review'), value: pendingReviewItems },
+              { icon: <SendOutlined style={{ color: 'var(--color-info)', fontSize: 18 }} />, label: t('dashboard.ordersAwaitingShipment', 'Pending Orders'), value: ordersAwaitingShipment },
+              { icon: <DollarOutlined style={{ color: 'var(--color-info)', fontSize: 18 }} />, label: t('dashboard.totalActiveBids', 'Active Bids'), value: dashboardStats?.totalActiveBids ?? 0 },
+              { icon: <EyeOutlined style={{ color: 'var(--color-warning)', fontSize: 18 }} />, label: t('dashboard.totalActiveViews', 'Total Views'), value: dashboardStats?.totalActiveViews ?? 0 },
+            ].map((stat) => (
+              <Col key={stat.label} xs={12} sm={8} lg={6}>
+                <Card style={statCardStyle} styles={{ body: { padding: isMobile ? '12px 14px' : '20px 24px' } }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                    {stat.icon}
+                    <span style={{ color: 'var(--color-text-secondary)', fontSize: isMobile ? 11 : 13, lineHeight: 1.3 }}>
+                      {stat.label}
+                    </span>
+                  </div>
+                  <div style={{ fontFamily: monoFont, fontSize: isMobile ? 18 : 24, fontWeight: 500, color: 'var(--color-text-primary)' }}>
+                    {stat.value}
+                  </div>
+                </Card>
               </Col>
             ))}
-          </Row>
-        ) : (
-          <Space wrap size={12}>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => navigate('/seller/items/create')}
-              style={{
-                background: 'var(--color-accent)',
-                borderColor: 'var(--color-accent)',
-                fontWeight: 500,
-                ...touchBtnStyle,
-              }}
-            >
-              {t('dashboard.createItem')}
-            </Button>
-            <Button icon={<ShoppingOutlined />} onClick={() => navigate('/seller/items')} style={{ ...outlinedBtnStyle, ...touchBtnStyle }}>
-              {t('dashboard.manageItems')}
-            </Button>
-            <Button icon={<OrderedListOutlined />} onClick={() => navigate('/seller/orders')} style={{ ...outlinedBtnStyle, ...touchBtnStyle }}>
-              {t('dashboard.orders')}
-            </Button>
-            <Button icon={<WalletOutlined />} onClick={() => navigate('/seller/wallet')} style={{ ...outlinedBtnStyle, ...touchBtnStyle }}>
-              {t('dashboard.wallet')}
-            </Button>
-            <Button icon={<SendOutlined />} onClick={() => navigate('/seller/orders?status=paid')} style={{ ...outlinedBtnStyle, ...touchBtnStyle }}>
-              {t('dashboard.ordersAwaitingShipment')}
-            </Button>
-          </Space>
-        )}
-      </Card>
+        </Row>
+      </Spin>
 
-      {/* ── Recent Auctions ────────────────────────────────────────── */}
-      <Card
-        title={<span style={sectionTitleStyle}>{t('recentAuctions')}</span>}
-        style={{ ...statCardStyle, marginBottom: hasPendingActions ? (isMobile ? 16 : 24) : 0 }}
-        styles={{ body: { padding: isMobile ? '0 8px 8px' : undefined, overflowX: 'auto' } }}
-      >
-        <ResponsiveTable<AuctionListItemDto>
-          mobileMode="card"
-          rowKey="id"
-          columns={auctionColumns}
-          dataSource={recentAuctions}
-          loading={auctionsLoading}
-          pagination={false}
-          locale={{ emptyText: t('noAuctions') }}
-          scroll={{ x: 'max-content' }}
-        />
-      </Card>
+      <Row gutter={[24, 24]}>
+        {/* ── Action Center ──────────────────────────────────────────── */}
+        <Col xs={24} lg={8}>
+          <Card
+            title={<span style={sectionTitleStyle}>{t('dashboard.actionCenter', 'Action Center')}</span>}
+            style={statCardStyle}
+            styles={{ body: { padding: isMobile ? '12px 16px' : '20px 24px', maxHeight: 400, overflowY: 'auto' } }}
+          >
+            {toDos.length === 0 ? (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description={
+                  <span style={{ color: 'var(--color-text-secondary)', fontSize: 14 }}>
+                    {t('dashboard.allClear', "You're all caught up! No pending actions.")}
+                  </span>
+                }
+                style={{ margin: '40px 0' }}
+              />
+            ) : (
+              <List
+                loading={isStatsLoading}
+                itemLayout="horizontal"
+                dataSource={toDos}
+                renderItem={(item) => (
+                  <List.Item
+                    onClick={() => item.path && navigate(item.path)}
+                    style={{
+                      cursor: item.path ? 'pointer' : 'default',
+                      padding: '12px 0',
+                      borderBottom: '1px solid var(--color-border-secondary)'
+                    }}
+                    actions={item.path ? [<RightOutlined key="arrow" style={{ color: 'var(--color-text-secondary)' }} />] : undefined}
+                  >
+                    <List.Item.Meta
+                      avatar={
+                        <div style={{
+                          width: 40, height: 40, borderRadius: 20, 
+                          background: 'var(--color-fill-tertiary)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 18
+                        }}>
+                          {item.icon}
+                        </div>
+                      }
+                      title={
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: 14, fontWeight: 500 }}>{item.title}</span>
+                          {item.count > 0 && (
+                            <span style={{ fontFamily: monoFont, fontWeight: 600, fontSize: 16, color: 'var(--color-text-primary)' }}>
+                              {item.count}
+                            </span>
+                          )}
+                        </div>
+                      }
+                    />
+                  </List.Item>
+                )}
+              />
+            )}
+          </Card>
+        </Col>
 
-      {/* ── Pending Actions ────────────────────────────────────────── */}
-      {hasPendingActions && (
-        <Card
-          title={<span style={sectionTitleStyle}>{t('pendingActions')}</span>}
-          style={statCardStyle}
-          styles={{ body: { padding: isMobile ? '12px 16px' : '20px 24px' } }}
-        >
-          <Space direction="vertical" size={12} style={{ width: '100%' }}>
-            {pendingItems > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                <span style={{ color: 'var(--color-text-secondary)', fontSize: isMobile ? 13 : 14 }}>
-                  <ClockCircleOutlined style={{ marginRight: 8 }} />
-                  {t('itemsPendingReview', { count: pendingItems })}
-                </span>
-                <Button
-                  type="link"
-                  onClick={() => navigate('/seller/items?status=pending_review')}
-                  style={{ color: 'var(--color-accent)', padding: 0, minHeight: 36 }}
-                >
-                  {t('viewAll')}
-                </Button>
-              </div>
-            )}
-            {draftAuctions > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                <span style={{ color: 'var(--color-text-secondary)', fontSize: isMobile ? 13 : 14 }}>
-                  <ClockCircleOutlined style={{ marginRight: 8 }} />
-                  {t('draftAuctionsNeedSubmission', { count: draftAuctions })}
-                </span>
-                <Button
-                  type="link"
-                  onClick={() => navigate('/seller/auctions?status=draft')}
-                  style={{ color: 'var(--color-accent)', padding: 0, minHeight: 36 }}
-                >
-                  {t('viewAll')}
-                </Button>
-              </div>
-            )}
-          </Space>
-        </Card>
-      )}
+        {/* ── Recent Activity ────────────────────────────────────────── */}
+        <Col xs={24} lg={16}>
+          <Card
+            style={{ ...statCardStyle, height: '100%' }}
+            styles={{ body: { padding: isMobile ? '12px 8px' : '16px 24px', overflowX: 'auto' } }}
+          >
+            <Tabs
+              defaultActiveKey="auctions"
+              items={[
+                {
+                  key: 'auctions',
+                  label: <span style={{ fontWeight: 500 }}>{t('recentAuctions', 'Recent Auctions')}</span>,
+                  children: (
+                    <div style={{ marginTop: 8 }}>
+                      <ResponsiveTable<AuctionListItemDto>
+                        mobileMode="card"
+                        rowKey="id"
+                        columns={auctionColumns}
+                        dataSource={recentAuctions}
+                        loading={auctionsLoading}
+                        pagination={false}
+                        locale={{ emptyText: t('noAuctions') }}
+                        scroll={{ x: 'max-content' }}
+                      />
+                      <div style={{ textAlign: 'right', marginTop: 12 }}>
+                        <Button type="link" onClick={() => navigate('/seller/auctions')}>
+                          {t('viewAll')} <RightOutlined />
+                        </Button>
+                      </div>
+                    </div>
+                  )
+                },
+                {
+                  key: 'orders',
+                  label: <span style={{ fontWeight: 500 }}>{t('recentOrders', 'Recent Orders')}</span>,
+                  children: (
+                    <div style={{ marginTop: 8 }}>
+                      <ResponsiveTable<OrderDto>
+                        mobileMode="card"
+                        rowKey="id"
+                        columns={orderColumns}
+                        dataSource={recentOrders}
+                        loading={ordersLoading}
+                        pagination={false}
+                        locale={{ emptyText: t('noOrders', 'No recent orders') }}
+                        scroll={{ x: 'max-content' }}
+                      />
+                      <div style={{ textAlign: 'right', marginTop: 12 }}>
+                        <Button type="link" onClick={() => navigate('/seller/orders')}>
+                          {t('viewAll')} <RightOutlined />
+                        </Button>
+                      </div>
+                    </div>
+                  )
+                }
+              ]}
+            />
+          </Card>
+        </Col>
+      </Row>
     </>
   )
 
@@ -542,147 +483,112 @@ export default function SellerDashboardPage() {
   return (
     <div style={{ padding: isMobile ? '0 0 24px' : undefined }}>
       {/* ── Welcome Banner + Wallet ─────────────────────────────────── */}
-      <Row gutter={[isMobile ? 0 : 24, isMobile ? 16 : 16]} style={{ marginBottom: isMobile ? 20 : 24 }}>
-        {/* Left: Welcome */}
-        <Col xs={24} md={16}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4, flexWrap: 'wrap' }}>
-            <h1
-              style={{
-                fontFamily: serifFont,
-                fontWeight: 400,
-                fontSize: isMobile ? 22 : 28,
-                color: 'var(--color-text-primary)',
-                margin: 0,
-                letterSpacing: '-0.01em',
-              }}
-            >
-              {profile.storeName}
-            </h1>
-            {profile.status === SellerProfileStatus.Verified && (
-              <span
+      <Card
+        style={{
+          border: '1px solid var(--color-border)',
+          background: 'var(--color-bg-container)',
+          backgroundImage: 'linear-gradient(to right, rgba(var(--color-primary-rgb), 0.05), rgba(var(--color-bg-container-rgb), 1))',
+          backdropFilter: 'var(--oio-blur)',
+          WebkitBackdropFilter: 'var(--oio-blur)',
+          borderRadius: 24,
+          boxShadow: 'var(--shadow-sm)',
+          marginBottom: isMobile ? 20 : 32
+        }}
+        styles={{ body: { padding: isMobile ? '20px 16px' : '24px 32px' } }}
+      >
+        <Row gutter={[isMobile ? 24 : 0, isMobile ? 24 : 0]} align="middle" justify="space-between">
+          {/* Left: Welcome */}
+          <Col xs={24} md={12}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
+              <h1
                 style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  background: 'var(--color-success)',
-                  color: '#fff',
-                  borderRadius: 100,
-                  padding: '3px 12px',
-                  fontSize: 11,
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.04em',
-                  lineHeight: '18px',
+                  fontFamily: serifFont,
+                  fontWeight: 400,
+                  fontSize: isMobile ? 24 : 32,
+                  color: 'var(--color-text-primary)',
+                  margin: 0,
+                  letterSpacing: '-0.01em',
                 }}
               >
-                <CheckCircleOutlined style={{ fontSize: 12 }} />
-                {t('verified')}
-              </span>
+                {profile.storeName}
+              </h1>
+              {profile.status === SellerProfileStatus.Verified ? (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    background: 'var(--color-success)',
+                    color: '#fff',
+                    borderRadius: 100,
+                    padding: '3px 12px',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                    lineHeight: '18px',
+                  }}
+                >
+                  <CheckCircleOutlined style={{ fontSize: 13 }} />
+                  {t('verified')}
+                </span>
+              ) : (
+                <StatusBadge status={profile.status} />
+              )}
+            </div>
+            {profile.storeDescription && (
+              <Typography.Text type="secondary" style={{ fontSize: isMobile ? 14 : 15 }}>
+                {profile.storeDescription}
+              </Typography.Text>
             )}
-            {profile.status !== SellerProfileStatus.Verified && (
-              <StatusBadge status={profile.status} />
-            )}
-          </div>
-          {profile.description && (
-            <p style={{ color: 'var(--color-text-secondary)', fontSize: isMobile ? 13 : 14, margin: 0 }}>
-              {profile.description}
-            </p>
-          )}
-        </Col>
+          </Col>
 
-        {/* Right: Wallet summary */}
-        <Col xs={24} md={8}>
-          <Card
-            style={{
-              border: '1px solid var(--color-border)',
-              background: 'var(--color-bg-container)',
-              backdropFilter: 'var(--oio-blur)',
-              WebkitBackdropFilter: 'var(--oio-blur)',
-              borderRadius: 24,
-              boxShadow: 'var(--shadow-md)',
-            }}
-            styles={{ body: { padding: isMobile ? '14px 16px' : '16px 20px' } }}
-          >
-            {isMobile ? (
-              // Mobile: single row layout
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                    <WalletOutlined style={{ color: 'var(--color-accent)', fontSize: 15 }} />
-                    <span style={{ fontFamily: serifFont, fontSize: 13, color: 'var(--color-text-primary)' }}>
-                      {t('dashboard.walletBalance')}
-                    </span>
-                  </div>
-                  <div style={{ fontFamily: monoFont, fontSize: 20, fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                    {wallet ? formatCurrency(wallet.availableBalance, wallet.currency) : '--'}
-                  </div>
-                  {wallet && wallet.pendingBalance > 0 && (
-                    <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', fontFamily: monoFont, marginTop: 2 }}>
-                      {t('pendingBalance')}: {formatCurrency(wallet.pendingBalance, wallet.currency)}
-                    </div>
-                  )}
-                </div>
-                <Space size={8}>
-                  <Button
-                    type="primary"
-                    size="small"
-                    icon={<SendOutlined />}
-                    onClick={() => navigate('/seller/wallet/withdraw')}
-                    style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)', fontWeight: 500, borderRadius: 6, minHeight: 36 }}
-                  >
-                    {t('dashboard.withdraw')}
-                  </Button>
-                  <Button
-                    size="small"
-                    icon={<HistoryOutlined />}
-                    onClick={() => navigate('/seller/wallet')}
-                    style={{ borderColor: 'var(--color-accent)', color: 'var(--color-accent)', fontWeight: 500, borderRadius: 6, minHeight: 36 }}
-                  >
-                    {t('dashboard.history')}
-                  </Button>
-                </Space>
-              </div>
-            ) : (
-              // Desktop: stacked layout
-              <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                  <WalletOutlined style={{ color: 'var(--color-accent)', fontSize: 18 }} />
-                  <span style={{ fontFamily: serifFont, fontSize: 15, color: 'var(--color-text-primary)' }}>
+          {/* Right: Wallet summary */}
+          <Col xs={24} md={12}>
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: isMobile ? 'column' : 'row',
+              alignItems: isMobile ? 'flex-start' : 'center', 
+              justifyContent: isMobile ? 'flex-start' : 'flex-end',
+              gap: 24
+            }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <WalletOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />
+                  <span style={{ fontFamily: serifFont, fontSize: 14, color: 'var(--color-text-secondary)' }}>
                     {t('dashboard.walletBalance')}
                   </span>
                 </div>
-                <div style={{ fontFamily: monoFont, fontSize: 22, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 14 }}>
+                <div style={{ fontFamily: monoFont, fontSize: isMobile ? 24 : 28, fontWeight: 600, color: 'var(--color-text-primary)' }}>
                   {wallet ? formatCurrency(wallet.availableBalance, wallet.currency) : '--'}
                 </div>
                 {wallet && wallet.pendingBalance > 0 && (
-                  <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 14, fontFamily: monoFont }}>
+                  <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: monoFont, marginTop: 4 }}>
                     {t('pendingBalance')}: {formatCurrency(wallet.pendingBalance, wallet.currency)}
                   </div>
                 )}
-                <Space size={8}>
-                  <Button
-                    type="primary"
-                    size="small"
-                    icon={<SendOutlined />}
-                    onClick={() => navigate('/seller/wallet/withdraw')}
-                    style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)', fontWeight: 500, borderRadius: 6 }}
-                  >
-                    {t('dashboard.withdraw')}
-                  </Button>
-                  <Button
-                    size="small"
-                    icon={<HistoryOutlined />}
-                    onClick={() => navigate('/seller/wallet')}
-                    style={{ borderColor: 'var(--color-accent)', color: 'var(--color-accent)', fontWeight: 500, borderRadius: 6 }}
-                  >
-                    {t('dashboard.history')}
-                  </Button>
-                </Space>
-              </>
-            )}
-          </Card>
-        </Col>
-      </Row>
+              </div>
+              <Space size={12} direction={isMobile ? 'horizontal' : 'vertical'}>
+                <Button
+                  type="primary"
+                  icon={<SendOutlined />}
+                  onClick={() => navigate('/seller/wallet/withdraw')}
+                  style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)', fontWeight: 500, borderRadius: 8, height: 40 }}
+                >
+                  {t('dashboard.withdraw')}
+                </Button>
+                <Button
+                  icon={<HistoryOutlined />}
+                  onClick={() => navigate('/seller/wallet')}
+                  style={{ borderColor: 'var(--color-accent)', color: 'var(--color-accent)', fontWeight: 500, borderRadius: 8, height: 40 }}
+                >
+                  {t('dashboard.history')}
+                </Button>
+              </Space>
+            </div>
+          </Col>
+        </Row>
+      </Card>
 
       {/* ── Dashboard Content ───────────────────────────────────────── */}
       {dashboardContent}

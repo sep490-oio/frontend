@@ -72,8 +72,8 @@ function SellerIdentity({
 
   const displayName = seller?.storeName || sellerUsername || `${sellerId.slice(0, 8)}…`
   const avatarChar = displayName[0]?.toUpperCase()
-  const reviewCount = seller?.reviewCount || 0
-  const rating = seller?.rating || 0
+  const reviewCount = seller?.ratingCount || 0
+  const rating = seller?.averageRating || 0
 
   return (
     <>
@@ -407,7 +407,7 @@ export function AuctionDetailTabs({
                         )}
                       </span>
                       {bid.isAutoBid && <StatusBadge status="auto" size="small" />}
-                      {bid.status && <StatusBadge status={bid.status} size="small" />}
+                      {bid.status && !['cancelled', 'outbid'].includes(bid.status.toLowerCase()) && <StatusBadge status={bid.status} size="small" />}
                       {(bid.bidderDisplayName || bid.bidderId) && (
                         <Typography.Text type="secondary" style={{
                           fontSize: 12,

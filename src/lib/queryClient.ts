@@ -54,6 +54,7 @@ export const queryKeys = {
     myParticipationsRoot: () => ['myParticipations'] as const,
     myParticipations: (params?: unknown) => ['myParticipations', params] as const,
     myPendingWinnerOffers: () => [...queryKeys.auctions.all, 'myPendingWinnerOffers'] as const,
+    sellerStats: () => [...queryKeys.auctions.all, 'sellerStats'] as const,
   },
   items: {
     all: ['items'] as const,
@@ -64,6 +65,7 @@ export const queryKeys = {
     my: (params?: unknown) => [...queryKeys.items.all, 'my', params] as const,
     questionsRoot: (itemId: string) => [...queryKeys.items.all, 'questions', itemId] as const,
     questions: (itemId: string, params?: unknown) => [...queryKeys.items.all, 'questions', itemId, params] as const,
+    sellerStats: () => [...queryKeys.items.all, 'sellerStats'] as const,
   },
   categories: {
     all: ['categories'] as const,
@@ -77,6 +79,7 @@ export const queryKeys = {
     sellerDirectShipRoot: () => ['orders', 'seller-direct-ship'] as const,
     list: (params?: unknown) => [...queryKeys.orders.all, 'list', params] as const,
     detail: (id: string) => [...queryKeys.orders.all, 'detail', id] as const,
+    sellerStats: () => [...queryKeys.orders.all, 'sellerStats'] as const,
   },
   directShipments: {
     all: ['directShipments'] as const,
@@ -121,6 +124,7 @@ export const queryKeys = {
     inspectionQueue: (params?: unknown) => [...queryKeys.warehouse.all, 'inspectionQueue', params] as const,
     staffOutboundQueueRoot: () => ['warehouse-staff', 'outbound-queue'] as const,
     staffOutboundQueue: (params?: unknown) => ['warehouse-staff', 'outbound-queue', params] as const,
+    sellerReturnStats: (sellerId: string) => [...queryKeys.warehouse.all, 'sellerReturnStats', sellerId] as const,
   },
   notifications: {
     all: ['notifications'] as const,

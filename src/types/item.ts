@@ -88,3 +88,10 @@ export interface CategoryDto {
   path: string
   createdAt: string
 }
+
+export interface SellerItemStats {
+  totalItems: number
+  pendingReviewItems: number
+  rejectedItems: number
+}
+

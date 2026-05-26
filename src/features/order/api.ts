@@ -2,7 +2,7 @@ import apiClient from '@/lib/axios'
 import { queryKeys } from '@/lib/queryClient'
 import { invalidateAndRefetchActive } from '@/lib/mutationFreshness'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import type { OrderDto, OrderReturnDto, OrderReturnEvidenceDto, CreateReturnRequest, PagedList, PaginationParams, UpdateOrderShippingRequest, SellerDirectShipmentDto, PackageCondition, SellerDirectShipmentListItem, MyDirectShipmentListItem, BuyerShipmentListItemDto } from '@/types'
+import type { OrderDto, OrderReturnDto, OrderReturnEvidenceDto, CreateReturnRequest, PagedList, PaginationParams, UpdateOrderShippingRequest, SellerDirectShipmentDto, PackageCondition, SellerDirectShipmentListItem, MyDirectShipmentListItem, BuyerShipmentListItemDto, SellerOrderStats } from '@/types'
 import type { OrderReturnEvidenceCategory } from '@/types/enums'
 
 // ── Queries ──────────────────────────────────────────────────────────
@@ -851,3 +851,14 @@ export function useCreateSellerReview() {
     },
   })
 }
+
+export function useSellerOrderStats() {
+  return useQuery({
+    queryKey: queryKeys.orders.sellerStats(),
+    queryFn: async ({ signal }) => {
+      const res = await apiClient.get<SellerOrderStats>('/api/orders/me/stats', { signal })
+      return res.data
+    }
+  })
+}
+

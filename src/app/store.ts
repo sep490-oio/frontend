@@ -19,10 +19,12 @@ interface SystemState {
   clockOffset: number
 }
 
-// Clean up corrupted token values (e.g., literal "undefined" string from previous bugs)
 function getValidToken(key: string): string | null {
-  const value = localStorage.getItem(key)
-  if (!value || value === 'undefined' || value === 'null') {
+  let value = localStorage.getItem(key)
+  if (!value) return null
+  
+  value = value.replace(/^["']|["']$/g, '').trim()
+  if (value === 'undefined' || value === 'null' || value === '') {
     localStorage.removeItem(key)
     return null
   }

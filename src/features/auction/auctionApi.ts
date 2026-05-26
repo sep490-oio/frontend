@@ -13,6 +13,7 @@ import type {
   WinnerOfferDto,
   BuyNowReservationDto,
   AuctionFilterParams,
+  SellerAuctionStats,
   PagedList,
   PaginationParams,
   MyBidDto,
@@ -95,7 +96,7 @@ export function useAuctionBids(auctionId: string) {
   })
 }
 
-export function useMyAuctions(params?: PaginationParams & { status?: string; sortBy?: string }, options?: { refetchInterval?: number }) {
+export function useMyAuctions(params?: PaginationParams & { status?: string; sortBy?: string; search?: string }, options?: { refetchInterval?: number }) {
   return useQuery({
     queryKey: queryKeys.auctions.myAuctions(params),
     queryFn: async () => {
@@ -103,6 +104,17 @@ export function useMyAuctions(params?: PaginationParams & { status?: string; sor
       return res.data
     },
     ...options,
+    staleTime: 0,
+  })
+}
+
+export function useMyAuctionStats() {
+  return useQuery({
+    queryKey: ['my-auction-stats'],
+    queryFn: async () => {
+      const res = await apiClient.get<SellerAuctionStats>('/me/auctions/stats')
+      return res.data
+    },
     staleTime: 0,
   })
 }
@@ -578,3 +590,14 @@ export function useBuyNow() {
     },
   })
 }
+
+export function useSellerAuctionStats() {
+  return useQuery({
+    queryKey: queryKeys.auctions.sellerStats(),
+    queryFn: async ({ signal }) => {
+      const res = await apiClient.get<SellerAuctionStats>('/api/auctions/me/stats', { signal })
+      return res.data
+    }
+  })
+}
+

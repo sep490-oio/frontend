@@ -69,6 +69,20 @@ export interface ReceiveInboundPackageRequest {
   notes?: string
 }
 
+export interface InboundShipmentItemStats {
+  totalPackages: number
+  totalItems: number
+  totalExpectedQuantity: number
+  totalActualQuantity: number
+}
+
+export interface SellerWarehouseReturnStats {
+  awaitingAction: number
+  processing: number
+  resolved: number
+  completed: number
+}
+
 export interface InboundShipmentDto {
   id: string
   itemId: string
@@ -100,6 +114,16 @@ export interface InboundShipmentDto {
   trackingEvents: ShipmentTrackingEventDto[]
   itemTitle?: string
   itemImageUrl?: string
+  itemImageUrls?: string[]
+  receiptPhotos?: string[]
+  warehousePackage?: InboundShipmentWarehouseItemDto
+}
+
+export interface InboundShipmentWarehouseItemDto {
+  id: string
+  status: string
+  storageLocationLabel?: string
+  media: WarehouseItemMediaDto[]
 }
 
 export interface OutboundShipmentDto {
@@ -409,75 +433,6 @@ export interface EvidencePhotoDto {
   createdAt: string
 }
 
-/**
-  id: string
-  status: string
-  receivedAt?: string
-  createdAt: string
-  modifiedAt?: string
-  storageLocationId?: string
-  storageLocationLabel?: string
-  inboundShipmentId: string
-  inboundShipmentCode?: string
-  itemId: string
-  itemTitle?: string
-  itemImageUrl?: string
-  condition?: string
-  description?: string
-  sellerId?: string
-  sellerName?: string
-  media: WarehouseItemMediaDto[]
-  canAssignOrMoveLocation?: boolean
-  canBookOutbound?: boolean
-  outboundBookingOrderId?: string
-  canViewOutboundShipment?: boolean
-  outboundShipmentId?: string
-}
-
-export interface StorageLocationDto {
-  id: string
-  zone: string
-  aisle: string
-  shelf: string
-  bin: string
-  label: string
-  isOccupied: boolean
-  createdAt: string
-}
-
-export interface ShipmentTrackingEventDto {
-  id?: string
-  providerCode?: string
-  carrierStatusRaw?: string
-  carrierStatusDesc?: string
-  normalizedStatus?: string
-  location?: string
-  reasonCode?: string
-  reasonDescription?: string
-  eventTime?: string
-  createdAt?: string
-  // Legacy fields for backward compatibility
-  timestamp?: string
-  status?: string
-  notes?: string
-}
-
-export interface TrackingEventDto {
-  id?: string
-  providerCode?: string
-  carrierStatusRaw?: string
-  carrierStatusDesc?: string
-  normalizedStatus?: string
-  location?: string
-  reasonCode?: string
-  reasonDescription?: string
-  eventTime?: string
-  createdAt?: string
-  // Legacy fields for backward compatibility
-  timestamp?: string
-  status?: string
-  notes?: string
-}
 
 // ── Warehouse Staff Outbound Queue ──────────────────────────────────
 
