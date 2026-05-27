@@ -1,6 +1,7 @@
 import apiClient from '@/lib/axios'
 import { queryKeys } from '@/lib/queryClient'
 import { useQuery, useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query'
+import { stripEmpty } from '@/lib/stripEmpty'
 import type {
   ItemDto,
   ItemMediaDto,
@@ -37,7 +38,7 @@ export function useMyItems(
   return useQuery({
     queryKey: queryKeys.items.my(params),
     queryFn: async () => {
-      const res = await apiClient.get<PagedList<ItemDto>>('/items/my', { params })
+      const res = await apiClient.get<PagedList<ItemDto>>('/items/my', { params: stripEmpty((params ?? {}) as Record<string, unknown>) })
       return res.data
     },
   })

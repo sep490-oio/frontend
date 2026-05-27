@@ -252,6 +252,34 @@ export default function WarehouseItemDetailPage() {
         </Card>
       )}
 
+      {/* Inspection Evidence */}
+      {data.inspection && data.inspection.evidence.length > 0 && (
+        <Card title={t('warehouseItem.inspectionEvidence', 'Inspection Evidence')} style={cardStyle}>
+          <Image.PreviewGroup>
+            <Flex gap={12} wrap="wrap">
+              {data.inspection.evidence.map((ev, idx) => (
+                <div key={idx}>
+                  <Image
+                    src={ev.secureUrl}
+                    width={isMobile ? 100 : 140}
+                    height={isMobile ? 100 : 140}
+                    style={{ objectFit: 'cover', borderRadius: 8 }}
+                  />
+                </div>
+              ))}
+            </Flex>
+          </Image.PreviewGroup>
+          {data.inspection.inspectionNotes && (
+            <div style={{ marginTop: 12 }}>
+              <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 4 }}>
+                {t('warehouseItem.inspectionNotes', 'Notes:')}
+              </Typography.Text>
+              <Typography.Text>{data.inspection.inspectionNotes}</Typography.Text>
+            </div>
+          )}
+        </Card>
+      )}
+
       {/* Original Item Info */}
       <Card title={t('warehouseItem.originalItem', 'Original Item Info')} style={cardStyle}>
         <Flex gap={16} vertical={isMobile}>

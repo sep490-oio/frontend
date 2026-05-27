@@ -107,9 +107,14 @@ function upsertBidPage(
   }
 
   const pageSize = current.metadata.pageSize || current.items.length || 1
+  const updatedItems = current.items.map((item) =>
+    item.status.toLowerCase() === BidStatus.Winning.toLowerCase() || item.status.toLowerCase() === BidStatus.Active.toLowerCase()
+      ? { ...item, status: BidStatus.Outbid }
+      : item
+  )
 
   return {
-    items: [bid, ...current.items].slice(0, pageSize),
+    items: [bid, ...updatedItems].slice(0, pageSize),
     metadata: {
       ...current.metadata,
       totalCount: totalBids,
@@ -166,7 +171,16 @@ function applyAuctionRealtimePatch(
         isEndingSoon: data.isEndingSoon,
       },
       recentBids: bid
-        ? [bid, ...current.recentBids.filter((item) => item.id !== bid.id)].slice(0, 20)
+        ? [
+            bid,
+            ...current.recentBids
+              .filter((item) => item.id !== bid.id)
+              .map((item) =>
+                item.status.toLowerCase() === BidStatus.Winning.toLowerCase() || item.status.toLowerCase() === BidStatus.Active.toLowerCase()
+                  ? { ...item, status: BidStatus.Outbid }
+                  : item
+              ),
+          ].slice(0, 20)
         : current.recentBids,
       priceHistory: data.newPriceHistoryPoint
         ? appendPriceHistory(
@@ -634,13 +648,13 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
   }, [auctionId])
 
   const configureAutoBid = useCallback(
-    async (maxAmount: number, currency: string) => {
+    async (maxAmount: number, currency: string, incrementAmount?: number) => {
       const connection = connectionRef.current
       if (!connection || !auctionId) {
         throw new Error('SignalR not connected')
       }
 
-      return connection.invoke<HubCommandResult<unknown>>('ConfigureAutoBid', auctionId, maxAmount, currency)
+      return connection.invoke<HubCommandResult<unknown>>('ConfigureAutoBid', auctionId, maxAmount, currency, incrementAmount)
     },
     [auctionId],
   )

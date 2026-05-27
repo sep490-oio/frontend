@@ -53,7 +53,7 @@ type AddressFormValues = {
   metadata?: GhnMetadata
 }
 
-export default function AddressesPage() {
+export function AddressesSection() {
   const { t } = useTranslation('user')
   const { isMobile } = useBreakpoint()
   const { message } = App.useApp()
@@ -142,7 +142,7 @@ export default function AddressesPage() {
   }
 
   return (
-    <div style={{ maxWidth: 1400, margin: '0 auto', padding: isMobile ? '24px 16px 80px' : '48px 24px 80px' }}>
+    <div style={{ marginTop: 40 }}>
       {/* Header */}
       <Flex
         justify="space-between"

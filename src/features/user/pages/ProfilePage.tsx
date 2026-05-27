@@ -27,6 +27,7 @@ import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useCurrentUser, useCurrentUserProfile, useUpdateProfile, useSetPhoneNumber, useConfirmPhoneNumber } from '../api'
 import { useResendConfirmEmail } from '@/features/auth/api'
+import { AddressesSection } from '../components/AddressesSection'
 import type { Gender } from '@/types/enums'
 import { MONO_FONT, SANS_FONT } from '@/styles/tokens'
 
@@ -536,6 +537,8 @@ export default function ProfilePage() {
               </Button>
             </form>
           </div>
+          
+          <AddressesSection />
         </Col>
 
         {/* Sidebar Content: Security & Verification */}

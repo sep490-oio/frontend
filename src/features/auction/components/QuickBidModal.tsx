@@ -32,6 +32,7 @@ export function QuickBidModal({ open, onCancel, detailData, auctionId, onSuccess
   const [bidAmount, setBidAmount] = useState<number | null>(null)
   const [autoBidModalOpen, setAutoBidModalOpen] = useState(false)
   const [autoBidMax, setAutoBidMax] = useState<number | null>(null)
+  const [autoBidIncrement, setAutoBidIncrement] = useState<number | null>(null)
 
   const placeBidMutation = usePlaceBid()
   const autoBidMutation = useConfigureAutoBid()
@@ -71,7 +72,8 @@ export function QuickBidModal({ open, onCancel, detailData, auctionId, onSuccess
       await autoBidMutation.mutateAsync({
         auctionId,
         maxAmount: autoBidMax,
-        currency
+        currency,
+        incrementAmount: autoBidIncrement ?? undefined
       })
       message.success(t('autoBidConfigured', 'Auto-bid configured'))
       setAutoBidModalOpen(false)
@@ -155,12 +157,14 @@ export function QuickBidModal({ open, onCancel, detailData, auctionId, onSuccess
             myAutoBid={myAutoBid}
             onAutoBidClick={() => {
               setAutoBidMax(myAutoBid?.maxAmount?.amount ?? null)
+              setAutoBidIncrement(myAutoBid?.incrementAmount?.amount ?? null)
               setAutoBidModalOpen(true)
             }}
             onPauseAutoBid={() => pauseAutoBidMutation.mutateAsync(auctionId)}
             onResumeAutoBid={() => resumeAutoBidMutation.mutateAsync(auctionId)}
             onModifyAutoBid={() => {
               setAutoBidMax(myAutoBid?.maxAmount?.amount ?? null)
+              setAutoBidIncrement(myAutoBid?.incrementAmount?.amount ?? null)
               setAutoBidModalOpen(true)
             }}
             onCancelAutoBid={() => cancelAutoBidMutation.mutateAsync(auctionId)}
@@ -232,6 +236,46 @@ export function QuickBidModal({ open, onCancel, detailData, auctionId, onSuccess
               </Text>
             )}
           </div>
+          <div>
+            <Text strong style={{ display: 'block', marginBottom: 8, fontSize: 13 }}>
+              {t('bidIncrement', 'Bid Increment')} <Text type="secondary" style={{ fontSize: 11 }}>({t('optional', 'optional')})</Text>
+            </Text>
+            <InputNumber
+              style={{ width: '100%', height: 44, borderRadius: 8 }}
+              size="large"
+              min={bidIncrement}
+              step={bidIncrement}
+              value={autoBidIncrement}
+              onChange={(v) => setAutoBidIncrement(v)}
+              addonAfter={currency}
+              placeholder={t('autoBidIncrementPlaceholder', 'Default: auction increment ({{amount}})', { amount: formatCurrency(bidIncrement, currency) })}
+              formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+              parser={(v) => {
+                const parsed = (v ?? '').replace(/\$\s?|(,*)/g, '')
+                return parsed ? Number(parsed) : (null as any)
+              }}
+            />
+            <Text type="secondary" style={{ fontSize: 11, marginTop: 4, display: 'block' }}>
+              {t('autoBidIncrementHelp', 'Custom step size for each auto-bid. Leave empty to use the auction default.')}
+            </Text>
+          </div>
+          {autoBidMax && autoBidMax > currentPrice && (
+            <div style={{ padding: '12px 16px', borderRadius: 8, background: 'var(--color-warning-soft)', border: '1px solid var(--color-warning)', marginTop: 8 }}>
+              <Text strong style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>
+                {t('autoBidSummary', 'Summary')}
+              </Text>
+              <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.8 }}>
+                <div>{t('maxBidAmount', 'Max bid')}: <strong>{formatCurrency(autoBidMax, currency)}</strong></div>
+                <div>{t('walletBalance', 'Wallet')}: {formatCurrency(walletBalance, currency)}</div>
+                <div>{t('bidIncrementLabel', 'Increment')}: {formatCurrency(autoBidIncrement ?? bidIncrement, currency)}{autoBidIncrement ? ` (${t('custom', 'custom')})` : ''}</div>
+              </div>
+            </div>
+          )}
+          {myAutoBid && (
+            <Text type="secondary" style={{ fontSize: 12, marginTop: 4 }}>
+              {t('currentAutoBid', 'Current auto-bid max')}: {formatCurrency(myAutoBid?.maxAmount?.amount ?? 0, myAutoBid?.maxAmount?.currency ?? currency)}
+            </Text>
+          )}
         </div>
       </Modal>
     </>

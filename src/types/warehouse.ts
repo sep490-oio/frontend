@@ -262,6 +262,27 @@ export interface WarehouseItemDetailDto {
   outboundBookingOrderId?: string
   canViewOutboundShipment?: boolean
   outboundShipmentId?: string
+  inspection?: WarehouseInspectionDto | null
+}
+
+export interface WarehouseInspectionDto {
+  id: string
+  warehouseItemId: string
+  inboundShipmentId: string
+  itemId: string
+  declaredCondition: string
+  conditionOnArrival: string
+  inspectionNotes?: string
+  decisionStatus: string
+  decisionReason?: string
+  inspectedBy: string
+  inspectedAt: string
+  reviewedBy?: string
+  reviewedAt?: string
+  sellerConfirmedAt?: string
+  createdAt: string
+  modifiedAt?: string
+  evidence: { secureUrl: string; publicId?: string; folder?: string; fileName?: string; bytes?: number; format?: string; width?: number; height?: number }[]
 }
 
 export interface StorageLocationDto {

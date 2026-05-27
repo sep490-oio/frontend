@@ -3,16 +3,14 @@ import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useTranslation } from 'react-i18next'
-import { App, Input, Button, Form, Row, Col, Select, Checkbox, Divider } from 'antd'
+import { App, Input, Button, Form, Row, Col, Checkbox, Divider } from 'antd'
 import { Link, useNavigate } from 'react-router'
 import {
   UserOutlined,
   LockOutlined,
-  EnvironmentOutlined,
   SafetyCertificateOutlined,
   CheckCircleOutlined,
   CustomerServiceOutlined,
-  PhoneOutlined,
   MailOutlined,
 } from '@ant-design/icons'
 import { useRegister } from '@/features/auth/api'
@@ -29,18 +27,7 @@ type RegisterFormValues = {
   lastName?: string
 }
 
-const PROVINCE_OPTIONS = [
-  { value: 'hanoi', label: 'Ha Noi' },
-  { value: 'hochiminh', label: 'TP. Ho Chi Minh' },
-  { value: 'danang', label: 'Da Nang' },
-  { value: 'haiphong', label: 'Hai Phong' },
-  { value: 'cantho', label: 'Can Tho' },
-  { value: 'binhduong', label: 'Binh Duong' },
-  { value: 'dongnai', label: 'Dong Nai' },
-  { value: 'nghean', label: 'Nghe An' },
-  { value: 'thanhhoa', label: 'Thanh Hoa' },
-  { value: 'hue', label: 'Thua Thien Hue' },
-]
+
 
 import { SERIF_FONT, SANS_FONT } from '@/styles/tokens'
 
@@ -241,16 +228,7 @@ export default function RegisterPage() {
             </Col>
           </Row>
 
-          <Form.Item
-            label={t('register.phone', 'So dien thoai')}
-            style={{ marginBottom: 20 }}
-          >
-            <Input
-              prefix={<PhoneOutlined style={{ color: 'var(--color-text-secondary)' }} />}
-              placeholder={t('register.phonePlaceholder', 'Nhap so dien thoai')}
-              style={fieldStyle}
-            />
-          </Form.Item>
+
         </div>
 
         {/* ── Section 2: Thong tin tai khoan ── */}
@@ -352,48 +330,7 @@ export default function RegisterPage() {
           </Row>
         </div>
 
-        {/* ── Section 3: Dia chi ── */}
-        <div style={sectionBoxStyle}>
-          <div style={sectionHeaderStyle}>
-            <EnvironmentOutlined style={sectionIconStyle} />
-            <h3 style={sectionTitleStyle}>
-              {t('register.sectionAddress', 'Dia chi')}
-            </h3>
-          </div>
 
-          <Row gutter={16}>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                label={t('register.province', 'Tinh / Thanh pho')}
-                style={{ marginBottom: 20 }}
-              >
-                <Select
-                  placeholder={t('register.provincePlaceholder', 'Chon tinh / thanh pho')}
-                  options={PROVINCE_OPTIONS}
-                  style={{ height: 48 }}
-                  size="large"
-                  allowClear
-                  showSearch
-                  filterOption={(input, option) =>
-                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                  }
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                label={t('register.addressDetail', 'Dia chi chi tiet')}
-                style={{ marginBottom: 20 }}
-              >
-                <Input
-                  prefix={<EnvironmentOutlined style={{ color: 'var(--color-text-secondary)' }} />}
-                  placeholder={t('register.addressDetailPlaceholder', 'So nha, duong, phuong/xa...')}
-                  style={fieldStyle}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-        </div>
 
         <Divider style={{ margin: '0 0 24px', borderColor: 'var(--color-border)' }} />
 
