@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Button, Space, Modal, Flex, Tooltip, message, Select, Typography, Tag } from 'antd'
+import { Button, Space, Modal, Flex, Tooltip, message, Select, Typography, Tag, Input } from 'antd'
 import {
   PlusOutlined,
   EditOutlined,
@@ -60,13 +60,14 @@ export default function MyItemsPage() {
   const statusFilter = searchParams.get('status') ?? 'all'
   const verifyFilter =
     (searchParams.get('verify') as 'all' | 'platform' | 'no_platform' | null) ?? 'all'
+  const searchFilter = searchParams.get('search') ?? ''
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
 
   // Reset to page 1 whenever the filter query changes
   useEffect(() => {
     setPage(1)
-  }, [statusFilter, verifyFilter])
+  }, [statusFilter, verifyFilter, searchFilter])
 
   const setStatusFilter = (next: string) => {
     setSearchParams((prev) => {
@@ -94,6 +95,7 @@ export default function MyItemsPage() {
     pageNumber: page,
     pageSize,
     sortBy: 'CreatedAt Desc',
+    ...(searchFilter ? { search: searchFilter } : {}),
     ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
     ...(verifyFilter === 'platform'
       ? { requiresPlatformInspection: true }
@@ -439,6 +441,26 @@ export default function MyItemsPage() {
       </Flex>
 
       <Flex gap={16} align="center" style={{ marginBottom: 24 }} wrap="wrap">
+        <Space direction="vertical" size={4}>
+          <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
+            {tc('action.search', 'Search')}
+          </span>
+          <Input.Search
+            placeholder={tc('action.search', 'Search')}
+            defaultValue={searchFilter}
+            onSearch={(v) => {
+              setSearchParams((prev) => {
+                const sp = new URLSearchParams(prev)
+                if (v.trim()) sp.set('search', v.trim())
+                else sp.delete('search')
+                return sp
+              })
+            }}
+            style={{ width: 250 }}
+            allowClear
+          />
+        </Space>
+
         <Space direction="vertical" size={4}>
           <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
             {t('verificationFilter', 'Platform verification')}

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Button, Flex, Typography, Upload } from 'antd'
 import { CameraOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
@@ -47,14 +47,10 @@ export function MultiCaptureUploader({
       previewUrl: URL.createObjectURL(blob),
     }
     setPhotos((prev) => {
-      const updated = [...prev, newPhoto]
-      onPhotosChange(updated)
-      if (updated.length >= maxPhotos) {
-        setShowCamera(false)
-      }
-      return updated
+      if (prev.length >= maxPhotos) return prev
+      return [...prev, newPhoto]
     })
-  }, [maxPhotos, onPhotosChange])
+  }, [maxPhotos])
 
   const handleFileUpload = useCallback((file: File) => {
     const newPhoto: CapturedPhoto = {
@@ -63,27 +59,28 @@ export function MultiCaptureUploader({
       previewUrl: URL.createObjectURL(file),
     }
     setPhotos((prev) => {
-      const updated = [...prev, newPhoto]
-      onPhotosChange(updated)
-      if (updated.length >= maxPhotos) {
-        setShowCamera(false)
-      }
-      return updated
+      if (prev.length >= maxPhotos) return prev
+      return [...prev, newPhoto]
     })
-  }, [maxPhotos, onPhotosChange])
+  }, [maxPhotos])
 
   const handleRemove = useCallback((index: number) => {
     setPhotos((prev) => {
       const removed = prev[index]
       if (removed) URL.revokeObjectURL(removed.previewUrl)
-      const updated = prev.filter((_, i) => i !== index)
-      onPhotosChange(updated)
-      if (updated.length < maxPhotos) {
-        setShowCamera(true)
-      }
-      return updated
+      return prev.filter((_, i) => i !== index)
     })
-  }, [maxPhotos, onPhotosChange])
+  }, [])
+
+  // Sync state with parent and auto-hide/show camera based on count
+  useEffect(() => {
+    onPhotosChange(photos)
+    if (photos.length >= maxPhotos) {
+      setShowCamera(false)
+    } else if (photos.length === maxPhotos - 1) {
+      setShowCamera(true)
+    }
+  }, [photos, maxPhotos, onPhotosChange])
 
   return (
     <Flex vertical gap={16}>

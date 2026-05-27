@@ -1,7 +1,7 @@
 import apiClient, { extractArray, idempotentPost } from '@/lib/axios'
 import { queryKeys } from '@/lib/queryClient'
 import { invalidateAndRefetchActive } from '@/lib/mutationFreshness'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import type {
   InboundShipmentDto,
   OutboundShipmentDto,
@@ -147,18 +147,19 @@ export function useSetExternalTracking() {
 
 // ── Inbound Packages (package-level receiving) ─────────────────────
 
-export function useInboundPackages(params?: PaginationParams & {
+export function useInboundPackages(params: PaginationParams & {
   packageState?: string
   search?: string
   sortBy?: string
-  isDescending?: boolean
 }) {
   return useQuery({
     queryKey: [...queryKeys.warehouse.all, 'packages', 'list', params] as const,
     queryFn: async () => {
-      const res = await apiClient.get<PagedList<InboundPackageDto>>('/warehouse/inbound-packages', { params })
+      const { stripEmpty } = await import('@/lib/stripEmpty')
+      const res = await apiClient.get<PagedList<InboundPackageDto>>('/warehouse/inbound-packages', { params: stripEmpty(params as Record<string, unknown>) })
       return res.data
     },
+    placeholderData: keepPreviousData,
   })
 }
 

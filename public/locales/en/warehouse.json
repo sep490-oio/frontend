@@ -192,12 +192,21 @@
   },
   "dashboard": {
     "title": "Warehouse Dashboard",
+    "inboundMetrics": "Inbound Flow",
+    "outboundMetrics": "Outbound & Storage Flow",
+    "quickActions": "Quick Actions",
     "awaitingPickup": "Awaiting Pickup",
     "inTransit": "In Transit",
     "arrived": "Arrived",
     "completed": "Completed",
     "awaitingOutbound": "Orders Awaiting Outbound",
-    "goToReceiving": "Go to Receiving"
+    "storedItems": "Stored Items",
+    "pendingReturns": "Pending Returns",
+    "goToReceiving": "Go to Receiving",
+    "receiveNewPackage": "Receive New Package",
+    "scanAndCheckIn": "Scan & Check-in",
+    "processOutbound": "Process Outbound",
+    "handleReturns": "Handle Returns"
   },
   "receiving": {
     "title": "Receiving Queue"

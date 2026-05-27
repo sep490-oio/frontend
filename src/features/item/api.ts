@@ -18,6 +18,7 @@ import type {
 export function useMyItems(
   params?: PaginationParams & {
     status?: string
+    search?: string
     hasInboundShipment?: boolean
     /**
      * Filters by the backend's `Item.RequiresPlatformInspection` flag.

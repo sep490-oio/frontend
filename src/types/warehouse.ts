@@ -255,6 +255,7 @@ export interface WarehouseItemDetailDto {
   description?: string
   sellerId?: string
   sellerName?: string
+  receiptPhotos?: string[]
   media: WarehouseItemMediaDto[]
   canAssignOrMoveLocation?: boolean
   canBookOutbound?: boolean

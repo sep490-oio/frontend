@@ -207,6 +207,26 @@ export default function WarehouseItemDetailPage() {
         </Descriptions>
       </Card>
 
+      {/* Package Receipt Photos */}
+      {(data.receiptPhotos && data.receiptPhotos.length > 0) && (
+        <Card title={t('warehouseItem.packageReceiptPhotos', 'Package Receipt Photos')} style={cardStyle}>
+          <Image.PreviewGroup>
+            <Flex gap={12} wrap="wrap">
+              {data.receiptPhotos.map((url, idx) => (
+                <div key={idx}>
+                  <Image
+                    src={url}
+                    width={isMobile ? 100 : 140}
+                    height={isMobile ? 100 : 140}
+                    style={{ objectFit: 'cover', borderRadius: 8 }}
+                  />
+                </div>
+              ))}
+            </Flex>
+          </Image.PreviewGroup>
+        </Card>
+      )}
+
       {/* Receiving Media */}
       {data.media.length > 0 && (
         <Card title={t('warehouseItem.receivingMedia', 'Receiving Media')} style={cardStyle}>

@@ -380,32 +380,6 @@ export default function InspectionDetailPage() {
           marginBottom: isMobile ? 12 : 20,
         }}
       >
-        {itemImage ? (
-          <Image
-            src={itemImage}
-            alt={shipment.itemTitle}
-            width={isMobile ? 72 : 110}
-            height={isMobile ? 72 : 110}
-            style={{ objectFit: 'cover', borderRadius: 8, flexShrink: 0 }}
-          />
-        ) : (
-          <div
-            style={{
-              width: isMobile ? 72 : 110,
-              height: isMobile ? 72 : 110,
-              borderRadius: 8,
-              background: 'var(--color-bg-surface)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--color-text-secondary)',
-              fontSize: isMobile ? 24 : 32,
-              flexShrink: 0,
-            }}
-          >
-            <InboxOutlined />
-          </div>
-        )}
         <div style={{ flex: 1, minWidth: 0 }}>
           <Typography.Title level={isMobile ? 5 : 4} style={{ margin: 0, fontFamily: SERIF_FONT, marginBottom: 4 }}>
             {shipment.itemTitle ?? t('inspector:inspectionDetail.untitledItem', 'Untitled item')}
@@ -416,6 +390,74 @@ export default function InspectionDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Photos & Media ── */}
+      {((shipment.itemImageUrls && shipment.itemImageUrls.length > 0) || itemImage || (shipment.receiptPhotos && shipment.receiptPhotos.length > 0)) && (
+        <div
+          className="oio-widget"
+          style={{
+            padding: isMobile ? 12 : 20,
+            marginBottom: isMobile ? 12 : 20,
+          }}
+        >
+          <Typography.Text strong style={{ display: 'block', fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-text-secondary)', marginBottom: 16 }}>
+            {t('inspector:inspectionDetail.photosAndMedia', 'Photos & Media')}
+          </Typography.Text>
+
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 24 }}>
+            {/* Seller Photos */}
+            {((shipment.itemImageUrls && shipment.itemImageUrls.length > 0) || itemImage) && (
+              <div style={{ flex: 1 }}>
+                <Typography.Text style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 12 }}>
+                  {t('inspector:inspectionDetail.itemPhotosSeller', 'Item Photos (From Seller)')}
+                </Typography.Text>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  <Image.PreviewGroup>
+                    {(shipment.itemImageUrls && shipment.itemImageUrls.length > 0 
+                        ? shipment.itemImageUrls 
+                        : (itemImage ? [itemImage] : [])
+                      ).map((url, idx) => (
+                      <div key={idx} style={{ display: 'inline-block', flexShrink: 0 }}>
+                        <Image
+                          src={url}
+                          alt={`${shipment.itemTitle} ${idx + 1}`}
+                          width={isMobile ? 72 : 100}
+                          height={isMobile ? 72 : 100}
+                          style={{ objectFit: 'cover', borderRadius: 8 }}
+                        />
+                      </div>
+                    ))}
+                  </Image.PreviewGroup>
+                </div>
+              </div>
+            )}
+
+            {/* Receipt Photos */}
+            {shipment.receiptPhotos && shipment.receiptPhotos.length > 0 && (
+              <div style={{ flex: 1 }}>
+                <Typography.Text style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 12 }}>
+                  {t('inspector:inspectionDetail.receiptPhotosWarehouse', 'Warehouse Receipt Photos')}
+                </Typography.Text>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  <Image.PreviewGroup>
+                    {shipment.receiptPhotos.map((url, idx) => (
+                      <div key={idx} style={{ display: 'inline-block', flexShrink: 0 }}>
+                        <Image
+                          src={url}
+                          alt={`Receipt photo ${idx + 1}`}
+                          width={isMobile ? 72 : 100}
+                          height={isMobile ? 72 : 100}
+                          style={{ objectFit: 'cover', borderRadius: 8 }}
+                        />
+                      </div>
+                    ))}
+                  </Image.PreviewGroup>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── Shipment Information Grid ── */}
       <div
@@ -480,6 +522,7 @@ export default function InspectionDetailPage() {
             <strong>{t('inspector:inspectionDetail.notes', 'Notes')}:</strong> {shipment.notes}
           </div>
         )}
+
       </div>
 
       {/* ── Package Information (from Warehouse Receipt) ── */}
@@ -521,14 +564,15 @@ export default function InspectionDetailPage() {
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 <Image.PreviewGroup>
                   {shipment.warehousePackage.media.map(m => (
-                    <Image
-                      key={m.id}
-                      src={m.secureUrl}
-                      alt={m.fileName || 'Warehouse Photo'}
-                      width={80}
-                      height={80}
-                      style={{ objectFit: 'cover', borderRadius: 8 }}
-                    />
+                    <div key={m.id} style={{ display: 'inline-block', flexShrink: 0 }}>
+                      <Image
+                        src={m.secureUrl}
+                        alt={m.fileName || 'Warehouse Photo'}
+                        width={80}
+                        height={80}
+                        style={{ objectFit: 'cover', borderRadius: 8 }}
+                      />
+                    </div>
                   ))}
                 </Image.PreviewGroup>
               </div>

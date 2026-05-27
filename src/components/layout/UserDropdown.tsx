@@ -137,7 +137,11 @@ export function UserDropdown({ children, mode = 'app' }: Props) {
 
   return (
     <Dropdown
-      menu={{ items: userMenuItems, onClick: handleUserMenuClick }}
+      menu={{ 
+        items: userMenuItems, 
+        onClick: handleUserMenuClick,
+        style: { maxHeight: '80vh', overflowY: 'auto' }
+      }}
       trigger={['click']}
       placement="bottomRight"
     >

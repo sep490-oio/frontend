@@ -192,12 +192,21 @@
   },
   "dashboard": {
     "title": "Bảng điều khiển kho",
+    "inboundMetrics": "Luồng Nhập Kho",
+    "outboundMetrics": "Luồng Xuất Kho & Lưu Trữ",
+    "quickActions": "Thao tác nhanh",
     "awaitingPickup": "Chờ lấy hàng",
     "inTransit": "Đang vận chuyển",
     "arrived": "Đã đến",
     "completed": "Hoàn thành",
     "awaitingOutbound": "Đơn chờ xuất kho",
-    "goToReceiving": "Đi tới Nhận hàng"
+    "storedItems": "Hàng lưu kho",
+    "pendingReturns": "Xử lý hàng hoàn",
+    "goToReceiving": "Đi tới Nhận hàng",
+    "receiveNewPackage": "Nhận hàng mới",
+    "scanAndCheckIn": "Quét mã & Kiểm tra",
+    "processOutbound": "Xử lý xuất kho",
+    "handleReturns": "Xử lý hàng hoàn"
   },
   "receiving": {
     "title": "Hàng đợi nhận"
