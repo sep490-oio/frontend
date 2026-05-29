@@ -5,7 +5,7 @@ import {
 import { EyeOutlined, WarningOutlined, AlertOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import dayjs from 'dayjs'
-import { useAdminCompletedAuctionDetail, useAdminOrderDetail } from '@/features/admin/api'
+import { useAdminCompletedAuctionDetail, useAdminOrderDetail, useAdminProvisionWinnerOrder } from '@/features/admin/api'
 import { AdminErrorState } from '@/features/admin/components/AdminErrorState'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatCurrency, formatDateTime } from '@/utils/format'
@@ -23,6 +23,7 @@ const ALERT_SEVERITY_COLOR: Record<string, string> = {
 export function CompletedAuctionSummary({ auctionId, bidsData }: { auctionId: string, bidsData?: any }) {
   const { t } = useTranslation('admin')
   const navigate = useNavigate()
+  const { mutate: provisionOrder, isPending: isProvisioning } = useAdminProvisionWinnerOrder()
 
   const { data, isLoading, error, refetch } = useAdminCompletedAuctionDetail(auctionId!)
   
@@ -140,11 +141,21 @@ export function CompletedAuctionSummary({ auctionId, bidsData }: { auctionId: st
 
       <Flex justify="space-between" align="center" wrap="wrap" gap={12}>
         <Typography.Title level={5} style={{ margin: 0 }}>{t('completedAuctions.detail.orderInfo', 'Order Information')}</Typography.Title>
-        {order && (
+        {order ? (
           <Button type="primary" icon={<EyeOutlined />} onClick={() => navigate(`/admin/orders/${summary.orderId}`)}>
             View Order Detail
           </Button>
-        )}
+        ) : (summary.winnerId && summary.finalPrice > 0) ? (
+          <Button 
+            type="primary" 
+            loading={isProvisioning}
+            onClick={() => provisionOrder(auctionId, {
+              onSuccess: () => refetch() // refetch the data to show the order
+            })}
+          >
+            Create Order
+          </Button>
+        ) : null}
       </Flex>
       
       {order && (

@@ -595,9 +595,23 @@ export function useSellerAuctionStats() {
   return useQuery({
     queryKey: queryKeys.auctions.sellerStats(),
     queryFn: async ({ signal }) => {
-      const res = await apiClient.get<SellerAuctionStats>('/api/auctions/me/stats', { signal })
+      const res = await apiClient.get<SellerAuctionStats>('/auctions/me/stats', { signal })
       return res.data
     }
   })
 }
 
+
+export function useProvisionWinnerOrder() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (auctionId: string) => {
+      const res = await apiClient.post<string>(`/seller/auctions/completed/${auctionId}/provision-order`)
+      return res.data
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.all })
+      qc.invalidateQueries({ queryKey: queryKeys.orders.all })
+    },
+  })
+}

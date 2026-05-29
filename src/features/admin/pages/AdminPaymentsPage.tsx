@@ -650,10 +650,10 @@ export default function AdminPaymentsPage() {
             onClear={() => setWStatus('')}
             options={[
               { value: '', label: t('payments.allStatuses') },
-              { value: 'Pending', label: tc('statusLabel.pending') },
-              { value: 'Approved', label: tc('statusLabel.approved') },
-              { value: 'Rejected', label: tc('statusLabel.rejected') },
-              { value: 'Completed', label: tc('statusLabel.completed') },
+              { value: 'pending', label: tc('statusLabel.pending') },
+              { value: 'approved', label: tc('statusLabel.approved') },
+              { value: 'rejected', label: tc('statusLabel.rejected') },
+              { value: 'completed', label: tc('statusLabel.completed') },
             ]}
               />
             </Space>
@@ -722,9 +722,9 @@ export default function AdminPaymentsPage() {
             onClear={() => setTStatus('')}
             options={[
               { value: '', label: t('payments.allStatuses') },
-              { value: 'Pending', label: tc('statusLabel.pending') },
-              { value: 'Completed', label: tc('statusLabel.completed') },
-              { value: 'Failed', label: tc('statusLabel.failed') },
+              { value: 'pending', label: tc('statusLabel.pending') },
+              { value: 'completed', label: tc('statusLabel.completed') },
+              { value: 'failed', label: tc('statusLabel.failed') },
             ]}
               />
             </Space>
@@ -776,10 +776,10 @@ export default function AdminPaymentsPage() {
             onClear={() => setEStatus('')}
             options={[
               { value: '', label: t('payments.allStatuses') },
-              { value: 'Held', label: tc('statusLabel.held') },
-              { value: 'Released', label: tc('statusLabel.released') },
-              { value: 'Disputed', label: tc('statusLabel.disputed') },
-              { value: 'Refunded', label: tc('statusLabel.refunded') },
+              { value: 'holding', label: tc('statusLabel.held') },
+              { value: 'released_to_seller', label: tc('statusLabel.released') },
+              { value: 'disputed', label: tc('statusLabel.disputed') },
+              { value: 'refunded_to_buyer', label: tc('statusLabel.refunded') },
             ]}
               />
             </Space>

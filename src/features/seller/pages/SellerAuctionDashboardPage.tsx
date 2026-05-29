@@ -16,7 +16,8 @@ import {
   useSubmitAuction,
   useCancelAuction,
   useOfferRunnerUp,
-  useCloseAuction
+  useCloseAuction,
+  useProvisionWinnerOrder
 } from '@/features/auction/auctionApi.ts'
 import { PriceHistoryChart } from '@/features/auction/components/PriceHistoryChart'
 import { StatusBadge } from '@/components/ui/StatusBadge'
@@ -48,6 +49,7 @@ export default function SellerAuctionDashboardPage() {
   const { mutate: cancelAuction, isPending: isCancelLoading } = useCancelAuction()
   const { mutate: offerRunnerUp, isPending: isOfferRunnerUpLoading } = useOfferRunnerUp()
   const { mutate: closeAuction, isPending: isCloseLoading } = useCloseAuction()
+  const { mutate: provisionOrder, isPending: isProvisionOrderLoading } = useProvisionWinnerOrder()
 
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false)
   const [isTimingModalOpen, setIsTimingModalOpen] = useState(false)
@@ -159,6 +161,7 @@ export default function SellerAuctionDashboardPage() {
         status={auction.status}
         verifyByPlatform={auction.verifyByPlatform}
         itemStatus={item.status}
+        hasOrder={!!detail.currentBuyerOrder}
         isMobile={isMobile}
         onEdit={() => navigate(`/seller/auctions/${auction.id}/edit`)}
         onSetTiming={() => setIsTimingModalOpen(true)}
@@ -172,10 +175,14 @@ export default function SellerAuctionDashboardPage() {
         onClose={() => closeAuction(auction.id, {
           onSuccess: () => message.success(tc('success.saved', 'Thành công'))
         })}
+        onProvisionOrder={() => provisionOrder(auction.id, {
+          onSuccess: () => message.success(tc('success.saved', 'Order created successfully'))
+        })}
         isSubmitLoading={isSubmitLoading}
         isCancelLoading={isCancelLoading}
         isOfferRunnerUpLoading={isOfferRunnerUpLoading}
         isCloseLoading={isCloseLoading}
+        isProvisionOrderLoading={isProvisionOrderLoading}
       />
 
       {/* Stats Row */}

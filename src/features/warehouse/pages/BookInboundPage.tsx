@@ -39,7 +39,7 @@ export default function BookInboundPage() {
   //   1. seller's default address (or first address)
   //   2. seller profile store name / current profile name
   //   3. current user phone
-  const { data: addresses } = useAddresses()
+  const { data: addresses, isSuccess: isAddressesSuccess } = useAddresses()
   const { data: currentUser } = useCurrentUser()
   const { data: currentProfile } = useCurrentUserProfile()
   const { data: mySellerProfile } = useMySellerProfile()
@@ -129,6 +129,7 @@ export default function BookInboundPage() {
   const senderAutofilledRef = useRef(false)
   useEffect(() => {
     if (senderAutofilledRef.current) return
+    if (!isAddressesSuccess) return
     if (!autofillSenderValues) return
     const current = form.getFieldsValue([
       'senderName',

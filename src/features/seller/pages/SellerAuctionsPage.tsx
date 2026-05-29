@@ -84,7 +84,7 @@ export default function SellerAuctionsPage() {
         key: 'edit',
         icon: <EditOutlined />,
         label: tc('action.edit', 'Edit'),
-        onClick: () => navigate(`${prefix}/auctions/create?mode=edit&id=${record.id}`)
+        onClick: () => navigate(`${prefix}/auctions/${record.id}/edit`)
       })
     }
 

@@ -19,6 +19,7 @@ import {
   ArrowLeftOutlined,
   ShoppingOutlined,
   EyeOutlined,
+  PlusOutlined,
 } from '@ant-design/icons'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { SafeHtmlRenderer } from '@/components/ui/SafeHtmlRenderer'
@@ -182,9 +183,23 @@ export default function SellerItemDetailPage() {
 
   const logisticsTab = (
     <Card bordered={false} style={{ boxShadow: 'var(--shadow-sm)' }}>
-      <Empty
-        description={t('logisticsPlaceholder', 'Logistics & shipping details will be displayed here.')}
-      />
+      {item.status === ItemStatus.PendingVerify && !item.hasInboundShipment ? (
+        <Empty
+          description={t('logisticsPlaceholder', 'Logistics & shipping details will be displayed here.')}
+        >
+          <Button 
+            type="primary" 
+            icon={<PlusOutlined />}
+            onClick={() => navigate(`${prefix}/warehouse/inbound/book?itemId=${item.id}`)}
+          >
+            {t('bookInbound', 'Book Inbound Shipment')}
+          </Button>
+        </Empty>
+      ) : (
+        <Empty
+          description={t('logisticsPlaceholder', 'Logistics & shipping details will be displayed here.')}
+        />
+      )}
     </Card>
   )
 

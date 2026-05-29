@@ -1378,3 +1378,17 @@ export function useAdminRemoveBidWithRefund() {
     },
   })
 }
+
+export function useAdminProvisionWinnerOrder() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (auctionId: string) => {
+      const res = await apiClient.post<string>(`/admin/auctions/completed/${auctionId}/provision-order`)
+      return res.data
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.all })
+      qc.invalidateQueries({ queryKey: queryKeys.orders.all })
+    },
+  })
+}

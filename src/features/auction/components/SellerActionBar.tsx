@@ -9,6 +9,7 @@ import {
   UserSwitchOutlined,
   ReloadOutlined,
   CloseCircleOutlined,
+  PlusSquareOutlined,
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { getSellerActions, isSubmitDisabled, type SellerAction } from '@/features/auction/utils/sellerActions'
@@ -17,6 +18,7 @@ interface SellerActionBarProps {
   status: string
   verifyByPlatform?: boolean
   itemStatus?: string
+  hasOrder?: boolean
   isMobile?: boolean
   // Action handlers
   onEdit?: () => void
@@ -28,6 +30,7 @@ interface SellerActionBarProps {
   onOfferRunnerUp?: () => void
   onRelist?: () => void
   onClose?: () => void
+  onProvisionOrder?: () => void
   canOfferRunnerUp?: boolean
   // Loading states
   isSubmitLoading?: boolean
@@ -35,6 +38,7 @@ interface SellerActionBarProps {
   isOfferRunnerUpLoading?: boolean
   isRelistLoading?: boolean
   isCloseLoading?: boolean
+  isProvisionOrderLoading?: boolean
 }
 
 const actionConfig: Record<SellerAction, {
@@ -53,12 +57,14 @@ const actionConfig: Record<SellerAction, {
   offerRunnerUp: { icon: <UserSwitchOutlined />, labelKey: 'offerRunnerUp', labelFallback: 'Offer Runner-Up', type: 'default' },
   relist: { icon: <ReloadOutlined />, labelKey: 'relistAuction', labelFallback: 'Relist', type: 'primary' },
   close: { icon: <CloseCircleOutlined />, labelKey: 'closeAuction', labelFallback: 'Close', danger: true },
+  provisionOrder: { icon: <PlusSquareOutlined />, labelKey: 'provisionOrder', labelFallback: 'Create Order', type: 'primary' },
 }
 
 export function SellerActionBar({
   status,
   verifyByPlatform,
   itemStatus,
+  hasOrder,
   isMobile,
   onEdit,
   onSubmit,
@@ -69,16 +75,18 @@ export function SellerActionBar({
   onOfferRunnerUp,
   onRelist,
   onClose,
+  onProvisionOrder,
   canOfferRunnerUp,
   isSubmitLoading,
   isCancelLoading,
   isOfferRunnerUpLoading,
   isRelistLoading,
   isCloseLoading,
+  isProvisionOrderLoading,
 }: SellerActionBarProps) {
   const { t } = useTranslation('auction')
 
-  const actions = getSellerActions({ status, verifyByPlatform, canOfferRunnerUp, itemStatus })
+  const actions = getSellerActions({ status, verifyByPlatform, canOfferRunnerUp, itemStatus, hasOrder })
   if (actions.length === 0) return null
 
   const handlers: Record<SellerAction, (() => void) | undefined> = {
@@ -91,6 +99,7 @@ export function SellerActionBar({
     offerRunnerUp: onOfferRunnerUp,
     relist: onRelist,
     close: onClose,
+    provisionOrder: onProvisionOrder,
   }
 
   const loadingMap: Partial<Record<SellerAction, boolean>> = {
@@ -99,6 +108,7 @@ export function SellerActionBar({
     offerRunnerUp: isOfferRunnerUpLoading,
     relist: isRelistLoading,
     close: isCloseLoading,
+    provisionOrder: isProvisionOrderLoading,
   }
 
   const submitDisabled = isSubmitDisabled(itemStatus)

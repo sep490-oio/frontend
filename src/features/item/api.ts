@@ -651,7 +651,7 @@ export function useSellerItemStats() {
   return useQuery({
     queryKey: queryKeys.items.sellerStats(),
     queryFn: async ({ signal }) => {
-      const res = await apiClient.get<SellerItemStats>('/api/items/me/stats', { signal })
+      const res = await apiClient.get<SellerItemStats>('/items/me/stats', { signal })
       return res.data
     }
   })

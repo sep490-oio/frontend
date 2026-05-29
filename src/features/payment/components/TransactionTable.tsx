@@ -52,38 +52,10 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
       return true;
     });
 
-    // Group by referenceId (only for certain types that make sense to group)
-    const groups: Record<string, WalletTransactionDto[]> = {};
-    const others: WalletTransactionDto[] = [];
+    // Return the data sorted strictly by time descending, 
+    // without arbitrarily grouping items which ruins the pagination flow.
+    const result = filteredData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-    filteredData.forEach(item => {
-      const canGroup = item.referenceId && (
-        item.referenceType === 'deposit' ||
-        item.referenceType === 'escrow' ||
-        item.referenceType === 'order'
-      );
-
-      if (canGroup) {
-        if (!groups[item.referenceId!]) groups[item.referenceId!] = [];
-        groups[item.referenceId!].push(item);
-      } else {
-        others.push(item);
-      }
-    });
-
-    const result: WalletTransactionDto[] = [];
-    // Sort groups by latest transaction in group
-    const sortedGroupIds = Object.keys(groups).sort((a, b) => {
-      const latestA = new Date(groups[a][0].createdAt).getTime();
-      const latestB = new Date(groups[b][0].createdAt).getTime();
-      return latestB - latestA;
-    });
-
-    sortedGroupIds.forEach(id => {
-      result.push(...groups[id]);
-    });
-
-    result.push(...others);
     return result;
   }, [data]);
 

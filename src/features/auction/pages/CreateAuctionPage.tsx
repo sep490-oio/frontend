@@ -200,7 +200,7 @@ export default function CreateAuctionPage() {
       buyNowPrice: values.buyNowPrice,
       extensionMinutes: isSealedType ? undefined : values.extensionMinutes,
       currency: values.currency,
-      images: uploadedImages?.map((img, i) => ({ mediaUploadId: img.mediaUploadId, isPrimary: i === 0, sortOrder: i })),
+      media: uploadedImages?.map((img, i) => ({ mediaUploadId: img.mediaUploadId, isPrimary: i === 0, sortOrder: i })),
       verifyByPlatform: requireVerification,
     } as any as CreateAuctionRequest
   }
