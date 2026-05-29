@@ -138,6 +138,7 @@ export interface AuctionListItemDto {
   hasWatched?: boolean
   isOnWatchList?: boolean
   canOfferRunnerUp?: boolean
+  orderId?: string
 }
 
 export interface AuctionParticipantListItemDto {

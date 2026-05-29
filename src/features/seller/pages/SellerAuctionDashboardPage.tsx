@@ -178,6 +178,7 @@ export default function SellerAuctionDashboardPage() {
         onProvisionOrder={() => provisionOrder(auction.id, {
           onSuccess: () => message.success(tc('success.saved', 'Order created successfully'))
         })}
+        onViewOrder={() => navigate(`/seller/orders/${detail.currentBuyerOrder?.orderId}`)}
         isSubmitLoading={isSubmitLoading}
         isCancelLoading={isCancelLoading}
         isOfferRunnerUpLoading={isOfferRunnerUpLoading}

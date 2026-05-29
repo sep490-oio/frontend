@@ -14,12 +14,14 @@ import {
   Table,
   Empty,
   Skeleton,
+  Tooltip,
 } from 'antd'
 import {
   ArrowLeftOutlined,
   ShoppingOutlined,
   EyeOutlined,
   PlusOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { SafeHtmlRenderer } from '@/components/ui/SafeHtmlRenderer'
@@ -96,13 +98,26 @@ export default function SellerItemDetailPage() {
     {
       title: 'Action',
       key: 'action',
-      width: 80,
+      width: 120,
       render: (_, record) => (
-        <Button
-          type="text"
-          icon={<EyeOutlined />}
-          onClick={() => navigate(`${prefix}/auctions/${record.id}/dashboard`)}
-        />
+        <Space size="small">
+          <Tooltip title={t('viewAuction', 'View Auction Dashboard')}>
+            <Button
+              type="text"
+              icon={<EyeOutlined />}
+              onClick={() => navigate(`${prefix}/auctions/${record.id}/dashboard`)}
+            />
+          </Tooltip>
+          {record.orderId && (
+            <Tooltip title={t('viewOrder', 'View Order')}>
+              <Button
+                type="text"
+                icon={<FileTextOutlined />}
+                onClick={() => navigate(`/seller/orders/${record.orderId}`)}
+              />
+            </Tooltip>
+          )}
+        </Space>
       ),
     },
   ]

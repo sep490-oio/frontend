@@ -10,6 +10,7 @@ import {
   ReloadOutlined,
   CloseCircleOutlined,
   PlusSquareOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { getSellerActions, isSubmitDisabled, type SellerAction } from '@/features/auction/utils/sellerActions'
@@ -31,6 +32,7 @@ interface SellerActionBarProps {
   onRelist?: () => void
   onClose?: () => void
   onProvisionOrder?: () => void
+  onViewOrder?: () => void
   canOfferRunnerUp?: boolean
   // Loading states
   isSubmitLoading?: boolean
@@ -58,6 +60,7 @@ const actionConfig: Record<SellerAction, {
   relist: { icon: <ReloadOutlined />, labelKey: 'relistAuction', labelFallback: 'Relist', type: 'primary' },
   close: { icon: <CloseCircleOutlined />, labelKey: 'closeAuction', labelFallback: 'Close', danger: true },
   provisionOrder: { icon: <PlusSquareOutlined />, labelKey: 'provisionOrder', labelFallback: 'Create Order', type: 'primary' },
+  viewOrder: { icon: <FileTextOutlined />, labelKey: 'viewOrder', labelFallback: 'View Order', type: 'primary' },
 }
 
 export function SellerActionBar({
@@ -76,6 +79,7 @@ export function SellerActionBar({
   onRelist,
   onClose,
   onProvisionOrder,
+  onViewOrder,
   canOfferRunnerUp,
   isSubmitLoading,
   isCancelLoading,
@@ -100,6 +104,7 @@ export function SellerActionBar({
     relist: onRelist,
     close: onClose,
     provisionOrder: onProvisionOrder,
+    viewOrder: onViewOrder,
   }
 
   const loadingMap: Partial<Record<SellerAction, boolean>> = {

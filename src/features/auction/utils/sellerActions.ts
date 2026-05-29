@@ -9,6 +9,7 @@ export type SellerAction =
   | 'relist'
   | 'close'
   | 'provisionOrder'
+  | 'viewOrder'
 
 interface GetSellerActionsParams {
   status: string
@@ -45,6 +46,8 @@ export function getSellerActions({ status, canOfferRunnerUp, itemStatus, hasOrde
       // But if order creation failed, allow manual provisioning.
       if (hasOrder === false) {
         actions.push('provisionOrder')
+      } else if (hasOrder === true) {
+        actions.push('viewOrder')
       }
       break
     case 'payment_defaulted':
