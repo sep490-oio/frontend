@@ -20,7 +20,7 @@ import { NotificationDropdown } from '@/features/notification/components/Notific
 import { TermsAcceptanceModal } from '@/components/terms/TermsAcceptanceModal'
 import { SpotlightSearchModal } from '@/components/layout/SpotlightSearchModal'
 import { TermsGateProvider } from '@/features/user/components/TermsGateProvider'
-import { useActiveTermsByType, useAcceptedTerms } from '@/features/user/api'
+import { useActiveTermsByType, useAcceptedTerms, useCurrentUser } from '@/features/user/api'
 import { SERIF_FONT, SANS_FONT } from '@/styles/tokens'
 
 const { Header, Content, Footer } = Layout
@@ -30,7 +30,8 @@ export function AppLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const { isMobile, isTablet } = useBreakpoint()
-  const { isAuthenticated, user: currentUserData } = useAuth()
+  const { isAuthenticated } = useAuth()
+  const { data: currentUserData } = useCurrentUser({ enabled: isAuthenticated })
   const { isDark, toggle: toggleTheme } = useTheme()
   const dispatch = useAppDispatch()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)

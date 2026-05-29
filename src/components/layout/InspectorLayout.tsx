@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/hooks/useTheme'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { useCurrentUser } from '@/features/user/api'
 import { NotificationDropdown } from '@/features/notification/components/NotificationDropdown'
 import { UserDropdown } from './UserDropdown'
 import { SERIF_FONT, SANS_FONT } from '@/styles/tokens'
@@ -52,7 +53,8 @@ export function InspectorLayout() {
   const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
   const location = useLocation()
-  const { user } = useAuth()
+  const { isAuthenticated } = useAuth()
+  const { data: user } = useCurrentUser({ enabled: isAuthenticated })
   const { isDark, toggle: toggleTheme } = useTheme()
 
   // On tablet: force icon-only sidebar

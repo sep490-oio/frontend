@@ -25,6 +25,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useMySellerProfile } from '@/features/seller/api'
 import { useTheme } from '@/hooks/useTheme'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { useCurrentUser } from '@/features/user/api'
 import { NotificationDropdown } from '@/features/notification/components/NotificationDropdown'
 import { UserDropdown } from './UserDropdown'
 import { SellerProfileStatus } from '@/types/enums'
@@ -74,7 +75,8 @@ export function SellerLayout() {
   const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
   const location = useLocation()
-  const { user } = useAuth()
+  const { isAuthenticated } = useAuth()
+  const { data: user } = useCurrentUser({ enabled: isAuthenticated })
   const { data: sellerProfile } = useMySellerProfile()
   const { isDark, toggle: toggleTheme } = useTheme()
 
