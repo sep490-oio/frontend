@@ -2,23 +2,18 @@ import type { IdentityVerificationStatus, SellerProfileStatus } from './enums'
 
 export interface SellerProfileDto {
   id: string
-  userId: string
   storeName: string
-  description?: string
   storeDescription?: string
   logo?: string
-  rating: number
   averageRating?: number
-  reviewCount: number
   ratingCount?: number
-  totalSalesCount: number
+  totalSalesCount?: number
   totalSalesAmount?: number
   trustScore?: number
   trustScoreCalculatedAt?: string
   status: SellerProfileStatus
   createdAt: string
   modifiedAt?: string
-  approvedAt?: string
   verifiedAt?: string
 }
 
@@ -118,4 +113,18 @@ export interface PublicSellerItemDto {
   createdAt: string
   auction?: PublicSellerItemAuctionDto
   hasLiveAuction: boolean
+}
+
+export interface SellerDashboardStats {
+  activeAuctions: number
+  soldAuctions: number
+  draftAuctions: number
+  ordersAwaitingShipment: number
+  pendingReviewItems: number
+  rejectedItems: number
+  activeWarehouseReturns: number
+  orderReturns: number
+  totalRevenue: number
+  totalActiveBids: number
+  totalActiveViews: number
 }

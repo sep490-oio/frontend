@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Typography, Row, Col, Button, Select, Modal, InputNumber, App, Flex } from 'antd'
+import type { ColumnsType } from 'antd/es/table'
 const { Text } = Typography
 import { WalletOutlined, ArrowDownOutlined, PlusOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
@@ -12,7 +13,7 @@ import { PriceDisplay } from '@/components/ui/PriceDisplay'
 import { WalletTransactionType } from '@/types/enums'
 import { formatDateTime, formatCurrency } from '@/utils/format'
 import type { WalletTransactionDto } from '@/types'
-import type { ColumnsType } from 'antd/es/table'
+import { ReferenceTitle } from '../components/ReferenceTitle'
 import { SANS_FONT, MONO_FONT } from '@/styles/tokens'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 
@@ -69,7 +70,7 @@ export default function WalletPage() {
       dataIndex: 'amount',
       key: 'amount',
       width: 160,
-      render: (amount: number, record) => (
+      render: (amount: number, record: WalletTransactionDto) => (
         <PriceDisplay
           amount={amount}
           currency={record.currency}
@@ -89,12 +90,19 @@ export default function WalletPage() {
       title: t('txReason', 'Reason'),
       dataIndex: 'reason',
       key: 'reason',
-      ellipsis: true,
-      render: (reason: string | undefined) => (
-        <span style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
-          {reason ?? '-'}
-        </span>
-      ),
+      render: (reason: string | undefined, record: WalletTransactionDto) => {
+        return (
+          <div style={{ minWidth: 0 }}>
+            <ReferenceTitle referenceId={record.referenceId} referenceType={record.referenceType} />
+            <Typography.Text
+              style={{ color: 'var(--color-text-secondary)', fontSize: 13, display: 'block' }}
+              ellipsis={{ tooltip: reason }}
+            >
+              {reason ?? '-'}
+            </Typography.Text>
+          </div>
+        )
+      },
     },
     {
       title: t('txDate', 'Date'),
@@ -257,9 +265,9 @@ export default function WalletPage() {
           dataSource={transactions?.items ?? []}
           loading={txLoading}
           pagination={{
-            current: transactions?.metadata?.currentPage ?? page,
-            pageSize: transactions?.metadata?.pageSize ?? pageSize,
-            total: transactions?.metadata?.totalCount ?? 0,
+            current: transactions?.metadata?.currentPage ?? (transactions as any)?.pageNumber ?? page,
+            pageSize: transactions?.metadata?.pageSize ?? (transactions as any)?.pageSize ?? pageSize,
+            total: transactions?.metadata?.totalCount ?? (transactions as any)?.totalCount ?? 0,
             showSizeChanger: true,
             showTotal: isMobile ? undefined : (total) => tc('pagination.total', { total }),
             onChange: (p, ps) => {

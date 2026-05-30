@@ -23,10 +23,12 @@ export interface ItemDto {
     endTime: string
   }
   /**
-   * True when the item's latest auction has VerifyByPlatform = true. Source
-   * of truth is Auction.VerifyByPlatform, NOT item.status.
+   * Indicates if the item currently has an active or completed inbound shipment record.
+   * Use this to hide UI elements like "Send to floor".
    */
-  requiresPlatformInspection?: boolean
+  hasInboundShipment?: boolean
+  /** Set when the item is linked to a warehouse item (platform inspection flow). */
+  warehouseItemId?: string | null
 }
 
 export interface ItemMediaDto {
@@ -58,13 +60,20 @@ export interface CreateItemRequest {
 export interface ItemQuestionDto {
   id: string
   itemId: string
-  questionerId: string
+  askerId: string
   question: string
   answer?: string
   createdAt: string
   answeredAt?: string
   askerDisplayName?: string
   answererDisplayName?: string
+  isPublic?: boolean
+}
+
+export interface AdminItemQuestionDto extends ItemQuestionDto {
+  hiddenByAdminId?: string
+  hiddenAt?: string
+  hiddenReason?: string
 }
 
 export interface CategoryDto {
@@ -79,3 +88,10 @@ export interface CategoryDto {
   path: string
   createdAt: string
 }
+
+export interface SellerItemStats {
+  totalItems: number
+  pendingReviewItems: number
+  rejectedItems: number
+}
+

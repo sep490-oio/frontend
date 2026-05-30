@@ -1,7 +1,7 @@
-import apiClient, { extractArray } from '@/lib/axios'
+import apiClient, { extractArray, idempotentPost } from '@/lib/axios'
 import { queryKeys } from '@/lib/queryClient'
 import { invalidateAndRefetchActive } from '@/lib/mutationFreshness'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import type {
   InboundShipmentDto,
   OutboundShipmentDto,
@@ -20,11 +20,12 @@ import type {
   PagedList,
   PaginationParams,
   GhnMetadata,
+  SellerWarehouseReturnStats,
 } from '@/types'
 
 // ── Inbound Shipments ───────────────────────────────────────────────
 
-export function useInboundShipments(params?: PaginationParams & { status?: string; search?: string; requiresPlatformInspection?: string }) {
+export function useInboundShipments(params?: PaginationParams & { status?: string; search?: string }) {
   return useQuery({
     queryKey: queryKeys.warehouse.inbound(params),
     queryFn: async () => {
@@ -146,13 +147,19 @@ export function useSetExternalTracking() {
 
 // ── Inbound Packages (package-level receiving) ─────────────────────
 
-export function useInboundPackages(params?: PaginationParams & { packageState?: string; search?: string }) {
+export function useInboundPackages(params: PaginationParams & {
+  packageState?: string
+  search?: string
+  sortBy?: string
+}) {
   return useQuery({
     queryKey: [...queryKeys.warehouse.all, 'packages', 'list', params] as const,
     queryFn: async () => {
-      const res = await apiClient.get<PagedList<InboundPackageDto>>('/warehouse/inbound-packages', { params })
+      const { stripEmpty } = await import('@/lib/stripEmpty')
+      const res = await apiClient.get<PagedList<InboundPackageDto>>('/warehouse/inbound-packages', { params: stripEmpty(params as Record<string, unknown>) })
       return res.data
     },
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -774,3 +781,69 @@ export function useStoreWarehouseItem() {
     },
   })
 }
+
+export interface UpdateWarehouseItemTrackingNumberRequest {
+  trackingNumber: string
+}
+
+export function useUpdateWarehouseItemTrackingNumber(
+  warehouseItemId: string,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (body: UpdateWarehouseItemTrackingNumberRequest) => {
+      const res = await idempotentPost(
+        `/api/warehouse/items/${warehouseItemId}/tracking-number`,
+        body,
+      )
+      return res.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.warehouse.itemsRoot(), 'detail', warehouseItemId] as const,
+      })
+    },
+  })
+}
+
+export function useGetSellerWarehouseReturnStats(sellerId: string) {
+  return useQuery({
+    queryKey: queryKeys.warehouse.sellerReturnStats(sellerId),
+    queryFn: async ({ signal }) => {
+      const res = await apiClient.get<SellerWarehouseReturnStats>(
+        `/api/warehouse/stats/seller-warehouse-return/${sellerId}`,
+        { signal },
+      )
+      return res.data
+    },
+    enabled: !!sellerId,
+  })
+}
+
+export function useRequestWarehouseReinspection() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ warehouseItemId, reason }: { warehouseItemId: string; reason?: string }) => {
+      const { data } = await apiClient.post(
+        `/seller/warehouse/items/${warehouseItemId}/request-reinspection`,
+        { reason },
+      )
+      return data
+    },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: [...queryKeys.warehouse.itemsRoot(), 'seller', 'detail', variables.warehouseItemId] })
+      qc.invalidateQueries({ queryKey: [...queryKeys.warehouse.itemsRoot(), 'seller', 'list'] })
+    },
+  })
+}
+
+export function useSellerWarehouseReturnStats() {
+  return useQuery({
+    queryKey: queryKeys.warehouse.sellerReturnStats('me'),
+    queryFn: async ({ signal }) => {
+      const res = await apiClient.get<SellerWarehouseReturnStats>('/api/warehouse-returns/me/stats', { signal })
+      return res.data
+    }
+  })
+}
+

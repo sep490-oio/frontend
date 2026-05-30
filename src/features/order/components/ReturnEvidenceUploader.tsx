@@ -6,6 +6,7 @@ import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { SecureCaptureUploader } from '@/components/ui/SecureCaptureUploader'
 import { LiveCapturedBadge } from '@/components/ui/LiveCapturedBadge'
 import type { CaptureMetadata } from '@/types/capture'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 
 /**
  * Shared chain-of-custody photo uploader used by both OrderReturn and
@@ -55,7 +56,12 @@ export function ReturnEvidenceUploader({
   const [submitting, setSubmitting] = useState(false)
   const [showCamera, setShowCamera] = useState(false)
 
-  const photosCount = existingEvidence.length
+  // BUG FIX: track locally uploaded count to avoid stale server data.
+  // After onUpload succeeds the parent invalidates queries, but React Query
+  // cache may not have refreshed yet — so existingEvidence.length is stale.
+  const [localUploadCount, setLocalUploadCount] = useState(0)
+
+  const photosCount = existingEvidence.length + localUploadCount
   const atMax = photosCount >= maxPhotos
   const needsMore = photosCount < minRequired
 
@@ -79,12 +85,11 @@ export function ReturnEvidenceUploader({
         )
         const result = await mediaUpload.upload(file)
         await onUpload(result.mediaUploadId)
+        setLocalUploadCount((c) => c + 1)
         message.success(t('returnEvidence.uploadSuccess', 'Photo uploaded'))
         setShowCamera(false)
       } catch (err) {
-        const detail =
-          (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-        message.error(detail ?? t('returnEvidence.uploadError', 'Upload failed'))
+        message.error(normalizeErrorMessage(err, t('returnEvidence.uploadError', 'Upload failed')))
       } finally {
         setSubmitting(false)
       }
@@ -179,7 +184,11 @@ export function ReturnEvidenceUploader({
       </Flex>
 
       {showCamera && !atMax && (
-        <div style={{ marginTop: 8 }}>
+        <div style={{
+          marginTop: 8,
+          borderRadius: 8,
+          overflow: 'hidden',
+        }}>
           <SecureCaptureUploader
             step="item_photo"
             facingMode="environment"
@@ -190,14 +199,16 @@ export function ReturnEvidenceUploader({
               'Capture a clear photo — camera only (live capture)',
             )}
           />
-          <Button
-            size="small"
-            style={{ marginTop: 8 }}
-            onClick={() => setShowCamera(false)}
-            disabled={isUploading}
-          >
-            {t('returnEvidence.closeCamera', 'Close camera')}
-          </Button>
+          <div style={{ padding: '8px 0' }}>
+            <Button
+              size="small"
+              onClick={() => setShowCamera(false)}
+              disabled={isUploading}
+              block
+            >
+              {t('returnEvidence.closeCamera', 'Close camera')}
+            </Button>
+          </div>
         </div>
       )}
     </div>

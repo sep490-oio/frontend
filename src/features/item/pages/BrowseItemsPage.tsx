@@ -288,11 +288,11 @@ export default function BrowseItemsPage() {
                 </label>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
                   <input type="radio" name="itemStatus" checked={itemStatus === 'active'} onChange={() => updateStatus('active')} style={{ accentColor: 'var(--color-accent)' }} />
-                  <span style={{ fontSize: 15, color: 'var(--color-text-primary)' }}>{t('browse.statusActive', 'Đang hoạt động')}</span>
+                  <span style={{ fontSize: 15, color: 'var(--color-text-primary)' }}>{t('browse.statusActive', 'Active')}</span>
                 </label>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
                   <input type="radio" name="itemStatus" checked={itemStatus === 'in_auction'} onChange={() => updateStatus('in_auction')} style={{ accentColor: 'var(--color-accent)' }} />
-                  <span style={{ fontSize: 15, color: 'var(--color-text-primary)' }}>{t('browse.statusAuction', 'Đang đấu giá')}</span>
+                  <span style={{ fontSize: 15, color: 'var(--color-text-primary)' }}>{t('browse.statusAuction', 'In Auction')}</span>
                 </label>
               </div>
             </FilterWidget>

@@ -1,6 +1,7 @@
 import apiClient from '@/lib/axios'
 import { queryKeys } from '@/lib/queryClient'
 import { useQuery, useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query'
+import { stripEmpty } from '@/lib/stripEmpty'
 import type {
   ItemDto,
   ItemMediaDto,
@@ -10,6 +11,7 @@ import type {
   ItemQuestionNotification,
   PagedList,
   PaginationParams,
+  SellerItemStats,
 } from '@/types'
 
 // ── Items ────────────────────────────────────────────────────────────
@@ -17,7 +19,15 @@ import type {
 export function useMyItems(
   params?: PaginationParams & {
     status?: string
+    search?: string
+    hasInboundShipment?: boolean
+    /**
+     * Filters by the backend's `Item.RequiresPlatformInspection` flag.
+     * true = needs platform verification, false = direct review only.
+     */
     requiresPlatformInspection?: boolean
+    sortBy?: string
+    isDescending?: boolean
     /**
      * When false, returns only items with no active inbound shipment
      * (active = status not in [cancelled, failed]). Used by the inbound-book picker.
@@ -28,7 +38,7 @@ export function useMyItems(
   return useQuery({
     queryKey: queryKeys.items.my(params),
     queryFn: async () => {
-      const res = await apiClient.get<PagedList<ItemDto>>('/items/my', { params })
+      const res = await apiClient.get<PagedList<ItemDto>>('/items/my', { params: stripEmpty((params ?? {}) as Record<string, unknown>) })
       return res.data
     },
   })
@@ -42,6 +52,21 @@ export function useItemById(id: string) {
       return res.data
     },
     enabled: !!id,
+  })
+}
+
+/**
+ * Fetch all auction sessions for a given item (ordered by createdAt DESC).
+ * Returns the full AuctionListItemDto[] — not paged since items rarely have >5 auctions.
+ */
+export function useItemAuctions(itemId: string | undefined) {
+  return useQuery({
+    queryKey: [...queryKeys.items.detail(itemId ?? ''), 'auctions'],
+    queryFn: async () => {
+      const res = await apiClient.get<import('@/types').AuctionListItemDto[]>(`/items/${itemId}/auctions`)
+      return res.data
+    },
+    enabled: !!itemId,
   })
 }
 
@@ -247,23 +272,27 @@ function toItemQuestionDto(
   incoming: ItemQuestionDto | ItemQuestionNotification,
   existing?: ItemQuestionDto,
 ): ItemQuestionDto {
-  if ('questionerId' in incoming) {
-    return incoming
+  if ('askerId' in incoming && 'questionId' in incoming) {
+    // It's a notification, map it to DTO
+    return {
+      id: incoming.questionId,
+      itemId: incoming.itemId,
+      askerId: incoming.askerId,
+      question: incoming.question,
+      answer: incoming.answer ?? existing?.answer,
+      createdAt: incoming.createdAt,
+      answeredAt:
+        incoming.answer != null
+          ? existing?.answeredAt ?? new Date().toISOString()
+          : existing?.answeredAt,
+    }
   }
 
-  return {
-    id: incoming.questionId,
-    itemId: incoming.itemId,
-    questionerId: incoming.askerId,
-    question: incoming.question,
-    answer: incoming.answer ?? existing?.answer,
-    createdAt: incoming.createdAt,
-    answeredAt:
-      incoming.answer != null
-        ? existing?.answeredAt ?? new Date().toISOString()
-        : existing?.answeredAt,
-  }
+  // It's already a DTO
+  return incoming as ItemQuestionDto
 }
+
+
 
 function upsertQuestionPage(
   current: PagedList<ItemQuestionDto> | undefined,
@@ -448,12 +477,155 @@ export function useReorderItemMedia() {
   })
 }
 
+// ── AI Suggest Description ────────────────────────────────────────────
+
+export interface SuggestDescriptionRequest {
+  title: string
+  condition: string
+  imageMediaUploadIds: string[]
+  locale?: 'vi' | 'en'
+}
+
+export interface SuggestedCategory {
+  id: string
+  name: string
+  path: string
+  confidence: number
+}
+
+export interface SuggestDescriptionResponse {
+  description: string
+  /**
+   * Indicates how to interpret `description`. The backend now returns sanitized
+   * HTML (`'html'`) suitable for the Quill RichTextEditor. The field is optional
+   * for forwards compatibility with older deployments that returned plain text.
+   */
+  descriptionFormat?: 'html' | 'plain_text'
+  suggestedCategory: SuggestedCategory | null
+  alternatives: SuggestedCategory[]
+  warnings: string[]
+}
+
+/**
+ * Convert a suggestion description into HTML safe for the Quill RichTextEditor.
+ * - If the backend declares `descriptionFormat: 'html'`, pass through.
+ * - If the value already looks like HTML (starts with one of our allowed tags),
+ *   pass through as a forwards-compatible heuristic.
+ * - Otherwise, treat as plain text: HTML-encode and wrap in a single <p>.
+ *
+ * This is defense-in-depth: the backend is the source of truth, but we still
+ * never push raw model output into the editor.
+ */
+export function coerceSuggestionToEditorHtml(description: string, format?: string): string {
+  if (!description) return ''
+  if (format === 'html') return description
+  if (looksLikeAllowedHtml(description)) return description
+
+  const encoded = encodeHtmlEntities(description.replace(/\r\n/g, '\n').trim())
+  if (!encoded) return ''
+  return encoded
+    .split(/\n{2,}/)
+    .map((para) => `<p>${para.replace(/\n/g, '<br />')}</p>`)
+    .join('')
+}
+
+function looksLikeAllowedHtml(value: string): boolean {
+  const probe = value.slice(0, 200).toLowerCase().trimStart()
+  return /^<\s*(p|ul|ol|strong|em|li|br)\b/.test(probe)
+}
+
+function encodeHtmlEntities(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+export function useSuggestDescription() {
+  return useMutation({
+    mutationFn: async (data: SuggestDescriptionRequest): Promise<SuggestDescriptionResponse> => {
+      const res = await apiClient.post<SuggestDescriptionResponse>('/items/suggest-description', data)
+      return res.data
+    },
+  })
+}
+
+export function mapSuggestError(err: unknown): { code: 'disabled' | 'unavailable' | 'rate' | 'other'; detail?: string } {
+  const errAny = err as Record<string, unknown> | undefined
+  const responseData = (errAny?.response as Record<string, unknown> | undefined)?.data as Record<string, unknown> | undefined
+  const responseStatus = (errAny?.response as Record<string, unknown> | undefined)?.status as number | undefined
+  const errors = responseData?.errors as Array<Record<string, unknown>> | undefined
+  const code = responseData?.code ?? errors?.[0]?.code
+  if (code === 'AiSuggestion.Disabled') return { code: 'disabled' }
+  if (code === 'AiSuggestion.ProviderUnavailable') return { code: 'unavailable' }
+  if (code === 'AiSuggestion.RateLimited' || responseStatus === 429) return { code: 'rate' }
+  return { code: 'other', detail: responseData?.detail as string | undefined }
+}
+
 // Choose item shipping
 export function useChooseItemShipping() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ itemId, senderName, senderPhone, senderAddress, senderWard, senderDistrict, senderProvince, weightGrams, insuranceValue }: { itemId: string; senderName: string; senderPhone: string; senderAddress: string; senderWard: string; senderDistrict: string; senderProvince: string; weightGrams: number; insuranceValue: number }) => {
-      await apiClient.post(`/items/${itemId}/shipping`, { senderName, senderPhone, senderAddress, senderWard, senderDistrict, senderProvince, weightGrams, insuranceValue })
+    mutationFn: async ({
+      itemId,
+      senderName,
+      senderPhone,
+      senderAddress,
+      senderWard,
+      senderDistrict,
+      senderProvince,
+      senderMetadata,
+      weightGrams,
+      insuranceValue,
+      providerCode,
+      lengthCm,
+      widthCm,
+      heightCm,
+      externalTrackingNumber,
+      externalCarrierName,
+      notes,
+    }: {
+      itemId: string
+      senderName: string
+      senderPhone: string
+      senderAddress: string
+      senderWard: string
+      senderDistrict: string
+      senderProvince: string
+      senderMetadata?: any
+      weightGrams: number
+      insuranceValue: number
+      providerCode?: string
+      lengthCm?: number
+      widthCm?: number
+      heightCm?: number
+      externalTrackingNumber?: string
+      externalCarrierName?: string
+      notes?: string
+    }) => {
+      await apiClient.post(`/items/${itemId}/shipping`, {
+        senderName,
+        senderPhone,
+        senderAddress,
+        senderWard,
+        senderDistrict,
+        senderProvince,
+        senderCarrierAddressDataJson: senderMetadata ? JSON.stringify({
+          district_id: senderMetadata.id,
+          ward_code: String(senderMetadata.code)
+        }) : null,
+        weightGrams,
+        insuranceValue,
+        providerCode: providerCode ?? null,
+        lengthCm: lengthCm ?? undefined,
+        widthCm: widthCm ?? undefined,
+        heightCm: heightCm ?? undefined,
+        externalTrackingNumber: externalTrackingNumber ?? null,
+        externalCarrierName: externalCarrierName ?? undefined,
+        notes: notes ?? undefined,
+      })
     },
     onSuccess: (_, { itemId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.items.detail(itemId) })
@@ -474,3 +646,14 @@ export function useResubmitItem() {
     },
   })
 }
+
+export function useSellerItemStats() {
+  return useQuery({
+    queryKey: queryKeys.items.sellerStats(),
+    queryFn: async ({ signal }) => {
+      const res = await apiClient.get<SellerItemStats>('/items/me/stats', { signal })
+      return res.data
+    }
+  })
+}
+

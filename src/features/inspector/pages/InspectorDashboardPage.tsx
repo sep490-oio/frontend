@@ -10,7 +10,8 @@ import {
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { useInspectionQueue } from '@/features/inspector/api'
+import { useInspectionQueue, useInspectionDashboardStats } from '@/features/inspector/api'
+import { useCategories } from '@/features/item/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
@@ -21,29 +22,28 @@ export default function InspectorDashboardPage() {
   const { t } = useTranslation('inspector')
   const { isMobile } = useBreakpoint()
 
-  const CATEGORY_PILLS = [
-    t('dashboard.categoryAll'),
-    t('dashboard.categoryWatches'),
-    t('dashboard.categoryFashion'),
-    t('dashboard.categoryArt'),
-  ]
+  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null)
 
-  const [activePill, setActivePill] = useState(t('dashboard.categoryAll'))
+  const { data: categories } = useCategories()
+  const { data: stats, isLoading: statsLoading } = useInspectionDashboardStats()
 
   const { data: queueData, isLoading: queueLoading } = useInspectionQueue({
     pageNumber: 1,
-    pageSize: 5,
+    pageSize: 8,
     status: 'awaiting_inspection',
+    categoryId: activeCategoryId || undefined,
   })
+
   const { data: reviewData, isLoading: reviewLoading } = useInspectionQueue({
     pageNumber: 1,
-    pageSize: 100,
+    pageSize: 5,
     status: 'awaiting_review',
   })
-  const queue = queueData?.items ?? []
-  const completedToday = reviewData?.items ?? []
 
-  const isLoading = queueLoading || reviewLoading
+  const queue = queueData?.items ?? []
+  const awaitingReviewList = reviewData?.items ?? []
+
+  const isLoading = statsLoading || queueLoading || reviewLoading
 
   if (isLoading) {
     return (
@@ -53,29 +53,26 @@ export default function InspectorDashboardPage() {
     )
   }
 
-  const pendingCount = queueData?.metadata?.totalCount ?? queue.length
-  const reviewCount = reviewData?.metadata?.totalCount ?? completedToday.length
-
   const statCards = [
     {
       icon: <SearchOutlined style={{ fontSize: 24, color: 'var(--color-accent)' }} />,
-      value: pendingCount,
+      value: stats?.awaitingInspection ?? 0,
       label: t('dashboard.awaitingInspection'),
       trend: '',
       trendColor: 'var(--color-text-secondary)',
     },
     {
-      icon: <AuditOutlined style={{ fontSize: 24, color: 'var(--color-accent)' }} />,
-      value: reviewCount,
+      icon: <AuditOutlined style={{ fontSize: 24, color: 'var(--color-warning)' }} />,
+      value: stats?.awaitingReview ?? 0,
       label: t('dashboard.awaitingReview'),
       trend: '',
       trendColor: 'var(--color-text-secondary)',
     },
     {
       icon: <CheckCircleOutlined style={{ fontSize: 24, color: 'var(--color-success)' }} />,
-      value: '—',
+      value: stats?.todayCompleted ?? 0,
       label: t('dashboard.completedToday'),
-      trend: t('dashboard.comingSoon'),
+      trend: '',
       trendColor: 'var(--color-text-secondary)',
     },
   ]
@@ -95,7 +92,7 @@ export default function InspectorDashboardPage() {
           <Col xs={12} sm={8} key={idx}>
             <div
               style={{
-                background: 'var(--color-accent-light)',
+                background: 'var(--color-bg-card)',
                 borderRadius: 12,
                 padding: isMobile ? '16px 12px' : '28px 24px',
                 border: '1px solid var(--color-border-light)',
@@ -127,9 +124,6 @@ export default function InspectorDashboardPage() {
               >
                 {stat.label}
               </div>
-              <div style={{ fontSize: 12, color: stat.trendColor, fontWeight: 500 }}>
-                {stat.trend}
-              </div>
             </div>
           </Col>
         ))}
@@ -160,23 +154,39 @@ export default function InspectorDashboardPage() {
 
       {/* ── Category Filter Pills ── */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-        {CATEGORY_PILLS.map((pill) => (
+        <button
+          onClick={() => setActiveCategoryId(null)}
+          style={{
+            padding: '6px 18px',
+            borderRadius: 20,
+            border: '1px solid var(--color-border)',
+            background: activeCategoryId === null ? 'var(--color-accent)' : 'var(--color-bg-card)',
+            color: activeCategoryId === null ? '#fff' : 'var(--color-text-secondary)',
+            fontWeight: 500,
+            fontSize: 13,
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+          }}
+        >
+          {t('dashboard.categoryAll')}
+        </button>
+        {categories?.map((cat) => (
           <button
-            key={pill}
-            onClick={() => setActivePill(pill)}
+            key={cat.id}
+            onClick={() => setActiveCategoryId(cat.id)}
             style={{
               padding: '6px 18px',
               borderRadius: 20,
               border: '1px solid var(--color-border)',
-              background: activePill === pill ? 'var(--color-accent)' : 'var(--color-bg-card)',
-              color: activePill === pill ? '#fff' : 'var(--color-text-secondary)',
+              background: activeCategoryId === cat.id ? 'var(--color-accent)' : 'var(--color-bg-card)',
+              color: activeCategoryId === cat.id ? '#fff' : 'var(--color-text-secondary)',
               fontWeight: 500,
               fontSize: 13,
               cursor: 'pointer',
               transition: 'all 0.2s',
             }}
           >
-            {pill}
+            {cat.name}
           </button>
         ))}
       </div>
@@ -202,7 +212,7 @@ export default function InspectorDashboardPage() {
         {queue?.length ? (
           <Row gutter={[16, 16]}>
             {queue.map((item) => (
-              <Col xs={24} sm={12} md={8} lg={6} key={item.inboundShipmentId}>
+              <Col xs={24} sm={12} md={8} lg={6} key={item.warehouseItemId ?? item.itemId}>
                 <div
                   style={{
                     borderRadius: 12,
@@ -221,7 +231,7 @@ export default function InspectorDashboardPage() {
                     e.currentTarget.style.boxShadow = 'none'
                   }}
                 >
-                  {/* Image placeholder */}
+                  {/* Item image or placeholder */}
                   <div
                     style={{
                       position: 'relative',
@@ -233,25 +243,23 @@ export default function InspectorDashboardPage() {
                       justifyContent: 'center',
                       color: 'var(--color-text-secondary)',
                       fontSize: 32,
+                      overflow: 'hidden',
                     }}
                   >
-                    <DatabaseOutlined />
-                    {/* Category badge */}
-                    <span
-                      style={{
-                        position: 'absolute',
-                        top: 8,
-                        left: 8,
-                        background: 'var(--color-accent)',
-                        color: '#fff',
-                        fontSize: 11,
-                        fontWeight: 600,
-                        padding: '2px 10px',
-                        borderRadius: 10,
-                      }}
-                    >
-                      {t('dashboard.itemBadge')}
-                    </span>
+                    {item.itemImageUrl ? (
+                      <img
+                        src={item.itemImageUrl}
+                        alt={item.itemTitle}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                        }}
+                      />
+                    ) : (
+                      <DatabaseOutlined />
+                    )}
+                    {/* Category badge could be dynamically added if we enrich API to return categoryName */}
                   </div>
 
                   {/* Card body */}
@@ -311,21 +319,21 @@ export default function InspectorDashboardPage() {
         )}
       </div>
 
-      {/* ── History table (kept as-is) ── */}
+      {/* ── Awaiting Review History table ── */}
       <Card
-        title={t('dashboard.inspectionHistory')}
+        title={t('dashboard.awaitingReview')}
         style={{ borderRadius: 12, border: '1px solid var(--color-border)' }}
         extra={
-          <Button type="link" onClick={() => navigate('/inspector/queue')} style={{ color: 'var(--color-accent)' }}>
+          <Button type="link" onClick={() => navigate('/inspector/reviews')} style={{ color: 'var(--color-accent)' }}>
             {t('dashboard.viewAll')}
           </Button>
         }
       >
-        {completedToday?.length ? (
+        {awaitingReviewList?.length ? (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
+                <tr style={{ borderBottom: '0px solid var(--color-border)' }}>
                   <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600 }}>{t('dashboard.columnItem')}</th>
                   <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600 }}>{t('dashboard.columnSeller')}</th>
                   <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600 }}>{t('dashboard.columnStatus')}</th>
@@ -333,8 +341,8 @@ export default function InspectorDashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {completedToday.map((item) => (
-                  <tr key={item.inboundShipmentId} style={{ borderBottom: '1px solid var(--color-border-light)' }}>
+                {awaitingReviewList.map((item) => (
+                  <tr key={item.warehouseItemId ?? item.itemId} style={{ borderBottom: '1px solid var(--color-border-light)' }}>
                     <td style={{ padding: '10px 12px', fontSize: 13 }}>{item.itemTitle}</td>
                     <td style={{ padding: '10px 12px', fontSize: 13, color: 'var(--color-text-secondary)' }}>{item.sellerId.slice(0, 8)}...</td>
                     <td style={{ padding: '10px 12px' }}><StatusBadge status={item.queueStatus} /></td>

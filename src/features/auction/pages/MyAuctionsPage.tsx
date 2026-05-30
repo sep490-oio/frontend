@@ -1,684 +1,654 @@
 import { useState } from 'react'
-import { Button, Space, Modal, Flex, Tooltip, Input, message, DatePicker, Form, Card, List, Typography } from 'antd'
-import {
-  PlusOutlined,
-  EditOutlined,
-  SendOutlined,
-  EyeOutlined,
-  StopOutlined,
-  ClockCircleOutlined,
-  ReloadOutlined,
-  UserSwitchOutlined,
-  DashboardOutlined,
+import { Typography, Select, Spin, Empty, Flex, Pagination, Button, Input, Tabs, Row, Col, App } from 'antd'
+import { 
+  HistoryOutlined, TrophyOutlined,
+  HeartFilled, ShoppingOutlined, BellOutlined, SearchOutlined 
 } from '@ant-design/icons'
-import { useNavigate } from 'react-router'
-import { useRoutePrefix } from '@/hooks/useRoutePrefix'
+import { useNavigate, useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import dayjs from 'dayjs'
-import {
-  useMyAuctions,
-  useSubmitAuction,
-  useCancelAuction,
-  useSetAuctionTiming,
-  useRelistAuction,
-  useOfferRunnerUp,
-} from '@/features/auction/api'
-import { StatusBadge } from '@/components/ui/StatusBadge'
+import { 
+  useMyParticipations, useMyPendingWinnerOffers, useRespondRunnerUpOffer, useAuctionDetail,
+  useWatchlist, useUnwatchAuction, useUpdateWatcherPreferences
+} from '@/features/auction/auctionApi.ts'
+import type { WatchlistItemDto } from '@/features/auction/auctionApi.ts'
+import type { MyParticipationDto } from '@/types/auction'
 import { PriceDisplay } from '@/components/ui/PriceDisplay'
-import { CountdownTimer } from '@/components/ui/CountdownTimer'
-import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
-import { useBreakpoint } from '@/hooks/useBreakpoint'
-import { EmptyState } from '@/components/ui/EmptyState'
-
 import { AuctionStatus } from '@/types/enums'
-import { formatDateTime } from '@/utils/format'
-import type { AuctionListItemDto } from '@/types'
-import type { ColumnsType } from 'antd/es/table'
-import { AuctionTimingSection } from '@/features/auction/components/AuctionTimingSection'
+import { formatCurrency } from '@/utils/format'
+import { WinnerOfferPanel } from '@/features/auction/components/WinnerOfferPanel'
+import { MyBidPositionBadge, type MyBidPosition } from '@/features/auction/components/MyBidPositionBadge'
+import { CountdownTimer } from '@/components/ui/CountdownTimer'
+import { StatusBadge } from '@/components/ui/StatusBadge'
+import { useAuctionHub } from '@/features/auction/hooks/useAuctionHub'
+import { useUserHub } from '@/features/auction/hooks/useUserHub'
+import { useDebounce } from '@/hooks/useDebounce'
+import { useCurrentUser } from '@/features/user/api'
+import { QuickBidModal } from '@/features/auction/components/QuickBidModal'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { MONO_FONT, SANS_FONT } from '@/styles/tokens'
 
-export default function MyAuctionsPage() {
+const { Title } = Typography
+
+// ============================================================================
+// MY BIDS COMPONENTS
+// ============================================================================
+
+export function AuctionCell({ bid }: { bid: MyParticipationDto }) {
+  const { t } = useTranslation('auction')
+  const navigate = useNavigate()
+
+  const { data: currentUser } = useCurrentUser()
+  const userId = currentUser?.id
+
+  const hasBid = !!bid.bidPosition
+
+  const { data: detailData, refetch } = useAuctionDetail(bid.auctionId, userId)
+  useAuctionHub(bid.auctionId, undefined, userId)
+  useUserHub(bid.auctionId, userId)
+
+  const [bidModalOpen, setBidModalOpen] = useState(false)
+
+  const auction = detailData?.auction
+  const bidState = detailData?.currentUserBidState
+
+  const currentPriceAmount = auction?.currentPrice?.amount ?? bid.currentPrice?.amount
+  const currentPriceCurrency = auction?.currentPrice?.currency ?? bid.currentPrice?.currency
+  const position = bidState?.position ?? bid.bidPosition
+  const auctionStatus = (auction?.status ?? bid.auctionStatus) as AuctionStatus
+  const myLatestBidAmount = bidState?.latestBidAmount ?? bid.myLatestBidAmount?.amount
+  const myLatestBidCurrency = bid.myLatestBidAmount?.currency
+
+  const isActive = auctionStatus === AuctionStatus.Active
+  const isWon = position === 'won'
+  const isOutbid = position === 'outbid'
+
+  const navState = {
+    knownPosition: position,
+    returnTo: '/me/auctions',
+    returnLabel: t('myAuctionActivity', 'My Auction Activity'),
+  }
+
+  return (
+    <>
+    <div
+      className="oio-press group"
+      onClick={() => navigate(`/auctions/${bid.auctionId}`, { state: navState })}
+      tabIndex={0}
+      role="link"
+      style={{
+        backgroundColor: 'var(--color-bg-container)',
+        borderRadius: 16,
+        overflow: 'hidden',
+        border: '1px solid rgba(0,0,0,0.04)',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        transition: 'all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'
+      }}
+    >
+      <div style={{
+        position: 'relative',
+        width: '100%',
+        aspectRatio: '4/3',
+        flexShrink: 0,
+        overflow: 'hidden',
+        background: 'var(--color-bg-surface)',
+      }}>
+        {bid.primaryImageUrl ? (
+          <img
+            src={bid.primaryImageUrl}
+            alt={bid.itemTitle}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', color: 'var(--color-text-secondary)', fontSize: 13, background: 'var(--color-bg-layout)' }}>
+            {t('noImage')}
+          </div>
+        )}
+
+        {hasBid && (
+          <MyBidPositionBadge 
+            position={position as MyBidPosition} 
+            label={
+              position === 'won' ? t('bidStatusWon', 'Won')
+              : position === 'leading' ? t('leading', 'Leading')
+              : position === 'outbid' ? t('outbid', 'Outbid')
+              : t('bidStatusLost', 'Lost')
+            } 
+          />
+        )}
+
+        {/* Status & Timer Overlays */}
+        <div style={{ position: 'absolute', bottom: 8, left: 8, right: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
+           <StatusBadge status={auctionStatus} size="small" />
+           {((isActive && (auction?.endTime || bid.auctionStatus)) || (auctionStatus === AuctionStatus.Scheduled && (auction?.startTime || bid.auctionStatus))) && (
+             <div style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', padding: '4px 8px', borderRadius: 6, color: '#fff', fontSize: 11, fontWeight: 700, fontFamily: MONO_FONT }}>
+               <CountdownTimer endTime={isActive ? (auction?.endTime ?? '') : (auction?.startTime ?? '')} size="small" />
+             </div>
+           )}
+        </div>
+      </div>
+
+      <div style={{ padding: 16, display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+        <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12, color: 'var(--color-text-primary)', fontFamily: SANS_FONT, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+          {bid.itemTitle}
+        </h3>
+        
+        {/* Pricing Block */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto' }}>
+           <div>
+             <Typography.Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+                {t('currentPrice', 'Current Price')}
+             </Typography.Text>
+             <div style={{ fontSize: 16, color: 'var(--color-text-primary)', fontWeight: 700, fontFamily: MONO_FONT, marginTop: 2 }}>
+                <PriceDisplay amount={currentPriceAmount ?? 0} currency={currentPriceCurrency ?? 'VND'} />
+             </div>
+           </div>
+           
+           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+             {/* Deposit Status Badge */}
+             {bid.depositStatus && (
+               <div style={{
+                 display: 'inline-flex', alignItems: 'center',
+                 padding: '2px 8px', borderRadius: 4,
+                 background: bid.depositStatus === 'held' ? 'rgba(59,130,246,0.1)'
+                   : bid.depositStatus === 'returned' ? 'rgba(34,197,94,0.1)'
+                   : bid.depositStatus === 'forfeited' ? 'rgba(239,68,68,0.1)'
+                   : 'rgba(139,92,246,0.1)',
+                 border: `1px solid ${bid.depositStatus === 'held' ? 'rgba(59,130,246,0.2)'
+                   : bid.depositStatus === 'returned' ? 'rgba(34,197,94,0.2)'
+                   : bid.depositStatus === 'forfeited' ? 'rgba(239,68,68,0.2)'
+                   : 'rgba(139,92,246,0.2)'}`,
+               }}>
+                 <span style={{
+                   fontSize: 10, fontWeight: 700, fontFamily: SANS_FONT, textTransform: 'uppercase',
+                   color: bid.depositStatus === 'held' ? '#3b82f6'
+                     : bid.depositStatus === 'returned' ? '#22c55e'
+                     : bid.depositStatus === 'forfeited' ? '#ef4444'
+                     : '#8b5cf6',
+                 }}>
+                   {bid.depositStatus === 'held' ? t('depositHeld', 'Held')
+                     : bid.depositStatus === 'returned' ? t('depositReturned', 'Refunded')
+                     : bid.depositStatus === 'forfeited' ? t('depositForfeited', 'Forfeited')
+                     : t('depositApplied', 'Applied')}
+                 </span>
+               </div>
+             )}
+
+             {/* My Bid Amount */}
+             {(myLatestBidAmount || 0) > 0 && (
+               <div style={{ textAlign: 'right' }}>
+                 <Typography.Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, color: isOutbid ? '#d97706' : undefined, display: 'block', marginBottom: 2 }}>
+                    {t('myLatestBid', 'My Bid')}
+                 </Typography.Text>
+                 <div style={{ fontSize: 16, color: isOutbid ? '#d97706' : isWon ? '#22c55e' : 'var(--color-accent)', fontWeight: 700, fontFamily: MONO_FONT }}>
+                    <PriceDisplay amount={myLatestBidAmount ?? 0} currency={myLatestBidCurrency ?? 'VND'} />
+                 </div>
+               </div>
+             )}
+           </div>
+        </div>
+
+        {/* Action Bar (Only show if there are primary actions like Pay Now or Bid Again) */}
+        {isWon && bid.canPayNow && bid.orderId ? (
+          <div style={{ marginTop: 16 }}>
+            <Button
+              type="primary"
+              onClick={(e: React.MouseEvent) => { e.stopPropagation(); navigate(`/checkout/${bid.orderId}`) }}
+              style={{ borderRadius: 8, fontWeight: 600, width: '100%', height: 36 }}
+            >
+              {t('payNow', 'Pay Now')}
+            </Button>
+          </div>
+        ) : isOutbid && isActive ? (
+          <div style={{ marginTop: 16 }}>
+            <Button
+              type="primary"
+              onClick={(e: React.MouseEvent) => { e.stopPropagation(); setBidModalOpen(true) }}
+              style={{ background: '#f59e0b', borderColor: '#f59e0b', borderRadius: 8, fontWeight: 600, width: '100%', height: 36 }}
+            >
+              {t('bidAgain', 'Bid Again')}
+            </Button>
+          </div>
+        ) : null}
+      </div>
+    </div>
+    <QuickBidModal 
+      open={bidModalOpen} 
+      onCancel={() => setBidModalOpen(false)} 
+      detailData={detailData} 
+      auctionId={bid.auctionId}
+      onSuccess={() => refetch()}
+    />
+    </>
+  )
+}
+
+function MyBidsTab() {
   const { t } = useTranslation('auction')
   const { t: tc } = useTranslation('common')
-
-  const STATUS_PILLS = [
-    { value: 'all', label: t('statusTab.all') },
-    { value: AuctionStatus.Draft, label: tc('statusLabel.draft') },
-    { value: AuctionStatus.Approved, label: tc('statusLabel.approved') },
-    { value: AuctionStatus.Scheduled, label: tc('statusLabel.scheduled') },
-    { value: AuctionStatus.Active, label: tc('statusLabel.active') },
-    { value: AuctionStatus.Ended, label: tc('statusLabel.ended') },
-    { value: AuctionStatus.Sold, label: tc('statusLabel.sold') },
-    { value: AuctionStatus.Failed, label: tc('statusLabel.failed') },
-    { value: AuctionStatus.Cancelled, label: tc('statusLabel.cancelled') },
-    { value: AuctionStatus.Pending, label: tc('statusLabel.pending') },
-    { value: AuctionStatus.Terminated, label: tc('statusLabel.terminated') },
-  ]
   const navigate = useNavigate()
-  const prefix = useRoutePrefix()
-  const [msgApi, contextHolder] = message.useMessage()
-  const { isMobile, isTablet } = useBreakpoint()
+  const { isMobile } = useBreakpoint()
 
-  const [statusFilter, setStatusFilter] = useState<string>('all')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
-
-  // Cancel modal state
-  const [cancelModalOpen, setCancelModalOpen] = useState(false)
-  const [cancelAuctionId, setCancelAuctionId] = useState<string | null>(null)
-  const [cancelReason, setCancelReason] = useState('')
-
-  // Timing modal state
-  const [timingModalOpen, setTimingModalOpen] = useState(false)
-  const [timingAuctionId, setTimingAuctionId] = useState<string | null>(null)
-  const [modalForm] = Form.useForm()
-  const [submitPendingTimingAuctionId, setSubmitPendingTimingAuctionId] = useState<string | null>(null)
+  const [statusFilter, setStatusFilter] = useState<string>('')
+  const [sortBy, setSortBy] = useState<string>('DepositedAt Desc')
+  const [search, setSearch] = useState<string>('')
+  const debouncedSearch = useDebounce(search, 300)
 
   const params = {
     pageNumber: page,
     pageSize,
-    sortBy: 'CreatedAt Desc',
-    ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
+    sortBy,
+    ...(statusFilter ? { status: statusFilter } : {}),
+    ...(debouncedSearch ? { search: debouncedSearch } : {})
   }
 
-  const { data, isLoading } = useMyAuctions(params, { refetchInterval: 30000 })
-  const submitAuction = useSubmitAuction()
-  const cancelAuction = useCancelAuction()
-  const setAuctionTiming = useSetAuctionTiming()
-  const relistAuction = useRelistAuction()
-  const offerRunnerUp = useOfferRunnerUp()
+  const { data, isLoading } = useMyParticipations(params)
+  const { data: pendingOffers } = useMyPendingWinnerOffers()
+  const respondMutation = useRespondRunnerUpOffer()
 
-  /* ── Cancel handlers ── */
-  const openCancelModal = (id: string) => {
-    setCancelAuctionId(id)
-    setCancelReason('')
-    setCancelModalOpen(true)
+  const STATUS_PILLS = [
+    { value: '', label: t('bidStatusAll', 'All') },
+    { value: 'active', label: t('bidStatusActive', 'Active') },
+    { value: 'won', label: t('bidStatusWon', 'Won') },
+    { value: 'lost', label: t('bidStatusLost', 'Lost') },
+    { value: 'deposit_only', label: t('depositOnly', 'Deposit Only') },
+  ]
+
+  const displayItems = data?.items ?? []
+  const totalCount = data?.metadata?.totalCount ?? 0
+
+  return (
+    <div>
+      {/* Pending Offers */}
+      {pendingOffers && pendingOffers.length > 0 && (
+        <div style={{ marginBottom: 32 }}>
+          <Title level={4} style={{ fontFamily: SANS_FONT, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 16, fontSize: 18 }}>
+            <TrophyOutlined style={{ marginRight: 8, color: 'var(--color-accent)' }} />
+            {t('pendingOffers', 'Pending Offers')}
+          </Title>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {pendingOffers.map((offer: any) => (
+              <WinnerOfferPanel
+                key={offer.offerId}
+                offer={offer as any}
+                onAccept={(_offerId) =>
+                  respondMutation.mutate(
+                    { auctionId: offer.auctionId, accept: true },
+                    {
+                      onSuccess: (result: any) => {
+                        const orderId = (result as any)?.orderId
+                        if (orderId) {
+                          navigate(`/checkout/${orderId}`)
+                        } else {
+                          navigate(`/auctions/${offer.auctionId}`)
+                        }
+                      },
+                    },
+                  )
+                }
+                onDecline={(_offerId) => respondMutation.mutate({ auctionId: offer.auctionId, accept: false })}
+                isAcceptLoading={respondMutation.isPending}
+                isDeclineLoading={respondMutation.isPending}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Filters */}
+      <Flex align={isMobile ? 'stretch' : 'center'} justify="space-between" vertical={isMobile} gap={16} style={{ marginBottom: 24 }}>
+        <Flex gap={12} align="center" vertical={isMobile}>
+          <Input
+            placeholder={t('search', 'Search auctions...')}
+            prefix={<SearchOutlined style={{ color: 'var(--color-text-tertiary)' }} />}
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+            style={{ width: isMobile ? '100%' : 280, height: 44, borderRadius: 12 }}
+            allowClear
+          />
+          <Select
+            value={statusFilter}
+            onChange={(v) => { setStatusFilter(v); setPage(1) }}
+            style={{ width: isMobile ? '100%' : 160, height: 44 }}
+            className="oio-select"
+            options={STATUS_PILLS}
+          />
+        </Flex>
+
+        <Select
+          value={sortBy}
+          onChange={(v) => { setSortBy(v); setPage(1) }}
+          style={{ width: isMobile ? '100%' : 220, height: 44 }}
+          className="oio-select"
+          options={[
+            { value: 'DepositedAt Desc', label: t('sortNewest', 'Newest First') },
+            { value: 'DepositedAt Asc', label: t('sortOldest', 'Oldest First') },
+          ]}
+        />
+      </Flex>
+
+      {/* List */}
+      <div>
+        {isLoading ? (
+          <div style={{ textAlign: 'center', padding: 80 }}><Spin size="large" /></div>
+        ) : displayItems.length === 0 ? (
+          <Empty
+            description={t('noBidsYet', 'You have not participated in any auctions yet')}
+            style={{ padding: 80, background: 'var(--color-bg-card)', borderRadius: 24, border: '1px solid var(--color-border)' }}
+          />
+        ) : (
+          <Row gutter={isMobile ? [12, 12] : [24, 24]}>
+            {displayItems.map((bid: MyParticipationDto) => (
+              <Col xs={12} sm={12} md={8} lg={6} key={bid.auctionId}>
+                <AuctionCell bid={bid} />
+              </Col>
+            ))}
+          </Row>
+        )}
+
+        {displayItems.length > 0 && (
+          <Flex justify="center" style={{ marginTop: 40 }}>
+            <Pagination
+              current={data?.metadata?.currentPage ?? page}
+              pageSize={data?.metadata?.pageSize ?? pageSize}
+              total={totalCount}
+              showSizeChanger={!isMobile}
+              showTotal={isMobile ? undefined : (total) => tc('pagination.total', { total })}
+              size={isMobile ? 'small' : undefined}
+              onChange={(p, ps) => { setPage(p); setPageSize(ps); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+            />
+          </Flex>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// WATCHLIST COMPONENTS
+// ============================================================================
+
+type SortKey = 'endingSoon' | 'newest' | 'priceLow' | 'priceHigh'
+
+function sortItems(items: WatchlistItemDto[], sortKey: SortKey): WatchlistItemDto[] {
+  const copy = [...items]
+  switch (sortKey) {
+    case 'endingSoon':
+      return copy.sort((a, b) => new Date(a.endTime ?? '').getTime() - new Date(b.endTime ?? '').getTime())
+    case 'newest':
+      return copy.sort((a, b) => new Date(b.watchedAt).getTime() - new Date(a.watchedAt).getTime())
+    case 'priceLow':
+      return copy.sort((a, b) => (a.currentPrice?.amount ?? 0) - (b.currentPrice?.amount ?? 0))
+    case 'priceHigh':
+      return copy.sort((a, b) => (b.currentPrice?.amount ?? 0) - (a.currentPrice?.amount ?? 0))
+    default:
+      return copy
   }
+}
 
-  const handleCancelConfirm = () => {
-    if (!cancelAuctionId || !cancelReason.trim()) return
-    cancelAuction.mutate(
-      { auctionId: cancelAuctionId, reason: cancelReason.trim() },
-      {
-        onSuccess: () => {
-          msgApi.success(t('cancelSuccess', 'Auction cancelled'))
-          setCancelModalOpen(false)
-          setCancelAuctionId(null)
-        },
-      },
-    )
-  }
+function WatchlistTab() {
+  const { t } = useTranslation('auction')
+  const { t: tc } = useTranslation('common')
+  const navigate = useNavigate()
+  const { message } = App.useApp()
+  const { isMobile } = useBreakpoint()
 
-  /* ── Timing handlers ── */
-  const openTimingModal = (id: string) => {
-    setTimingAuctionId(id)
-    modalForm.resetFields()
-    setTimingModalOpen(true)
-  }
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(12)
+  const [sortKey, setSortKey] = useState<SortKey>('endingSoon')
 
-  const handleTimingConfirm = async () => {
-    if (!timingAuctionId) return
-    try {
-      await modalForm.validateFields()
-    } catch {
-      return
-    }
+  const { data, isLoading } = useWatchlist({ pageNumber: page, pageSize })
+  const unwatchMutation = useUnwatchAuction()
+  const prefsMutation = useUpdateWatcherPreferences()
 
-    const fields = modalForm.getFieldsValue([
-      'qualificationStartAt',
-      'qualificationEndAt',
-      'startTime',
-      'endTime',
-      'autoExtend',
-      'extensionMinutes',
-    ])
+  const SORT_OPTIONS = [
+    { value: 'endingSoon', label: t('sort.endingSoon', 'Ending Soon') },
+    { value: 'newest', label: t('sort.newest', 'Recently Added') },
+    { value: 'priceLow', label: t('sort.priceLow', 'Price: Low to High') },
+    { value: 'priceHigh', label: t('sort.priceHigh', 'Price: High to Low') },
+  ]
 
-    if (!fields.startTime || !fields.endTime) return
-
-    const isSubmitFlow = submitPendingTimingAuctionId === timingAuctionId
-
-    const timingPayload = {
-      auctionId: timingAuctionId,
-      startTime: dayjs(fields.startTime).toISOString(),
-      endTime: dayjs(fields.endTime).toISOString(),
-      ...(fields.qualificationStartAt
-        ? { qualificationStartAt: dayjs(fields.qualificationStartAt).toISOString() }
-        : {}),
-      ...(fields.qualificationEndAt
-        ? { qualificationEndAt: dayjs(fields.qualificationEndAt).toISOString() }
-        : {}),
-      autoExtend: fields.autoExtend ?? false,
-      extensionMinutes: fields.extensionMinutes ?? 5,
-    }
-
-    if (isSubmitFlow) {
-      try {
-        await submitAuction.mutateAsync(timingAuctionId)
-        try {
-          await setAuctionTiming.mutateAsync(timingPayload)
-          msgApi.success(t('submitAndTimingSuccess', 'Auction submitted and timing configured'))
-        } catch {
-          msgApi.warning(t('submitSuccessTimingFailed', 'Auction submitted successfully, but timing could not be set. Please set timing manually.'))
-        }
-      } catch {
-        msgApi.error(t('submitFailed', 'Failed to submit auction'))
-      }
-      setSubmitPendingTimingAuctionId(null)
-      setTimingModalOpen(false)
-      setTimingAuctionId(null)
-    } else {
-      setAuctionTiming.mutate(timingPayload, {
-        onSuccess: () => {
-          msgApi.success(t('timingSuccess', 'Timing configured'))
-          setTimingModalOpen(false)
-          setTimingAuctionId(null)
-        },
-      })
-    }
-  }
-
-  /* ── Submit handler ── */
-  const handleSubmit = (id: string) => {
-    const auction = data?.items?.find((a: any) => a.id === id)
-    const hasTiming = auction?.startTime && auction?.endTime
-    if (hasTiming) {
-      submitAuction.mutate(id, {
-        onSuccess: () => msgApi.success(t('submitSuccess', 'Auction submitted for review')),
-      })
-    } else {
-      setSubmitPendingTimingAuctionId(id)
-      openTimingModal(id)
-    }
-  }
-
-  /* ── Relist modal state ── */
-  const [relistModalOpen, setRelistModalOpen] = useState(false)
-  const [relistAuctionId, setRelistAuctionId] = useState<string | null>(null)
-  const [relistForm, setRelistForm] = useState<{
-    qualificationStartAt: dayjs.Dayjs | null
-    qualificationEndAt: dayjs.Dayjs | null
-    startAt: dayjs.Dayjs | null
-    endAt: dayjs.Dayjs | null
-  }>({ qualificationStartAt: null, qualificationEndAt: null, startAt: null, endAt: null })
-
-  const openRelistModal = (id: string) => {
-    setRelistAuctionId(id)
-    setRelistForm({ qualificationStartAt: null, qualificationEndAt: null, startAt: null, endAt: null })
-    setRelistModalOpen(true)
-  }
-
-  const handleRelistConfirm = () => {
-    if (!relistAuctionId || !relistForm.qualificationStartAt || !relistForm.qualificationEndAt || !relistForm.startAt || !relistForm.endAt) return
-    if (relistForm.qualificationEndAt.isAfter(relistForm.startAt)) {
-      msgApi.error(t('relistValidation', 'Thời gian đăng ký phải trước thời gian đấu giá'))
-      return
-    }
-    relistAuction.mutate(
-      {
-        auctionId: relistAuctionId,
-        qualificationStartAt: relistForm.qualificationStartAt.toISOString(),
-        qualificationEndAt: relistForm.qualificationEndAt.toISOString(),
-        startAt: relistForm.startAt.toISOString(),
-        endAt: relistForm.endAt.toISOString(),
-      },
-      {
-        onSuccess: () => {
-          msgApi.success(t('relistSuccess', 'Auction relisted'))
-          setRelistModalOpen(false)
-          setRelistAuctionId(null)
-        },
-      },
-    )
-  }
-
-  const handleOfferRunnerUp = (id: string) => {
-    offerRunnerUp.mutate(id, {
-      onSuccess: () => msgApi.success(t('offerRunnerUpSuccess', 'Offer sent to runner-up')),
+  const handleUnwatch = (auctionId: string) => {
+    unwatchMutation.mutate(auctionId, {
+      onSuccess: () => message.success(t('removedFromWatchlist', 'Removed from watchlist')),
     })
   }
 
-  /* ── Action buttons per status ── */
-  const renderActions = (record: AuctionListItemDto) => {
-    const s = record.status
-    return (
-      <Space size="small" wrap>
-        {s === AuctionStatus.Draft && (
-          <>
-            <Tooltip title={tc('action.edit', 'Edit')}>
-              <Button type="text" size="small" icon={<EditOutlined />} onClick={() => navigate(`${prefix}/auctions/${record.id}/edit`)} />
-            </Tooltip>
-            <Tooltip title={
-              ((record as any)).itemStatus && ((record as any)).itemStatus !== 'approved'
-                ? t('itemMustBeApproved', 'Item must be approved before submitting auction')
-                : tc('action.submit', 'Submit')
-            }>
-              <Button
-                type="text"
-                size="small"
-                icon={<SendOutlined />}
-                loading={submitAuction.isPending}
-                disabled={!!((record as any)).itemStatus && ((record as any)).itemStatus !== 'approved' && ((record as any)).itemStatus !== 'active'}
-                onClick={() => handleSubmit(record.id)}
-              />
-            </Tooltip>
-            <Tooltip title={tc('action.cancel', 'Cancel')}>
-              <Button type="text" size="small" danger icon={<StopOutlined />} onClick={() => openCancelModal(record.id)} />
-            </Tooltip>
-          </>
-        )}
-        {s === AuctionStatus.Approved && (
-          <>
-            <Tooltip title={t('setTiming', 'Set Timing')}>
-              <Button type="text" size="small" icon={<ClockCircleOutlined />} onClick={() => openTimingModal(record.id)} />
-            </Tooltip>
-            <Tooltip title={tc('action.cancel', 'Cancel')}>
-              <Button type="text" size="small" danger icon={<StopOutlined />} onClick={() => openCancelModal(record.id)} />
-            </Tooltip>
-          </>
-        )}
-        {s === AuctionStatus.Scheduled && (
-          <>
-            <Tooltip title={t('dashboard', 'Dashboard')}>
-              <Button type="text" size="small" icon={<DashboardOutlined />} onClick={() => navigate(`/seller/auctions/${record.id}/dashboard`)} />
-            </Tooltip>
-            <Tooltip title={t('viewDetail', 'View Detail')}>
-              <Button type="text" size="small" icon={<EyeOutlined />} onClick={() => navigate(`/auctions/${record.id}`)} />
-            </Tooltip>
-            <Tooltip title={tc('action.cancel', 'Cancel')}>
-              <Button type="text" size="small" danger icon={<StopOutlined />} onClick={() => openCancelModal(record.id)} />
-            </Tooltip>
-          </>
-        )}
-        {s === AuctionStatus.Active && (
-          <>
-            <Tooltip title={t('dashboard', 'Dashboard')}>
-              <Button type="text" size="small" icon={<DashboardOutlined />} onClick={() => navigate(`/seller/auctions/${record.id}/dashboard`)} />
-            </Tooltip>
-            <Tooltip title={t('viewDetail', 'View Detail')}>
-              <Button type="text" size="small" icon={<EyeOutlined />} onClick={() => navigate(`/auctions/${record.id}`)} />
-            </Tooltip>
-            <Tooltip title={tc('action.cancel', 'Cancel')}>
-              <Button type="text" size="small" danger icon={<StopOutlined />} onClick={() => openCancelModal(record.id)} />
-            </Tooltip>
-          </>
-        )}
-        {s === AuctionStatus.Ended && (
-          <Space size="small">
-            <Tooltip title={t('dashboard', 'Dashboard')}>
-              <Button type="text" size="small" icon={<DashboardOutlined />} onClick={() => navigate(`/seller/auctions/${record.id}/dashboard`)} />
-            </Tooltip>
-            <Tooltip title={t('viewDetail', 'View Detail')}>
-              <Button type="text" size="small" icon={<EyeOutlined />} onClick={() => navigate(`/auctions/${record.id}`)} />
-            </Tooltip>
-          </Space>
-        )}
-        {s === AuctionStatus.Sold && (
-          <Space size="small">
-            <Tooltip title={t('dashboard', 'Dashboard')}>
-              <Button type="text" size="small" icon={<DashboardOutlined />} onClick={() => navigate(`/seller/auctions/${record.id}/dashboard`)} />
-            </Tooltip>
-            <Tooltip title={t('viewOrder', 'View Order')}>
-              <Button type="text" size="small" icon={<EyeOutlined />} onClick={() => navigate(`/auctions/${record.id}`)} />
-            </Tooltip>
-          </Space>
-        )}
-        {s === AuctionStatus.PaymentDefaulted && (
-          <>
-            <Tooltip title={t('dashboard', 'Dashboard')}>
-              <Button type="text" size="small" icon={<DashboardOutlined />} onClick={() => navigate(`/seller/auctions/${record.id}/dashboard`)} />
-            </Tooltip>
-            <Tooltip title={t('relist', 'Relist')}>
-              <Button type="text" size="small" icon={<ReloadOutlined />} loading={relistAuction.isPending} onClick={() => openRelistModal(record.id)} />
-            </Tooltip>
-            <Tooltip title={t('offerRunnerUp', 'Offer Runner-up')}>
-              <Button type="text" size="small" icon={<UserSwitchOutlined />} loading={offerRunnerUp.isPending} onClick={() => handleOfferRunnerUp(record.id)} />
-            </Tooltip>
-          </>
-        )}
-      </Space>
-    )
+  const handleToggleNotify = (item: WatchlistItemDto, field: 'notifyOnBid' | 'notifyOnEnd', value: boolean) => {
+    prefsMutation.mutate({
+      auctionId: item.auctionId,
+      [field]: value,
+    })
   }
 
-  /* ── Table columns ── */
-  const columns: ColumnsType<AuctionListItemDto> = [
-    {
-      title: t('title', 'Title'),
-      dataIndex: 'itemTitle',
-      key: 'itemTitle',
-      ellipsis: true,
-      render: (title: string, record) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, maxWidth: '100%' }}>
-          {record.primaryImageUrl && (
-            <img src={record.primaryImageUrl} alt="" style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }} />
-          )}
-          <Button
-            type="link"
-            onClick={() => navigate(`/auctions/${record.id}`)}
-            style={{ padding: 0, textAlign: 'left', maxWidth: '100%', height: 'auto' }}
-          >
-            <Typography.Text ellipsis style={{ maxWidth: '100%', color: 'inherit' }}>
-              {title}
-            </Typography.Text>
-          </Button>
-        </div>
-      ),
-    },
-    {
-      title: t('status', 'Status'),
-      dataIndex: 'status',
-      key: 'status',
-      width: 170,
-      render: (status: string) => <StatusBadge status={status} />,
-    },
-    {
-      title: t('currentPrice', 'Current Price'),
-      dataIndex: 'currentPrice',
-      key: 'currentPrice',
-      width: 150,
-      render: (price: unknown) => {
-        if (price && typeof price === 'object' && 'amount' in price) {
-          const m = price as { amount: number; currency: string }
-          return <PriceDisplay price={{ amount: m.amount, currency: m.currency, symbol: '' }} size="small" />
-        }
-        return <PriceDisplay price={(price as number) ?? 0} size="small" />
-      },
-    },
-    {
-      title: t('bids', 'Bids'),
-      dataIndex: 'bidCount',
-      key: 'bidCount',
-      width: 70,
-      align: 'center',
-    },
-    {
-      title: t('endTime', 'End Time'),
-      dataIndex: 'endTime',
-      key: 'endTime',
-      width: 160,
-      render: (endTime: string | undefined, record) => {
-        if (!endTime) return <span style={{ color: 'var(--color-text-secondary)' }}>-</span>
-        if (record.status === AuctionStatus.Active) return <CountdownTimer endTime={endTime} size="small" />
-        return formatDateTime(endTime)
-      },
-    },
-    {
-      title: tc('action.actions', 'Actions'),
-      key: 'actions',
-      width: 180,
-      render: (_: unknown, record: AuctionListItemDto) => renderActions(record),
-    },
-  ]
-
-  const isNarrow = isMobile || isTablet
+  const sortedItems = data?.items ? sortItems(data.items, sortKey) : []
 
   return (
-    <div
-      style={{
-        maxWidth: 1200,
-        margin: '0 auto',
-        padding: isMobile ? '20px 0 80px' : isTablet ? '28px 0 64px' : '40px 24px 80px',
-      }}
-    >
-      {contextHolder}
-
-      {/* Header */}
-      <Flex
-        justify="space-between"
-        align="center"
-        style={{ marginBottom: isMobile ? 20 : 28, paddingInline: isMobile ? 16 : 0 }}
-      >
-        <h2
-          className="oio-serif"
-          style={{
-            margin: 0,
-            fontSize: isMobile ? 20 : 28,
-            fontWeight: 600,
-            color: 'var(--color-text-primary)',
-          }}
-        >
-          {t('myAuctions', 'My Auctions')}
-        </h2>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => navigate(`${prefix}/items/create`)}
-          size={isMobile ? 'middle' : 'middle'}
-          style={{
-            background: 'var(--color-accent)',
-            borderColor: 'var(--color-accent)',
-            borderRadius: 8,
-            height: isMobile ? 40 : 36,
-          }}
-        >
-          {!isMobile && t('createItem', 'Create Item')}
-        </Button>
+    <div>
+      <Flex justify="flex-end" style={{ marginBottom: 24 }}>
+        {sortedItems.length > 0 && (
+          <Select
+            value={sortKey}
+            onChange={setSortKey}
+            style={{ width: isMobile ? '100%' : 220, height: 44 }}
+            options={SORT_OPTIONS}
+            className="oio-select"
+          />
+        )}
       </Flex>
 
-      {/* Status pills — scrollable on mobile */}
-      <div
-        style={{
-          display: 'flex',
-          gap: 8,
-          flexWrap: isNarrow ? undefined : 'wrap',
-          overflowX: isNarrow ? 'auto' : undefined,
-          scrollbarWidth: 'none',
-          paddingInline: isMobile ? 16 : 0,
-          paddingBottom: isMobile ? 4 : 0,
-          marginBottom: isMobile ? 16 : 24,
-        }}
-      >
-        {STATUS_PILLS.map((pill) => (
-          <button
-            key={pill.value}
-            type="button"
-            style={{
-              padding: isMobile ? '6px 14px' : '8px 20px',
-              borderRadius: 100,
-              fontSize: 13,
-              fontWeight: 500,
-              cursor: 'pointer',
-              transition: 'all 200ms ease',
-              whiteSpace: 'nowrap',
-              flexShrink: 0,
-              minHeight: 34,
-              border: `1px solid ${statusFilter === pill.value ? 'var(--color-accent)' : 'var(--color-border)'}`,
-              background: statusFilter === pill.value ? 'var(--color-accent)' : 'var(--color-bg-container)',
-              backdropFilter: statusFilter === pill.value ? 'none' : 'var(--oio-blur)',
-              WebkitBackdropFilter: statusFilter === pill.value ? 'none' : 'var(--oio-blur)',
-              color: statusFilter === pill.value ? '#fff' : 'var(--color-text-secondary)',
-            }}
-            onClick={() => { setStatusFilter(pill.value); setPage(1) }}
+      {isLoading ? (
+        <Row gutter={isMobile ? [12, 12] : [24, 24]}>
+          {[...Array(isMobile ? 4 : 8)].map((_, i) => (
+            <Col key={i} xs={12} sm={12} md={8} lg={6}>
+              <div className="oio-skeleton" style={{ height: 360, borderRadius: 24 }} />
+            </Col>
+          ))}
+        </Row>
+      ) : sortedItems.length === 0 ? (
+        <Empty
+          description={t('emptyWatchlist', 'Your watchlist is empty')}
+          style={{ padding: 80, background: 'var(--color-bg-card)', borderRadius: 24, border: '1px solid var(--color-border)' }}
+        >
+          <Button
+            type="primary"
+            icon={<ShoppingOutlined />}
+            size="large"
+            onClick={() => navigate('/auctions')}
+            style={{ borderRadius: 12, fontWeight: 600, padding: '0 32px' }}
           >
-            {pill.label}
-          </button>
-        ))}
+            {t('browseAuctions', 'Browse Auctions')}
+          </Button>
+        </Empty>
+      ) : (
+        <>
+          <Row gutter={isMobile ? [12, 12] : [24, 24]}>
+            {sortedItems.map((item) => {
+              const isActive = item.auctionStatus === 'Active' || item.auctionStatus === 'active' || item.auctionStatus === AuctionStatus.Active
+              
+              return (
+              <Col xs={12} sm={12} md={8} lg={6} key={item.auctionId}>
+                <div
+                  className="oio-press"
+                  onClick={() => navigate(`/auctions/${item.auctionId}`)}
+                  style={{
+                    cursor: 'pointer',
+                    background: 'var(--color-bg-card)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 24,
+                    padding: 12,
+                    transition: 'all 0.3s ease',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    height: '100%',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    boxShadow: 'var(--shadow-sm)'
+                  }}
+                >
+                  <div style={{ position: 'relative', borderRadius: 16, overflow: 'hidden', aspectRatio: '1', marginBottom: 16, background: 'var(--color-bg-surface)' }}>
+                    {item.primaryImageUrl ? (
+                      <img alt={item.itemTitle} src={item.primaryImageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <Flex align="center" justify="center" style={{ height: '100%', color: 'var(--color-text-tertiary)' }}>
+                        <ShoppingOutlined style={{ fontSize: 32 }} />
+                      </Flex>
+                    )}
+
+                    {/* Unwatch Button */}
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); handleUnwatch(item.auctionId) }}
+                      style={{
+                        position: 'absolute', top: 10, left: 10, width: 34, height: 34,
+                        borderRadius: '50%', background: 'rgba(0, 0, 0, 0.5)', backdropFilter: 'blur(8px)',
+                        border: '1px solid rgba(255,255,255,0.1)', color: '#ef4444',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer', fontSize: 16, zIndex: 10,
+                      }}
+                    >
+                      <HeartFilled />
+                    </button>
+
+                    {/* Notify Toggle */}
+                    {isActive && (
+                      <div
+                        onClick={(e) => { e.stopPropagation(); handleToggleNotify(item, 'notifyOnBid', !item.notifyOnBid) }}
+                        style={{
+                          position: 'absolute', top: 10, right: 10, width: 34, height: 34,
+                          borderRadius: '50%', 
+                          background: item.notifyOnBid ? 'var(--color-accent)' : 'rgba(0, 0, 0, 0.5)', 
+                          backdropFilter: 'blur(8px)',
+                          border: item.notifyOnBid ? '1px solid var(--color-accent)' : '1px solid rgba(255,255,255,0.1)', 
+                          color: '#fff',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          cursor: 'pointer', fontSize: 16, zIndex: 10,
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        <BellOutlined />
+                      </div>
+                    )}
+
+                    {/* Status & Timer Overlays */}
+                    <div style={{ position: 'absolute', bottom: 10, left: 10, right: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
+                       <StatusBadge status={item.auctionStatus} size="small" />
+                       {item.endTime && isActive && (
+                         <div style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', padding: '4px 10px', borderRadius: 8, color: '#fff', fontSize: 11, fontWeight: 700, fontFamily: MONO_FONT }}>
+                           <CountdownTimer endTime={item.endTime} size="small" />
+                         </div>
+                       )}
+                    </div>
+                  </div>
+
+                  <div style={{ padding: '0 4px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+                    <h3 style={{ fontWeight: 600, fontSize: isMobile ? 14 : 16, marginBottom: 8, color: 'var(--color-text-primary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', margin: 0, fontFamily: SANS_FONT, lineHeight: 1.4, minHeight: isMobile ? '2.8em' : '2.8em' }}>
+                      {item.itemTitle}
+                    </h3>
+                    
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto', paddingTop: 12 }}>
+                       <div>
+                         <Typography.Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+                            {t('currentPrice', 'Current Price')}
+                         </Typography.Text>
+                         <div style={{ fontSize: isMobile ? 18 : 22, color: 'var(--color-text-primary)', fontWeight: 700, fontFamily: MONO_FONT, marginTop: 2 }}>
+                            {formatCurrency(item.currentPrice?.amount ?? 0, item.currency)}
+                         </div>
+                       </div>
+                       
+                       <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600, padding: '4px 8px', background: 'var(--color-bg-surface)', borderRadius: 6 }}>
+                         {item.bidCount} {t('bids', 'bids')}
+                       </div>
+                    </div>
+                    
+                    <Button 
+                      type={isActive ? "primary" : "default"}
+                      onClick={(e) => { e.stopPropagation(); navigate(`/auctions/${item.auctionId}`) }}
+                      style={{ width: '100%', marginTop: 16, borderRadius: 10, fontWeight: 600, height: 40 }}
+                    >
+                      {isActive ? t('placeBid', 'Place Bid') : t('viewDetails', 'View Details')}
+                    </Button>
+
+                  </div>
+                </div>
+              </Col>
+            )})}
+          </Row>
+
+          <Flex justify="center" style={{ marginTop: 48 }}>
+            <Pagination
+              current={data?.metadata?.currentPage ?? page}
+              pageSize={data?.metadata?.pageSize ?? pageSize}
+              total={data?.metadata?.totalCount ?? 0}
+              showSizeChanger={!isMobile}
+              showTotal={isMobile ? undefined : (total) => tc('pagination.total', { total })}
+              size={isMobile ? 'small' : undefined}
+              onChange={(p, ps) => { setPage(p); setPageSize(ps); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+            />
+          </Flex>
+        </>
+      )}
+    </div>
+  )
+}
+
+// ============================================================================
+// MAIN PAGE
+// ============================================================================
+
+export default function MyAuctionsPage() {
+  const { t } = useTranslation('auction')
+  const { isMobile } = useBreakpoint()
+  const [searchParams, setSearchParams] = useSearchParams()
+  
+  const activeTab = searchParams.get('tab') || 'bids'
+  
+  const handleTabChange = (key: string) => {
+    setSearchParams({ tab: key })
+  }
+
+  return (
+    <div style={{ maxWidth: 1400, margin: '0 auto', padding: isMobile ? '24px 16px 80px' : '48px 32px 80px' }}>
+      <div style={{ marginBottom: isMobile ? 24 : 32 }}>
+        <Title level={2} style={{ fontFamily: SANS_FONT, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 8, fontSize: isMobile ? 24 : 32 }}>
+          {t('myAuctions', 'My Auctions')}
+        </Title>
+        <Typography.Text style={{ fontSize: 16, color: 'var(--color-text-secondary)' }}>
+          {t('myAuctionsSubtitle', 'Manage your bids, deposits, and tracked items in one place.')}
+        </Typography.Text>
       </div>
 
-      {/* Content */}
-      {!isLoading && !data?.items?.length ? (
-        <div style={{ paddingInline: isMobile ? 16 : 0 }}>
-          <EmptyState
-            title={t('noAuctions', 'No auctions found')}
-            description={t('noAuctionsDesc', 'Create your first auction to get started.')}
-            action={
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => navigate(`${prefix}/items/create`)}
-                style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)', borderRadius: 8 }}
-              >
-                {t('createItem', 'Create Item')}
-              </Button>
-            }
-          />
-        </div>
-      ) : isMobile ? (
-        /* Mobile card view */
-        <div style={{ paddingInline: 16 }}>
-          <List
-            dataSource={data?.items ?? []}
-            loading={isLoading}
-            pagination={{
-              current: data?.metadata?.currentPage ?? page,
-              pageSize: data?.metadata?.pageSize ?? pageSize,
-              total: data?.metadata?.totalCount ?? 0,
-              size: 'small',
-              onChange: (p, ps) => { setPage(p); setPageSize(ps) },
-            }}
-            renderItem={(record: AuctionListItemDto) => (
-              <List.Item style={{ padding: '6px 0', border: 'none' }}>
-                <Card
-                  size="small"
-                  style={{ width: '100%', borderRadius: 10 }}
-                  styles={{ body: { padding: '12px 14px' } }}
-                >
-                  <Flex vertical gap={8}>
-                    <Flex justify="space-between" align="flex-start" gap={8}>
-                      <Button
-                        type="link"
-                        style={{ padding: 0, fontWeight: 600, fontSize: 14, textAlign: 'left', height: 'auto', lineHeight: 1.3, maxWidth: 'calc(100% - 100px)' }}
-                        onClick={() => navigate(`/auctions/${record.id}`)}
-                      >
-                        <Typography.Text ellipsis style={{ color: 'inherit' }}>
-                          {record.itemTitle}
-                        </Typography.Text>
-                      </Button>
-                      <StatusBadge status={record.status} />
-                    </Flex>
-                    <Flex justify="space-between" align="center">
-                      <span style={{ color: 'var(--color-text-secondary)', fontSize: 12 }}>
-                        {t('currentPrice', 'Current Price')}
-                      </span>
-                      {record.currentPrice && typeof record.currentPrice === 'object' && 'amount' in record.currentPrice ? (
-                        <PriceDisplay price={{ amount: (record.currentPrice as { amount: number; currency: string }).amount, currency: (record.currentPrice as { amount: number; currency: string }).currency, symbol: '' }} size="small" />
-                      ) : (
-                        <PriceDisplay price={(record.currentPrice as number) ?? 0} size="small" />
-                      )}
-                    </Flex>
-                    <Flex justify="space-between" align="center">
-                      <span style={{ color: 'var(--color-text-secondary)', fontSize: 12 }}>
-                        {t('bids', 'Bids')}: {record.bidCount ?? 0}
-                      </span>
-                      {record.endTime ? (
-                        record.status === AuctionStatus.Active ? (
-                          <CountdownTimer endTime={record.endTime} size="small" />
-                        ) : (
-                          <span style={{ color: 'var(--color-text-secondary)', fontSize: 12 }}>{formatDateTime(record.endTime)}</span>
-                        )
-                      ) : (
-                        <span style={{ color: 'var(--color-text-secondary)' }}>-</span>
-                      )}
-                    </Flex>
-                    <Flex justify="flex-end" style={{ marginTop: 2 }}>
-                      {renderActions(record)}
-                    </Flex>
-                  </Flex>
-                </Card>
-              </List.Item>
-            )}
-          />
-        </div>
-      ) : (
-        <ResponsiveTable<AuctionListItemDto>
-          mobileMode="card"
-          rowKey="id"
-          columns={columns}
-          dataSource={data?.items ?? []}
-          loading={isLoading}
-          pagination={{
-            current: data?.metadata?.currentPage ?? page,
-            pageSize: data?.metadata?.pageSize ?? pageSize,
-            total: data?.metadata?.totalCount ?? 0,
-            showSizeChanger: true,
-            showTotal: (total) => tc('pagination.total', { total }),
-            onChange: (p, ps) => { setPage(p); setPageSize(ps) },
-          }}
-        />
-      )}
-
-      {/* Cancel modal */}
-      <Modal
-        title={<span className="oio-serif" style={{ fontSize: 20 }}>{t('cancelAuction', 'Cancel Auction')}</span>}
-        open={cancelModalOpen}
-        onCancel={() => { setCancelModalOpen(false); setCancelAuctionId(null) }}
-        onOk={handleCancelConfirm}
-        okText={t('confirmCancel', 'Cancel Auction')}
-        okButtonProps={{
-          danger: true,
-          loading: cancelAuction.isPending,
-          disabled: !cancelReason.trim(),
-          style: { borderRadius: 8 }
-        }}
-        cancelButtonProps={{ style: { borderRadius: 8 } }}
-        centered
-        style={{ borderRadius: 24 }}
-      >
-        <p style={{ marginBottom: 12, color: 'var(--color-text-secondary)' }}>
-          {t('cancelReasonPrompt', 'Please provide a reason for cancellation:')}
-        </p>
-        <Input.TextArea
-          rows={3}
-          value={cancelReason}
-          onChange={(e) => setCancelReason(e.target.value)}
-          placeholder={t('cancelReasonPlaceholder', 'Enter cancellation reason...')}
-        />
-      </Modal>
-
-      {/* Timing modal */}
-      <Modal
-        title={<span className="oio-serif" style={{ fontSize: 20 }}>{submitPendingTimingAuctionId ? t('submitAndSetTiming', 'Submit & Set Auction Timing') : t('setTiming', 'Set Auction Timing')}</span>}
-        open={timingModalOpen}
-        onCancel={() => { setTimingModalOpen(false); setTimingAuctionId(null); setSubmitPendingTimingAuctionId(null) }}
-        onOk={handleTimingConfirm}
-        okText={t('saveTiming', 'Save Timing')}
-        okButtonProps={{
-          loading: setAuctionTiming.isPending,
-          style: { background: 'var(--color-accent)', borderColor: 'var(--color-accent)', borderRadius: 8 },
-        }}
-        cancelButtonProps={{ style: { borderRadius: 8 } }}
-        centered
-        width={isMobile ? '100%' : 720}
-        style={{ borderRadius: 24 }}
-      >
-        <Form form={modalForm} layout="vertical">
-          <AuctionTimingSection form={modalForm} itemApproved={true} />
-        </Form>
-      </Modal>
-
-      {/* Relist modal */}
-      <Modal
-        title={t('relistAuction', 'Đăng lại phiên đấu giá')}
-        open={relistModalOpen}
-        onCancel={() => { setRelistModalOpen(false); setRelistAuctionId(null) }}
-        onOk={handleRelistConfirm}
-        okText={t('confirmRelist', 'Đăng lại')}
-        okButtonProps={{
-          loading: relistAuction.isPending,
-          disabled: !relistForm.qualificationStartAt || !relistForm.qualificationEndAt || !relistForm.startAt || !relistForm.endAt,
-          style: { background: 'var(--color-accent)', borderColor: 'var(--color-accent)' },
-        }}
-        centered
-        width={isMobile ? '100%' : 480}
-      >
-        <Flex vertical gap={16} style={{ marginTop: 16 }}>
-          {[
-            { label: t('relist.qualificationStart'), key: 'qualificationStartAt' as const, placeholder: t('relist.qualificationStartPlaceholder') },
-            { label: t('relist.qualificationEnd'), key: 'qualificationEndAt' as const, placeholder: t('relist.qualificationEndPlaceholder') },
-            { label: t('relist.auctionStart'), key: 'startAt' as const, placeholder: t('relist.auctionStartPlaceholder') },
-            { label: t('relist.auctionEnd'), key: 'endAt' as const, placeholder: t('relist.auctionEndPlaceholder') },
-          ].map(({ label, key, placeholder }) => (
-            <div key={key}>
-              <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13 }}>{label}</label>
-              <DatePicker
-                showTime
-                style={{ width: '100%' }}
-                value={relistForm[key]}
-                onChange={(v) => setRelistForm((prev) => ({ ...prev, [key]: v }))}
-                placeholder={placeholder}
-              />
-            </div>
-          ))}
-        </Flex>
-      </Modal>
+      <Tabs 
+        activeKey={activeTab} 
+        onChange={handleTabChange}
+        size="large"
+        items={[
+          {
+            key: 'bids',
+            label: (
+              <span style={{ fontSize: 16, fontWeight: 600 }}>
+                <HistoryOutlined style={{ marginRight: 8 }} />
+                {t('tab.myBids', 'My Bids')}
+              </span>
+            ),
+            children: <MyBidsTab />
+          },
+          {
+            key: 'watchlist',
+            label: (
+              <span style={{ fontSize: 16, fontWeight: 600 }}>
+                <HeartFilled style={{ marginRight: 8 }} />
+                {t('tab.watchlist', 'Watchlist')}
+              </span>
+            ),
+            children: <WatchlistTab />
+          }
+        ]}
+      />
     </div>
   )
 }

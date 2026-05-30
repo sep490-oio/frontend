@@ -12,6 +12,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge'
 import { IdentityVerificationStatus } from '@/types/enums'
 import { useCreateVerificationDispute } from '@/features/seller/api'
 import { formatDateTime } from '@/utils/format'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import type { VerificationDto } from '@/types'
 
 interface VerificationStatusViewProps {
@@ -34,11 +35,15 @@ export function VerificationStatusView({
   const [correctionModalOpen, setCorrectionModalOpen] = useState(false)
   const [correctionReason, setCorrectionReason] = useState('')
   const createDispute = useCreateVerificationDispute()
+  const { isMobile } = useBreakpoint()
 
   // ── No verification ─────────────────────────────────────────
   if (status === 'none') {
     return (
-      <Card style={{ textAlign: 'center', padding: '40px 24px' }}>
+      <Card 
+        style={{ textAlign: 'center', padding: isMobile ? '24px 8px' : '40px 24px' }} 
+        styles={{ body: { padding: isMobile ? 12 : 24 } }}
+      >
         <SafetyCertificateOutlined style={{ fontSize: 64, color: 'var(--color-accent)', marginBottom: 24 }} />
         <Typography.Title level={3} style={{ marginBottom: 8 }}>
           {t('verifyIdentity', 'Verify Your Identity')}
@@ -47,7 +52,10 @@ export function VerificationStatusView({
           {t('verifyDescription', 'Identity verification is required to sell items, participate in high-value auctions, and build trust on the platform. The process is quick and secure.')}
         </Typography.Paragraph>
 
-        <Card size="small" style={{ maxWidth: 400, margin: '0 auto 24px', textAlign: 'left', background: 'var(--color-bg-surface)' }}>
+        <Card 
+          size="small" 
+          style={{ maxWidth: 400, margin: '0 auto 24px', textAlign: 'left', background: 'var(--color-bg-surface)' }}
+        >
           <Typography.Text strong style={{ display: 'block', marginBottom: 12 }}>
             {t('whatYouNeed', "What you'll need:")}
           </Typography.Text>

@@ -1,10 +1,11 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Button, Flex, Typography, Upload } from 'antd'
 import { CameraOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { SecureCaptureUploader } from '@/components/ui/SecureCaptureUploader'
 import { LiveCapturedBadge } from '@/components/ui/LiveCapturedBadge'
-import type { CaptureMetadata, CaptureStep } from '@/types/capture'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
+import type { CaptureMetadata, CaptureQualityProfile, CaptureStep } from '@/types/capture'
 
 const ALLOW_UPLOAD = String(import.meta.env.VITE_ALLOW_UPLOAD).trim() === 'true'
 
@@ -18,6 +19,8 @@ interface MultiCaptureUploaderProps {
   maxPhotos?: number
   step?: CaptureStep
   facingMode?: 'user' | 'environment'
+  /** Quality profile passed to SecureCaptureUploader. Default 'item_or_package' (lenient). */
+  qualityProfile?: CaptureQualityProfile
   onPhotosChange: (photos: CapturedPhoto[]) => void
   instruction?: string
 }
@@ -26,10 +29,12 @@ export function MultiCaptureUploader({
   maxPhotos = 10,
   step = 'item_photo',
   facingMode = 'environment',
+  qualityProfile = 'item_or_package',
   onPhotosChange,
   instruction,
 }: MultiCaptureUploaderProps) {
   const { t } = useTranslation('common')
+  const { isMobile } = useBreakpoint()
   const [photos, setPhotos] = useState<CapturedPhoto[]>([])
   const [showCamera, setShowCamera] = useState(true)
 
@@ -42,14 +47,10 @@ export function MultiCaptureUploader({
       previewUrl: URL.createObjectURL(blob),
     }
     setPhotos((prev) => {
-      const updated = [...prev, newPhoto]
-      onPhotosChange(updated)
-      if (updated.length >= maxPhotos) {
-        setShowCamera(false)
-      }
-      return updated
+      if (prev.length >= maxPhotos) return prev
+      return [...prev, newPhoto]
     })
-  }, [maxPhotos, onPhotosChange])
+  }, [maxPhotos])
 
   const handleFileUpload = useCallback((file: File) => {
     const newPhoto: CapturedPhoto = {
@@ -58,27 +59,28 @@ export function MultiCaptureUploader({
       previewUrl: URL.createObjectURL(file),
     }
     setPhotos((prev) => {
-      const updated = [...prev, newPhoto]
-      onPhotosChange(updated)
-      if (updated.length >= maxPhotos) {
-        setShowCamera(false)
-      }
-      return updated
+      if (prev.length >= maxPhotos) return prev
+      return [...prev, newPhoto]
     })
-  }, [maxPhotos, onPhotosChange])
+  }, [maxPhotos])
 
   const handleRemove = useCallback((index: number) => {
     setPhotos((prev) => {
       const removed = prev[index]
       if (removed) URL.revokeObjectURL(removed.previewUrl)
-      const updated = prev.filter((_, i) => i !== index)
-      onPhotosChange(updated)
-      if (updated.length < maxPhotos) {
-        setShowCamera(true)
-      }
-      return updated
+      return prev.filter((_, i) => i !== index)
     })
-  }, [maxPhotos, onPhotosChange])
+  }, [])
+
+  // Sync state with parent and auto-hide/show camera based on count
+  useEffect(() => {
+    onPhotosChange(photos)
+    if (photos.length >= maxPhotos) {
+      setShowCamera(false)
+    } else if (photos.length === maxPhotos - 1) {
+      setShowCamera(true)
+    }
+  }, [photos, maxPhotos, onPhotosChange])
 
   return (
     <Flex vertical gap={16}>
@@ -90,14 +92,21 @@ export function MultiCaptureUploader({
 
       {/* Captured photos grid */}
       {photos.length > 0 && (
-        <Flex wrap="wrap" gap={12}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile
+              ? 'repeat(auto-fill, minmax(80px, 1fr))'
+              : 'repeat(auto-fill, minmax(110px, 1fr))',
+            gap: isMobile ? 8 : 12,
+          }}
+        >
           {photos.map((photo, index) => (
             <div
               key={index}
               style={{
                 position: 'relative',
-                width: 120,
-                height: 90,
+                aspectRatio: '4/3',
                 borderRadius: 8,
                 overflow: 'hidden',
                 border: '2px solid var(--color-success)',
@@ -147,7 +156,7 @@ export function MultiCaptureUploader({
               </div>
             </div>
           ))}
-        </Flex>
+        </div>
       )}
 
       {/* Camera viewfinder or upload option */}
@@ -174,6 +183,7 @@ export function MultiCaptureUploader({
             step={step}
             facingMode={facingMode}
             overlayType="document"
+            qualityProfile={qualityProfile}
             onCapture={handleCapture}
             instruction={instruction || t('captureItemPhoto', 'Take a clear photo of your item')}
           />

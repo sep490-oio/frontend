@@ -80,7 +80,7 @@
   "sla": {
     "shipBy": "Ship By",
     "overdue": "Overdue",
-    "remainingDays": "{{count}} days left"
+    "remainingDays": "{{count}} days remaining"
   },
   "directShipment": {
     "createShipment": "Create Shipment",
@@ -172,7 +172,8 @@
       "printLabel": "Print Label",
       "downloadLabel": "Download Label",
       "scanParcel": "Scan Parcel"
-    }
+    },
+    "createShipmentSuccess": "Shipment created successfully"
   },
   "rejectReason": "Rejection Reason",
   "carrierCode": "Carrier Code",
@@ -193,6 +194,23 @@
   "disputeCreated": "Dispute created successfully",
   "disputeError": "Failed to create dispute",
   "sellerOrders": "Seller Orders",
+  "sellerOrder": {
+    "paymentEscrow": {
+      "title": "Payment & Escrow",
+      "buyerPaid": "Has buyer paid?",
+      "notYet": "Buyer has not paid for this order yet. Escrow details will appear here once payment completes.",
+      "escrowStatus": "Escrow status",
+      "holdReason": "Why are funds on hold?",
+      "grossPaid": "Buyer paid (gross)",
+      "expectedNet": "Expected seller payout",
+      "actualReleased": "Released",
+      "platformFee": "Platform fee (10%)",
+      "inspectionFee": "Inspection fee (3%)",
+      "expectedRelease": "Expected release",
+      "decisionWindow": "Decision window ends",
+      "disputeNotice": "Funds are on hold while a dispute is open."
+    }
+  },
   "shipmentFeed": {
     "title": "My Shipments",
     "kindDirect": "Direct",
@@ -201,30 +219,6 @@
     "viewShipment": "View shipment",
     "searchPlaceholder": "Search order / tracking / title",
     "empty": "No shipments yet"
-  },
-  "disputeDomainOption": {
-    "order": "Order",
-    "auction": "Auction",
-    "payment": "Payment",
-    "shipment": "Shipment",
-    "warehouse_item": "Warehouse Item"
-  },
-  "disputeCaseTypeOption": {
-    "item_not_as_described": "Item not as described",
-    "item_damaged": "Item damaged",
-    "item_not_received": "Item not received",
-    "wrong_item": "Wrong item",
-    "other": "Other",
-    "bid_manipulation": "Bid manipulation",
-    "counterfeit": "Counterfeit",
-    "misrepresentation": "Misrepresentation",
-    "unauthorized_charge": "Unauthorized charge",
-    "double_charge": "Double charge",
-    "refund_not_received": "Refund not received",
-    "lost_in_transit": "Lost in transit",
-    "damaged_in_transit": "Damaged in transit",
-    "delivery_issue": "Delivery issue",
-    "item_missing": "Item missing"
   },
   "escrow": {
     "title": "Escrow & Payment Timeline",
@@ -271,9 +265,9 @@
   "modeSelfShip": "Mode: Self-ship",
   "sellerReportIssue": "Report Buyer Issue",
   "shippingInformation": "Shipping Information",
-  "recipientName": "Recipient Name",
+  "recipientName": "Name",
   "phoneNumber": "Phone Number",
-  "streetAddress": "Street Address",
+  "streetAddress": "Street",
   "ward": "Ward",
   "district": "District",
   "cityProvince": "City / Province",
@@ -298,5 +292,57 @@
   "reviewPlaceholder": "Share your experience with this seller...",
   "submitReview": "Submit Review",
   "reviewSubmitted": "Review submitted successfully",
-  "reviewError": "Failed to submit review"
+  "reviewError": "Failed to submit review",
+  "rateThisSellerDesc": "Please take a moment to rate your experience with this seller.",
+  "shippingNotStructuredWarn": "Buyer has not provided a valid shipping address yet.",
+  "orderConfirmed": "Order confirmed",
+  "orderConfirmFailed": "Failed to confirm order",
+  "shipmentBooked": "Outbound shipment booked",
+  "shipmentFailed": "Failed to create shipment",
+  "shipmentCreated": "Shipment created",
+  "shippingNotProvided": "Buyer has not provided a valid shipping address yet.",
+  "viewShipment": "View Shipment",
+  "awaitingWarehouseOutbound": "Awaiting warehouse outbound",
+  "noOrders": "No orders",
+  "all": "All",
+  "createShipment": "Create Shipment",
+  "carrierRequired": "Carrier name is required",
+  "trackingRequired": "Tracking number is required",
+  "weightGrams": "Weight (grams)",
+  "weightRequired": "Package weight is required",
+  "weightMinInvalid": "Weight must be greater than 0",
+  "shippingMethod": "Shipping Method (optional)",
+  "bookOutbound": "Book Outbound Shipment",
+  "province": "Province/City",
+  "package": "Package",
+  "insuranceValue": "Insurance",
+  "codAmount": "COD",
+  "lengthCm": "Length (cm)",
+  "widthCm": "Width (cm)",
+  "heightCm": "Height (cm)",
+  "genericError": "Something went wrong. Please try again.",
+  "warehouseOutbound": {
+    "title": "Warehouse Shipment Detail",
+    "shipmentId": "Shipment",
+    "internalTracking": "Internal tracking",
+    "carrierTracking": "Carrier tracking",
+    "carrier": "Carrier",
+    "provider": "Provider",
+    "dispatchedAt": "Dispatched",
+    "deliveredAt": "Delivered",
+    "buyerReceivedAt": "Received At",
+    "buyerAcceptedAt": "Accepted At",
+    "activeDispute": "A dispute is already open for this order",
+    "scanQrGuidance": "When the parcel arrives, scan the QR on the label to confirm receipt.",
+    "viewShipmentTracking": "View shipment tracking",
+    "acceptItem": "Inspected and Accept Item",
+    "reportIssue": "Report Issue / Open Dispute",
+    "scanParcelQr": "Scan Parcel QR"
+  },
+  "detail": {
+    "manualReview": "Order is under manual review",
+    "receivedPackage": "Package received",
+    "inspectedAccepted": "Inspected and accepted",
+    "confirmAccept": "Confirm that you have inspected and accepted the item? Funds will be released to the seller."
+  }
 }

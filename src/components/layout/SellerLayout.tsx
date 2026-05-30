@@ -12,7 +12,6 @@ import {
   ExportOutlined,
   DatabaseOutlined,
   UserOutlined,
-  SafetyCertificateOutlined,
   ArrowLeftOutlined,
   SunOutlined,
   MoonOutlined,
@@ -26,6 +25,9 @@ import { useAuth } from '@/hooks/useAuth'
 import { useMySellerProfile } from '@/features/seller/api'
 import { useTheme } from '@/hooks/useTheme'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { useCurrentUser } from '@/features/user/api'
+import { NotificationDropdown } from '@/features/notification/components/NotificationDropdown'
+import { UserDropdown } from './UserDropdown'
 import { SellerProfileStatus } from '@/types/enums'
 import { SERIF_FONT, SANS_FONT } from '@/styles/tokens'
 
@@ -73,7 +75,8 @@ export function SellerLayout() {
   const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
   const location = useLocation()
-  const { user } = useAuth()
+  const { isAuthenticated } = useAuth()
+  const { data: user } = useCurrentUser({ enabled: isAuthenticated })
   const { data: sellerProfile } = useMySellerProfile()
   const { isDark, toggle: toggleTheme } = useTheme()
 
@@ -123,25 +126,24 @@ export function SellerLayout() {
       type: 'group',
       label: t('menu.groupSettings'),
       children: [
-        { key: '/seller/profile', icon: <UserOutlined />, label: t('menu.profile', 'Profile') },
-        { key: '/seller/verification', icon: <SafetyCertificateOutlined />, label: t('menu.verification', 'Verification') },
+        { key: '/seller/profile', icon: <UserOutlined />, label: t('menu.profile', 'Store Profile') },
       ],
     },
   ]
 
-  // If not verified, only show Verification and Profile
+  // If not verified, only show Profile in sidebar
   const menuEntries = isVerified
     ? allMenuEntries
     : allMenuEntries
       .map((entry) => {
         if ('type' in entry && entry.type === 'group') {
           const filteredChildren = entry.children.filter(
-            (child) => child.key === '/seller/verification' || child.key === '/seller/profile'
+            (child) => child.key === '/seller/profile'
           )
           return filteredChildren.length > 0 ? { ...entry, children: filteredChildren } : null
         }
         const item = entry as MenuItem
-        return item.key === '/seller/verification' || item.key === '/seller/profile' ? entry : null
+        return item.key === '/seller/profile' ? entry : null
       })
       .filter((entry): entry is MenuEntry => entry !== null)
 
@@ -247,7 +249,12 @@ export function SellerLayout() {
     })
 
   return (
-    <div style={{ minHeight: '100vh', background: 'transparent' }}>
+    <div style={{
+      minHeight: '100vh',
+      background: 'transparent',
+      '--navbar-offset-desktop': '80px',
+      '--navbar-offset-mobile': '80px'
+    } as React.CSSProperties}>
       {/* ── Sidebar ── */}
       <aside
         style={{
@@ -276,7 +283,7 @@ export function SellerLayout() {
             alignItems: 'center',
             justifyContent: effectiveCollapsed ? 'center' : 'flex-start',
             padding: effectiveCollapsed ? '0' : '0 20px',
-            borderBottom: '1px solid var(--color-border)',
+            borderBottom: '0px solid var(--color-border)',
             flexShrink: 0,
           }}
         >
@@ -474,33 +481,39 @@ export function SellerLayout() {
 
           <div style={{ width: 1, height: 24, background: 'var(--color-border)', margin: '0 4px', flexShrink: 0 }} />
 
+          <NotificationDropdown />
+
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 4px', borderRadius: 8 }}>
-            <Avatar
-              size={32}
-              src={avatarUrl}
-              icon={!avatarUrl ? <UserOutlined /> : undefined}
-              style={{
-                backgroundColor: avatarUrl ? undefined : 'var(--color-accent-light)',
-                color: avatarUrl ? undefined : 'var(--color-accent)',
-                flexShrink: 0,
-              }}
-            />
-            {!isMobile && !isTablet && (
-              <span
-                style={{
-                  fontFamily: SANS_FONT,
-                  fontSize: 13,
-                  fontWeight: 500,
-                  color: 'var(--color-text-primary)',
-                  maxWidth: 200,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                <span>{displayName}</span> <span style={{ opacity: 0.6, fontSize: 11, fontWeight: 400 }}>(@{user?.userName})</span>
-              </span>
-            )}
+            <UserDropdown mode="portal">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                <Avatar
+                  size={32}
+                  src={avatarUrl}
+                  icon={!avatarUrl ? <UserOutlined /> : undefined}
+                  style={{
+                    backgroundColor: avatarUrl ? undefined : 'var(--color-accent-light)',
+                    color: avatarUrl ? undefined : 'var(--color-accent)',
+                    flexShrink: 0,
+                  }}
+                />
+                {!isMobile && !isTablet && (
+                  <span
+                    style={{
+                      fontFamily: SANS_FONT,
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: 'var(--color-text-primary)',
+                      maxWidth: 200,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    <span>{displayName}</span> <span style={{ opacity: 0.6, fontSize: 11, fontWeight: 400 }}>(@{user?.userName})</span>
+                  </span>
+                )}
+              </div>
+            </UserDropdown>
           </div>
         </div>
       </header>

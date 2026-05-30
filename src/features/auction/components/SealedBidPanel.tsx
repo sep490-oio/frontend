@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Card, InputNumber, Button, Typography, Alert, Flex, Tag } from 'antd'
 import { LockOutlined, CheckCircleOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
-import { useSubmitSealedBid } from '@/features/auction/api'
+import { useSubmitSealedBid } from '@/features/auction/auctionApi.ts'
 import { formatCurrency } from '@/utils/format'
 import type { SealedBidInfoDto } from '@/types'
 

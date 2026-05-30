@@ -9,9 +9,16 @@ import { store } from './store'
 import { queryClient } from '@/lib/queryClient'
 import { ThemeContext, useThemeProvider } from '@/hooks/useTheme'
 import { UserHubProvider } from '@/features/user/contexts/UserHubContext'
+import { SessionMonitor } from '@/components/auth/SessionMonitor'
 import { lightTheme, darkTheme } from '@/theme'
+import { useTimeSync } from '@/hooks/useTimeSync'
 import '@/app/i18n'
 import '@/styles/global.css'
+
+function TimeSyncInitializer() {
+  useTimeSync()
+  return null
+}
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   const themeValue = useThemeProvider()
@@ -22,9 +29,11 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <ThemeContext.Provider value={themeValue}>
       <Provider store={store}>
+        <TimeSyncInitializer />
         <QueryClientProvider client={queryClient}>
           <ConfigProvider locale={antLocale} theme={currentTheme}>
             <AntApp>
+              <SessionMonitor />
               <UserHubProvider>
                 {children}
               </UserHubProvider>

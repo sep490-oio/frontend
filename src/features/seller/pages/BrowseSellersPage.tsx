@@ -314,7 +314,7 @@ export default function BrowseSellersPage() {
                         )}
                       </h3>
                       <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 16, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                        {htmlToPlainTextExcerpt(seller.storeDescription || seller.description || '') || '—'}
+                        {htmlToPlainTextExcerpt(seller.storeDescription || '') || '—'}
                       </div>
 
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto', paddingTop: 16 }}>

@@ -6,6 +6,7 @@ import { CountdownTimer } from '@/components/ui/CountdownTimer'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatCurrency, formatDateTime } from '@/utils/format'
 import { MONO_FONT } from '@/styles/tokens'
+import { getServerNowMs } from '@/utils/time'
 
 interface WinnerOfferPanelProps {
   offer: {
@@ -30,12 +31,12 @@ export function WinnerOfferPanel({ offer, onAccept, onDecline, isAcceptLoading, 
   const isPending = offer.status === 'pending'
 
   const [isExpired, setIsExpired] = useState(
-    () => !!offer.expiresAt && new Date(offer.expiresAt).getTime() < Date.now()
+    () => !!offer.expiresAt && new Date(offer.expiresAt).getTime() < getServerNowMs()
   )
   useEffect(() => {
     if (!offer.expiresAt || isExpired) return
     const check = () => {
-      if (new Date(offer.expiresAt!).getTime() < Date.now()) setIsExpired(true)
+      if (new Date(offer.expiresAt!).getTime() < getServerNowMs()) setIsExpired(true)
     }
     const interval = setInterval(check, 10000)
     return () => clearInterval(interval)

@@ -185,7 +185,7 @@ export default function SellerDirectShipmentDetailPage() {
   return (
     <div style={{ maxWidth: 960, margin: '0 auto', padding: isMobile ? '0 12px' : '0 24px' }}>
       <Space style={{ marginBottom: 16, width: '100%', justifyContent: 'space-between' }}>
-        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)} size={isMobile ? 'middle' : 'large'}>
+        <Button icon={<ArrowLeftOutlined />} onClick={() => { navigate(-1); }} size={isMobile ? 'middle' : 'large'}>
           {tc('action.back', 'Back')}
         </Button>
         <Button icon={<PrinterOutlined />} onClick={() => setPrintModalOpen(true)} size={isMobile ? 'middle' : 'large'}>

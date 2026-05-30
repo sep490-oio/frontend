@@ -11,6 +11,7 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment: production
 
     # GITHUB_TOKEN needs these permissions to push Docker images to ghcr.io
     permissions:
@@ -39,7 +40,7 @@ jobs:
           build-args: |
             VITE_API_URL=${{ vars.VITE_API_URL || 'https://api.newlsun.com/api' }}
             VITE_SIGNALR_URL=${{ vars.VITE_SIGNALR_URL || 'https://api.newlsun.com/hubs' }}
-            VITE_ALLOW_UPLOAD=${{ vars.VITE_ALLOW_UPLOAD || 'true' }}
+            VITE_ALLOW_UPLOAD=${{ vars.VITE_ALLOW_UPLOAD || 'false' }}
 
       - name: Deploy to VPS
         run: |

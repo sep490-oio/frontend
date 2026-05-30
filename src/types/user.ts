@@ -14,6 +14,7 @@ export interface UserDto {
   status: UserStatus
   createdAt: string
   profile?: UserProfileDto
+  roles?: string[]
 }
 
 export interface UserProfileDto {
@@ -75,9 +76,8 @@ export interface SetPhoneNumberRequest {
 }
 
 export interface SetupTotpResponse {
-  secret: string
-  qrCodeUri: string
-  recoveryCodesCount: number
+  sharedKey: string
+  qrCodeBase64: string
 }
 
 export interface UserNotificationPreferenceDto {

@@ -62,9 +62,27 @@ export interface InspectionEvidenceDto {
   type: string
 }
 
+export interface InspectionDashboardStats {
+  awaitingInspection: number
+  awaitingReview: number
+  todayCompleted: number
+}
+
+export function useInspectionDashboardStats() {
+  return useQuery({
+    queryKey: [...queryKeys.warehouse.all, 'inspectionDashboardStats'],
+    queryFn: async () => {
+      const res = await apiClient.get<InspectionDashboardStats>(
+        '/warehouse/inbound-shipments/inspection-dashboard-stats',
+      )
+      return res.data
+    },
+  })
+}
+
 // ── Inspection Queue ─────────────────────────────────────────────────
 
-export function useInspectionQueue(params?: { pageNumber?: number; pageSize?: number; status?: string; requiresPlatformInspection?: boolean }) {
+export function useInspectionQueue(params?: { pageNumber?: number; pageSize?: number; status?: string; categoryId?: string }) {
   return useQuery({
     queryKey: [...queryKeys.warehouse.all, 'inspectionQueue', params],
     queryFn: async () => {

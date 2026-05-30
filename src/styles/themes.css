@@ -1,0 +1,252 @@
+/* ─── Color Presets ─── */
+
+/* Default Preset (Blue/Deep Ocean) */
+[data-preset="default"] {
+  --color-accent: #0284C7;
+  --color-accent-hover: #0369A1;
+  --color-accent-light: rgba(2, 132, 199, 0.08);
+  --color-accent-rgb: 2, 132, 199;
+  
+  --bg-unified-gradient: linear-gradient(180deg,
+      #150804 0%,    /* nâu đen — đỉnh dark */
+      #0d1b2e 15%,   /* navy đậm */
+      #1e3a5a 35%,   /* xanh thép đậm */
+      #4a7090 48%,   /* xanh bụi — vùng chuyển tiếp */
+      #7a9fb8 52%,   /* xanh nhạt — vùng chuyển tiếp */
+      #8fb0c8 58%,   /* xanh thép nhạt — đỉnh light */
+      #b0c8d8 72%,   /* xanh trời mờ */
+      #ccdbe8 82%,   /* xanh trắng */
+      #e0ecf2 90%,   /* trắng xanh */
+      #f2ead8 100%); /* kem vàng — đáy light */
+}
+
+[data-theme="dark"][data-preset="default"] {
+  --color-accent: #38BDF8;
+  --color-accent-hover: #0EA5E9;
+  --color-accent-light: rgba(56, 189, 248, 0.1);
+  --color-accent-rgb: 56, 189, 248;
+}
+
+/* Mint Preset (Botanical Green) */
+[data-preset="mint"] {
+  --color-accent: #10B981;
+  --color-accent-hover: #059669;
+  --color-accent-light: rgba(16, 185, 129, 0.08);
+  --color-accent-rgb: 16, 185, 129;
+
+  --bg-unified-gradient: linear-gradient(180deg,
+      #06100a 0%,    /* rêu đen */
+      #0b2e1b 15%,   /* rừng sâu */
+      #124a2a 35%,   /* ngọc lục bảo đậm */
+      #347d51 48%,   /* xám xanh lá */
+      #7eb898 52%,   /* bạc hà mờ */
+      #9fd6b8 58%,   /* xanh pastel */
+      #b8e2cb 72%,   /* sương mai */
+      #dcfce7 82%,   /* trắng lục */
+      #f0fdf4 90%,   /* nắng sớm */
+      #fefce8 100%); /* nắng vàng */
+}
+
+[data-theme="dark"][data-preset="mint"] {
+  --color-accent: #34D399;
+  --color-accent-hover: #10B981;
+  --color-accent-light: rgba(52, 211, 153, 0.1);
+  --color-accent-rgb: 52, 211, 153;
+}
+
+/* Ember Preset (Sunset Orange) */
+[data-preset="ember"] {
+  --color-accent: #F59E0B;
+  --color-accent-hover: #D97706;
+  --color-accent-light: rgba(245, 158, 11, 0.08);
+  --color-accent-rgb: 245, 158, 11;
+
+  --bg-unified-gradient: linear-gradient(180deg,
+      #1a0b05 0%,    /* gỗ mun */
+      #3d1a0a 15%,   /* đất nung */
+      #6b2d0e 35%,   /* hoàng hôn đỏ */
+      #92400e 48%,   /* tro hồng */
+      #c2845a 52%,   /* cát ấm */
+      #fcd34d 58%,   /* hổ phách sáng */
+      #fde68a 72%,   /* mật ong */
+      #fef3c7 82%,   /* trắng kem */
+      #fffbeb 90%,   /* nắng nhạt */
+      #fdf4ff 100%); /* ánh hồng */
+}
+
+[data-theme="dark"][data-preset="ember"] {
+  --color-accent: #FBBF24;
+  --color-accent-hover: #F59E0B;
+  --color-accent-light: rgba(251, 191, 36, 0.1);
+  --color-accent-rgb: 251, 191, 36;
+}
+
+/* Aurora Preset (Twilight Indigo) */
+[data-preset="aurora"] {
+  --color-accent: #6366F1;
+  --color-accent-hover: #4F46E5;
+  --color-accent-light: rgba(99, 102, 241, 0.08);
+  --color-accent-rgb: 99, 102, 241;
+
+  --bg-unified-gradient: linear-gradient(180deg,
+      #0f0a1f 0%,    /* cực quang đen */
+      #1e1b4b 15%,   /* chạng vạng */
+      #312e81 35%,   /* tím đêm */
+      #4338ca 48%,   /* lam mờ */
+      #818cf8 52%,   /* sương tím */
+      #a5b4fc 58%,   /* oải hương sáng */
+      #c7d2fe 72%,   /* tuyết lam */
+      #e0e7ff 82%,   /* trắng tím */
+      #eef2ff 90%,   /* sương sớm */
+      #faf5ff 100%); /* ánh hồng mờ */
+}
+
+[data-theme="dark"][data-preset="aurora"] {
+  --color-accent: #818CF8;
+  --color-accent-hover: #6366F1;
+  --color-accent-light: rgba(129, 140, 248, 0.1);
+  --color-accent-rgb: 129, 140, 248;
+}
+
+/* Slate Preset (Stormy Gray) */
+[data-preset="slate"] {
+  --color-accent: #64748B;
+  --color-accent-hover: #475569;
+  --color-accent-light: rgba(100, 116, 139, 0.08);
+  --color-accent-rgb: 100, 116, 139;
+
+  --bg-unified-gradient: linear-gradient(180deg,
+      #020617 0%,    /* hố đen */
+      #0f172a 15%,   /* đá phiến đậm */
+      #1e293b 35%,   /* bão tố */
+      #334155 48%,   /* khói bụi */
+      #64748b 52%,   /* sương đá */
+      #94a3b8 58%,   /* xi măng sáng */
+      #cbd5e1 72%,   /* mây xám */
+      #f1f5f9 82%,   /* trắng tuyết */
+      #f8fafc 90%,   /* sương mù */
+      #ffffff 100%); /* trắng tinh khôi */
+}
+
+[data-theme="dark"][data-preset="slate"] {
+  --color-accent: #94A3B8;
+  --color-accent-hover: #64748B;
+  --color-accent-light: rgba(148, 163, 184, 0.1);
+  --color-accent-rgb: 148, 163, 184;
+}
+
+/* Frosted Preset (Matte Steel) */
+[data-preset="frosted"] {
+  --color-accent: #52525B;
+  --color-accent-hover: #3F3F46;
+  --color-accent-light: rgba(82, 82, 91, 0.08);
+  --color-accent-rgb: 82, 82, 91;
+
+  --bg-unified-gradient: linear-gradient(180deg,
+      #09090b 0%,    /* than chì */
+      #18181b 15%,   /* sắt nguội */
+      #27272a 35%,   /* hầm mỏ */
+      #3f3f46 48%,   /* xám xi măng */
+      #71717a 52%,   /* bạc mờ */
+      #a1a1aa 58%,   /* kim loại sáng */
+      #d4d4d8 72%,   /* giấy trắng */
+      #f4f4f5 82%,   /* ánh kim */
+      #fafafa 90%,   /* mây nhạt */
+      #e5e7eb 100%); /* tro bụi */
+}
+
+[data-theme="dark"][data-preset="frosted"] {
+  --color-accent: #A1A1AA;
+  --color-accent-hover: #D4D4D8;
+  --color-accent-light: rgba(161, 161, 170, 0.1);
+  --color-accent-rgb: 161, 161, 170;
+}
+
+/* Custom Preset (Sophisticated HSL Engine) */
+:root {
+  --custom-hue: 200;
+  --custom-saturation: 75%;
+}
+
+[data-preset="custom"] {
+  --color-accent: hsl(var(--custom-hue), var(--custom-saturation), 45%);
+  --color-accent-hover: hsl(var(--custom-hue), var(--custom-saturation), 35%);
+  --color-accent-light: hsla(var(--custom-hue), var(--custom-saturation), 45%, 0.08);
+  --color-accent-rgb: 2, 132, 199;
+
+  --bg-unified-gradient: linear-gradient(180deg,
+      /* Top half (Dark Mode): Reduced saturation and lightness for a more muted, darker look */
+      hsl(var(--custom-hue), calc(var(--custom-saturation) * 0.15), 3%) 0%,
+      hsl(var(--custom-hue), calc(var(--custom-saturation) * 0.12), 6%) 15%,
+      hsl(var(--custom-hue), calc(var(--custom-saturation) * 0.1), 10%) 35%,
+      hsl(var(--custom-hue), calc(var(--custom-saturation) * 0.08), 14%) 48%,
+      
+      /* Bottom half (Light Mode): Increased saturation and color presence, delaying the fade to white */
+      hsl(var(--custom-hue), var(--custom-saturation), 90%) 52%,
+      hsl(var(--custom-hue), var(--custom-saturation), 94%) 70%,
+      hsl(var(--custom-hue), calc(var(--custom-saturation) * 0.7), 97%) 85%,
+      hsl(var(--custom-hue), calc(var(--custom-saturation) * 0.3), 99%) 95%,
+      #fff 100%);
+}
+
+[data-theme="dark"][data-preset="custom"] {
+  --color-accent: hsl(var(--custom-hue), var(--custom-saturation), 65%);
+  --color-accent-hover: hsl(var(--custom-hue), var(--custom-saturation), 55%);
+  --color-accent-light: hsla(var(--custom-hue), var(--custom-saturation), 65%, 0.1);
+}
+
+/* Global Slider UI Fixes */
+.ant-slider-handle {
+  border-radius: 50% !important;
+  background: var(--color-accent) !important;
+  border: 3px solid #fff !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+  width: 24px !important;
+  height: 24px !important;
+  margin-top: -7px !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.ant-slider-handle::after {
+  display: none !important;
+}
+
+.ant-slider-handle:hover, .ant-slider-handle:active {
+  transform: scale(1.1) !important;
+}
+
+.ant-slider-rail {
+  background: rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme="dark"] .ant-slider-rail {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ─── Skip Link (A11y) ─── */
+.skip-link {
+  position: fixed;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-accent);
+  color: #fff;
+  padding: 12px 24px;
+  z-index: 10001;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 0 0 12px 12px;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: none;
+  color: #fff;
+}
+
+.skip-link:hover {
+  color: #fff;
+  background: var(--color-accent-hover);
+}

@@ -164,6 +164,26 @@
   "statusFailed": "Thất bại",
   "statusRefunded": "Đã hoàn tiền",
   "statusUnknown": "Không xác định",
+  "ledgerStatus": {
+    "posted": "Đã ghi nhận",
+    "pending": "Đang xử lý",
+    "failed": "Thất bại",
+    "reversed": "Đã đảo giao dịch"
+  },
+  "event": {
+    "wallet_top_up": "Nạp tiền vào ví",
+    "auction_deposit_hold": "Đặt cọc đấu giá",
+    "auction_deposit_refund": "Hoàn cọc đấu giá",
+    "order_payment": "Thanh toán đơn hàng",
+    "order_refund": "Hoàn tiền đơn hàng",
+    "withdrawal_hold": "Giữ tiền chờ rút",
+    "withdrawal_release": "Rút tiền",
+    "seller_payout": "Nhận thanh toán bán hàng",
+    "fee": "Phí giao dịch"
+  },
+  "availableBalanceHelp": "Số tiền có thể sử dụng ngay.",
+  "reservedFundsHelpShort": "Số tiền đang bị giữ do cọc đấu giá, rút tiền hoặc giao dịch đang xử lý.",
+  "refOpenDetail": "Mở chi tiết",
   "checkoutSubtitle": "Hoàn tất thông tin giao hàng và thanh toán để kết thúc đơn hàng",
   "shippingInformation": "Thông tin giao hàng",
   "buyerProtectionTitle": "Đang bảo vệ người mua",
@@ -177,5 +197,124 @@
   "confirmPayment": "Xác nhận thanh toán cho đơn hàng này?",
   "secureCheckout": "Thanh toán được mã hóa an toàn",
   "grossPrice": "Giá gốc",
-  "amountDue": "Số tiền cần trả"
+  "amountDue": "Số tiền cần trả",
+  "paymentDeadline": "Hạn thanh toán",
+  "shippingPlaceholderWarning": "Vui lòng hoàn tất địa chỉ giao hàng trước khi thanh toán.",
+  "recipientName": "Tên người nhận",
+  "recipientRequired": "Vui lòng nhập tên người nhận",
+  "recipientNamePlaceholder": "Họ và tên đầy đủ",
+  "phoneNumber": "Số điện thoại",
+  "phoneRequired": "Vui lòng nhập số điện thoại",
+  "phoneNumberPlaceholder": "09xx xxx xxx",
+  "street": "Địa chỉ",
+  "streetRequired": "Vui lòng nhập địa chỉ",
+  "streetPlaceholder": "Số nhà, tên đường...",
+  "postalCode": "Mã bưu chính (tùy chọn)",
+  "shippingSaved": "Thông tin giao hàng đã được xác minh và lưu",
+  "depositApplied": "Khấu trừ tiền cọc",
+  "walletPortion": "Thanh toán qua ví",
+  "sellerFinance": {
+    "title": "Tài chính người bán",
+    "subtitle": "Theo dõi số dư có thể rút, escrow đang giữ và phí",
+    "cards": {
+      "withdrawable": "Có thể rút",
+      "withdrawableHelp": "Số tiền có thể rút về tài khoản ngân hàng.",
+      "holding": "Sàn đang giữ",
+      "holdingHelp": "Buyer đã thanh toán nhưng chưa được release sang ví.",
+      "expected": "Dự kiến nhận (estimate)",
+      "expectedHelp": "= gross − phí sàn 10% − phí kiểm định 3% (nếu có).",
+      "pendingFees": "Phí/khấu trừ đang chờ",
+      "pendingFeesHelp": "Tổng phí sàn + phí kiểm định + phí seller đang chờ."
+    },
+    "tooltip": {
+      "holding": "Buyer đã thanh toán nhưng escrow chưa release",
+      "estimate": "Đây là số ước tính. Số thực tế sẽ được hiển thị sau khi giao dịch hoàn tất."
+    },
+    "tabs": {
+      "escrow": "Escrow & Pending Payout",
+      "fees": "Fees & Deductions",
+      "transactions": "Transactions"
+    },
+    "col": {
+      "orderNumber": "Mã đơn",
+      "itemTitle": "Sản phẩm",
+      "orderStatus": "Đơn hàng",
+      "escrowStatus": "Escrow",
+      "holdReason": "Lý do giữ",
+      "buyerPaidAt": "Buyer trả",
+      "expectedRelease": "Dự kiến release",
+      "netPayout": "Dự kiến nhận"
+    },
+    "label": {
+      "released": "Đã release",
+      "estimate": "(estimate)"
+    },
+    "action": {
+      "viewBreakdown": "Chi tiết",
+      "viewDispute": "Xem dispute",
+      "openOrder": "Mở chi tiết đơn hàng"
+    },
+    "drawer": {
+      "title": "Chi tiết tiền",
+      "orderStatus": "Trạng thái đơn",
+      "escrowStatus": "Trạng thái escrow",
+      "grossPaid": "Buyer đã trả",
+      "platformCommission": "Phí sàn (10%)",
+      "payoutBeforeInspection": "Trước phí kiểm định",
+      "inspectionFee": "Phí kiểm định (3%)",
+      "netPayout": "Seller nhận cuối",
+      "holdReason": "Lý do giữ",
+      "buyerPaidAt": "Buyer thanh toán lúc",
+      "expectedRelease": "Dự kiến release",
+      "decisionWindow": "Kết thúc decision window"
+    },
+    "fees": {
+      "explainTitle": "Cách tính phí",
+      "explainBody": "Phí sàn 10% áp dụng cho mọi đơn hàng. Phí kiểm định 3% chỉ áp dụng cho item đã được sàn xác minh, và được giới hạn tối đa 625.000 VND/đơn.",
+      "platform": "Tổng phí sàn 10% pending",
+      "inspection": "Tổng phí kiểm định 3%",
+      "inspectionNote": "Chỉ áp dụng cho item có \"Sàn xác minh\".",
+      "pendingCharges": "Phí seller đang chờ",
+      "disputed": "Đang tranh chấp",
+      "readyToRelease": "Sẵn sàng release"
+    },
+    "empty": {
+      "noEscrowTitle": "Chưa có giao dịch escrow",
+      "noEscrow": "Chưa có giao dịch escrow nào — khi buyer thanh toán đơn hàng đầu tiên, tiền sẽ hiển thị tại đây."
+    },
+    "holdReason": {
+      "awaitingDelivery": "Đang chờ giao hàng",
+      "awaitingAcceptance": "Đang chờ buyer xác nhận",
+      "frozenByDispute": "Tạm khóa do tranh chấp",
+      "inspectionInProgress": "Đang kiểm định"
+    },
+    "disputeFrozen": "Frozen by dispute"
+  },
+  "finalPrice": "Giá chốt",
+  "escrowCard": {
+    "title": "Thanh toán & Escrow",
+    "notPaid": "Buyer chưa thanh toán đơn hàng này. Khi thanh toán hoàn tất, chi tiết escrow sẽ hiển thị tại đây.",
+    "disputeHeld": "Tiền đang bị giữ do có tranh chấp.",
+    "buyerPaid": "Buyer đã thanh toán?",
+    "escrowStatus": "Trạng thái escrow",
+    "whyLocked": "Vì sao chưa rút được?",
+    "buyerGross": "Buyer trả (gross)",
+    "released": "Đã release",
+    "estimatedPayout": "Dự kiến seller nhận",
+    "platformFee": "Phí sàn 10%",
+    "inspectionFee": "Phí kiểm định 3%",
+    "estimatedRelease": "Dự kiến release",
+    "decisionWindowEnds": "Kết thúc decision window"
+  },
+  "deposits": {
+    "auctionDeposit": "Đặt cọc đấu giá"
+  },
+  "moneyFlow": {
+    "step1Desc": "Khi tham gia đấu giá, bạn đặt cọc từ ví. Số tiền này bị tạm giữ (hold) — không thể dùng cho giao dịch khác cho đến khi hoàn cọc.",
+    "step2Desc": "Bạn đấu giá hoặc mua ngay. Deposit vẫn bị giữ trong suốt phiên đấu giá. Nếu bạn thua, deposit được hoàn ngay.",
+    "step3Desc": "Nếu thắng, deposit được trừ vào giá thanh toán. Bạn chỉ cần thanh toán phần còn lại (chênh lệch).",
+    "step4Desc": "Thanh toán phần chênh lệch (giá cuối − deposit). Tiền được trừ từ ví hoặc qua VNPay. Toàn bộ tiền vào escrow.",
+    "step5Desc": "Tiền thanh toán được giữ trong ký quỹ (escrow) — chưa chuyển cho seller. Bảo vệ buyer trong thời gian kiểm tra và khiếu nại.",
+    "step6Desc": "Sau khi buyer xác nhận nhận hàng (hoặc hết hạn khiếu nại), tiền escrow được giải ngân cho seller, trừ phí sàn."
+  }
 }

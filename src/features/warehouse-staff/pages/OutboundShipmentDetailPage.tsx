@@ -25,6 +25,7 @@ import {
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 
 const statusButtonType = (status: string): 'primary' | 'default' | 'dashed' => {
   if (status === 'delivered') return 'primary'
@@ -61,8 +62,7 @@ export default function OutboundShipmentDetailPage() {
           await updateStatus.mutateAsync({ shipmentId, status })
           message.success(t('staffOutboundShipments.updateSuccess', 'Shipment updated'))
         } catch (err) {
-          const detailMsg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-          message.error(detailMsg ?? t('staffOutboundShipments.updateError', 'Failed to update shipment'))
+          message.error(normalizeErrorMessage(err, t('staffOutboundShipments.updateError', 'Failed to update shipment')))
         }
       },
     })

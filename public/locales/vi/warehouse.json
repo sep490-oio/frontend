@@ -192,12 +192,21 @@
   },
   "dashboard": {
     "title": "Bảng điều khiển kho",
+    "inboundMetrics": "Luồng Nhập Kho",
+    "outboundMetrics": "Luồng Xuất Kho & Lưu Trữ",
+    "quickActions": "Thao tác nhanh",
     "awaitingPickup": "Chờ lấy hàng",
     "inTransit": "Đang vận chuyển",
     "arrived": "Đã đến",
     "completed": "Hoàn thành",
     "awaitingOutbound": "Đơn chờ xuất kho",
-    "goToReceiving": "Đi tới Nhận hàng"
+    "storedItems": "Hàng lưu kho",
+    "pendingReturns": "Xử lý hàng hoàn",
+    "goToReceiving": "Đi tới Nhận hàng",
+    "receiveNewPackage": "Nhận hàng mới",
+    "scanAndCheckIn": "Quét mã & Kiểm tra",
+    "processOutbound": "Xử lý xuất kho",
+    "handleReturns": "Xử lý hàng hoàn"
   },
   "receiving": {
     "title": "Hàng đợi nhận"
@@ -283,7 +292,17 @@
     "originalItem": "Thông tin sản phẩm gốc",
     "condition": "Tình trạng",
     "viewItem": "Xem trang sản phẩm",
-    "seller": "Người bán"
+    "seller": "Người bán",
+    "reinspection": {
+      "button": "Yêu cầu kiểm định lại",
+      "confirmTitle": "Yêu cầu kiểm định lại?",
+      "confirmBody": "Inspector sẽ review lại item của bạn. Reason cũ và evidence sẽ được giữ trong audit log.",
+      "reasonPlaceholder": "Tùy chọn: mô tả lý do yêu cầu kiểm định lại",
+      "successToast": "Đã gửi yêu cầu kiểm định lại",
+      "errorToast": "Gửi yêu cầu kiểm định lại thất bại",
+      "returningTag": "Đang trả về cho seller",
+      "returningTooltip": "Hàng đang được trả về cho bạn. Sau khi nhận hàng, vui lòng tạo inbound mới."
+    }
   },
   "receive": {
     "packageTitle": "Kiện hàng",
@@ -471,5 +490,16 @@
     "outboundBooked": "Đã đặt vận đơn xuất",
     "dispatched": "Đã gửi cho người mua",
     "delivered": "Đã giao"
+  },
+  "alreadyExistsError": "Sản phẩm này đã có yêu cầu vận chuyển đang hoạt động. Vui lòng kiểm tra lịch sử của bạn.",
+  "noEligibleInboundItemsTitle": "Không có sản phẩm nào chờ kiểm định",
+  "noEligibleInboundItemsDesc": "Chỉ những sản phẩm có trạng thái \"Chờ xác minh\" đã được gửi để kiểm định và chưa có yêu cầu gửi hàng đang hoạt động mới có thể được gửi vào kho. Vui lòng gửi sản phẩm để kiểm định trước.",
+  "noEligibleInboundItemsPlaceholder": "Không có sản phẩm đủ điều kiện để gửi",
+  "selectedItems": "Sản phẩm đã chọn",
+  "externalDimensionsNote": "Nhập tổng kích thước kiện hàng cho tất cả các sản phẩm.",
+  "weightMinPerItem": "Tổng trọng lượng phải ít nhất là {{count}}g (1g cho mỗi sản phẩm đã chọn).",
+  "carriers": {
+    "ghn": "GHN - Giao Hàng Nhanh",
+    "ghtk": "GHTK - Giao Hàng Tiết Kiệm"
   }
 }

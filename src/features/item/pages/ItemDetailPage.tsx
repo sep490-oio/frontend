@@ -66,7 +66,7 @@ export default function ItemDetailPage() {
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: isMobile ? '0 12px' : undefined }}>
       <Space style={{ marginBottom: 16 }}>
-        <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)}>
+        <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => { navigate(-1); }}>
           {tc('action.back', 'Back')}
         </Button>
       </Space>
@@ -108,8 +108,8 @@ export default function ItemDetailPage() {
             />
           </div>
 
-          {/* Shipping Config — Seller only */}
-          {isSeller && item.status === ItemStatus.PendingVerify && (
+          {/* Shipping Config — Seller only, hidden when shipment already exists */}
+          {isSeller && item.status === ItemStatus.PendingVerify && !item.hasInboundShipment && (
             <div className="glass-card p-8 space-y-6">
               <h3 style={{
                 color: 'var(--color-text-primary)',
@@ -156,7 +156,7 @@ export default function ItemDetailPage() {
         okText={tc('action.confirm', 'Confirm')}
         okButtonProps={{ loading: chooseShipping.isPending }}
         centered
-        width={isMobile ? '95vw' : 560}
+        width={isMobile ? '95vw' : 860}
       >
         <ShippingDetailsForm form={shippingForm} />
       </Modal>

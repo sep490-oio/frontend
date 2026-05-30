@@ -18,6 +18,9 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/hooks/useTheme'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { useCurrentUser } from '@/features/user/api'
+import { NotificationDropdown } from '@/features/notification/components/NotificationDropdown'
+import { UserDropdown } from './UserDropdown'
 import { SERIF_FONT, SANS_FONT } from '@/styles/tokens'
 
 const { Content } = Layout
@@ -50,7 +53,8 @@ export function InspectorLayout() {
   const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
   const location = useLocation()
-  const { user } = useAuth()
+  const { isAuthenticated } = useAuth()
+  const { data: user } = useCurrentUser({ enabled: isAuthenticated })
   const { isDark, toggle: toggleTheme } = useTheme()
 
   // On tablet: force icon-only sidebar
@@ -127,7 +131,12 @@ export function InspectorLayout() {
     })
 
   return (
-    <div style={{ minHeight: '100vh', background: 'transparent' }}>
+    <div style={{
+      minHeight: '100vh',
+      background: 'transparent',
+      '--navbar-offset-desktop': '64px',
+      '--navbar-offset-mobile': '64px'
+    } as React.CSSProperties}>
       {/* ── Sidebar ── */}
       <aside
         style={{
@@ -154,7 +163,7 @@ export function InspectorLayout() {
             alignItems: 'center',
             justifyContent: effectiveCollapsed ? 'center' : 'flex-start',
             padding: effectiveCollapsed ? '0' : '0 20px',
-            borderBottom: '1px solid var(--color-border)',
+            borderBottom: '0px solid var(--color-border)',
             flexShrink: 0,
           }}
         >
@@ -256,7 +265,7 @@ export function InspectorLayout() {
           background: 'var(--color-bg-card)',
           backdropFilter: 'var(--oio-blur)',
           WebkitBackdropFilter: 'var(--oio-blur)',
-          borderBottom: '1px solid var(--color-border)',
+          borderBottom: '0px solid var(--color-border)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -350,33 +359,39 @@ export function InspectorLayout() {
 
           <div style={{ width: 1, height: 24, background: 'var(--color-border)', margin: '0 4px', flexShrink: 0 }} />
 
+          <NotificationDropdown />
+
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 4px', borderRadius: 8 }}>
-            <Avatar
-              size={32}
-              src={avatarUrl}
-              icon={!avatarUrl ? <UserOutlined /> : undefined}
-              style={{
-                backgroundColor: avatarUrl ? undefined : 'var(--color-accent-light)',
-                color: avatarUrl ? undefined : 'var(--color-accent)',
-                flexShrink: 0,
-              }}
-            />
-            {!isMobile && !isTablet && (
-              <span
-                style={{
-                  fontFamily: SANS_FONT,
-                  fontSize: 13,
-                  fontWeight: 500,
-                  color: 'var(--color-text-primary)',
-                  maxWidth: 120,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {displayName}
-              </span>
-            )}
+            <UserDropdown mode="portal">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                <Avatar
+                  size={32}
+                  src={avatarUrl}
+                  icon={!avatarUrl ? <UserOutlined /> : undefined}
+                  style={{
+                    backgroundColor: avatarUrl ? undefined : 'var(--color-accent-light)',
+                    color: avatarUrl ? undefined : 'var(--color-accent)',
+                    flexShrink: 0,
+                  }}
+                />
+                {!isMobile && !isTablet && (
+                  <span
+                    style={{
+                      fontFamily: SANS_FONT,
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: 'var(--color-text-primary)',
+                      maxWidth: 120,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {displayName}
+                  </span>
+                )}
+              </div>
+            </UserDropdown>
           </div>
         </div>
       </header>

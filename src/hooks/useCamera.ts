@@ -87,7 +87,11 @@ export function useCamera(): UseCameraReturn {
           // Some drivers reject 'continuous' at start — leave the browser's default.
         }
       }
-    } catch (err) {
+    } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        // Ignore play() interruption (often caused by stopCamera being called during startup)
+        return
+      }
       const msg = err instanceof DOMException
         ? err.name === 'NotAllowedError'
           ? 'Camera permission denied. Please allow camera access in your browser settings.'

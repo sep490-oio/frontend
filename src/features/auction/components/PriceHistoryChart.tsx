@@ -164,6 +164,35 @@ export function PriceHistoryChart({
 
   const handleReset = useCallback(() => setViewRange(null), [])
 
+  // Mouse wheel zoom
+  const handleWheel = useCallback((e: React.WheelEvent<SVGSVGElement>) => {
+    if (!enableZoom) return
+    
+    const isZoomIn = e.deltaY < 0
+    const current = viewRange ?? { start: 0, end: sorted.length - 1 }
+    const range = current.end - current.start
+
+    if (isZoomIn) {
+      if (sorted.length < 4 || range <= 4) return
+      const shrink = Math.max(1, Math.floor(range * 0.1))
+      setViewRange({
+        start: Math.min(current.start + shrink, current.end - 2),
+        end: Math.max(current.end - shrink, current.start + 2),
+      })
+    } else {
+      if (!viewRange) return
+      const expand = Math.max(1, Math.floor(range * 0.1))
+      const newStart = Math.max(0, viewRange.start - expand)
+      const newEnd = Math.min(sorted.length - 1, viewRange.end + expand)
+      
+      if (newStart <= 0 && newEnd >= sorted.length - 1) {
+        setViewRange(null)
+      } else {
+        setViewRange({ start: newStart, end: newEnd })
+      }
+    }
+  }, [enableZoom, sorted.length, viewRange])
+
   // Pan via drag
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (!enableZoom || !viewRange) return
@@ -271,6 +300,7 @@ export function PriceHistoryChart({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        onWheel={handleWheel}
       >
         <defs>
           <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">

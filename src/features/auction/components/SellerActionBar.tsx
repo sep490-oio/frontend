@@ -8,6 +8,9 @@ import {
   TruckOutlined,
   UserSwitchOutlined,
   ReloadOutlined,
+  CloseCircleOutlined,
+  PlusSquareOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { getSellerActions, isSubmitDisabled, type SellerAction } from '@/features/auction/utils/sellerActions'
@@ -16,6 +19,7 @@ interface SellerActionBarProps {
   status: string
   verifyByPlatform?: boolean
   itemStatus?: string
+  hasOrder?: boolean
   isMobile?: boolean
   // Action handlers
   onEdit?: () => void
@@ -26,11 +30,17 @@ interface SellerActionBarProps {
   onConfigureShipping?: () => void
   onOfferRunnerUp?: () => void
   onRelist?: () => void
+  onClose?: () => void
+  onProvisionOrder?: () => void
+  onViewOrder?: () => void
+  canOfferRunnerUp?: boolean
   // Loading states
   isSubmitLoading?: boolean
   isCancelLoading?: boolean
   isOfferRunnerUpLoading?: boolean
   isRelistLoading?: boolean
+  isCloseLoading?: boolean
+  isProvisionOrderLoading?: boolean
 }
 
 const actionConfig: Record<SellerAction, {
@@ -48,12 +58,16 @@ const actionConfig: Record<SellerAction, {
   configureShipping: { icon: <TruckOutlined />, labelKey: 'configureShipping', labelFallback: 'Shipping', type: 'default' },
   offerRunnerUp: { icon: <UserSwitchOutlined />, labelKey: 'offerRunnerUp', labelFallback: 'Offer Runner-Up', type: 'default' },
   relist: { icon: <ReloadOutlined />, labelKey: 'relistAuction', labelFallback: 'Relist', type: 'primary' },
+  close: { icon: <CloseCircleOutlined />, labelKey: 'closeAuction', labelFallback: 'Close', danger: true },
+  provisionOrder: { icon: <PlusSquareOutlined />, labelKey: 'provisionOrder', labelFallback: 'Create Order', type: 'primary' },
+  viewOrder: { icon: <FileTextOutlined />, labelKey: 'viewOrder', labelFallback: 'View Order', type: 'primary' },
 }
 
 export function SellerActionBar({
   status,
   verifyByPlatform,
   itemStatus,
+  hasOrder,
   isMobile,
   onEdit,
   onSubmit,
@@ -63,14 +77,20 @@ export function SellerActionBar({
   onConfigureShipping,
   onOfferRunnerUp,
   onRelist,
+  onClose,
+  onProvisionOrder,
+  onViewOrder,
+  canOfferRunnerUp,
   isSubmitLoading,
   isCancelLoading,
   isOfferRunnerUpLoading,
   isRelistLoading,
+  isCloseLoading,
+  isProvisionOrderLoading,
 }: SellerActionBarProps) {
   const { t } = useTranslation('auction')
 
-  const actions = getSellerActions({ status, verifyByPlatform })
+  const actions = getSellerActions({ status, verifyByPlatform, canOfferRunnerUp, itemStatus, hasOrder })
   if (actions.length === 0) return null
 
   const handlers: Record<SellerAction, (() => void) | undefined> = {
@@ -82,6 +102,9 @@ export function SellerActionBar({
     configureShipping: onConfigureShipping,
     offerRunnerUp: onOfferRunnerUp,
     relist: onRelist,
+    close: onClose,
+    provisionOrder: onProvisionOrder,
+    viewOrder: onViewOrder,
   }
 
   const loadingMap: Partial<Record<SellerAction, boolean>> = {
@@ -89,6 +112,8 @@ export function SellerActionBar({
     cancel: isCancelLoading,
     offerRunnerUp: isOfferRunnerUpLoading,
     relist: isRelistLoading,
+    close: isCloseLoading,
+    provisionOrder: isProvisionOrderLoading,
   }
 
   const submitDisabled = isSubmitDisabled(itemStatus)
@@ -126,6 +151,28 @@ export function SellerActionBar({
                 cancelText={t('cancel', 'Cancel')}
               >
                 <Button
+                  icon={config.icon}
+                  loading={loading}
+                  size="middle"
+                >
+                  {t(config.labelKey, config.labelFallback)}
+                </Button>
+              </Popconfirm>
+            )
+          }
+
+          if (action === 'close') {
+            return (
+              <Popconfirm
+                key={action}
+                title={t('closeAuctionConfirm', 'Are you sure you want to close this auction? This will end the auction process.')}
+                onConfirm={handler}
+                okText={t('confirm', 'Confirm')}
+                cancelText={t('cancel', 'Cancel')}
+                okButtonProps={{ danger: true }}
+              >
+                <Button
+                  danger
                   icon={config.icon}
                   loading={loading}
                   size="middle"

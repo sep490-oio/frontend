@@ -3,9 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { App, Button, Spin } from 'antd'
 import { Link, useSearchParams } from 'react-router'
 import { useConfirmEmail, useResendConfirmEmail } from '@/features/auth/api'
-import type { AxiosError } from 'axios'
-import type { ApiError } from '@/types'
 import { SERIF_FONT } from '@/styles/tokens'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 
 export default function ConfirmEmailPage() {
   const { t } = useTranslation('auth')
@@ -88,8 +87,7 @@ export default function ConfirmEmailPage() {
 
   // Error
   if (confirmMutation.isError) {
-    const axiosError = confirmMutation.error as AxiosError<ApiError>
-    const detail = axiosError.response?.data?.detail
+    const errorMessage = normalizeErrorMessage(confirmMutation.error, t('confirmEmail.errorDesc', 'Token đã hết hạn hoặc không hợp lệ.'))
 
     const handleResend = () => {
       if (!email) {
@@ -116,7 +114,7 @@ export default function ConfirmEmailPage() {
           {t('confirmEmail.error', 'Xác nhận thất bại')}
         </h2>
         <p style={{ color: 'var(--color-text-secondary)', marginBottom: 24 }}>
-          {detail ?? t('confirmEmail.errorDesc', 'Token đã hết hạn hoặc không hợp lệ.')}
+          {errorMessage}
         </p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
           {email && (

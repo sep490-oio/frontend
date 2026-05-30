@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
+import { getServerNow, getServerNowMs } from '@/utils/time'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import {
   Typography,
@@ -14,7 +15,6 @@ import {
   Breadcrumb,
   Input,
   DatePicker,
-  Flex,
 } from 'antd'
 import dayjs from 'dayjs'
 import { ArrowLeftOutlined, FlagOutlined } from '@ant-design/icons'
@@ -41,11 +41,13 @@ import {
   useCancelAuction,
   useAdminRejectAuction,
   useSetAuctionTiming,
-} from '@/features/auction/api'
+  useCloseAuction,
+} from '@/features/auction/auctionApi'
 import { useWallet, useCreateDepositPayment, useDepositFromWallet } from '@/features/payment/api'
 import { useAuctionHub } from '@/features/auction/hooks/useAuctionHub'
 import { useUserHub } from '@/features/auction/hooks/useUserHub'
 import { queryClient, queryKeys } from '@/lib/queryClient'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 import { useAuth } from '@/hooks/useAuth'
 import { useCurrentUser } from '@/features/user/api'
 import { ImageGallery } from '@/components/ui/ImageGallery'
@@ -65,6 +67,8 @@ import { PriceHistoryChart } from '@/features/auction/components/PriceHistoryCha
 import { SellerActionBar } from '@/features/auction/components/SellerActionBar'
 import { CreateDisputeModal } from '@/features/order/components/CreateDisputeModal'
 import { addSpotlightRecent } from '@/components/layout/SpotlightSearchModal'
+import { useDisputeEligibility } from '@/features/dispute/hooks/useDisputeEligibility'
+import { AuctionTimingSection } from '@/features/auction/components/AuctionTimingSection'
 
 // ── Qualification state helper ──────────────────────────────────────
 
@@ -83,7 +87,7 @@ function computeQualificationState(
   if (userId && auction.sellerId === userId) return 'is_seller'
   if (isQualified) return 'qualified'
 
-  const now = Date.now()
+  const now = getServerNowMs()
   const qualStart = auction.qualificationStartAt ? new Date(auction.qualificationStartAt).getTime() : null
   const qualEnd = auction.qualificationEndAt ? new Date(auction.qualificationEndAt).getTime() : null
 
@@ -123,6 +127,8 @@ export default function AuctionDetailPage() {
   const bidderTerms = useTermsGate('bidder')
   const { isAuthenticated } = useAuth()
   const { data: currentUser } = useCurrentUser()
+
+  const { data: eligibility } = useDisputeEligibility('auction', id, { enabled: !!id && isAuthenticated })
 
   // Cache key is scoped by auth context (anon vs. userId). When the user logs in
   // or `useCurrentUser` resolves, `userScope` changes and React Query refetches
@@ -228,10 +234,12 @@ export default function AuctionDetailPage() {
   const relistAuction = useRelistAuction()
   const submitAuctionMutation = useSubmitAuction()
   const cancelAuctionMutation = useCancelAuction()
+  const closeAuctionMutation = useCloseAuction()
   const adminRejectMutation = useAdminRejectAuction()
   const adminRemoveItemMutation = useAdminRemoveItem()
   const setAuctionTimingMutation = useSetAuctionTiming()
   const [shippingForm] = Form.useForm<ShippingDetailsFormValues>()
+  const [relistModalForm] = Form.useForm()
 
   const [bidAmount, setBidAmount] = useState<number | null>(null)
   const [autoBidModalOpen, setAutoBidModalOpen] = useState(false)
@@ -253,12 +261,6 @@ export default function AuctionDetailPage() {
   const [depositModalOpen, setDepositModalOpen] = useState(false)
   const [shippingModalOpen, setShippingModalOpen] = useState(false)
   const [relistModalOpen, setRelistModalOpen] = useState(false)
-  const [relistForm, setRelistForm] = useState<{
-    qualificationStartAt: dayjs.Dayjs | null
-    qualificationEndAt: dayjs.Dayjs | null
-    startAt: dayjs.Dayjs | null
-    endAt: dayjs.Dayjs | null
-  }>({ qualificationStartAt: null, qualificationEndAt: null, startAt: null, endAt: null })
   const [reportModalOpen, setReportModalOpen] = useState(false)
   const [cancelModalOpen, setCancelModalOpen] = useState(false)
   const [chartModalOpen, setChartModalOpen] = useState(false)
@@ -284,6 +286,10 @@ export default function AuctionDetailPage() {
   })
   const [submitPendingTiming, setSubmitPendingTiming] = useState(false)
   const [pendingActivation, setPendingActivation] = useState(false)
+  // Client-side flag: set to true when the local countdown timer reaches zero
+  // for an Active auction. Immediately disables bid/buy-now UI while we wait
+  // for the server to process the EndAuction command and broadcast AuctionEnded.
+  const [countdownExpired, setCountdownExpired] = useState(false)
   const hasJustDeposited = useRef(false)
   // Report/dispute modal uses CreateDisputeModal — no inline hook needed
 
@@ -321,7 +327,7 @@ export default function AuctionDetailPage() {
   // If returning from VnPay deposit with success flag, mark qualified
   useEffect(() => {
     if (depositedParam && id && storageKey) {
-      const now = Date.now().toString()
+      const now = getServerNowMs().toString()
       localStorage.setItem(storageKey, 'true')
       localStorage.setItem(`${storageKey}_ts`, now)
       setIsQualified(true)
@@ -340,12 +346,18 @@ export default function AuctionDetailPage() {
 
     const isDataForCurrentUser = data && detailUserScope === currentUser?.id
     const lastDepositTs = parseInt(localStorage.getItem(`${storageKey}_ts`) || '0', 10)
-    const isRecentlyDeposited = (Date.now() - lastDepositTs) < 30000 || hasJustDeposited.current
+    const isRecentlyDeposited = (getServerNowMs() - lastDepositTs) < 30000 || hasJustDeposited.current
 
     if (isDataForCurrentUser && !isLoading && !isFetching && !data.currentUserParticipant && !isRecentlyDeposited) {
-      localStorage.removeItem(storageKey)
-      localStorage.removeItem(`${storageKey}_ts`)
-      setIsQualified(false)
+      // Aggressively clearing the storage key when participant data is missing can cause 
+      // race condition bugs if a refetch drops the info momentarily. 
+      // We only clear if they weren't already explicitly qualified in storage.
+      const isQualifiedNow = localStorage.getItem(storageKey) === 'true'
+      if (!isQualifiedNow) {
+        localStorage.removeItem(storageKey)
+        localStorage.removeItem(`${storageKey}_ts`)
+        setIsQualified(false)
+      }
       return
     }
 
@@ -375,7 +387,7 @@ export default function AuctionDetailPage() {
 
     if (!isQualifiedOnServer && !isLoading) {
       const lastDepositTs = parseInt(localStorage.getItem(`${storageKey}_ts`) || '0', 10)
-      const recentlyDeposited = (Date.now() - lastDepositTs) < 30000
+      const recentlyDeposited = (getServerNowMs() - lastDepositTs) < 30000
 
       if (recentlyDeposited) {
         const timer = setInterval(() => {
@@ -522,6 +534,8 @@ export default function AuctionDetailPage() {
     if (hub.auctionEnded && storageKey) {
       localStorage.removeItem(storageKey)
       setIsQualified(false)
+      // Ensure bid/buy-now UI is locked (belt-and-suspenders with countdownExpired)
+      setCountdownExpired(true)
 
       const isWinner = currentUser?.id && hub.auctionEnded.winnerId === currentUser.id
       if (isWinner) {
@@ -559,6 +573,10 @@ export default function AuctionDetailPage() {
     if (!pendingActivation || !id) return
     if (auction?.status === AuctionStatus.Active) {
       setPendingActivation(false)
+      // Ensure countdownExpired is cleared — it may have been incorrectly set
+      // during the Scheduled→Active race (start-time countdown firing after
+      // SignalR patched status to Active).
+      setCountdownExpired(false)
       return
     }
     const interval = setInterval(() => {
@@ -578,14 +596,14 @@ export default function AuctionDetailPage() {
     const nextBoundary = [auction.qualificationStartAt, auction.qualificationEndAt]
       .filter((value): value is string => Boolean(value))
       .map((value) => new Date(value).getTime())
-      .filter((value) => value > Date.now())
+      .filter((value) => value > getServerNowMs())
       .sort((a, b) => a - b)[0]
 
     if (!nextBoundary) return
 
     const timeout = window.setTimeout(() => {
       setQualificationBoundaryTick((value) => value + 1)
-    }, Math.max(0, nextBoundary - Date.now()) + 250)
+    }, Math.max(0, nextBoundary - getServerNowMs()) + 250)
 
     return () => window.clearTimeout(timeout)
   }, [auction, auction?.qualificationEndAt, auction?.qualificationStartAt, qualificationBoundaryTick])
@@ -604,23 +622,31 @@ export default function AuctionDetailPage() {
       // If server says they are clearly not qualified (pending, rejected, etc.), return a boundary state
       if (
         (serverQualStatus as any) === 'rejected' ||
-        (serverQualStatus as any) === 'expired' ||
-        (serverQualStatus as any) === 'none' ||
-        (serverQualStatus as any) === 'pending'
+        (serverQualStatus as any) === 'expired'
       ) {
         // Fall back to window calculation but NOT to 'qualified'
         const base = auction
           ? computeQualificationState(
             { ...auction, sellerId: item?.sellerId ?? auction.sellerId ?? '' },
             currentUser?.id,
-            false, // Don't use local storage qualified flag if server has a participant record
+            false, // Don't use local storage qualified flag if server explicitly rejected them
           )
           : 'before_window'
         return base === 'qualified' ? 'window_open' : base // Ensure we don't return 'qualified'
       }
-      
-      // Trust the optimistic flag to mask caching/webhook delays right after deposit
+
+      // If they were already qualified locally but the server returned 'none' or 'pending' momentarily 
+      // (due to cache delays or race conditions), trust the local storage.
       if (isQualifiedInStorage) return 'qualified' as QualificationState
+
+      // If they are not qualified locally and server returned 'none' or 'pending', restrict access.
+      if ((serverQualStatus as any) === 'none' || (serverQualStatus as any) === 'pending') {
+        const base = auction
+          ? computeQualificationState({ ...auction, sellerId: item?.sellerId ?? auction.sellerId ?? '' }, currentUser?.id, false)
+          : 'before_window'
+        return base === 'qualified' ? 'window_open' : base
+      }
+
     }
 
     // 3. Fallback for guests or initial loads: trust localStorage ONLY for guests or very early loads
@@ -655,6 +681,11 @@ export default function AuctionDetailPage() {
     if (!ensureTermsAccepted()) return
     if (isSeller) return
     if (!id || !bidAmount) return
+    // Client-side guard: if the local countdown has expired, reject immediately.
+    if (countdownExpired) {
+      message.warning(t('auctionEndedCannotBid', 'Auction has ended. Bids are no longer accepted.'))
+      return
+    }
     const rawBid = bidAmount
     try {
       let result: Partial<import('@/types').PlaceBidResultDto> = {}
@@ -664,7 +695,7 @@ export default function AuctionDetailPage() {
         const idempotencyKey = crypto.randomUUID()
         const hubResult = await hub.placeBid(rawBid, currency, idempotencyKey)
         if (!hubResult.success) {
-          throw new Error(hubResult.error ?? t('bidError', 'Failed to place bid'))
+          throw new Error(normalizeErrorMessage(hubResult.error, t('bidError', 'Failed to place bid')))
         }
         result = hubResult.data ?? {}
       } else {
@@ -698,7 +729,7 @@ export default function AuctionDetailPage() {
               position: result.wasImmediatelyOutbid ? 'outbid' : 'leading',
               isCurrentWinner: !result.wasImmediatelyOutbid,
               latestBidAmount: effectiveAmount,
-              latestBidAt: new Date().toISOString(),
+              latestBidAt: getServerNow().toISOString(),
               hasAutoBid: old.currentUserBidState?.hasAutoBid ?? false,
             },
           } : old,
@@ -732,8 +763,7 @@ export default function AuctionDetailPage() {
 
       setBidAmount(null)
     } catch (err) {
-      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      message.error(detail ?? (err as Error)?.message ?? t('bidError', 'Failed to place bid'))
+      message.error(normalizeErrorMessage(err, t('bidError', 'Failed to place bid')))
     }
   }
 
@@ -750,9 +780,7 @@ export default function AuctionDetailPage() {
     } catch (err) {
       // Revert optimistic update on error
       setOptimisticIsWatching(null)
-      const data = (err as { response?: { data?: any } })?.response?.data
-      const detail = data?.detail ?? data?.title ?? data?.message ?? (err as Error)?.message
-      message.error(detail ?? t('watchError', 'Failed to update watchlist'))
+      message.error(normalizeErrorMessage(err, t('watchError', 'Failed to update watchlist')))
     }
   }
 
@@ -760,8 +788,13 @@ export default function AuctionDetailPage() {
     if (!ensureTermsAccepted()) return
     if (!id || !autoBidMax) return
     try {
-      await autoBidMutation.mutateAsync({ auctionId: id, maxAmount: autoBidMax, currency, incrementAmount: autoBidIncrement ?? undefined })
-      message.success(t('autoBidConfigured', 'Auto-bid configured'))
+      const result = await autoBidMutation.mutateAsync({ auctionId: id, maxAmount: autoBidMax, currency, incrementAmount: autoBidIncrement ?? undefined })
+      const bidWasPlaced = result.totalAutoBids > 0
+      if (bidWasPlaced) {
+        message.success(t('autoBid.configuredAndBidPlaced', 'Auto-bid configured and placed your opening/proxy bid.'))
+      } else {
+        message.success(t('autoBid.configured', 'Auto-bid configured.'))
+      }
       setAutoBidModalOpen(false)
     } catch {
       message.error(t('autoBidError', 'Failed to configure auto-bid'))
@@ -776,8 +809,7 @@ export default function AuctionDetailPage() {
       setBuyNowConfirmOpen(false)
       navigate(`/checkout/${result.orderId}`)
     } catch (err) {
-      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      message.error(detail ?? t('buyNowError', 'Buy now failed'))
+      message.error(normalizeErrorMessage(err, t('buyNowError', 'Buy now failed')))
     }
   }, [id, buyNowMutation, message, t, navigate])
 
@@ -785,7 +817,7 @@ export default function AuctionDetailPage() {
     if (!ensureTermsAccepted()) return
     if (!id || !auction) return
     try {
-      const depositAmount = auction.startingPrice?.amount ?? 0
+      const depositAmount = auction.requiredDepositAmount ?? auction.startingPrice?.amount ?? 0
       const result = await depositMutation.mutateAsync({
         amount: depositAmount,
         currency,
@@ -798,15 +830,14 @@ export default function AuctionDetailPage() {
       // Redirect to VNPay
       window.location.href = result.paymentUrl
     } catch (err) {
-      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      message.error(detail ?? t('depositError', 'Failed to create deposit payment'))
+      message.error(normalizeErrorMessage(err, t('depositError', 'Failed to create deposit payment')))
     }
   }
 
   const handleWalletDeposit = async () => {
     if (bidderTerms.hasPending) { bidderTerms.openModal(); return }
     if (!id || !auction) return
-    const depositAmount = auction.startingPrice?.amount ?? 0
+    const depositAmount = auction.requiredDepositAmount ?? auction.startingPrice?.amount ?? 0
 
     modal.confirm({
       title: t('confirmDeposit', 'Confirm Deposit'),
@@ -833,8 +864,7 @@ export default function AuctionDetailPage() {
           message.success(t('depositSuccess', 'Deposit successful — you are now qualified to bid!'))
           queryClient.invalidateQueries({ queryKey: queryKeys.auctions.detail(id) })
         } catch (err) {
-          const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-          message.error(detail ?? t('depositError', 'Deposit failed'))
+          message.error(normalizeErrorMessage(err, t('depositError', 'Deposit failed')))
         }
       },
     })
@@ -843,7 +873,7 @@ export default function AuctionDetailPage() {
   // Keep original VnPay deposit handler (redirects to external gateway)
   const _handleWalletDepositDirect = async () => {
     if (!id || !auction) return
-    const depositAmount = auction.startingPrice?.amount ?? 0
+    const depositAmount = auction.requiredDepositAmount ?? auction.startingPrice?.amount ?? 0
     try {
       await walletDepositMutation.mutateAsync({ auctionId: id, amount: depositAmount, currency })
       if (storageKey) {
@@ -854,8 +884,7 @@ export default function AuctionDetailPage() {
       queryClient.invalidateQueries({ queryKey: queryKeys.auctions.detail(id) })
     } catch (err) {
 
-      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      message.error(detail ?? t('depositError', 'Deposit failed'))
+      message.error(normalizeErrorMessage(err, t('depositError', 'Deposit failed')))
     }
   }
   void _handleWalletDepositDirect
@@ -889,20 +918,7 @@ export default function AuctionDetailPage() {
         setCancelModalOpen(false)
       },
       onError: (err: unknown) => {
-        const apiErr = err as { response?: { data?: { code?: string; detail?: string } } }
-        const code = apiErr?.response?.data?.code
-        if (code === 'Auction.CancelBlocked.ActiveBids') {
-          message.warning(
-            t(
-              'cancelBlockedActiveBids',
-              'Không thể hủy phiên đấu giá khi đã có người đặt giá. Vui lòng liên hệ admin nếu cần xử lý khẩn cấp.',
-            ),
-          )
-          return
-        }
-        // fallback to BE detail or generic message — let global error handler log the rest
-        const detail = apiErr?.response?.data?.detail
-        if (detail) message.error(detail)
+        message.error(normalizeErrorMessage(err, t('cancelError', 'Failed to cancel auction')))
       },
     })
   }
@@ -931,9 +947,7 @@ export default function AuctionDetailPage() {
         setAdminRejectReason('')
       },
       onError: (err: unknown) => {
-        const apiErr = err as { response?: { data?: { detail?: string } } }
-        const detail = apiErr?.response?.data?.detail
-        if (detail) message.error(detail)
+        message.error(normalizeErrorMessage(err, t('adminRejectError', 'Failed to reject auction')))
       },
     })
   }
@@ -951,9 +965,7 @@ export default function AuctionDetailPage() {
         setAdminRemoveItemReason('')
       },
       onError: (err: unknown) => {
-        const apiErr = err as { response?: { data?: { detail?: string } } }
-        const detail = apiErr?.response?.data?.detail
-        if (detail) message.error(detail)
+        message.error(normalizeErrorMessage(err, t('adminRemoveItemError', 'Failed to remove item')))
       },
     })
   }
@@ -1003,6 +1015,24 @@ export default function AuctionDetailPage() {
     }
   }
 
+  const handleRelistConfirm = async () => {
+    try {
+      const values = await relistModalForm.validateFields()
+      const result = await relistAuction.mutateAsync({
+        auctionId: id ?? '',
+        qualificationStartAt: dayjs(values.qualificationStartAt).toISOString(),
+        qualificationEndAt: dayjs(values.qualificationEndAt).toISOString(),
+        startAt: dayjs(values.startTime).toISOString(),
+        endAt: dayjs(values.endTime).toISOString(),
+      })
+      message.success(t('relistSuccess', 'Auction relisted'))
+      setRelistModalOpen(false)
+      if (result.id) navigate(`/auctions/${result.id}`)
+    } catch {
+      // Validation failed or mutation error
+    }
+  }
+
   // ── Loading / empty states ──────────────────────────────────────
 
   if (isPageLoading) {
@@ -1029,6 +1059,13 @@ export default function AuctionDetailPage() {
 
   const images = item.images ?? []
   const endTime = auction.endTime
+
+  // Platform-verified = item has been through the warehouse inspection pipeline
+  // (has an inbound shipment) AND is no longer awaiting inspection (status !== pending_verify).
+  // We also accept the seller's request flag as a secondary indicator.
+  const isPlatformVerified = !!(
+    (item.hasInboundShipment || auction.verifyByPlatform) && item.status !== 'pending_verify'
+  )
 
   return (
     <div className="oio-fade-in" style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px 12px 100px' : isTablet ? '20px 16px 80px' : '24px 24px 80px' }}>
@@ -1063,7 +1100,7 @@ export default function AuctionDetailPage() {
       </button>
 
       {/* Report Auction button */}
-      {isAuthenticated && !isSeller && (
+      {isAuthenticated && eligibility?.canReport && (
         <Button
           size="small"
           icon={<FlagOutlined />}
@@ -1115,11 +1152,14 @@ export default function AuctionDetailPage() {
           onCancel={handleSellerCancel}
           onConfigureShipping={() => { shippingForm.resetFields(); setShippingModalOpen(true) }}
           onOfferRunnerUp={() => offerRunnerUp.mutateAsync(id!).then(() => message.success(t('offerRunnerUpSuccess', 'Offer sent')))}
-          onRelist={() => { setRelistForm({ qualificationStartAt: null, qualificationEndAt: null, startAt: null, endAt: null }); setRelistModalOpen(true) }}
+          onRelist={() => { relistModalForm.resetFields(); setRelistModalOpen(true) }}
+          onClose={() => closeAuctionMutation.mutateAsync(id!).then(() => message.success(t('closeAuctionSuccess', 'Auction closed')))}
+          canOfferRunnerUp={auction?.canOfferRunnerUp}
           isSubmitLoading={submitAuctionMutation.isPending}
           isCancelLoading={cancelAuctionMutation.isPending}
           isOfferRunnerUpLoading={offerRunnerUp.isPending}
           isRelistLoading={relistAuction.isPending}
+          isCloseLoading={closeAuctionMutation.isPending}
         />
       )}
 
@@ -1152,7 +1192,7 @@ export default function AuctionDetailPage() {
               images={images}
               alt={item.title}
               showOverlayBadges
-              isVerified={auction.verifyByPlatform}
+              isVerified={isPlatformVerified}
               viewCount={viewCount}
               maxThumbnails={isMobile ? 3 : 5}
             />
@@ -1191,6 +1231,7 @@ export default function AuctionDetailPage() {
               qaConnected={hub.connected}
               qaLastSyncedAt={hub.lastSyncedAt}
               currentUserId={currentUser?.id}
+              isPlatformVerified={isPlatformVerified}
             />
           </div>
         </Col>
@@ -1259,7 +1300,7 @@ export default function AuctionDetailPage() {
             onExpandChart={() => setChartModalOpen(true)}
             qualificationStatus={isQualified ? 'qualified' : data?.currentUserParticipant?.qualificationStatus}
             depositStatus={data?.currentUserParticipant?.depositStatus}
-            depositAmount={data?.currentUserParticipant?.depositAmount ?? auction.startingPrice?.amount}
+            depositAmount={data?.currentUserParticipant?.depositAmount ?? auction.requiredDepositAmount ?? auction.startingPrice?.amount}
             onDeposit={() => {
               if (!ensureTermsAccepted()) return
               setDepositModalOpen(true)
@@ -1272,8 +1313,8 @@ export default function AuctionDetailPage() {
                 ? () => navigate(`/checkout/${winnerPayNowOrderId}`)
                 : undefined
             }
-            canBid={isActive && isAuthenticated && qualState === 'qualified' && !isSeller && !isAdmin}
-            canBuyNow={isAuthenticated && !isSeller && !isAdmin && !isTerminal && (auction?.status !== AuctionStatus.Active || qualState === 'qualified')}
+            canBid={isActive && !countdownExpired && isAuthenticated && qualState === 'qualified' && !isSeller && !isAdmin}
+            canBuyNow={isAuthenticated && !isSeller && !isAdmin && !isTerminal && !countdownExpired && (auction?.status !== AuctionStatus.Active || qualState === 'qualified')}
             currentBuyerOrder={data?.currentBuyerOrder}
             onViewOrderClick={(orderId) => navigate(`/me/orders/${orderId}`)}
             isOrderProvisioning={pollingForOrder}
@@ -1290,6 +1331,21 @@ export default function AuctionDetailPage() {
                 queryClient.setQueryData(queryKeys.auctions.detailFor(id!, detailUserScope), (old: import('@/types').AuctionDetailDto | undefined) =>
                   old ? { ...old, auction: { ...old.auction, status: AuctionStatus.Active } } : old,
                 )
+              } else if (auction?.status === AuctionStatus.Active) {
+                // Guard: if pendingActivation is still true, this onEnd was fired by
+                // the "Starts In" countdown that re-rendered momentarily after a
+                // SignalR AuctionStateChanged patched status to Active before our
+                // optimistic update ran. In that case we must NOT mark the auction
+                // as countdown-expired — the end-time countdown hasn't even started.
+                // Belt-and-suspenders: also verify endTime is genuinely near zero.
+                const endMs = endTime ? new Date(endTime).getTime() : 0
+                const nowMs = getServerNowMs()
+                const isEndTimeNear = endMs > 0 && (endMs - nowMs) < 60_000
+                if (!pendingActivation && isEndTimeNear) {
+                  // Timer hit zero for an active auction — immediately disable bidding
+                  // while the server processes the EndAuction command.
+                  setCountdownExpired(true)
+                }
               }
               queryClient.invalidateQueries({ queryKey: queryKeys.auctions.detail(id!) })
               refetch()
@@ -1362,7 +1418,7 @@ export default function AuctionDetailPage() {
         onOk={handleAutoBid}
         confirmLoading={autoBidMutation.isPending}
         okText={t('confirmAutoBid', 'Confirm Auto-Bid')}
-        okButtonProps={{ disabled: !autoBidMax || autoBidMax <= currentPrice }}
+        okButtonProps={{ disabled: !autoBidMax || autoBidMax <= currentPrice || autoBidMax > walletBalance }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Typography.Paragraph style={{ margin: 0, fontSize: 13, color: 'var(--color-text-secondary)' }}>
@@ -1382,14 +1438,23 @@ export default function AuctionDetailPage() {
               style={{ width: '100%' }}
               size="large"
               min={minBid}
+              max={walletBalance > 0 ? walletBalance : undefined}
               step={auction?.bidIncrement?.amount ?? 0}
               value={autoBidMax}
               onChange={(v) => setAutoBidMax(v)}
               addonAfter={currency}
+              status={autoBidMax && autoBidMax > walletBalance ? 'error' : undefined}
+              formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+              parser={(v) => (v ?? '').replace(/\$\s?|(,*)/g, '') as any}
             />
             <Typography.Text style={{ fontSize: 12, color: 'var(--color-text-secondary)', display: 'block', marginTop: 4 }}>
               {t('autoBidMinHelp', 'Must be higher than current price')}: {formatCurrency(currentPrice, currency)}
             </Typography.Text>
+            {autoBidMax != null && autoBidMax > walletBalance && (
+              <Typography.Text type="danger" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>
+                {t('autoBidExceedsBalance', 'Maximum amount cannot exceed your wallet balance')} ({formatCurrency(walletBalance, currency)})
+              </Typography.Text>
+            )}
           </div>
           <div>
             <span className="oio-label" style={{ display: 'block', marginBottom: 6 }}>
@@ -1404,6 +1469,8 @@ export default function AuctionDetailPage() {
               onChange={(v) => setAutoBidIncrement(v)}
               addonAfter={currency}
               placeholder={t('autoBidIncrementPlaceholder', 'Default: auction increment ({{amount}})', { amount: formatCurrency(auction?.bidIncrement?.amount ?? 0, currency) })}
+              formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+              parser={(v) => (v ?? '').replace(/\$\s?|(,*)/g, '') as any}
             />
             <Typography.Text style={{ fontSize: 12, color: 'var(--color-text-secondary)', display: 'block', marginTop: 4 }}>
               {t('autoBidIncrementHelp', 'Custom step size for each auto-bid. Leave empty to use the auction default.')}
@@ -1482,7 +1549,7 @@ export default function AuctionDetailPage() {
             }
           }}
           auctionId={id}
-          requiredDepositAmount={auction.startingPrice?.amount ?? 0}
+          requiredDepositAmount={auction.requiredDepositAmount ?? auction.startingPrice?.amount ?? 0}
           currency={currency}
         />
       )}
@@ -1492,92 +1559,33 @@ export default function AuctionDetailPage() {
         title={t('relistAuction', 'Relist Auction')}
         open={relistModalOpen}
         onCancel={() => setRelistModalOpen(false)}
-        onOk={async () => {
-          if (!relistForm.qualificationStartAt || !relistForm.qualificationEndAt || !relistForm.startAt || !relistForm.endAt) return
-          try {
-            const result = await relistAuction.mutateAsync({
-              auctionId: id ?? '',
-              qualificationStartAt: relistForm.qualificationStartAt.toISOString(),
-              qualificationEndAt: relistForm.qualificationEndAt.toISOString(),
-              startAt: relistForm.startAt.toISOString(),
-              endAt: relistForm.endAt.toISOString(),
-            })
-            message.success(t('relistSuccess', 'Auction relisted'))
-            setRelistModalOpen(false)
-            if (result.id) navigate(`/auctions/${result.id}`)
-          } catch {
-            message.error(t('relistError', 'Failed to relist auction'))
-          }
-        }}
+        onOk={handleRelistConfirm}
         okText={t('confirmRelist', 'Relist')}
         okButtonProps={{
           loading: relistAuction.isPending,
-          disabled: !relistForm.qualificationStartAt || !relistForm.qualificationEndAt || !relistForm.startAt || !relistForm.endAt,
-          style: { background: 'var(--color-accent)', borderColor: 'var(--color-accent)' },
+          style: { background: 'var(--color-accent)', borderColor: 'var(--color-accent)', borderRadius: 8 },
         }}
+        cancelButtonProps={{ style: { borderRadius: 8 } }}
         centered
-        width={480}
+        width={isMobile ? '100%' : isTablet ? 800 : 1000}
+        style={{ borderRadius: 24 }}
       >
-        <Flex vertical gap={16} style={{ marginTop: 16 }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13 }}>
-              {t('qualificationStart', 'Qualification Start')} *
-            </label>
-            <DatePicker
-              showTime
-              style={{ width: '100%' }}
-              value={relistForm.qualificationStartAt}
-              onChange={(v) => setRelistForm((prev) => ({ ...prev, qualificationStartAt: v }))}
-              placeholder={t('selectStartTime', 'Select start time')}
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13 }}>
-              {t('qualificationEnd', 'Qualification End')} *
-            </label>
-            <DatePicker
-              showTime
-              style={{ width: '100%' }}
-              value={relistForm.qualificationEndAt}
-              onChange={(v) => setRelistForm((prev) => ({ ...prev, qualificationEndAt: v }))}
-              placeholder={t('selectEndTime', 'Select end time')}
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13 }}>
-              {t('auctionStart', 'Auction Start')} *
-            </label>
-            <DatePicker
-              showTime
-              style={{ width: '100%' }}
-              value={relistForm.startAt}
-              onChange={(v) => setRelistForm((prev) => ({ ...prev, startAt: v }))}
-              placeholder={t('selectStartTime', 'Select start time')}
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: 13 }}>
-              {t('auctionEnd', 'Auction End')} *
-            </label>
-            <DatePicker
-              showTime
-              style={{ width: '100%' }}
-              value={relistForm.endAt}
-              onChange={(v) => setRelistForm((prev) => ({ ...prev, endAt: v }))}
-              placeholder={t('selectEndTime', 'Select end time')}
-            />
-          </div>
-        </Flex>
+        <Form form={relistModalForm} layout="vertical">
+          <AuctionTimingSection form={relistModalForm} itemApproved={true} />
+        </Form>
       </Modal>
 
       {/* Report Auction Modal */}
-      <CreateDisputeModal
-        targetType="auction"
-        targetId={id!}
-        auctionId={id!}
-        open={reportModalOpen}
-        onClose={() => setReportModalOpen(false)}
-      />
+      {eligibility?.canReport && (
+        <CreateDisputeModal
+          targetType="auction"
+          targetId={id!}
+          auctionId={id!}
+          open={reportModalOpen}
+          onClose={() => setReportModalOpen(false)}
+          eligibility={eligibility}
+        />
+      )}
 
       {/* Cancel Auction Modal */}
       <Modal

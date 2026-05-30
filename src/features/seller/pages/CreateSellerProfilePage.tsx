@@ -59,7 +59,7 @@ export default function CreateSellerProfilePage() {
         <Button
           type="text"
           icon={<ArrowLeftOutlined />}
-          onClick={() => navigate(-1)}
+          onClick={() => { navigate(-1); }}
           style={{ marginBottom: 12, minHeight: 44, paddingLeft: 0 }}
         >
           {tc('action.back', 'Back')}
@@ -123,7 +123,7 @@ export default function CreateSellerProfilePage() {
                   </Col>
                   <Col span={12}>
                     <Button
-                      onClick={() => navigate(-1)}
+                      onClick={() => { navigate(-1); }}
                       block
                       style={{ minHeight: 48 }}
                     >
@@ -142,7 +142,7 @@ export default function CreateSellerProfilePage() {
                   >
                     {tc('action.create', 'Create')}
                   </Button>
-                  <Button onClick={() => navigate(-1)} style={{ minHeight: 44 }}>
+                  <Button onClick={() => { navigate(-1); }} style={{ minHeight: 44 }}>
                     {tc('action.cancel', 'Cancel')}
                   </Button>
                 </Space>

@@ -175,6 +175,7 @@ export const EscrowStatus = {
   ReleasedToSeller: 'released_to_seller',
   Disputed: 'disputed',
   RefundedToBuyer: 'refunded_to_buyer',
+  Forfeited: 'forfeited',
 } as const
 export type EscrowStatus = (typeof EscrowStatus)[keyof typeof EscrowStatus]
 

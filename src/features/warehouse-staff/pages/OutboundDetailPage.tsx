@@ -25,6 +25,7 @@ import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { MultiCaptureUploader } from '@/components/ui/MultiCaptureUploader'
 import type { CapturedPhoto } from '@/components/ui/MultiCaptureUploader'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 
 const GHN_HANDLING_KEYS = [
   { value: 'CHOTHUHANG', key: 'tryItem' },
@@ -77,7 +78,7 @@ export default function OutboundDetailPage() {
       heightCm: detail.heightCm,
       insuranceValue: detail.insuranceValueDefault,
       codAmount: detail.codAmountDefault,
-      shipmentMode: 'platform_managed',
+      shipmentMode: 'external_carrier',
     } as BookOutboundRequest)
   }, [detail, form])
 
@@ -121,8 +122,7 @@ export default function OutboundDetailPage() {
         navigate('/warehouse-staff/outbound')
       }
     } catch (err) {
-      const detailMsg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      message.error(detailMsg ?? t('bookError', 'Failed to book shipment'))
+      message.error(normalizeErrorMessage(err, t('bookError', 'Failed to book shipment')))
     }
   }
 
@@ -269,12 +269,12 @@ export default function OutboundDetailPage() {
               block
               options={[
                 {
-                  label: t('shipmentModePlatform', 'Platform Managed'),
-                  value: 'platform_managed',
-                },
-                {
                   label: t('shipmentModeExternal', 'External Carrier'),
                   value: 'external_carrier',
+                },
+                {
+                  label: t('shipmentModePlatform', 'Platform Managed'),
+                  value: 'platform_managed',
                 },
               ]}
             />

@@ -13,11 +13,45 @@ export type PermissionName = string
 export interface MonitoringAlertDto {
   id: string
   alertType: string
+  alertTitle?: string
   severity: AlertSeverity
   status: AlertStatus
   payload: string
   entityType: string
   entityId: string
+  score?: number
+  summary?: string
+  ageSeconds?: number
+  primaryEntity?: {
+    type: string
+    id: string
+    displayName?: string
+    url?: string
+  }
+  participants?: Array<{
+    role: string
+    userId: string
+    displayName?: string
+  }>
+  evidenceRefs?: Array<{
+    type: 'bid' | 'user' | 'auction' | 'order' | 'device' | 'ip'
+    idOrValue: string
+    label: string
+    route?: string
+    copyValue: string
+    group: 'primary_entity' | 'participants' | 'evidence' | 'related'
+    description: string
+  }>
+  windowLabel?: string
+  recommendedNextStep?: string
+  rawPayloadAvailable?: boolean
+  assignedTo?: string
+  assignedAt?: string
+  slaDueAt?: string
+  isOverdue?: boolean
+  resolutionOutcome?: string
+  resolutionReason?: string
+  fingerprint?: string
   notes?: string
   acknowledgedBy?: string
   acknowledgedAt?: string
@@ -51,6 +85,7 @@ export interface ReviewQueueItemDto {
   title: string
   sellerId: string
   sellerName: string
+  primaryImageUrl?: string | null
   submittedAt: string
   assignedTo?: string
   status: string
@@ -80,7 +115,11 @@ export interface PaymentTransactionDto {
   id: string
   transactionNumber?: string
   userId?: string
+  userDisplayName?: string | null
   orderId?: string
+  orderNumber?: string | null
+  auctionId?: string | null
+  auctionItemTitle?: string | null
   type: string
   amount: number
   fee?: number
@@ -172,4 +211,34 @@ export interface AdminCompletedAuctionDetailDto {
   order: OrderDto
   outboundShipment?: OutboundShipmentDto | null
   monitoringAlerts: MonitoringAlertDto[]
+}
+// -- Admin Orders -----------------------------------------------------
+
+export interface AdminOrderListItemDto {
+  id: string
+  orderNumber: string
+  auctionId: string
+  status: string
+  totalAmount: number
+  currency: string
+  buyerDisplayName?: string | null
+  sellerDisplayName?: string | null
+  itemTitle?: string | null
+  itemPrimaryImageUrl?: string | null
+  createdAt: string
+  paidAt?: string | null
+  completedAt?: string | null
+  cancelledAt?: string | null
+}
+
+export interface AdminOrderDetailDto {
+  order: OrderDto
+  outboundShipment?: OutboundShipmentDto | null
+  monitoringAlerts: MonitoringAlertDto[]
+  escrowSummary?: {
+    totalHeld: number
+    totalReleased: number
+    totalRefunded: number
+    currency: string
+  } | null
 }

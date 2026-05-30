@@ -11,7 +11,11 @@
     "monitoring": "Monitoring",
     "payments": "Payments",
     "terms": "Terms",
-    "roles": "Roles & Permissions"
+    "roles": "Roles & Permissions",
+    "usersManagement": "Users Management",
+    "catalogAndAuctions": "Catalog & Auctions",
+    "ordersAndFinances": "Orders & Finances",
+    "systemAndSettings": "System & Settings"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -244,7 +248,9 @@
     "resolutionStatus": {
       "resolved": "Resolved",
       "dismissed": "Dismissed"
-    }
+    },
+    "cancelBidWarning": "This action will cancel the bid and be recorded in the audit log. The cancellation reason will be saved.",
+    "cancelBidPlaceholder": "Enter cancellation reason (will be saved to audit log)…"
   },
   "reports": {
     "title": "Reports",
@@ -299,6 +305,57 @@
     "resolutionNotesOptional": "Resolution notes (optional)",
     "markAsIgnored": "Mark as ignored (false positive)",
     "ignore": "Ignore",
+    "subtitle": "Monitor fraud, payment, bidding behavior, and operational queues.",
+    "lastUpdated": "Last updated",
+    "refresh": "Refresh",
+    "retry": "Retry",
+    "genericError": "An error occurred",
+    "errorTitle": "Unable to load monitoring alerts",
+    "errorDescription": "Please retry or check the admin API connection.",
+    "alert": "Alert",
+    "score": "Score",
+    "scoreTooltip": "Risk score provided by the detection rule. Not every alert type has a score.",
+    "age": "Age",
+    "overdue": "Overdue",
+    "searchPlaceholder": "Search alert type, entity, ID, details...",
+    "alertTypeFilter": "Alert type",
+    "alertTypeCollusion": "Collusion",
+    "alertTypeRepeatedPair": "Repeated pair",
+    "alertTypeNonPayment": "Non-payment",
+    "alertTypeSuspicious": "Suspicious",
+    "entityTypeFilter": "Entity type",
+    "entityAuction": "Auction",
+    "entityUser": "User",
+    "entityOrder": "Order",
+    "dateFrom": "From date",
+    "dateTo": "To date",
+    "onlyUnack": "Unacknowledged",
+    "onlyUnackTooltip": "Only show open alerts that have not been acknowledged.",
+    "clearFilters": "Clear filters",
+    "emptyFiltered": "No alerts match the current filters.",
+    "emptyAll": "There are no monitoring alerts right now.",
+    "exportCsv": "Export CSV",
+    "exportEmpty": "No alerts to export",
+    "exportSuccess": "Exported {{count}} alerts",
+    "alertRecordShort": "Alert record #{{id}}",
+    "alertIdTooltip": "Alert ID is the monitoring record ID used for audit and debugging.",
+    "primaryEntity": "Primary entity",
+    "viewEntityType": "View {{type}}",
+    "entityIdShort": "{{type}} ID: {{id}}",
+    "entityTooltip": "The primary object that was flagged by this monitoring rule.",
+    "entityIdTooltip": "This is the primary entity ID. Open it to inspect the auction, user, or order.",
+    "detailsTooltip": "Business summary of why this alert was raised. Technical evidence IDs are grouped in the drawer.",
+    "confirmResolveTitle": "Confirm alert resolution",
+    "confirmResolveBody": "This is a {{severity}} alert. Confirm only after reviewing the evidence and related entity.",
+    "confirmResolveOutcomeNote": "Outcome: {{outcome}}",
+    "confirmResolveOk": "Resolve",
+    "resolveOutcome": "Outcome",
+    "outcomeResolvedValid": "Valid risk",
+    "outcomeIgnoredFalsePositive": "False positive",
+    "outcomeNoAction": "No action needed",
+    "resolutionReasonRequired": "Reason is required before resolving this alert.",
+    "reasonRequiredWarn": "Enter a reason so future reviewers can understand this resolution.",
+    "highRiskConfirmHint": "{{severity}} alerts require a final confirmation before resolving.",
     "stats": {
       "openAlerts": "Open Alerts",
       "critical": "Critical",
@@ -418,7 +475,8 @@
     "previewTitle": "Preview",
     "statusDraft": "Draft",
     "statusActive": "Active",
-    "statusArchived": "Archived"
+    "statusArchived": "Archived",
+    "selectTypeAndPdf": "Please select a terms type and upload a PDF document"
   },
   "roles": {
     "title": "Roles & Permissions",
@@ -444,178 +502,424 @@
     },
     "users": {
       "me": {
-        "read": { "label": "View my account", "description": "Read basic account information" },
+        "read": {
+          "label": "View my account",
+          "description": "Read basic account information"
+        },
         "profile": {
-          "read": { "label": "View my profile", "description": "Read own profile details" },
-          "update": { "label": "Update my profile", "description": "Edit own profile information" }
+          "read": {
+            "label": "View my profile",
+            "description": "Read own profile details"
+          },
+          "update": {
+            "label": "Update my profile",
+            "description": "Edit own profile information"
+          }
         },
         "password": {
-          "change": { "label": "Change my password", "description": "Update own account password" }
+          "change": {
+            "label": "Change my password",
+            "description": "Update own account password"
+          }
         },
         "sessions": {
-          "read": { "label": "View my sessions", "description": "See active login sessions" }
+          "read": {
+            "label": "View my sessions",
+            "description": "See active login sessions"
+          }
         },
-        "login-history": { "label": "View login history", "description": "See recent login activity" },
+        "login-history": {
+          "label": "View login history",
+          "description": "See recent login activity"
+        },
         "2fa": {
-          "manage": { "label": "Manage 2FA", "description": "Enable or disable two-factor authentication" }
+          "manage": {
+            "label": "Manage 2FA",
+            "description": "Enable or disable two-factor authentication"
+          }
         },
         "phone": {
-          "manage": { "label": "Manage phone number", "description": "Add or verify phone numbers" }
+          "manage": {
+            "label": "Manage phone number",
+            "description": "Add or verify phone numbers"
+          }
         },
         "address": {
-          "read": { "label": "View my addresses", "description": "See saved shipping addresses" },
-          "manage": { "label": "Manage my addresses", "description": "Add or edit shipping addresses" }
+          "read": {
+            "label": "View my addresses",
+            "description": "See saved shipping addresses"
+          },
+          "manage": {
+            "label": "Manage my addresses",
+            "description": "Add or edit shipping addresses"
+          }
         },
         "terms": {
-          "read": { "label": "View platform terms", "description": "Read current terms of service" },
-          "accept": { "label": "Accept terms", "description": "Accept platform terms and conditions" }
+          "read": {
+            "label": "View platform terms",
+            "description": "Read current terms of service"
+          },
+          "accept": {
+            "label": "Accept terms",
+            "description": "Accept platform terms and conditions"
+          }
         },
         "verification": {
-          "read": { "label": "View my verification", "description": "See own identity verification status" },
-          "manage": { "label": "Manage my verification", "description": "Submit or update identity documents" }
+          "read": {
+            "label": "View my verification",
+            "description": "See own identity verification status"
+          },
+          "manage": {
+            "label": "Manage my verification",
+            "description": "Submit or update identity documents"
+          }
         },
         "seller-profile": {
-          "read": { "label": "View my seller profile", "description": "See own seller profile details" },
-          "manage": { "label": "Manage my seller profile", "description": "Create or update seller profile" }
+          "read": {
+            "label": "View my seller profile",
+            "description": "See own seller profile details"
+          },
+          "manage": {
+            "label": "Manage my seller profile",
+            "description": "Create or update seller profile"
+          }
         },
         "notification-preferences": {
-          "read": { "label": "View notification settings", "description": "See own notification preferences" },
-          "manage": { "label": "Manage notification settings", "description": "Update notification preferences" }
+          "read": {
+            "label": "View notification settings",
+            "description": "See own notification preferences"
+          },
+          "manage": {
+            "label": "Manage notification settings",
+            "description": "Update notification preferences"
+          }
         }
       }
     },
     "me": {
       "auctions": {
-        "read": { "label": "View my auctions", "description": "See own auction listings" }
+        "read": {
+          "label": "View my auctions",
+          "description": "See own auction listings"
+        }
       },
       "bids": {
-        "read": { "label": "View my bids", "description": "See own bid history" }
+        "read": {
+          "label": "View my bids",
+          "description": "See own bid history"
+        }
       },
       "watchlist": {
-        "read": { "label": "View my watchlist", "description": "See watched auctions" }
+        "read": {
+          "label": "View my watchlist",
+          "description": "See watched auctions"
+        }
       },
       "orders": {
         "direct-ship": {
-          "read": { "label": "View direct-ship orders", "description": "See own direct-ship orders" }
+          "read": {
+            "label": "View direct-ship orders",
+            "description": "See own direct-ship orders"
+          }
         }
       },
       "shipments": {
         "outbound": {
-          "read": { "label": "View outbound shipments", "description": "See own outgoing shipments" }
+          "read": {
+            "label": "View outbound shipments",
+            "description": "See own outgoing shipments"
+          }
         },
         "inbound": {
-          "read": { "label": "View inbound shipments", "description": "See own incoming shipments" }
+          "read": {
+            "label": "View inbound shipments",
+            "description": "See own incoming shipments"
+          }
         }
       }
     },
     "items": {
-      "create": { "label": "Create items", "description": "List new items for sale" },
-      "activate": { "label": "Activate items", "description": "Publish items to the catalog" },
-      "resubmit": { "label": "Resubmit rejected items", "description": "Send rejected items back for review" },
+      "create": {
+        "label": "Create items",
+        "description": "List new items for sale"
+      },
+      "activate": {
+        "label": "Activate items",
+        "description": "Publish items to the catalog"
+      },
+      "resubmit": {
+        "label": "Resubmit rejected items",
+        "description": "Send rejected items back for review"
+      },
       "my": {
-        "read": { "label": "View my items", "description": "See own item listings" }
+        "read": {
+          "label": "View my items",
+          "description": "See own item listings"
+        }
       },
       "media": {
-        "manage": { "label": "Manage item media", "description": "Upload or remove item photos" }
+        "manage": {
+          "label": "Manage item media",
+          "description": "Upload or remove item photos"
+        }
       },
       "questions": {
-        "ask": { "label": "Ask item questions", "description": "Post questions on item pages" },
-        "answer": { "label": "Answer item questions", "description": "Reply to questions as seller" }
+        "ask": {
+          "label": "Ask item questions",
+          "description": "Post questions on item pages"
+        },
+        "answer": {
+          "label": "Answer item questions",
+          "description": "Reply to questions as seller"
+        }
       }
     },
     "auctions": {
-      "create": { "label": "Create auctions", "description": "Set up new auctions" },
-      "submit": { "label": "Submit auctions", "description": "Submit auctions for approval" },
-      "cancel": { "label": "Cancel own auction", "description": "Cancel a self-owned auction" },
-      "bid": { "label": "Place bids", "description": "Participate in auctions as a bidder" },
-      "buy-now": { "label": "Buy Now", "description": "Purchase auction items instantly" },
-      "auto-bid": { "label": "Place auto-bids", "description": "Enable automatic bidding up to a max price" },
-      "auto-bid:read": { "label": "View auto-bids", "description": "See configured auto-bids" },
-      "watch": { "label": "Watch auctions", "description": "Add auctions to watchlist" },
-      "unwatch": { "label": "Unwatch auctions", "description": "Remove auctions from watchlist" }
+      "create": {
+        "label": "Create auctions",
+        "description": "Set up new auctions"
+      },
+      "submit": {
+        "label": "Submit auctions",
+        "description": "Submit auctions for approval"
+      },
+      "cancel": {
+        "label": "Cancel own auction",
+        "description": "Cancel a self-owned auction"
+      },
+      "bid": {
+        "label": "Place bids",
+        "description": "Participate in auctions as a bidder"
+      },
+      "buy-now": {
+        "label": "Buy Now",
+        "description": "Purchase auction items instantly"
+      },
+      "auto-bid": {
+        "label": "Place auto-bids",
+        "description": "Enable automatic bidding up to a max price"
+      },
+      "auto-bid:read": {
+        "label": "View auto-bids",
+        "description": "See configured auto-bids"
+      },
+      "watch": {
+        "label": "Watch auctions",
+        "description": "Add auctions to watchlist"
+      },
+      "unwatch": {
+        "label": "Unwatch auctions",
+        "description": "Remove auctions from watchlist"
+      }
     },
     "warehouse": {
       "inbound": {
-        "book": { "label": "Book inbound shipment", "description": "Schedule a package into the warehouse" },
-        "update-external-status": { "label": "Update external inbound status", "description": "Manually update carrier status for external inbound" }
+        "book": {
+          "label": "Book inbound shipment",
+          "description": "Schedule a package into the warehouse"
+        },
+        "update-external-status": {
+          "label": "Update external inbound status",
+          "description": "Manually update carrier status for external inbound"
+        }
       },
       "outbound": {
-        "book": { "label": "Book outbound shipment", "description": "Schedule a package leaving the warehouse" },
-        "self-ship": { "label": "Self-ship outbound", "description": "Ship outbound package without platform carrier" },
-        "cancel": { "label": "Cancel outbound shipment", "description": "Cancel a pending outbound shipment" }
+        "book": {
+          "label": "Book outbound shipment",
+          "description": "Schedule a package leaving the warehouse"
+        },
+        "self-ship": {
+          "label": "Self-ship outbound",
+          "description": "Ship outbound package without platform carrier"
+        },
+        "cancel": {
+          "label": "Cancel outbound shipment",
+          "description": "Cancel a pending outbound shipment"
+        }
       },
       "item": {
-        "inspect": { "label": "Inspect warehouse items", "description": "Review and inspect stored items" },
-        "store": { "label": "Store items", "description": "Assign items to storage locations" },
-        "move": { "label": "Move items", "description": "Move items between storage locations" },
-        "adjust": { "label": "Adjust item records", "description": "Correct item metadata or condition notes" }
+        "inspect": {
+          "label": "Inspect warehouse items",
+          "description": "Review and inspect stored items"
+        },
+        "store": {
+          "label": "Store items",
+          "description": "Assign items to storage locations"
+        },
+        "move": {
+          "label": "Move items",
+          "description": "Move items between storage locations"
+        },
+        "adjust": {
+          "label": "Adjust item records",
+          "description": "Correct item metadata or condition notes"
+        }
       },
       "locations": {
-        "manage": { "label": "Manage storage locations", "description": "Create or delete storage bins" }
+        "manage": {
+          "label": "Manage storage locations",
+          "description": "Create or delete storage bins"
+        }
       },
       "shipments": {
-        "read": { "label": "View warehouse shipments", "description": "Read inbound and outbound shipment records" }
+        "read": {
+          "label": "View warehouse shipments",
+          "description": "Read inbound and outbound shipment records"
+        }
       },
       "shipping": {
-        "calculate-fee": { "label": "Calculate shipping fee", "description": "Query carrier shipping rates" },
-        "calculate-lead-time": { "label": "Calculate lead time", "description": "Query carrier delivery estimates" }
+        "calculate-fee": {
+          "label": "Calculate shipping fee",
+          "description": "Query carrier shipping rates"
+        },
+        "calculate-lead-time": {
+          "label": "Calculate lead time",
+          "description": "Query carrier delivery estimates"
+        }
       },
       "address": {
-        "sync": { "label": "Sync carrier addresses", "description": "Synchronize address data with carrier APIs" }
+        "sync": {
+          "label": "Sync carrier addresses",
+          "description": "Synchronize address data with carrier APIs"
+        }
       }
     },
     "media": {
       "contexts": {
-        "read": { "label": "View upload contexts", "description": "See available media upload contexts" }
+        "read": {
+          "label": "View upload contexts",
+          "description": "See available media upload contexts"
+        }
       },
-      "upload": { "label": "Upload files", "description": "Upload images and documents" },
-      "upload:confirm": { "label": "Confirm uploads", "description": "Finalize uploaded media" }
+      "upload": {
+        "label": "Upload files",
+        "description": "Upload images and documents"
+      },
+      "upload:confirm": {
+        "label": "Confirm uploads",
+        "description": "Finalize uploaded media"
+      }
     },
     "categories": {
-      "create": { "label": "Create categories", "description": "Add new product categories" },
-      "update": { "label": "Update categories", "description": "Edit existing categories" }
+      "create": {
+        "label": "Create categories",
+        "description": "Add new product categories"
+      },
+      "update": {
+        "label": "Update categories",
+        "description": "Edit existing categories"
+      }
     },
     "admin": {
       "users": {
-        "read": { "label": "View users", "description": "See all user accounts" },
-        "manage": { "label": "Manage users", "description": "Create, edit, and lock user accounts" },
-        "delete": { "label": "Delete users", "description": "Permanently remove user accounts" }
+        "read": {
+          "label": "View users",
+          "description": "See all user accounts"
+        },
+        "manage": {
+          "label": "Manage users",
+          "description": "Create, edit, and lock user accounts"
+        },
+        "delete": {
+          "label": "Delete users",
+          "description": "Permanently remove user accounts"
+        }
       },
       "roles": {
-        "read": { "label": "View roles", "description": "See all roles and their permissions" },
-        "assign": { "label": "Assign roles", "description": "Grant roles to users" },
-        "revoke": { "label": "Revoke roles", "description": "Remove roles from users" }
+        "read": {
+          "label": "View roles",
+          "description": "See all roles and their permissions"
+        },
+        "assign": {
+          "label": "Assign roles",
+          "description": "Grant roles to users"
+        },
+        "revoke": {
+          "label": "Revoke roles",
+          "description": "Remove roles from users"
+        }
       },
       "permissions": {
-        "read": { "label": "View permissions", "description": "See all permission definitions" },
-        "grant": { "label": "Grant permissions", "description": "Give individual permissions to roles" },
-        "revoke": { "label": "Revoke permissions", "description": "Remove permissions from roles" },
-        "deny": { "label": "Deny permissions", "description": "Explicitly block specific permissions" },
-        "manage": { "label": "Manage permissions", "description": "Full control over role permissions" }
+        "read": {
+          "label": "View permissions",
+          "description": "See all permission definitions"
+        },
+        "grant": {
+          "label": "Grant permissions",
+          "description": "Give individual permissions to roles"
+        },
+        "revoke": {
+          "label": "Revoke permissions",
+          "description": "Remove permissions from roles"
+        },
+        "deny": {
+          "label": "Deny permissions",
+          "description": "Explicitly block specific permissions"
+        },
+        "manage": {
+          "label": "Manage permissions",
+          "description": "Full control over role permissions"
+        }
       },
       "settings": {
-        "read": { "label": "View system settings", "description": "Read platform configuration" },
-        "manage": { "label": "Manage system settings", "description": "Update platform configuration" }
+        "read": {
+          "label": "View system settings",
+          "description": "Read platform configuration"
+        },
+        "manage": {
+          "label": "Manage system settings",
+          "description": "Update platform configuration"
+        }
       },
       "terms": {
-        "read": { "label": "View platform terms", "description": "Read current and past terms" },
-        "manage": { "label": "Manage platform terms", "description": "Publish new terms versions" }
+        "read": {
+          "label": "View platform terms",
+          "description": "Read current and past terms"
+        },
+        "manage": {
+          "label": "Manage platform terms",
+          "description": "Publish new terms versions"
+        }
       },
       "verifications": {
-        "read": { "label": "View user verifications", "description": "See identity verification queue" },
-        "manage": { "label": "Manage user verifications", "description": "Approve or reject verifications" }
+        "read": {
+          "label": "View user verifications",
+          "description": "See identity verification queue"
+        },
+        "manage": {
+          "label": "Manage user verifications",
+          "description": "Approve or reject verifications"
+        }
       },
       "seller-profiles": {
-        "read": { "label": "View seller profiles", "description": "See all seller profiles" },
-        "manage": { "label": "Manage seller profiles", "description": "Approve or suspend seller profiles" }
+        "read": {
+          "label": "View seller profiles",
+          "description": "See all seller profiles"
+        },
+        "manage": {
+          "label": "Manage seller profiles",
+          "description": "Approve or suspend seller profiles"
+        }
       },
       "items": {
-        "read": { "label": "View all items", "description": "See every item across sellers" },
-        "manage": { "label": "Moderate items", "description": "Approve, reject, or remove items" }
+        "read": {
+          "label": "View all items",
+          "description": "See every item across sellers"
+        },
+        "manage": {
+          "label": "Moderate items",
+          "description": "Approve, reject, or remove items"
+        }
       },
       "payments": {
-        "read": { "label": "View payment operations", "description": "See platform payment activity" },
-        "manage": { "label": "Manage payment operations", "description": "Approve or reverse platform payments" }
+        "read": {
+          "label": "View payment operations",
+          "description": "See platform payment activity"
+        },
+        "manage": {
+          "label": "Manage payment operations",
+          "description": "Approve or reverse platform payments"
+        }
       }
     }
   },
@@ -805,7 +1109,29 @@
     "created": "Created",
     "acknowledged": "Acknowledged",
     "resolved": "Resolved",
-    "by": "by"
+    "by": "by",
+    "overview": "Overview",
+    "relatedEntity": "Related Entity",
+    "detectionEvidence": "Detection Evidence",
+    "noEvidence": "No additional evidence references in this alert payload.",
+    "recommendedNextStep": "Recommended Next Step",
+    "actions": "Actions",
+    "alertId": "Alert ID",
+    "alertIdHelp": "This is the monitoring alert record ID. Use it for audit logs or debugging.",
+    "window": "Window",
+    "primaryEntityId": "{{type}} ID",
+    "entityIdHelp": "This is the primary object that admin should inspect first.",
+    "idLegendTitle": "How to read these IDs",
+    "idLegendAlert": "Alert ID: the system monitoring record.",
+    "idLegendEntity": "Entity ID: the main object being flagged, such as an auction, user, or order.",
+    "idLegendEvidence": "Evidence IDs: records used by the rule to raise this alert.",
+    "primaryEntityGroup": "Primary entity",
+    "participantsGroup": "Participants",
+    "evidenceRecordsGroup": "Evidence records",
+    "relatedRecordsGroup": "Related records",
+    "primaryEntityHelp": "The main entity that this alert is about.",
+    "owner": "Owner",
+    "slaDueAt": "SLA due at"
   },
   "disputeDetail": {
     "outcomeOption": {
@@ -906,7 +1232,10 @@
     "validation": {
       "refundAmountRequired": "Refund amount must be greater than 0 when partial refund is selected.",
       "conflictReleaseAndRefund": "Cannot release to seller and refund buyer simultaneously.",
-      "noActionsWarning": "No resolution actions selected. Are you sure?"
+      "conflictDoubleRefund": "Cannot request buyer refund through both Escrow and Refund actions. Use one or the other.",
+      "noActionsWarning": "No resolution actions selected. Are you sure?",
+      "returnToSellerNeedsOpenReturn": "Item \"Return to Seller\" requires Shipment \"Open Return\" to trigger the buyer return flow. Without it, the return is manual only.",
+      "refundWithoutReturnWarning": "Refund will fire immediately without waiting for the buyer to return the item. Select Shipment \"Open Return\" to defer the refund until the seller confirms receipt."
     }
   },
   "disputeList": {

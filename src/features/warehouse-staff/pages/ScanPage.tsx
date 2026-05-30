@@ -18,7 +18,7 @@ function ShipmentItemRow({ shipment }: { shipment: InboundShipmentDto }) {
   const primaryImage = item?.images?.find((m) => m.isPrimary) ?? item?.images?.[0]
 
   return (
-    <Flex gap={12} align="center" style={{ padding: '12px 0', borderBottom: '1px solid var(--color-border, #f0f0f0)' }}>
+    <Flex gap={12} align="center" style={{ padding: '12px 0', borderBottom: '0px solid var(--color-border, #f0f0f0)' }}>
       {primaryImage?.url ? (
         <img
           src={primaryImage.url}

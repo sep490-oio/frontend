@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { Typography, Space, Button, Modal, Input, App, Drawer } from 'antd'
+import { Typography, Space, Button, Modal, Input, App, Drawer, Image, Select } from 'antd'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { FileSearchOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { useReviewQueue, useApproveItem, useRejectItem, useAssignReviewer } from '@/features/admin/api'
+import { useReviewQueue, useApproveItem, useRejectItem, useAssignReviewer, useAdminUsers } from '@/features/admin/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
 import type { ReviewQueueItemDto } from '@/types'
@@ -28,6 +28,7 @@ export default function AdminReviewQueuePage() {
   const [rejectReason, setRejectReason] = useState('')
 
   const { data, isLoading } = useReviewQueue({ pageNumber: page, pageSize })
+  const { data: usersData, isLoading: isLoadingUsers } = useAdminUsers({ pageNumber: 1, pageSize: 100 })
   const approveItem = useApproveItem()
   const rejectItem = useRejectItem()
   const assignReviewer = useAssignReviewer()
@@ -66,6 +67,32 @@ export default function AdminReviewQueuePage() {
   }
 
   const columns: ColumnsType<ReviewQueueItemDto> = [
+    {
+      title: '',
+      dataIndex: 'primaryImageUrl',
+      key: 'image',
+      width: 64,
+      render: (url: string | null | undefined) => (
+        <div style={{
+          width: 44, height: 44, borderRadius: 10, overflow: 'hidden',
+          background: 'var(--color-bg-surface)', border: '1px solid var(--color-border)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          flexShrink: 0,
+        }}>
+          {url ? (
+            <Image
+              src={url}
+              width={44}
+              height={44}
+              style={{ objectFit: 'cover', display: 'block' }}
+              preview={{ mask: false }}
+            />
+          ) : (
+            <span style={{ fontSize: 10, color: 'var(--color-text-tertiary)' }}>—</span>
+          )}
+        </div>
+      ),
+    },
     {
       title: t('reviewQueue.itemTitle'),
       dataIndex: 'title',
@@ -135,13 +162,13 @@ export default function AdminReviewQueuePage() {
                 >
                   {t('reviewQueue.reject')}
                 </Button>
-                <Button
+                {/* <Button
                   type="link"
                   size="small"
                   onClick={() => { setAssignItemId(record.itemId); setAssignModalOpen(true) }}
                 >
                   {t('reviewQueue.assign')}
-                </Button>
+                </Button> */}
               </>
             )}
           </Space>
@@ -156,44 +183,51 @@ export default function AdminReviewQueuePage() {
         <FileSearchOutlined /> {t('reviewQueue.title')}
       </Typography.Title>
 
-      <div style={{ overflowX: 'auto' }}>
-        <ResponsiveTable<ReviewQueueItemDto>
-          rowKey="id"
-          columns={columns}
-          dataSource={data?.items ?? []}
-          loading={isLoading}
-          mobileMode="list"
-          onRow={(record) => ({
-            onClick: isMobile ? () => navigate(`/admin/items/${record.itemId}`) : undefined,
-            style: isMobile ? { cursor: 'pointer', minHeight: 56 } : undefined,
-          })}
-          pagination={{
-            current: data?.metadata?.currentPage ?? page,
-            pageSize: data?.metadata?.pageSize ?? pageSize,
-            total: data?.metadata?.totalCount ?? 0,
-            showSizeChanger: !isMobile,
-            showTotal: (total) => tc('pagination.total', { total }),
-            simple: isMobile,
-            onChange: (p, ps) => { setPage(p); setPageSize(ps) },
-          }}
-        />
-      </div>
+      <ResponsiveTable<ReviewQueueItemDto>
+        rowKey="id"
+        columns={columns}
+        dataSource={data?.items ?? []}
+        loading={isLoading}
+        mobileMode="list"
+        onRow={(record) => ({
+          onClick: isMobile ? () => navigate(`/admin/items/${record.itemId}`) : undefined,
+          style: isMobile ? { cursor: 'pointer', minHeight: 56 } : undefined,
+        })}
+        pagination={{
+          current: data?.metadata?.currentPage ?? page,
+          pageSize: data?.metadata?.pageSize ?? pageSize,
+          total: data?.metadata?.totalCount ?? 0,
+          showSizeChanger: !isMobile,
+          showTotal: (total) => tc('pagination.total', { total }),
+          simple: isMobile,
+          onChange: (p, ps) => { setPage(p); setPageSize(ps) },
+        }}
+      />
 
       {/* Assign reviewer modal */}
       <Modal
         title={t('reviewQueue.assignReviewer')}
         open={assignModalOpen}
         onOk={handleAssign}
-        onCancel={() => { setAssignModalOpen(false); setReviewerId('') }}
+        onCancel={() => { setAssignModalOpen(false); setReviewerId(''); setAssignItemId('') }}
         confirmLoading={assignReviewer.isPending}
         centered={isMobile}
       >
         <Typography.Text strong>{t('reviewQueue.reviewerId')}</Typography.Text>
-        <Input
-          value={reviewerId}
-          onChange={(e) => setReviewerId(e.target.value)}
-          placeholder={t('reviewQueue.reviewerIdPlaceholder')}
-          style={{ marginTop: 8, minHeight: 44 }}
+        <Select
+          showSearch
+          value={reviewerId || undefined}
+          onChange={(val) => setReviewerId(val)}
+          placeholder={t('reviewQueue.reviewerIdPlaceholder', 'Select reviewer...')}
+          style={{ marginTop: 8, width: '100%', minHeight: 44 }}
+          options={(usersData?.items || [])
+            .filter(u => u.roles?.includes('Admin') || u.roles?.includes('Staff'))
+            .map(u => ({
+              label: `${u.userName} (${u.email})`,
+              value: u.id
+            }))}
+          optionFilterProp="label"
+          loading={isLoadingUsers}
         />
       </Modal>
 

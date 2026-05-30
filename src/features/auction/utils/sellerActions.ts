@@ -7,17 +7,23 @@ export type SellerAction =
   | 'configureShipping'
   | 'offerRunnerUp'
   | 'relist'
+  | 'close'
+  | 'provisionOrder'
+  | 'viewOrder'
 
 interface GetSellerActionsParams {
   status: string
   verifyByPlatform?: boolean
+  canOfferRunnerUp?: boolean
+  itemStatus?: string
+  hasOrder?: boolean
 }
 
 /**
  * Single source of truth for which seller actions are available per auction status.
  * Used by both MyAuctionsPage and AuctionDetailPage.
  */
-export function getSellerActions({ status }: GetSellerActionsParams): SellerAction[] {
+export function getSellerActions({ status, canOfferRunnerUp, itemStatus, hasOrder }: GetSellerActionsParams): SellerAction[] {
   const s = status?.toLowerCase()
   const actions: SellerAction[] = []
 
@@ -35,15 +41,32 @@ export function getSellerActions({ status }: GetSellerActionsParams): SellerActi
       actions.push('viewDetail', 'cancel')
       break
     case 'sold':
-      // No seller actions — the order is already paid/owned by the winner.
-      // offerRunnerUp is ONLY valid in payment_defaulted (backend enforced).
+    case 'completed':
+      // No seller actions usually — the order is already paid/owned by the winner.
+      // But if order creation failed, allow manual provisioning.
+      if (hasOrder === false) {
+        actions.push('provisionOrder')
+      } else if (hasOrder === true) {
+        actions.push('viewOrder')
+      }
       break
     case 'payment_defaulted':
-      actions.push('relist', 'offerRunnerUp')
-      break
+      actions.push('relist', 'close')
+      if (canOfferRunnerUp !== false) {
+        actions.push('offerRunnerUp')
+      }
+      break;
     case 'failed':
       actions.push('relist')
       break
+  }
+
+  // Filter out relist if the item is already in another auction or sold
+  if (actions.includes('relist') && itemStatus) {
+    const is = itemStatus.toLowerCase()
+    if (is === 'in_auction' || is === 'sold') {
+      return actions.filter((a) => a !== 'relist')
+    }
   }
 
   return actions

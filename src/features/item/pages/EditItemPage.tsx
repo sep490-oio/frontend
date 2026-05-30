@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Typography, Button, Card, Space, Spin, App, Image, Popconfirm, Empty, Alert } from 'antd'
-import { ArrowLeftOutlined, DeleteOutlined, StarOutlined, PlusOutlined } from '@ant-design/icons'
+import { ArrowLeftOutlined, DeleteOutlined, StarOutlined, PlusOutlined, AuditOutlined } from '@ant-design/icons'
 import { useNavigate, useParams } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
 import { useTranslation } from 'react-i18next'
@@ -12,6 +12,7 @@ import {
   useSetPrimaryImage,
   useResubmitItem,
 } from '@/features/item/api'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { SafeHtmlRenderer } from '@/components/ui/SafeHtmlRenderer'
 import { MultiCaptureUploader } from '@/components/ui/MultiCaptureUploader'
@@ -91,8 +92,8 @@ export default function EditItemPage() {
       await resubmitItem.mutateAsync({ itemId: id })
       message.success(t('resubmitSuccess', 'Item resubmitted for review'))
       navigate(`${prefix}/items`)
-    } catch {
-      message.error(t('resubmitError', 'Failed to resubmit item'))
+    } catch (err) {
+      message.error(normalizeErrorMessage(err, t('resubmitError', 'Failed to resubmit item')))
     }
   }
 
@@ -110,7 +111,9 @@ export default function EditItemPage() {
     )
   }
 
-  const canResubmit = item.status === 'rejected' || item.status === 'draft'
+  const isWarehouseBound = item.hasInboundShipment || !!item.warehouseItemId
+  const canResubmitOnline = (item.status === 'rejected' || item.status === 'draft') && !isWarehouseBound
+  const canRequestReinspection = item.status === 'rejected' && isWarehouseBound
   const maxPhotos = 10 - existingImages.length
 
   return (
@@ -203,9 +206,23 @@ export default function EditItemPage() {
 
       {/* Actions */}
       <Space>
-        {canResubmit && (
+        {canResubmitOnline && (
           <Button type="primary" onClick={handleResubmit} loading={resubmitItem.isPending}>
             {t('resubmitForReview', 'Resubmit for Review')}
+          </Button>
+        )}
+        {canRequestReinspection && item.warehouseItemId && (
+          <Button
+            type="primary"
+            icon={<AuditOutlined />}
+            onClick={() => navigate(`/seller/warehouse/items/${item.warehouseItemId}`)}
+          >
+            {t('myItems.openWarehouse', 'Open warehouse item')}
+          </Button>
+        )}
+        {canRequestReinspection && !item.warehouseItemId && (
+          <Button type="primary" icon={<AuditOutlined />} disabled>
+            {t('myItems.warehousePending', 'Pending warehouse intake')}
           </Button>
         )}
         <Button onClick={() => navigate(`${prefix}/items`)}>

@@ -97,7 +97,7 @@ export function AuctionDepositModal({
           amount: requiredDepositAmount,
           currency,
         })
-        message.success(t('depositSuccess', 'Đặt cọc thành công — bạn đã đủ điều kiện đặt giá!'))
+        message.success(t('depositSuccess', 'Deposit successful — you are now eligible to bid!'))
         queryClient.invalidateQueries({ queryKey: queryKeys.auctions.detail(auctionId) })
         queryClient.invalidateQueries({ queryKey: queryKeys.wallet.all })
         onSuccess?.()
@@ -105,7 +105,7 @@ export function AuctionDepositModal({
       } catch (err) {
         const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data
           ?.detail
-        message.error(detail ?? t('depositError', 'Đặt cọc thất bại'))
+        message.error(detail ?? t('depositError', 'Deposit failed'))
       }
       return
     }
@@ -117,7 +117,7 @@ export function AuctionDepositModal({
         amount: requiredDepositAmount,
         currency,
         purpose: 'auction_deposit',
-        description: t('depositOrderInfo', 'Tiền cọc đấu giá'),
+        description: t('depositOrderInfo', 'Auction deposit'),
         auctionId,
         clientReturnPath: `/auctions/${auctionId}?deposited=true`,
         ...(isNewCard
@@ -150,7 +150,7 @@ export function AuctionDepositModal({
                 style={{
                   width: '100%',
                   padding: '12px 0',
-                  borderBottom: '1px solid var(--color-border-light)',
+                  borderBottom: '0px solid var(--color-border-light)',
                 }}
               >
                 <Flex align="center" gap={10} wrap="wrap">
@@ -186,7 +186,7 @@ export function AuctionDepositModal({
               <Flex align="center" gap={10}>
                 <CreditCardOutlined style={{ flexShrink: 0 }} />
                 <span style={{ fontWeight: 500, fontSize: 13 }}>
-                  {tp('newVnPayCard', 'Thanh toán bằng thẻ VNPay mới')}
+                  {tp('newVnPayCard', 'Pay with new VNPay card')}
                 </span>
               </Flex>
             </Radio>
@@ -203,7 +203,7 @@ export function AuctionDepositModal({
       onCancel={handleClose}
       title={
         <span style={{ fontFamily: SERIF_FONT, fontWeight: 400, fontSize: isMobile ? 16 : 18 }}>
-          {t('depositToJoin', 'Đặt Cọc Để Tham Gia')}
+          {t('depositToJoin', 'Deposit to Join')}
         </span>
       }
       width={isMobile ? '100%' : 560}
@@ -230,6 +230,12 @@ export function AuctionDepositModal({
           >
             {formatCurrency(requiredDepositAmount, currency)}
           </Typography.Text>
+          <Typography.Text
+            type="secondary"
+            style={{ display: 'block', marginTop: 4, fontSize: 12 }}
+          >
+            {t('depositPolicyInfo', 'Deposit = 10% of starting price (minimum 10,000₫)')}
+          </Typography.Text>
         </div>
 
         <Divider style={{ margin: '4px 0' }} />
@@ -240,7 +246,7 @@ export function AuctionDepositModal({
             strong
             style={{ display: 'block', marginBottom: 10, fontSize: 13 }}
           >
-            {tp('paymentSource', 'Phương thức thanh toán')}
+            {tp('paymentSource', 'Payment Method')}
           </Typography.Text>
           <Radio.Group
             value={source}
@@ -252,7 +258,7 @@ export function AuctionDepositModal({
                 <Flex align="center" gap={8} wrap="wrap">
                   <WalletOutlined style={{ color: 'var(--color-accent)', flexShrink: 0 }} />
                   <span style={{ fontWeight: 500, fontSize: 13 }}>
-                    {tp('walletPayment', 'Số dư ví')}
+                    {tp('walletPayment', 'Wallet Balance')}
                   </span>
                   <span style={{ color: 'var(--color-text-secondary)', fontSize: 12 }}>
                     ({formatCurrency(walletBalance, currency)})
@@ -264,7 +270,7 @@ export function AuctionDepositModal({
                   type="warning"
                   showIcon
                   style={{ marginLeft: 24 }}
-                  message={t('insufficientWallet', 'Số dư không đủ — vui lòng nạp thêm')}
+                  message={t('insufficientWallet', 'Insufficient balance — please top up')}
                 />
               )}
               <Radio value="vnpay">
@@ -285,14 +291,14 @@ export function AuctionDepositModal({
                 strong
                 style={{ display: 'block', marginBottom: 10, fontSize: 13 }}
               >
-                {tp('selectCard', 'Chọn thẻ')}
+                {tp('selectCard', 'Select Card')}
               </Typography.Text>
               {renderCardSource()}
               {isNewCard && (
                 <div style={{ marginTop: 12, paddingLeft: 4 }}>
                   <Checkbox checked={saveCard} onChange={(e) => setSaveCard(e.target.checked)}>
                     <span style={{ fontSize: 13 }}>
-                      {tp('saveCardForTopUp', 'Lưu thẻ này cho lần sau')}
+                      {tp('saveCardForTopUp', 'Save this card for next time')}
                     </span>
                   </Checkbox>
                   {saveCard && (
@@ -301,10 +307,10 @@ export function AuctionDepositModal({
                       onChange={setCardType}
                       style={{ width: '100%', marginTop: 8 }}
                       options={[
-                        { value: '01', label: tp('domesticCard', 'ATM / Thẻ nội địa') },
+                        { value: '01', label: tp('domesticCard', 'ATM / Domestic Card') },
                         {
                           value: '02',
-                          label: tp('internationalCard', 'Thẻ quốc tế (Visa/Master)'),
+                          label: tp('internationalCard', 'International Card (Visa/Master)'),
                         },
                       ]}
                     />
@@ -319,7 +325,7 @@ export function AuctionDepositModal({
 
         <Flex gap={10} justify="flex-end">
           <Button onClick={handleClose} style={{ minHeight: 40 }}>
-            {tc('action.cancel', 'Hủy')}
+            {tc('action.cancel', 'Cancel')}
           </Button>
           <Button
             type="primary"
@@ -334,7 +340,7 @@ export function AuctionDepositModal({
                 : {}),
             }}
           >
-            {t('deposit', 'Đặt cọc')}
+            {t('deposit', 'Deposit')}
           </Button>
         </Flex>
       </Space>

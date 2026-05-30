@@ -339,6 +339,8 @@ export function AuctionSidebar({
     !auction.isBuyNowReserved &&
     canBuyNow &&
     (isActive || isScheduled)
+  
+  const showBuyNowReserved = !isTerminal && auction.isBuyNowReserved
 
 
   // ── Terminal outcome block (IIFE) ────────────────────────────────
@@ -400,7 +402,7 @@ export function AuctionSidebar({
               {!currentBuyerOrder && isOrderProvisioning && (
                 <Button block disabled style={{ height: 48, borderRadius: 8 }}>
                   <Spin size="small" indicator={<LoadingOutlined spin style={{ marginRight: 8 }} />} />
-                  {t('orderBeingPrepared', 'Đang chuẩn bị đơn hàng...')}
+                  {t('orderBeingPrepared', 'Preparing order...')}
                 </Button>
               )}
               {!currentBuyerOrder && !isOrderProvisioning && (
@@ -408,7 +410,7 @@ export function AuctionSidebar({
                   <Typography.Text
                     style={{ color: 'var(--color-text-secondary)', fontSize: 13, textAlign: 'center' }}
                   >
-                    {t('orderBeingCreated', 'Đơn hàng đang được tạo, vui lòng tải lại sau')}
+                    {t('orderBeingCreated', 'Order is being created, please reload later')}
                   </Typography.Text>
                   {onReloadOrder && (
                     <Button
@@ -584,7 +586,7 @@ export function AuctionSidebar({
       {terminalBlock}
 
       {/* 2. Bid / Sealed panel */}
-      {showSealedPanel && (
+      {showSealedPanel && !showBuyNowReserved && (
         <SealedBidPanel
           auctionId={auctionId!}
           currency={currency}
@@ -598,7 +600,7 @@ export function AuctionSidebar({
         />
       )}
 
-      {showBidForm && (
+      {showBidForm && !showBuyNowReserved && (
         <div style={{ marginTop: 8 }}>
           {currentUserBidState && currentUserBidState.position !== 'none' && (
             <BidderPositionBlock position={currentUserBidState.position} currency={currency} />
@@ -630,8 +632,80 @@ export function AuctionSidebar({
         </div>
       )}
 
+      {/* 2c. Buy Now Reserved State (Prominent Position) */}
+      {showBuyNowReserved && (
+        <Card
+          style={{
+            marginTop: 16,
+            borderColor: 'var(--color-warning)',
+            background: 'var(--color-warning-soft)',
+            borderRadius: 12,
+            boxShadow: '0 4px 12px rgba(250, 173, 20, 0.12)',
+          }}
+        >
+          <Flex vertical gap={16} align="center" style={{ padding: '8px 0' }}>
+            <div style={{
+              width: 56,
+              height: 56,
+              borderRadius: '50%',
+              background: 'rgba(250, 173, 20, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 4
+            }}>
+              <ThunderboltOutlined style={{ fontSize: 28, color: 'var(--color-warning)' }} />
+            </div>
+            
+            <Flex vertical align="center" gap={4}>
+              <Typography.Text strong style={{ fontSize: 17, color: 'var(--color-warning)', textAlign: 'center' }}>
+                {currentBuyerOrder ? t('reservedForYou', 'Bạn đang mua ngay vật phẩm này') : t('buyNowReserved', 'Mua ngay đã được đặt trước')}
+              </Typography.Text>
+              <Typography.Text style={{ color: 'var(--color-text-secondary)', fontSize: 13, textAlign: 'center' }}>
+                {currentBuyerOrder 
+                  ? t('reservedForYouDesc', 'Vui lòng hoàn tất thanh toán để sở hữu vật phẩm.') 
+                  : t('buyNowReservedDesc', 'Tính năng đấu giá tạm khóa trong thời gian giữ chỗ.')}
+              </Typography.Text>
+            </Flex>
+            
+            {currentBuyerOrder?.canPayNow && onCheckoutClick && (
+              <Button
+                type="primary"
+                block
+                onClick={onCheckoutClick}
+                style={{
+                  height: 52,
+                  borderRadius: 10,
+                  fontWeight: 600,
+                  fontSize: 16,
+                  background: 'var(--color-warning)',
+                  borderColor: 'var(--color-warning)',
+                  boxShadow: '0 4px 10px rgba(250, 173, 20, 0.3)',
+                }}
+              >
+                {t('completePayment', 'Hoàn tất thanh toán')}
+              </Button>
+            )}
+
+            {auction.buyNowReservedUntil && (
+              <div style={{ 
+                padding: '6px 12px', 
+                background: 'rgba(255, 255, 255, 0.05)', 
+                borderRadius: 20,
+                border: '1px solid var(--color-border-light)'
+              }}>
+                <Typography.Text type="secondary" style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <LoadingOutlined spin style={{ fontSize: 10 }} />
+                  {t('reservationExpires', 'Hết hạn giữ chỗ')}: {formatDateTime(auction.buyNowReservedUntil)}
+                </Typography.Text>
+              </div>
+            )}
+          </Flex>
+        </Card>
+      )}
+
       {/* 3. Eligibility Panel */}
-      {!isTerminal && (
+      {!isTerminal && !showBuyNowReserved && (
         <div style={{ marginTop: 16 }}>
           <EligibilityPanel
             qualificationStatus={qualificationStatus}
@@ -673,45 +747,7 @@ export function AuctionSidebar({
         </>
       )}
 
-      {!isTerminal && auction.isBuyNowReserved && (
-        <Card
-          style={{
-            marginTop: 16,
-            borderColor: 'var(--color-warning)',
-            background: 'var(--color-warning-soft)',
-          }}
-        >
-          <Flex vertical gap={12} align="center">
-            <ThunderboltOutlined style={{ fontSize: 24, color: 'var(--color-warning)' }} />
-            <Typography.Text strong style={{ textAlign: 'center', color: 'var(--color-warning)' }}>
-              {currentBuyerOrder ? t('reservedForYou', 'Bạn đang mua ngay vật phẩm này') : t('buyNowReserved', 'Mua ngay đã được đặt trước')}
-            </Typography.Text>
-            
-            {currentBuyerOrder?.canPayNow && onCheckoutClick && (
-              <Button
-                type="primary"
-                block
-                onClick={onCheckoutClick}
-                style={{
-                  height: 48,
-                  borderRadius: 8,
-                  fontWeight: 600,
-                  background: 'var(--color-warning)',
-                  borderColor: 'var(--color-warning)',
-                }}
-              >
-                {t('completePayment', 'Hoàn tất thanh toán')}
-              </Button>
-            )}
-
-            {auction.buyNowReservedUntil && (
-              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                {t('reservationExpires', 'Hết hạn giữ chỗ')}: {formatDateTime(auction.buyNowReservedUntil)}
-              </Typography.Text>
-            )}
-          </Flex>
-        </Card>
-      )}
+      {/* 4. Buy Now / Reserved State (Hidden here, moved up) */}
 
       {/* 5. Outbid warning banner */}
       {outbid && (

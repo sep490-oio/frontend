@@ -28,7 +28,7 @@ import React from 'react'
 
 const useAuctionsMock = vi.fn(() => ({ data: { items: [], metadata: { currentPage: 1, pageSize: 12, totalCount: 0 } }, isLoading: false }))
 const useSuggestAuctionsMock = vi.fn(() => ({ data: [] }))
-vi.mock('@/features/auction/api', () => ({
+vi.mock('@/features/auction/auctionApi.ts', () => ({
   useAuctions: (...args: unknown[]) => useAuctionsMock(...args),
   useSuggestAuctions: (...args: unknown[]) => useSuggestAuctionsMock(...args),
   useWatchAuction: () => ({ mutate: vi.fn() }),

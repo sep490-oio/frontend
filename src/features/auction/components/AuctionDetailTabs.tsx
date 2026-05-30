@@ -49,6 +49,7 @@ export interface AuctionDetailTabsProps {
   qaConnected?: boolean
   qaLastSyncedAt?: number | null
   currentUserId?: string
+  isPlatformVerified?: boolean
 }
 
 function SellerIdentity({
@@ -71,8 +72,8 @@ function SellerIdentity({
 
   const displayName = seller?.storeName || sellerUsername || `${sellerId.slice(0, 8)}…`
   const avatarChar = displayName[0]?.toUpperCase()
-  const reviewCount = seller?.reviewCount || 0
-  const rating = seller?.rating || 0
+  const reviewCount = seller?.ratingCount || 0
+  const rating = seller?.averageRating || 0
 
   return (
     <>
@@ -171,6 +172,7 @@ export function AuctionDetailTabs({
   qaConnected = false,
   qaLastSyncedAt = null,
   currentUserId,
+  isPlatformVerified = false,
 }: AuctionDetailTabsProps) {
   const { t } = useTranslation('auction')
   const { t: tc } = useTranslation('common')
@@ -405,7 +407,7 @@ export function AuctionDetailTabs({
                         )}
                       </span>
                       {bid.isAutoBid && <StatusBadge status="auto" size="small" />}
-                      {bid.status && <StatusBadge status={bid.status} size="small" />}
+                      {bid.status && !['cancelled', 'outbid'].includes(bid.status.toLowerCase()) && <StatusBadge status={bid.status} size="small" />}
                       {(bid.bidderDisplayName || bid.bidderId) && (
                         <Typography.Text type="secondary" style={{
                           fontSize: 12,
@@ -457,11 +459,11 @@ export function AuctionDetailTabs({
             <div style={{ paddingTop: 4 }}>
               <div
                 style={{
-                  background: auction.verifyByPlatform
+                  background: isPlatformVerified
                     ? 'var(--color-success-soft)'
                     : 'var(--color-warning-soft)',
                   border: `1px solid ${
-                    auction.verifyByPlatform
+                    isPlatformVerified
                       ? 'var(--color-success)'
                       : 'var(--color-warning)'
                   }`,
@@ -480,7 +482,7 @@ export function AuctionDetailTabs({
                 >
                   <SafetyOutlined
                     style={{
-                      color: auction.verifyByPlatform
+                      color: isPlatformVerified
                         ? 'var(--color-success)'
                         : 'var(--color-text-secondary)',
                       fontSize: 18,
@@ -496,7 +498,7 @@ export function AuctionDetailTabs({
                       }}
                     >
                       {t('inspectionStatus', 'Trạng thái kiểm định')}:{' '}
-                      {auction.verifyByPlatform ? (
+                      {isPlatformVerified ? (
                         <span style={{ color: 'var(--color-success)' }}>
                           {t('approved', 'Đã phê duyệt')} <CheckCircleOutlined />
                         </span>
@@ -517,14 +519,14 @@ export function AuctionDetailTabs({
                   }}
                 >
                   <div>
-                    {auction.verifyByPlatform
+                    {isPlatformVerified
                       ? t(
                           'verifiedByPlatformNote',
-                          'OIO đã xác minh listing này trước khi mở đấu giá.',
+                          'OIO has verified this listing before opening the auction.',
                         )
                       : t(
                           'noCertificateAvailable',
-                          'Listing này không có chứng chỉ hoặc biên bản kiểm định công khai.',
+                          'This listing has no public verification certificate or report.',
                         )}
                   </div>
                   {/* Review-owner row hidden: DTO exposes only the admin's UUID, not a display name.

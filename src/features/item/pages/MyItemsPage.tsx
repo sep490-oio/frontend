@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Button, Space, Modal, Flex, Tooltip, message, Segmented, Typography } from 'antd'
+import { Button, Space, Modal, Flex, Tooltip, message, Select, Typography, Tag, Input } from 'antd'
 import {
   PlusOutlined,
   EditOutlined,
@@ -9,6 +9,7 @@ import {
   ReloadOutlined,
   DeleteOutlined,
   RocketOutlined,
+  AuditOutlined,
 } from '@ant-design/icons'
 import { useNavigate, useSearchParams } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
@@ -18,7 +19,9 @@ import {
   useSubmitItem,
   useActivateItem,
   useResubmitItem,
+  useCategories,
 } from '@/features/item/api'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { StatusBadge } from '@/components/ui/StatusBadge'
@@ -41,28 +44,7 @@ const STATUS_PILL_VALUES = [
   ItemStatus.Rejected,
 ] as const
 
-const pillBase: React.CSSProperties = {
-  padding: '8px 20px',
-  borderRadius: 100,
-  fontSize: 13,
-  fontWeight: 500,
-  cursor: 'pointer',
-  transition: 'all 200ms ease',
-  border: '1px solid var(--color-border)',
-  background: 'var(--color-bg-container)',
-  backdropFilter: 'var(--oio-blur)',
-  WebkitBackdropFilter: 'var(--oio-blur)',
-  color: 'var(--color-text-secondary)',
-  whiteSpace: 'nowrap',
-  minHeight: 36,
-}
 
-const pillActive: React.CSSProperties = {
-  ...pillBase,
-  background: 'var(--color-accent, #3b82f6)',
-  borderColor: 'var(--color-accent, #3b82f6)',
-  color: '#fff',
-}
 
 export default function MyItemsPage() {
   const { t } = useTranslation('item')
@@ -78,13 +60,14 @@ export default function MyItemsPage() {
   const statusFilter = searchParams.get('status') ?? 'all'
   const verifyFilter =
     (searchParams.get('verify') as 'all' | 'platform' | 'no_platform' | null) ?? 'all'
+  const searchFilter = searchParams.get('search') ?? ''
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
 
   // Reset to page 1 whenever the filter query changes
   useEffect(() => {
     setPage(1)
-  }, [statusFilter, verifyFilter])
+  }, [statusFilter, verifyFilter, searchFilter])
 
   const setStatusFilter = (next: string) => {
     setSearchParams((prev) => {
@@ -111,6 +94,8 @@ export default function MyItemsPage() {
   const params = {
     pageNumber: page,
     pageSize,
+    sortBy: 'CreatedAt Desc',
+    ...(searchFilter ? { search: searchFilter } : {}),
     ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
     ...(verifyFilter === 'platform'
       ? { requiresPlatformInspection: true }
@@ -120,6 +105,7 @@ export default function MyItemsPage() {
   }
 
   const { data, isLoading } = useMyItems(params)
+  const { data: categories } = useCategories()
   const submitItem = useSubmitItem()
   const activateItem = useActivateItem()
   const resubmitItem = useResubmitItem()
@@ -152,6 +138,10 @@ export default function MyItemsPage() {
   const handleResubmit = (id: string) => {
     resubmitItem.mutate({ itemId: id }, {
       onSuccess: () => msgApi.success(t('resubmitSuccess', 'Item resubmitted')),
+      onError: (err) => {
+        const msg = normalizeErrorMessage(err, t('resubmitError', 'Failed to resubmit item'))
+        msgApi.error(msg)
+      },
     })
   }
 
@@ -197,10 +187,20 @@ export default function MyItemsPage() {
           </span>
         )}
 
-        {/* Pending Verify: waiting */}
-        {s === ItemStatus.PendingVerify && (
-          <span style={{ color: 'var(--color-text-secondary)', fontSize: 12, fontStyle: 'italic' }}>
+        {/* Pending Verify: show ship link if no active shipment, else show waiting */}
+        {s === ItemStatus.PendingVerify && !record.hasInboundShipment && (
+          <Button
+            type="link"
+            size="small"
+            style={{ padding: 0 }}
+            onClick={() => navigate(`${prefix}/items/${record.id}`)}
+          >
             {t('waitingVerify', 'Ship to warehouse')}
+          </Button>
+        )}
+        {s === ItemStatus.PendingVerify && record.hasInboundShipment && (
+          <span style={{ color: 'var(--color-text-secondary)', fontSize: 12, fontStyle: 'italic' }}>
+            {t('shipmentInProgress', 'Awaiting inspection...')}
           </span>
         )}
 
@@ -264,7 +264,7 @@ export default function MyItemsPage() {
               icon={<EyeOutlined />}
               onClick={() => {
                 const auctionId = (record as any).auctionId
-                navigate(auctionId ? `/auctions/${auctionId}` : `/items/${record.id}`)
+                navigate(auctionId ? `/auctions/${auctionId}` : `${prefix}/items/${record.id}`)
               }}
             />
           </Tooltip>
@@ -277,34 +277,63 @@ export default function MyItemsPage() {
               type="text"
               size="small"
               icon={<EyeOutlined />}
-              onClick={() => navigate(`/items/${record.id}`)}
+              onClick={() => navigate(`${prefix}/items/${record.id}`)}
             />
           </Tooltip>
         )}
 
-        {/* Rejected: Resubmit, Delete */}
-        {s === ItemStatus.Rejected && (
-          <>
-            <Tooltip title={t('resubmit', 'Resubmit')}>
-              <Button
-                type="text"
-                size="small"
-                icon={<ReloadOutlined />}
-                loading={resubmitItem.isPending}
-                onClick={() => handleResubmit(record.id)}
-              />
-            </Tooltip>
-            <Tooltip title={tc('action.delete', 'Delete')}>
-              <Button
-                type="text"
-                size="small"
-                danger
-                icon={<DeleteOutlined />}
-                disabled
-              />
-            </Tooltip>
-          </>
-        )}
+        {/* Rejected: Edit first, then resubmit from edit page */}
+        {s === ItemStatus.Rejected && (() => {
+          const isWarehouseBound = record.hasInboundShipment || !!record.warehouseItemId
+          const canResubmitOnline = !isWarehouseBound
+          const canRequestReinspection = isWarehouseBound
+          return (
+            <>
+              {/* Edit button — available for both flows so seller can update photos */}
+              <Tooltip title={tc('action.edit', 'Edit')}>
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<EditOutlined />}
+                  onClick={() => navigate(`${prefix}/items/${record.id}/edit`)}
+                />
+              </Tooltip>
+              {canResubmitOnline && (
+                <Tooltip title={t('resubmit', 'Resubmit for Review')}>
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={<ReloadOutlined />}
+                    loading={resubmitItem.isPending}
+                    onClick={() => handleResubmit(record.id)}
+                  />
+                </Tooltip>
+              )}
+              {canRequestReinspection && record.warehouseItemId && (
+                <Tooltip title={t('myItemsActions.openWarehouse', 'Open warehouse item')}>
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={<AuditOutlined />}
+                    onClick={() => navigate(`/seller/warehouse/items/${record.warehouseItemId}`)}
+                  />
+                </Tooltip>
+              )}
+              {canRequestReinspection && !record.warehouseItemId && (
+                <Tag color="warning" style={{ margin: 0 }}>{t('myItemsActions.warehousePending', 'Pending warehouse intake')}</Tag>
+              )}
+              <Tooltip title={tc('action.delete', 'Delete')}>
+                <Button
+                  type="text"
+                  size="small"
+                  danger
+                  icon={<DeleteOutlined />}
+                  disabled
+                />
+              </Tooltip>
+            </>
+          )
+        })()}
       </Space>
     )
   }
@@ -318,33 +347,42 @@ export default function MyItemsPage() {
       render: (title: string, record) => {
         const primaryImg = record.images?.find((img) => img.isPrimary) ?? record.images?.[0]
         return (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, maxWidth: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, maxWidth: '100%' }}>
             {primaryImg && (
               <img
                 src={primaryImg.thumbnailUrl ?? primaryImg.url}
                 alt=""
-                style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }}
+                style={{ width: 48, height: 48, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }}
               />
             )}
-            <Button
-              type="link"
-              onClick={() => navigate(`/items/${record.id}`)}
-              style={{ padding: 0, textAlign: 'left', maxWidth: '100%', height: 'auto' }}
-            >
-              <Typography.Text ellipsis style={{ maxWidth: '100%', color: 'inherit' }}>
-                {title}
-              </Typography.Text>
-            </Button>
+            <Flex vertical gap={4} style={{ flex: 1, minWidth: 0 }}>
+              <Button
+                type="link"
+                onClick={() => navigate(`${prefix}/items/${record.id}`)}
+                style={{ padding: 0, textAlign: 'left', maxWidth: '100%', height: 'auto', whiteSpace: 'normal', lineHeight: 1.4 }}
+              >
+                <Typography.Text style={{ color: 'inherit' }}>
+                  {title}
+                </Typography.Text>
+              </Button>
+              <div>
+                <StatusBadge status={record.condition} size="small" />
+              </div>
+            </Flex>
           </div>
         )
       },
     },
     {
-      title: t('condition', 'Condition'),
-      dataIndex: 'condition',
-      key: 'condition',
-      width: 110,
-      render: (condition: string) => <StatusBadge status={condition} size="small" />,
+      title: tc('category', 'Category'),
+      dataIndex: 'categoryId',
+      key: 'categoryId',
+      width: 140,
+      render: (catId: string) => {
+        if (!categories) return null
+        const cat = categories.find((c) => c.id === catId)
+        return <Typography.Text type="secondary">{cat?.name ?? '-'}</Typography.Text>
+      },
     },
     {
       title: t('status', 'Status'),
@@ -402,34 +440,57 @@ export default function MyItemsPage() {
         </Button>
       </Flex>
 
-      {/* Verification dimension filter — distinct from item status */}
-      <Flex gap={12} align="center" style={{ marginBottom: 16 }} wrap="wrap">
-        <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
-          {t('verificationFilter', 'Platform verification')}:
-        </span>
-        <Segmented
-          value={verifyFilter}
-          onChange={(v) => setVerifyFilter(v as 'all' | 'platform' | 'no_platform')}
-          options={[
-            { label: t('verifyAll', 'All'), value: 'all' },
-            { label: t('verifyNeedsPlatform', 'Needs Platform Verification'), value: 'platform' },
-            { label: t('verifyDirectReview', 'Direct Review'), value: 'no_platform' },
-          ]}
-        />
-      </Flex>
+      <Flex gap={16} align="center" style={{ marginBottom: 24 }} wrap="wrap">
+        <Space direction="vertical" size={4}>
+          <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
+            {tc('action.search', 'Search')}
+          </span>
+          <Input.Search
+            placeholder={tc('action.search', 'Search')}
+            defaultValue={searchFilter}
+            onSearch={(v) => {
+              setSearchParams((prev) => {
+                const sp = new URLSearchParams(prev)
+                if (v.trim()) sp.set('search', v.trim())
+                else sp.delete('search')
+                return sp
+              })
+            }}
+            style={{ width: 250 }}
+            allowClear
+          />
+        </Space>
 
-      {/* Status pills */}
-      <Flex gap={8} wrap="wrap" style={{ marginBottom: 24 }}>
-        {STATUS_PILL_VALUES.map((value) => (
-          <button
-            key={value}
-            type="button"
-            style={statusFilter === value ? pillActive : pillBase}
-            onClick={() => setStatusFilter(value)}
-          >
-            {t(`statusPill.${value}`)}
-          </button>
-        ))}
+        <Space direction="vertical" size={4}>
+          <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
+            {t('verificationFilter', 'Platform verification')}
+          </span>
+          <Select
+            value={verifyFilter}
+            onChange={(v) => setVerifyFilter(v as 'all' | 'platform' | 'no_platform')}
+            style={{ width: 220 }}
+            options={[
+              { label: t('verifyAll', 'All'), value: 'all' },
+              { label: t('verifyNeedsPlatform', 'Needs Platform Verification'), value: 'platform' },
+              { label: t('verifyDirectReview', 'Direct Review'), value: 'no_platform' },
+            ]}
+          />
+        </Space>
+
+        <Space direction="vertical" size={4}>
+          <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
+            {t('statusFilter', 'Status')}
+          </span>
+          <Select
+            value={statusFilter}
+            onChange={(v) => setStatusFilter(v)}
+            style={{ width: 200 }}
+            options={STATUS_PILL_VALUES.map((value) => ({
+              label: t(`statusPill.${value}`),
+              value,
+            }))}
+          />
+        </Space>
       </Flex>
 
       {/* Table / Empty */}

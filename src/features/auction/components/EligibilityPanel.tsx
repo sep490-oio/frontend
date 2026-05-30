@@ -6,6 +6,7 @@ import { CountdownTimer } from '@/components/ui/CountdownTimer'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatCurrency } from '@/utils/format'
 import { ParticipantQualificationStatus, DepositStatus as _DepositStatus } from '@/types/enums'
+import { getServerNowMs } from '@/utils/time'
 
 interface EligibilityPanelProps {
   qualificationStatus?: string
@@ -37,15 +38,15 @@ export function EligibilityPanel({
   const { t } = useTranslation('auction')
 
   // Hooks must be called before any early returns (React rules of hooks)
-  const [now, setNow] = useState(Date.now())
+  const [now, setNow] = useState(getServerNowMs)
   useEffect(() => {
     // Use fast 1s ticks when near a qualification boundary (within 60s), otherwise 10s
     const boundaries = [qualificationStartAt, qualificationEndAt]
       .filter((v): v is string => Boolean(v))
       .map((v) => new Date(v).getTime())
-    const nearBoundary = boundaries.some((b) => Math.abs(b - Date.now()) < 60000)
+    const nearBoundary = boundaries.some((b) => Math.abs(b - getServerNowMs()) < 60000)
     const ms = nearBoundary ? 1000 : 10000
-    const interval = setInterval(() => setNow(Date.now()), ms)
+    const interval = setInterval(() => setNow(getServerNowMs()), ms)
     return () => clearInterval(interval)
   }, [qualificationStartAt, qualificationEndAt, now])
 

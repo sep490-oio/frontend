@@ -1,0 +1,54 @@
+/* ═══════════════════════════════════════════════════════════
+   Admin Design Tokens
+   Centralised CSS custom properties for the admin panel.
+   Import in AdminLayout or global stylesheet.
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Spacing ── */
+  --admin-page-padding-desktop: 40px;
+  --admin-page-padding-tablet: 24px;
+  --admin-page-padding-mobile: 16px;
+
+  /* ── Cards & Containers ── */
+  --admin-card-border-radius: 12px;
+  --admin-card-padding-desktop: 24px;
+  --admin-card-padding-mobile: 16px;
+
+  /* ── Typography ── */
+  --admin-page-title-size: 24px;
+  --admin-page-title-weight: 700;
+  --admin-section-title-size: 16px;
+  --admin-section-title-weight: 600;
+  --admin-table-header-size: 13px;
+  --admin-table-header-weight: 600;
+  --admin-body-size: 14px;
+
+  /* ── Status Badge Colours (standardised) ── */
+  --admin-status-active: #52c41a;
+  --admin-status-pending: #faad14;
+  --admin-status-suspended: #ff4d4f;
+  --admin-status-resolved: #1890ff;
+  --admin-status-inactive: #8c8c8c;
+
+  /* ── Stats Card ── */
+  --admin-stats-icon-position: left;
+  --admin-stats-gap: 16px;
+
+  /* ── Table ── */
+  --admin-table-row-hover: rgba(var(--color-accent-rgb, 59, 130, 246), 0.04);
+  --admin-table-border-radius: 8px;
+
+  /* ── Action Button ── */
+  --admin-action-btn-radius: 6px;
+  --admin-action-btn-height: 32px;
+}
+
+/* ── Responsive overrides ── */
+@media (max-width: 768px) {
+  :root {
+    --admin-page-title-size: 20px;
+    --admin-section-title-size: 14px;
+    --admin-body-size: 13px;
+  }
+}

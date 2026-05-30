@@ -26,7 +26,15 @@
     "watchlist": "Theo dõi",
     "myShipments": "Vận đơn",
     "disputes": "Tranh chấp",
-    "paymentMethods": "Phương thức thanh toán"
+    "paymentMethods": "Phương thức thanh toán",
+    "group": {
+      "portals": "Cổng quản trị",
+      "personal": "Tài khoản cá nhân",
+      "buyer": "Tài khoản người mua",
+      "buying": "Mua sắm & Đấu giá",
+      "account": "Tài khoản & Ví",
+      "settings": "Bảo mật & Cài đặt"
+    }
   },
   "action": {
     "login": "Đăng nhập",
@@ -44,6 +52,7 @@
     "reset": "Đặt lại",
     "clearFilters": "Xóa bộ lọc",
     "view": "Xem",
+    "viewAll": "Xem tất cả",
     "upload": "Tải lên",
     "download": "Tải xuống"
   },
@@ -185,6 +194,7 @@
   "somethingWentWrong": "Đã xảy ra lỗi",
   "pageUpdatedDesc": "Phiên bản mới đã được triển khai. Vui lòng tải lại trang.",
   "unexpectedErrorDesc": "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.",
+  "termsAcceptedToast": "Điều khoản đã được chấp nhận. Bây giờ bạn có thể tiếp tục thanh toán.",
   "reloadPage": "Tải lại trang",
   "goToHome": "Bảng điều khiển",
   "noImage": "Không có hình ảnh",
@@ -238,7 +248,19 @@
     "readyCapture": "Tôi sẵn sàng — Chụp ngay",
     "attempt": "Lần thử {{current}}/{{total}}",
     "capturing": "Đang chụp... Giữ yên",
-    "livenessComplete": "Kiểm tra hoàn tất"
+    "livenessComplete": "Kiểm tra hoàn tất",
+    "error": {
+      "resolutionTooLow": "Độ phân giải quá thấp",
+      "tooDark": "Ảnh quá tối",
+      "tooBright": "Ảnh quá sáng",
+      "blurSevere": "Ảnh bị mờ"
+    },
+    "cta": {
+      "tapToFocusAndRetake": "Chạm vào vùng cần lấy nét và chụp lại"
+    },
+    "warning": {
+      "borderlineBlur": "Ảnh có vẻ hơi mờ. Vui lòng đảm bảo các chi tiết có thể đọc được."
+    }
   },
   "emptyState": {
     "title": "Chưa có gì ở đây"
@@ -393,6 +415,7 @@
       "sellerOutbound": "Lô hàng Xuất kho",
       "sellerWarehouseItems": "Sản phẩm trong Kho",
       "sellerCreateItem": "Đăng sản phẩm mới",
+      "logout": "Đăng xuất",
       "adminDashboard": "Quản trị nền tảng",
       "adminUsers": "Quản lý Người dùng",
       "adminRoles": "Quản lý Phân quyền",
@@ -440,6 +463,7 @@
       "sellerOutbound": "Quản lý lô hàng xuất từ kho OIO",
       "sellerWarehouseItems": "Theo dõi hàng hóa lưu trữ tại kho",
       "sellerCreateItem": "Bắt đầu quy trình đăng bán sản phẩm",
+      "logout": "Đăng xuất khỏi tài khoản của bạn",
       "adminDashboard": "Giám sát hệ thống tổng thể",
       "adminUsers": "Kiểm soát truy cập và khóa tài khoản",
       "adminRoles": "Cấu hình quyền hạn cho Moderator",
@@ -454,6 +478,56 @@
       "adminMonitoring": "Theo dõi sức khỏe hệ thống thời gian thực",
       "inspectorDashboard": "Khu vực chuyên gia kiểm định",
       "warehouseDashboard": "Điều phối nhập/xuất kho vận"
-    }
+    },
+    "auctions": "Đấu giá",
+    "products": "Sản phẩm",
+    "sellers": "Người bán",
+    "about": "Giới thiệu",
+    "categories": "Danh mục",
+    "dashboard": "Tổng quan",
+    "profile": "Hồ sơ",
+    "wallet": "Ví",
+    "payments": "Thanh toán",
+    "verification": "Xác minh",
+    "security": "Bảo mật",
+    "addresses": "Địa chỉ",
+    "notifications": "Thông báo",
+    "settings": "Cài đặt",
+    "myAuctions": "Đấu giá của tôi",
+    "watchlist": "Theo dõi",
+    "orders": "Đơn hàng",
+    "shipping": "Vận chuyển",
+    "disputes": "Tranh chấp",
+    "logout": "Đăng xuất",
+    "sellerDashboard": "Tổng quan người bán",
+    "sellerProducts": "Sản phẩm",
+    "sellerAuctions": "Phiên đấu giá",
+    "sellerWallet": "Ví người bán",
+    "sellerShop": "Cửa hàng",
+    "sellerListing": "Đăng bán",
+    "sellerOrders": "Đơn hàng",
+    "sellerReturns": "Trả hàng",
+    "sellerShipping": "Vận chuyển",
+    "sellerInbound": "Nhập kho",
+    "sellerOutbound": "Xuất kho",
+    "sellerGoods": "Hàng hóa",
+    "admin": "Quản trị",
+    "adminUsers": "Người dùng",
+    "adminRoles": "Quyền",
+    "adminVerification": "Xác minh",
+    "adminPolicies": "Chính sách",
+    "adminAuctions": "Phiên đấu giá",
+    "adminCompleted": "Đã kết thúc",
+    "adminItems": "Sản phẩm",
+    "adminDisputes": "Tranh chấp",
+    "adminSellers": "Người bán",
+    "adminModeration": "Kiểm duyệt",
+    "adminMonitoring": "Giám sát",
+    "adminTransactions": "Giao dịch",
+    "adminInspection": "Kiểm định",
+    "adminWarehouse": "Kho vận"
+  },
+  "validation": {
+    "required": "Trường này là bắt buộc"
   }
 }

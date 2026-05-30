@@ -9,9 +9,10 @@ import type { BuyerShipmentListItemDto } from '@/types'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { SERIF_FONT } from '@/styles/tokens'
 import { formatDateTime } from '@/utils/format'
+import { getServerNowMs } from '@/utils/time'
 
 function formatCountdown(targetDate: string): string {
-  const diff = new Date(targetDate).getTime() - Date.now()
+  const diff = new Date(targetDate).getTime() - getServerNowMs()
   if (diff <= 0) return 'Expired'
   const hours = Math.floor(diff / (1000 * 60 * 60))
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
@@ -28,7 +29,7 @@ function DecisionCountdown({ endsAt }: { endsAt: string }) {
     const interval = setInterval(() => setDisplay(formatCountdown(endsAt)), 60_000)
     return () => clearInterval(interval)
   }, [endsAt])
-  const isExpired = new Date(endsAt).getTime() <= Date.now()
+  const isExpired = new Date(endsAt).getTime() <= getServerNowMs()
   return (
     <Tooltip title={`Decision window ends: ${formatDateTime(endsAt)}`}>
       <Tag icon={<ClockCircleOutlined />} color={isExpired ? 'default' : 'warning'} style={{ fontSize: 12 }}>

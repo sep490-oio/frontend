@@ -220,7 +220,6 @@ export function useConfirmTotp() {
   })
 }
 
-// SECURITY: BE ignores the code parameter - 2FA can be disabled without TOTP verification. Needs BE fix.
 export function useDisable2FA() {
   const qc = useQueryClient()
   return useMutation({

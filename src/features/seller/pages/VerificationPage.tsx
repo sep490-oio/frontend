@@ -4,14 +4,16 @@ import {
   Card,
   Button,
   Spin,
-  List,
   App,
   Divider,
   Descriptions,
   Alert,
   Timeline,
+  Image,
+  Row,
+  Col,
 } from 'antd'
-import { ArrowLeftOutlined, FileOutlined, LockOutlined } from '@ant-design/icons'
+import { ArrowLeftOutlined, FileOutlined, LockOutlined, CheckCircleOutlined, FileAddOutlined, CloseCircleOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import {
@@ -94,7 +96,7 @@ export default function VerificationPage() {
   }
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: isMobile ? '12px 16px 48px' : '0 24px 48px' }}>
+    <div style={{ maxWidth: 800, margin: '0 auto', padding: isMobile ? '12px 16px 48px' : '0 24px 48px', width: '100%', boxSizing: 'border-box' }}>
       {/* ── Header ──────────────────────────────────────────────────── */}
       <div style={{ marginBottom: isMobile ? 24 : 32 }}>
         <Button
@@ -288,23 +290,55 @@ export default function VerificationPage() {
                     <Typography.Title level={5} style={{ fontSize: 16, fontFamily: SANS_FONT, fontWeight: 600, marginBottom: 16 }}>
                       {t('documents', 'Documents')}
                     </Typography.Title>
-                    <List
-                      size="small"
-                      dataSource={activeVerification.documents}
-                      renderItem={(doc) => (
-                        <List.Item style={{ padding: '12px 0', borderBottom: '1px solid var(--color-border-light)' }}>
-                          <List.Item.Meta
-                            avatar={<div style={{ width: 40, height: 40, borderRadius: 8, background: 'var(--color-bg-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FileOutlined style={{ fontSize: 18, color: 'var(--color-accent)' }} /></div>}
-                            title={
-                              <a href={doc.secureUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-accent)' }}>
-                                {doc.documentType}
-                              </a>
-                            }
-                            description={<span style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>{formatDateTime(doc.uploadedAt)}</span>}
-                          />
-                        </List.Item>
-                      )}
-                    />
+                    <Row gutter={[16, 16]}>
+                      {activeVerification.documents.map((doc) => {
+                        const isImage = /\.(jpg|jpeg|png|webp|gif|bmp)(\?.*)?$/i.test(doc.secureUrl);
+                        return (
+                          <Col xs={24} sm={12} md={8} key={doc.id || doc.documentType}>
+                            <Card 
+                              size="small" 
+                              hoverable 
+                              style={{ borderRadius: 16, overflow: 'hidden' }}
+                              styles={{ body: { padding: 12 } }}
+                            >
+                              {isImage ? (
+                                <Image
+                                  src={doc.secureUrl}
+                                  alt={doc.documentType}
+                                  style={{ width: '100%', aspectRatio: '16/9', objectFit: 'cover', borderRadius: 8 }}
+                                />
+                              ) : (
+                                <div style={{ 
+                                  width: '100%', 
+                                  aspectRatio: '16/9', 
+                                  background: 'var(--color-bg-surface)', 
+                                  borderRadius: 8, 
+                                  display: 'flex', 
+                                  alignItems: 'center', 
+                                  justifyContent: 'center' 
+                                }}>
+                                  <a href={doc.secureUrl} target="_blank" rel="noopener noreferrer">
+                                    <FileOutlined style={{ fontSize: 32, color: 'var(--color-accent)' }} />
+                                  </a>
+                                </div>
+                              )}
+                              <div style={{ marginTop: 12 }}>
+                                <Typography.Text strong style={{ display: 'block', fontSize: 14 }}>
+                                  {isImage ? doc.documentType : (
+                                    <a href={doc.secureUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-text-primary)' }}>
+                                      {doc.documentType}
+                                    </a>
+                                  )}
+                                </Typography.Text>
+                                <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                                  {formatDateTime(doc.uploadedAt)}
+                                </Typography.Text>
+                              </div>
+                            </Card>
+                          </Col>
+                        )
+                      })}
+                    </Row>
                     <Divider style={{ margin: '20px 0' }} />
                   </>
                 )}
@@ -314,10 +348,26 @@ export default function VerificationPage() {
                 </Typography.Title>
                 <Timeline
                   items={[
-                    { color: 'green', children: <div style={{ fontSize: 13 }}><Text strong>{t('created', 'Created')}</Text> — <Text type="secondary">{formatDateTime(activeVerification.createdAt)}</Text></div> },
-                    ...(activeVerification.submittedAt ? [{ color: 'blue' as const, children: <div style={{ fontSize: 13 }}><Text strong>{t('submitted', 'Submitted')}</Text> — <Text type="secondary">{formatDateTime(activeVerification.submittedAt)}</Text></div> }] : []),
-                    ...(activeVerification.verifiedAt ? [{ color: 'green' as const, children: <div style={{ fontSize: 13 }}><Text strong>{t('verified', 'Verified')}</Text> — <Text type="secondary">{formatDateTime(activeVerification.verifiedAt)}</Text></div> }] : []),
-                    ...(activeVerification.rejectionReason ? [{ color: 'red' as const, children: <div style={{ fontSize: 13 }}><Text strong style={{ color: 'var(--color-danger)' }}>{t('rejected', 'Rejected')}</Text> — <Text type="danger">{activeVerification.rejectionReason}</Text></div> }] : []),
+                    { 
+                      color: 'green', 
+                      dot: <FileAddOutlined style={{ fontSize: 16 }} />,
+                      children: <div style={{ fontSize: 14, paddingBottom: 12 }}><Text strong>{t('created', 'Created')}</Text><br/><Text type="secondary">{formatDateTime(activeVerification.createdAt)}</Text></div> 
+                    },
+                    ...(activeVerification.submittedAt ? [{ 
+                      color: 'blue' as const, 
+                      dot: <SendOutlined style={{ fontSize: 16 }} />,
+                      children: <div style={{ fontSize: 14, paddingBottom: 12 }}><Text strong>{t('submitted', 'Submitted')}</Text><br/><Text type="secondary">{formatDateTime(activeVerification.submittedAt)}</Text></div> 
+                    }] : []),
+                    ...(activeVerification.verifiedAt ? [{ 
+                      color: 'green' as const, 
+                      dot: <CheckCircleOutlined style={{ fontSize: 16 }} />,
+                      children: <div style={{ fontSize: 14, paddingBottom: 12 }}><Text strong>{t('verified', 'Verified')}</Text><br/><Text type="secondary">{formatDateTime(activeVerification.verifiedAt)}</Text></div> 
+                    }] : []),
+                    ...(activeVerification.rejectionReason ? [{ 
+                      color: 'red' as const, 
+                      dot: <CloseCircleOutlined style={{ fontSize: 16 }} />,
+                      children: <div style={{ fontSize: 14, paddingBottom: 12 }}><Text strong style={{ color: 'var(--color-danger)' }}>{t('rejected', 'Rejected')}</Text><br/><Text type="danger">{activeVerification.rejectionReason}</Text></div> 
+                    }] : []),
                   ]}
                 />
               </Card>

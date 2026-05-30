@@ -7,9 +7,8 @@ import { App, Input, Button, Form } from 'antd'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { useResetPassword } from '@/features/auth/api'
 import { createPasswordSchema } from '@/utils/validation'
-import type { AxiosError } from 'axios'
-import type { ApiError } from '@/types'
 import { SERIF_FONT } from '@/styles/tokens'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 
 type ResetPasswordFormValues = { newPassword: string; confirmPassword: string }
 
@@ -24,7 +23,7 @@ export default function ResetPasswordPage() {
   const resetPasswordSchema = useMemo(() => z
     .object({
       newPassword: createPasswordSchema(tv),
-      confirmPassword: z.string().min(1, tv('required', 'Trường này là bắt buộc')),
+      confirmPassword: z.string().min(1, tv('required', 'This field is required')),
     })
     .refine((data) => data.newPassword === data.confirmPassword, {
       message: t('passwordMismatch', 'Mật khẩu không khớp'),
@@ -76,9 +75,7 @@ export default function ResetPasswordPage() {
           navigate('/login')
         },
         onError: (error) => {
-          const axiosError = error as AxiosError<ApiError>
-          const detail = axiosError.response?.data?.detail
-          message.error(detail ?? t('resetPassword.error', 'Đặt lại mật khẩu thất bại'))
+          message.error(normalizeErrorMessage(error, t('resetPassword.error', 'Đặt lại mật khẩu thất bại')))
         },
       },
     )

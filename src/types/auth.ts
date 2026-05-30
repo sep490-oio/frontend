@@ -65,3 +65,7 @@ export interface LoginHistoryDto {
   loginAt: string
   status: string
 }
+
+export interface LogoutRequest {
+  deviceId?: string | null
+}

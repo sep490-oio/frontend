@@ -4,6 +4,8 @@ export const SIGNALR_URL = import.meta.env.VITE_SIGNALR_URL as string
 export const STORAGE_KEYS = {
   ACCESS_TOKEN: 'oio_access_token',
   REFRESH_TOKEN: 'oio_refresh_token',
+  ACCESS_TOKEN_EXPIRES_AT: 'oio_access_token_expires_at',
+  SESSION: 'oio_session',
   DEVICE_ID: 'oio_device_id',
   LANGUAGE: 'oio_language',
   TWO_FA_TOKEN: 'oio_2fa_token',

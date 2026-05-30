@@ -1,29 +1,21 @@
 import { useState, useMemo, useEffect } from 'react'
 import { Outlet, useNavigate, useLocation, Link } from 'react-router'
-import { Layout, Avatar, Dropdown, Button, Space, Drawer, Alert } from 'antd'
+import { Layout, Avatar, Button, Space, Drawer, Alert } from 'antd'
 import { FileProtectOutlined } from '@ant-design/icons'
 import {
   UserOutlined,
-  LogoutOutlined,
-  SettingOutlined,
-  HistoryOutlined,
-  SunOutlined,
-  MoonOutlined,
-  HeartOutlined,
-  WalletOutlined,
-  CreditCardOutlined,
-  ShoppingOutlined,
-  CommentOutlined,
-  SafetyCertificateOutlined,
   MenuOutlined,
   CloseOutlined,
   SearchOutlined,
+  SunOutlined,
+  MoonOutlined,
 } from '@ant-design/icons'
+import { UserDropdown } from './UserDropdown'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/hooks/useTheme'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
-import { useAppSelector, useAppDispatch, setUser } from '@/app/store'
+import { useAppDispatch, setUser } from '@/app/store'
 import { NotificationDropdown } from '@/features/notification/components/NotificationDropdown'
 import { TermsAcceptanceModal } from '@/components/terms/TermsAcceptanceModal'
 import { SpotlightSearchModal } from '@/components/layout/SpotlightSearchModal'
@@ -31,33 +23,20 @@ import { TermsGateProvider } from '@/features/user/components/TermsGateProvider'
 import { useActiveTermsByType, useAcceptedTerms, useCurrentUser } from '@/features/user/api'
 import { SERIF_FONT, SANS_FONT } from '@/styles/tokens'
 
-function getRolesFromToken(token: string | null): string[] {
-  if (!token) return []
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    const roles: string[] = Array.isArray(payload.role) ? payload.role : payload.role ? [payload.role] : []
-    return roles.map((r) => r.toLowerCase())
-  } catch {
-    return []
-  }
-}
-
 const { Header, Content, Footer } = Layout
 
 export function AppLayout() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
-  const { isAuthenticated, logout: handleLogout } = useAuth()
+  const { isMobile, isTablet } = useBreakpoint()
+  const { isAuthenticated } = useAuth()
   const { data: currentUserData } = useCurrentUser({ enabled: isAuthenticated })
   const { isDark, toggle: toggleTheme } = useTheme()
-  const accessToken = useAppSelector((state) => state.auth.accessToken)
-  const roles = getRolesFromToken(accessToken)
+  const dispatch = useAppDispatch()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const { isMobile, isTablet } = useBreakpoint()
 
   const isNarrow = isMobile || isTablet
-  const dispatch = useAppDispatch()
 
   // Sync user data to redux store for global access (e.g. ownership checks)
   useEffect(() => {
@@ -86,82 +65,24 @@ export function AppLayout() {
     return !acceptedDocIds.has(activePlatformTerm.id)
   }, [activePlatformTerm, acceptedTermsList])
 
-  const userMenuItems = [
-    { key: 'dashboard', icon: <UserOutlined />, label: t('common:menu.home', 'Dashboard') },
-    { key: 'profile', icon: <UserOutlined />, label: t('common:menu.profile', 'Profile') },
-    { key: 'bids', icon: <HistoryOutlined />, label: t('common:menu.bids', 'My Bids') },
-    { key: 'watchlist', icon: <HeartOutlined />, label: t('common:menu.watchlist', 'Watchlist') },
-    { key: 'orders', icon: <ShoppingOutlined />, label: t('common:menu.myOrders', 'Orders') },
-    { key: 'shipments', icon: <ShoppingOutlined />, label: t('common:menu.myShipments', 'My Shipments') },
-    { key: 'wallet', icon: <WalletOutlined />, label: t('common:menu.wallet', 'Wallet') },
-    { key: 'paymentMethods', icon: <CreditCardOutlined />, label: t('common:menu.paymentMethods', 'Payment Methods') },
-    { key: 'disputes', icon: <CommentOutlined />, label: t('common:menu.disputes', 'Disputes') },
-    { type: 'divider' as const },
-    { key: 'verification', icon: <SafetyCertificateOutlined />, label: t('common:menu.verification', 'Verification') },
-    { key: 'security', icon: <SettingOutlined />, label: t('common:menu.security', 'Security') },
-    { key: 'settings', icon: <SettingOutlined />, label: t('common:menu.settings', 'Settings') },
-    { type: 'divider' as const },
-    { key: 'logout', icon: <LogoutOutlined />, label: t('common:menu.logout', 'Sign Out'), danger: true },
-  ]
 
-  const handleUserMenuClick = ({ key }: { key: string }) => {
-    switch (key) {
-      case 'dashboard': navigate('/me/dashboard'); break
-      case 'profile': navigate('/me/profile'); break
-      case 'bids': navigate('/me/bids'); break
-      case 'watchlist': navigate('/me/watchlist'); break
-      case 'orders': navigate('/me/orders'); break
-      case 'shipments': navigate('/me/shipments'); break
-      case 'wallet': navigate('/me/wallet'); break
-      case 'paymentMethods': navigate('/me/payment-methods'); break
-      case 'disputes': navigate('/me/disputes'); break
-      case 'security': navigate('/me/security'); break
-      case 'settings': navigate('/me/settings'); break
-      case 'verification': navigate('/me/verification'); break
-      case 'logout': handleLogout().then(() => navigate('/')); break
-    }
-  }
-
-  // All nav links (role-gated)
+  // All nav links (public/general)
   const navLinks = [
     { to: '/auctions', label: t('common:menu.auctions', 'Auctions'), alwaysShow: true },
     { to: '/items', label: t('common:menu.items', 'Items'), alwaysShow: true },
     { to: '/sellers', label: t('common:menu.sellers', 'Sellers'), alwaysShow: true },
     { to: '/about', label: t('common:menu.about'), alwaysShow: true },
-    ...(isAuthenticated && roles.includes('admin')
-      ? [{ to: '/admin', label: t('common:menu.admin', 'Admin'), alwaysShow: false, accent: true }]
-      : []),
-    ...(isAuthenticated && (roles.includes('inspector') || roles.includes('warehousemanager'))
-      ? [{ to: '/inspector', label: t('common:menu.inspector', 'Inspector'), alwaysShow: false, accent: true }]
-      : []),
-    ...(isAuthenticated && (roles.includes('warehouse_staff') || roles.includes('warehousemanager') || roles.includes('admin'))
-      ? [{ to: '/warehouse-staff', label: t('common:menu.warehouse', 'Warehouse'), alwaysShow: false, accent: true }]
-      : []),
-    ...(isAuthenticated && roles.includes('seller')
-      ? [{ to: '/seller', label: t('common:menu.seller', 'Seller'), alwaysShow: false, accent: true }]
-      : []),
   ]
 
   return (
     <TermsGateProvider>
-      <Layout style={{ minHeight: '100vh', background: 'transparent' }}>
-        <a
-          href="#main-content"
-          style={{
-            position: 'absolute',
-            left: '-9999px',
-            top: 'auto',
-            width: '1px',
-            height: '1px',
-            overflow: 'hidden',
-            zIndex: 9999,
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.position = 'static'
-            e.currentTarget.style.width = 'auto'
-            e.currentTarget.style.height = 'auto'
-          }}
-        >
+      <Layout style={{
+        minHeight: '100vh',
+        background: 'transparent',
+        '--navbar-offset-desktop': '112px',
+        '--navbar-offset-mobile': '96px'
+      } as React.CSSProperties}>
+        <a href="#main-content" className="skip-link">
           {t('common:layout.skipToContent')}
         </a>
 
@@ -332,23 +253,38 @@ export function AppLayout() {
             {isAuthenticated ? (
               <>
                 <NotificationDropdown />
-                <Dropdown
-                  menu={{ items: userMenuItems, onClick: handleUserMenuClick }}
-                  trigger={['click']}
-                  placement="bottomRight"
-                >
+                <UserDropdown>
                   <Space style={{ cursor: 'pointer' }}>
                     {!isMobile && (
                       <span style={{
                         fontSize: 14,
                         fontWeight: 500,
                         color: 'var(--color-text-primary)',
-                        fontFamily: SANS_FONT
+                        fontFamily: SANS_FONT,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        maxWidth: isTablet ? 120 : 250,
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap',
                       }}>
-                        <span>{currentUserData?.profile?.displayName ?? currentUserData?.userName}</span>
-                        <span style={{ marginLeft: 6, opacity: 0.6, fontSize: 12, fontWeight: 400 }}>
-                          (@{currentUserData?.userName})
+                        <span style={{ 
+                          overflow: 'hidden', 
+                          textOverflow: 'ellipsis', 
+                          whiteSpace: 'nowrap' 
+                        }}>
+                          {currentUserData?.profile?.displayName ?? currentUserData?.userName}
                         </span>
+                        {!isTablet && (
+                          <span style={{ 
+                            marginLeft: 6, 
+                            opacity: 0.6, 
+                            fontSize: 12, 
+                            fontWeight: 400,
+                            flexShrink: 0
+                          }}>
+                            (@{currentUserData?.userName})
+                          </span>
+                        )}
                       </span>
                     )}
                     <Avatar
@@ -358,7 +294,7 @@ export function AppLayout() {
                       style={{ border: '1px solid var(--color-border)' }}
                     />
                   </Space>
-                </Dropdown>
+                </UserDropdown>
               </>
             ) : (
               <Space size={isMobile ? 6 : 12}>

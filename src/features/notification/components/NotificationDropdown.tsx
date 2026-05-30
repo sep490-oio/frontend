@@ -18,7 +18,7 @@ import {
   getEntityRoute,
   type NotificationAction,
 } from '@/features/notification/api'
-import { useRespondRunnerUpOffer, useAuctionDetail } from '@/features/auction/api'
+import { useRespondRunnerUpOffer, useAuctionDetail } from '@/features/auction/auctionApi.ts'
 import { useNotificationHub } from '@/features/notification/hooks/useNotificationHub'
 import { useAuth } from '@/hooks/useAuth'
 import { NotificationStatus } from '@/types/enums'
@@ -137,7 +137,7 @@ function MobileDropdown({ open, onClose, children }: MobileDropdownProps) {
         display: 'flex',
         flexDirection: 'column',
         maxHeight: 'calc(100dvh - 56px)',
-        borderBottom: '1px solid var(--color-border)',
+        borderBottom: '0px solid var(--color-border)',
       }}
     >
       {children}
@@ -183,7 +183,7 @@ function NotificationContent({
       <div
         style={{
           padding: '18px 20px',
-          borderBottom: '1px solid var(--color-border-light)',
+          borderBottom: '0px solid var(--color-border-light)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -271,7 +271,7 @@ function NotificationContent({
                     padding: showGroupHeader ? '8px 16px 16px 26px' : '12px 16px 12px 26px',
                     cursor: 'pointer',
                     background: isUnread ? 'rgba(139, 115, 85, 0.04)' : 'transparent',
-                    borderBottom: '1px solid var(--color-border-light)',
+                    borderBottom: '0px solid var(--color-border-light)',
                     transition: 'all 0.2s',
                     alignItems: 'flex-start',
                     position: 'relative'

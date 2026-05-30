@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
 import {
@@ -33,6 +33,7 @@ import { ReturnEvidenceUploader } from '@/features/order/components/ReturnEviden
 import { ReturnQrDisplayModal } from '@/features/order/components/ReturnQrDisplayModal'
 import { OrderReturnEvidenceCategory } from '@/types/enums'
 import { CreateDisputeModal } from '@/features/order/components/CreateDisputeModal'
+import { useDisputeEligibility } from '@/features/dispute/hooks/useDisputeEligibility'
 import { ActiveDisputeBanner } from '@/components/dispute/ActiveDisputeBanner'
 // useAcknowledgeReceivedOutboundShipment removed — actions moved to shipment page
 // Tooltip removed — no longer used after shipment panel cleanup
@@ -49,6 +50,8 @@ import { useAddresses, useCurrentUser, useCurrentUserProfile } from '@/features/
 import type { UpdateOrderShippingRequest } from '@/types'
 import { SellerRatingForm } from '@/features/order/components/SellerRatingForm'
 import { OrderItemSummary } from '@/features/order/components/OrderItemSummary'
+import { useAuctionDetail } from '@/features/auction/auctionApi'
+import { SellerPaymentEscrowCard } from '@/features/order/components/SellerPaymentEscrowCard'
 import { useAuth } from '@/hooks/useAuth'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/queryClient'
@@ -63,6 +66,7 @@ import { OrderStatus, OrderReturnStatus } from '@/types/enums'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { formatDateTime, formatCurrency, formatDateTimeVn } from '@/utils/format'
 import { SANS_FONT, MONO_FONT } from '@/styles/tokens'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 
 const RETURN_ELIGIBLE_STATUSES = new Set<string>([
   OrderStatus.Delivered,
@@ -84,12 +88,15 @@ export default function OrderDetailPage() {
   const prefix = useRoutePrefix()
 
   const { message } = App.useApp()
-  const { user: authUser } = useAuth()
+  const { user: authUser, isAuthenticated } = useAuth()
   const { data: currentUser } = useCurrentUser()
   const user = currentUser ?? authUser
   const { isMobile } = useBreakpoint()
   const qc = useQueryClient()
   const { data: order, isLoading, error } = useOrderById(id)
+  const { data: auctionData } = useAuctionDetail(order?.auctionId || '', user?.id, {
+    enabled: !!order?.auctionId && !!user?.id,
+  })
 
   // Poll order detail when status is 'paid' — auto-ship runs async after payment
   useEffect(() => {
@@ -106,6 +113,7 @@ export default function OrderDetailPage() {
   const confirmReturnReceived = useConfirmReturnReceived()
   const createReview = useCreateSellerReview()
   const [reviewSubmitted, setReviewSubmitted] = useState(false)
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
 
   // Reject return modal state
   const [rejectModalOpen, setRejectModalOpen] = useState(false)
@@ -126,6 +134,9 @@ export default function OrderDetailPage() {
 
   // Dispute modal state
   const [disputeModalOpen, setDisputeModalOpen] = useState(false)
+
+  const { data: eligibility } = useDisputeEligibility('order', id, { enabled: !!id && isAuthenticated })
+
   const confirmSellerOrder = useConfirmSellerOrder()
   const markPickedUp = useMarkOrderPickedUp()
   const markOnDelivering = useMarkOrderOnDelivering()
@@ -161,6 +172,17 @@ export default function OrderDetailPage() {
       navigate(`/seller/orders/${order.id}`, { replace: true })
     }
   }, [order, user, routeIsSeller, routeIsBuyer, ownsAsSeller, ownsAsBuyer, navigate])
+
+  const depositApplied = useMemo(() => {
+    if (order?.depositAppliedAmount != null && order.depositAppliedAmount > 0) {
+      return order.depositAppliedAmount
+    }
+    const isWinner = auctionData?.auction?.currentWinnerId === user?.id
+    if (isWinner && auctionData?.currentUserParticipant?.depositAmount) {
+      return auctionData.currentUserParticipant.depositAmount
+    }
+    return 0
+  }, [order?.depositAppliedAmount, auctionData, user?.id])
 
   if (isLoading) {
     return (
@@ -215,6 +237,7 @@ export default function OrderDetailPage() {
       message.success(
         t('directShipment.confirmAndAccept', 'Inspected and Accept Item'),
       )
+      setIsReviewModalOpen(true)
     } catch (e) {
       message.error((e as Error)?.message ?? t('genericError', 'Something went wrong'))
     }
@@ -383,12 +406,20 @@ export default function OrderDetailPage() {
 
       {/* Escrow timeline */}
       <EscrowTimeline
-        order={order}
+        order={{ ...order, depositAppliedAmount: depositApplied }}
         isSeller={isSeller}
         hideBuyerDecisionActions={hideLegacyDelivered || hasActiveReturn}
         onAcceptRelease={isBuyer && !hasActiveReturn ? handleAcceptRelease : undefined}
         onDispute={isBuyer && order.status !== OrderStatus.Completed ? handleOpenDispute : undefined}
       />
+
+      {/* Seller Payment & Escrow card — sourced from /seller/finance/escrow-ledger.
+          Surfaces gross paid, fees, expected/actual net payout, hold reason,
+          and dispute link so the seller can reason about money for this order
+          without leaving the page. */}
+      {isSeller && (
+        <SellerPaymentEscrowCard orderId={order.id} isMobile={isMobile} />
+      )}
 
       {/* Seller Rating Section — Displayed prominently after completion */}
       {isBuyer && order.status === OrderStatus.Completed && !reviewSubmitted && (
@@ -401,21 +432,53 @@ export default function OrderDetailPage() {
             boxShadow: 'var(--shadow-sm)'
           }}
         >
-          <SellerRatingForm
-            orderId={order.id}
-            loading={createReview.isPending}
-            onSubmit={async (data) => {
-              try {
-                await createReview.mutateAsync(data)
-                message.success(t('reviewSubmitted', 'Review submitted successfully'))
-                setReviewSubmitted(true)
-              } catch (err) {
-                message.error(t('reviewError', 'Failed to submit review'))
-              }
-            }}
-          />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <Typography.Text type="secondary">
+              {t('rateThisSellerDesc', 'Please take a moment to rate your experience with this seller.')}
+            </Typography.Text>
+            <div>
+              <Button type="primary" onClick={() => setIsReviewModalOpen(true)}>
+                {t('rateThisSeller', 'Rate this Seller')}
+              </Button>
+            </div>
+          </div>
         </Card>
       )}
+
+      {/* Review Modal */}
+      <Modal
+        open={isReviewModalOpen}
+        onCancel={() => setIsReviewModalOpen(false)}
+        footer={null}
+        destroyOnClose
+        centered
+        width={500}
+        closeIcon={null}
+        styles={{ 
+          body: { 
+            padding: 24,
+            borderRadius: 24,
+            border: '1px solid var(--color-border)',
+            boxShadow: 'var(--shadow-lg)',
+            background: 'var(--color-bg-card)'
+          } 
+        }}
+      >
+        <SellerRatingForm
+          orderId={order.id}
+          loading={createReview.isPending}
+          onSubmit={async (data) => {
+            try {
+              await createReview.mutateAsync(data)
+              message.success(t('reviewSubmitted', 'Review submitted successfully'))
+              setReviewSubmitted(true)
+              setIsReviewModalOpen(false)
+            } catch (err) {
+              message.error(t('reviewError', 'Failed to submit review'))
+            }
+          }}
+        />
+      </Modal>
 
       {/* Buyer-facing warehouse outbound shipment panel — compact summary.
           All actions now live on /me/outbound-shipments/:shipmentId. */}
@@ -495,9 +558,18 @@ export default function OrderDetailPage() {
                   </Typography.Text>
                 </div>
                 <div style={{ marginTop: 8 }}>
-                  <Button type="link" style={{ paddingLeft: 0 }} onClick={() => navigate(`/me/outbound-shipments/${ws.shipmentId}`)}>
-                    {t('warehouseOutbound.viewShipmentTracking', 'View shipment tracking')}
-                  </Button>
+                  <Space wrap>
+                    <Button 
+                      type="primary" 
+                      icon={<QrcodeOutlined />} 
+                      onClick={() => navigate('/me/shipments/scan')}
+                    >
+                      {t('warehouseOutbound.scanParcelQr', 'Scan Parcel QR')}
+                    </Button>
+                    <Button type="link" style={{ paddingLeft: 0 }} onClick={() => navigate(`/me/outbound-shipments/${ws.shipmentId}`)}>
+                      {t('warehouseOutbound.viewShipmentTracking', 'View shipment tracking')}
+                    </Button>
+                  </Space>
                 </div>
               </>
             )}
@@ -553,12 +625,12 @@ export default function OrderDetailPage() {
                 </Descriptions.Item>
                 <Descriptions.Item label={t('directShipment.externalCarrier', 'External Carrier')}>
                   {ds.externalCarrierName ?? (
-                    <Typography.Text type="secondary">{t('notYetAvailable', 'Chưa có')}</Typography.Text>
+                    <Typography.Text type="secondary">{t('notYetAvailable', 'Not yet available')}</Typography.Text>
                   )}
                 </Descriptions.Item>
                 <Descriptions.Item label={t('directShipment.externalTracking', 'External Tracking')}>
                   {ds.externalTrackingCode ?? (
-                    <Typography.Text type="secondary">{t('notYetAvailable', 'Chưa có')}</Typography.Text>
+                    <Typography.Text type="secondary">{t('notYetAvailable', 'Not yet available')}</Typography.Text>
                   )}
                 </Descriptions.Item>
                 {ds.deliveredAt && (
@@ -587,7 +659,7 @@ export default function OrderDetailPage() {
                   type="warning"
                   showIcon
                   style={{ marginTop: 12 }}
-                  message={t('directShipment.manualReview.title', 'Đơn hàng đang được xem xét thủ công')}
+                  message={t('directShipment.manualReview.title', 'Order is under manual review')}
                   description={ds.manualReviewReason ?? undefined}
                 />
               )}
@@ -608,18 +680,18 @@ export default function OrderDetailPage() {
                         size="middle"
                         onClick={() => navigate(`/me/shipments/${ds.id}/receive`)}
                       >
-                        {t('directShipment.acknowledgeReceived', 'Đã nhận kiện')}
+                        {t('directShipment.acknowledgeReceived', 'Package received')}
                       </Button>
                     )}
                     <Popconfirm
                       title={t(
                         'directShipment.confirmAndAcceptConfirm',
-                        'Xác nhận đã kiểm tra và chấp nhận hàng? Tiền sẽ được giải ngân cho người bán.',
+                        'Confirm that you have inspected and accepted the item? Funds will be released to the seller.',
                       )}
                       onConfirm={handleAcceptRelease}
                     >
                       <Button type="primary" size="middle" loading={confirmOrderReceipt.isPending}>
-                        {t('directShipment.confirmAndAccept', 'Đã kiểm tra và chấp nhận hàng')}
+                        {t('directShipment.confirmAndAccept', 'Inspected and accepted')}
                       </Button>
                     </Popconfirm>
                     <Button
@@ -654,12 +726,12 @@ export default function OrderDetailPage() {
               <Popconfirm
                 title={t(
                   'directShipment.confirmAndAcceptConfirm',
-                  'Xác nhận đã kiểm tra và chấp nhận hàng? Tiền sẽ được giải ngân cho người bán.',
+                  'Confirm that you have inspected and accepted the item? Funds will be released to the seller.',
                 )}
                 onConfirm={handleAcceptRelease}
               >
                 <Button type="primary" size="middle" loading={confirmOrderReceipt.isPending}>
-                  {t('directShipment.confirmAndAccept', 'Đã kiểm tra và chấp nhận hàng')}
+                  {t('directShipment.confirmAndAccept', 'Inspected and accepted')}
                 </Button>
               </Popconfirm>
             )}
@@ -855,8 +927,8 @@ export default function OrderDetailPage() {
                     type="error"
                     showIcon
                     style={{ marginTop: 4 }}
-                    message={t('sla.overdue', 'Quá hạn')}
-                    description={sf.escalationReason ?? t('sla.shipBy', 'Hạn giao') + ': ' + dayjs(sf.shipByAt!).format('DD/MM/YYYY HH:mm')}
+                    message={t('sla.overdue', 'Overdue')}
+                    description={sf.escalationReason ?? t('sla.shipBy', 'Ship by') + ': ' + dayjs(sf.shipByAt!).format('DD/MM/YYYY HH:mm')}
                   />
                 ) : (
                   <Alert
@@ -864,8 +936,8 @@ export default function OrderDetailPage() {
                     showIcon
                     style={{ marginTop: 4 }}
                     message={
-                      t('sla.shipBy', 'Hạn giao') + ': ' + dayjs(sf.shipByAt!).format('DD/MM/YYYY HH:mm')
-                      + ' — ' + t('sla.remainingDays', '{{count}} ngày còn lại', { count: daysLeft })
+                      t('sla.shipBy', 'Ship by') + ': ' + dayjs(sf.shipByAt!).format('DD/MM/YYYY HH:mm')
+                      + ' — ' + t('sla.remainingDays', '{{count}} days remaining', { count: daysLeft })
                     }
                   />
                 )
@@ -894,22 +966,36 @@ export default function OrderDetailPage() {
           <Descriptions.Item label={t('totalAmount', 'Total Amount')}>
             <PriceDisplay amount={order.totalAmount} currency={order.currency} size="small" />
           </Descriptions.Item>
-          {order.depositAppliedAmount != null && order.depositAppliedAmount > 0 && (
+          {depositApplied > 0 && (
             <>
               <Descriptions.Item label={t('depositApplied', 'Deposit applied')}>
                 <Typography.Text type="success">
-                  −{formatCurrency(order.depositAppliedAmount, order.currency)}
+                  −{formatCurrency(depositApplied, order.currency)}
                 </Typography.Text>
               </Descriptions.Item>
               <Descriptions.Item label={t('amountDue', 'Amount due')}>
                 <Typography.Text strong>
                   {formatCurrency(
-                    Math.max(0, (order.totalAmount ?? 0) - (order.depositAppliedAmount ?? 0)),
+                    Math.max(0, (order.totalAmount ?? 0) - depositApplied),
                     order.currency,
                   )}
                 </Typography.Text>
               </Descriptions.Item>
             </>
+          )}
+          {order.walletAppliedAmount != null && order.walletAppliedAmount > 0 && (
+            <Descriptions.Item label={t('walletApplied', 'Paid via Wallet')}>
+              <Typography.Text type="success" style={{ fontWeight: 600 }}>
+                {formatCurrency(order.walletAppliedAmount, order.currency)}
+              </Typography.Text>
+            </Descriptions.Item>
+          )}
+          {order.gatewayPaidAmount != null && order.gatewayPaidAmount > 0 && (
+            <Descriptions.Item label={t('gatewayPaid', 'Paid via VNPay')}>
+              <Typography.Text style={{ fontWeight: 600, color: 'var(--color-accent)' }}>
+                {formatCurrency(order.gatewayPaidAmount, order.currency)}
+              </Typography.Text>
+            </Descriptions.Item>
           )}
           <Descriptions.Item label={t('currency', 'Currency')}>
             {order.currency}
@@ -1108,8 +1194,7 @@ export default function OrderDetailPage() {
                   message.success(t('shippingSaved', 'Shipping information saved'))
                 } catch (err) {
                   if ((err as { errorFields?: unknown[] })?.errorFields === undefined) {
-                    const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-                    message.error(detail ?? t('shippingSaveError', 'Failed to save shipping information'))
+                    message.error(normalizeErrorMessage(err, t('shippingSaveError', 'Failed to save shipping information')))
                   }
                 }
               }}
@@ -1521,13 +1606,16 @@ export default function OrderDetailPage() {
       </Modal>
 
       {/* Open Dispute Modal */}
-      <CreateDisputeModal
-        targetType="order"
-        targetId={order.id}
-        orderId={order.id}
-        open={disputeModalOpen}
-        onClose={() => setDisputeModalOpen(false)}
-      />
+      {eligibility?.canReport && (
+        <CreateDisputeModal
+          targetType="order"
+          targetId={order.id}
+          orderId={order.id}
+          open={disputeModalOpen}
+          onClose={() => setDisputeModalOpen(false)}
+          eligibility={eligibility}
+        />
+      )}
 
       {/* Return QR display — shown after MarkShipped success and reopenable
           via the persistent QR card on the return section above. */}

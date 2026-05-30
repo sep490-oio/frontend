@@ -147,7 +147,7 @@ export function ItemQA({
           <span>
             {realtimeConnected
               ? t('realtimeLive', 'Realtime đang hoạt động')
-              : t('realtimeFallback', 'Đang dùng làm mới định kỳ')}
+              : t('realtimeFallback', 'Using periodic refresh')}
           </span>
           {lastSyncedLabel && (
             <span>
@@ -167,7 +167,7 @@ export function ItemQA({
             textAlign: 'center',
           }}
         >
-          {t('loading', 'Đang tải...')}
+          {t('loading', 'Loading...')}
         </div>
       ) : questions.length === 0 && pendingQuestions.length === 0 ? (
         <div
@@ -233,7 +233,7 @@ export function ItemQA({
                       marginTop: 4,
                     }}
                   >
-                    {t('pendingQuestion', 'Đang gửi...')} • {formatRelativeTime(question.createdAt)}
+                    {t('pendingQuestion', 'Submitting...')} • {formatRelativeTime(question.createdAt)}
                   </span>
                 </div>
               </div>
@@ -435,7 +435,7 @@ export function ItemQA({
                         }}
                       >
                         {answeringQuestionId === question.id
-                          ? t('answering', 'Đang gửi...')
+                          ? t('answering', 'Submitting...')
                           : t('answer', 'Trả lời')}
                       </button>
                     </div>
@@ -477,7 +477,7 @@ export function ItemQA({
               padding: '10px 18px',
             }}
           >
-            {isFetching ? t('loadingMore', 'Đang tải thêm...') : t('loadMore', 'Xem thêm câu hỏi')}
+            {isFetching ? t('loadingMore', 'Loading more...') : t('loadMore', 'Xem thêm câu hỏi')}
           </button>
         </div>
       )}
@@ -501,7 +501,7 @@ export function ItemQA({
               marginBottom: 8,
             }}
           >
-            {t('askLabel', 'Đặt câu hỏi')}
+            {t('askLabel', 'Ask a question')}
           </label>
           <div style={{ display: 'flex', gap: 8 }}>
             <input
@@ -546,7 +546,7 @@ export function ItemQA({
                 padding: '10px 24px',
               }}
             >
-              {askQuestion.isPending ? t('sending', 'Đang gửi...') : t('ask', 'Gửi')}
+              {askQuestion.isPending ? t('sending', 'Submitting...') : t('ask', 'Gửi')}
             </button>
           </div>
         </div>

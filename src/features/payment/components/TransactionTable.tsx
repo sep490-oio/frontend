@@ -3,11 +3,31 @@ import type { ColumnsType, TablePaginationConfig } from 'antd/es/table'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { formatDateTime, formatCurrency } from '@/utils/format'
 import { WalletTransactionType } from '@/types/enums'
-import type { WalletTransactionDto } from '@/types'
-import { Tag, Typography, Space, Tooltip, Flex } from 'antd'
+import type { WalletTransactionDto, WalletEventType, WalletLedgerStatus } from '@/types'
+import { Tag, Typography, Space, Tooltip, Flex, Drawer, Descriptions } from 'antd'
 import { MONO_FONT } from '@/styles/tokens'
 import { useState, useMemo } from 'react'
+import { ReferenceTitle } from './ReferenceTitle'
 import { FilterOutlined } from '@ant-design/icons'
+
+const LEDGER_STATUS_CONFIG: Record<WalletLedgerStatus, { color: string; key: string; fallback: string }> = {
+  posted: { color: 'success', key: 'ledgerStatus.posted', fallback: 'Posted' },
+  pending: { color: 'warning', key: 'ledgerStatus.pending', fallback: 'Pending' },
+  failed: { color: 'error', key: 'ledgerStatus.failed', fallback: 'Failed' },
+  reversed: { color: 'processing', key: 'ledgerStatus.reversed', fallback: 'Reversed' },
+}
+
+const EVENT_TYPE_CONFIG: Record<WalletEventType, { fallback: string }> = {
+  wallet_top_up: { fallback: 'Wallet Top-up' },
+  auction_deposit_hold: { fallback: 'Auction Deposit' },
+  auction_deposit_refund: { fallback: 'Deposit Refund' },
+  order_payment: { fallback: 'Order Payment' },
+  order_refund: { fallback: 'Order Refund' },
+  withdrawal_hold: { fallback: 'Withdrawal Hold' },
+  withdrawal_release: { fallback: 'Withdrawal' },
+  seller_payout: { fallback: 'Seller Payout' },
+  fee: { fallback: 'Transaction Fee' },
+}
 
 export interface TransactionTableProps {
   data: WalletTransactionDto[]
@@ -18,42 +38,24 @@ export interface TransactionTableProps {
 export function TransactionTable({ data, loading, pagination }: TransactionTableProps) {
   const { t } = useTranslation('payment')
   const [hoveredRefId, setHoveredRefId] = useState<string | null>(null)
+  const [selectedTx, setSelectedTx] = useState<WalletTransactionDto | null>(null)
 
   const processedData = useMemo(() => {
     if (!data) return data;
-    
-    // Group by referenceId (only for certain types that make sense to group)
-    const groups: Record<string, WalletTransactionDto[]> = {};
-    const others: WalletTransactionDto[] = [];
-    
-    data.forEach(item => {
-      const canGroup = item.referenceId && (
-        item.referenceType === 'deposit' || 
-        item.referenceType === 'escrow' || 
-        item.referenceType === 'order'
-      );
 
-      if (canGroup) {
-        if (!groups[item.referenceId!]) groups[item.referenceId!] = [];
-        groups[item.referenceId!].push(item);
-      } else {
-        others.push(item);
+    // Filter out withdrawal_hold if there's a withdrawal_release with the same reference
+    const releaseRefIds = new Set(data.filter(item => item.eventType === 'withdrawal_release').map(item => item.referenceId));
+    const filteredData = data.filter(item => {
+      if (item.eventType === 'withdrawal_hold' && item.referenceId && releaseRefIds.has(item.referenceId)) {
+        return false; // hide hold if release exists
       }
+      return true;
     });
-    
-    const result: WalletTransactionDto[] = [];
-    // Sort groups by latest transaction in group
-    const sortedGroupIds = Object.keys(groups).sort((a, b) => {
-      const latestA = new Date(groups[a][0].createdAt).getTime();
-      const latestB = new Date(groups[b][0].createdAt).getTime();
-      return latestB - latestA;
-    });
-    
-    sortedGroupIds.forEach(id => {
-      result.push(...groups[id]);
-    });
-    
-    result.push(...others);
+
+    // Return the data sorted strictly by time descending, 
+    // without arbitrarily grouping items which ruins the pagination flow.
+    const result = filteredData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
     return result;
   }, [data]);
 
@@ -99,39 +101,69 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
       title: t('txDescription', 'Description'),
       dataIndex: 'description',
       key: 'description',
+      width: 350,
       ellipsis: true,
       render: (description: string | undefined, record) => {
         const isRelatedToAuction = record.referenceType === 'deposit' || record.referenceType === 'escrow' || record.referenceType === 'order';
         const isHighlighted = record.referenceId && record.referenceId === hoveredRefId;
-        
+        // Prefer the server-provided eventType i18n key; fall back to the
+        // original description string for legacy rows that predate the new
+        // enrichment fields.
+        let label: string = description ?? '-'
+        if (record.eventType === 'seller_payout') {
+          label = `Tiền bán đơn hàng ${record.referenceNumber ?? record.referenceId?.split('-')[0].toUpperCase() ?? ''}`
+        } else if (record.eventType === 'auction_deposit_hold') {
+          label = 'Đặt cọc phiên đấu giá'
+        } else if (record.eventType === 'withdrawal_hold' || record.eventType === 'withdrawal_release') {
+          label = 'Rút tiền về ngân hàng'
+        } else if (record.eventType) {
+          const cfg = EVENT_TYPE_CONFIG[record.eventType]
+          label = t(`event.${record.eventType}`, cfg?.fallback ?? description ?? record.eventType)
+        }
+
+        const displayDescription = label.length > 80 ? `${label.slice(0, 80)}...` : label;
+
         return (
-          <Space direction="vertical" size={0}>
-            <span style={{ color: 'var(--color-text-primary)', fontSize: 14, fontWeight: 600 }}>
-              {description ?? '-'}
-            </span>
-            {record.referenceId && (
-              <Tooltip title={t('filterByThis', 'Filter by this reference')}>
-                <Tag
-                  color={isRelatedToAuction ? 'processing' : 'default'}
-                  onMouseEnter={() => setHoveredRefId(record.referenceId!)}
-                  onMouseLeave={() => setHoveredRefId(null)}
-                  style={{
-                    marginTop: 4,
-                    cursor: 'pointer',
-                    fontSize: 11,
-                    borderRadius: 4,
-                    border: isHighlighted ? `1px solid ${getReferenceBorderColor(record.referenceId)}` : undefined,
-                    background: isHighlighted ? getReferenceColor(record.referenceId) : undefined,
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  <FilterOutlined style={{ marginRight: 4, fontSize: 10 }} />
-                  {record.referenceType ? t(`refType.${record.referenceType}`, record.referenceType) : ''}
-                  {` • ${record.referenceId.split('-')[0].toUpperCase()}`}
-                </Tag>
-              </Tooltip>
+          <div style={{ maxWidth: 350, minWidth: 0 }}>
+            <ReferenceTitle referenceId={record.referenceId} referenceType={record.referenceType} />
+            <Typography.Text
+              style={{ color: 'var(--color-text-primary)', fontSize: 14, fontWeight: 600, display: 'block' }}
+              ellipsis={{ tooltip: label }}
+            >
+              {displayDescription}
+            </Typography.Text>
+            {description && record.eventType && description !== label && (
+              <Typography.Text
+                type="secondary"
+                style={{ fontSize: 12, display: 'block', marginTop: 2 }}
+                ellipsis={{ tooltip: description }}
+              >
+                {description}
+              </Typography.Text>
             )}
-          </Space>
+              {record.referenceId && (
+                <Tooltip title={t('filterByThis', 'Filter by this reference')}>
+                  <Tag
+                    color={isRelatedToAuction ? 'processing' : 'default'}
+                    onMouseEnter={() => setHoveredRefId(record.referenceId!)}
+                    onMouseLeave={() => setHoveredRefId(null)}
+                    style={{
+                      marginTop: 4,
+                      cursor: 'pointer',
+                      fontSize: 11,
+                      borderRadius: 4,
+                      border: isHighlighted ? `1px solid ${getReferenceBorderColor(record.referenceId)}` : undefined,
+                      background: isHighlighted ? getReferenceColor(record.referenceId) : undefined,
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <FilterOutlined style={{ marginRight: 4, fontSize: 10 }} />
+                    {record.referenceType ? t(`refType.${record.referenceType}`, record.referenceType) : ''}
+                    {` • ${(record.referenceNumber ?? record.referenceId.split('-')[0]).toUpperCase()}`}
+                  </Tag>
+                </Tooltip>
+              )}
+          </div>
         )
       },
     },
@@ -140,15 +172,16 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
       dataIndex: 'amount',
       key: 'amount',
       width: 160,
+      align: 'right',
       render: (amount: number, record) => {
         const isDeduction = record.type === WalletTransactionType.Debit || record.type === WalletTransactionType.Hold;
         const color = isDeduction ? 'var(--color-danger)' : 'var(--color-success)';
         const sign = isDeduction ? '-' : '+';
-        
+
         let typeLabel = t(`txTypeLabel.${record.type}`, record.type);
         if (record.type === WalletTransactionType.Release) {
-           if (record.referenceType === 'deposit') typeLabel = t('refType.depositRefund', 'Hoàn tiền cọc');
-           else if (record.referenceType === 'order') typeLabel = t('refType.orderRefund', 'Hoàn tiền đơn hàng');
+          if (record.referenceType === 'deposit') typeLabel = t('refType.depositRefund', 'Hoàn tiền cọc');
+          else if (record.referenceType === 'order') typeLabel = t('refType.orderRefund', 'Hoàn tiền đơn hàng');
         }
 
         return (
@@ -175,41 +208,36 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
       dataIndex: 'balanceAfter',
       key: 'balanceAfter',
       width: 140,
+      align: 'right',
       render: (value: number, record) => (
         <span style={{ fontSize: 13, fontWeight: 500 }}>{formatCurrency(value, record.currency)}</span>
       ),
     },
     {
       title: t('txStatus', 'Status'),
-      dataIndex: 'status',
       key: 'status',
       width: 140,
       align: 'right',
-      render: (status: string) => {
-        const s = status?.toLowerCase()
-        let color = 'default'
-        let label = status || t('statusUnknown', 'Unknown')
-
-        if (s === 'completed' || s === 'success') {
-          color = 'success'
-          label = t('statusCompleted', 'Completed')
-        } else if (s === 'pending' || s === 'processing') {
-          color = 'warning'
-          label = t('statusPending', 'Pending')
-        } else if (s === 'failed' || s === 'cancelled' || s === 'error') {
-          color = 'error'
-          label = t('statusFailed', 'Failed')
-        } else if (s === 'refunded') {
-          color = 'processing'
-          label = t('statusRefunded', 'Refunded')
-        }
-
-        return <Tag color={color} bordered={false}>{label}</Tag>
+      render: (_v, record) => {
+        // Prefer the never-null ledgerStatus the new mapper emits. Fall back to
+        // the legacy `status` string only if the server hasn't been redeployed yet.
+        const ledger: WalletLedgerStatus = record.ledgerStatus ?? (() => {
+          const s = (record.status as string | undefined)?.toLowerCase()
+          if (s === 'completed' || s === 'success' || s === 'released') return 'posted'
+          if (s === 'pending' || s === 'processing' || s === 'initiated') return 'pending'
+          if (s === 'failed' || s === 'cancelled' || s === 'error' || s === 'rejected' || s === 'expired') return 'failed'
+          if (s === 'refunded' || s === 'reversed') return 'reversed'
+          // Wallet ledger entries that exist in the table are by definition posted.
+          return 'posted'
+        })()
+        const cfg = LEDGER_STATUS_CONFIG[ledger]
+        return <Tag color={cfg.color} bordered={false}>{t(cfg.key, cfg.fallback)}</Tag>
       },
     },
   ]
 
   return (
+    <>
     <ResponsiveTable<WalletTransactionDto>
       mobileMode="card"
       rowKey="id"
@@ -221,21 +249,29 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
         const isDeduction = record.type === WalletTransactionType.Debit || record.type === WalletTransactionType.Hold;
         const color = isDeduction ? 'var(--color-danger)' : 'var(--color-success)';
         const sign = isDeduction ? '-' : '+';
-        
-        const s = record.status?.toLowerCase()
-        let statusColor = 'default'
-        if (s === 'completed' || s === 'success') statusColor = 'success'
-        else if (s === 'pending' || s === 'processing') statusColor = 'warning'
-        else if (s === 'failed' || s === 'cancelled' || s === 'error') statusColor = 'error'
-        else if (s === 'refunded') statusColor = 'processing'
+
+        const ledger: WalletLedgerStatus = record.ledgerStatus ?? (() => {
+          const s = (record.status as string | undefined)?.toLowerCase()
+          if (s === 'completed' || s === 'success' || s === 'released') return 'posted'
+          if (s === 'pending' || s === 'processing' || s === 'initiated') return 'pending'
+          if (s === 'failed' || s === 'cancelled' || s === 'error' || s === 'rejected' || s === 'expired') return 'failed'
+          if (s === 'refunded' || s === 'reversed') return 'reversed'
+          return 'posted'
+        })()
+        const ledgerCfg = LEDGER_STATUS_CONFIG[ledger]
 
         return (
           <Flex vertical gap={12} style={{ padding: '4px 0' }}>
             <Flex justify="space-between" align="flex-start">
               <div style={{ flex: 1, paddingRight: 12 }}>
-                <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--color-text-primary)', marginBottom: 4, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {record.description || '-'}
+                <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--color-text-primary)', marginBottom: 2, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {record.eventType ? t(`event.${record.eventType}`, EVENT_TYPE_CONFIG[record.eventType]?.fallback ?? record.description ?? record.eventType) : (record.description || '-')}
                 </div>
+                {record.description && record.eventType && (
+                  <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 2, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {record.description}
+                  </div>
+                )}
                 <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)', fontFamily: MONO_FONT }}>
                   {formatDateTime(record.createdAt)} • #{record.id.split('-')[0].toUpperCase()}
                 </div>
@@ -249,10 +285,10 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
                 </div>
               </div>
             </Flex>
-            
+
             <Flex justify="space-between" align="center" style={{ paddingTop: 8, borderTop: '1px solid var(--color-border-light)' }}>
-              <Tag color={statusColor} bordered={false} style={{ fontSize: 10, borderRadius: 4, margin: 0 }}>
-                {t(`status${record.status?.charAt(0).toUpperCase()}${record.status?.slice(1)}`, record.status)}
+              <Tag color={ledgerCfg.color} bordered={false} style={{ fontSize: 10, borderRadius: 4, margin: 0 }}>
+                {t(ledgerCfg.key, ledgerCfg.fallback)}
               </Tag>
               <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
                 <span style={{ fontSize: 10, color: 'var(--color-text-tertiary)', marginRight: 4 }}>Balance:</span>
@@ -263,20 +299,78 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
         )
       }}
       onRow={(record) => ({
+        onClick: () => setSelectedTx(record),
         onMouseEnter: () => record.referenceId && setHoveredRefId(record.referenceId),
         onMouseLeave: () => setHoveredRefId(null),
         style: {
+          cursor: 'pointer',
           transition: 'all 0.3s ease',
-          background: record.referenceId && record.referenceId === hoveredRefId 
-            ? getReferenceColor(record.referenceId) 
+          background: record.referenceId && record.referenceId === hoveredRefId
+            ? getReferenceColor(record.referenceId)
             : undefined,
-          borderLeft: record.referenceId 
-            ? `4px solid ${getReferenceBorderColor(record.referenceId)}` 
+          borderLeft: record.referenceId
+            ? `4px solid ${getReferenceBorderColor(record.referenceId)}`
             : '4px solid transparent',
           opacity: hoveredRefId && record.referenceId !== hoveredRefId ? 0.6 : 1
         }
       })}
     />
+
+    <Drawer
+      title={t('receiptDetails', 'Detailed Receipt')}
+      placement="right"
+      width={400}
+      onClose={() => setSelectedTx(null)}
+      open={!!selectedTx}
+    >
+      {selectedTx && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <Flex justify="center" align="center" style={{ marginBottom: 8, padding: '24px 0', background: 'var(--color-bg-surface)', borderRadius: 16 }}>
+            <div style={{ textAlign: 'center' }}>
+              <Typography.Text type="secondary" style={{ display: 'block', fontSize: 13, marginBottom: 8 }}>
+                {t('txAmount', 'Amount')}
+              </Typography.Text>
+              <Typography.Title level={2} style={{ margin: 0, color: selectedTx.type === WalletTransactionType.Debit || selectedTx.type === WalletTransactionType.Hold ? 'var(--color-danger)' : 'var(--color-success)', fontFamily: MONO_FONT }}>
+                {selectedTx.type === WalletTransactionType.Debit || selectedTx.type === WalletTransactionType.Hold ? '-' : '+'}
+                {formatCurrency(selectedTx.amount, selectedTx.currency)}
+              </Typography.Title>
+            </div>
+          </Flex>
+
+          <Descriptions column={1} bordered size="small" labelStyle={{ width: 140, color: 'var(--color-text-secondary)' }}>
+            <Descriptions.Item label={t('txId', 'Transaction ID')}>
+              <Typography.Text copyable style={{ fontFamily: MONO_FONT }}>{selectedTx.id}</Typography.Text>
+            </Descriptions.Item>
+            <Descriptions.Item label={t('txDate', 'Date & Time')}>
+              {formatDateTime(selectedTx.createdAt)}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('txType', 'Transaction Type')}>
+              {selectedTx.eventType ? t(`event.${selectedTx.eventType}`, EVENT_TYPE_CONFIG[selectedTx.eventType]?.fallback ?? selectedTx.eventType) : t(`txTypeLabel.${selectedTx.type}`, selectedTx.type)}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('txStatus', 'Status')}>
+              <Tag color={LEDGER_STATUS_CONFIG[selectedTx.ledgerStatus ?? 'posted'].color}>
+                {t(LEDGER_STATUS_CONFIG[selectedTx.ledgerStatus ?? 'posted'].key, LEDGER_STATUS_CONFIG[selectedTx.ledgerStatus ?? 'posted'].fallback)}
+              </Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label={t('txBalanceAfter', 'Balance After')}>
+              <Typography.Text strong style={{ fontFamily: MONO_FONT }}>
+                {formatCurrency(selectedTx.balanceAfter, selectedTx.currency)}
+              </Typography.Text>
+            </Descriptions.Item>
+          </Descriptions>
+
+          {selectedTx.description && (
+            <div>
+              <Typography.Text type="secondary" style={{ fontSize: 12 }}>{t('txDescription', 'Description')}</Typography.Text>
+              <div style={{ marginTop: 4, padding: 12, background: 'var(--color-bg-surface)', borderRadius: 8, fontSize: 14 }}>
+                {selectedTx.description}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </Drawer>
+    </>
   )
 }
 

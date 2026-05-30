@@ -41,6 +41,8 @@ export interface AuctionDto {
   rejectionCount: number
   createdAt: string
   isOnWatchList?: boolean
+  canOfferRunnerUp?: boolean
+  requiredDepositAmount?: number
 }
 
 export interface ParticipantInfoDto {
@@ -85,6 +87,7 @@ export interface AuctionDetailDto {
   currentUserBidState?: CurrentUserBidStateDto
   currentBuyerOrder?: CurrentBuyerOrderDto
   sealedBidInfo?: SealedBidInfoDto | null
+  canOfferRunnerUp?: boolean
 }
 
 export interface AuctionItemDto {
@@ -98,6 +101,8 @@ export interface AuctionItemDto {
   quantity: number
   images: AuctionItemMediaDto[]
   createdAt: string
+  /** Indicates if the item has an active/completed inbound shipment. Used to hide "Send to floor" UI. */
+  hasInboundShipment?: boolean
 }
 
 export interface AuctionItemMediaDto {
@@ -132,6 +137,20 @@ export interface AuctionListItemDto {
   isWatched?: boolean
   hasWatched?: boolean
   isOnWatchList?: boolean
+  canOfferRunnerUp?: boolean
+  orderId?: string
+}
+
+export interface AuctionParticipantListItemDto {
+  auctionId: string
+  userId: string
+  displayName: string
+  joinStatus: ParticipantJoinStatus
+  qualificationStatus: ParticipantQualificationStatus
+  registeredAt: string
+  qualifiedAt?: string
+  depositAmount?: number
+  depositCurrency?: string
 }
 
 export interface BidDto {
@@ -413,6 +432,46 @@ export interface MyBidDto {
   canPayNow?: boolean
 }
 
+export interface MyDepositDto {
+  depositId: string
+  auctionId: string
+  itemId: string
+  itemTitle: string
+  primaryImageUrl?: string
+  auctionStatus: string
+  currentPrice?: MoneyDto
+  depositAmount: number
+  depositCurrency: string
+  depositStatus: string
+  depositedAt: string
+  releasedAt?: string
+  auctionEndTime?: string
+  auctionStartTime?: string
+}
+
+export interface MyParticipationDto {
+  auctionId: string
+  itemId: string
+  itemTitle: string
+  primaryImageUrl?: string
+  auctionStatus: string
+  currentPrice: MoneyDto
+  // Deposit info (always present)
+  depositAmount: number
+  depositCurrency: string
+  depositStatus: string
+  depositedAt: string
+  // Bid info (null if deposit-only)
+  myLatestBidAmount?: MoneyDto | null
+  bidPosition?: string | null
+  lastBidAt?: string | null
+  bidCountForUser: number
+  // Order enrichment
+  orderId?: string | null
+  orderStatus?: string | null
+  canPayNow?: boolean
+}
+
 export interface MyAuctionWatchlistDto {
   auctionId: string
   itemTitle: string
@@ -426,4 +485,11 @@ export interface MyAuctionWatchlistDto {
   notifyOnBid: boolean
   notifyOnEnd: boolean
   watchedAt: string
+}
+
+export interface SellerAuctionStats {
+  totalAuctions: number
+  activeAuctions: number
+  draftAuctions: number
+  endedAuctions: number
 }

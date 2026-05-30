@@ -192,12 +192,21 @@
   },
   "dashboard": {
     "title": "Warehouse Dashboard",
+    "inboundMetrics": "Inbound Flow",
+    "outboundMetrics": "Outbound & Storage Flow",
+    "quickActions": "Quick Actions",
     "awaitingPickup": "Awaiting Pickup",
     "inTransit": "In Transit",
     "arrived": "Arrived",
     "completed": "Completed",
     "awaitingOutbound": "Orders Awaiting Outbound",
-    "goToReceiving": "Go to Receiving"
+    "storedItems": "Stored Items",
+    "pendingReturns": "Pending Returns",
+    "goToReceiving": "Go to Receiving",
+    "receiveNewPackage": "Receive New Package",
+    "scanAndCheckIn": "Scan & Check-in",
+    "processOutbound": "Process Outbound",
+    "handleReturns": "Handle Returns"
   },
   "receiving": {
     "title": "Receiving Queue"
@@ -283,7 +292,17 @@
     "originalItem": "Original Item Info",
     "condition": "Condition",
     "viewItem": "View item page",
-    "seller": "Seller"
+    "seller": "Seller",
+    "reinspection": {
+      "button": "Request re-inspection",
+      "confirmTitle": "Request re-inspection?",
+      "confirmBody": "Inspector will review your item again. Previous decision and evidence remain in audit log.",
+      "reasonPlaceholder": "Optional: describe why you are requesting re-inspection",
+      "successToast": "Re-inspection requested",
+      "errorToast": "Failed to request re-inspection",
+      "returningTag": "Returning to seller",
+      "returningTooltip": "Item is being returned to you. After receipt, please create a new inbound shipment."
+    }
   },
   "receive": {
     "packageTitle": "Package",
@@ -471,5 +490,16 @@
     "outboundBooked": "Outbound shipment booked",
     "dispatched": "Dispatched to buyer",
     "delivered": "Delivered"
+  },
+  "alreadyExistsError": "This item already has an active shipping request. Please check your history.",
+  "noEligibleInboundItemsTitle": "No items are waiting for platform inspection",
+  "noEligibleInboundItemsDesc": "Only items in status \"pending_verify\" that were submitted for platform verification and do not already have an active inbound shipment can be shipped in. Submit an item for platform verification first.",
+  "noEligibleInboundItemsPlaceholder": "No eligible items to ship",
+  "selectedItems": "Selected Items",
+  "externalDimensionsNote": "Enter the total package dimensions for all items.",
+  "weightMinPerItem": "Total weight must be at least {{count}}g (1g per selected item).",
+  "carriers": {
+    "ghn": "GHN - Express Delivery",
+    "ghtk": "GHTK - Economy Delivery"
   }
 }

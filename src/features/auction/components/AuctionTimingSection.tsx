@@ -11,16 +11,20 @@ import {
   Radio,
   Select,
   Button,
-  Card,
   Alert,
   Grid,
 } from 'antd'
 import type { FormInstance } from 'antd'
+import { useSelector } from 'react-redux'
+import type { RootState } from '@/app/store'
 import { ClockCircleOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import dayjs from 'dayjs'
 import type { Dayjs } from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
+
+import { getServerDayjs } from '@/utils/time'
 
 dayjs.extend(relativeTime)
 
@@ -40,7 +44,7 @@ type BiddingGapPreset = '1min' | '5min' | '15min' | '30min' | '1h' | '3h' | 'cus
 type AuctionDurationPreset = '2h' | '6h' | '12h' | '24h' | '3d' | 'custom'
 
 interface CustomDuration {
-  value: number
+  value: number | null
   unit: 'minutes' | 'hours' | 'days'
 }
 
@@ -54,7 +58,7 @@ interface TimingState {
   auctionDurationPreset: AuctionDurationPreset
   auctionDurationCustom: CustomDuration | null
   autoExtend: boolean
-  extensionMinutes: number
+  extensionMinutes: number | null
   advancedOverride: boolean
   showAdvanced: boolean
 }
@@ -72,47 +76,48 @@ const MAX_AUCTION_DURATION_MINUTES = 14 * 24 * 60
 
 // Safety buffer added to "now" when writing hidden form fields to avoid
 // the backend rejecting qualificationStartAt < now on a slow submit.
-const SAFE_NOW_BUFFER_SECONDS = 30
+const SAFE_NOW_BUFFER_SECONDS = 60
 
-const QUAL_DURATION_OPTIONS: { label: string; value: QualDurationPreset; minutes: number }[] = [
-  { label: '15 min', value: '15min', minutes: 15 },
-  { label: '30 min', value: '30min', minutes: 30 },
-  { label: '1 hour', value: '1h', minutes: 60 },
-  { label: '3 hours', value: '3h', minutes: 180 },
-  { label: '6 hours', value: '6h', minutes: 360 },
-  { label: '12 hours', value: '12h', minutes: 720 },
-  { label: 'Custom…', value: 'custom', minutes: 0 },
+const QUAL_DURATION_OPTIONS: { labelKey: string; labelDefault: string; value: QualDurationPreset; minutes: number; displayCount?: number }[] = [
+  { labelKey: 'timing.minutes_count', labelDefault: '15 min', value: '15min', minutes: 15, displayCount: 15 },
+  { labelKey: 'timing.minutes_count', labelDefault: '30 min', value: '30min', minutes: 30, displayCount: 30 },
+  { labelKey: 'timing.hours_count', labelDefault: '1 hour', value: '1h', minutes: 60, displayCount: 1 },
+  { labelKey: 'timing.hours_count', labelDefault: '3 hours', value: '3h', minutes: 180, displayCount: 3 },
+  { labelKey: 'timing.hours_count', labelDefault: '6 hours', value: '6h', minutes: 360, displayCount: 6 },
+  { labelKey: 'timing.hours_count', labelDefault: '12 hours', value: '12h', minutes: 720, displayCount: 12 },
+  { labelKey: 'timing.durationCustom', labelDefault: 'Custom…', value: 'custom', minutes: 0 },
 ]
 
-const BIDDING_GAP_OPTIONS: { label: string; value: BiddingGapPreset; minutes: number }[] = [
-  { label: '1 min', value: '1min', minutes: 1 },
-  { label: '5 min', value: '5min', minutes: 5 },
-  { label: '15 min', value: '15min', minutes: 15 },
-  { label: '30 min', value: '30min', minutes: 30 },
-  { label: '1 hour', value: '1h', minutes: 60 },
-  { label: '3 hours', value: '3h', minutes: 180 },
-  { label: 'Custom…', value: 'custom', minutes: 0 },
+const BIDDING_GAP_OPTIONS: { labelKey: string; labelDefault: string; value: BiddingGapPreset; minutes: number; displayCount?: number }[] = [
+  { labelKey: 'timing.minutes_count', labelDefault: '1 min', value: '1min', minutes: 1, displayCount: 1 },
+  { labelKey: 'timing.minutes_count', labelDefault: '5 min', value: '5min', minutes: 5, displayCount: 5 },
+  { labelKey: 'timing.minutes_count', labelDefault: '15 min', value: '15min', minutes: 15, displayCount: 15 },
+  { labelKey: 'timing.minutes_count', labelDefault: '30 min', value: '30min', minutes: 30, displayCount: 30 },
+  { labelKey: 'timing.hours_count', labelDefault: '1 hour', value: '1h', minutes: 60, displayCount: 1 },
+  { labelKey: 'timing.hours_count', labelDefault: '3 hours', value: '3h', minutes: 180, displayCount: 3 },
+  { labelKey: 'timing.durationCustom', labelDefault: 'Custom…', value: 'custom', minutes: 0 },
 ]
 
-const AUCTION_DURATION_OPTIONS: { label: string; value: AuctionDurationPreset; minutes: number }[] = [
-  { label: '2 hours', value: '2h', minutes: 120 },
-  { label: '6 hours', value: '6h', minutes: 360 },
-  { label: '12 hours', value: '12h', minutes: 720 },
-  { label: '24 hours', value: '24h', minutes: 1440 },
-  { label: '3 days', value: '3d', minutes: 4320 },
-  { label: 'Custom…', value: 'custom', minutes: 0 },
+const AUCTION_DURATION_OPTIONS: { labelKey: string; labelDefault: string; value: AuctionDurationPreset; minutes: number; displayCount?: number }[] = [
+  { labelKey: 'timing.hours_count', labelDefault: '2 hours', value: '2h', minutes: 120, displayCount: 2 },
+  { labelKey: 'timing.hours_count', labelDefault: '6 hours', value: '6h', minutes: 360, displayCount: 6 },
+  { labelKey: 'timing.hours_count', labelDefault: '12 hours', value: '12h', minutes: 720, displayCount: 12 },
+  { labelKey: 'timing.hours_count', labelDefault: '24 hours', value: '24h', minutes: 1440, displayCount: 24 },
+  { labelKey: 'timing.days_count', labelDefault: '3 days', value: '3d', minutes: 4320, displayCount: 3 },
+  { labelKey: 'timing.durationCustom', labelDefault: 'Custom…', value: 'custom', minutes: 0 },
 ]
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function safeNow(): Dayjs {
-  return dayjs().add(SAFE_NOW_BUFFER_SECONDS, 'second')
+function safeNow(offset: number = 0): Dayjs {
+  return dayjs(Date.now() + offset).add(SAFE_NOW_BUFFER_SECONDS, 'second')
 }
 
 function customToMinutes(custom: CustomDuration): number {
-  if (custom.unit === 'minutes') return custom.value
-  if (custom.unit === 'hours') return custom.value * 60
-  return custom.value * 60 * 24
+  const val = custom.value ?? 0
+  if (custom.unit === 'minutes') return val
+  if (custom.unit === 'hours') return val * 60
+  return val * 60 * 24
 }
 
 function getQualDurationMinutes(state: TimingState): number {
@@ -139,16 +144,23 @@ function getAuctionDurationMinutes(state: TimingState): number {
   return state.auctionDurationCustom ? customToMinutes(state.auctionDurationCustom) : 1440
 }
 
-function deriveTimingPayload(state: TimingState): {
+function deriveTimingPayload(state: TimingState, offset: number = 0): {
   qualificationStartAt: Dayjs
   qualificationEndAt: Dayjs
   startTime: Dayjs
   endTime: Dayjs
 } {
-  const qualificationStartAt =
+  const minStart = safeNow(offset)
+  
+  let qualificationStartAt =
     state.qualificationOpenMode === 'now'
-      ? safeNow()
-      : (state.scheduledQualificationStart ?? dayjs().add(MIN_QUAL_START_OFFSET_MINUTES, 'minute'))
+      ? minStart
+      : (state.scheduledQualificationStart ?? dayjs(Date.now() + offset).add(MIN_QUAL_START_OFFSET_MINUTES, 'minute'))
+
+  // Safety: if scheduled start is now in the past due to UI latency, bump it to minStart
+  if (qualificationStartAt.isBefore(minStart)) {
+    qualificationStartAt = minStart
+  }
 
   const qualDurationMinutes = getQualDurationMinutes(state)
   const biddingGapMinutes = getBiddingGapMinutes(state)
@@ -161,27 +173,34 @@ function deriveTimingPayload(state: TimingState): {
   return { qualificationStartAt, qualificationEndAt, startTime, endTime }
 }
 
-function formatMinutesLabel(minutes: number): string {
-  if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''}`
+function formatMinutesLabel(minutes: number, t: TFunction): string {
+  if (minutes < 60) return t('timing.minutes_count', { count: minutes, defaultValue: `${minutes} minutes` })
   if (minutes < 1440) {
     const h = Math.round(minutes / 60)
-    return `${h} hour${h !== 1 ? 's' : ''}`
+    return t('timing.hours_count', { count: h, defaultValue: `${h} hours` })
   }
   const d = Math.round(minutes / 1440)
-  return `${d} day${d !== 1 ? 's' : ''}`
+  return t('timing.days_count', { count: d, defaultValue: `${d} days` })
 }
 
-function formatNaturalSummary(state: TimingState, qualStart: Dayjs): string {
+function formatNaturalSummary(state: TimingState, qualStart: Dayjs, t: TFunction): string {
   const qualLabel =
-    state.qualificationOpenMode === 'now' ? 'now' : qualStart.format(DISPLAY_FORMAT)
-  const qualDurLabel = formatMinutesLabel(getQualDurationMinutes(state))
-  const gapLabel = formatMinutesLabel(getBiddingGapMinutes(state))
-  const auctionDurLabel = formatMinutesLabel(getAuctionDurationMinutes(state))
-  return `Qualification opens ${qualLabel}, stays open for ${qualDurLabel}, bidding starts ${gapLabel} after qualification closes, and the auction runs for ${auctionDurLabel}.`
+    state.qualificationOpenMode === 'now' ? t('timing.summaryNow', 'now') : qualStart.format(DISPLAY_FORMAT)
+  const qualDurLabel = formatMinutesLabel(getQualDurationMinutes(state), t)
+  const gapLabel = formatMinutesLabel(getBiddingGapMinutes(state), t)
+  const auctionDurLabel = formatMinutesLabel(getAuctionDurationMinutes(state), t)
+  
+  return t('timing.summaryTemplate', {
+    qualLabel,
+    qualDur: qualDurLabel,
+    gap: gapLabel,
+    auctionDur: auctionDurLabel,
+    defaultValue: `Qualification opens ${qualLabel}, stays open for ${qualDurLabel}, bidding starts ${gapLabel} after qualification closes, and the auction runs for ${auctionDurLabel}.`
+  })
 }
 
 function disabledDate(current: Dayjs): boolean {
-  return current && current.isBefore(dayjs().startOf('day'))
+  return current && current.isBefore(getServerDayjs().startOf('day'))
 }
 
 // Mount the picker popup inside the nearest scroll container so it never
@@ -193,7 +212,7 @@ function getPopupContainer(trigger: HTMLElement): HTMLElement {
 // ─── Preset button renderer ───────────────────────────────────────────────────
 
 interface PresetButtonsProps<T extends string> {
-  options: { label: string; value: T }[]
+  options: { labelKey: string; labelDefault: string; value: T; minutes?: number; displayCount?: number }[]
   value: T
   onChange: (v: T) => void
   customLabel?: string
@@ -203,8 +222,8 @@ function PresetButtons<T extends string>({
   options,
   value,
   onChange,
-  customLabel,
 }: PresetButtonsProps<T>) {
+  const { t } = useTranslation('auction')
   return (
     <div
       style={{
@@ -214,28 +233,36 @@ function PresetButtons<T extends string>({
         width: '100%',
       }}
     >
-      {options.map((opt) => (
-        <button
-          key={opt.value}
-          type="button"
-          onClick={() => onChange(opt.value)}
-          style={{
-            padding: '8px 14px',
-            borderRadius: 20,
-            border: `1.5px solid ${value === opt.value ? 'var(--color-accent)' : 'var(--color-border)'}`,
-            background: value === opt.value ? 'var(--color-accent)' : 'var(--color-bg-card)',
-            color: value === opt.value ? '#fff' : 'var(--color-text-secondary)',
-            fontWeight: 500,
-            fontSize: 12,
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-            minHeight: 40,
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {opt.label === 'Custom…' && customLabel ? customLabel : opt.label}
-        </button>
-      ))}
+      {options.map((opt) => {
+        const label = opt.labelKey === 'timing.minutes_count' || opt.labelKey === 'timing.hours_count' || opt.labelKey === 'timing.days_count'
+          ? t(opt.labelKey, { count: opt.displayCount ?? opt.minutes, defaultValue: opt.labelDefault })
+          : t(opt.labelKey, { defaultValue: opt.labelDefault })
+
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => onChange(opt.value)}
+            className="oio-card-hover"
+            style={{
+              padding: '8px 16px',
+              borderRadius: 4,
+              border: `1px solid ${value === opt.value ? 'var(--color-accent)' : 'var(--color-border)'}`,
+              background: value === opt.value ? 'var(--color-accent)' : 'var(--color-bg-card)',
+              color: value === opt.value ? '#fff' : 'var(--color-text-secondary)',
+              fontWeight: 600,
+              fontSize: 12,
+              cursor: 'pointer',
+              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+              minHeight: 38,
+              whiteSpace: 'nowrap',
+              boxShadow: value === opt.value ? '0 4px 12px rgba(var(--color-accent-rgb, 0,0,0), 0.2)' : 'none',
+            }}
+          >
+            {label}
+          </button>
+        )
+      })}
     </div>
   )
 }
@@ -256,15 +283,15 @@ function CustomDurationPicker({
     <Flex gap={8} style={{ marginTop: 10, width: '100%' }} align="center" wrap="wrap">
       <InputNumber
         min={1}
-        value={value?.value ?? 60}
-        onChange={(val) => onChange({ value: val ?? 1, unit: value?.unit ?? 'minutes' })}
+        value={value?.value}
+        onChange={(val) => onChange({ value: val, unit: value?.unit ?? 'minutes' })}
         style={{ flex: '1 1 80px', minWidth: 72 }}
         placeholder={placeholder ?? '60'}
         size="large"
       />
       <Select
         value={value?.unit ?? 'minutes'}
-        onChange={(unit) => onChange({ value: value?.value ?? 60, unit })}
+        onChange={(unit) => onChange({ value: value?.value ?? null, unit })}
         style={{ flex: '1 1 110px', minWidth: 110 }}
         size="large"
         options={[
@@ -315,7 +342,7 @@ function MobileDateTimePicker({
       setDraftDate(value.format('YYYY-MM-DD'))
       setDraftTime(value.format('HH:mm'))
     } else {
-      const def = dayjs().add(1, 'day')
+      const def = getServerDayjs().add(1, 'day')
       setDraftDate(def.format('YYYY-MM-DD'))
       setDraftTime('09:00')
     }
@@ -336,7 +363,7 @@ function MobileDateTimePicker({
     setOpen(false)
   }
 
-  const today = dayjs().format('YYYY-MM-DD')
+  const today = getServerDayjs().format('YYYY-MM-DD')
 
   if (!isMobile) {
     return (
@@ -405,7 +432,7 @@ function MobileDateTimePicker({
         centered
         styles={{
           header: {
-            borderBottom: '1px solid var(--color-border-light, #f0f0f0)',
+            borderBottom: '0px solid var(--color-border-light, #f0f0f0)',
             paddingBottom: 12,
             marginBottom: 0,
           },
@@ -568,6 +595,7 @@ export function AuctionTimingSection({ form, itemApproved = true }: AuctionTimin
   const { t } = useTranslation('auction')
   const screens = useBreakpoint()
   const isMobile = !screens.md
+  const clockOffset = useSelector((state: RootState) => state.system.clockOffset)
 
   const [state, setState] = useState<TimingState>({
     qualificationOpenMode: 'now',
@@ -602,7 +630,7 @@ export function AuctionTimingSection({ form, itemApproved = true }: AuctionTimin
       const qualDur = getQualDurationMinutes(s)
       const auctionDur = getAuctionDurationMinutes(s)
       const biddingGapMinutes = getBiddingGapMinutes(s)
-      const now = dayjs()
+      const now = getServerDayjs()
 
       if (qualDur < MIN_QUALIFICATION_DURATION_MINUTES) {
         errors.push(t('errorQualDurationMin', 'Qualification must last at least 5 minutes.'))
@@ -630,7 +658,7 @@ export function AuctionTimingSection({ form, itemApproved = true }: AuctionTimin
           t('errorQualStartFuture', 'Pick a qualification opening time in the future.'),
         )
       }
-      if (s.autoExtend && (s.extensionMinutes < 1 || s.extensionMinutes > 30)) {
+      if (s.autoExtend && (!s.extensionMinutes || s.extensionMinutes < 1 || s.extensionMinutes > 30)) {
         errors.push(t('errorExtensionRange', 'Extension minutes must be between 1 and 30.'))
       }
       return errors
@@ -642,19 +670,20 @@ export function AuctionTimingSection({ form, itemApproved = true }: AuctionTimin
     (next: TimingState) => {
       const errors = validateSimpleMode(next)
       setValidationErrors(errors)
-      if (errors.length === 0) {
-        const derived = deriveTimingPayload(next)
-        form.setFieldsValue({
-          qualificationStartAt: derived.qualificationStartAt,
-          qualificationEndAt: derived.qualificationEndAt,
-          startTime: derived.startTime,
-          endTime: derived.endTime,
-          autoExtend: next.autoExtend,
-          extensionMinutes: next.extensionMinutes,
-        })
-      }
+
+      // Always update form fields so the live summary and hidden fields stay in sync
+      // even if there are temporary validation errors while typing.
+      const derived = deriveTimingPayload(next, clockOffset)
+      form.setFieldsValue({
+        qualificationStartAt: derived.qualificationStartAt,
+        qualificationEndAt: derived.qualificationEndAt,
+        startTime: derived.startTime,
+        endTime: derived.endTime,
+        autoExtend: next.autoExtend,
+        extensionMinutes: next.extensionMinutes,
+      })
     },
-    [form, validateSimpleMode],
+    [form, validateSimpleMode, clockOffset],
   )
 
   const patch = useCallback(
@@ -674,8 +703,18 @@ export function AuctionTimingSection({ form, itemApproved = true }: AuctionTimin
     if (!state.advancedOverride) {
       syncFormFromState(state)
     }
+  }, [clockOffset, state.advancedOverride, syncFormFromState])
 
-  }, [])
+  // Periodic refresh for 'now' mode to prevent the timestamp from becoming stale
+  useEffect(() => {
+    if (state.qualificationOpenMode !== 'now' || state.advancedOverride) return
+
+    const interval = setInterval(() => {
+      syncFormFromState(state)
+    }, 10000)
+
+    return () => clearInterval(interval)
+  }, [state.qualificationOpenMode, state.advancedOverride, state, syncFormFromState])
 
   const handleAdvancedFieldChange = () => {
     setState((prev) => ({ ...prev, advancedOverride: true }))
@@ -716,7 +755,7 @@ export function AuctionTimingSection({ form, itemApproved = true }: AuctionTimin
         startTime: advStartTime ? dayjs(advStartTime) : null,
         endTime: advEndTime ? dayjs(advEndTime) : null,
       }
-    : deriveTimingPayload(state)
+    : deriveTimingPayload(state, clockOffset)
 
   const hasDerived =
     derived.startTime &&
@@ -726,7 +765,7 @@ export function AuctionTimingSection({ form, itemApproved = true }: AuctionTimin
 
   // ── Validation helpers for advanced mode ─────────────────────────────────
   const validateAdvancedStart = (_: unknown, value: Dayjs | null | undefined) => {
-    if (value && dayjs(value).isBefore(dayjs())) {
+    if (value && dayjs(value).isBefore(getServerDayjs())) {
       return Promise.reject(
         new Error(t('errorStartFuture', 'Pick a start time in the future.')),
       )
@@ -819,391 +858,402 @@ export function AuctionTimingSection({ form, itemApproved = true }: AuctionTimin
         {/* Section title */}
         <Flex align="center" gap={8} style={{ marginBottom: 4 }}>
           <ClockCircleOutlined style={{ color: 'var(--color-accent)', fontSize: 16, flexShrink: 0 }} />
-          <Text style={{ fontWeight: 600, fontSize: 15, color: 'var(--color-text-primary)' }}>
+          <Text className="oio-serif" style={{ fontWeight: 600, fontSize: 18, color: 'var(--color-text-primary)' }}>
             {t('scheduleSectionTitle', 'Schedule')}
           </Text>
         </Flex>
-        <Text type="secondary" style={{ display: 'block', fontSize: 13, marginBottom: 18 }}>
+        <Text type="secondary" style={{ display: 'block', fontSize: 13, marginBottom: 24 }}>
           {t('scheduleSectionSubtitle', 'Set qualification and bidding windows.')}
         </Text>
 
-        {/* ── Simple mode ────────────────────────────────────────────────── */}
-        {!state.advancedOverride && (
-          <>
-            {/* Validation error alert */}
-            {validationErrors.length > 0 && (
-              <Alert
-                type="error"
-                showIcon
-                style={{ marginBottom: 14, borderRadius: 8 }}
-                message={t('timingValidationError', 'Please fix the following:')}
-                description={
-                  <ul style={{ margin: 0, paddingLeft: 16, fontSize: 13 }}>
-                    {validationErrors.map((err) => (
-                      <li key={err}>{err}</li>
-                    ))}
-                  </ul>
-                }
-              />
-            )}
-
-            {/* 1. When should qualification open? */}
-            <Form.Item
-              label={
-                <Text strong style={{ fontSize: 13 }}>
-                  {t('whenQualOpen', 'When should qualification open?')}
-                </Text>
-              }
-            >
-              <Radio.Group
-                value={state.qualificationOpenMode}
-                onChange={(e) =>
-                  patch({
-                    qualificationOpenMode: e.target.value as QualOpenMode,
-                    scheduledQualificationStart: null,
-                  })
-                }
-                style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
-              >
-                <Radio value="now" style={{ fontSize: 13 }}>
-                  {t('qualOpenNow', 'Open qualification now')}
-                </Radio>
-                <Radio value="later" style={{ fontSize: 13 }}>
-                  {t('qualOpenLater', 'Schedule qualification for later')}
-                </Radio>
-              </Radio.Group>
-
-              {state.qualificationOpenMode === 'later' && (
-                <div style={{ width: '100%', marginTop: 10 }}>
-                  <MobileDateTimePicker
-                    value={state.scheduledQualificationStart}
-                    onChange={(val) => patch({ scheduledQualificationStart: val })}
-                    placeholder={t('scheduledQualStartPlaceholder', 'Pick a date and time')}
-                    disabledDate={disabledDate}
-                    isMobile={isMobile}
-                    label={t('whenQualOpen', 'When should qualification open?')}
+        <Flex gap={32} vertical={isMobile} align="flex-start">
+          {/* LEFT COLUMN: Settings */}
+          <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
+            {/* ── Simple mode ────────────────────────────────────────────────── */}
+            {!state.advancedOverride && (
+              <>
+                {/* Validation error alert */}
+                {validationErrors.length > 0 && (
+                  <Alert
+                    type="error"
+                    showIcon
+                    style={{ marginBottom: 14, borderRadius: 8 }}
+                    message={t('timingValidationError', 'Please fix the following:')}
+                    description={
+                      <ul style={{ margin: 0, paddingLeft: 16, fontSize: 13 }}>
+                        {validationErrors.map((err) => (
+                          <li key={err}>{err}</li>
+                        ))}
+                      </ul>
+                    }
                   />
-                </div>
-              )}
-            </Form.Item>
+                )}
 
-            {/* 2. Qualification phase lasts */}
-            <Form.Item
-              label={
-                <Text strong style={{ fontSize: 13 }}>
-                  {t('qualDurationLabel', 'Qualification phase lasts')}
-                </Text>
-              }
-            >
-              <PresetButtons
-                options={QUAL_DURATION_OPTIONS}
-                value={state.qualificationDurationPreset}
-                onChange={(v) => patch({ qualificationDurationPreset: v })}
-                customLabel={t('durationCustom', 'Custom…')}
-              />
-              {state.qualificationDurationPreset === 'custom' && (
-                <CustomDurationPicker
-                  value={state.qualificationDurationCustom}
-                  onChange={(v) => patch({ qualificationDurationCustom: v })}
-                  placeholder="60"
-                />
-              )}
-            </Form.Item>
-
-            {/* 3. Bidding starts after qualification closes */}
-            <Form.Item
-              label={
-                <Text strong style={{ fontSize: 13 }}>
-                  {t('biddingGapLabel', 'Bidding starts after qualification closes')}
-                </Text>
-              }
-              help={
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  {t(
-                    'biddingGapHelp',
-                    'Gap between qualification closing and bidding opening. Minimum 1 minute.',
-                  )}
-                </Text>
-              }
-            >
-              <PresetButtons
-                options={BIDDING_GAP_OPTIONS}
-                value={state.biddingGapPreset}
-                onChange={(v) => patch({ biddingGapPreset: v })}
-                customLabel={t('durationCustom', 'Custom…')}
-              />
-              {state.biddingGapPreset === 'custom' && (
-                <CustomDurationPicker
-                  value={state.biddingGapCustom}
-                  onChange={(v) => patch({ biddingGapCustom: v })}
-                  placeholder="60"
-                />
-              )}
-            </Form.Item>
-
-            {/* 4. Auction duration */}
-            <Form.Item
-              label={
-                <Text strong style={{ fontSize: 13 }}>
-                  {t('auctionDurationLabel', 'Auction duration')}
-                </Text>
-              }
-            >
-              <PresetButtons
-                options={AUCTION_DURATION_OPTIONS}
-                value={state.auctionDurationPreset}
-                onChange={(v) => patch({ auctionDurationPreset: v })}
-                customLabel={t('durationCustom', 'Custom…')}
-              />
-              {state.auctionDurationPreset === 'custom' && (
-                <CustomDurationPicker
-                  value={state.auctionDurationCustom}
-                  onChange={(v) => patch({ auctionDurationCustom: v })}
-                  placeholder="1440"
-                />
-              )}
-            </Form.Item>
-
-            {/* 5. Auto-extend */}
-            <Form.Item
-              label={
-                <Text strong style={{ fontSize: 13 }}>
-                  {t('autoExtendTitle', 'Auto-extend')}
-                </Text>
-              }
-            >
-              <Flex align="flex-start" gap={10} wrap="wrap">
-                <Switch
-                  checked={isSealed ? false : state.autoExtend}
-                  onChange={(val) => patch({ autoExtend: val })}
-                  disabled={isSealed}
-                  style={{ marginTop: 2, flexShrink: 0 }}
-                />
-                <Text style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-                  {isSealed
-                    ? t(
-                        'autoExtendSealedDisabled',
-                        'Auto-extend is not available for sealed auctions.',
-                      )
-                    : t(
-                        'autoExtendDesc',
-                        "If someone bids near the end, the auction gets a few extra minutes.",
-                      )}
-                </Text>
-              </Flex>
-              {state.autoExtend && (
-                <Flex align="center" gap={8} style={{ marginTop: 10 }} wrap="wrap">
-                  <Text
-                    style={{
-                      fontSize: 13,
-                      color: 'var(--color-text-secondary)',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {t('extensionMinutesLabel', 'Extend by (minutes):')}
-                  </Text>
-                  <InputNumber
-                    min={1}
-                    max={30}
-                    value={state.extensionMinutes}
-                    onChange={(val) => patch({ extensionMinutes: val ?? 5 })}
-                    style={{ width: 80 }}
-                  />
-                </Flex>
-              )}
-            </Form.Item>
-          </>
-        )}
-
-        {/* ── Advanced override active notice ──────────────────────────── */}
-        {state.advancedOverride && (
-          <Alert
-            type="info"
-            showIcon
-            style={{ marginBottom: 14, borderRadius: 8 }}
-            message={t('advancedTimingActive', 'Advanced timing in use.')}
-            description={t(
-              'advancedTimingActiveDesc',
-              'Simple mode is paused. Click Reset to return to simple mode.',
-            )}
-            action={
-              <Button size="small" type="link" onClick={handleResetToSimple}>
-                {t('resetToSimple', 'Reset to simple')}
-              </Button>
-            }
-          />
-        )}
-
-        {/* ── Live summary card ─────────────────────────────────────────── */}
-        {hasDerived &&
-          derived.startTime &&
-          derived.endTime &&
-          derived.qualificationStartAt &&
-          derived.qualificationEndAt && (
-            <Card
-              size="small"
-              style={{
-                borderRadius: 8,
-                background: 'var(--color-bg-surface)',
-                border: '1px solid var(--color-border-light)',
-                marginBottom: 14,
-              }}
-            >
-              <Text
-                strong
-                style={{
-                  display: 'block',
-                  fontSize: 12,
-                  marginBottom: 8,
-                  color: 'var(--color-text-primary)',
-                }}
-              >
-                {t('liveSummaryHeader', 'Summary')}
-              </Text>
-              {!state.advancedOverride && (
-                <Text
-                  style={{
-                    display: 'block',
-                    fontSize: 12,
-                    color: 'var(--color-text-secondary)',
-                    marginBottom: 8,
-                    fontStyle: 'italic',
-                    lineHeight: 1.5,
-                  }}
+                {/* 1. When should qualification open? */}
+                <Form.Item
+                  label={
+                    <Text className="oio-label" style={{ marginBottom: 4, display: 'block' }}>
+                      {t('whenQualOpen', 'When should qualification open?')}
+                    </Text>
+                  }
                 >
-                  {formatNaturalSummary(state, derived.qualificationStartAt)}
-                </Text>
-              )}
-              <Flex vertical gap={3}>
-                {[
-                  {
-                    label: t('qualOpens', 'Qualification opens'),
-                    value: derived.qualificationStartAt.format(DISPLAY_FORMAT),
-                  },
-                  {
-                    label: t('qualCloses', 'Qualification closes'),
-                    value: derived.qualificationEndAt.format(DISPLAY_FORMAT),
-                  },
-                  {
-                    label: t('biddingStarts', 'Bidding starts'),
-                    value: derived.startTime.format(DISPLAY_FORMAT),
-                  },
-                  {
-                    label: t('auctionEnds', 'Auction ends'),
-                    value: derived.endTime.format(DISPLAY_FORMAT),
-                  },
-                  {
-                    label: t('autoExtendTitle', 'Auto-extend'),
-                    value: state.autoExtend ? t('timing.autoExtendOn', { minutes: state.extensionMinutes, defaultValue: `on (${state.extensionMinutes} min)` }) : t('timing.autoExtendOff', 'off'),
-                  },
-                ].map(({ label, value }) => (
-                  <Text
-                    key={label}
-                    style={{
-                      fontSize: 12,
-                      color: 'var(--color-text-secondary)',
-                      wordBreak: 'break-word',
-                    }}
+                  <Radio.Group
+                    value={state.qualificationOpenMode}
+                    onChange={(e) =>
+                      patch({
+                        qualificationOpenMode: e.target.value as QualOpenMode,
+                        scheduledQualificationStart: null,
+                      })
+                    }
+                    style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
                   >
-                    <strong>{label}:</strong> {value}
-                  </Text>
-                ))}
-              </Flex>
-            </Card>
-          )}
+                    <Radio value="now" style={{ fontSize: 13 }}>
+                      {t('qualOpenNow', 'Open qualification now')}
+                    </Radio>
+                    <Radio value="later" style={{ fontSize: 13 }}>
+                      {t('qualOpenLater', 'Schedule qualification for later')}
+                    </Radio>
+                  </Radio.Group>
 
-        {/* ── Advanced timing toggle ────────────────────────────────────── */}
-        <Collapse
-          ghost
-          activeKey={state.showAdvanced ? ['adv'] : []}
-          onChange={(keys) =>
-            setState((prev) => ({
-              ...prev,
-              showAdvanced: Array.isArray(keys) ? keys.includes('adv') : keys === 'adv',
-            }))
-          }
-          style={{ marginBottom: 8 }}
-          items={[
-            {
-              key: 'adv',
-              label: (
-                <Button type="link" style={{ padding: 0, height: 'auto', fontSize: 13 }}>
-                  {t('advancedTiming', 'Advanced timing')}
-                </Button>
-              ),
-              children: (
-                <div>
-                  {/* Advanced DatePickers */}
-                  {[
-                    {
-                      name: 'qualificationStartAt',
-                      label: t('timing.qualificationStart', 'Qualification Start'),
-                      rules: [{ validator: validateAdvancedStart }],
-                    },
-                    {
-                      name: 'qualificationEndAt',
-                      label: t('timing.qualificationEnd', 'Qualification End'),
-                      rules: [{ validator: validateAdvancedQualEnd }],
-                    },
-                    {
-                      name: 'startTime',
-                      label: t('timing.auctionStart', 'Auction Start'),
-                      rules: [{ validator: validateAdvancedStart }],
-                    },
-                    {
-                      name: 'endTime',
-                      label: t('timing.auctionEnd', 'Auction End'),
-                      rules: [{ validator: validateAdvancedAuctionEnd }],
-                    },
-                  ].map(({ name, label, rules }) => (
-                    <Form.Item key={name} name={name} label={label} rules={rules}>
+                  {state.qualificationOpenMode === 'later' && (
+                    <div style={{ width: '100%', marginTop: 10 }}>
                       <MobileDateTimePicker
+                        value={state.scheduledQualificationStart}
+                        onChange={(val) => patch({ scheduledQualificationStart: val })}
+                        placeholder={t('scheduledQualStartPlaceholder', 'Pick a date and time')}
                         disabledDate={disabledDate}
                         isMobile={isMobile}
-                        label={label}
-                        onAfterChange={handleAdvancedFieldChange}
+                        label={t('whenQualOpen', 'When should qualification open?')}
                       />
-                    </Form.Item>
-                  ))}
+                    </div>
+                  )}
+                </Form.Item>
 
-                  <Form.Item label={t('extensionMinutesLabel', 'Extend by (minutes)')}>
-                    <Flex align="center" gap={10} wrap="wrap">
-                      <Switch
-                        checked={isSealed ? false : state.autoExtend}
-                        disabled={isSealed}
-                        onChange={(val) => {
-                          setState((prev) => ({ ...prev, autoExtend: val }))
-                          form.setFieldValue('autoExtend', val)
+                {/* 2. Qualification phase lasts */}
+                <Form.Item
+                  label={
+                    <Text className="oio-label" style={{ marginBottom: 4, display: 'block' }}>
+                      {t('qualDurationLabel', 'Qualification phase lasts')}
+                    </Text>
+                  }
+                >
+                  <PresetButtons
+                    options={QUAL_DURATION_OPTIONS}
+                    value={state.qualificationDurationPreset}
+                    onChange={(v) => patch({ qualificationDurationPreset: v })}
+                    customLabel={t('durationCustom', 'Custom…')}
+                  />
+                  {state.qualificationDurationPreset === 'custom' && (
+                    <CustomDurationPicker
+                      value={state.qualificationDurationCustom}
+                      onChange={(v) => patch({ qualificationDurationCustom: v })}
+                      placeholder="60"
+                    />
+                  )}
+                </Form.Item>
+
+                {/* 3. Bidding starts after qualification closes */}
+                <Form.Item
+                  label={
+                    <Text className="oio-label" style={{ marginBottom: 4, display: 'block' }}>
+                      {t('biddingGapLabel', 'Bidding starts after qualification closes')}
+                    </Text>
+                  }
+                  help={
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      {t(
+                        'biddingGapHelp',
+                        'Gap between qualification closing and bidding opening. Minimum 1 minute.',
+                      )}
+                    </Text>
+                  }
+                >
+                  <PresetButtons
+                    options={BIDDING_GAP_OPTIONS}
+                    value={state.biddingGapPreset}
+                    onChange={(v) => patch({ biddingGapPreset: v })}
+                    customLabel={t('durationCustom', 'Custom…')}
+                  />
+                  {state.biddingGapPreset === 'custom' && (
+                    <CustomDurationPicker
+                      value={state.biddingGapCustom}
+                      onChange={(v) => patch({ biddingGapCustom: v })}
+                      placeholder="60"
+                    />
+                  )}
+                </Form.Item>
+
+                {/* 4. Auction duration */}
+                <Form.Item
+                  label={
+                    <Text className="oio-label" style={{ marginBottom: 4, display: 'block' }}>
+                      {t('auctionDurationLabel', 'Auction duration')}
+                    </Text>
+                  }
+                >
+                  <PresetButtons
+                    options={AUCTION_DURATION_OPTIONS}
+                    value={state.auctionDurationPreset}
+                    onChange={(v) => patch({ auctionDurationPreset: v })}
+                    customLabel={t('durationCustom', 'Custom…')}
+                  />
+                  {state.auctionDurationPreset === 'custom' && (
+                    <CustomDurationPicker
+                      value={state.auctionDurationCustom}
+                      onChange={(v) => patch({ auctionDurationCustom: v })}
+                      placeholder="1440"
+                    />
+                  )}
+                </Form.Item>
+
+                {/* 5. Auto-extend */}
+                <Form.Item
+                  label={
+                    <Text strong style={{ fontSize: 13 }}>
+                      {t('autoExtendTitle', 'Auto-extend')}
+                    </Text>
+                  }
+                >
+                  <Flex align="flex-start" gap={10} wrap="wrap">
+                    <Switch
+                      checked={isSealed ? false : state.autoExtend}
+                      onChange={(val) => patch({ autoExtend: val })}
+                      disabled={isSealed}
+                      style={{ marginTop: 2, flexShrink: 0 }}
+                    />
+                    <Text style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+                      {isSealed
+                        ? t(
+                            'autoExtendSealedDisabled',
+                            'Auto-extend is not available for sealed auctions.',
+                          )
+                        : t(
+                            'autoExtendDesc',
+                            "If someone bids near the end, the auction gets a few extra minutes.",
+                          )}
+                    </Text>
+                  </Flex>
+                  {state.autoExtend && (
+                    <Flex align="center" gap={8} style={{ marginTop: 10 }} wrap="wrap">
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          color: 'var(--color-text-secondary)',
+                          whiteSpace: 'nowrap',
                         }}
-                      />
-                      <Text style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
-                        {t('autoExtendTitle', 'Auto-extend')}
+                      >
+                        {t('extensionMinutesLabel', 'Extend by (minutes):')}
                       </Text>
-                    </Flex>
-                    {state.autoExtend && (
                       <InputNumber
                         min={1}
                         max={30}
                         value={state.extensionMinutes}
-                        onChange={(val) => {
-                          setState((prev) => ({ ...prev, extensionMinutes: val ?? 5 }))
-                          form.setFieldValue('extensionMinutes', val ?? 5)
-                        }}
-                        style={{ width: 80, marginTop: 8 }}
+                        onChange={(val) => patch({ extensionMinutes: val })}
+                        style={{ width: 80 }}
                       />
-                    )}
-                  </Form.Item>
-
-                  {state.advancedOverride && (
-                    <Button type="link" onClick={handleResetToSimple} style={{ padding: 0 }}>
-                      {t('resetToSimple', 'Reset to simple')}
-                    </Button>
+                    </Flex>
                   )}
+                </Form.Item>
+              </>
+            )}
+
+            {/* ── Advanced override active notice ──────────────────────────── */}
+            {state.advancedOverride && (
+              <Alert
+                type="info"
+                showIcon
+                style={{ marginBottom: 14, borderRadius: 8 }}
+                message={t('advancedTimingActive', 'Advanced timing in use.')}
+                description={t(
+                  'advancedTimingActiveDesc',
+                  'Simple mode is paused. Click Reset to return to simple mode.',
+                )}
+                action={
+                  <Button size="small" type="link" onClick={handleResetToSimple}>
+                    {t('resetToSimple', 'Reset to simple')}
+                  </Button>
+                }
+              />
+            )}
+          </div>
+
+          {/* RIGHT COLUMN: Summary & Advanced */}
+          <div style={{ width: isMobile ? '100%' : 320, flexShrink: 0 }}>
+            {/* ── Live summary card ─────────────────────────────────────────── */}
+            {hasDerived &&
+              derived.startTime &&
+              derived.endTime &&
+              derived.qualificationStartAt &&
+              derived.qualificationEndAt && (
+                <div
+                  className="oio-widget"
+                  style={{
+                    background: 'var(--color-bg-surface)',
+                    marginBottom: 14,
+                    padding: '16px 20px',
+                    border: '1px solid var(--color-border-light)',
+                    borderRadius: 12,
+                    position: isMobile ? undefined : 'sticky',
+                    top: 20,
+                  }}
+                >
+                  <Text
+                    className="oio-label"
+                    style={{
+                      display: 'block',
+                      marginBottom: 12,
+                      color: 'var(--color-accent)',
+                      fontSize: 10,
+                    }}
+                  >
+                    {t('liveSummaryHeader', 'Schedule Summary')}
+                  </Text>
+                  {!state.advancedOverride && (
+                    <Text
+                      style={{
+                        display: 'block',
+                        fontSize: 13,
+                        color: 'var(--color-text-primary)',
+                        marginBottom: 16,
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {formatNaturalSummary(state, derived.qualificationStartAt, t)}
+                    </Text>
+                  )}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {[
+                      {
+                        label: t('qualOpens', 'Qualification opens'),
+                        value: derived.qualificationStartAt.format(DISPLAY_FORMAT),
+                      },
+                      {
+                        label: t('qualCloses', 'Qualification closes'),
+                        value: derived.qualificationEndAt.format(DISPLAY_FORMAT),
+                      },
+                      {
+                        label: t('biddingStarts', 'Bidding starts'),
+                        value: derived.startTime.format(DISPLAY_FORMAT),
+                      },
+                      {
+                        label: t('auctionEnds', 'Auction ends'),
+                        value: derived.endTime.format(DISPLAY_FORMAT),
+                      },
+                      {
+                        label: t('autoExtendTitle', 'Auto-extend'),
+                        value: state.autoExtend ? t('timing.autoExtendOn', { minutes: state.extensionMinutes, defaultValue: `ON (${state.extensionMinutes} MIN)` }) : t('timing.autoExtendOff', 'OFF'),
+                      },
+                    ].map(({ label, value }) => (
+                      <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <Text className="oio-label" style={{ fontSize: 9, opacity: 0.6 }}>{label}</Text>
+                        <Text style={{ 
+                          fontSize: 13, 
+                          fontFamily: 'var(--font-mono)', 
+                          fontWeight: 500,
+                          color: 'var(--color-text-primary)' 
+                        }}>
+                          {value}
+                        </Text>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ),
-            },
-          ]}
-        />
+              )}
+
+            {/* ── Advanced timing toggle ────────────────────────────────────── */}
+            <Collapse
+              ghost
+              activeKey={state.showAdvanced ? ['adv'] : []}
+              onChange={(keys) =>
+                setState((prev) => ({
+                  ...prev,
+                  showAdvanced: Array.isArray(keys) ? keys.includes('adv') : keys === 'adv',
+                }))
+              }
+              style={{ marginBottom: 8 }}
+              items={[
+                {
+                  key: 'adv',
+                  label: (
+                    <Button type="link" style={{ padding: 0, height: 'auto', fontSize: 13 }}>
+                      {t('advancedTiming', 'Advanced timing')}
+                    </Button>
+                  ),
+                  children: (
+                    <div>
+                      {/* Advanced DatePickers */}
+                      {[
+                        {
+                          name: 'qualificationStartAt',
+                          label: t('timing.qualificationStart', 'Qualification Start'),
+                          rules: [{ validator: validateAdvancedStart }],
+                        },
+                        {
+                          name: 'qualificationEndAt',
+                          label: t('timing.qualificationEnd', 'Qualification End'),
+                          rules: [{ validator: validateAdvancedQualEnd }],
+                        },
+                        {
+                          name: 'startTime',
+                          label: t('timing.auctionStart', 'Auction Start'),
+                          rules: [{ validator: validateAdvancedStart }],
+                        },
+                        {
+                          name: 'endTime',
+                          label: t('timing.auctionEnd', 'Auction End'),
+                          rules: [{ validator: validateAdvancedAuctionEnd }],
+                        },
+                      ].map(({ name, label, rules }) => (
+                        <Form.Item key={name} name={name} label={label} rules={rules}>
+                          <MobileDateTimePicker
+                            disabledDate={disabledDate}
+                            isMobile={isMobile}
+                            label={label}
+                            onAfterChange={handleAdvancedFieldChange}
+                          />
+                        </Form.Item>
+                      ))}
+
+                      <Form.Item label={t('extensionMinutesLabel', 'Extend by (minutes)')}>
+                        <Flex align="center" gap={10} wrap="wrap">
+                          <Switch
+                            checked={isSealed ? false : state.autoExtend}
+                            disabled={isSealed}
+                            onChange={(val) => {
+                              setState((prev) => ({ ...prev, autoExtend: val }))
+                              form.setFieldValue('autoExtend', val)
+                            }}
+                          />
+                          <Text style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
+                            {t('autoExtendTitle', 'Auto-extend')}
+                          </Text>
+                        </Flex>
+                        {state.autoExtend && (
+                          <InputNumber
+                            min={1}
+                            max={30}
+                            value={state.extensionMinutes}
+                            onChange={(val) => {
+                              setState((prev) => ({ ...prev, extensionMinutes: val }))
+                              form.setFieldValue('extensionMinutes', val)
+                            }}
+                            style={{ width: 80, marginTop: 8 }}
+                          />
+                        )}
+                      </Form.Item>
+
+                      {state.advancedOverride && (
+                        <Button type="link" onClick={handleResetToSimple} style={{ padding: 0 }}>
+                          {t('resetToSimple', 'Reset to simple')}
+                        </Button>
+                      )}
+                    </div>
+                  ),
+                },
+              ]}
+            />
+          </div>
+        </Flex>
       </div>
     </div>
   )

@@ -1,8 +1,14 @@
 import { useState } from 'react'
-import { Typography, Tabs, Card, Statistic, Row, Col, Select, Space, Button, Modal, Input, App, Popconfirm } from 'antd'
+import { useNavigate } from 'react-router'
+import dayjs from 'dayjs'
+import { Typography, Tabs, Card, Statistic, Row, Col, Select, Space, Button, Modal, Input, App, Upload, Image, Descriptions, Tooltip, Tag, Drawer, Flex, Empty, Dropdown, DatePicker } from 'antd'
+const { RangePicker } = DatePicker
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
-import { DollarOutlined } from '@ant-design/icons'
+import { DollarOutlined, UploadOutlined, PictureOutlined, BankOutlined, UserOutlined, UndoOutlined, SendOutlined, CheckOutlined, CloseOutlined, EllipsisOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
+import { PlatformRevenueChart } from '@/features/admin/components/PlatformRevenueChart'
+import { PlatformIncomeTable } from '@/features/admin/components/PlatformIncomeTable'
+import { EscrowAuditDrawer } from '@/features/admin/components/payments/EscrowAuditDrawer'
 import {
   usePaymentSummary,
   usePlatformWallet,
@@ -12,11 +18,14 @@ import {
   useApproveWithdrawal,
   useRejectWithdrawal,
   useCompleteWithdrawal,
+  useAdminForceReleaseEscrow,
+  useAdminForceRefundEscrow,
 } from '@/features/admin/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime, formatCurrency } from '@/utils/format'
-import { WithdrawalStatus } from '@/types/enums'
-import type { WithdrawalRequestDto, PaymentTransactionDto, EscrowDto } from '@/types'
+import { WithdrawalStatus, EscrowStatus } from '@/types/enums'
+import { useMediaUpload } from '@/hooks/useMediaUpload'
+import type { AdminWithdrawalDto, PaymentTransactionDto, EscrowDto } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 
@@ -25,50 +34,85 @@ export default function AdminPaymentsPage() {
   const { t: tc } = useTranslation('common')
   const { message } = App.useApp()
   const { isMobile } = useBreakpoint()
+  const navigate = useNavigate()
 
   const [activeTab, setActiveTab] = useState('overview')
 
   // Overview data
   const { data: summary, isLoading: summaryLoading } = usePaymentSummary()
-  const { data: wallet, isLoading: walletLoading } = usePlatformWallet()
+  const { data: wallet } = usePlatformWallet()
 
   // Withdrawals
   const [wPage, setWPage] = useState(1)
   const [wPageSize, setWPageSize] = useState(10)
   const [wStatus, setWStatus] = useState('')
+  const [wSearch, setWSearch] = useState('')
+  const [wDateRange, setWDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null)
   const { data: withdrawals, isLoading: wLoading } = useAdminWithdrawals({
     pageNumber: wPage,
     pageSize: wPageSize,
     ...(wStatus ? { status: wStatus } : {}),
+    ...(wSearch ? { searchTerm: wSearch } : {}),
+    ...(wDateRange ? { fromDate: wDateRange[0].startOf('day').toISOString(), toDate: wDateRange[1].endOf('day').toISOString() } : {}),
   })
 
   // Transactions
   const [tPage, setTPage] = useState(1)
   const [tPageSize, setTPageSize] = useState(10)
   const [tStatus, setTStatus] = useState('')
+  const [tType, setTType] = useState('')
+  const [tSearch, setTSearch] = useState('')
+  const [tDateRange, setTDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null)
   const { data: transactions, isLoading: tLoading } = useAdminTransactions({
     pageNumber: tPage,
     pageSize: tPageSize,
     ...(tStatus ? { status: tStatus } : {}),
+    ...(tType ? { type: tType } : {}),
+    ...(tSearch ? { searchTerm: tSearch } : {}),
+    ...(tDateRange ? { fromDate: tDateRange[0].startOf('day').toISOString(), toDate: tDateRange[1].endOf('day').toISOString() } : {}),
   })
 
   // Escrows
   const [ePage, setEPage] = useState(1)
   const [ePageSize, setEPageSize] = useState(10)
   const [eStatus, setEStatus] = useState('')
+  const [eSearch, setESearch] = useState('')
+  const [eDateRange, setEDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null)
   const { data: escrows, isLoading: eLoading } = useAdminEscrows({
     pageNumber: ePage,
     pageSize: ePageSize,
     ...(eStatus ? { status: eStatus } : {}),
+    ...(eSearch ? { searchTerm: eSearch } : {}),
+    ...(eDateRange ? { fromDate: eDateRange[0].startOf('day').toISOString(), toDate: eDateRange[1].endOf('day').toISOString() } : {}),
   })
 
   const approveWithdrawal = useApproveWithdrawal()
   const rejectWithdrawal = useRejectWithdrawal()
   const completeWithdrawal = useCompleteWithdrawal()
+  const forceReleaseEscrow = useAdminForceReleaseEscrow()
+  const forceRefundEscrow = useAdminForceRefundEscrow()
 
   const [rejectModalOpen, setRejectModalOpen] = useState(false)
   const [rejectId, setRejectId] = useState('')
   const [rejectReason, setRejectReason] = useState('')
+
+  // Transaction detail drawer
+  const [txnDrawerOpen, setTxnDrawerOpen] = useState(false)
+  const [txnDrawerRecord, setTxnDrawerRecord] = useState<PaymentTransactionDto | null>(null)
+
+  // Escrow action modal
+  const [escrowActionModal, setEscrowActionModal] = useState<{ open: boolean; type: 'release' | 'refund'; escrow: EscrowDto | null }>({ open: false, type: 'release', escrow: null })
+  const [escrowActionReason, setEscrowActionReason] = useState('')
+
+  // Escrow audit drawer
+  const [escrowAuditDrawerOpen, setEscrowAuditDrawerOpen] = useState(false)
+  const [escrowAuditRecord, setEscrowAuditRecord] = useState<EscrowDto | null>(null)
+
+  // Complete withdrawal modal state
+  const [completeModalOpen, setCompleteModalOpen] = useState(false)
+  const [completeRecord, setCompleteRecord] = useState<AdminWithdrawalDto | null>(null)
+  const [transferNote, setTransferNote] = useState('')
+  const mediaUpload = useMediaUpload('withdrawal_transfer_proof')
 
   const handleApprove = async (id: string) => {
     try {
@@ -79,10 +123,27 @@ export default function AdminPaymentsPage() {
     }
   }
 
-  const handleComplete = async (id: string) => {
+  const openCompleteModal = (record: AdminWithdrawalDto) => {
+    setCompleteRecord(record)
+    setTransferNote('')
+    mediaUpload.reset()
+    setCompleteModalOpen(true)
+  }
+
+  const handleComplete = async () => {
+    if (!completeRecord) return
+    if (!mediaUpload.uploadedFiles.length) {
+      message.error(t('payments.transferProofRequired', 'Please upload transfer proof screenshot'))
+      return
+    }
     try {
-      await completeWithdrawal.mutateAsync(id)
+      await completeWithdrawal.mutateAsync({
+        id: completeRecord.id,
+        transferProofUrl: mediaUpload.uploadedFiles[0].secureUrl,
+        transferNote: transferNote || undefined,
+      })
       message.success(t('payments.completeSuccess', 'Withdrawal completed'))
+      setCompleteModalOpen(false)
     } catch {
       message.error(t('common.error'))
     }
@@ -100,12 +161,41 @@ export default function AdminPaymentsPage() {
     }
   }
 
-  const withdrawalColumns: ColumnsType<WithdrawalRequestDto> = [
+  const handleEscrowAction = async () => {
+    const { type, escrow } = escrowActionModal
+    if (!escrow || !escrowActionReason.trim()) return
+    try {
+      if (type === 'release') {
+        await forceReleaseEscrow.mutateAsync({ id: escrow.id, reason: escrowActionReason })
+        message.success('Escrow released to seller')
+      } else {
+        await forceRefundEscrow.mutateAsync({ id: escrow.id, reason: escrowActionReason })
+        message.success('Escrow refunded to buyer')
+      }
+      setEscrowActionModal({ open: false, type: 'release', escrow: null })
+      setEscrowActionReason('')
+    } catch {
+      message.error('Action failed')
+    }
+  }
+
+  // ── Transaction type display helpers ──────────────────────────────
+  const txnTypeConfig: Record<string, { color: string; label: string }> = {
+    payment: { color: 'green', label: 'Payment' },
+    deposit: { color: 'blue', label: 'Deposit' },
+    fee: { color: 'gold', label: 'Fee' },
+    refund: { color: 'red', label: 'Refund' },
+    payout: { color: 'purple', label: 'Payout' },
+    withdrawal: { color: 'default', label: 'Withdrawal' },
+  }
+
+  const withdrawalColumns: ColumnsType<AdminWithdrawalDto> = [
     {
       title: t('payments.amount'),
       dataIndex: 'amount',
       key: 'amount',
       width: 140,
+      align: 'right',
       render: (amount: number) => formatCurrency(amount),
     },
     {
@@ -119,19 +209,44 @@ export default function AdminPaymentsPage() {
       title: t('payments.bankName'),
       dataIndex: 'bankName',
       key: 'bankName',
-      width: 100,
+      width: 120,
     },
     {
       title: t('payments.accountNumber'),
-      dataIndex: 'accountNumberMasked',
-      key: 'accountNumberMasked',
-      width: 150,
+      dataIndex: 'accountNumber',
+      key: 'accountNumber',
+      width: 220,
+      render: (val: string) => (
+        <Typography.Text copyable style={{ fontFamily: 'monospace', fontSize: 13, wordBreak: 'break-all' }}>
+          {val}
+        </Typography.Text>
+      ),
     },
     {
       title: t('payments.accountHolder'),
       dataIndex: 'accountHolder',
       key: 'accountHolder',
       ellipsis: true,
+    },
+    {
+      title: t('payments.transferProof', 'Proof'),
+      key: 'transferProof',
+      width: 80,
+      align: 'center',
+      render: (_, record) => {
+        if (!record.transferProofUrl) return <Typography.Text type="secondary" style={{ fontSize: 14 }}>-</Typography.Text>
+        return (
+          <Image
+            src={record.transferProofUrl}
+            alt="Transfer proof"
+            width={40}
+            height={40}
+            style={{ borderRadius: 4, objectFit: 'cover', cursor: 'pointer' }}
+            preview={{ mask: <PictureOutlined /> }}
+            fallback="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iMjAiIHk9IjI0IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTAiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkVycm9yPC90ZXh0Pjwvc3ZnPg=="
+          />
+        )
+      },
     },
     {
       title: t('payments.createdAt'),
@@ -148,36 +263,37 @@ export default function AdminPaymentsPage() {
         if (record.status === WithdrawalStatus.Pending) {
           return (
             <Space size={4}>
-              <Button
-                type="link"
-                size="small"
-                onClick={() => handleApprove(record.id)}
-                style={{ minHeight: isMobile ? 44 : undefined, padding: isMobile ? '0 8px' : undefined }}
-              >
-                {t('payments.approve')}
-              </Button>
-              <Button
-                type="link"
-                size="small"
-                danger
-                onClick={() => { setRejectId(record.id); setRejectModalOpen(true) }}
-                style={{ minHeight: isMobile ? 44 : undefined, padding: isMobile ? '0 8px' : undefined }}
-              >
-                {t('payments.reject')}
-              </Button>
+              <Tooltip title={t('payments.approve')}>
+                <Button
+                  type="text"
+                  size="small"
+                  onClick={() => handleApprove(record.id)}
+                  icon={<CheckOutlined />}
+                  style={{ color: 'var(--color-success)' }}
+                />
+              </Tooltip>
+              <Tooltip title={t('payments.reject')}>
+                <Button
+                  type="text"
+                  size="small"
+                  danger
+                  onClick={() => { setRejectId(record.id); setRejectModalOpen(true) }}
+                  icon={<CloseOutlined />}
+                />
+              </Tooltip>
             </Space>
           )
         }
         if (record.status === 'approved') {
           return (
-            <Popconfirm
-              title={t('payments.completeConfirm')}
-              onConfirm={() => handleComplete(record.id)}
+            <Button
+              type="link"
+              size="small"
+              onClick={() => openCompleteModal(record)}
+              style={{ color: 'var(--color-success)' }}
             >
-              <Button type="link" size="small" loading={completeWithdrawal.isPending} style={{ color: 'var(--color-success)' }}>
-                {t('payments.complete')}
-              </Button>
-            </Popconfirm>
+              {t('payments.complete')}
+            </Button>
           )
         }
         return null
@@ -187,39 +303,90 @@ export default function AdminPaymentsPage() {
 
   const transactionColumns: ColumnsType<PaymentTransactionDto> = [
     {
-      title: t('common.id'),
-      dataIndex: 'id',
-      key: 'id',
-      width: 180,
-      ellipsis: true,
+      title: 'Txn #',
+      dataIndex: 'transactionNumber',
+      key: 'transactionNumber',
+      width: 130,
+      render: (val: string | undefined, record) => (
+        <Typography.Text copyable={{ text: val ?? record.id, tooltips: ['Copy', 'Copied!'] }} style={{ fontFamily: 'monospace', fontSize: 12 }}>
+          {val ?? record.id.slice(0, 8)}
+        </Typography.Text>
+      ),
     },
     {
       title: t('payments.type'),
       dataIndex: 'type',
       key: 'type',
-      width: 100,
+      width: 110,
+      render: (type: string) => {
+        const cfg = txnTypeConfig[type] ?? { color: 'default', label: type }
+        return <Tag color={cfg.color}>{cfg.label}</Tag>
+      },
+    },
+    {
+      title: 'User',
+      key: 'user',
+      width: 160,
+      render: (_, record) => record.userId ? (
+        <Tooltip title={record.userId}>
+          <a onClick={(e) => { e.stopPropagation(); navigate(`/admin/users/${record.userId}`) }} style={{ cursor: 'pointer' }}>
+            <UserOutlined style={{ marginRight: 4 }} />
+            {record.userDisplayName ?? record.userId?.slice(0, 8) + '…'}
+          </a>
+        </Tooltip>
+      ) : '-',
     },
     {
       title: t('payments.amount'),
-      dataIndex: 'amount',
       key: 'amount',
-      width: 140,
-      render: (amount: number, record) => formatCurrency(amount, record.currency),
+      width: 160,
+      align: 'right',
+      render: (_, record) => (
+        <Space direction="vertical" size={0}>
+          <Typography.Text strong>{formatCurrency(record.amount, record.currency)}</Typography.Text>
+          {record.fee != null && record.fee > 0 && (
+            <Typography.Text type="secondary" style={{ fontSize: 11 }}>
+              Fee: {formatCurrency(record.fee, record.currency)} → Net: {formatCurrency(record.netAmount ?? record.amount, record.currency)}
+            </Typography.Text>
+          )}
+        </Space>
+      ),
     },
     {
       title: t('payments.status'),
       dataIndex: 'status',
       key: 'status',
       width: 110,
-      render: (status: string) => <StatusBadge status={status} />,
+      render: (status: string) => {
+        let color = 'default'
+        if (['success', 'completed'].includes(status.toLowerCase())) color = 'success'
+        if (['pending', 'processing'].includes(status.toLowerCase())) color = 'warning'
+        if (['failed', 'cancelled'].includes(status.toLowerCase())) color = 'error'
+        return <Tag color={color}>{status}</Tag>
+      },
     },
     {
-      title: t('payments.orderId'),
-      dataIndex: 'orderId',
-      key: 'orderId',
+      title: 'Reference',
+      key: 'reference',
       width: 180,
-      ellipsis: true,
-      render: (val: string | undefined) => val ?? '-',
+      render: (_, record) => {
+        if (record.orderId) {
+          return (
+            <Button type="link" size="small" onClick={(e) => { e.stopPropagation(); navigate(`/admin/orders/${record.orderId}`) }} style={{ padding: 0 }}>
+              Order {record.orderNumber ?? record.orderId?.slice(0, 8)}
+            </Button>
+          )
+        }
+        if (record.auctionItemTitle) return <Typography.Text ellipsis style={{ maxWidth: 160 }}>{record.auctionItemTitle}</Typography.Text>
+        return <Typography.Text type="secondary">—</Typography.Text>
+      },
+    },
+    {
+      title: 'Payment Method',
+      dataIndex: 'gatewayProvider',
+      key: 'gateway',
+      width: 90,
+      render: (val: string | undefined) => val ? <Tag>{val}</Tag> : <Typography.Text type="secondary">—</Typography.Text>,
     },
     {
       title: t('payments.createdAt'),
@@ -227,49 +394,138 @@ export default function AdminPaymentsPage() {
       key: 'createdAt',
       width: 150,
       render: (date: string) => formatDateTime(date),
+    },
+    {
+      title: '',
+      key: 'actions',
+      width: 80,
+      render: (_, record) => (
+        <Tooltip title="View Details">
+          <Button size="small" type="text" icon={<EllipsisOutlined />} onClick={() => { setTxnDrawerRecord(record); setTxnDrawerOpen(true) }} />
+        </Tooltip>
+      ),
     },
   ]
 
   const escrowColumns: ColumnsType<EscrowDto> = [
     {
-      title: t('common.id'),
-      dataIndex: 'id',
-      key: 'id',
-      width: 180,
-      ellipsis: true,
+      title: 'Item',
+      key: 'item',
+      width: 200,
+      render: (_, record) => (
+        <Space direction="vertical" size={0} style={{ display: 'flex' }}>
+          <Space>
+            <Typography.Text strong ellipsis style={{ maxWidth: 180 }}>
+              {record.auctionItemTitle ?? '—'}
+            </Typography.Text>
+            {record.isDisputed && <Tag color="red">DISPUTED</Tag>}
+          </Space>
+          <Typography.Text 
+            copyable={{ text: record.orderId, tooltips: ['Copy Order ID', 'Copied!'] }} 
+            style={{ fontSize: 11, cursor: 'pointer', fontFamily: 'monospace' }}
+            ellipsis
+            onClick={(e) => { e.stopPropagation(); navigate(`/admin/orders/${record.orderId}`) }}
+          >
+            <a>ORD-{record.orderId.slice(0, 4)}...{record.orderId.slice(-4)}</a>
+          </Typography.Text>
+        </Space>
+      ),
     },
     {
-      title: t('payments.orderId'),
-      dataIndex: 'orderId',
-      key: 'orderId',
-      width: 180,
-      ellipsis: true,
+      title: 'Buyer',
+      key: 'buyer',
+      width: 150,
+      render: (_, record) => record.buyerId ? (
+        <a onClick={(e) => { e.stopPropagation(); navigate(`/admin/users/${record.buyerId}`) }} style={{ cursor: 'pointer' }}>
+          <UserOutlined style={{ marginRight: 4 }} />
+          {record.buyerDisplayName ?? record.buyerId?.slice(0, 8) + '…'}
+        </a>
+      ) : '-',
+    },
+    {
+      title: 'Seller',
+      key: 'seller',
+      width: 150,
+      render: (_, record) => record.sellerId ? (
+        <a onClick={(e) => { e.stopPropagation(); navigate(`/admin/users/${record.sellerId}`) }} style={{ cursor: 'pointer' }}>
+          <UserOutlined style={{ marginRight: 4 }} />
+          {record.sellerDisplayName ?? record.sellerId?.slice(0, 8) + '…'}
+        </a>
+      ) : '-',
     },
     {
       title: t('payments.amount'),
       dataIndex: 'amount',
       key: 'amount',
-      width: 140,
+      width: 130,
+      align: 'right',
       render: (amount: number, record) => formatCurrency(amount, record.currency),
     },
     {
       title: t('payments.status'),
       dataIndex: 'status',
       key: 'status',
-      width: 110,
-      render: (status: string) => <StatusBadge status={status} />,
+      width: 130,
+      render: (status: string) => {
+        let color = 'default'
+        if (['released', 'released_to_seller'].includes(status.toLowerCase())) color = 'success'
+        if (['holding'].includes(status.toLowerCase())) color = 'processing'
+        if (['refunded', 'refunded_to_buyer'].includes(status.toLowerCase())) color = 'warning'
+        if (['forfeited'].includes(status.toLowerCase())) color = 'error'
+        return <Tag color={color}>{status}</Tag>
+      },
     },
     {
-      title: t('payments.createdAt'),
-      dataIndex: 'createdAt',
-      key: 'createdAt',
+      title: 'Timeline',
+      key: 'timeline',
       width: 150,
-      render: (date: string) => formatDateTime(date),
+      render: (_, record) => (
+        <Space direction="vertical" size={0}>
+          <Typography.Text style={{ fontSize: 11 }}>Held: {formatDateTime(record.createdAt)}</Typography.Text>
+          {record.releasedAt && <Typography.Text style={{ fontSize: 11 }} type="success">Released: {formatDateTime(record.releasedAt)}</Typography.Text>}
+          {record.refundedAt && <Typography.Text style={{ fontSize: 11 }} type="warning">Refunded: {formatDateTime(record.refundedAt)}</Typography.Text>}
+        </Space>
+      ),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      width: 250,
+      render: (_, record) => {
+        const moreActions = [
+          {
+            key: 'release',
+            label: 'Release to seller',
+            icon: <SendOutlined />,
+            onClick: () => { setEscrowActionModal({ open: true, type: 'release', escrow: record }); setEscrowActionReason('') }
+          },
+          {
+            key: 'refund',
+            label: 'Refund to buyer',
+            danger: true,
+            icon: <UndoOutlined />,
+            onClick: () => { setEscrowActionModal({ open: true, type: 'refund', escrow: record }); setEscrowActionReason('') }
+          }
+        ]
+
+        return (
+          <Space size={4}>
+            <Button size="small" type="default" onClick={() => { setEscrowAuditRecord(record); setEscrowAuditDrawerOpen(true) }}>
+              View Details
+            </Button>
+            {record.status === EscrowStatus.Holding && (
+              <Dropdown menu={{ items: moreActions }} trigger={['click']}>
+                <Button size="small" icon={<EllipsisOutlined />} />
+              </Dropdown>
+            )}
+          </Space>
+        )
+      },
     },
   ]
 
   // Shared filter select style
-  const filterSelectStyle = { width: isMobile ? '100%' : 200, marginBottom: 16 }
+  const filterSelectStyle = { width: isMobile ? '100%' : 200 }
 
   const tabItems = [
     {
@@ -277,114 +533,94 @@ export default function AdminPaymentsPage() {
       label: t('payments.overview'),
       children: (
         <>
-          {/* Escrow Statistics */}
-          <Typography.Title level={5} style={{ marginTop: 0, marginBottom: 16 }}>{t('payments.escrowStats', 'Escrow Statistics')}</Typography.Title>
-          <Row gutter={[12, 12]} style={{ marginBottom: isMobile ? 16 : 24 }}>
-            <Col xs={12} sm={12} lg={8}>
-              <Card loading={summaryLoading} styles={{ body: { padding: isMobile ? '12px' : '24px' } }}>
+          <Row gutter={[16, 16]}>
+            {/* ── ROW 1: METRICS ── */}
+            <Col xs={24} lg={8}>
+              <Card loading={summaryLoading} styles={{ body: { padding: isMobile ? '16px' : '24px' } }} style={{ borderRadius: 12, height: '100%' }}>
                 <Statistic
-                  title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('payments.releasedEscrow', 'Released Escrow')}</span>}
-                  value={summary?.releasedEscrowTotal ?? 0}
-                  formatter={(val) => formatCurrency(val as number)}
-                  valueStyle={{ color: '#3f8600', fontSize: isMobile ? 16 : 24 }}
-                />
-              </Card>
-            </Col>
-            <Col xs={12} sm={12} lg={8}>
-              <Card loading={summaryLoading} styles={{ body: { padding: isMobile ? '12px' : '24px' } }}>
-                <Statistic
-                  title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('payments.refundedEscrow', 'Refunded Escrow')}</span>}
-                  value={summary?.refundedEscrowTotal ?? 0}
-                  formatter={(val) => formatCurrency(val as number)}
-                  valueStyle={{ fontSize: isMobile ? 16 : 24 }}
-                />
-              </Card>
-            </Col>
-            <Col xs={12} sm={12} lg={8}>
-              <Card loading={summaryLoading} styles={{ body: { padding: isMobile ? '12px' : '24px' } }}>
-                <Statistic
-                  title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('payments.holdingEscrowCount', 'Holding Escrows')}</span>}
-                  value={summary?.holdingEscrowCount ?? 0}
-                  valueStyle={{ color: '#1677ff', fontSize: isMobile ? 16 : 24 }}
-                />
-              </Card>
-            </Col>
-          </Row>
-
-          {/* Activity Statistics */}
-          <Typography.Title level={5} style={{ marginBottom: 16 }}>{t('payments.activityStats', 'Activity Statistics')}</Typography.Title>
-          <Row gutter={[12, 12]} style={{ marginBottom: isMobile ? 16 : 24 }}>
-            <Col xs={12} sm={12} lg={6}>
-              <Card loading={summaryLoading} styles={{ body: { padding: isMobile ? '12px' : '24px' } }}>
-                <Statistic
-                  title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('payments.completedPayments', 'Completed Payments')}</span>}
-                  value={summary?.completedPayments ?? 0}
-                  valueStyle={{ color: '#3f8600', fontSize: isMobile ? 16 : 24 }}
-                />
-              </Card>
-            </Col>
-            <Col xs={12} sm={12} lg={6}>
-              <Card loading={summaryLoading} styles={{ body: { padding: isMobile ? '12px' : '24px' } }}>
-                <Statistic
-                  title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('payments.failedPayments', 'Failed Payments')}</span>}
-                  value={summary?.failedPayments ?? 0}
-                  valueStyle={{ color: '#cf1322', fontSize: isMobile ? 16 : 24 }}
-                />
-              </Card>
-            </Col>
-            <Col xs={12} sm={12} lg={6}>
-              <Card loading={summaryLoading} styles={{ body: { padding: isMobile ? '12px' : '24px' } }}>
-                <Statistic
-                  title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('payments.walletTopUps', 'Wallet Top-ups')}</span>}
-                  value={summary?.walletTopUps ?? 0}
-                  valueStyle={{ fontSize: isMobile ? 16 : 24 }}
-                />
-              </Card>
-            </Col>
-            <Col xs={12} sm={12} lg={6}>
-              <Card loading={summaryLoading} styles={{ body: { padding: isMobile ? '12px' : '24px' } }}>
-                <Statistic
-                  title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('payments.pendingWithdrawals', 'Pending Withdrawals')}</span>}
-                  value={summary?.withdrawalPendingCount ?? 0}
-                  valueStyle={{ color: '#faad14', fontSize: isMobile ? 16 : 24 }}
-                />
-              </Card>
-            </Col>
-          </Row>
-
-          {/* Platform wallet */}
-          <Card
-            title={t('payments.walletBalance')}
-            loading={walletLoading}
-            style={{ borderRadius: 12 }}
-          >
-            <Row gutter={[isMobile ? 12 : 16, 12]}>
-              <Col xs={8} sm={8}>
-                <Statistic
-                  title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('payments.availableBalance')}</span>}
-                  value={wallet?.availableBalance ?? 0}
+                  title={<span style={{ fontSize: isMobile ? 12 : 14, fontWeight: 600 }}>{t('payments.totalSystemBalance', 'Total System Balance')}</span>}
+                  value={summary?.totalSystemBalance ?? 0}
                   formatter={(val) => formatCurrency(val as number, wallet?.currency)}
-                  valueStyle={{ color: '#3f8600', fontSize: isMobile ? 14 : 20 }}
+                  valueStyle={{ color: 'var(--color-primary, #1677ff)', fontSize: isMobile ? 24 : 32, fontWeight: 700 }}
                 />
-              </Col>
-              <Col xs={8} sm={8}>
+              </Card>
+            </Col>
+            <Col xs={12} sm={12} lg={4}>
+              <Card loading={summaryLoading} styles={{ body: { padding: isMobile ? '16px' : '16px' } }} style={{ borderRadius: 12, height: '100%' }}>
                 <Statistic
-                  title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('payments.pendingBalance')}</span>}
+                  title={<span style={{ fontSize: isMobile ? 12 : 13 }}>{t('payments.totalRevenue', 'Total Revenue')}</span>}
+                  value={summary?.totalRevenue ?? 0}
+                  formatter={(val) => formatCurrency(val as number, wallet?.currency)}
+                  valueStyle={{ color: 'var(--color-success, #3f8600)', fontSize: isMobile ? 18 : 20, fontWeight: 600 }}
+                />
+              </Card>
+            </Col>
+            <Col xs={12} sm={12} lg={4}>
+              <Card loading={summaryLoading} styles={{ body: { padding: isMobile ? '16px' : '16px' } }} style={{ borderRadius: 12, height: '100%' }}>
+                <Statistic
+                  title={<span style={{ fontSize: isMobile ? 12 : 13 }}>{t('payments.escrowHolding', 'Escrow Holding')}</span>}
                   value={wallet?.pendingBalance ?? 0}
                   formatter={(val) => formatCurrency(val as number, wallet?.currency)}
-                  valueStyle={{ color: '#faad14', fontSize: isMobile ? 14 : 20 }}
+                  valueStyle={{ color: 'var(--color-warning, #faad14)', fontSize: isMobile ? 18 : 20, fontWeight: 600 }}
                 />
-              </Col>
-              <Col xs={8} sm={8}>
+              </Card>
+            </Col>
+            <Col xs={12} sm={12} lg={4}>
+              <Card loading={summaryLoading} styles={{ body: { padding: isMobile ? '16px' : '16px' } }} style={{ borderRadius: 12, height: '100%' }}>
                 <Statistic
-                  title={<span style={{ fontSize: isMobile ? 11 : 14 }}>{t('payments.platformBalance')}</span>}
-                  value={wallet?.totalBalance ?? 0}
-                  formatter={(val) => formatCurrency(val as number, wallet?.currency)}
-                  valueStyle={{ fontSize: isMobile ? 14 : 20 }}
+                  title={<span style={{ fontSize: isMobile ? 12 : 13 }}>{t('payments.pendingWithdrawals', 'Pending Withdrawals')}</span>}
+                  value={summary?.withdrawalPendingCount ?? 0}
+                  valueStyle={{ color: 'var(--color-error, #cf1322)', fontSize: isMobile ? 18 : 20, fontWeight: 600 }}
                 />
-              </Col>
-            </Row>
-          </Card>
+              </Card>
+            </Col>
+            <Col xs={12} sm={12} lg={4}>
+              <Card loading={summaryLoading} styles={{ body: { padding: isMobile ? '16px' : '16px' } }} style={{ borderRadius: 12, height: '100%' }}>
+                <Statistic
+                  title={<span style={{ fontSize: isMobile ? 12 : 13 }}>{t('payments.refundedAmount', 'Refunded Amount')}</span>}
+                  value={summary?.refundedEscrowTotal ?? 0}
+                  formatter={(val) => formatCurrency(val as number)}
+                  valueStyle={{ color: 'var(--color-error, #cf1322)', fontSize: isMobile ? 18 : 20, fontWeight: 600 }}
+                />
+              </Card>
+            </Col>
+
+            {/* ── ROW 2: DATA & ACTIVITY ── */}
+            <Col xs={24} lg={16}>
+              <Card title="Revenue Chart" style={{ borderRadius: 12, height: '100%' }} styles={{ body: { padding: 0 } }}>
+                <div style={{ padding: 24 }}>
+                  <PlatformRevenueChart />
+                </div>
+              </Card>
+            </Col>
+            <Col xs={24} lg={8}>
+              <Card title="Pending Withdrawals" style={{ borderRadius: 12, height: '100%' }}>
+                {withdrawals?.items && withdrawals.items.length > 0 ? (
+                  <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                    {withdrawals.items.filter((w: any) => w.status === WithdrawalStatus.Pending).slice(0, 5).map((w: any) => (
+                      <Flex key={w.id} justify="space-between" align="center" style={{ paddingBottom: 12, borderBottom: '1px solid var(--color-border)' }}>
+                        <div>
+                          <Typography.Text strong style={{ display: 'block' }}>{formatCurrency(w.amount)}</Typography.Text>
+                          <Typography.Text type="secondary" style={{ fontSize: 12 }}>{w.accountHolder} - {w.bankName}</Typography.Text>
+                        </div>
+                        <Space size={4}>
+                          <Tooltip title="Approve">
+                            <Button size="small" type="text" icon={<CheckOutlined />} onClick={() => handleApprove(w.id)} style={{ color: 'var(--color-success)' }} />
+                          </Tooltip>
+                          <Tooltip title="Reject">
+                            <Button size="small" type="text" danger icon={<CloseOutlined />} onClick={() => { setRejectId(w.id); setRejectModalOpen(true) }} />
+                          </Tooltip>
+                        </Space>
+                      </Flex>
+                    ))}
+                    <Button type="link" block onClick={() => setActiveTab('withdrawals')}>View All</Button>
+                  </Space>
+                ) : (
+                  <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No pending withdrawals" />
+                )}
+              </Card>
+            </Col>
+          </Row>
         </>
       ),
     },
@@ -393,8 +629,20 @@ export default function AdminPaymentsPage() {
       label: t('payments.withdrawals'),
       children: (
         <>
-          <Select
-            placeholder={t('payments.filterStatus')}
+          <Flex justify="space-between" align="center" wrap="wrap" gap={16} style={{ marginBottom: 16 }}>
+            <Input.Search
+              placeholder="Search withdrawal..."
+              allowClear
+              onSearch={(val) => { setWSearch(val); setWPage(1) }}
+              style={{ width: isMobile ? '100%' : 250 }}
+            />
+            <Space wrap>
+              <RangePicker
+                onChange={(dates) => { setWDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null); setWPage(1) }}
+                style={{ width: 250 }}
+              />
+              <Select
+              placeholder={t('payments.filterStatus')}
             value={wStatus}
             onChange={(val) => { setWStatus(val); setWPage(1) }}
             style={filterSelectStyle}
@@ -407,12 +655,14 @@ export default function AdminPaymentsPage() {
               { value: 'rejected', label: tc('statusLabel.rejected') },
               { value: 'completed', label: tc('statusLabel.completed') },
             ]}
-          />
+              />
+            </Space>
+          </Flex>
           <div style={{ overflowX: 'auto' }}>
-            <ResponsiveTable<WithdrawalRequestDto>
+            <ResponsiveTable<AdminWithdrawalDto>
               rowKey="id"
               columns={withdrawalColumns}
-              dataSource={withdrawals?.items ?? []}
+              dataSource={(withdrawals?.items ?? []) as AdminWithdrawalDto[]}
               loading={wLoading}
               mobileMode="list"
               pagination={{
@@ -434,8 +684,37 @@ export default function AdminPaymentsPage() {
       label: t('payments.transactions'),
       children: (
         <>
-          <Select
-            placeholder={t('payments.filterStatus')}
+          <Flex justify="space-between" align="center" wrap="wrap" gap={16} style={{ marginBottom: 16 }}>
+            <Input.Search
+              placeholder="Search transaction..."
+              allowClear
+              onSearch={(val) => { setTSearch(val); setTPage(1) }}
+              style={{ width: isMobile ? '100%' : 250 }}
+            />
+            <Space wrap>
+              <RangePicker
+                onChange={(dates) => { setTDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null); setTPage(1) }}
+                style={{ width: 250 }}
+              />
+              <Select
+                placeholder="Filter Type"
+                value={tType}
+                onChange={(val) => { setTType(val); setTPage(1) }}
+                style={filterSelectStyle}
+                allowClear
+                onClear={() => setTType('')}
+                options={[
+                  { value: '', label: 'All Types' },
+                  { value: 'payment', label: 'Payment' },
+                  { value: 'refund', label: 'Refund' },
+                  { value: 'deposit', label: 'Deposit' },
+                  { value: 'withdrawal', label: 'Withdrawal' },
+                  { value: 'fee', label: 'Fee' },
+                  { value: 'payout', label: 'Payout' },
+                ]}
+              />
+              <Select
+              placeholder={t('payments.filterStatus')}
             value={tStatus}
             onChange={(val) => { setTStatus(val); setTPage(1) }}
             style={filterSelectStyle}
@@ -447,7 +726,9 @@ export default function AdminPaymentsPage() {
               { value: 'completed', label: tc('statusLabel.completed') },
               { value: 'failed', label: tc('statusLabel.failed') },
             ]}
-          />
+              />
+            </Space>
+          </Flex>
           <div style={{ overflowX: 'auto' }}>
             <ResponsiveTable<PaymentTransactionDto>
               rowKey="id"
@@ -474,8 +755,20 @@ export default function AdminPaymentsPage() {
       label: t('payments.escrows'),
       children: (
         <>
-          <Select
-            placeholder={t('payments.filterStatus')}
+          <Flex justify="space-between" align="center" wrap="wrap" gap={16} style={{ marginBottom: 16 }}>
+            <Input.Search
+              placeholder="Search escrow..."
+              allowClear
+              onSearch={(val) => { setESearch(val); setEPage(1) }}
+              style={{ width: isMobile ? '100%' : 250 }}
+            />
+            <Space wrap>
+              <RangePicker
+                onChange={(dates) => { setEDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null); setEPage(1) }}
+                style={{ width: 250 }}
+              />
+              <Select
+              placeholder={t('payments.filterStatus')}
             value={eStatus}
             onChange={(val) => { setEStatus(val); setEPage(1) }}
             style={filterSelectStyle}
@@ -483,12 +776,14 @@ export default function AdminPaymentsPage() {
             onClear={() => setEStatus('')}
             options={[
               { value: '', label: t('payments.allStatuses') },
-              { value: 'held', label: tc('statusLabel.held') },
-              { value: 'released', label: tc('statusLabel.released') },
+              { value: 'holding', label: tc('statusLabel.held') },
+              { value: 'released_to_seller', label: tc('statusLabel.released') },
               { value: 'disputed', label: tc('statusLabel.disputed') },
-              { value: 'refunded', label: tc('statusLabel.refunded') },
+              { value: 'refunded_to_buyer', label: tc('statusLabel.refunded') },
             ]}
-          />
+              />
+            </Space>
+          </Flex>
           <div style={{ overflowX: 'auto' }}>
             <ResponsiveTable<EscrowDto>
               rowKey="id"
@@ -509,6 +804,11 @@ export default function AdminPaymentsPage() {
           </div>
         </>
       ),
+    },
+    {
+      key: 'platformIncome',
+      label: <span><BankOutlined /> {t('revenue.incomeTabTitle', 'Platform Income')}</span>,
+      children: <PlatformIncomeTable />,
     },
   ]
 
@@ -541,6 +841,168 @@ export default function AdminPaymentsPage() {
           style={{ marginTop: 8 }}
         />
       </Modal>
+
+      {/* Complete withdrawal modal — requires transfer proof upload */}
+      <Modal
+        title={t('payments.completeWithdrawal', 'Complete Withdrawal')}
+        open={completeModalOpen}
+        onOk={handleComplete}
+        onCancel={() => { setCompleteModalOpen(false); mediaUpload.reset() }}
+        confirmLoading={completeWithdrawal.isPending}
+        okButtonProps={{ disabled: !mediaUpload.uploadedFiles.length }}
+        okText={t('payments.confirmComplete', 'Confirm Transfer')}
+        centered={isMobile}
+        width={520}
+      >
+        {completeRecord && (
+          <div style={{ marginBottom: 16 }}>
+            <Descriptions column={1} size="small" bordered>
+              <Descriptions.Item label={t('payments.bankName')}>
+                {completeRecord.bankName}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('payments.accountNumber')}>
+                <Typography.Text copyable style={{ fontFamily: 'monospace' }}>
+                  {completeRecord.accountNumber}
+                </Typography.Text>
+              </Descriptions.Item>
+              <Descriptions.Item label={t('payments.accountHolder')}>
+                {completeRecord.accountHolder}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('payments.amount')}>
+                <Typography.Text strong style={{ color: 'var(--color-success)' }}>
+                  {formatCurrency(completeRecord.netAmount)}
+                </Typography.Text>
+              </Descriptions.Item>
+            </Descriptions>
+          </div>
+        )}
+
+        <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>
+          {t('payments.transferProofLabel', 'Upload transfer proof screenshot')} *
+        </Typography.Text>
+
+        {mediaUpload.uploadedFiles.length > 0 ? (
+          <div style={{ marginBottom: 12 }}>
+            <Image
+              src={mediaUpload.uploadedFiles[0].secureUrl}
+              alt="Transfer proof"
+              width={200}
+              style={{ borderRadius: 8 }}
+            />
+            <div style={{ marginTop: 4 }}>
+              <Button size="small" danger onClick={() => mediaUpload.reset()}>
+                {t('common:action.remove', 'Remove')}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Upload
+            accept="image/*"
+            maxCount={1}
+            showUploadList={false}
+            customRequest={async ({ file, onSuccess, onError }) => {
+              try {
+                await mediaUpload.upload(file as File)
+                onSuccess?.(null)
+              } catch (err) {
+                onError?.(err as Error)
+              }
+            }}
+          >
+            <Button
+              icon={<UploadOutlined />}
+              loading={mediaUpload.uploading}
+              style={{ width: '100%', height: 80 }}
+            >
+              {t('payments.uploadProof', 'Click to upload screenshot')}
+            </Button>
+          </Upload>
+        )}
+
+        <Input.TextArea
+          rows={2}
+          value={transferNote}
+          onChange={(e) => setTransferNote(e.target.value)}
+          placeholder={t('payments.transferNotePlaceholder', 'Optional: transfer reference number or note')}
+          style={{ marginTop: 12 }}
+        />
+      </Modal>
+
+      {/* ── Transaction Detail Drawer ────────────────────────────────── */}
+      <Drawer
+        title="Transaction Detail"
+        open={txnDrawerOpen}
+        onClose={() => { setTxnDrawerOpen(false); setTxnDrawerRecord(null) }}
+        width={480}
+      >
+        {txnDrawerRecord && (
+          <Descriptions column={1} bordered size="small">
+            <Descriptions.Item label="Txn #">{txnDrawerRecord.transactionNumber ?? '—'}</Descriptions.Item>
+            <Descriptions.Item label="ID">
+              <Typography.Text copyable style={{ fontFamily: 'monospace', fontSize: 11 }}>{txnDrawerRecord.id}</Typography.Text>
+            </Descriptions.Item>
+            <Descriptions.Item label="Type">
+              <Tag color={txnTypeConfig[txnDrawerRecord.type]?.color ?? 'default'}>{txnTypeConfig[txnDrawerRecord.type]?.label ?? txnDrawerRecord.type}</Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label="Status"><StatusBadge status={txnDrawerRecord.status} /></Descriptions.Item>
+            <Descriptions.Item label="User">
+              {txnDrawerRecord.userId ? (
+                <a onClick={() => navigate(`/admin/users/${txnDrawerRecord.userId}`)} style={{ cursor: 'pointer' }}>
+                  {txnDrawerRecord.userDisplayName ?? txnDrawerRecord.userId}
+                </a>
+              ) : '—'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Gross Amount">{formatCurrency(txnDrawerRecord.amount, txnDrawerRecord.currency)}</Descriptions.Item>
+            <Descriptions.Item label="Fee">{formatCurrency(txnDrawerRecord.fee ?? 0, txnDrawerRecord.currency)}</Descriptions.Item>
+            <Descriptions.Item label="Net Amount">{formatCurrency(txnDrawerRecord.netAmount ?? txnDrawerRecord.amount, txnDrawerRecord.currency)}</Descriptions.Item>
+            <Descriptions.Item label="Gateway">{txnDrawerRecord.gatewayProvider ?? '—'}</Descriptions.Item>
+            <Descriptions.Item label="Description">{txnDrawerRecord.description ?? '—'}</Descriptions.Item>
+            {txnDrawerRecord.orderId && (
+              <Descriptions.Item label="Order">
+                <a onClick={() => navigate(`/admin/orders/${txnDrawerRecord.orderId}`)} style={{ cursor: 'pointer' }}>
+                  {txnDrawerRecord.orderNumber ?? txnDrawerRecord.orderId}
+                </a>
+              </Descriptions.Item>
+            )}
+            {txnDrawerRecord.auctionItemTitle && (
+              <Descriptions.Item label="Auction Item">{txnDrawerRecord.auctionItemTitle}</Descriptions.Item>
+            )}
+            <Descriptions.Item label="Created">{formatDateTime(txnDrawerRecord.createdAt)}</Descriptions.Item>
+            <Descriptions.Item label="Processed">{txnDrawerRecord.processedAt ? formatDateTime(txnDrawerRecord.processedAt) : '—'}</Descriptions.Item>
+          </Descriptions>
+        )}
+      </Drawer>
+
+      {/* ── Escrow Action Modal ──────────────────────────────────────── */}
+      <Modal
+        title={escrowActionModal.type === 'release' ? 'Force Release Escrow to Seller' : 'Force Refund Escrow to Buyer'}
+        open={escrowActionModal.open}
+        onOk={handleEscrowAction}
+        onCancel={() => { setEscrowActionModal({ open: false, type: 'release', escrow: null }); setEscrowActionReason('') }}
+        okText={escrowActionModal.type === 'release' ? 'Release' : 'Refund'}
+        okButtonProps={{ danger: escrowActionModal.type === 'refund', disabled: !escrowActionReason.trim(), loading: forceReleaseEscrow.isPending || forceRefundEscrow.isPending }}
+      >
+        {escrowActionModal.escrow && (
+          <Descriptions column={1} size="small" style={{ marginBottom: 16 }}>
+            <Descriptions.Item label="Escrow ID">{escrowActionModal.escrow.id.slice(0, 12)}…</Descriptions.Item>
+            <Descriptions.Item label="Amount">{formatCurrency(escrowActionModal.escrow.amount, escrowActionModal.escrow.currency)}</Descriptions.Item>
+            <Descriptions.Item label="Item">{escrowActionModal.escrow.auctionItemTitle ?? '—'}</Descriptions.Item>
+          </Descriptions>
+        )}
+        <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>Reason *</Typography.Text>
+        <Input.TextArea
+          rows={3}
+          value={escrowActionReason}
+          onChange={(e) => setEscrowActionReason(e.target.value)}
+          placeholder="Provide a reason for this action..."
+        />
+      </Modal>
+      {/* Escrow Audit Drawer */}
+      <EscrowAuditDrawer
+        open={escrowAuditDrawerOpen}
+        onClose={() => setEscrowAuditDrawerOpen(false)}
+        escrow={escrowAuditRecord}
+      />
     </div>
   )
 }

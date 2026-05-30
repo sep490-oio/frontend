@@ -39,12 +39,16 @@ const VALUE_TO_KEY: Record<string, string> = {
 const MANUAL_FOLLOWUP_SHIPMENT = new Set(['rebook_shipment', 'open_return'])
 const MANUAL_FOLLOWUP_ITEM = new Set(['return_to_seller', 'reject_listing'])
 
+// Actions that exist in the UI but are V1 stubs on the backend — they only log
+// a warning and require manual admin intervention. Shown with a red tag.
+const STUB_ACTIONS = new Set(['rebook_shipment', 'reject_listing'])
+
 // ── Tooltips (key suffixes matching VALUE_TO_KEY) ──────────────────
 
 // ── Outcome presets ─────────────────────────────────────────────────
 
 const OUTCOME_PRESETS: Record<string, Partial<ResolutionActionSet>> = {
-  favor_buyer: { escrowAction: 'refund_buyer', refundAction: 'full_refund', penaltyAction: 'no_action' },
+  favor_buyer: { escrowAction: 'refund_buyer', refundAction: 'no_refund', penaltyAction: 'no_action' },
   favor_seller: { escrowAction: 'release_to_seller', refundAction: 'no_refund', penaltyAction: 'no_action' },
   favor_platform: { escrowAction: 'hold', refundAction: 'no_refund' },
   partial_split: { escrowAction: 'partial_refund', refundAction: 'partial_refund' },
@@ -59,7 +63,7 @@ const DOMAIN_OVERRIDES: Record<string, Record<string, Partial<ResolutionActionSe
   },
   item_condition: {
     favor_seller: { itemAction: 'return_to_active' },
-    favor_buyer: { itemAction: 'hold_in_warehouse' },
+    favor_buyer: { itemAction: 'return_to_seller', shipmentAction: 'open_return' },
     favor_platform: { itemAction: 'hold_in_warehouse' },
     partial_split: { itemAction: 'hold_in_warehouse' },
     void_claim: { itemAction: 'hold_in_warehouse' },
@@ -134,6 +138,11 @@ export function validateActionSet(
     errors.push(t?.('resolution.validation.conflictReleaseAndRefund') ?? 'Cannot release to seller and refund buyer simultaneously.')
   }
 
+  // Cannot request buyer refund through both EscrowAction and RefundAction
+  if (actionSet.escrowAction === 'refund_buyer' && (actionSet.refundAction === 'full_refund' || actionSet.refundAction === 'partial_refund')) {
+    errors.push(t?.('resolution.validation.conflictDoubleRefund') ?? 'Cannot request buyer refund through both Escrow and Refund actions. Use one or the other.')
+  }
+
   const allNoAction = !actionSet.escrowAction || actionSet.escrowAction === 'no_action'
   const allNoRefund = !actionSet.refundAction || actionSet.refundAction === 'no_refund'
   const shipNone = !actionSet.shipmentAction || actionSet.shipmentAction === 'no_action'
@@ -143,6 +152,36 @@ export function validateActionSet(
 
   if (allNoAction && allNoRefund && shipNone && itemNone && auctNone && penNone) {
     warnings.push(t?.('resolution.validation.noActionsWarning') ?? 'No resolution actions selected. Are you sure?')
+  }
+
+  // Warn when return_to_seller is selected without open_return — the item
+  // action alone is a no-op; the buyer won't have a structured return flow.
+  if (
+    actionSet.itemAction === 'return_to_seller' &&
+    actionSet.shipmentAction !== 'open_return'
+  ) {
+    warnings.push(
+      t?.('resolution.validation.returnToSellerNeedsOpenReturn') ??
+        'Item "Return to Seller" requires Shipment "Open Return" to trigger the buyer return flow. Without it, the return is manual only.',
+    )
+  }
+
+  // Warn when a refund is selected alongside return_to_seller but without
+  // open_return — refund will fire immediately before buyer ships item back.
+  const hasRefundIntent =
+    actionSet.escrowAction === 'refund_buyer' ||
+    actionSet.escrowAction === 'partial_refund' ||
+    actionSet.refundAction === 'full_refund' ||
+    actionSet.refundAction === 'partial_refund'
+  if (
+    hasRefundIntent &&
+    actionSet.itemAction === 'return_to_seller' &&
+    actionSet.shipmentAction !== 'open_return'
+  ) {
+    errors.push(
+      t?.('resolution.validation.refundWithoutReturnWarning') ??
+        'Refund will fire immediately without waiting for the buyer to return the item. Select Shipment "Open Return" to defer the refund until the seller confirms receipt.',
+    )
   }
 
   return { errors, warnings }
@@ -176,10 +215,16 @@ export default function ResolutionActionBuilder({ value, onChange, domain: _doma
   const renderOptionLabel = (opt: { value: string; label: string }, manualSet?: Set<string>) => {
     const tooltipKey = VALUE_TO_KEY[opt.value]
     const tooltip = tooltipKey ? ta(`resolution.tooltip.${tooltipKey}`) : undefined
+    const isStub = STUB_ACTIONS.has(opt.value)
     return (
       <span title={tooltip}>
         {opt.label}
-        {manualSet?.has(opt.value) && (
+        {isStub && (
+          <Tag color="red" style={{ marginLeft: 8, fontSize: 10, lineHeight: '16px', padding: '0 4px' }}>
+            V1 stub
+          </Tag>
+        )}
+        {!isStub && manualSet?.has(opt.value) && (
           <Tag color="orange" style={{ marginLeft: 8, fontSize: 10, lineHeight: '16px', padding: '0 4px' }}>
             {ta('resolution.manualFollowupRequired')}
           </Tag>
@@ -192,7 +237,34 @@ export default function ResolutionActionBuilder({ value, onChange, domain: _doma
     opts.map((o) => ({ value: o.value, label: renderOptionLabel(o, manualSet) }))
 
   const update = (patch: Partial<ResolutionActionSet>) => {
-    onChange({ ...value, ...patch })
+    const next = { ...value, ...patch }
+
+    // Auto-clear conflicting refund selections to prevent double-refund
+    if (patch.escrowAction === 'refund_buyer') {
+      // Escrow handles buyer refund → clear refund action
+      next.refundAction = 'no_refund'
+    } else if (patch.refundAction === 'full_refund' || patch.refundAction === 'partial_refund') {
+      // Refund action handles buyer refund → clear escrow if it's refund_buyer
+      if (next.escrowAction === 'refund_buyer') {
+        next.escrowAction = 'no_action'
+      }
+    }
+
+    // Auto-link: selecting return_to_seller auto-sets open_return so the
+    // buyer return flow triggers and the refund is deferred correctly.
+    if (patch.itemAction === 'return_to_seller') {
+      if (!next.shipmentAction || next.shipmentAction === 'no_action') {
+        next.shipmentAction = 'open_return'
+      }
+    }
+    // Auto-link reverse: selecting open_return auto-sets return_to_seller
+    if (patch.shipmentAction === 'open_return') {
+      if (!next.itemAction || next.itemAction === 'no_action') {
+        next.itemAction = 'return_to_seller'
+      }
+    }
+
+    onChange(next)
   }
 
   const showRefundAmount =
@@ -337,6 +409,14 @@ export default function ResolutionActionBuilder({ value, onChange, domain: _doma
           placeholder={t('selectPenaltyAction', 'Select penalty action')}
           allowClear
         />
+        {value.penaltyAction && value.penaltyAction !== 'no_action' && (
+          <Alert
+            type="info"
+            showIcon
+            message={ta('resolution.penaltyInfoV1', 'Penalty actions currently log a review flag only — no automated enforcement (ban/restriction) is applied.')}
+            style={{ marginTop: 4 }}
+          />
+        )}
       </div>
 
       {/* Resolution Summary */}

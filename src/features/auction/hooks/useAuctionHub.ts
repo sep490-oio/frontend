@@ -1,10 +1,12 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import type { QueryClient } from '@tanstack/react-query'
+import { getServerNowMs } from '@/utils/time'
 
 import { upsertItemQuestionCaches } from '@/features/item/api'
 import { queryKeys } from '@/lib/queryClient'
 import { getAuctionHub, startConnection } from '@/lib/signalr'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 import { DEFAULT_CURRENCY } from '@/utils/constants'
 import { BidStatus } from '@/types/enums'
 import type {
@@ -20,6 +22,7 @@ import type {
   BuyNowNotification,
   BuyNowReservedNotification,
   BuyNowReservationReleasedNotification,
+  ErrorNotification,
   HubCommandResult,
   ItemQuestionNotification,
   OutbidNotification,
@@ -104,9 +107,14 @@ function upsertBidPage(
   }
 
   const pageSize = current.metadata.pageSize || current.items.length || 1
+  const updatedItems = current.items.map((item) =>
+    item.status.toLowerCase() === BidStatus.Winning.toLowerCase() || item.status.toLowerCase() === BidStatus.Active.toLowerCase()
+      ? { ...item, status: BidStatus.Outbid }
+      : item
+  )
 
   return {
-    items: [bid, ...current.items].slice(0, pageSize),
+    items: [bid, ...updatedItems].slice(0, pageSize),
     metadata: {
       ...current.metadata,
       totalCount: totalBids,
@@ -163,7 +171,16 @@ function applyAuctionRealtimePatch(
         isEndingSoon: data.isEndingSoon,
       },
       recentBids: bid
-        ? [bid, ...current.recentBids.filter((item) => item.id !== bid.id)].slice(0, 20)
+        ? [
+            bid,
+            ...current.recentBids
+              .filter((item) => item.id !== bid.id)
+              .map((item) =>
+                item.status.toLowerCase() === BidStatus.Winning.toLowerCase() || item.status.toLowerCase() === BidStatus.Active.toLowerCase()
+                  ? { ...item, status: BidStatus.Outbid }
+                  : item
+              ),
+          ].slice(0, 20)
         : current.recentBids,
       priceHistory: data.newPriceHistoryPoint
         ? appendPriceHistory(
@@ -237,7 +254,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         ...prev,
         connected: true,
         lastError: null,
-        lastSyncedAt: Date.now(),
+        lastSyncedAt: getServerNowMs(),
       }))
     }
 
@@ -268,16 +285,6 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         }
 
         markConnected()
-
-        try {
-          const serverTime = await connection.invoke<string>('GetServerTime')
-          const serverMs = new Date(serverTime).getTime()
-          const clientMs = Date.now()
-          const offset = serverMs - clientMs
-          setState((prev) => ({ ...prev, serverTimeOffset: offset }))
-        } catch {
-          // Ignore — fallback to client time
-        }
       } catch (error) {
         if (!isActive) {
           return
@@ -312,7 +319,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         // Clear outbid only when the current user placed a new bid
         outbid: currentUserId && data.bidderId === currentUserId ? null : prev.outbid,
         connected: true,
-        lastSyncedAt: Date.now(),
+        lastSyncedAt: getServerNowMs(),
       }))
 
       // Cache patching handled by AuctionStateChanged — only keep wallet invalidation
@@ -333,7 +340,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
           currency: eventCurrency,
         },
         connected: true,
-        lastSyncedAt: Date.now(),
+        lastSyncedAt: getServerNowMs(),
       }))
 
       // Cache patching handled by AuctionStateChanged
@@ -348,7 +355,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         ...prev,
         auctionStarted: data,
         connected: true,
-        lastSyncedAt: Date.now(),
+        lastSyncedAt: getServerNowMs(),
       }))
 
       // Cache patching handled by AuctionStateChanged
@@ -371,7 +378,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         },
         outbid: null, // Clear outbid — auction is no longer active
         connected: true,
-        lastSyncedAt: Date.now(),
+        lastSyncedAt: getServerNowMs(),
       }))
 
       // Cache patching handled by AuctionStateChanged — only keep wallet invalidation
@@ -387,7 +394,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         ...prev,
         auctionExtended: data,
         connected: true,
-        lastSyncedAt: Date.now(),
+        lastSyncedAt: getServerNowMs(),
       }))
 
       // Cache patching handled by AuctionStateChanged
@@ -403,7 +410,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         auctionCancelled: data,
         outbid: null, // Clear outbid — auction is cancelled
         connected: true,
-        lastSyncedAt: Date.now(),
+        lastSyncedAt: getServerNowMs(),
       }))
 
       // Patch the cache directly — don't rely on a paired AuctionStateChanged event.
@@ -435,7 +442,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         ...prev,
         buyNowReserved: data,
         connected: true,
-        lastSyncedAt: Date.now(),
+        lastSyncedAt: getServerNowMs(),
       }))
 
       // Cache patching handled by AuctionStateChanged
@@ -450,7 +457,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         ...prev,
         buyNowReservationReleased: data,
         connected: true,
-        lastSyncedAt: Date.now(),
+        lastSyncedAt: getServerNowMs(),
       }))
 
       // Cache patching handled by AuctionStateChanged
@@ -472,17 +479,23 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
         },
         outbid: null, // Clear outbid — auction sold via buy now
         connected: true,
-        lastSyncedAt: Date.now(),
+        lastSyncedAt: getServerNowMs(),
       }))
 
-      // Cache patching handled by AuctionStateChanged — only keep wallet invalidation
+      // Buy-now finalizes the auction. Invalidate auction detail so any client
+      // (including a losing bidder still viewing the page) refreshes status,
+      // currentPrice, and currentUserBidState — preventing stale "place bid"
+      // attempts that would surface as "[object Object]" toasts.
+      qc.invalidateQueries({ queryKey: queryKeys.auctions.detail(data.auctionId) })
       qc.invalidateQueries({ queryKey: queryKeys.wallet.summary() })
     }
 
-    const errorHandler = (data: { message: string; code?: string }) => {
+    const errorHandler = (data: ErrorNotification | string | null | undefined) => {
+      const normalized = normalizeErrorMessage(data, 'Realtime error')
+      const code = data && typeof data === 'object' ? data.code : undefined
       setState((prev) => ({
         ...prev,
-        lastError: data,
+        lastError: { message: normalized, code },
       }))
     }
 
@@ -494,7 +507,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
       setState((prev) => ({
         ...prev,
         connected: true,
-        lastSyncedAt: Date.now(),
+        lastSyncedAt: getServerNowMs(),
       }))
 
       upsertItemQuestionCaches(qc, data.itemId, data)
@@ -520,7 +533,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
       setState((prev) => ({
         ...prev,
         connected: true,
-        lastSyncedAt: Date.now(),
+        lastSyncedAt: getServerNowMs(),
       }))
     }
 
@@ -532,7 +545,7 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
       setState((prev) => ({
         ...prev,
         connected: true,
-        lastSyncedAt: Date.now(),
+        lastSyncedAt: getServerNowMs(),
       }))
 
       upsertItemQuestionCaches(qc, data.itemId, data)
@@ -635,13 +648,13 @@ export function useAuctionHub(auctionId?: string, itemId?: string, currentUserId
   }, [auctionId])
 
   const configureAutoBid = useCallback(
-    async (maxAmount: number, currency: string) => {
+    async (maxAmount: number, currency: string, incrementAmount?: number) => {
       const connection = connectionRef.current
       if (!connection || !auctionId) {
         throw new Error('SignalR not connected')
       }
 
-      return connection.invoke<HubCommandResult<unknown>>('ConfigureAutoBid', auctionId, maxAmount, currency)
+      return connection.invoke<HubCommandResult<unknown>>('ConfigureAutoBid', auctionId, maxAmount, currency, incrementAmount)
     },
     [auctionId],
   )

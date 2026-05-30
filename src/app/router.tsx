@@ -109,8 +109,6 @@ const BrowseItemsPage = lazy(() => import('@/features/item/pages/BrowseItemsPage
 
 // User pages (auth required)
 const ProfilePage = lazy(() => import('@/features/user/pages/ProfilePage'))
-const AddressesPage = lazy(() => import('@/features/user/pages/AddressesPage'))
-const SecurityPage = lazy(() => import('@/features/user/pages/SecurityPage'))
 const NotificationPrefsPage = lazy(() => import('@/features/user/pages/NotificationPrefsPage'))
 const SettingsPage = lazy(() => import('@/features/user/pages/SettingsPage'))
 const TermsPage = lazy(() => import('@/features/user/pages/TermsPage'))
@@ -123,8 +121,6 @@ const EditItemPage = lazy(() => import('@/features/item/pages/EditItemPage'))
 // Auction pages
 const CreateAuctionPage = lazy(() => import('@/features/auction/pages/CreateAuctionPage'))
 const MyAuctionsPage = lazy(() => import('@/features/auction/pages/MyAuctionsPage'))
-const WatchlistPage = lazy(() => import('@/features/auction/pages/WatchlistPage'))
-const MyBidsPage = lazy(() => import('@/features/auction/pages/MyBidsPage'))
 
 // Order pages
 const MyOrdersPage = lazy(() => import('@/features/order/pages/MyOrdersPage'))
@@ -165,6 +161,8 @@ const SellerProfilePage = lazy(() => import('@/features/seller/pages/SellerProfi
 const VerificationPage = lazy(() => import('@/features/seller/pages/VerificationPage'))
 const SellerReturnsPage = lazy(() => import('@/features/seller/pages/SellerReturnsPage'))
 const SellerAuctionDashboardPage = lazy(() => import('@/features/seller/pages/SellerAuctionDashboardPage'))
+const SellerAuctionsPage = lazy(() => import('@/features/seller/pages/SellerAuctionsPage'))
+const SellerItemDetailPage = lazy(() => import('@/features/seller/pages/SellerItemDetailPage'))
 
 // Warehouse pages
 const InboundShipmentsPage = lazy(() => import('@/features/warehouse/pages/InboundShipmentsPage'))
@@ -183,17 +181,20 @@ const AdminVerificationsPage = lazy(() => import('@/features/admin/pages/AdminVe
 const AdminVerificationDetailPage = lazy(() => import('@/features/admin/pages/AdminVerificationDetailPage'))
 const AdminSellerProfilesPage = lazy(() => import('@/features/admin/pages/AdminSellerProfilesPage'))
 const AdminReviewQueuePage = lazy(() => import('@/features/admin/pages/AdminReviewQueuePage'))
+const AdminItemsPage = lazy(() => import('@/features/admin/pages/AdminItemsPage'))
 const AdminItemDetailPage = lazy(() => import('@/features/admin/pages/AdminItemDetailPage'))
-const AdminAuctionControlPage = lazy(() => import('@/features/admin/pages/AdminAuctionControlPage'))
+const AdminAuctionsPage = lazy(() => import('@/features/admin/pages/AdminAuctionsPage'))
+const AdminAuctionDetailPage = lazy(() => import('@/features/admin/pages/AdminAuctionDetailPage'))
 const AdminMonitoringPage = lazy(() => import('@/features/admin/pages/AdminMonitoringPage'))
 const AdminModerationPage = lazy(() => import('@/features/admin/pages/AdminModerationPage'))
 const AdminPaymentsPage = lazy(() => import('@/features/admin/pages/AdminPaymentsPage'))
 const AdminTermsPage = lazy(() => import('@/features/admin/pages/AdminTermsPage'))
 const AdminRolesPage = lazy(() => import('@/features/admin/pages/AdminRolesPage'))
-const AdminCompletedAuctionsPage = lazy(() => import('@/features/admin/pages/AdminCompletedAuctionsPage'))
-const AdminCompletedAuctionDetailPage = lazy(() => import('@/features/admin/pages/AdminCompletedAuctionDetailPage'))
+
 const AdminDisputeListPage = lazy(() => import('@/features/admin/pages/AdminDisputeListPage'))
 const AdminDisputeDetailPage = lazy(() => import('@/features/admin/pages/AdminDisputeDetailPage'))
+const AdminOrdersPage = lazy(() => import('@/features/admin/pages/AdminOrdersPage'))
+const AdminOrderDetailPage = lazy(() => import('@/features/admin/pages/AdminOrderDetailPage'))
 
 // Inspector pages
 const InspectorDashboardPage = lazy(() => import('@/features/inspector/pages/InspectorDashboardPage'))
@@ -266,8 +267,7 @@ export const router = createBrowserRouter([
           // User
           { path: '/me/dashboard', element: withSuspense(UserDashboardPage) },
           { path: '/me/profile', element: withSuspense(ProfilePage) },
-          { path: '/me/addresses', element: withSuspense(AddressesPage) },
-          { path: '/me/security', element: withSuspense(SecurityPage) },
+          { path: '/me/security', element: <Navigate to="/me/settings" replace /> },
           { path: '/me/settings', element: withSuspense(SettingsPage) },
           { path: '/me/notifications', element: withSuspense(NotificationsPage) },
           { path: '/me/notifications/settings', element: withSuspense(NotificationPrefsPage) },
@@ -280,8 +280,8 @@ export const router = createBrowserRouter([
           { path: '/me/auctions', element: withSuspense(MyAuctionsPage) },
           { path: '/me/auctions/create', element: withSuspense(CreateAuctionPage) },
           { path: '/me/auctions/:id/edit', element: withSuspense(CreateAuctionPage) },
-          { path: '/me/watchlist', element: withSuspense(WatchlistPage) },
-          { path: '/me/bids', element: withSuspense(MyBidsPage) },
+          { path: '/me/watchlist', element: <Navigate to="/me/auctions?tab=watchlist" replace /> },
+          { path: '/me/bids', element: <Navigate to="/me/auctions?tab=bids" replace /> },
           // Orders
           { path: '/me/orders', element: withSuspense(MyOrdersPage) },
           { path: '/me/orders/:id', element: withSuspense(OrderDetailPage) },
@@ -318,9 +318,10 @@ export const router = createBrowserRouter([
           // Items
           { path: '/seller/items', element: withSuspense(MyItemsPage) },
           { path: '/seller/items/create', element: withSuspense(CreateItemPage) },
+          { path: '/seller/items/:id', element: withSuspense(SellerItemDetailPage) },
           { path: '/seller/items/:id/edit', element: withSuspense(EditItemPage) },
           // Auctions
-          { path: '/seller/auctions', element: withSuspense(MyAuctionsPage) },
+          { path: '/seller/auctions', element: withSuspense(SellerAuctionsPage) },
           { path: '/seller/auctions/:id/dashboard', element: withSuspense(SellerAuctionDashboardPage) },
           { path: '/seller/auctions/create', element: withSuspense(CreateAuctionPage) },
           { path: '/seller/auctions/:id/edit', element: withSuspense(CreateAuctionPage) },
@@ -363,16 +364,18 @@ export const router = createBrowserRouter([
           { path: '/admin/verifications', element: withSuspense(AdminVerificationsPage) },
           { path: '/admin/verifications/:id', element: withSuspense(AdminVerificationDetailPage) },
           { path: '/admin/sellers', element: withSuspense(AdminSellerProfilesPage) },
+          { path: '/admin/items', element: withSuspense(AdminItemsPage) },
           { path: '/admin/items/review', element: withSuspense(AdminReviewQueuePage) },
           { path: '/admin/items/:id', element: withSuspense(AdminItemDetailPage) },
-          { path: '/admin/auctions/completed', element: withSuspense(AdminCompletedAuctionsPage) },
-          { path: '/admin/auctions/completed/:auctionId', element: withSuspense(AdminCompletedAuctionDetailPage) },
-          { path: '/admin/auctions/:id', element: withSuspense(AdminAuctionControlPage) },
+          { path: '/admin/auctions', element: withSuspense(AdminAuctionsPage) },
+          { path: '/admin/auctions/:id', element: withSuspense(AdminAuctionDetailPage) },
           { path: '/admin/moderation', element: withSuspense(AdminModerationPage) },
           { path: '/admin/reports', element: <Navigate to="/admin/moderation" replace /> },
           { path: '/admin/monitoring', element: withSuspense(AdminMonitoringPage) },
           { path: '/admin/disputes', element: withSuspense(AdminDisputeListPage) },
           { path: '/admin/disputes/:id', element: withSuspense(AdminDisputeDetailPage) },
+          { path: '/admin/orders', element: withSuspense(AdminOrdersPage) },
+          { path: '/admin/orders/:orderId', element: withSuspense(AdminOrderDetailPage) },
           { path: '/admin/payments', element: withSuspense(AdminPaymentsPage) },
           { path: '/admin/terms', element: withSuspense(AdminTermsPage) },
           { path: '/admin/roles', element: withSuspense(AdminRolesPage) },

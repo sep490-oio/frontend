@@ -1,6 +1,6 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { API_URL, STORAGE_KEYS, uuid } from '@/utils/constants'
-import { refreshToken, isTokenExpired } from '@/lib/tokenRefresh'
+import { refreshToken } from '@/lib/tokenRefresh'
 
 // ── Terms-gate 409 interceptor ────────────────────────────────────────────────
 // When BE returns 409 with code "Terms.PendingAcceptance", the interceptor calls
@@ -29,7 +29,30 @@ export function unregisterTermsGateHandler() {
 const apiClient = axios.create({
   baseURL: API_URL,
   headers: { 'Content-Type': 'application/json' },
+  // Important: some browsers strip the Date header from response.headers
+  // unless explicitly exposed by the server.
 })
+
+// Add a transformer to wrap large integers in quotes before JSON.parse
+// to avoid rounding errors with 64-bit IDs (§4.3 BigInt Handling).
+apiClient.defaults.transformResponse = [
+  (data) => {
+    if (typeof data === 'string' && data.length > 0) {
+      // Find large numbers (15+ digits) that are not already in quotes
+      // and wrap them in quotes. This targets numeric IDs in JSON.
+      // We safely consume string literals first to avoid corrupting strings containing numbers.
+      return data.replace(/"(?:[^"\\]|\\.)*"|([:\[,]\s*)(-?\d{15,})(?=\s*[,}\]])/g, (match, p1, p2) => {
+        if (p1) return `${p1}"${p2}"`
+        return match
+      })
+    }
+    return data
+  },
+  ...(Array.isArray(axios.defaults.transformResponse) 
+    ? axios.defaults.transformResponse 
+    : [axios.defaults.transformResponse]) as any[]
+]
+
 
 // Axios request queue — gates retrying failed requests (separate from tokenRefresh mutex)
 let isRefreshing = false
@@ -60,16 +83,18 @@ apiClient.interceptors.request.use(async (config: InternalAxiosRequestConfig) =>
   } else if (!config.url?.includes('/auth/login') && !config.url?.includes('/auth/refresh')) {
     let token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
     if (token) {
-      if (isTokenExpired()) {
-        try {
-          token = await refreshToken()
-        } catch (error) {
-          // If proactive refresh fails, proceed with the expired token.
-          // The response interceptor will catch the 401 or handleRefreshFailure will redirect.
-        }
+      // Remove any surrounding quotes or literal string "undefined" / "null"
+      token = token.replace(/^["']|["']$/g, '').trim()
+      if (token === 'undefined' || token === 'null' || token === '') {
+        token = null
       }
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`
+    }
+    
+    if (token) {
+      if (config.headers && typeof config.headers.set === 'function') {
+        config.headers.set('Authorization', `Bearer ${token}`)
+      } else if (config.headers) {
+        config.headers['Authorization'] = `Bearer ${token}`
       }
     }
   }
@@ -129,6 +154,10 @@ apiClient.interceptors.response.use(
       return new Promise<string>((resolve, reject) => {
         failedQueue.push({ resolve, reject })
       }).then((token) => {
+        originalRequest._retry = true
+        if (typeof originalRequest.headers.set === 'function') {
+          originalRequest.headers.set('Authorization', `Bearer ${token}`)
+        }
         originalRequest.headers.Authorization = `Bearer ${token}`
         return apiClient(originalRequest)
       })
@@ -138,8 +167,20 @@ apiClient.interceptors.response.use(
     isRefreshing = true
 
     try {
-      const newAccessToken = await refreshToken()
+      let failedToken = typeof originalRequest.headers.get === 'function'
+        ? originalRequest.headers.get('Authorization')
+        : originalRequest.headers.Authorization
+      
+      if (typeof failedToken !== 'string') {
+        failedToken = failedToken?.toString()
+      }
+      failedToken = failedToken?.replace('Bearer ', '')
+
+      const newAccessToken = await refreshToken(failedToken)
       processQueue(null, newAccessToken)
+      if (typeof originalRequest.headers.set === 'function') {
+        originalRequest.headers.set('Authorization', `Bearer ${newAccessToken}`)
+      }
       originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
       return apiClient(originalRequest)
     } catch (refreshError) {
@@ -192,6 +233,28 @@ export function extractArray<T>(data: unknown): T[] {
     return (data as { items: T[] }).items
   }
   return []
+}
+
+/**
+ * Normalizes flat pagination responses (where page properties are at the root)
+ * into the expected PagedList<T> shape containing `{ items, metadata }`.
+ */
+export function normalizePagedList<T>(data: any): { items: T[]; metadata: any } {
+  if (!data) return { items: [], metadata: { currentPage: 1, totalPages: 1, pageSize: 10, totalCount: 0, hasPrevious: false, hasNext: false } }
+  
+  if (data.metadata) return data
+
+  return {
+    items: data.items ?? [],
+    metadata: {
+      currentPage: data.pageNumber ?? 1,
+      totalPages: data.totalPages ?? 1,
+      pageSize: data.pageSize ?? 10,
+      totalCount: data.totalCount ?? 0,
+      hasPrevious: data.hasPreviousPage ?? false,
+      hasNext: data.hasNextPage ?? false,
+    }
+  }
 }
 
 export default apiClient

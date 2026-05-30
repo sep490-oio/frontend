@@ -21,7 +21,7 @@ export default function InspectionQueuePage() {
     { value: 'pending_review', label: t('queue.statusPendingReview') },
   ]
   const [statusFilter, setStatusFilter] = useState('')
-  const [inspectionFilter, setInspectionFilter] = useState<boolean | undefined>(true)
+
 
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(12)
@@ -30,7 +30,6 @@ export default function InspectionQueuePage() {
     pageNumber: page,
     pageSize,
     status: statusFilter || undefined,
-    requiresPlatformInspection: inspectionFilter,
   })
 
   const renderItemCell = (_: unknown, record: InspectionQueueItem) => {
@@ -137,19 +136,6 @@ export default function InspectionQueuePage() {
             options={STATUS_OPTIONS}
             style={{ width: 200 }}
             placeholder={t('queue.filterByStatus')}
-          />
-          <Select
-            value={inspectionFilter === undefined ? '' : inspectionFilter ? 'true' : 'false'}
-            onChange={(v) => {
-              setInspectionFilter(v === '' ? undefined : v === 'true')
-              setPage(1)
-            }}
-            options={[
-              { value: '', label: t('queue.inspectionAll') },
-              { value: 'true', label: t('queue.inspectionRequiresPlatform') },
-              { value: 'false', label: t('queue.inspectionNoPlatform') },
-            ]}
-            style={{ width: 220 }}
           />
         </Space>
       </Card>

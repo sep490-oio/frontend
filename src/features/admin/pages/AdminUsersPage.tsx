@@ -277,24 +277,22 @@ export default function AdminUsersPage() {
       </Space>
 
       {/* Table */}
-      <div style={{ overflowX: 'auto' }}>
-        <ResponsiveTable<UserListItemDto>
-          rowKey="id"
-          columns={columns}
-          dataSource={data?.items ?? []}
-          loading={isLoading}
-          mobileMode="list"
-          pagination={{
-            current: data?.metadata?.currentPage ?? page,
-            pageSize: data?.metadata?.pageSize ?? pageSize,
-            total: data?.metadata?.totalCount ?? 0,
-            showSizeChanger: !isMobile,
-            showTotal: (total) => tc('pagination.total', { total }),
-            onChange: (p, ps) => { setPage(p); setPageSize(ps) },
-            simple: isMobile,
-          }}
-        />
-      </div>
+      <ResponsiveTable<UserListItemDto>
+        rowKey="id"
+        columns={columns}
+        dataSource={data?.items ?? []}
+        loading={isLoading}
+        mobileMode="list"
+        pagination={{
+          current: data?.metadata?.currentPage ?? page,
+          pageSize: data?.metadata?.pageSize ?? pageSize,
+          total: data?.metadata?.totalCount ?? 0,
+          showSizeChanger: !isMobile,
+          showTotal: (total) => tc('pagination.total', { total }),
+          onChange: (p, ps) => { setPage(p); setPageSize(ps) },
+          simple: isMobile,
+        }}
+      />
 
       {/* Create User Modal */}
       <Modal

@@ -1,9 +1,12 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Button, Flex, Modal, Typography, Upload } from 'antd'
 import { CameraOutlined, ReloadOutlined, UploadOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { SecureCaptureUploader } from '@/components/ui/SecureCaptureUploader'
 import { LiveCapturedBadge } from '@/components/ui/LiveCapturedBadge'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
+import type { CaptureQualityProfile } from '@/types/capture'
 
 interface SingleCaptureUploaderProps {
   label: string
@@ -13,6 +16,8 @@ interface SingleCaptureUploaderProps {
   allowUploadFallback: boolean
   cameraAvailable: boolean
   helpText?: string
+  /** Quality profile for blur/brightness validation. Default 'item_or_package' (lenient). */
+  qualityProfile?: CaptureQualityProfile
 }
 
 export function SingleCaptureUploader({
@@ -23,8 +28,10 @@ export function SingleCaptureUploader({
   allowUploadFallback,
   cameraAvailable,
   helpText,
+  qualityProfile = 'item_or_package',
 }: SingleCaptureUploaderProps) {
   const { t } = useTranslation('warehouse')
+  const { isMobile } = useBreakpoint()
   const [open, setOpen] = useState(false)
   const [isLiveCapture, setIsLiveCapture] = useState(false)
 
@@ -74,7 +81,7 @@ export function SingleCaptureUploader({
             alt={label}
             style={{
               width: '100%',
-              maxHeight: 180,
+              maxHeight: isMobile ? '50vh' : 180,
               objectFit: 'cover',
               borderRadius: 6,
               marginBottom: 8,
@@ -104,7 +111,7 @@ export function SingleCaptureUploader({
               </Upload>
             )}
           </Flex>
-          {showUploadButton && (
+          {import.meta.env.DEV && showUploadButton && (
             <Typography.Text type="secondary" style={{ fontSize: 11, display: 'block', marginTop: 4 }}>
               {t('uploadFallbackHint', 'Fallback for testing')}
             </Typography.Text>
@@ -134,7 +141,7 @@ export function SingleCaptureUploader({
               </Upload>
             )}
           </Flex>
-          {showUploadButton && (
+          {import.meta.env.DEV && showUploadButton && (
             <Typography.Text type="secondary" style={{ fontSize: 11 }}>
               {t('uploadFallbackHint', 'Fallback for testing')}
             </Typography.Text>
@@ -142,22 +149,97 @@ export function SingleCaptureUploader({
         </Flex>
       )}
 
-      <Modal
-        open={open}
-        onCancel={() => setOpen(false)}
-        footer={null}
-        destroyOnHidden
-        width={640}
-        title={label}
-      >
-        <SecureCaptureUploader
-          step="item_photo"
-          facingMode="environment"
-          overlayType="document"
-          instruction={label}
-          onCapture={(blob) => handleCapture(blob)}
-        />
-      </Modal>
+      {/* ── Mobile: plain fullscreen overlay via portal ── */}
+      {open && isMobile && createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 1100,
+            background: '#000',
+          }}
+        >
+          {/* Top bar: label + close */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            padding: '10px 52px 10px 16px',
+            background: 'linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%)',
+            color: '#fff',
+            textAlign: 'center',
+            zIndex: 10,
+            pointerEvents: 'none',
+          }}>
+            <Typography.Text style={{ color: '#fff', fontSize: 15, fontWeight: 600 }}>
+              {label}
+            </Typography.Text>
+            <button
+              onClick={() => setOpen(false)}
+              style={{
+                position: 'absolute',
+                right: 12,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'rgba(255,255,255,0.15)',
+                border: 'none',
+                color: '#fff',
+                width: 36,
+                height: 36,
+                borderRadius: '50%',
+                cursor: 'pointer',
+                fontSize: 18,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                pointerEvents: 'auto',
+                backdropFilter: 'blur(4px)',
+              }}
+              aria-label="Close"
+            >
+              ✕
+            </button>
+          </div>
+          {/* Camera — fills entire viewport */}
+          <div style={{ width: '100%', height: '100%' }}>
+            <SecureCaptureUploader
+              step="item_photo"
+              facingMode="environment"
+              overlayType="document"
+              qualityProfile={qualityProfile}
+              onCapture={(blob) => handleCapture(blob)}
+            />
+          </div>
+        </div>,
+        document.body,
+      )}
+
+      {/* ── Desktop: standard Ant Modal ── */}
+      {!isMobile && (
+        <Modal
+          open={open}
+          onCancel={() => setOpen(false)}
+          footer={null}
+          destroyOnHidden
+          centered
+          width={640}
+          zIndex={1100}
+          style={{ borderRadius: 12, overflow: 'hidden' }}
+          title={label}
+        >
+          <div style={{ background: '#000' }}>
+            <SecureCaptureUploader
+              step="item_photo"
+              facingMode="environment"
+              overlayType="document"
+              qualityProfile={qualityProfile}
+              instruction={label}
+              onCapture={(blob) => handleCapture(blob)}
+            />
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }

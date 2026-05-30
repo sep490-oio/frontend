@@ -78,7 +78,7 @@ export default function WarehouseItemDetailPage() {
     return (
       <div style={{ maxWidth: 720, margin: '0 auto' }}>
         <Space style={{ marginBottom: 16 }}>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)} style={{ minHeight: 44 }}>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => { navigate(-1); }} style={{ minHeight: 44 }}>
             {t('back', 'Back')}
           </Button>
         </Space>
@@ -102,7 +102,7 @@ export default function WarehouseItemDetailPage() {
       <Space style={{ marginBottom: 16 }}>
         <Button
           icon={<ArrowLeftOutlined />}
-          onClick={() => navigate(-1)}
+          onClick={() => { navigate(-1); }}
           size={buttonSize}
           style={{ minHeight: 44 }}
         >
@@ -207,6 +207,26 @@ export default function WarehouseItemDetailPage() {
         </Descriptions>
       </Card>
 
+      {/* Package Receipt Photos */}
+      {(data.receiptPhotos && data.receiptPhotos.length > 0) && (
+        <Card title={t('warehouseItem.packageReceiptPhotos', 'Package Receipt Photos')} style={cardStyle}>
+          <Image.PreviewGroup>
+            <Flex gap={12} wrap="wrap">
+              {data.receiptPhotos.map((url, idx) => (
+                <div key={idx}>
+                  <Image
+                    src={url}
+                    width={isMobile ? 100 : 140}
+                    height={isMobile ? 100 : 140}
+                    style={{ objectFit: 'cover', borderRadius: 8 }}
+                  />
+                </div>
+              ))}
+            </Flex>
+          </Image.PreviewGroup>
+        </Card>
+      )}
+
       {/* Receiving Media */}
       {data.media.length > 0 && (
         <Card title={t('warehouseItem.receivingMedia', 'Receiving Media')} style={cardStyle}>
@@ -229,6 +249,34 @@ export default function WarehouseItemDetailPage() {
               ))}
             </Flex>
           </Image.PreviewGroup>
+        </Card>
+      )}
+
+      {/* Inspection Evidence */}
+      {data.inspection && data.inspection.evidence.length > 0 && (
+        <Card title={t('warehouseItem.inspectionEvidence', 'Inspection Evidence')} style={cardStyle}>
+          <Image.PreviewGroup>
+            <Flex gap={12} wrap="wrap">
+              {data.inspection.evidence.map((ev, idx) => (
+                <div key={idx}>
+                  <Image
+                    src={ev.secureUrl}
+                    width={isMobile ? 100 : 140}
+                    height={isMobile ? 100 : 140}
+                    style={{ objectFit: 'cover', borderRadius: 8 }}
+                  />
+                </div>
+              ))}
+            </Flex>
+          </Image.PreviewGroup>
+          {data.inspection.inspectionNotes && (
+            <div style={{ marginTop: 12 }}>
+              <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 4 }}>
+                {t('warehouseItem.inspectionNotes', 'Notes:')}
+              </Typography.Text>
+              <Typography.Text>{data.inspection.inspectionNotes}</Typography.Text>
+            </div>
+          )}
         </Card>
       )}
 

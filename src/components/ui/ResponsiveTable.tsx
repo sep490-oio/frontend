@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useState } from 'react'
 import { Table, Card, List, Typography, Flex, Pagination, Empty, Spin } from 'antd'
 import { DownOutlined, UpOutlined } from '@ant-design/icons'
@@ -24,18 +25,36 @@ export function ResponsiveTable<T extends Record<string, any>>({
   rowKey,
   ...tableProps
 }: ResponsiveTableProps<T>) {
+  const { t } = useTranslation('common')
   const { isMobile } = useBreakpoint()
 
   if (!isMobile) {
     return (
-      <Table<T>
-        columns={columns}
-        dataSource={dataSource}
-        loading={loading}
-        pagination={pagination}
-        rowKey={rowKey}
-        {...tableProps}
-      />
+      <div className="oio-table-wrapper" style={{ overflowX: 'auto', width: '100%' }}>
+        <Table<T>
+          columns={columns}
+          dataSource={dataSource}
+          loading={loading}
+          pagination={pagination}
+          rowKey={rowKey}
+          locale={{
+            emptyText: (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description={
+                  <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+                    {typeof tableProps.locale?.emptyText === 'function'
+                      ? tableProps.locale.emptyText()
+                      : (tableProps.locale?.emptyText ?? t('common:status.noData'))}
+                  </Typography.Text>
+                }
+                style={{ padding: '48px 0' }}
+              />
+            )
+          }}
+          {...tableProps}
+        />
+      </div>
     )
   }
 

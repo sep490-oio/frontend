@@ -1,19 +1,22 @@
 import * as signalR from '@microsoft/signalr'
 import { SIGNALR_URL, STORAGE_KEYS } from '@/utils/constants'
-import { refreshToken, isTokenExpired } from '@/lib/tokenRefresh'
+import { refreshToken } from '@/lib/tokenRefresh'
+
+let lastAttemptedToken: string | null = null
 
 function createHubConnection(hubPath: string): signalR.HubConnection {
   const connection = new signalR.HubConnectionBuilder()
     .withUrl(`${SIGNALR_URL}${hubPath}`, {
       accessTokenFactory: async () => {
-        if (isTokenExpired()) {
-          // Let refresh errors propagate. SignalR will surface them as a
-          // connection failure; onclose will see an error and run the
-          // recovery path below (guarded by terminallyStopped).
-          return await refreshToken()
-        }
-        const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
+        let token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
         if (!token) throw new Error('No access token available')
+        
+        token = token.replace(/^["']|["']$/g, '').trim()
+        if (token === 'undefined' || token === 'null' || token === '') {
+          throw new Error('No access token available')
+        }
+        
+        lastAttemptedToken = token
         return token
       },
     })
@@ -26,21 +29,27 @@ function createHubConnection(hubPath: string): signalR.HubConnection {
     .configureLogging(signalR.LogLevel.Warning)
     .build()
 
-  // When connection closes with error (e.g. token expired),
-  // refresh token and restart after a short delay.
+  // When connection closes with error (e.g. server drop, page reload),
+  // we should attempt to reconnect. We ONLY refresh the token if the error is explicitly a 401.
   // Skip the recovery path entirely once the connection is flagged as
   // terminally stopped — otherwise we loop 401 -> onclose -> refresh-fail
   // -> setTimeout -> startConnection -> 401 indefinitely.
   connection.onclose(async (error) => {
     if (terminallyStopped.get(connection)) return
     if (error) {
-      try {
-        await refreshToken()
-        setTimeout(() => void startConnection(connection), 3000)
-      } catch {
-        // handleRefreshFailure already cleared tokens + redirected to /login.
-        // Do NOT reconnect — it would loop through 401 -> onclose -> here.
-        terminallyStopped.set(connection, true)
+      if (error?.message?.includes('401')) {
+        try {
+          await refreshToken(lastAttemptedToken)
+          setTimeout(() => void startConnection(connection), 3000)
+        } catch {
+          // handleRefreshFailure already cleared tokens + redirected to /login.
+          // Do NOT reconnect — it would loop through 401 -> onclose -> here.
+          terminallyStopped.set(connection, true)
+        }
+      } else {
+        // Generic network drop (like closing laptop, or during page reload before it dies)
+        // Just retry the connection later
+        setTimeout(() => void startConnection(connection), 5000)
       }
     }
   })
@@ -130,8 +139,21 @@ export async function startConnection(connection: signalR.HubConnection): Promis
     // healed, e.g. user re-authenticated in another tab) can come back.
     terminallyStopped.delete(connection)
     return true
-  } catch (err) {
+  } catch (err: any) {
     console.error('SignalR connection error:', err)
+    
+    // If it's a 401 Unauthorized, force refresh
+    if (err?.statusCode === 401 || err?.message?.includes('401')) {
+      // Pass the token that actually failed, not the one currently in localStorage (which might have already been refreshed by another tab/request)
+      try {
+        await refreshToken(lastAttemptedToken)
+        // Note: startConnection will naturally retry after the timeout below
+      } catch {
+        terminallyStopped.set(connection, true)
+        return false // don't loop
+      }
+    }
+
     // Retry after 5 seconds
     const existing = retryTimeouts.get(connection)
     if (existing) clearTimeout(existing)

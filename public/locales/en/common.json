@@ -25,7 +25,16 @@
     "watching": "watching",
     "watchlist": "Watchlist",
     "myShipments": "My Shipments",
-    "disputes": "Disputes"
+    "disputes": "Disputes",
+    "paymentMethods": "Payment Methods",
+    "group": {
+      "portals": "Portals",
+      "personal": "Personal Account",
+      "buyer": "Buyer Account",
+      "buying": "Buying & Auctions",
+      "account": "Account & Wallet",
+      "settings": "Security & Settings"
+    }
   },
   "action": {
     "login": "Login",
@@ -43,6 +52,7 @@
     "reset": "Reset",
     "clearFilters": "Clear filters",
     "view": "View",
+    "viewAll": "View All",
     "upload": "Upload",
     "download": "Download"
   },
@@ -237,7 +247,19 @@
     "readyCapture": "I'm ready — Capture now",
     "attempt": "Attempt {{current}}/{{total}}",
     "capturing": "Capturing... Hold still",
-    "livenessComplete": "Liveness check complete"
+    "livenessComplete": "Liveness check complete",
+    "error": {
+      "resolutionTooLow": "Resolution too low",
+      "tooDark": "Too dark",
+      "tooBright": "Too bright",
+      "blurSevere": "Image is blurry"
+    },
+    "cta": {
+      "tapToFocusAndRetake": "Tap to focus and retake"
+    },
+    "warning": {
+      "borderlineBlur": "Image might be slightly blurry. Please ensure details are readable."
+    }
   },
   "emptyState": {
     "title": "Nothing here yet"
@@ -392,6 +414,7 @@
       "sellerOutbound": "Outbound Shipments",
       "sellerWarehouseItems": "Warehouse Items",
       "sellerCreateItem": "Post New Item",
+      "logout": "Sign Out",
       "adminDashboard": "Platform Administration",
       "adminUsers": "Manage Users",
       "adminRoles": "Manage Roles",
@@ -439,6 +462,7 @@
       "sellerOutbound": "Manage shipments from OIO warehouse",
       "sellerWarehouseItems": "Track items stored at OIO warehouse",
       "sellerCreateItem": "Start the item listing process",
+      "logout": "Log out of your account",
       "adminDashboard": "Overall system monitoring",
       "adminUsers": "Control access and ban users",
       "adminRoles": "Configure moderator permissions",
@@ -453,6 +477,57 @@
       "adminMonitoring": "Real-time system health tracking",
       "inspectorDashboard": "Quality inspection central",
       "warehouseDashboard": "Inbound and outbound logistics"
-    }
+    },
+    "auctions": "Auctions",
+    "products": "Products",
+    "sellers": "Sellers",
+    "about": "About",
+    "categories": "Categories",
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "wallet": "Wallet",
+    "payments": "Payments",
+    "verification": "Verification",
+    "security": "Security",
+    "addresses": "Addresses",
+    "notifications": "Notifications",
+    "settings": "Settings",
+    "myAuctions": "My Auctions",
+    "watchlist": "Watchlist",
+    "orders": "Orders",
+    "shipping": "Shipping",
+    "disputes": "Disputes",
+    "logout": "Log Out",
+    "sellerDashboard": "Seller Dashboard",
+    "sellerProducts": "Products",
+    "sellerAuctions": "Auction Sessions",
+    "sellerWallet": "Seller Wallet",
+    "sellerShop": "Shop",
+    "sellerListing": "Listing",
+    "sellerOrders": "Orders",
+    "sellerReturns": "Returns",
+    "sellerShipping": "Shipping",
+    "sellerInbound": "Inbound",
+    "sellerOutbound": "Outbound",
+    "sellerGoods": "Goods",
+    "admin": "Admin",
+    "adminUsers": "Users",
+    "adminRoles": "Roles",
+    "adminVerification": "Verification",
+    "adminPolicies": "Policies",
+    "adminAuctions": "Auctions",
+    "adminCompleted": "Completed",
+    "adminItems": "Items",
+    "adminDisputes": "Disputes",
+    "adminSellers": "Sellers",
+    "adminModeration": "Moderation",
+    "adminMonitoring": "Monitoring",
+    "adminTransactions": "Transactions",
+    "adminInspection": "Inspection",
+    "adminWarehouse": "Warehouse"
+  },
+  "termsAcceptedToast": "Terms accepted. You can now continue with checkout.",
+  "validation": {
+    "required": "This field is required"
   }
 }

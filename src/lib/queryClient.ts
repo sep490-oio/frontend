@@ -3,7 +3,7 @@ import { QueryClient } from '@tanstack/react-query'
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 30 * 1000, // 30 seconds
       retry: 1,
       refetchOnWindowFocus: false,
     },
@@ -49,7 +49,12 @@ export const queryKeys = {
     myAutoBid: (auctionId: string) => [...queryKeys.auctions.all, 'autoBid', auctionId] as const,
     watchlist: (params?: unknown) => [...queryKeys.auctions.all, 'watchlist', params] as const,
     myBids: (params?: unknown) => ['myBids', params] as const,
+    myDepositsRoot: () => ['myDeposits'] as const,
+    myDeposits: (params?: unknown) => ['myDeposits', params] as const,
+    myParticipationsRoot: () => ['myParticipations'] as const,
+    myParticipations: (params?: unknown) => ['myParticipations', params] as const,
     myPendingWinnerOffers: () => [...queryKeys.auctions.all, 'myPendingWinnerOffers'] as const,
+    sellerStats: () => [...queryKeys.auctions.all, 'sellerStats'] as const,
   },
   items: {
     all: ['items'] as const,
@@ -60,6 +65,7 @@ export const queryKeys = {
     my: (params?: unknown) => [...queryKeys.items.all, 'my', params] as const,
     questionsRoot: (itemId: string) => [...queryKeys.items.all, 'questions', itemId] as const,
     questions: (itemId: string, params?: unknown) => [...queryKeys.items.all, 'questions', itemId, params] as const,
+    sellerStats: () => [...queryKeys.items.all, 'sellerStats'] as const,
   },
   categories: {
     all: ['categories'] as const,
@@ -73,6 +79,7 @@ export const queryKeys = {
     sellerDirectShipRoot: () => ['orders', 'seller-direct-ship'] as const,
     list: (params?: unknown) => [...queryKeys.orders.all, 'list', params] as const,
     detail: (id: string) => [...queryKeys.orders.all, 'detail', id] as const,
+    sellerStats: () => [...queryKeys.orders.all, 'sellerStats'] as const,
   },
   directShipments: {
     all: ['directShipments'] as const,
@@ -84,6 +91,13 @@ export const queryKeys = {
     sellerOverview: () => [...queryKeys.wallet.all, 'sellerOverview'] as const,
     transactions: (params?: unknown) => [...queryKeys.wallet.all, 'transactions', params] as const,
     withdrawals: (params?: unknown) => [...queryKeys.wallet.all, 'withdrawals', params] as const,
+    activeDeposits: () => [...queryKeys.wallet.all, 'activeDeposits'] as const,
+  },
+  sellerFinance: {
+    all: ['sellerFinance'] as const,
+    overview: () => [...queryKeys.sellerFinance.all, 'overview'] as const,
+    escrowLedger: () => [...queryKeys.sellerFinance.all, 'escrowLedger'] as const,
+    auctionDeposits: () => [...queryKeys.sellerFinance.all, 'auctionDeposits'] as const,
   },
   paymentMethods: {
     all: ['paymentMethods'] as const,
@@ -110,6 +124,7 @@ export const queryKeys = {
     inspectionQueue: (params?: unknown) => [...queryKeys.warehouse.all, 'inspectionQueue', params] as const,
     staffOutboundQueueRoot: () => ['warehouse-staff', 'outbound-queue'] as const,
     staffOutboundQueue: (params?: unknown) => ['warehouse-staff', 'outbound-queue', params] as const,
+    sellerReturnStats: (sellerId: string) => [...queryKeys.warehouse.all, 'sellerReturnStats', sellerId] as const,
   },
   notifications: {
     all: ['notifications'] as const,
@@ -154,8 +169,11 @@ export const queryKeys = {
     transactionsRoot: () => ['admin', 'transactions'] as const,
     escrowsRoot: () => ['admin', 'escrows'] as const,
     termsRoot: () => ['admin', 'terms'] as const,
+    itemsRoot: () => ['admin', 'items'] as const,
+    items: (params?: unknown) => ['admin', 'items', params] as const,
     users: (params?: unknown) => ['admin', 'users', params] as const,
     userDetail: (id: string) => ['admin', 'users', id] as const,
+    userRiskFlags: (id: string) => ['admin', 'users', id, 'riskFlags'] as const,
     roles: () => ['admin', 'roles'] as const,
     permissions: () => ['admin', 'permissions'] as const,
     verifications: (params?: unknown) => ['admin', 'verifications', params] as const,
@@ -173,5 +191,10 @@ export const queryKeys = {
     completedAuctionsRoot: () => ['admin', 'completedAuctions'] as const,
     completedAuctions: (params?: unknown) => ['admin', 'completedAuctions', params] as const,
     completedAuctionDetail: (auctionId: string) => ['admin', 'completedAuctions', 'detail', auctionId] as const,
+    revenueHistory: (params?: unknown) => ['admin', 'revenueHistory', params] as const,
+    platformWalletTransactions: (params?: unknown) => ['admin', 'platformWalletTransactions', params] as const,
+    ordersRoot: () => ['admin', 'orders'] as const,
+    orders: (params?: unknown) => ['admin', 'orders', params] as const,
+    orderDetail: (orderId: string) => ['admin', 'orders', 'detail', orderId] as const,
   },
 } as const

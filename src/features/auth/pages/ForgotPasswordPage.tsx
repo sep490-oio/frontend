@@ -7,8 +7,7 @@ import { App, Typography, Input, Button, Form, Space } from 'antd'
 import { Link } from 'react-router'
 import { useForgotPassword } from '@/features/auth/api'
 import { createEmailSchema } from '@/utils/validation'
-import type { AxiosError } from 'axios'
-import type { ApiError } from '@/types'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 
 type ForgotPasswordFormValues = { email: string }
 
@@ -39,9 +38,7 @@ export default function ForgotPasswordPage() {
           message.success(t('forgotPassword.success'))
         },
         onError: (error) => {
-          const axiosError = error as AxiosError<ApiError>
-          const detail = axiosError.response?.data?.detail
-          message.error(detail ?? t('forgotPassword.error'))
+          message.error(normalizeErrorMessage(error, t('forgotPassword.error')))
         },
       },
     )

@@ -10,7 +10,7 @@ import {
   QRCode,
   Flex,
 } from 'antd'
-import { ArrowLeftOutlined, ArrowRightOutlined } from '@ant-design/icons'
+import { ArrowLeftOutlined, ArrowRightOutlined, QrcodeOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useMyDirectShipment } from '@/features/order/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
@@ -52,7 +52,7 @@ export default function MyDirectShipmentDetailPage() {
           shipment.status === 'delivered' && !shipment.buyerReceivedPackageAt
         return (
           <Space style={{ marginBottom: 16 }} wrap>
-            <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)}>
+            <Button icon={<ArrowLeftOutlined />} onClick={() => { navigate(-1); }}>
               {tc('action.back', 'Back')}
             </Button>
             {awaitingReceipt ? (
@@ -92,6 +92,15 @@ export default function MyDirectShipmentDetailPage() {
           'directShipment.openOrderActionsHint',
           'Acknowledge, accept, or report an issue from the order page.',
         )}
+        action={
+          <Button 
+            size="small" 
+            icon={<QrcodeOutlined />} 
+            onClick={() => navigate('/me/shipments/scan')}
+          >
+            {t('directShipment.scanParcelQr', 'Scan Parcel QR')}
+          </Button>
+        }
       />
 
       <Typography.Title level={2} style={{ fontFamily: SERIF_FONT, fontWeight: 400 }}>

@@ -8,7 +8,6 @@ import {
   UserOutlined,
   WalletOutlined,
   BookOutlined,
-  HeartOutlined,
   ShoppingOutlined,
   CarOutlined,
   CommentOutlined,
@@ -35,7 +34,8 @@ import {
   ExceptionOutlined,
   TrophyOutlined,
   MonitorOutlined,
-  LockOutlined
+  LockOutlined,
+  LogoutOutlined
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -43,7 +43,8 @@ import { useAppSelector } from '@/app/store'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useTheme } from '@/hooks/useTheme'
-import { useSearchAuctions } from '@/features/auction/api'
+import { useAuth } from '@/hooks/useAuth'
+import { useSearchAuctions } from '@/features/auction/auctionApi.ts'
 import { AuctionStatus } from '@/types/enums'
 
 export type RecentItemV2 = {
@@ -97,6 +98,7 @@ export const SpotlightSearchModal: React.FC = () => {
   const { isMobile } = useBreakpoint()
   
   const { isDark } = useTheme()
+  const { logout: handleLogout } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -214,16 +216,10 @@ export const SpotlightSearchModal: React.FC = () => {
       keywords: ['settings', 'cài đặt', 'preferences', 'tùy chỉnh'], auth: ['user']
     },
     {
-      id: 'bids', path: '/me/bids', icon: <BookOutlined />,
-      title: t('common:spotlight.title.myBids', 'My Bids'),
-      desc: t('common:spotlight.desc.myBids', 'Track your participating auctions'),
-      keywords: ['bids', 'đấu giá', 'đặt giá', 'lịch sử', 'history'], auth: ['user']
-    },
-    {
-      id: 'watchlist', path: '/me/watchlist', icon: <HeartOutlined />,
-      title: t('common:spotlight.title.watchlist', 'Watchlist'),
-      desc: t('common:spotlight.desc.watchlist', 'Items you are watching'),
-      keywords: ['watchlist', 'theo dõi', 'yêu thích', 'favorite', 'heart', 'tim'], auth: ['user']
+      id: 'auctions', path: '/me/auctions', icon: <BookOutlined />,
+      title: t('common:spotlight.title.myAuctions', 'My Auctions'),
+      desc: t('common:spotlight.desc.myAuctions', 'Track your participating auctions and watchlist'),
+      keywords: ['auctions', 'bids', 'watchlist', 'đấu giá', 'đặt giá', 'theo dõi', 'yêu thích', 'lịch sử', 'history'], auth: ['user']
     },
     {
       id: 'orders', path: '/me/orders', icon: <ShoppingOutlined />,
@@ -242,6 +238,12 @@ export const SpotlightSearchModal: React.FC = () => {
       title: t('common:spotlight.title.disputes', 'Disputes Center'),
       desc: t('common:spotlight.desc.disputes', 'Resolve issues and refunds'),
       keywords: ['disputes', 'tranh chấp', 'bồi hoàn', 'refund', 'khiếu nại', 'issue'], auth: ['user']
+    },
+    {
+      id: 'logout', path: 'action:logout', icon: <LogoutOutlined style={{ color: 'var(--color-danger)' }} />,
+      title: t('common:menu.logout', 'Sign Out'),
+      desc: t('common:spotlight.desc.logout', 'Log out of your account'),
+      keywords: ['logout', 'đăng xuất', 'sign out', 'thoát'], auth: ['user']
     },
 
     // --- SELLER ---
@@ -350,10 +352,16 @@ export const SpotlightSearchModal: React.FC = () => {
       keywords: ['terms', 'chính sách', 'điều khoản', 'policy', 'tos'], auth: ['admin']
     },
     {
-      id: 'admin_auctions', path: '/admin/auctions/completed', icon: <TrophyOutlined />,
-      title: t('common:spotlight.title.adminAuctions', 'Completed Auctions'),
-      desc: t('common:spotlight.desc.adminAuctions', 'View and manage finished auction records'),
-      keywords: ['auctions', 'phiên', 'đấu giá', 'completed', 'đã kết thúc'], auth: ['admin']
+      id: 'admin_auctions', path: '/admin/auctions', icon: <AppstoreOutlined />,
+      title: t('common:spotlight.title.adminAuctions', 'All Auctions'),
+      desc: t('common:spotlight.desc.adminAuctions', 'Browse and manage all platform auctions'),
+      keywords: ['auctions', 'phiên', 'đấu giá', 'all', 'tất cả', 'quản lý'], auth: ['admin']
+    },
+    {
+      id: 'admin_completed_auctions', path: '/admin/auctions/completed', icon: <TrophyOutlined />,
+      title: t('common:spotlight.title.adminCompletedAuctions', 'Completed Auctions'),
+      desc: t('common:spotlight.desc.adminCompletedAuctions', 'View post-sale auction records and order fulfillment'),
+      keywords: ['completed', 'đã kết thúc', 'hoàn thành', 'post-sale'], auth: ['admin']
     },
     {
       id: 'admin_items', path: '/admin/items/review', icon: <AuditOutlined />,
@@ -562,7 +570,9 @@ export const SpotlightSearchModal: React.FC = () => {
        const found = results.find(r => r.id === id)
        addSpotlightRecent(currentUserId, { id, type: 'dynamic', path, title: found?.title, desc: found?.desc, status: found?.status, price: found?.price, currency: found?.currency })
     }
-    if (path.startsWith('/auctions/') && path.length > '/auctions/'.length) {
+    if (path === 'action:logout') {
+      handleLogout().then(() => navigate('/'))
+    } else if (path.startsWith('/auctions/') && path.length > '/auctions/'.length) {
       window.location.href = path
     } else {
       navigate(path)
@@ -648,7 +658,7 @@ export const SpotlightSearchModal: React.FC = () => {
       <div style={{ display: 'flex', flexDirection: 'column', background: 'transparent' }} onKeyDown={handleModalKeyDown}>
         <div style={{ 
           padding: isMobile ? '16px 20px' : '20px 24px', 
-          borderBottom: '1px solid var(--color-border)', 
+          borderBottom: '0px solid var(--color-border)', 
           display: 'flex', 
           alignItems: 'center', 
           gap: 14,

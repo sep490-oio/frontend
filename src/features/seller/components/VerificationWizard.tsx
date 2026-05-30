@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { Steps, Card, Button, Radio, Space, Typography, Flex, App, Spin } from 'antd'
-import { IdcardOutlined, CameraOutlined, ShopOutlined, FileProtectOutlined, SendOutlined } from '@ant-design/icons'
+import { IdcardOutlined, CameraOutlined, SendOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useCreateVerification, useSubmitVerification, useUploadVerificationDocument, useDeleteVerificationDocument, useVerificationById } from '@/features/seller/api'
 import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { VerificationDocumentSlots, getRequiredSlots } from '@/features/seller/components/VerificationDocumentSlots'
 import { VerificationType } from '@/types/enums'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { normalizeErrorMessage } from '@/lib/errorNormalizer'
 
 interface VerificationWizardProps {
   onComplete: () => void
@@ -23,29 +25,11 @@ export function VerificationWizard({ onComplete, onCancel }: VerificationWizardP
       title: t('verification.typeGovernmentId.title'),
       description: t('verification.typeGovernmentId.description'),
     },
-    {
-      value: VerificationType.Passport,
-      icon: <FileProtectOutlined style={{ fontSize: 28 }} />,
-      title: t('verification.typePassport.title'),
-      description: t('verification.typePassport.description'),
-    },
-    {
-      value: VerificationType.BusinessOwner,
-      icon: <ShopOutlined style={{ fontSize: 28 }} />,
-      title: t('verification.typeBusinessOwner.title'),
-      description: t('verification.typeBusinessOwner.description'),
-    },
-    {
-      value: VerificationType.Manual,
-      icon: <ShopOutlined style={{ fontSize: 28 }} />,
-      title: t('verification.typeManual.title', 'In-Person (at Shop)'),
-      description: t('verification.typeManual.description', 'Visit our store for physical document verification'),
-    },
   ]
   const { message } = App.useApp()
 
   const [currentStep, setCurrentStep] = useState(0)
-  const [selectedType, setSelectedType] = useState<string>('')
+  const [selectedType, setSelectedType] = useState<string>(VerificationType.GovernmentId)
   const [verificationId, setVerificationId] = useState<string>('')
   const [creating, setCreating] = useState(false)
 
@@ -66,12 +50,12 @@ export function VerificationWizard({ onComplete, onCancel }: VerificationWizardP
       setCurrentStep(1)
     } catch (err: unknown) {
       // If user already has a pending verification, exit wizard and show management view
-      const errMsg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? ''
-      if (errMsg.includes('pending') || errMsg.includes('submitted') || errMsg.includes('already')) {
+      const errMsg = normalizeErrorMessage(err, '')
+      if (errMsg.includes('pending') || errMsg.includes('submitted') || errMsg.includes('already') || errMsg.includes('pending')) {
         message.warning(t('alreadyHasPending', 'You already have a verification in progress. Returning to management view.'))
         onComplete() // exits wizard, invalidates queries → page shows existing verification
       } else {
-        message.error(t('verificationCreateError', 'Failed to create verification'))
+        message.error(errMsg || t('verificationCreateError', 'Failed to create verification'))
       }
     } finally {
       setCreating(false)
@@ -111,11 +95,13 @@ export function VerificationWizard({ onComplete, onCancel }: VerificationWizardP
   const filledSlots = new Set(verification?.documents?.map((d) => d.documentType) ?? [])
   const allRequiredFilled = requiredSlots.every((s) => filledSlots.has(s))
 
+  const { isMobile } = useBreakpoint()
+
   return (
-    <Card>
+    <Card styles={{ body: { padding: isMobile ? '16px' : '24px' } }}>
       <Steps
         current={currentStep}
-        style={{ marginBottom: 32 }}
+        style={{ marginBottom: 32, maxWidth: 560, marginLeft: 'auto', marginRight: 'auto' }}
         items={[
           { title: t('stepType', 'Choose Type') },
           { title: t('stepDocuments', 'Upload Documents') },
@@ -125,7 +111,7 @@ export function VerificationWizard({ onComplete, onCancel }: VerificationWizardP
 
       {/* Step 0: Choose Type */}
       {currentStep === 0 && (
-        <div>
+        <div style={{ maxWidth: 520, margin: '0 auto' }}>
           <Typography.Title level={4} style={{ marginBottom: 16 }}>
             {t('selectVerificationType', 'Select Verification Type')}
           </Typography.Title>
@@ -168,7 +154,7 @@ export function VerificationWizard({ onComplete, onCancel }: VerificationWizardP
 
       {/* Step 1: Upload Documents */}
       {currentStep === 1 && (
-        <div>
+        <div style={{ maxWidth: 520, margin: '0 auto' }}>
           <Typography.Title level={4} style={{ marginBottom: 8 }}>
             {t('uploadDocuments', 'Upload Documents')}
           </Typography.Title>
@@ -206,7 +192,7 @@ export function VerificationWizard({ onComplete, onCancel }: VerificationWizardP
 
       {/* Step 2: Review & Submit */}
       {currentStep === 2 && (
-        <div>
+        <div style={{ maxWidth: 520, margin: '0 auto' }}>
           <Typography.Title level={4} style={{ marginBottom: 16 }}>
             {t('reviewAndSubmit', 'Review & Submit')}
           </Typography.Title>
@@ -243,7 +229,7 @@ export function VerificationWizard({ onComplete, onCancel }: VerificationWizardP
               loading={submitVerification.isPending}
               style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
             >
-              {t('submitForReview', 'Submit for Review')}
+              {tc('action.submit', 'Submit')}
             </Button>
           </Flex>
         </div>

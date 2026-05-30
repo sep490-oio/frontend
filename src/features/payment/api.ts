@@ -1,9 +1,12 @@
-import apiClient, { extractArray } from '@/lib/axios'
+import apiClient, { extractArray, normalizePagedList } from '@/lib/axios'
 import { queryKeys } from '@/lib/queryClient'
 import { invalidateAndRefetchActive } from '@/lib/mutationFreshness'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type {
   SellerWalletOverviewDto,
+  SellerFinanceOverviewDto,
+  SellerEscrowLedgerRowDto,
+  SellerAuctionDepositRowDto,
   WalletSummaryDto,
   WalletTransactionDto,
   PaymentMethodDto,
@@ -39,13 +42,78 @@ export function useSellerWalletOverview(options?: { refetchInterval?: number; en
   })
 }
 
+// ── Seller Finance Transparency ─────────────────────────────────────
+// Two BE endpoints (`/seller/finance/overview` and `/seller/finance/escrow-ledger`)
+// power the seller finance dashboard. Both queries default to a 30s stale
+// window so summary cards stay reasonably fresh without hammering BE.
+
+export function useSellerFinanceOverview(options?: { refetchInterval?: number; enabled?: boolean }) {
+  return useQuery({
+    queryKey: queryKeys.sellerFinance.overview(),
+    queryFn: async () => {
+      const res = await apiClient.get<SellerFinanceOverviewDto>('/seller/finance/overview')
+      return res.data
+    },
+    staleTime: 30_000,
+    ...options,
+  })
+}
+
+export function useSellerEscrowLedger(options?: { refetchInterval?: number; enabled?: boolean }) {
+  return useQuery({
+    queryKey: queryKeys.sellerFinance.escrowLedger(),
+    queryFn: async () => {
+      const res = await apiClient.get<SellerEscrowLedgerRowDto[]>('/seller/finance/escrow-ledger')
+      return extractArray<SellerEscrowLedgerRowDto>(res.data)
+    },
+    staleTime: 30_000,
+    ...options,
+  })
+}
+
+export function useSellerAuctionDeposits(options?: { refetchInterval?: number; enabled?: boolean }) {
+  return useQuery({
+    queryKey: queryKeys.sellerFinance.auctionDeposits(),
+    queryFn: async () => {
+      const res = await apiClient.get<SellerAuctionDepositRowDto[]>('/seller/finance/auction-deposits')
+      return extractArray<SellerAuctionDepositRowDto>(res.data)
+    },
+    staleTime: 30_000,
+    ...options,
+  })
+}
+
 export function useWalletTransactions(params?: PaginationParams & { type?: string }, options?: { refetchInterval?: number }) {
   return useQuery({
     queryKey: queryKeys.wallet.transactions(params),
     queryFn: async () => {
-      const res = await apiClient.get<PagedList<WalletTransactionDto>>('/me/wallet/transactions', { params })
-      return res.data
+      const res = await apiClient.get<any>('/me/wallet/transactions', { params })
+      return normalizePagedList<WalletTransactionDto>(res.data) as PagedList<WalletTransactionDto>
     },
+    ...options,
+  })
+}
+
+// ── Active Deposits (authoritative, from AuctionDeposit entities) ────
+
+export interface ActiveDepositDto {
+  depositId: string
+  auctionId: string
+  auctionTitle?: string
+  amount: number
+  currency: string
+  status: string
+  createdAt: string
+}
+
+export function useActiveDeposits(options?: { refetchInterval?: number; enabled?: boolean }) {
+  return useQuery({
+    queryKey: queryKeys.wallet.activeDeposits(),
+    queryFn: async () => {
+      const res = await apiClient.get<ActiveDepositDto[]>('/me/deposits/active')
+      return extractArray<ActiveDepositDto>(res.data)
+    },
+    staleTime: 30_000,
     ...options,
   })
 }
@@ -200,8 +268,8 @@ export function useMyWithdrawals(params?: PaginationParams) {
   return useQuery({
     queryKey: queryKeys.wallet.withdrawals(params),
     queryFn: async () => {
-      const res = await apiClient.get<PagedList<WithdrawalRequestDto>>('/me/wallet/withdrawals', { params })
-      return res.data
+      const res = await apiClient.get<any>('/me/wallet/withdrawals', { params })
+      return normalizePagedList<WithdrawalRequestDto>(res.data) as PagedList<WithdrawalRequestDto>
     },
   })
 }

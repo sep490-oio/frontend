@@ -12,7 +12,7 @@ import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useWallet } from '@/features/payment/api'
-import { useMyBids, useWatchlist } from '@/features/auction/api'
+import { useMyBids, useWatchlist } from '@/features/auction/auctionApi.ts'
 import { useMyOrders } from '@/features/order/api'
 import { useMyDisputes } from '@/features/dispute/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
@@ -91,7 +91,7 @@ export default function DashboardPage() {
             label: t('dashboard.activeBids', 'Active Bids'), 
             value: activeBidsCount, 
             icon: <ThunderboltOutlined />, 
-            path: '/me/bids', 
+            path: '/me/auctions?tab=bids', 
             color: 'var(--color-accent)' 
           },
           { 
@@ -169,7 +169,7 @@ export default function DashboardPage() {
               <Title level={4} style={{ margin: 0, fontFamily: SANS_FONT, fontWeight: 600, fontSize: 18 }}>
                 {t('dashboard.activeBidsTitle', 'Active Bids')}
               </Title>
-              <Button type="link" onClick={() => navigate('/me/bids')} style={{ color: 'var(--color-accent)', fontWeight: 600, paddingRight: 0 }}>
+              <Button type="link" onClick={() => navigate('/me/auctions?tab=bids')} style={{ color: 'var(--color-accent)', fontWeight: 600, paddingRight: 0 }}>
                 {t('dashboard.viewAll', 'View All')} <RightOutlined style={{ fontSize: 10 }} />
               </Button>
             </Flex>
@@ -237,56 +237,101 @@ export default function DashboardPage() {
               <Title level={4} style={{ margin: 0, fontFamily: SANS_FONT, fontWeight: 600, fontSize: 18 }}>
                 {t('dashboard.watchlistTitle', 'Watchlist')}
               </Title>
-              <Button type="link" onClick={() => navigate('/me/watchlist')} style={{ color: 'var(--color-accent)', fontWeight: 600, paddingRight: 0 }}>
+              <Button type="link" onClick={() => navigate('/me/auctions?tab=watchlist')} style={{ color: 'var(--color-accent)', fontWeight: 600, paddingRight: 0 }}>
                 {t('dashboard.viewAll', 'View All')} <RightOutlined style={{ fontSize: 10 }} />
               </Button>
             </Flex>
 
             {watchlist.length > 0 ? (
               <Row gutter={[16, 16]}>
-                {watchlist.map((item) => (
-                  <Col xs={24} sm={12} key={item.auctionId}>
-                    <div
-                      onClick={() => navigate(`/auctions/${item.auctionId}`)}
-                      className="oio-press"
-                      style={{
-                        background: 'var(--color-bg-card)',
-                        border: '1px solid var(--color-border)',
-                        borderRadius: 20,
-                        padding: '16px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        gap: 16,
-                        transition: 'all 0.2s ease',
-                        boxShadow: 'var(--shadow-sm)',
-                        height: '100%'
-                      }}
-                    >
-                      <img 
-                        src={item.primaryImageUrl || '/placeholder-item.png'} 
-                        alt={item.itemTitle}
-                        style={{ 
-                          width: 80, 
-                          height: 80, 
-                          objectFit: 'cover', 
-                          borderRadius: 12,
-                          background: 'var(--color-bg-surface)'
-                        }}
-                      />
-                      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                        <div style={{ fontWeight: 600, color: 'var(--color-text-primary)', fontSize: 14, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {item.itemTitle}
-                        </div>
-                        <div style={{ fontFamily: MONO_FONT, color: 'var(--color-accent)', fontWeight: 700, fontSize: 15 }}>
-                          {formatCurrency(item.currentPrice.amount, item.currentPrice.currency)}
-                        </div>
-                        <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)', marginTop: 4 }}>
-                          {item.remainingTime ? `${t('dashboard.endsIn', 'Ends in')}: ${item.remainingTime}` : t('dashboard.ended', 'Ended')}
-                        </div>
-                      </div>
-                    </div>
-                  </Col>
-                ))}
+                    {watchlist.map((item) => {
+                      const isEnded = item.auctionStatus !== 'Active' && item.auctionStatus !== 'active'
+                      const remainingTimeStr = item.remainingTime?.startsWith('-') ? t('dashboard.ended', 'Ended') : item.remainingTime
+
+                      return (
+                        <Col xs={24} sm={12} key={item.auctionId}>
+                          <div
+                            onClick={() => navigate(`/auctions/${item.auctionId}`)}
+                            className="oio-press"
+                            style={{
+                              background: 'var(--color-bg-card)',
+                              border: '1px solid var(--color-border)',
+                              borderRadius: 24,
+                              padding: '16px',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              gap: 16,
+                              transition: 'all 0.2s ease',
+                              boxShadow: 'var(--shadow-sm)',
+                              height: '100%',
+                              alignItems: 'center'
+                            }}
+                          >
+                            <img
+                              src={item.primaryImageUrl || '/placeholder-item.png'}
+                              alt={item.itemTitle}
+                              style={{
+                                width: 88,
+                                height: 88,
+                                objectFit: 'cover',
+                                borderRadius: 16,
+                                background: 'var(--color-bg-surface)',
+                                border: '1px solid var(--color-border-light)'
+                              }}
+                            />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{
+                                fontWeight: 600,
+                                color: 'var(--color-text-primary)',
+                                fontSize: 15,
+                                marginBottom: 6,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap'
+                              }}>
+                                {item.itemTitle}
+                              </div>
+
+                              <Flex align="center" gap={8} style={{ marginBottom: 8 }}>
+                                <StatusBadge status={item.auctionStatus} size="small" />
+                                <div style={{
+                                  fontSize: 12,
+                                  padding: '2px 10px',
+                                  borderRadius: 100,
+                                  background: 'var(--color-bg-surface)',
+                                  border: '1px solid var(--color-border)',
+                                  color: 'var(--color-text-secondary)',
+                                  fontWeight: 600
+                                }}>
+                                  {item.bidCount} {t('dashboard.bids', 'bids')}
+                                </div>
+                              </Flex>
+
+                              <div style={{
+                                fontSize: 13,
+                                color: isEnded ? 'var(--color-text-tertiary)' : 'var(--color-warning)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 6,
+                                fontWeight: 600,
+                                marginBottom: 4
+                              }}>
+                                <ThunderboltOutlined style={{ fontSize: 12 }} />
+                                {isEnded ? t('dashboard.ended', 'Ended') : remainingTimeStr || '--'}
+                              </div>
+
+                              <div style={{ 
+                                fontSize: 12, 
+                                color: 'var(--color-text-tertiary)',
+                                fontFamily: MONO_FONT 
+                              }}>
+                                {t('dashboard.currentPrice', 'Current')}: <span style={{ color: 'var(--color-text-primary)', fontWeight: 600 }}>{formatCurrency(item.currentPrice?.amount ?? 0, item.currentPrice?.currency ?? item.currency ?? 'VND')}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </Col>
+                      )
+                    })}
               </Row>
             ) : (
               <Empty 

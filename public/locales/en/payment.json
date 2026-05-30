@@ -164,6 +164,26 @@
   "statusFailed": "Failed",
   "statusRefunded": "Refunded",
   "statusUnknown": "Unknown",
+  "ledgerStatus": {
+    "posted": "Posted",
+    "pending": "Pending",
+    "failed": "Failed",
+    "reversed": "Reversed"
+  },
+  "event": {
+    "wallet_top_up": "Wallet Top-up",
+    "auction_deposit_hold": "Auction Deposit",
+    "auction_deposit_refund": "Deposit Refund",
+    "order_payment": "Order Payment",
+    "order_refund": "Order Refund",
+    "withdrawal_hold": "Withdrawal Hold",
+    "withdrawal_release": "Withdrawal",
+    "seller_payout": "Seller Payout",
+    "fee": "Transaction Fee"
+  },
+  "availableBalanceHelp": "Funds available for immediate use.",
+  "reservedFundsHelpShort": "Funds held by auction deposits, pending withdrawals, or in-progress transactions.",
+  "refOpenDetail": "Open detail",
   "checkoutSubtitle": "Finalize your shipment details and payment to complete your order",
   "shippingInformation": "Shipping Details",
   "buyerProtectionTitle": "Buyer Protection Active",
@@ -177,5 +197,124 @@
   "confirmPayment": "Authorize payment for this order?",
   "secureCheckout": "Secure encrypted checkout",
   "grossPrice": "Original Price",
-  "amountDue": "Amount Due"
+  "amountDue": "Amount Due",
+  "paymentDeadline": "Payment deadline",
+  "shippingPlaceholderWarning": "Please complete your delivery address before paying.",
+  "recipientName": "Recipient Name",
+  "recipientRequired": "Recipient name is required",
+  "recipientNamePlaceholder": "Full name",
+  "phoneNumber": "Phone Number",
+  "phoneRequired": "Phone number is required",
+  "phoneNumberPlaceholder": "09xx xxx xxx",
+  "street": "Street Address",
+  "streetRequired": "Street is required",
+  "streetPlaceholder": "House number, street name",
+  "postalCode": "Postal Code (optional)",
+  "shippingSaved": "Shipping information verified and saved",
+  "depositApplied": "Deposit Deduction",
+  "walletPortion": "Paid via Wallet",
+  "sellerFinance": {
+    "title": "Seller Finance",
+    "subtitle": "Track withdrawable balance, escrow holdings, and fees",
+    "cards": {
+      "withdrawable": "Withdrawable",
+      "withdrawableHelp": "Funds available for withdrawal to your bank account.",
+      "holding": "Held in Escrow",
+      "holdingHelp": "Buyer has paid but funds are not yet released to your wallet.",
+      "expected": "Expected Net Payout (estimate)",
+      "expectedHelp": "= gross − 10% platform fee − 3% inspection fee (when applicable).",
+      "pendingFees": "Pending Fees & Deductions",
+      "pendingFeesHelp": "Total platform fees + inspection fees + pending seller charges."
+    },
+    "tooltip": {
+      "holding": "Buyer paid but escrow not yet released",
+      "estimate": "This is an estimate. Actual amount will be shown once the transaction settles."
+    },
+    "tabs": {
+      "escrow": "Escrow & Pending Payout",
+      "fees": "Fees & Deductions",
+      "transactions": "Transactions"
+    },
+    "col": {
+      "orderNumber": "Order #",
+      "itemTitle": "Item",
+      "orderStatus": "Order",
+      "escrowStatus": "Escrow",
+      "holdReason": "Hold reason",
+      "buyerPaidAt": "Buyer paid",
+      "expectedRelease": "Expected release",
+      "netPayout": "Net payout"
+    },
+    "label": {
+      "released": "Released",
+      "estimate": "(estimate)"
+    },
+    "action": {
+      "viewBreakdown": "Breakdown",
+      "viewDispute": "View dispute",
+      "openOrder": "Open order detail"
+    },
+    "drawer": {
+      "title": "Money breakdown",
+      "orderStatus": "Order status",
+      "escrowStatus": "Escrow status",
+      "grossPaid": "Buyer paid (gross)",
+      "platformCommission": "Platform fee (10%)",
+      "payoutBeforeInspection": "Before inspection fee",
+      "inspectionFee": "Inspection fee (3%)",
+      "netPayout": "Net payout",
+      "holdReason": "Hold reason",
+      "buyerPaidAt": "Buyer paid at",
+      "expectedRelease": "Expected release",
+      "decisionWindow": "Decision window ends"
+    },
+    "fees": {
+      "explainTitle": "How fees are calculated",
+      "explainBody": "The 10% platform fee applies to every order. The 3% inspection fee only applies to platform-verified items and is capped at 625,000 VND / $25 USD per order.",
+      "platform": "Pending 10% platform fee",
+      "inspection": "Pending 3% inspection fee",
+      "inspectionNote": "Only applies to items with platform verification.",
+      "pendingCharges": "Pending seller charges",
+      "disputed": "Disputed",
+      "readyToRelease": "Ready to release"
+    },
+    "empty": {
+      "noEscrowTitle": "No escrow transactions yet",
+      "noEscrow": "No escrow transactions yet — funds will appear here once a buyer pays for their first order."
+    },
+    "holdReason": {
+      "awaitingDelivery": "Awaiting delivery",
+      "awaitingAcceptance": "Awaiting buyer acceptance",
+      "frozenByDispute": "Frozen by dispute",
+      "inspectionInProgress": "Inspection in progress"
+    },
+    "disputeFrozen": "Frozen by dispute"
+  },
+  "finalPrice": "Final Price",
+  "escrowCard": {
+    "title": "Payment & Escrow",
+    "notPaid": "Buyer has not paid for this order yet. Once paid, escrow details will appear here.",
+    "disputeHeld": "Funds are held due to an active dispute.",
+    "buyerPaid": "Buyer Paid?",
+    "escrowStatus": "Escrow Status",
+    "whyLocked": "Why can't I withdraw?",
+    "buyerGross": "Buyer Paid (gross)",
+    "released": "Released",
+    "estimatedPayout": "Estimated Seller Payout",
+    "platformFee": "Platform Fee 10%",
+    "inspectionFee": "Inspection Fee 3%",
+    "estimatedRelease": "Estimated Release",
+    "decisionWindowEnds": "Decision Window Ends"
+  },
+  "deposits": {
+    "auctionDeposit": "Auction Deposit"
+  },
+  "moneyFlow": {
+    "step1Desc": "When joining an auction, you place a deposit from your wallet. This amount is held — it cannot be spent elsewhere until refunded.",
+    "step2Desc": "You bid or buy now. The deposit remains held throughout the auction. If you lose, the deposit is refunded immediately.",
+    "step3Desc": "If you win, the deposit is deducted from the winning price. You only need to pay the remaining difference.",
+    "step4Desc": "Pay the difference (final price − deposit). Funds are deducted from your wallet or paid via VNPay. The full amount enters escrow.",
+    "step5Desc": "Payment is held in escrow — not transferred to the seller yet. This protects buyers during the inspection and dispute window.",
+    "step6Desc": "After the buyer confirms receipt (or the dispute window expires), escrow funds are released to the seller, minus platform fees."
+  }
 }

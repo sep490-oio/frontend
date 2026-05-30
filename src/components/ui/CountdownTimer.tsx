@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { MONO_FONT } from '@/styles/tokens'
+import { useTimeOffset } from '@/hooks/useTimeOffset'
 
 interface CountdownTimerProps {
   endTime: string
@@ -42,11 +43,13 @@ const FONT_SIZES: Record<string, number> = {
 const ONE_HOUR = 60 * 60 * 1000
 const FIVE_MIN = 5 * 60 * 1000
 
-export function CountdownTimer({ endTime, onEnd, size = 'default', serverTimeOffset = 0 }: CountdownTimerProps) {
+export function CountdownTimer({ endTime, onEnd, size = 'default', serverTimeOffset }: CountdownTimerProps) {
+  const globalOffset = useTimeOffset()
+  const effectiveOffset = serverTimeOffset ?? globalOffset
   const endTimestamp = new Date(endTime).getTime()
   const isValid = !!endTime && !Number.isNaN(endTimestamp)
 
-  const [now, setNow] = useState(() => Date.now() + serverTimeOffset)
+  const [now, setNow] = useState(() => Date.now() + effectiveOffset)
   const onEndCalledRef = useRef(false)
   const onEndRef = useRef(onEnd)
 
@@ -64,11 +67,11 @@ export function CountdownTimer({ endTime, onEnd, size = 'default', serverTimeOff
     }
 
     const timerId = setInterval(() => {
-      setNow(Date.now() + serverTimeOffset)
+      setNow(Date.now() + effectiveOffset)
     }, 1000)
 
     return () => clearInterval(timerId)
-  }, [isValid, serverTimeOffset])
+  }, [isValid, effectiveOffset])
 
   const timeLeft = isValid ? calcTimeLeft(endTimestamp, now) : ZERO
 

@@ -1,5 +1,5 @@
 import { HistoryOutlined } from '@ant-design/icons'
-import { Typography } from 'antd'
+
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 
@@ -65,38 +65,33 @@ export function OrderItemSummary({ item, variant = 'card', linkToAuction = false
     </div>
   )
 
-  const titleNode = linkToAuction ? (
-    <Link
-      to={`/auctions/${item.auctionId}`}
+  const titleNode = (
+    <div
       style={{
         color: 'var(--color-text-primary)',
-        textDecoration: 'none',
         fontFamily: SERIF_FONT,
-        fontWeight: 500,
+        fontWeight: 600,
         fontSize: variant === 'row' ? 14 : 16,
         display: '-webkit-box',
         WebkitLineClamp: 2,
         WebkitBoxOrient: 'vertical',
         overflow: 'hidden',
+        lineHeight: 1.4,
+        wordBreak: 'break-word',
+        marginBottom: 2,
       }}
     >
-      {item.itemTitle}
-    </Link>
-  ) : (
-    <Typography.Text
-      strong
-      style={{
-        fontFamily: SERIF_FONT,
-        fontWeight: 500,
-        fontSize: variant === 'row' ? 14 : 16,
-        display: '-webkit-box',
-        WebkitLineClamp: 2,
-        WebkitBoxOrient: 'vertical',
-        overflow: 'hidden',
-      }}
-    >
-      {item.itemTitle}
-    </Typography.Text>
+      {linkToAuction ? (
+        <Link
+          to={`/auctions/${item.auctionId}`}
+          style={{ color: 'inherit', textDecoration: 'none' }}
+        >
+          {item.itemTitle}
+        </Link>
+      ) : (
+        item.itemTitle
+      )}
+    </div>
   )
 
   return (

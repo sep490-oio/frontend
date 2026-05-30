@@ -167,7 +167,9 @@
     "myBid": "Giá của tôi",
     "becomeSellerTitle": "Bắt đầu bán hàng trên OIO",
     "becomeSellerDesc": "Biến vật phẩm của bạn thành lợi nhuận. Tham gia cộng đồng người bán chuyên nghiệp ngay hôm nay.",
-    "becomeSellerBtn": "Đăng ký người bán"
+    "becomeSellerBtn": "Đăng ký người bán",
+    "bids": "lượt đặt giá",
+    "currentPrice": "Giá hiện tại"
   },
   "profile": {
     "title": "Hồ sơ của tôi",
@@ -177,6 +179,24 @@
     "resendEmail": "Gửi lại email xác minh",
     "resendSuccess": "Đã gửi email xác minh! Vui lòng kiểm tra hộp thư.",
     "resendError": "Gửi email xác minh thất bại. Vui lòng đợi 60 giây giữa các lần gửi.",
+    "appearance": "Diện mạo & Thương hiệu",
+    "themeMode": "Chế độ giao diện",
+    "switchToDark": "Chuyển sang Chế độ tối",
+    "switchToLight": "Chuyển sang Chế độ sáng",
+    "colorPreset": "Mã màu thương hiệu",
+    "presetHint": "Mỗi bộ màu sử dụng công thức đa sắc độ để tối ưu hóa chiều sâu thị giác.",
+    "presets": {
+      "default": "Đại dương sâu",
+      "mint": "Thực vật học",
+      "ember": "Hoàng hôn",
+      "aurora": "Cực quang",
+      "slate": "Bão tố",
+      "frosted": "Thép mờ",
+      "custom": "Duy nhất"
+    },
+    "customColor": "Tinh chỉnh chuẩn xác",
+    "customDesc": "Điều chỉnh sắc độ và cường độ để tạo nên bản sắc thương hiệu riêng của bạn.",
+    "customHueHint": "Kéo thanh trượt để tạo màu sắc thương hiệu riêng của bạn. Mọi yếu tố trong ứng dụng sẽ thích nghi theo tông màu này.",
     "changeAvatar": "Đổi ảnh đại diện",
     "avatarUploaded": "Đã tải ảnh đại diện",
     "avatarUploadError": "Tải ảnh đại diện thất bại",
@@ -212,7 +232,55 @@
       "maxChars": "Tối đa {{max}} ký tự",
       "phoneInvalid": "Số điện thoại không hợp lệ",
       "countryCodeRequired": "Vui lòng chọn mã quốc gia",
-      "otpLength": "Mã xác nhận phải gồm 6 chữ số"
+      "otpLength": "Mã xác nhận phải gồm 6 chữ số",
+      "firstNameRequired": "Họ không được để trống",
+      "lastNameRequired": "Tên không được để trống",
+      "displayNameRequired": "Tên hiển thị không được để trống"
+    }
+  },
+  "settings": {
+    "title": "Cài đặt",
+    "subtitle": "Quản lý tùy chọn tài khoản và bảo mật của bạn",
+    "notifications": {
+      "title": "Thông báo",
+      "description": "Chọn cách bạn nhận thông báo — trên nền tảng và qua email"
+    },
+    "appearance": {
+      "livePreview": "Xem trực tiếp",
+      "sampleInterface": "Giao diện mẫu",
+      "sampleDesc": "Xem các lựa chọn của bạn ảnh hưởng thế nào đến nhận diện thị giác của nền tảng.",
+      "primaryAction": "Hành động chính",
+      "ghost": "Nút phụ",
+      "activeTag": "Thẻ hoạt động",
+      "backgroundGradient": "Dải màu nền",
+      "brightness": "Độ sáng",
+      "lightModeActive": "Chế độ sáng đang bật",
+      "darkModeActive": "Chế độ tối đang bật",
+      "clickForDark": "Nhấn để chuyển sang Tối",
+      "clickForLight": "Nhấn để chuyển sang Sáng",
+      "colorDna": "Mã màu thương hiệu",
+      "presetHint": "Mỗi bộ màu sử dụng công thức đa sắc độ để tối ưu hóa chiều sâu thị giác.",
+      "precisionTuning": "Tinh chỉnh chuẩn xác",
+      "pigmentHue": "Sắc độ (Hue)",
+      "intensity": "Cường độ (Saturation)",
+      "quickTemplates": "MẪU NHANH",
+      "swatches": {
+        "ruby": "Hồng ngọc",
+        "amber": "Hổ phách",
+        "emerald": "Lục bảo",
+        "sapphire": "Lam ngọc",
+        "amethyst": "Thạch anh",
+        "rose": "Hoa hồng"
+      },
+      "presets": {
+        "default": { "label": "Đại dương sâu", "desc": "Xanh biển & Navy cổ điển" },
+        "mint": { "label": "Thực vật học", "desc": "Sắc xanh rừng tự nhiên" },
+        "ember": { "label": "Hoàng hôn", "desc": "Hổ phách ấm áp & Đất" },
+        "aurora": { "label": "Cực quang", "desc": "Tím Indigo & Chạng vạng" },
+        "slate": { "label": "Bão tố", "desc": "Xám xanh kỹ thuật" },
+        "frosted": { "label": "Thép mờ", "desc": "Kim loại mờ hiện đại" },
+        "custom": { "label": "Duy nhất", "desc": "Công thức HSL của riêng bạn" }
+      }
     }
   }
 }

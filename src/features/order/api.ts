@@ -2,12 +2,12 @@ import apiClient from '@/lib/axios'
 import { queryKeys } from '@/lib/queryClient'
 import { invalidateAndRefetchActive } from '@/lib/mutationFreshness'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import type { OrderDto, OrderReturnDto, OrderReturnEvidenceDto, CreateReturnRequest, PagedList, PaginationParams, UpdateOrderShippingRequest, SellerDirectShipmentDto, PackageCondition, SellerDirectShipmentListItem, MyDirectShipmentListItem, BuyerShipmentListItemDto } from '@/types'
+import type { OrderDto, OrderReturnDto, OrderReturnEvidenceDto, CreateReturnRequest, PagedList, PaginationParams, UpdateOrderShippingRequest, SellerDirectShipmentDto, PackageCondition, SellerDirectShipmentListItem, MyDirectShipmentListItem, BuyerShipmentListItemDto, SellerOrderStats } from '@/types'
 import type { OrderReturnEvidenceCategory } from '@/types/enums'
 
 // ── Queries ──────────────────────────────────────────────────────────
 
-export function useMyOrders(params?: PaginationParams & { status?: string }, options?: { refetchInterval?: number }) {
+export function useMyOrders(params?: PaginationParams & { status?: string; role?: string; escrowStatus?: string }, options?: { refetchInterval?: number }) {
   return useQuery({
     queryKey: queryKeys.orders.list(params),
     queryFn: async () => {
@@ -153,6 +153,27 @@ export function useSellerShippingProviderOptions() {
 }
 
 // ── Mutations ────────────────────────────────────────────────────────
+
+/**
+ * POST /api/orders/{orderId}/cancel-payment
+ * Buyer cancels payment for a pending order.
+ * Auction-win: 50% deposit penalty + runner-up flow.
+ * Buy-now: releases reservation with time compensation.
+ */
+export function useCancelOrderPayment() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ orderId, reason }: { orderId: string; reason?: string }) => {
+      await apiClient.post(`/orders/${orderId}/cancel-payment`, { reason: reason || undefined })
+    },
+    onSuccess: async (_data, variables) => {
+      await invalidateAndRefetchActive(qc, [
+        queryKeys.orders.detail(variables.orderId),
+        queryKeys.orders.all,
+      ])
+    },
+  })
+}
 
 export function useCreateReturn() {
   const qc = useQueryClient()
@@ -830,3 +851,14 @@ export function useCreateSellerReview() {
     },
   })
 }
+
+export function useSellerOrderStats() {
+  return useQuery({
+    queryKey: queryKeys.orders.sellerStats(),
+    queryFn: async ({ signal }) => {
+      const res = await apiClient.get<SellerOrderStats>('/api/orders/me/stats', { signal })
+      return res.data
+    }
+  })
+}
+

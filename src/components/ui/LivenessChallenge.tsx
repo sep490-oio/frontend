@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Typography, Button, Flex } from 'antd'
 import { EyeOutlined, ArrowLeftOutlined, ArrowRightOutlined, ReloadOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import type { CaptureMetadata, LivenessChallenge as ChallengeType } from '@/types/capture'
 import { uuid } from '@/utils/constants'
 
@@ -20,6 +21,7 @@ const CHALLENGES: { type: ChallengeType; instructionKey: string; icon: React.Rea
 
 export function LivenessChallengeOverlay({ videoRef, onComplete, onFail, step }: LivenessChallengeProps) {
   const { t } = useTranslation('common')
+  const { isMobile } = useBreakpoint()
   const [challenge] = useState(() => CHALLENGES[Math.floor(Math.random() * CHALLENGES.length)])
   const [status, setStatus] = useState<'waiting' | 'capturing' | 'done'>('waiting')
   const [attempts, setAttempts] = useState(0)
@@ -127,24 +129,33 @@ export function LivenessChallengeOverlay({ videoRef, onComplete, onFail, step }:
       zIndex: 10,
     }}>
       {status === 'waiting' && (
-        <Flex vertical align="center" gap={16}>
+        <Flex vertical align="center" gap={isMobile ? 10 : 16} style={{ padding: isMobile ? '0 16px' : 0 }}>
           <div style={{
-            width: 80, height: 80, borderRadius: '50%',
+            width: isMobile ? 60 : 80,
+            height: isMobile ? 60 : 80,
+            borderRadius: '50%',
             background: 'rgba(255,255,255,0.9)', display: 'flex',
-            alignItems: 'center', justifyContent: 'center', fontSize: 32,
+            alignItems: 'center', justifyContent: 'center',
+            fontSize: isMobile ? 24 : 32,
             color: 'var(--color-accent)',
           }}>
             {challenge.icon}
           </div>
-          <Typography.Text style={{ color: '#fff', fontSize: 18, fontWeight: 600, textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
+          <Typography.Text style={{
+            color: '#fff',
+            fontSize: isMobile ? 15 : 18,
+            fontWeight: 600,
+            textShadow: '0 1px 4px rgba(0,0,0,0.5)',
+            textAlign: 'center',
+          }}>
             {t(challenge.instructionKey)}
           </Typography.Text>
-          <Typography.Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13 }}>
+          <Typography.Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: isMobile ? 12 : 13 }}>
             {t('capture.remaining', { count: countdown })}
           </Typography.Text>
           <Button
             type="primary"
-            size="large"
+            size={isMobile ? 'middle' : 'large'}
             onClick={startBurstCapture}
             style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
           >

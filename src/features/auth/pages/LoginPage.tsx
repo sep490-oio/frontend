@@ -4,12 +4,13 @@ import { z } from 'zod'
 import { useTranslation } from 'react-i18next'
 import { useState } from 'react'
 import { App, Input, Button, Form, Alert, Modal } from 'antd'
-import { Link, useNavigate } from 'react-router'
+import { Link, useNavigate, useLocation } from 'react-router'
 import { useAppDispatch, setCredentials, set2FARequired } from '@/app/store'
 import { useLogin, useResendConfirmEmail } from '@/features/auth/api'
 import { STORAGE_KEYS, uuid } from '@/utils/constants'
-import type { AxiosError } from 'axios'
-import type { ApiError } from '@/types'
+import { getReturnToFromSearch } from '@/utils/returnTo'
+
+import { normalizeErrorMessage, getErrorCode } from '@/lib/errorNormalizer'
 
 function getRedirectPath(token: string): string {
   try {
@@ -17,7 +18,8 @@ function getRedirectPath(token: string): string {
     const roles: string[] = Array.isArray(payload.role) ? payload.role : payload.role ? [payload.role] : []
     const lowerRoles = roles.map((r) => r.toLowerCase())
     if (lowerRoles.includes('admin')) return '/admin'
-    if (lowerRoles.includes('inspector') || lowerRoles.includes('warehousemanager')) return '/inspector'
+    if (lowerRoles.includes('warehouse_staff') || lowerRoles.includes('warehousemanager')) return '/warehouse-staff'
+    if (lowerRoles.includes('inspector')) return '/inspector'
     if (lowerRoles.includes('seller')) return '/seller'
     return '/'
   } catch {
@@ -45,12 +47,18 @@ export default function LoginPage() {
   const { t } = useTranslation('auth')
   const { message } = App.useApp()
   const navigate = useNavigate()
+  const location = useLocation()
   const dispatch = useAppDispatch()
   const loginMutation = useLogin()
   const resendEmail = useResendConfirmEmail()
   const [emailNotConfirmed, setEmailNotConfirmed] = useState<string | null>(null)
   const [resendModalOpen, setResendModalOpen] = useState(false)
   const [resendEmailInput, setResendEmailInput] = useState('')
+
+  // Preserve a safe `?returnTo=` deep-link target across the auth flow so a
+  // user landing on a protected page while logged out is sent back where
+  // they tried to go after a successful login.
+  const returnTo = getReturnToFromSearch(location.search)
 
   const {
     control,
@@ -72,25 +80,25 @@ export default function LoginPage() {
         onSuccess: (data) => {
           if (data.requiresTwoFactor) {
             dispatch(set2FARequired({ userName: values.account, tempAccessToken: data.accessToken ?? '' }))
-            navigate('/2fa')
+            // Preserve returnTo across the 2FA hop.
+            navigate(returnTo ? `/2fa?returnTo=${encodeURIComponent(returnTo)}` : '/2fa')
           } else if (data.accessToken && data.refreshToken) {
             dispatch(setCredentials(data))
             message.success(t('login.success'))
-            navigate(getRedirectPath(data.accessToken))
+            // Prefer the validated returnTo over the role-based default.
+            navigate(returnTo ?? getRedirectPath(data.accessToken))
           } else {
             message.error(t('login.error', 'Login failed — no token received'))
           }
         },
         onError: (error) => {
-          const axiosError = error as AxiosError<ApiError>
-          const detail = axiosError.response?.data?.detail ?? ''
-          const code = axiosError.response?.data?.code ?? ''
+          const code = getErrorCode(error) ?? ''
           // Detect email-not-confirmed error (BE code: "User.Email.NotConfirmed")
           if (code === 'User.Email.NotConfirmed' || code.includes('EmailNotConfirmed')) {
             setEmailNotConfirmed(values.account)
           } else {
             setEmailNotConfirmed(null)
-            message.error(detail || t('login.error'))
+            message.error(normalizeErrorMessage(error, t('login.error')))
           }
         },
       },

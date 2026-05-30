@@ -20,7 +20,7 @@ import {
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useAdminUsers, useAdminReports, useAdminWithdrawals, usePendingVerifications, usePlatformWallet } from '@/features/admin/api'
-import { useAuctions } from '@/features/auction/api'
+import { useAuctions } from '@/features/auction/auctionApi.ts'
 import { formatCurrency, formatDateTime } from '@/utils/format'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
@@ -93,8 +93,9 @@ export default function AdminDashboardPage() {
           <Card
             style={{
               background: 'var(--color-accent-light)',
-              borderColor: 'var(--color-border)',
-              borderRadius: 12,
+              border: '1px solid var(--color-border)',
+              borderRadius: 24,
+              boxShadow: 'var(--shadow-sm)',
             }}
             styles={{ body: { padding: isMobile ? '12px' : '24px' } }}
           >
@@ -116,8 +117,9 @@ export default function AdminDashboardPage() {
           <Card
             style={{
               background: 'var(--color-accent-light)',
-              borderColor: 'var(--color-border)',
-              borderRadius: 12,
+              border: '1px solid var(--color-border)',
+              borderRadius: 24,
+              boxShadow: 'var(--shadow-sm)',
             }}
             styles={{ body: { padding: isMobile ? '12px' : '24px' } }}
           >
@@ -147,8 +149,9 @@ export default function AdminDashboardPage() {
           <Card
             style={{
               background: 'var(--color-accent-light)',
-              borderColor: 'var(--color-border)',
-              borderRadius: 12,
+              border: '1px solid var(--color-border)',
+              borderRadius: 24,
+              boxShadow: 'var(--shadow-sm)',
             }}
             styles={{ body: { padding: isMobile ? '12px' : '24px' } }}
           >
@@ -178,8 +181,9 @@ export default function AdminDashboardPage() {
           <Card
             style={{
               background: 'var(--color-accent-light)',
-              borderColor: 'var(--color-border)',
-              borderRadius: 12,
+              border: '1px solid var(--color-border)',
+              borderRadius: 24,
+              boxShadow: 'var(--shadow-sm)',
             }}
             styles={{ body: { padding: isMobile ? '12px' : '24px' } }}
           >
@@ -202,7 +206,7 @@ export default function AdminDashboardPage() {
       {/* ── Quick actions ────────────────────────────────────────────── */}
       <Card
         title={<span style={{ fontFamily: SERIF_FONT, fontWeight: 400 }}>{t('dashboard.quickActions')}</span>}
-        style={{ marginBottom: isMobile ? 16 : 24, borderRadius: 12 }}
+        style={{ marginBottom: isMobile ? 16 : 24, borderRadius: 24, border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)' }}
         styles={{ body: { padding: isMobile ? 12 : 24 } }}
       >
         {/* On mobile: stack vertically with full-width buttons */}
@@ -260,7 +264,7 @@ export default function AdminDashboardPage() {
                 {t('dashboard.viewVerifications')}
               </Button>
             }
-            style={{ borderRadius: 12 }}
+            style={{ borderRadius: 24, border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)' }}
             styles={{ body: { padding: isMobile ? 0 : 24 } }}
           >
             {verifications?.items?.length ? (
@@ -340,7 +344,7 @@ export default function AdminDashboardPage() {
                 {t('dashboard.liveAuctions', 'Live Auctions')}
               </span>
             }
-            style={{ borderRadius: 12 }}
+            style={{ borderRadius: 24, border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)' }}
           >
             {liveAuctions?.items?.length ? (
               <Space direction="vertical" size={12} style={{ width: '100%' }}>
@@ -414,7 +418,7 @@ export default function AdminDashboardPage() {
               </span>
             }
             extra={<Button type="link" onClick={() => navigate('/admin/reports')} style={{ padding: 0 }}>{t('dashboard.viewReports')}</Button>}
-            style={{ borderRadius: 12 }}
+            style={{ borderRadius: 24, border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)' }}
             styles={{ body: { padding: isMobile ? 0 : 24 } }}
           >
             {reports?.items?.length ? (
@@ -447,7 +451,7 @@ export default function AdminDashboardPage() {
               </span>
             }
             extra={<Button type="link" onClick={() => navigate('/admin/payments')} style={{ padding: 0 }}>{t('payments.withdrawals')}</Button>}
-            style={{ borderRadius: 12 }}
+            style={{ borderRadius: 24, border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)' }}
             styles={{ body: { padding: isMobile ? 0 : 24 } }}
           >
             {withdrawals?.items?.length ? (
@@ -459,7 +463,7 @@ export default function AdminDashboardPage() {
                       title={<span style={{ fontSize: 13 }}>{formatCurrency(item.amount)}</span>}
                       description={<span style={{ fontSize: 12 }}>{`${item.accountHolder ?? ''} - ${formatDateTime(item.createdAt)}`}</span>}
                     />
-                    <StatusBadge status={item.status} />
+                    <Tag color="processing" style={{ margin: 0 }}>{t('statusLabel.pending', { ns: 'common', defaultValue: 'Chờ xử lý' })}</Tag>
                   </List.Item>
                 )}
               />
@@ -473,7 +477,7 @@ export default function AdminDashboardPage() {
       </Row>
 
       {/* ── System Health Bar ────────────────────────────────────────── */}
-      <Card style={{ borderRadius: 12 }}>
+      <Card style={{ borderRadius: 24, border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)' }}>
         <Row gutter={[16, 16]} align="middle">
           <Col xs={8} sm={8}>
             <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 6 : 10 }}>
