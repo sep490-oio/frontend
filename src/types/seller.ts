@@ -1,4 +1,10 @@
 import type { IdentityVerificationStatus, SellerProfileStatus } from './enums'
+import type { UserDto } from './user'
+
+export interface AdminSellerProfileDetailDto {
+  profile: SellerProfileDto
+  user: UserDto
+}
 
 export interface SellerProfileDto {
   id: string

@@ -35,6 +35,7 @@ import type {
   AdminOrderDetailDto,
   PagedList,
   PaginationParams,
+  AdminSellerProfileDetailDto,
 } from '@/types'
 
 // ── Users ────────────────────────────────────────────────────────────
@@ -249,7 +250,7 @@ export function useAdminSellerProfileById(id: string) {
   return useQuery({
     queryKey: queryKeys.admin.sellerProfileDetail(id),
     queryFn: async () => {
-      const res = await apiClient.get<SellerProfileDto>(`/admin/seller-profiles/${id}`)
+      const res = await apiClient.get<AdminSellerProfileDetailDto>(`/admin/seller-profiles/${id}`)
       return res.data
     },
     enabled: !!id,
@@ -779,6 +780,17 @@ export function useAdminDisputes(params?: PaginationParams & { status?: string }
 
 
 // ── Payments ─────────────────────────────────────────────────────────
+
+export function useAdminUserWallet(userId: string) {
+  return useQuery({
+    queryKey: ['admin', 'users', userId, 'wallet'],
+    queryFn: async () => {
+      const res = await apiClient.get<WalletSummaryDto>(`/admin/users/${userId}/wallet`)
+      return res.data
+    },
+    enabled: !!userId,
+  })
+}
 
 export function useAdminWithdrawals(params?: PaginationParams & { status?: string; fromDate?: string; toDate?: string; searchTerm?: string; sortBy?: string }) {
   return useQuery({
