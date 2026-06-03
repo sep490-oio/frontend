@@ -180,6 +180,7 @@ const AdminUserDetailPage = lazy(() => import('@/features/admin/pages/AdminUserD
 const AdminVerificationsPage = lazy(() => import('@/features/admin/pages/AdminVerificationsPage'))
 const AdminVerificationDetailPage = lazy(() => import('@/features/admin/pages/AdminVerificationDetailPage'))
 const AdminSellerProfilesPage = lazy(() => import('@/features/admin/pages/AdminSellerProfilesPage'))
+const AdminSellerProfileDetailPage = lazy(() => import('@/features/admin/pages/AdminSellerProfileDetailPage'))
 const AdminReviewQueuePage = lazy(() => import('@/features/admin/pages/AdminReviewQueuePage'))
 const AdminItemsPage = lazy(() => import('@/features/admin/pages/AdminItemsPage'))
 const AdminItemDetailPage = lazy(() => import('@/features/admin/pages/AdminItemDetailPage'))
@@ -364,6 +365,7 @@ export const router = createBrowserRouter([
           { path: '/admin/verifications', element: withSuspense(AdminVerificationsPage) },
           { path: '/admin/verifications/:id', element: withSuspense(AdminVerificationDetailPage) },
           { path: '/admin/sellers', element: withSuspense(AdminSellerProfilesPage) },
+          { path: '/admin/sellers/:id', element: withSuspense(AdminSellerProfileDetailPage) },
           { path: '/admin/items', element: withSuspense(AdminItemsPage) },
           { path: '/admin/items/review', element: withSuspense(AdminReviewQueuePage) },
           { path: '/admin/items/:id', element: withSuspense(AdminItemDetailPage) },

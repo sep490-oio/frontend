@@ -245,6 +245,17 @@ export function useAdminSellerProfiles(params?: PaginationParams & { status?: st
   })
 }
 
+export function useAdminSellerProfileById(id: string) {
+  return useQuery({
+    queryKey: queryKeys.admin.sellerProfileDetail(id),
+    queryFn: async () => {
+      const res = await apiClient.get<SellerProfileDto>(`/admin/seller-profiles/${id}`)
+      return res.data
+    },
+    enabled: !!id,
+  })
+}
+
 export function useVerifySellerProfile() {
   const qc = useQueryClient()
   return useMutation({

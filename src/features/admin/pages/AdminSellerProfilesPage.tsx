@@ -165,11 +165,7 @@ export default function AdminSellerProfilesPage() {
               size="small"
               style={actionBtnStyle}
               onClick={() => {
-                // Navigate or open modal depending on implementation.
-                // Assuming navigate to user detail for now if userId exists, else no-op.
-                if ((record as any).userId) {
-                  window.location.href = `/admin/users/${(record as any).userId}`;
-                }
+                window.location.href = `/admin/sellers/${record.id}`;
               }}
             >
               {t('common:action.viewDetail', 'View Detail')}

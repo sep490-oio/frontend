@@ -25,6 +25,7 @@ import {
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime } from '@/utils/format'
+import { useAuth } from '@/hooks/useAuth'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useMyOrders } from '@/features/order/api'
 import type { OrderDto } from '@/types'
@@ -378,6 +379,7 @@ function WarehouseReturnsTab() {
 
 function OrderReturnsTab() {
   const { t } = useTranslation('seller')
+  const { user } = useAuth()
   const { message } = App.useApp()
   const navigate = useNavigate()
   const addEvidence = useAddOrderReturnEvidenceSeller()
@@ -394,6 +396,7 @@ function OrderReturnsTab() {
 
   const activeReturns = (data?.items ?? []).filter(
     (o) =>
+      o.sellerId === user?.id &&
       o.return &&
       (o.return.status === OrderReturnStatus.Approved ||
         o.return.status === OrderReturnStatus.ReturnInTransit ||

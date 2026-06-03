@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useItemById, useItemAuctions, useCategories } from '@/features/item/api'
+import { useInboundShipments } from '@/features/warehouse/api'
 import {
   Typography,
   Space,
@@ -44,6 +45,13 @@ export default function SellerItemDetailPage() {
   const { data: item, isLoading: isItemLoading } = useItemById(id || '')
   const { data: auctions, isLoading: isAuctionsLoading } = useItemAuctions(id)
   const { data: categories } = useCategories()
+
+  const { data: inboundShipmentsRes, isLoading: isInboundLoading } = useInboundShipments({
+    itemId: item?.id,
+    pageNumber: 1,
+    pageSize: 1,
+  })
+  const inboundShipment = inboundShipmentsRes?.items?.[0]
 
   if (isItemLoading) {
     return (
@@ -197,25 +205,91 @@ export default function SellerItemDetailPage() {
   )
 
   const logisticsTab = (
-    <Card bordered={false} style={{ boxShadow: 'var(--shadow-sm)' }}>
-      {item.status === ItemStatus.PendingVerify && !item.hasInboundShipment ? (
-        <Empty
-          description={t('logisticsPlaceholder', 'Logistics & shipping details will be displayed here.')}
-        >
-          <Button 
-            type="primary" 
-            icon={<PlusOutlined />}
-            onClick={() => navigate(`${prefix}/warehouse/inbound/book?itemId=${item.id}`)}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      {item.hasInboundShipment ? (
+        isInboundLoading ? (
+          <Card bordered={false} style={{ boxShadow: 'var(--shadow-sm)' }}>
+            <Skeleton active />
+          </Card>
+        ) : inboundShipment ? (
+          <Card 
+            title={
+              <Space>
+                <ShoppingOutlined style={{ color: 'var(--color-primary)' }} />
+                <span>{t('inboundShipmentDetails', 'Inbound Shipment Details')}</span>
+              </Space>
+            } 
+            bordered={false} 
+            style={{ boxShadow: 'var(--shadow-sm)' }}
           >
-            {t('bookInbound', 'Book Inbound Shipment')}
-          </Button>
-        </Empty>
+            <Descriptions 
+              bordered 
+              column={{ xs: 1, sm: 2 }} 
+              labelStyle={{ width: '25%', color: 'var(--color-text-secondary)', background: 'var(--color-bg-layout)' }}
+            >
+              <Descriptions.Item label={tc('tableHeader.status', 'Status')} span={2}>
+                <StatusBadge status={inboundShipment.status} />
+              </Descriptions.Item>
+              <Descriptions.Item label={t('provider', 'Provider')}>
+                <Text strong>{inboundShipment.providerCode}</Text>
+                {inboundShipment.externalCarrierName && <Text type="secondary"> ({inboundShipment.externalCarrierName})</Text>}
+              </Descriptions.Item>
+              <Descriptions.Item label={tc('trackingNumber', 'Tracking Number')}>
+                {inboundShipment.carrierTrackingNumber ? (
+                  <Text copyable>{inboundShipment.carrierTrackingNumber}</Text>
+                ) : (
+                  <Text type="secondary">{t('notAvailable', 'Not Available')}</Text>
+                )}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('clientOrderCode', 'Client Order Code')}>
+                {inboundShipment.clientOrderCode ? (
+                  <Text copyable>{inboundShipment.clientOrderCode}</Text>
+                ) : (
+                  <Text type="secondary">-</Text>
+                )}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('createdAt', 'Created At')}>
+                {formatDateTime(inboundShipment.createdAt)}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('expectedArrival', 'Expected Arrival')}>
+                {inboundShipment.expectedArrivalAt ? (
+                  <Text strong>{formatDateTime(inboundShipment.expectedArrivalAt)}</Text>
+                ) : (
+                  <Text type="secondary">{t('notAvailable', 'Not Available')}</Text>
+                )}
+              </Descriptions.Item>
+            </Descriptions>
+          </Card>
+        ) : (
+          <Card bordered={false} style={{ boxShadow: 'var(--shadow-sm)' }}>
+            <Empty description={t('noShipmentData', 'Shipment data not found.')} />
+          </Card>
+        )
+      ) : item.status === ItemStatus.PendingVerify ? (
+        <Card bordered={false} style={{ boxShadow: 'var(--shadow-sm)' }}>
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={t('logisticsPlaceholder', 'Logistics & shipping details will be displayed here.')}
+          >
+            <Button 
+              type="primary" 
+              icon={<PlusOutlined />}
+              onClick={() => navigate(`${prefix}/warehouse/inbound/book?itemId=${item.id}`)}
+              style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)', marginTop: 16 }}
+            >
+              {t('bookInbound', 'Book Inbound Shipment')}
+            </Button>
+          </Empty>
+        </Card>
       ) : (
-        <Empty
-          description={t('logisticsPlaceholder', 'Logistics & shipping details will be displayed here.')}
-        />
+        <Card bordered={false} style={{ boxShadow: 'var(--shadow-sm)' }}>
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={t('logisticsPlaceholder', 'Logistics & shipping details will be displayed here.')}
+          />
+        </Card>
       )}
-    </Card>
+    </div>
   )
 
   const tabs = [

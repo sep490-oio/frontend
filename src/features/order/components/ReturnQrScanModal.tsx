@@ -71,13 +71,12 @@ export function ReturnQrScanModal({
   const handlePayload = async (rawPayload: string) => {
     if (handledRef.current) return
     handledRef.current = true
-    stopCamera()
     setSubmitting(true)
     try {
       await onScannedRef.current(rawPayload)
     } catch (err) {
       message.error(normalizeErrorMessage(err, t('returnScan.invalidQr', 'Invalid QR code')))
-      // Allow retry if it failed — re-arm so the camera reopens on next mount.
+      // Do not stop the camera here; allow it to keep scanning if the QR was invalid/rejected.
       handledRef.current = false
     } finally {
       setSubmitting(false)

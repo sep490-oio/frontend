@@ -25,7 +25,7 @@ import type {
 
 // ── Inbound Shipments ───────────────────────────────────────────────
 
-export function useInboundShipments(params?: PaginationParams & { status?: string; search?: string }) {
+export function useInboundShipments(params?: PaginationParams & { status?: string; search?: string; itemId?: string }) {
   return useQuery({
     queryKey: queryKeys.warehouse.inbound(params),
     queryFn: async () => {

@@ -178,6 +178,7 @@ export const queryKeys = {
     permissions: () => ['admin', 'permissions'] as const,
     verifications: (params?: unknown) => ['admin', 'verifications', params] as const,
     sellerProfiles: (params?: unknown) => ['admin', 'sellerProfiles', params] as const,
+    sellerProfileDetail: (id: string) => ['admin', 'sellerProfiles', 'detail', id] as const,
     reviewQueue: (params?: unknown) => ['admin', 'reviewQueue', params] as const,
     reports: (params?: unknown) => ['admin', 'reports', params] as const,
     alerts: (params?: unknown) => ['admin', 'alerts', params] as const,
