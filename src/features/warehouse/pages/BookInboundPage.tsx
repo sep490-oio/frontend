@@ -145,11 +145,14 @@ export default function BookInboundPage() {
       return
     }
     const { _fromDefaultAddress: _omit, ...values } = autofillSenderValues
-    form.setFieldsValue(values)
+    form.setFieldsValue({
+      ...values,
+      senderAddressId: addresses?.find((a) => a.isDefault)?.id,
+    })
     senderAutofilledRef.current = true
-  }, [autofillSenderValues, form])
+  }, [autofillSenderValues, form, isAddressesSuccess, addresses])
 
-  const senderPrefilledFromDefault = autofillSenderValues?._fromDefaultAddress === true
+
 
   const onFinish = async (values: {
     itemIds: string[]
@@ -243,7 +246,7 @@ export default function BookInboundPage() {
           form={form}
           layout="vertical"
           onFinish={onFinish}
-          initialValues={{ weight: 1, length: 10, width: 10, height: 10, shipmentMode: 'platform_managed' }}
+          initialValues={{ weight: 1, length: 10, width: 10, height: 10, shipmentMode: 'external_carrier' }}
         >
           {/* Item Selection — multi-select. Only items currently awaiting
               platform verification are listed: status = pending_verify AND
@@ -402,18 +405,42 @@ export default function BookInboundPage() {
 
           <Divider>{t('senderInfo', 'Sender Information')}</Divider>
 
-          {senderPrefilledFromDefault && (
-            <Typography.Text
-              style={{
-                display: 'block',
-                marginBottom: 12,
-                fontSize: 12,
-                color: 'var(--color-text-secondary)',
+          <Form.Item name="senderAddressId" label={t('selectAddress', 'Select Saved Address')}>
+            <Select
+              allowClear
+              placeholder={t('manualAddress', 'Enter manually...')}
+              options={(addresses ?? []).map((a) => ({
+                label: `${a.recipientName} - ${a.phoneNumber} - ${a.street}, ${a.ward}, ${a.district}, ${a.city}`,
+                value: a.id,
+              }))}
+              onChange={(val) => {
+                if (!val) {
+                  form.setFieldsValue({
+                    senderName: '',
+                    senderPhone: '',
+                    senderAddress: '',
+                    senderWard: '',
+                    senderDistrict: '',
+                    senderProvince: '',
+                    senderMetadata: undefined,
+                  })
+                } else {
+                  const addr = addresses?.find((a) => a.id === val)
+                  if (addr) {
+                    form.setFieldsValue({
+                      senderName: addr.recipientName ?? '',
+                      senderPhone: addr.phoneNumber ?? '',
+                      senderAddress: addr.street ?? '',
+                      senderWard: addr.ward ?? '',
+                      senderDistrict: addr.district ?? '',
+                      senderProvince: addr.city ?? '',
+                      senderMetadata: addr.metadata,
+                    })
+                  }
+                }
               }}
-            >
-              {t('senderPrefilledHint', 'Pre-filled from your default address. You can edit any field before submitting.')}
-            </Typography.Text>
-          )}
+            />
+          </Form.Item>
 
           <Form.Item
             name="senderName"
@@ -511,13 +538,15 @@ export default function BookInboundPage() {
             </Form.Item>
           </div>
 
-          <Form.Item
-            name="insuranceValue"
-            label={t('insuranceValue', 'Insurance Value (VND)')}
-            help={t('insuranceHelp', 'Leave empty to use total item price')}
-          >
-            <InputNumber min={0} style={{ width: '100%' }} placeholder="0" />
-          </Form.Item>
+          {!isExternal && (
+            <Form.Item
+              name="insuranceValue"
+              label={t('insuranceValue', 'Insurance Value (VND)')}
+              help={t('insuranceHelp', 'Leave empty to use total item price')}
+            >
+              <InputNumber min={0} style={{ width: '100%' }} placeholder="0" />
+            </Form.Item>
+          )}
 
           <Form.Item
             name="notes"

@@ -14,11 +14,20 @@
     "walletBalance": "Số dư ví",
     "withdraw": "Rút tiền",
     "history": "Lịch sử",
-    "ordersAwaitingShipment": "Chờ giao hàng"
+    "ordersAwaitingShipment": "Đơn hàng chờ giao",
+    "rejectedItems": "Sản phẩm bị từ chối cần sửa",
+    "warehouseReturns": "Hàng trả về từ kho",
+    "orderReturns": "Khách yêu cầu trả hàng",
+    "totalRevenue": "Tổng doanh thu",
+    "soldAuctions": "Phiên đấu giá đã bán",
+    "draftAuctions": "Phiên đấu giá nháp",
+    "totalActiveViews": "Lượt xem",
+    "actionCenter": "Trung tâm thông báo",
+    "allClear": "Tuyệt vời! Không có hành động nào cần xử lý."
   },
-  "createProfile": "Tạo hồ sơ nhà bán hàng",
+  "createProfile": "Tạo hồ sơ",
   "sellerProfile": "Hồ sơ nhà bán hàng",
-  "noProfile": "Bạn chưa tạo hồ sơ nhà bán hàng",
+  "noProfile": "Chưa có hồ sơ",
   "storeName": "Tên cửa hàng",
   "storeDescription": "Mô tả",
   "storeNameRequired": "Vui lòng nhập tên cửa hàng",
@@ -43,8 +52,8 @@
   "newItem": "Sản phẩm mới",
   "manageItems": "Quản lý sản phẩm",
   "recentAuctions": "Phiên đấu giá gần đây",
-  "noAuctions": "Chưa có phiên đấu giá nào",
-  "auctionTitle": "Tiêu đề",
+  "noAuctions": "Không có phiên đấu giá",
+  "auctionTitle": "Tên phiên đấu giá",
   "currentPrice": "Giá hiện tại",
   "bids": "Lượt đấu giá",
   "endTime": "Thời gian kết thúc",
@@ -121,9 +130,9 @@
   "verified": "Đã xác minh",
   "pendingActions": "Cần xử lý",
   "itemsPendingReview": "{{count}} sản phẩm đang chờ duyệt",
-  "draftAuctionsNeedSubmission": "{{count}} phiên đấu giá nháp cần gửi duyệt",
+  "draftAuctionsNeedSubmission": "Phiên đấu giá nháp ({{count}})",
   "viewAll": "Xem tất cả",
-  "pendingBalance": "Đang chờ",
+  "pendingBalance": "Số dư chờ xử lý",
   "browse": {
     "title": "Người bán",
     "subtitle": "Khám phá các nhà bán hàng uy tín trên nền tảng",
@@ -231,5 +240,9 @@
   },
   "verificationWizard": {
     "pending": "đang chờ"
-  }
+  },
+  "amount": "Số tiền",
+  "orderNumber": "Mã đơn hàng",
+  "noOrders": "Không có đơn hàng",
+  "recentOrders": "Đơn hàng gần đây"
 }

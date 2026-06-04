@@ -9,13 +9,17 @@
     "disputes": "Tranh chấp",
     "completedAuctions": "Đấu giá đã hoàn tất",
     "monitoring": "Giám sát",
-    "payments": "Thanh toán",
+    "payments": "Dòng tiền",
     "terms": "Điều khoản",
     "roles": "Vai trò & Quyền",
     "usersManagement": "Quản lý Người dùng",
     "catalogAndAuctions": "Sản phẩm & Đấu giá",
     "ordersAndFinances": "Đơn hàng & Tài chính",
-    "systemAndSettings": "Hệ thống & Cài đặt"
+    "systemAndSettings": "Hệ thống & Cài đặt",
+    "items": "Sản phẩm",
+    "auctions": "Đấu giá",
+    "orders": "Đơn hàng",
+    "reportedContent": "Nội dung bị báo cáo"
   },
   "dashboard": {
     "title": "Bảng điều khiển",
@@ -385,14 +389,14 @@
     "dismiss": "Bác bỏ"
   },
   "payments": {
-    "title": "Quản lý thanh toán",
+    "title": "Quản lý dòng tiền",
     "overview": "Tổng quan",
     "withdrawals": "Rút tiền",
     "transactions": "Giao dịch",
     "escrows": "Ký quỹ",
-    "totalRevenue": "Tổng doanh thu",
+    "totalRevenue": "Tổng dòng tiền",
     "totalPayouts": "Tổng chi trả",
-    "pendingWithdrawals": "Rút tiền chờ duyệt",
+    "pendingWithdrawals": "Yêu cầu rút tiền chờ duyệt",
     "platformBalance": "Số dư nền tảng",
     "approve": "Duyệt",
     "reject": "Từ chối",
@@ -420,7 +424,15 @@
     "accountHolder": "Chủ tài khoản",
     "complete": "Hoàn tất",
     "completeConfirm": "Xác nhận đã chuyển khoản cho yêu cầu rút tiền này?",
-    "completeSuccess": "Đã hoàn tất rút tiền"
+    "completeSuccess": "Hoàn tất rút tiền thành công",
+    "totalSystemBalance": "Tổng số dư hệ thống",
+    "escrowHolding": "Đang giữ ký quỹ",
+    "refundedAmount": "Số tiền đã hoàn",
+    "transferProofRequired": "Vui lòng tải lên ảnh chụp minh chứng chuyển khoản",
+    "transferProof": "Minh chứng",
+    "completeWithdrawal": "Hoàn tất rút tiền",
+    "confirmComplete": "Xác nhận chuyển khoản",
+    "revenueChart": "Biểu đồ dòng tiền"
   },
   "terms": {
     "title": "Điều khoản sử dụng",
@@ -1254,5 +1266,12 @@
       "shipment": "Vận chuyển",
       "warehouseItem": "Sản phẩm kho"
     }
+  },
+  "revenue": {
+    "incomeTabTitle": "Doanh thu nền tảng"
+  },
+  "actions": {
+    "approve": "Phê duyệt",
+    "reject": "Từ chối"
   }
 }

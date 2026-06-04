@@ -16,6 +16,7 @@ import {
   Empty,
   Skeleton,
   Tooltip,
+  Timeline,
 } from 'antd'
 import {
   ArrowLeftOutlined,
@@ -222,43 +223,93 @@ export default function SellerItemDetailPage() {
             bordered={false} 
             style={{ boxShadow: 'var(--shadow-sm)' }}
           >
-            <Descriptions 
-              bordered 
-              column={{ xs: 1, sm: 2 }} 
-              labelStyle={{ width: '25%', color: 'var(--color-text-secondary)', background: 'var(--color-bg-layout)' }}
-            >
-              <Descriptions.Item label={tc('tableHeader.status', 'Status')} span={2}>
-                <StatusBadge status={inboundShipment.status} />
-              </Descriptions.Item>
-              <Descriptions.Item label={t('provider', 'Provider')}>
-                <Text strong>{inboundShipment.providerCode}</Text>
-                {inboundShipment.externalCarrierName && <Text type="secondary"> ({inboundShipment.externalCarrierName})</Text>}
-              </Descriptions.Item>
-              <Descriptions.Item label={tc('trackingNumber', 'Tracking Number')}>
-                {inboundShipment.carrierTrackingNumber ? (
-                  <Text copyable>{inboundShipment.carrierTrackingNumber}</Text>
-                ) : (
-                  <Text type="secondary">{t('notAvailable', 'Not Available')}</Text>
-                )}
-              </Descriptions.Item>
-              <Descriptions.Item label={t('clientOrderCode', 'Client Order Code')}>
-                {inboundShipment.clientOrderCode ? (
-                  <Text copyable>{inboundShipment.clientOrderCode}</Text>
-                ) : (
-                  <Text type="secondary">-</Text>
-                )}
-              </Descriptions.Item>
-              <Descriptions.Item label={t('createdAt', 'Created At')}>
-                {formatDateTime(inboundShipment.createdAt)}
-              </Descriptions.Item>
-              <Descriptions.Item label={t('expectedArrival', 'Expected Arrival')}>
-                {inboundShipment.expectedArrivalAt ? (
-                  <Text strong>{formatDateTime(inboundShipment.expectedArrivalAt)}</Text>
-                ) : (
-                  <Text type="secondary">{t('notAvailable', 'Not Available')}</Text>
-                )}
-              </Descriptions.Item>
-            </Descriptions>
+            <Row gutter={[24, 24]}>
+              <Col xs={24} md={14}>
+                <Descriptions 
+                  bordered 
+                  column={1} 
+                  labelStyle={{ width: '35%', color: 'var(--color-text-secondary)', background: 'var(--color-bg-layout)' }}
+                >
+                  <Descriptions.Item label={tc('tableHeader.status', 'Status')}>
+                    <StatusBadge status={inboundShipment.status} />
+                  </Descriptions.Item>
+                  <Descriptions.Item label={t('provider', 'Provider')}>
+                    <Text strong>{inboundShipment.providerCode}</Text>
+                    {inboundShipment.externalCarrierName && <Text type="secondary"> ({inboundShipment.externalCarrierName})</Text>}
+                  </Descriptions.Item>
+                  <Descriptions.Item label={tc('trackingNumber', 'Tracking Number')}>
+                    {inboundShipment.carrierTrackingNumber ? (
+                      <Text copyable>{inboundShipment.carrierTrackingNumber}</Text>
+                    ) : (
+                      <Text type="secondary">{t('notAvailable', 'Not Available')}</Text>
+                    )}
+                  </Descriptions.Item>
+                  <Descriptions.Item label={t('clientOrderCode', 'Client Order Code')}>
+                    {inboundShipment.clientOrderCode ? (
+                      <Text copyable>{inboundShipment.clientOrderCode}</Text>
+                    ) : (
+                      <Text type="secondary">-</Text>
+                    )}
+                  </Descriptions.Item>
+                  <Descriptions.Item label={t('createdAt', 'Created At')}>
+                    {formatDateTime(inboundShipment.createdAt)}
+                  </Descriptions.Item>
+                  <Descriptions.Item label={t('expectedArrival', 'Expected Arrival')}>
+                    {inboundShipment.expectedArrivalAt ? (
+                      <Text strong>{formatDateTime(inboundShipment.expectedArrivalAt)}</Text>
+                    ) : (
+                      <Text type="secondary">{t('notAvailable', 'Not Available')}</Text>
+                    )}
+                  </Descriptions.Item>
+                </Descriptions>
+              </Col>
+              <Col xs={24} md={10}>
+                <div style={{ background: 'var(--color-bg-layout)', padding: '16px 20px', borderRadius: 8, height: '100%', minHeight: 200 }}>
+                  <Typography.Title level={5} style={{ marginTop: 0, marginBottom: 16 }}>{t('trackingTimeline', 'Tracking Timeline')}</Typography.Title>
+                  <Timeline
+                    items={[
+                      { 
+                        children: (
+                          <>
+                            <Text strong>{t('shipmentCreated', 'Shipment Created')}</Text>
+                            <br/>
+                            <Text type="secondary" style={{ fontSize: 12 }}>{formatDateTime(inboundShipment.createdAt)}</Text>
+                          </>
+                        ),
+                        color: 'blue'
+                      },
+                      ...(inboundShipment.trackingEvents || []).map((event: any) => ({
+                        children: (
+                          <>
+                            <Text strong>{event.normalizedStatus || event.carrierStatusRaw}</Text>
+                            <br/>
+                            <Text type="secondary" style={{ fontSize: 12 }}>
+                              {formatDateTime(event.eventTime || event.createdAt)} {event.location ? `- ${event.location}` : ''}
+                            </Text>
+                            {event.reasonDescription && (
+                              <div style={{ marginTop: 4 }}>
+                                <Text type="secondary" style={{ fontSize: 12, fontStyle: 'italic' }}>{event.reasonDescription}</Text>
+                              </div>
+                            )}
+                          </>
+                        ),
+                        color: 'gray'
+                      })),
+                      ...(inboundShipment.arrivedAt ? [{
+                        children: (
+                          <>
+                            <Text strong style={{ color: 'var(--color-success)' }}>{t('arrivedAtWarehouse', 'Arrived at Warehouse')}</Text>
+                            <br/>
+                            <Text type="secondary" style={{ fontSize: 12 }}>{formatDateTime(inboundShipment.arrivedAt)}</Text>
+                          </>
+                        ),
+                        color: 'green'
+                      }] : [])
+                    ]}
+                  />
+                </div>
+              </Col>
+            </Row>
           </Card>
         ) : (
           <Card bordered={false} style={{ boxShadow: 'var(--shadow-sm)' }}>

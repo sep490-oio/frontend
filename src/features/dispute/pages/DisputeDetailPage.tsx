@@ -111,21 +111,18 @@ export default function DisputeDetailPage() {
     setUploadedFiles((prev) => prev.filter((f) => f.id !== fileId))
   }
 
-  const handleSend = () => {
+  const handleSend = async () => {
     const trimmed = messageText.trim()
     if (!trimmed || !disputeId) return
-
     const attachmentIds = uploadedFiles.map((f) => f.id)
-    sendMessage.mutate(
-      { disputeId, message: trimmed, attachments: attachmentIds.length > 0 ? attachmentIds : undefined },
-      {
-        onSuccess: () => {
-          setMessageText('')
-          setUploadedFiles([])
-          mediaUpload.reset()
-        },
-      },
-    )
+    try {
+      await sendMessage.mutateAsync({ disputeId, message: trimmed, attachments: attachmentIds.length > 0 ? attachmentIds : undefined })
+      setMessageText('')
+      setUploadedFiles([])
+      mediaUpload.reset()
+    } catch {
+      // Ignore
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

@@ -114,6 +114,7 @@ export default function CreateAuctionPage() {
   const [form] = Form.useForm<FormValues>()
   const watchedAuctionType = Form.useWatch('auctionType', form)
   const watchedStartingPrice = Form.useWatch('startingPrice', form)
+  const watchedReservePrice = Form.useWatch('reservePrice', form)
   const isSealed = watchedAuctionType === AuctionType.Sealed
   const createAuction = useCreateAuction()
   const createAuctionFromItem = useCreateAuctionFromItem()
@@ -747,6 +748,10 @@ export default function CreateAuctionPage() {
                 validator: (_, value) => {
                   if (isSealed) return Promise.resolve()
                   if (value == null || value < 1000) return Promise.reject(t('bidIncrementMin1000', 'Bid increment must be at least 1,000'))
+                  const rp = watchedReservePrice
+                  if (rp != null && rp > 0 && value > rp) {
+                    return Promise.reject(t('bidIncrementLteReserve', 'Bid increment must not exceed reserve price'))
+                  }
                   return Promise.resolve()
                 },
               }]}

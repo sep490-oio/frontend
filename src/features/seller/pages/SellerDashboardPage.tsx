@@ -22,6 +22,7 @@ import { useMyAuctions } from '@/features/auction/auctionApi'
 import { useWallet } from '@/features/payment/api'
 import { useMyOrders } from '@/features/order/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
+import { SafeHtmlRenderer } from '@/components/ui/SafeHtmlRenderer'
 import { formatCurrency, formatDateTime } from '@/utils/format'
 import { SellerProfileStatus } from '@/types/enums'
 import type { AuctionListItemDto, OrderDto } from '@/types'
@@ -327,13 +328,13 @@ export default function SellerDashboardPage() {
       <Spin spinning={isStatsLoading}>
         <Row gutter={[isMobile ? 12 : 16, isMobile ? 12 : 16]} style={{ marginBottom: isMobile ? 20 : 32 }}>
             {[
+              { icon: <WalletOutlined style={{ color: 'var(--color-primary)', fontSize: 18 }} />, label: t('dashboard.walletBalance', 'Wallet Balance'), value: formatCurrency(wallet?.availableBalance ?? 0, wallet?.currency ?? 'VND') },
               { icon: <DollarOutlined style={{ color: 'var(--color-success)', fontSize: 18 }} />, label: t('dashboard.totalRevenue', 'Total Revenue'), value: formatCurrency(dashboardStats?.totalRevenue ?? 0, 'VND') },
               { icon: <ThunderboltOutlined style={{ color: 'var(--color-accent)', fontSize: 18 }} />, label: t('dashboard.activeAuctions', 'Active Auctions'), value: activeAuctions },
               { icon: <CheckCircleOutlined style={{ color: 'var(--color-success)', fontSize: 18 }} />, label: t('dashboard.soldAuctions', 'Sold Auctions'), value: soldAuctions },
               { icon: <EditOutlined style={{ color: 'var(--color-text-secondary)', fontSize: 18 }} />, label: t('dashboard.draftAuctions', 'Draft Auctions'), value: dashboardStats?.draftAuctions ?? 0 },
               { icon: <ClockCircleOutlined style={{ color: 'var(--color-warning)', fontSize: 18 }} />, label: t('dashboard.pendingReview', 'Pending Review'), value: pendingReviewItems },
               { icon: <SendOutlined style={{ color: 'var(--color-info)', fontSize: 18 }} />, label: t('dashboard.ordersAwaitingShipment', 'Pending Orders'), value: ordersAwaitingShipment },
-              { icon: <DollarOutlined style={{ color: 'var(--color-info)', fontSize: 18 }} />, label: t('dashboard.totalActiveBids', 'Active Bids'), value: dashboardStats?.totalActiveBids ?? 0 },
               { icon: <EyeOutlined style={{ color: 'var(--color-warning)', fontSize: 18 }} />, label: t('dashboard.totalActiveViews', 'Total Views'), value: dashboardStats?.totalActiveViews ?? 0 },
             ].map((stat) => (
               <Col key={stat.label} xs={12} sm={8} lg={6}>
@@ -537,9 +538,9 @@ export default function SellerDashboardPage() {
               )}
             </div>
             {profile.storeDescription && (
-              <Typography.Text type="secondary" style={{ fontSize: isMobile ? 14 : 15 }}>
-                {profile.storeDescription}
-              </Typography.Text>
+              <div style={{ marginTop: 8 }}>
+                <SafeHtmlRenderer html={profile.storeDescription} />
+              </div>
             )}
           </Col>
 
