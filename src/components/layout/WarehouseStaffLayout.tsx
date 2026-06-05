@@ -201,7 +201,7 @@ export function WarehouseStaffLayout() {
                   marginLeft: 8,
                 }}
               >
-                Warehouse
+                {tc('layout.warehousePortal', 'Warehouse')}
               </span>
             )}
           </Link>
@@ -246,7 +246,7 @@ export function WarehouseStaffLayout() {
                 marginLeft: 8,
               }}
             >
-              Warehouse
+              {tc('layout.warehousePortal', 'Warehouse')}
             </span>
           </span>
         }
@@ -306,7 +306,7 @@ export function WarehouseStaffLayout() {
               textOverflow: 'ellipsis',
             }}
           >
-            {isMobile ? 'Warehouse' : 'OIO Warehouse'}
+            {isMobile ? tc('layout.warehousePortal', 'Warehouse') : `OIO ${tc('layout.warehousePortal', 'Warehouse')}`}
           </span>
         </div>
 

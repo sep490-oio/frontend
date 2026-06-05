@@ -57,7 +57,7 @@ export function CompletedAuctionSummary({ auctionId, bidsData }: { auctionId: st
 
   // Component parts
   const renderBiddingHistory = () => {
-    if (!bidsData || !bidsData.items) return <Typography.Text type="secondary">No bidding history available.</Typography.Text>
+    if (!bidsData || !bidsData.items) return <Typography.Text type="secondary">{t('auctionDetail.summary.noBidHistory', 'No bidding history available.')}</Typography.Text>
     
     return (
       <Table
@@ -68,17 +68,17 @@ export function CompletedAuctionSummary({ auctionId, bidsData }: { auctionId: st
         scroll={{ x: 600 }}
         columns={[
           {
-            title: 'BIDDER',
+            title: t('auctionDetail.summary.col.bidder', 'BIDDER'),
             dataIndex: 'bidderDisplayName',
             key: 'bidder',
             render: (_text: string, record: any) => (
               <Link to={`/admin/users/${record.bidderId}`} style={{ fontWeight: 500 }}>
-                {record.bidderDisplayName || 'Unknown Bidder'}
+                {record.bidderDisplayName || t('auctionDetail.summary.unknownBidder', 'Unknown Bidder')}
               </Link>
             )
           },
           {
-            title: 'Amount',
+            title: t('auctionDetail.summary.col.amount', 'Amount'),
             dataIndex: 'amount',
             key: 'amount',
             align: 'right',
@@ -89,19 +89,19 @@ export function CompletedAuctionSummary({ auctionId, bidsData }: { auctionId: st
             }
           },
           {
-            title: 'Date',
+            title: t('auctionDetail.summary.col.date', 'Date'),
             dataIndex: 'createdAt',
             key: 'createdAt',
             render: (val: any) => val ? dayjs(val).format('HH:mm:ss DD/MM/YYYY') : '—'
           },
           {
-            title: 'Type',
+            title: t('auctionDetail.summary.col.type', 'Type'),
             dataIndex: 'isAutoBid',
             key: 'isAutoBid',
-            render: (isAuto: boolean) => <Tag color={isAuto ? 'blue' : 'default'}>{isAuto ? 'Auto' : 'Manual'}</Tag>
+            render: (isAuto: boolean) => <Tag color={isAuto ? 'blue' : 'default'}>{isAuto ? t('auctionDetail.summary.bidType.auto', 'Auto') : t('auctionDetail.summary.bidType.manual', 'Manual')}</Tag>
           },
           {
-            title: 'Status',
+            title: t('auctionDetail.summary.col.status', 'Status'),
             dataIndex: 'status',
             key: 'status',
             render: (val: string) => <StatusBadge status={val} />
@@ -118,21 +118,21 @@ export function CompletedAuctionSummary({ auctionId, bidsData }: { auctionId: st
 
     return (
     <Space direction="vertical" size={16} style={{ width: '100%' }}>
-      <Typography.Title level={5} style={{ margin: 0 }}>Financials Summary</Typography.Title>
+      <Typography.Title level={5} style={{ margin: 0 }}>{t('auctionDetail.summary.financialsSummary', 'Financials Summary')}</Typography.Title>
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={8}>
           <Card size="small" bordered={false} style={{ backgroundColor: '#f0f5ff', border: '1px solid #adc6ff' }}>
-            <Statistic title="Final Bid Amount" value={formatCurrency(finalBidAmount, summary.currency ?? undefined)} valueStyle={{ color: '#096dd9' }} />
+            <Statistic title={t('auctionDetail.summary.stat.finalBid', 'Final Bid Amount')} value={formatCurrency(finalBidAmount, summary.currency ?? undefined)} valueStyle={{ color: '#096dd9' }} />
           </Card>
         </Col>
         <Col xs={24} sm={8}>
           <Card size="small" bordered={false} style={{ backgroundColor: '#fff1f0', border: '1px solid #ffa39e' }}>
-            <Statistic title="Platform Commission" value={formatCurrency(platformCommission, summary.currency ?? undefined)} valueStyle={{ color: '#cf1322' }} />
+            <Statistic title={t('auctionDetail.summary.stat.platformCommission', 'Platform Commission')} value={formatCurrency(platformCommission, summary.currency ?? undefined)} valueStyle={{ color: '#cf1322' }} />
           </Card>
         </Col>
         <Col xs={24} sm={8}>
           <Card size="small" bordered={false} style={{ backgroundColor: '#f6ffed', border: '1px solid #b7eb8f' }}>
-            <Statistic title="Seller Payout" value={formatCurrency(sellerPayout, summary.currency ?? undefined)} valueStyle={{ color: '#389e0d' }} />
+            <Statistic title={t('auctionDetail.summary.stat.sellerPayout', 'Seller Payout')} value={formatCurrency(sellerPayout, summary.currency ?? undefined)} valueStyle={{ color: '#389e0d' }} />
           </Card>
         </Col>
       </Row>
@@ -143,7 +143,7 @@ export function CompletedAuctionSummary({ auctionId, bidsData }: { auctionId: st
         <Typography.Title level={5} style={{ margin: 0 }}>{t('completedAuctions.detail.orderInfo', 'Order Information')}</Typography.Title>
         {order ? (
           <Button type="primary" icon={<EyeOutlined />} onClick={() => navigate(`/admin/orders/${summary.orderId}`)}>
-            View Order Detail
+            {t('auctionDetail.summary.action.viewOrder', 'View Order Detail')}
           </Button>
         ) : (summary.winnerId && summary.finalPrice > 0) ? (
           <Button 
@@ -153,7 +153,7 @@ export function CompletedAuctionSummary({ auctionId, bidsData }: { auctionId: st
               onSuccess: () => refetch() // refetch the data to show the order
             })}
           >
-            Create Order
+            {t('auctionDetail.summary.action.createOrder', 'Create Order')}
           </Button>
         ) : null}
       </Flex>
@@ -171,7 +171,7 @@ export function CompletedAuctionSummary({ auctionId, bidsData }: { auctionId: st
             {' '}{order.currency}
           </Descriptions.Item>
           {order.amountPaid != null && (
-            <Descriptions.Item label="Amount Paid (Deposit)">
+            <Descriptions.Item label={t('auctionDetail.summary.stat.amountPaidDeposit', 'Amount Paid (Deposit)')}>
               {formatCurrency(order.amountPaid)}
             </Descriptions.Item>
           )}
@@ -207,27 +207,27 @@ export function CompletedAuctionSummary({ auctionId, bidsData }: { auctionId: st
 
       {escrowSummary && (
         <>
-          <Typography.Title level={5} style={{ margin: 0, marginTop: 16 }}>Financials & Escrow</Typography.Title>
+          <Typography.Title level={5} style={{ margin: 0, marginTop: 16 }}>{t('auctionDetail.summary.financialsEscrow', 'Financials & Escrow')}</Typography.Title>
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={8}>
               <Card size="small" bordered={false} style={{ backgroundColor: '#fff7e6', border: '1px solid #ffd591' }}>
-                <Statistic title="Total Held" value={formatCurrency(escrowSummary.totalHeld ?? 0, escrowSummary.currency)} valueStyle={{ color: '#d46b08' }} />
+                <Statistic title={t('auctionDetail.summary.stat.totalHeld', 'Total Held')} value={formatCurrency(escrowSummary.totalHeld ?? 0, escrowSummary.currency)} valueStyle={{ color: '#d46b08' }} />
               </Card>
             </Col>
             <Col xs={24} sm={8}>
               <Card size="small" bordered={false} style={{ backgroundColor: '#f6ffed', border: '1px solid #b7eb8f' }}>
-                <Statistic title="Total Released" value={formatCurrency(escrowSummary.totalReleased ?? 0, escrowSummary.currency)} valueStyle={{ color: '#389e0d' }} />
+                <Statistic title={t('auctionDetail.summary.stat.totalReleased', 'Total Released')} value={formatCurrency(escrowSummary.totalReleased ?? 0, escrowSummary.currency)} valueStyle={{ color: '#389e0d' }} />
               </Card>
             </Col>
             <Col xs={24} sm={8}>
               <Card size="small" bordered={false} style={{ backgroundColor: '#fff1f0', border: '1px solid #ffa39e' }}>
-                <Statistic title="Total Refunded" value={formatCurrency(escrowSummary.totalRefunded ?? 0, escrowSummary.currency)} valueStyle={{ color: '#cf1322' }} />
+                <Statistic title={t('auctionDetail.summary.stat.totalRefunded', 'Total Refunded')} value={formatCurrency(escrowSummary.totalRefunded ?? 0, escrowSummary.currency)} valueStyle={{ color: '#cf1322' }} />
               </Card>
             </Col>
             {(escrowSummary as any).platformCommission != null && (
               <Col xs={24} sm={8}>
                 <Card size="small" bordered={false} style={{ backgroundColor: '#f0f5ff', border: '1px solid #adc6ff' }}>
-                  <Statistic title="Platform Commission" value={formatCurrency((escrowSummary as any).platformCommission ?? 0, escrowSummary.currency)} valueStyle={{ color: '#096dd9' }} />
+                  <Statistic title={t('auctionDetail.summary.stat.platformCommission', 'Platform Commission')} value={formatCurrency((escrowSummary as any).platformCommission ?? 0, escrowSummary.currency)} valueStyle={{ color: '#096dd9' }} />
                 </Card>
               </Col>
             )}
@@ -465,9 +465,9 @@ export function CompletedAuctionSummary({ auctionId, bidsData }: { auctionId: st
   }
 
   const items = [
-    { key: 'bids', label: '🔨 Bidding History', children: renderBiddingHistory() },
-    { key: 'financials', label: '🧾 Order & Financials', children: renderOrderFinancials() },
-    { key: 'fulfillment', label: '📦 Fulfillment & Evidence', children: renderFulfillment() },
+    { key: 'bids', label: t('auctionDetail.summary.tab.bidHistory', '🔨 Bidding History'), children: renderBiddingHistory() },
+    { key: 'financials', label: t('auctionDetail.summary.tab.orderFinancials', '🧾 Order & Financials'), children: renderOrderFinancials() },
+    { key: 'fulfillment', label: t('auctionDetail.summary.tab.fulfillment', '📦 Fulfillment & Evidence'), children: renderFulfillment() },
   ]
 
   return (

@@ -137,7 +137,12 @@ export default function SellerAuctionsPage() {
           <Flex vertical gap={4}>
             <Text strong style={{ fontSize: 16 }}>{record.itemTitle}</Text>
             {record.itemStatus && (
-               <Text type="secondary" style={{ fontSize: 13 }}>Condition: {record.itemStatus}</Text>
+              <Flex align="center" gap={6}>
+                <Text type="secondary" style={{ fontSize: 13 }}>
+                  {tc('itemStatusLabel', 'Item status')}:
+                </Text>
+                <StatusBadge status={record.itemStatus} size="small" />
+              </Flex>
             )}
           </Flex>
         </Space>

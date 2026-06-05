@@ -34,7 +34,9 @@
       "buying": "Buying & Auctions",
       "account": "Account & Wallet",
       "settings": "Security & Settings"
-    }
+    },
+    "myPurchases": "My Purchases",
+    "settings": "Settings"
   },
   "action": {
     "login": "Login",
@@ -50,6 +52,7 @@
     "search": "Search",
     "filter": "Filter",
     "reset": "Reset",
+    "retry": "Retry",
     "clearFilters": "Clear filters",
     "view": "View",
     "viewAll": "View All",
@@ -218,8 +221,10 @@
     "copyright": "© {{year}} OIO. All rights reserved.",
     "statItems": "items",
     "statUsers": "users",
-    "statVerified": "verified"
+    "statVerified": "verified",
+    "warehousePortal": "Warehouse"
   },
+  "itemStatusLabel": "Item status",
   "footer": {
     "tagline": "Premium auction platform for discerning collectors.",
     "platform": "Platform",

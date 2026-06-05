@@ -5,10 +5,29 @@ import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useSetCuration, useTriggerEmergency, useResolveEmergency, useFlagAuction, useAdminForceCancelAuction, useAdminTerminateAuction, useAdminExtendAuctionTime, useAdminOverrideAuctionStatus, useAdminForceEndAuction, useAdminRelistAuction, useAdminForceStartQualification, useAdminForceStartBidding } from '@/features/admin/api'
 
+function useAuctionStatusOptions() {
+  const { t } = useTranslation('admin')
+  return [
+    { value: 'draft', label: t('auctionDetail.statusOverride.draft', 'Draft') },
+    { value: 'pending', label: t('auctionDetail.statusOverride.pending', 'Pending') },
+    { value: 'approved', label: t('auctionDetail.statusOverride.approved', 'Approved') },
+    { value: 'scheduled', label: t('auctionDetail.statusOverride.scheduled', 'Scheduled') },
+    { value: 'active', label: t('auctionDetail.statusOverride.active', 'Active') },
+    { value: 'ended', label: t('auctionDetail.statusOverride.ended', 'Ended') },
+    { value: 'sold', label: t('auctionDetail.statusOverride.sold', 'Sold') },
+    { value: 'completed', label: t('auctionDetail.statusOverride.completed', 'Completed') },
+    { value: 'payment_defaulted', label: t('auctionDetail.statusOverride.payment_defaulted', 'Payment Defaulted') },
+    { value: 'cancelled', label: t('auctionDetail.statusOverride.cancelled', 'Cancelled') },
+    { value: 'failed', label: t('auctionDetail.statusOverride.failed', 'Failed') },
+    { value: 'terminated', label: t('auctionDetail.statusOverride.terminated', 'Terminated') },
+  ]
+}
+
 export function ActiveAuctionControls({ auction, refetch }: { auction: any, refetch: () => void }) {
   const { t } = useTranslation('admin')
   const { t: tc } = useTranslation('common')
   const { message } = App.useApp()
+  const auctionStatusOptions = useAuctionStatusOptions()
   const { isMobile } = useBreakpoint()
   const id = auction.id
 
@@ -446,20 +465,7 @@ export function ActiveAuctionControls({ auction, refetch }: { auction: any, refe
         <Alert type="error" showIcon message={t('auctionControl.overrideWarning', 'Status override bypasses normal state machine. No domain events are raised.')} style={{ marginBottom: 16 }} />
         <Form form={overrideForm} layout="vertical" onFinish={handleOverrideStatus}>
           <Form.Item name="overrideStatus" label={t('auctionControl.newStatus', 'New Status')} rules={[{ required: true }]}>
-            <Select placeholder={t('auctionControl.selectNewStatus', 'Select new status')} options={[
-              { value: 'draft', label: 'Draft' },
-              { value: 'pending', label: 'Pending' },
-              { value: 'approved', label: 'Approved' },
-              { value: 'scheduled', label: 'Scheduled' },
-              { value: 'active', label: 'Active' },
-              { value: 'ended', label: 'Ended' },
-              { value: 'sold', label: 'Sold' },
-              { value: 'completed', label: 'Completed' },
-              { value: 'payment_defaulted', label: 'Payment Defaulted' },
-              { value: 'cancelled', label: 'Cancelled' },
-              { value: 'failed', label: 'Failed' },
-              { value: 'terminated', label: 'Terminated' },
-            ]} />
+            <Select placeholder={t('auctionControl.selectNewStatus', 'Select new status')} options={auctionStatusOptions} />
           </Form.Item>
           <Form.Item name="overrideReason" label={t('auctionControl.reason', 'Reason')} rules={[{ required: true }]}>
             <Input.TextArea rows={2} placeholder={t('auctionControl.overrideReasonPlaceholder', 'Reason for status override...')} />

@@ -315,23 +315,23 @@ export function PlatformRevenueChart() {
                 <div style={{ fontFamily: SANS_FONT, fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 6 }}>
                   {chartData.mapped[hoveredIndex].data.date}
                 </div>
-                <TooltipRow color={COLORS.commission} label="Commission" value={chartData.mapped[hoveredIndex].data.commission} currency={data?.currency} />
-                <TooltipRow color={COLORS.inspectionFees} label="Inspection" value={chartData.mapped[hoveredIndex].data.inspectionFees} currency={data?.currency} />
-                <TooltipRow color={COLORS.forfeitIncome} label="Forfeit" value={chartData.mapped[hoveredIndex].data.forfeitIncome} currency={data?.currency} />
-                <TooltipRow color={COLORS.refunds} label="Refunds" value={-chartData.mapped[hoveredIndex].data.refunds} currency={data?.currency} />
+                <TooltipRow color={COLORS.commission} label={t('payments.revenueChart.label.commission', 'Commission')} value={chartData.mapped[hoveredIndex].data.commission} currency={data?.currency} />
+                <TooltipRow color={COLORS.inspectionFees} label={t('payments.revenueChart.label.inspection', 'Inspection')} value={chartData.mapped[hoveredIndex].data.inspectionFees} currency={data?.currency} />
+                <TooltipRow color={COLORS.forfeitIncome} label={t('payments.revenueChart.label.forfeit', 'Forfeit')} value={chartData.mapped[hoveredIndex].data.forfeitIncome} currency={data?.currency} />
+                <TooltipRow color={COLORS.refunds} label={t('payments.revenueChart.label.refunds', 'Refunds')} value={-chartData.mapped[hoveredIndex].data.refunds} currency={data?.currency} />
                 <div style={{ borderTop: '1px solid var(--color-border)', marginTop: 6, paddingTop: 6 }}>
-                  <TooltipRow color={COLORS.netRevenue} label="Net" value={chartData.mapped[hoveredIndex].data.netRevenue} currency={data?.currency} bold />
+                  <TooltipRow color={COLORS.netRevenue} label={t('payments.revenueChart.label.net', 'Net')} value={chartData.mapped[hoveredIndex].data.netRevenue} currency={data?.currency} bold />
                 </div>
               </div>
             )}
 
             {/* Legend */}
             <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 8, flexWrap: 'wrap' }}>
-              <LegendItem color={COLORS.commission} label="Commission 10%" />
-              <LegendItem color={COLORS.inspectionFees} label="Inspection 3%" />
-              <LegendItem color={COLORS.forfeitIncome} label="Forfeit" />
-              <LegendItem color={COLORS.refunds} label="Refunds" />
-              <LegendItem color={COLORS.netRevenue} label="Net Revenue" line />
+              <LegendItem color={COLORS.commission} label={t('payments.revenueChart.legend.commission', 'Commission 10%')} />
+              <LegendItem color={COLORS.inspectionFees} label={t('payments.revenueChart.legend.inspection', 'Inspection 3%')} />
+              <LegendItem color={COLORS.forfeitIncome} label={t('payments.revenueChart.legend.forfeit', 'Forfeit')} />
+              <LegendItem color={COLORS.refunds} label={t('payments.revenueChart.legend.refunds', 'Refunds')} />
+              <LegendItem color={COLORS.netRevenue} label={t('payments.revenueChart.legend.netRevenue', 'Net Revenue')} line />
             </div>
           </div>
         )}

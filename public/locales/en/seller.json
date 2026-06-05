@@ -116,7 +116,15 @@
     "walletBalance": "Wallet Balance",
     "withdraw": "Withdraw",
     "history": "History",
-    "ordersAwaitingShipment": "Awaiting Shipment"
+    "ordersAwaitingShipment": "Pending Orders",
+    "totalRevenue": "Total Revenue",
+    "soldAuctions": "Sold Auctions",
+    "draftAuctions": "Draft Auctions",
+    "totalActiveViews": "Total Views",
+    "actionCenter": "Action Center",
+    "rejectedItems": "Rejected items need fix",
+    "warehouseReturns": "Items being returned by warehouse",
+    "orderReturns": "Items buyer is returning after dispute"
   },
   "pendingActions": "Pending Actions",
   "itemsPendingReview": "{{count}} items pending review",
@@ -230,5 +238,41 @@
   },
   "verificationWizard": {
     "pending": "pending"
+  },
+  "trustScore": "Trust Score",
+  "amount": "Amount",
+  "orderNumber": "Order ID",
+  "noOrders": "No recent orders",
+  "recentOrders": "Recent Orders",
+  "auctionOverview": {
+    "title": "Auction Overview",
+    "subtitle": "All your items and their auction sessions in one place",
+    "searchPlaceholder": "Search items...",
+    "empty": "No auction sessions yet",
+    "createAuction": "Create Auction",
+    "noAuction": "No auction",
+    "stats": {
+      "totalItems": "Total Items",
+      "withAuctions": "With Auctions",
+      "active": "Active",
+      "sold": "Sold"
+    },
+    "columns": {
+      "item": "Item",
+      "itemStatus": "Item Status",
+      "latestAuction": "Latest Auction",
+      "actions": "Actions",
+      "endTime": "End Time",
+      "type": "Type",
+      "status": "Status",
+      "currentPrice": "Current Price",
+      "bids": "Bids",
+      "start": "Start",
+      "end": "End"
+    },
+    "actionTitles": {
+      "view": "View",
+      "dashboard": "Dashboard"
+    }
   }
 }

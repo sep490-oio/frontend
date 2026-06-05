@@ -15,7 +15,11 @@
     "usersManagement": "Users Management",
     "catalogAndAuctions": "Catalog & Auctions",
     "ordersAndFinances": "Orders & Finances",
-    "systemAndSettings": "System & Settings"
+    "systemAndSettings": "System & Settings",
+    "reportedContent": "Reported Content",
+    "orders": "Orders",
+    "items": "Items",
+    "auctions": "Auctions"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -94,7 +98,14 @@
     "severityCritical": "Critical",
     "reasonLabel": "Reason",
     "reasonRequired": "Please enter a reason",
-    "reasonPlaceholder": "Enter reason for flagging..."
+    "reasonPlaceholder": "Enter reason for flagging...",
+    "emailConfirmed": "Email Confirmed",
+    "emailUnconfirmed": "Email Unconfirmed",
+    "flag": "Flag",
+    "flagSuccess": "User flagged successfully",
+    "identityUnverified": "Identity Unverified",
+    "identityVerified": "Identity Verified",
+    "viewUser": "View User"
   },
   "userDetail": {
     "title": "User Detail",
@@ -115,7 +126,8 @@
     "phoneConfirmed": "Phone Confirmed",
     "twoFactor": "Two-Factor Auth",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "createdAt": "Created At"
   },
   "verifications": {
     "title": "Identity Verifications",
@@ -131,7 +143,8 @@
     "filterStatus": "Filter by status",
     "allStatuses": "All statuses",
     "approveSuccess": "Verification approved successfully",
-    "rejectSuccess": "Verification rejected successfully"
+    "rejectSuccess": "Verification rejected successfully",
+    "approveConfirm": "Are you sure you want to approve this verification?"
   },
   "verificationDetail": {
     "title": "Verification Detail",
@@ -159,8 +172,27 @@
     "rejectSuccess": "Seller profile rejected successfully",
     "rejectReason": "Rejection Reason",
     "rejectReasonPlaceholder": "Enter rejection reason...",
+    "rejectReasonPrompt": "Enter rejection reason:",
     "description": "Description",
-    "trustScore": "Trust Score"
+    "trustScore": "Trust Score",
+    "invalidId": "Invalid ID",
+    "errorLoadingProfile": "Error loading profile",
+    "detailBreadcrumb": "Detail",
+    "detailTitle": "Seller Profile Detail",
+    "userIdentity": "User Identity",
+    "storeInfo": "Store Information",
+    "financialOverview": "Wallet Balance",
+    "availableBalance": "Available Balance",
+    "averageRating": "Average Rating",
+    "lastUpdated": "Last Updated",
+    "noDescription": "No description provided",
+    "pendingBalance": "Pending Balance",
+    "storeDescription": "Store Description",
+    "totalSales": "Total Items Sold",
+    "totalSalesAmount": "Total Sales",
+    "trustScoreUpdated": "Last updated: ",
+    "verifiedAt": "Verified At",
+    "walletNotActivated": "Wallet Not Activated"
   },
   "reviewQueue": {
     "title": "Review Queue",
@@ -179,7 +211,8 @@
     "reviewerIdPlaceholder": "Enter reviewer ID...",
     "assignSuccess": "Reviewer assigned successfully",
     "approveSuccess": "Item approved successfully",
-    "rejectSuccess": "Item rejected successfully"
+    "rejectSuccess": "Item rejected successfully",
+    "confirmApprove": "Are you sure you want to approve this item?"
   },
   "itemDetail": {
     "title": "Item Detail",
@@ -193,7 +226,93 @@
     "rejectReasonPlaceholder": "Enter rejection reason...",
     "condition": "Condition",
     "quantity": "Quantity",
-    "category": "Category"
+    "category": "Category",
+    "overview": "Overview",
+    "qa": "Q&A",
+    "auctionHistory": "Auction History",
+    "logistics": "Logistics & Fulfillment",
+    "moderation": "Moderation & Inspection",
+    "description": "Description",
+    "gallery": "Gallery",
+    "warehouseTag": "WAREHOUSE",
+    "performedAction": "Performed action",
+    "noModerationHistory": "No moderation history available.",
+    "reviewerTag": {
+      "seller": "Seller",
+      "adminInspector": "Admin/Inspector"
+    },
+    "auctionHistoryColumns": {
+      "id": "ID",
+      "type": "Type",
+      "status": "Status",
+      "startingPrice": "Starting Price",
+      "currentPrice": "Current Price",
+      "bids": "Bids",
+      "startTime": "Start Time",
+      "endTime": "End Time"
+    }
+  },
+  "auctionDetail": {
+    "notFoundTitle": "Auction Not Found",
+    "notFoundDesc": "The auction you are looking for does not exist or has been removed.",
+    "backToList": "Back to List",
+    "header": {
+      "time": "Time",
+      "startPriceIncrement": "Start Price / Increment",
+      "finalPrice": "Final Price",
+      "buyNow": "BUY NOW",
+      "winner": "Winner",
+      "totalBids": "Total Bids"
+    },
+    "statusOverride": {
+      "draft": "Draft",
+      "pending": "Pending",
+      "approved": "Approved",
+      "scheduled": "Scheduled",
+      "active": "Active",
+      "ended": "Ended",
+      "sold": "Sold",
+      "completed": "Completed",
+      "payment_defaulted": "Payment Defaulted",
+      "cancelled": "Cancelled",
+      "failed": "Failed",
+      "terminated": "Terminated"
+    },
+    "summary": {
+      "noBidHistory": "No bidding history available.",
+      "unknownBidder": "Unknown Bidder",
+      "financialsSummary": "Financials Summary",
+      "financialsEscrow": "Financials & Escrow",
+      "col": {
+        "bidder": "BIDDER",
+        "amount": "Amount",
+        "date": "Date",
+        "type": "Type",
+        "status": "Status"
+      },
+      "bidType": {
+        "auto": "Auto",
+        "manual": "Manual"
+      },
+      "stat": {
+        "finalBid": "Final Bid Amount",
+        "platformCommission": "Platform Commission",
+        "sellerPayout": "Seller Payout",
+        "amountPaidDeposit": "Amount Paid (Deposit)",
+        "totalHeld": "Total Held",
+        "totalReleased": "Total Released",
+        "totalRefunded": "Total Refunded"
+      },
+      "action": {
+        "viewOrder": "View Order Detail",
+        "createOrder": "Create Order"
+      },
+      "tab": {
+        "bidHistory": "🔨 Bidding History",
+        "orderFinancials": "🧾 Order & Financials",
+        "fulfillment": "📦 Fulfillment & Evidence"
+      }
+    }
   },
   "auctionControl": {
     "title": "Auction Control",
@@ -250,7 +369,59 @@
       "dismissed": "Dismissed"
     },
     "cancelBidWarning": "This action will cancel the bid and be recorded in the audit log. The cancellation reason will be saved.",
-    "cancelBidPlaceholder": "Enter cancellation reason (will be saved to audit log)…"
+    "cancelBidPlaceholder": "Enter cancellation reason (will be saved to audit log)…",
+    "adminLifecycleActions": "Admin Lifecycle Actions",
+    "auctionEnd": "Auction End",
+    "auctionStart": "Auction Start",
+    "confirmOverride": "Confirm Override",
+    "createRelisted": "Create Relisted Auction",
+    "destructiveWarning": "These actions are irreversible and affect all bidders, deposits, and orders.",
+    "extendAuctionTime": "Extend Auction Time",
+    "extendReasonPlaceholder": "Reason for extending...",
+    "extendSuccess": "Auction time extended",
+    "extendTimeBtn": "Extend Time",
+    "extensionMinutes": "Extension (minutes)",
+    "forceCancelAlert": "This will cancel the auction, release all bids, return deposits, and release the item back to active.",
+    "forceCancelBtn": "Force Cancel",
+    "forceCancelTitle": "Force Cancel Auction",
+    "forceEndAlert": "This will immediately end the auction and resolve the winner (if any).",
+    "forceEndBtn": "Force End",
+    "forceEndTitle": "Force End Auction",
+    "forceStartBiddingBtn": "Force Start Bidding",
+    "forceStartBiddingContent": "Are you sure you want to force start the bidding phase NOW?",
+    "forceStartBiddingSuccess": "Bidding started successfully",
+    "forceStartBiddingTitle": "Force Start Bidding",
+    "forceStartQualBtn": "Force Start Qual",
+    "forceStartQualContent": "Are you sure you want to force start the qualification window NOW?",
+    "forceStartQualSuccess": "Qualification window started successfully",
+    "forceStartQualTitle": "Force Start Qualification",
+    "lifecycleProgression": "Lifecycle Progression",
+    "lifecycleReasonPlaceholder": "Enter the reason for this action...",
+    "lifecycleSuccess": "Action completed successfully",
+    "newStatus": "New Status",
+    "openOverrideForm": "Open Override Form",
+    "openRelistForm": "Open Relist Form",
+    "overrideReasonPlaceholder": "Reason for status override...",
+    "overrideStatusTitle": "Override Auction Status",
+    "overrideSuccess": "Status overridden",
+    "overrideWarning": "Status override bypasses normal state machine. No domain events are raised.",
+    "priorityTooltip": "Higher values will be displayed more prominently",
+    "qualEnd": "Qualification End",
+    "qualStart": "Qualification Start",
+    "reason": "Reason",
+    "reasonOptional": "Reason (optional)",
+    "relistAuction": "Relist Auction",
+    "relistDesc": "Create a new auction from this one (for failed/cancelled/terminated auctions).",
+    "relistReasonPlaceholder": "Reason for relisting...",
+    "relistSuccess": "Auction relisted",
+    "relistTitle": "Relist Auction",
+    "selectNewStatus": "Select new status",
+    "tabDangerZone": "Danger Zone",
+    "tabDisplayExtend": "Display & Extend",
+    "tabModeration": "Moderation & Emergency",
+    "terminateAlert": "This will permanently terminate the auction. All bids are cancelled, winner is cleared, and the item cannot be relisted from this auction.",
+    "terminateBtn": "Terminate",
+    "terminateTitle": "Terminate Auction"
   },
   "reports": {
     "title": "Reports",
@@ -420,7 +591,190 @@
     "accountHolder": "Account Holder",
     "complete": "Complete",
     "completeConfirm": "Confirm bank transfer completed for this withdrawal?",
-    "completeSuccess": "Withdrawal completed"
+    "completeSuccess": "Withdrawal completed",
+    "allTypes": "All Types",
+    "filterType": "Filter Type",
+    "searchWithdrawal": "Search withdrawal...",
+    "searchTransaction": "Search transaction...",
+    "searchEscrow": "Search escrow...",
+    "escrowActionReasonPlaceholder": "Provide a reason for this action...",
+    "txnType": {
+      "payment": "Payment",
+      "deposit": "Deposit",
+      "fee": "Fee",
+      "refund": "Refund",
+      "payout": "Payout",
+      "withdrawal": "Withdrawal"
+    },
+    "escrowAction": {
+      "release": "Release to seller",
+      "refund": "Refund to buyer",
+      "releaseSuccess": "Escrow released to seller",
+      "refundSuccess": "Escrow refunded to buyer",
+      "actionFailed": "Action failed"
+    },
+    "section": {
+      "revenueChart": "Revenue Chart",
+      "pendingWithdrawals": "Pending Withdrawals",
+      "noPendingWithdrawals": "No pending withdrawals",
+      "viewAll": "View All"
+    },
+    "txnDetail": {
+      "title": "Transaction Detail",
+      "label": {
+        "txnNumber": "Txn #",
+        "id": "ID",
+        "type": "Type",
+        "status": "Status",
+        "user": "User",
+        "grossAmount": "Gross Amount",
+        "fee": "Fee",
+        "netAmount": "Net Amount",
+        "gateway": "Gateway",
+        "description": "Description",
+        "order": "Order",
+        "auctionItem": "Auction Item",
+        "created": "Created",
+        "processed": "Processed",
+        "reference": "Reference",
+        "paymentMethod": "Payment Method",
+        "viewDetails": "View Details",
+        "buyer": "Buyer",
+        "seller": "Seller",
+        "item": "Item",
+        "timeline": "Timeline",
+        "actions": "Actions",
+        "held": "Held",
+        "released": "Released",
+        "refunded": "Refunded",
+        "orderPrefix": "Order",
+        "escrowId": "Escrow ID",
+        "amount": "Amount",
+        "reasonRequired": "Reason *",
+        "disputed": "DISPUTED",
+        "copy": "Copy",
+        "copied": "Copied!",
+        "copyOrderId": "Copy Order ID",
+        "transferProof": "Transfer proof"
+      }
+    },
+    "escrowForceAction": {
+      "releaseTitle": "Force Release Escrow to Seller",
+      "refundTitle": "Force Refund Escrow to Buyer",
+      "releaseOk": "Release",
+      "refundOk": "Refund"
+    },
+    "revenueChart": {
+      "label": {
+        "commission": "Commission",
+        "inspection": "Inspection",
+        "forfeit": "Forfeit",
+        "refunds": "Refunds",
+        "net": "Net"
+      },
+      "legend": {
+        "commission": "Commission 10%",
+        "inspection": "Inspection 3%",
+        "forfeit": "Forfeit",
+        "refunds": "Refunds",
+        "netRevenue": "Net Revenue"
+      }
+    },
+    "incomeCategory": {
+      "commission": "Commission",
+      "inspection_fee": "Inspection Fee",
+      "forfeit": "Forfeit",
+      "refund": "Refund",
+      "other": "Other"
+    },
+    "incomeTable": {
+      "searchPlaceholder": "Search descriptions...",
+      "filterByCategory": "Filter by Category",
+      "totalCredit": "Total Credit",
+      "totalDebit": "Total Debit",
+      "creditIncome": "Credit (Income)",
+      "debitOutflow": "Debit (Outflow)"
+    },
+    "withdrawalStatus": {
+      "pending": "Pending",
+      "completed": "Completed",
+      "rejected": "Rejected"
+    },
+    "withdrawalTimeline": {
+      "requested": "Withdrawal Requested",
+      "completed": "Completed",
+      "rejected": "Rejected",
+      "byUser": "By User",
+      "processedBy": "Processed By",
+      "rejectedBy": "Rejected By",
+      "unknown": "Unknown",
+      "unknownTime": "Unknown Time",
+      "systemAdmin": "System/Admin",
+      "note": "Note",
+      "reason": "Reason"
+    },
+    "auditTimeline": "Audit Timeline",
+    "bankDetails": "Bank Information",
+    "commission": "Commission",
+    "comparedToLastWeek": "vs. last week",
+    "completeWithdrawal": "Complete Withdrawal",
+    "confirmComplete": "Confirm Transfer",
+    "escrowBreakdown": "Escrow Breakdown",
+    "escrowDetails": "Escrow Details",
+    "escrowHolding": "Escrow Holding",
+    "escrowSource": "Source Information",
+    "escrowStatus": {
+      "forfeited": "Forfeited",
+      "holding": "Holding",
+      "refunded": "Refunded",
+      "released": "Released"
+    },
+    "escrowTimeline": {
+      "actionBy": "Action by",
+      "adminAction": "Admin Action",
+      "forfeitedToPlatform": "Forfeited to Platform",
+      "fundsHeld": "Funds Held in Escrow",
+      "refundedToBuyer": "Refunded to Buyer",
+      "releasedToSeller": "Released to Seller",
+      "systemLock": "System automated lock for order"
+    },
+    "escrowTotal": "Total Escrow",
+    "forfeit": "Forfeit",
+    "forfeitedToPlatform": "Forfeited to Platform Revenue",
+    "inspectionFees": "Inspection Fees",
+    "moneyDistribution": "Money Distribution",
+    "netAmount": "Net Amount",
+    "netRevenue": "Net Revenue",
+    "orderLabel": "Order",
+    "pendingCount": "pending",
+    "platformCommission": "Platform Commission",
+    "refundedAmount": "Refunded Amount",
+    "refundedLabel": "Refunded",
+    "refundedToBuyer": "Refunded to Buyer",
+    "releasedLabel": "Released",
+    "systemAuto": "System (Auto)",
+    "totalSystemBalance": "Total System Balance",
+    "transferNotePlaceholder": "Optional: transfer reference number or note",
+    "transferProof": "Proof",
+    "transferProofLabel": "Upload transfer proof screenshot",
+    "transferProofRequired": "Please upload transfer proof screenshot",
+    "transferredToSeller": "Transferred to Seller",
+    "uploadProof": "Click to upload screenshot",
+    "walletDetails": "Wallet Details",
+    "withdrawalDetails": "Withdrawal Details & Audit",
+    "activityStats": "Activity Stats",
+    "auditTrail": "Audit Trail",
+    "buyer": "Buyer",
+    "completedPayments": "Completed Payments",
+    "failedPayments": "Failed Payments",
+    "holdingEscrowCount": "Holding Escrow",
+    "holdingEscrowTooltip": "Total funds currently held in escrow across all in-progress orders.",
+    "item": "Item",
+    "platformBalanceTooltip": "Net platform balance after settlements, refunds, and pending releases.",
+    "refundedEscrow": "Refunded Escrow",
+    "releasedEscrow": "Released Escrow",
+    "seller": "Seller",
+    "walletTopUps": "Wallet Top-ups"
   },
   "terms": {
     "title": "Terms & Conditions",
@@ -935,9 +1289,12 @@
     "loading": "Loading...",
     "noData": "No data",
     "back": "Back",
+    "backToList": "Back to List",
     "save": "Save",
     "create": "Create",
-    "id": "ID"
+    "id": "ID",
+    "no": "No",
+    "yes": "Yes"
   },
   "moderation": {
     "title": "Moderation Center",
@@ -1027,7 +1384,9 @@
       "on_delivering": "On Delivering",
       "delivered": "Delivered",
       "shipping_overdue": "Shipping Overdue",
-      "escalated": "Escalated"
+      "escalated": "Escalated",
+      "noShippingData": "No shipping data",
+      "noShippingDataDesc": "No shipping data available yet."
     },
     "escalationReason": {
       "seller_ship_sla_missed": "Seller missed 3-day shipping SLA"
@@ -1207,7 +1566,8 @@
       "relist": "Return item to active status for a new auction",
       "cancel": "Cancel the auction permanently",
       "flagBuyer": "Flag the buyer account for review",
-      "flagSeller": "Flag the seller account for review"
+      "flagSeller": "Flag the seller account for review",
+      "forceReinspection": "Force the warehouse inspector to re-inspect the item"
     },
     "summary": {
       "escrowReleaseToSeller": "Escrow will be released to the seller",
@@ -1227,7 +1587,8 @@
       "auctionRelist": "Item will be relisted for auction",
       "auctionCancel": "Auction will be cancelled",
       "penaltyFlagBuyer": "Buyer account will be flagged for review",
-      "penaltyFlagSeller": "Seller account will be flagged for review"
+      "penaltyFlagSeller": "Seller account will be flagged for review",
+      "warehouseForceReinspection": "The item will be required to be re-inspected by the warehouse staff"
     },
     "validation": {
       "refundAmountRequired": "Refund amount must be greater than 0 when partial refund is selected.",
@@ -1236,6 +1597,10 @@
       "noActionsWarning": "No resolution actions selected. Are you sure?",
       "returnToSellerNeedsOpenReturn": "Item \"Return to Seller\" requires Shipment \"Open Return\" to trigger the buyer return flow. Without it, the return is manual only.",
       "refundWithoutReturnWarning": "Refund will fire immediately without waiting for the buyer to return the item. Select Shipment \"Open Return\" to defer the refund until the seller confirms receipt."
+    },
+    "warehouseInspectionOption": {
+      "noAction": "No Action",
+      "forceReinspection": "Force Re-inspection"
     }
   },
   "disputeList": {
@@ -1253,6 +1618,262 @@
       "payment": "Payment",
       "shipment": "Shipment",
       "warehouseItem": "Warehouse Item"
+    }
+  },
+  "revenue": {
+    "incomeTabTitle": "Platform Income",
+    "amount": "Amount",
+    "balanceAfter": "Balance After",
+    "category": "Category",
+    "chartTitle": "Revenue Over Time",
+    "commission": "Commission",
+    "date": "Date",
+    "day": "Day",
+    "description": "Description",
+    "filterType": "Filter by Type",
+    "forfeitIncome": "Forfeit",
+    "inspectionFees": "Inspection",
+    "month": "Month",
+    "noData": "No revenue data for this period",
+    "totalRevenue": "Net Revenue",
+    "type": "Type",
+    "week": "Week"
+  },
+  "actions": {
+    "approve": "Approve",
+    "reject": "Reject"
+  },
+  "auctions": {
+    "title": "Auctions",
+    "subtitle": "All platform auctions — every status",
+    "statusConfig": {
+      "draft": "Draft",
+      "pending": "Pending",
+      "approved": "Approved",
+      "scheduled": "Scheduled",
+      "active": "Active",
+      "ended": "Ended",
+      "sold": "Sold",
+      "completed": "Completed",
+      "payment_defaulted": "Payment Defaulted",
+      "cancelled": "Cancelled",
+      "failed": "Failed",
+      "terminated": "Terminated"
+    },
+    "statusTabs": {
+      "all": "All",
+      "active": "Active",
+      "scheduled": "Scheduled",
+      "pending": "Pending",
+      "sold": "Sold",
+      "failedCancelled": "Failed / Cancelled"
+    },
+    "sortOptions": {
+      "newestFirst": "Newest First",
+      "oldestFirst": "Oldest First",
+      "priceHighLow": "Price: High → Low",
+      "priceLowHigh": "Price: Low → High",
+      "mostBids": "Most Bids",
+      "endingSoon": "Ending Soon"
+    },
+    "columns": {
+      "item": "Item",
+      "status": "Status",
+      "price": "Price",
+      "bids": "Bids",
+      "time": "Time",
+      "flags": "Flags",
+      "actions": "Actions"
+    },
+    "typeIcons": {
+      "sealed": "🔒 Sealed",
+      "regular": "🔨 Regular"
+    },
+    "bin": "BIN",
+    "timeStart": "Start",
+    "timeEnd": "End",
+    "flags": {
+      "featured": "Featured",
+      "endingSoon": "Ending Soon"
+    },
+    "actionTitles": {
+      "adminControl": "Admin Control",
+      "viewPublic": "View Public"
+    },
+    "filters": {
+      "search": "Search by title or ID...",
+      "exactStatus": "Exact Status",
+      "sortBy": "Sort By"
+    },
+    "pagination": {
+      "total": "{{count}} auctions"
+    }
+  },
+  "items": {
+    "title": "Item Inventory",
+    "empty": "No items found matching the selected criteria",
+    "columns": {
+      "item": "Item",
+      "seller": "Seller",
+      "category": "Category",
+      "condition": "Condition",
+      "status": "Status",
+      "location": "Location",
+      "addedDate": "Added Date",
+      "action": "Action"
+    },
+    "filters": {
+      "search": "Search Title or ID...",
+      "status": "Filter Status",
+      "location": "Filter Location",
+      "apply": "Apply Filters"
+    },
+    "statusOptions": {
+      "pending_review": "Pending Review",
+      "approved": "Approved",
+      "active": "Active",
+      "in_auction": "In Auction",
+      "sold": "Sold",
+      "rejected": "Rejected"
+    },
+    "locationOptions": {
+      "warehouse": "Warehouse",
+      "withSeller": "With Seller"
+    },
+    "action": {
+      "viewDetails": "View Details"
+    }
+  },
+  "orders": {
+    "title": "Orders",
+    "subtitle": "All platform orders",
+    "statusOptions": {
+      "pendingPayment": "Pending Payment",
+      "paid": "Paid",
+      "processing": "Processing",
+      "pickedUp": "Picked Up",
+      "onDelivering": "On Delivering",
+      "delivered": "Delivered",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "refunded": "Refunded",
+      "disputed": "Disputed"
+    },
+    "columns": {
+      "orderNumber": "Order #",
+      "item": "Item",
+      "buyer": "Buyer",
+      "seller": "Seller",
+      "amount": "Amount",
+      "status": "Status",
+      "created": "Created",
+      "action": "Action"
+    },
+    "filters": {
+      "search": "Search by order # or ID...",
+      "status": "Status"
+    },
+    "pagination": {
+      "total": "{{count}} orders"
+    }
+  },
+  "orderDetail": {
+    "backToOrders": "Back to Orders",
+    "title": "Order",
+    "buyer": "Buyer",
+    "seller": "Seller",
+    "view": "View",
+    "statusOptions": {
+      "pending_payment": "Pending Payment",
+      "paid": "Paid",
+      "processing": "Processing",
+      "picked_up": "Picked Up",
+      "on_delivering": "On Delivering",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "refunded": "Refunded",
+      "disputed": "Disputed"
+    },
+    "toast": {
+      "forceCancelSuccess": "Order force-cancelled",
+      "forceCancelError": "Failed to force-cancel order",
+      "forceRefundSuccess": "Order force-refunded",
+      "forceRefundError": "Failed to force-refund order",
+      "overrideSuccess": "Order status overridden",
+      "overrideError": "Failed to override order status",
+      "copied": "Copied!"
+    },
+    "action": {
+      "forceCancel": "Force Cancel",
+      "forceRefund": "Force Refund",
+      "overrideStatus": "Override Status"
+    },
+    "section": {
+      "orderInformation": "Order Information",
+      "paymentBreakdown": "Payment Breakdown",
+      "shippingAddress": "Shipping Address",
+      "directShipment": "Direct Shipment",
+      "outboundShipment": "Outbound Shipment",
+      "returnRequest": "Return Request",
+      "evidence": "Evidence",
+      "parties": "Parties",
+      "item": "Item",
+      "escrowSummary": "Escrow Summary",
+      "monitoringAlerts": "Monitoring Alerts",
+      "sellerPackagePhotos": "Seller Package Photos",
+      "buyerDeliveryPhotos": "Buyer Delivery Photos"
+    },
+    "label": {
+      "orderNumber": "Order Number",
+      "status": "Status",
+      "totalAmount": "Total Amount",
+      "currency": "Currency",
+      "created": "Created",
+      "paymentDue": "Payment Due",
+      "paidAt": "Paid At",
+      "shippedAt": "Shipped At",
+      "deliveredAt": "Delivered At",
+      "completedAt": "Completed At",
+      "cancelledAt": "Cancelled At",
+      "escrowStatus": "Escrow Status",
+      "depositApplied": "Deposit Applied",
+      "walletApplied": "Wallet Applied",
+      "gatewayPaid": "Gateway Paid",
+      "recipient": "Recipient",
+      "phone": "Phone",
+      "address": "Address",
+      "shipmentId": "Shipment ID",
+      "carrier": "Carrier",
+      "tracking": "Tracking",
+      "reason": "Reason",
+      "description": "Description",
+      "requested": "Requested",
+      "buyer": "Buyer",
+      "seller": "Seller",
+      "final": "Final",
+      "held": "Held",
+      "released": "Released",
+      "refunded": "Refunded"
+    },
+    "modal": {
+      "forceCancelTitle": "Force Cancel Order",
+      "forceRefundTitle": "Force Refund Order",
+      "overrideStatusTitle": "Override Order Status",
+      "confirmCancel": "Confirm Cancel",
+      "confirmRefund": "Confirm Refund",
+      "confirmOverride": "Confirm Override",
+      "financialWarning": "This action will affect financial flow and cannot be undone. Are you sure?",
+      "forceCancelDescription": "This will cancel the order from any state and refund all held escrows to the buyer.",
+      "forceRefundDescription": "This will mark the order as refunded and release all escrows back to the buyer.",
+      "overrideStatusDescription": "This will directly change the order status. Use with extreme caution."
+    },
+    "placeholder": {
+      "cancelReason": "Reason for force cancellation...",
+      "refundReason": "Reason for force refund...",
+      "overrideReason": "Reason for status override...",
+      "selectNewStatus": "Select new status"
     }
   }
 }

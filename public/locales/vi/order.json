@@ -196,18 +196,18 @@
   "sellerOrders": "Đơn hàng người bán",
   "sellerOrder": {
     "paymentEscrow": {
-      "title": "Thanh toán & Escrow",
-      "buyerPaid": "Buyer đã thanh toán?",
-      "notYet": "Buyer chưa thanh toán đơn hàng này. Khi thanh toán hoàn tất, chi tiết escrow sẽ hiển thị tại đây.",
-      "escrowStatus": "Trạng thái escrow",
+      "title": "Thanh toán & Ký quỹ",
+      "buyerPaid": "Người mua đã thanh toán?",
+      "notYet": "Người mua chưa thanh toán đơn hàng này. Khi thanh toán hoàn tất, chi tiết ký quỹ sẽ hiển thị tại đây.",
+      "escrowStatus": "Trạng thái ký quỹ",
       "holdReason": "Vì sao chưa rút được?",
-      "grossPaid": "Buyer trả (gross)",
-      "expectedNet": "Dự kiến seller nhận",
+      "grossPaid": "Người mua trả (gộp)",
+      "expectedNet": "Dự kiến người bán nhận",
       "actualReleased": "Đã release",
       "platformFee": "Phí sàn 10%",
       "inspectionFee": "Phí kiểm định 3%",
-      "expectedRelease": "Dự kiến release",
-      "decisionWindow": "Kết thúc decision window",
+      "expectedRelease": "Dự kiến giải ngân",
+      "decisionWindow": "Kết thúc thời hạn xác nhận",
       "disputeNotice": "Tiền đang bị giữ do có tranh chấp."
     }
   },

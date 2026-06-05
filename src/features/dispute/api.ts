@@ -218,6 +218,7 @@ export interface ResolutionActionSet {
   itemAction?: string
   auctionAction?: string
   penaltyAction?: string
+  warehouseInspectionAction?: string
 }
 
 export function useResolveCaseDispute() {

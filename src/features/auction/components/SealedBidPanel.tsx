@@ -171,6 +171,11 @@ export function SealedBidPanel({
             onChange={(v) => setAmount(v)}
             addonAfter={currency}
             placeholder={t('enterBidAmount', 'Enter your bid')}
+            formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+            parser={(v) => {
+              const parsed = (v ?? '').replace(/\$\s?|(,*)/g, '')
+              return parsed ? Number(parsed) : (null as any)
+            }}
           />
           <Text type="secondary" style={{ fontSize: 11, marginTop: 4, display: 'block' }}>
             {t('minimumBid', 'Minimum')}: {formatCurrency(minBid, currency)}

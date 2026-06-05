@@ -15,7 +15,7 @@ interface WithdrawalDetailDrawerProps {
 }
 
 export const WithdrawalDetailDrawer: React.FC<WithdrawalDetailDrawerProps> = ({ open, onClose, withdrawal }) => {
-  const { t } = useTranslation()
+  const { t } = useTranslation('admin')
 
   if (!withdrawal) return null
 
@@ -41,9 +41,9 @@ export const WithdrawalDetailDrawer: React.FC<WithdrawalDetailDrawerProps> = ({ 
             </Title>
           </div>
           <div>
-            {withdrawal.status === WithdrawalStatus.Pending && <Tag icon={<ClockCircleOutlined />} color="warning">Pending</Tag>}
-            {withdrawal.status === WithdrawalStatus.Completed && <Tag icon={<CheckCircleOutlined />} color="success">Completed</Tag>}
-            {withdrawal.status === WithdrawalStatus.Rejected && <Tag icon={<CloseCircleOutlined />} color="error">Rejected</Tag>}
+            {withdrawal.status === WithdrawalStatus.Pending && <Tag icon={<ClockCircleOutlined />} color="warning">{t('payments.withdrawalStatus.pending', 'Pending')}</Tag>}
+            {withdrawal.status === WithdrawalStatus.Completed && <Tag icon={<CheckCircleOutlined />} color="success">{t('payments.withdrawalStatus.completed', 'Completed')}</Tag>}
+            {withdrawal.status === WithdrawalStatus.Rejected && <Tag icon={<CloseCircleOutlined />} color="error">{t('payments.withdrawalStatus.rejected', 'Rejected')}</Tag>}
           </div>
         </div>
 
@@ -57,10 +57,10 @@ export const WithdrawalDetailDrawer: React.FC<WithdrawalDetailDrawerProps> = ({ 
                 dot: <ClockCircleOutlined className="text-base" />,
                 children: (
                   <div className="flex flex-col">
-                    <Text strong>Withdrawal Requested</Text>
+                    <Text strong>{t('payments.withdrawalTimeline.requested', 'Withdrawal Requested')}</Text>
                     <Text type="secondary" className="text-xs">{dayjs(withdrawal.createdAt).format('DD MMM YYYY, HH:mm')}</Text>
                     <Text className="text-sm mt-1">
-                      By User: <Text strong>{withdrawal.userDisplayName || 'Unknown'}</Text>
+                      {t('payments.withdrawalTimeline.byUser', 'By User')}: <Text strong>{withdrawal.userDisplayName || t('payments.withdrawalTimeline.unknown', 'Unknown')}</Text>
                     </Text>
                   </div>
                 ),
@@ -72,14 +72,14 @@ export const WithdrawalDetailDrawer: React.FC<WithdrawalDetailDrawerProps> = ({ 
                       dot: <CheckCircleOutlined className="text-base" />,
                       children: (
                         <div className="flex flex-col">
-                          <Text strong>Completed</Text>
-                          <Text type="secondary" className="text-xs">{withdrawal.processedAt ? dayjs(withdrawal.processedAt).format('DD MMM YYYY, HH:mm') : 'Unknown Time'}</Text>
+                          <Text strong>{t('payments.withdrawalTimeline.completed', 'Completed')}</Text>
+                          <Text type="secondary" className="text-xs">{withdrawal.processedAt ? dayjs(withdrawal.processedAt).format('DD MMM YYYY, HH:mm') : t('payments.withdrawalTimeline.unknownTime', 'Unknown Time')}</Text>
                           <Text className="text-sm mt-1">
-                            Processed By: <Text strong>{withdrawal.processedByDisplayName || 'System/Admin'}</Text>
+                            {t('payments.withdrawalTimeline.processedBy', 'Processed By')}: <Text strong>{withdrawal.processedByDisplayName || t('payments.withdrawalTimeline.systemAdmin', 'System/Admin')}</Text>
                           </Text>
                           {withdrawal.transferNote && (
                             <div className="mt-2 bg-green-50 border border-green-200 p-2 rounded text-sm text-green-800">
-                              <span className="font-semibold">Note:</span> {withdrawal.transferNote}
+                              <span className="font-semibold">{t('payments.withdrawalTimeline.note', 'Note')}:</span> {withdrawal.transferNote}
                             </div>
                           )}
                           {withdrawal.transferProofUrl && (
@@ -99,14 +99,14 @@ export const WithdrawalDetailDrawer: React.FC<WithdrawalDetailDrawerProps> = ({ 
                       dot: <CloseCircleOutlined className="text-base" />,
                       children: (
                         <div className="flex flex-col">
-                          <Text strong>Rejected</Text>
-                          <Text type="secondary" className="text-xs">{withdrawal.processedAt ? dayjs(withdrawal.processedAt).format('DD MMM YYYY, HH:mm') : 'Unknown Time'}</Text>
+                          <Text strong>{t('payments.withdrawalTimeline.rejected', 'Rejected')}</Text>
+                          <Text type="secondary" className="text-xs">{withdrawal.processedAt ? dayjs(withdrawal.processedAt).format('DD MMM YYYY, HH:mm') : t('payments.withdrawalTimeline.unknownTime', 'Unknown Time')}</Text>
                           <Text className="text-sm mt-1">
-                            Rejected By: <Text strong>{withdrawal.processedByDisplayName || 'System/Admin'}</Text>
+                            {t('payments.withdrawalTimeline.rejectedBy', 'Rejected By')}: <Text strong>{withdrawal.processedByDisplayName || t('payments.withdrawalTimeline.systemAdmin', 'System/Admin')}</Text>
                           </Text>
                           {withdrawal.rejectionReason && (
                             <div className="mt-2 bg-red-50 border border-red-200 p-2 rounded text-sm text-red-800">
-                              <span className="font-semibold">Reason:</span> {withdrawal.rejectionReason}
+                              <span className="font-semibold">{t('payments.withdrawalTimeline.reason', 'Reason')}:</span> {withdrawal.rejectionReason}
                             </div>
                           )}
                         </div>

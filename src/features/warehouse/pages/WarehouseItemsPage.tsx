@@ -112,11 +112,19 @@ export default function WarehouseItemsPage() {
       render: (d: string) => formatDateTime(d),
     },
     {
-      title: '',
+      title: tc('actions', 'Actions'),
       key: 'actions',
       width: 120,
+      fixed: 'right',
       render: (_: unknown, r) => (
-        <Button size="small" onClick={() => gotoDetail(r.warehouseItemId)}>
+        <Button
+          size="small"
+          type="primary"
+          onClick={(e) => {
+            e.stopPropagation()
+            gotoDetail(r.warehouseItemId)
+          }}
+        >
           {t('viewDetails', 'View details')}
         </Button>
       ),

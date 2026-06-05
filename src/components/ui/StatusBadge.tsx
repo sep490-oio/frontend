@@ -246,7 +246,10 @@ interface StatusBadgeProps {
 export function StatusBadge({ status, size }: StatusBadgeProps) {
   const { t } = useTranslation('common')
   if (!status) return null
-  const normalized = status.toLowerCase()
+  const normalized = status
+    .replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`)
+    .replace(/^_/, '')
+    .toLowerCase()
   const variant = STATUS_VARIANT_MAP[normalized] ?? 'neutral'
   const style = VARIANT_STYLES[variant]
 

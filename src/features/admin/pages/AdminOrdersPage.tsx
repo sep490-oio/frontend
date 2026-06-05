@@ -30,21 +30,26 @@ const STATUS_COLOR: Record<string, string> = {
   disputed: 'error',
 }
 
-const STATUS_OPTIONS = [
-  { value: 'pending_payment', label: 'Pending Payment' },
-  { value: 'paid', label: 'Paid' },
-  { value: 'processing', label: 'Processing' },
-  { value: 'picked_up', label: 'Picked Up' },
-  { value: 'on_delivering', label: 'On Delivering' },
-  { value: 'delivered', label: 'Delivered' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'cancelled', label: 'Cancelled' },
-  { value: 'refunded', label: 'Refunded' },
-  { value: 'disputed', label: 'Disputed' },
-]
+function useStatusOptions() {
+  const { t } = useTranslation('admin')
+  return [
+    { value: 'pending_payment', label: t('orders.statusOptions.pendingPayment', 'Pending Payment') },
+    { value: 'paid', label: t('orders.statusOptions.paid', 'Paid') },
+    { value: 'processing', label: t('orders.statusOptions.processing', 'Processing') },
+    { value: 'picked_up', label: t('orders.statusOptions.pickedUp', 'Picked Up') },
+    { value: 'on_delivering', label: t('orders.statusOptions.onDelivering', 'On Delivering') },
+    { value: 'delivered', label: t('orders.statusOptions.delivered', 'Delivered') },
+    { value: 'completed', label: t('orders.statusOptions.completed', 'Completed') },
+    { value: 'cancelled', label: t('orders.statusOptions.cancelled', 'Cancelled') },
+    { value: 'refunded', label: t('orders.statusOptions.refunded', 'Refunded') },
+    { value: 'disputed', label: t('orders.statusOptions.disputed', 'Disputed') },
+  ]
+}
 
 export default function AdminOrdersPage() {
   const { t } = useTranslation('admin')
+  const { t: tc } = useTranslation('common')
+  const statusOptions = useStatusOptions()
   const navigate = useNavigate()
   const { isMobile } = useBreakpoint()
 
@@ -82,7 +87,7 @@ export default function AdminOrdersPage() {
 
   const columns: ColumnsType<AdminOrderListItemDto> = [
     {
-      title: 'Order #',
+      title: t('orders.columns.orderNumber', 'Order #'),
       dataIndex: 'orderNumber',
       key: 'orderNumber',
       width: 130,
@@ -93,7 +98,7 @@ export default function AdminOrdersPage() {
       ),
     },
     {
-      title: 'Item',
+      title: t('orders.columns.item', 'Item'),
       key: 'item',
       width: 220,
       render: (_, record) => (
@@ -111,7 +116,7 @@ export default function AdminOrdersPage() {
       ),
     },
     {
-      title: 'Buyer',
+      title: t('orders.columns.buyer', 'Buyer'),
       dataIndex: 'buyerDisplayName',
       key: 'buyer',
       width: 130,
@@ -122,7 +127,7 @@ export default function AdminOrdersPage() {
       ),
     },
     {
-      title: 'Seller',
+      title: t('orders.columns.seller', 'Seller'),
       dataIndex: 'sellerDisplayName',
       key: 'seller',
       width: 130,
@@ -133,7 +138,7 @@ export default function AdminOrdersPage() {
       ),
     },
     {
-      title: 'Amount',
+      title: t('orders.columns.amount', 'Amount'),
       dataIndex: 'totalAmount',
       key: 'totalAmount',
       width: 120,
@@ -145,7 +150,7 @@ export default function AdminOrdersPage() {
       ),
     },
     {
-      title: 'Status',
+      title: t('orders.columns.status', 'Status'),
       dataIndex: 'status',
       key: 'status',
       width: 140,
@@ -156,7 +161,7 @@ export default function AdminOrdersPage() {
       ),
     },
     {
-      title: 'Created',
+      title: t('orders.columns.created', 'Created'),
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 160,
@@ -165,7 +170,7 @@ export default function AdminOrdersPage() {
       ),
     },
     {
-      title: 'Action',
+      title: t('orders.columns.action', 'Action'),
       key: 'action',
       width: 100,
       render: (_, record) => (
@@ -216,7 +221,7 @@ export default function AdminOrdersPage() {
               onChange={(v) => { setStatus(v); setPage(1) }}
               allowClear
               style={{ width: '100%' }}
-              options={STATUS_OPTIONS}
+              options={statusOptions}
             />
             <RangePicker
               value={dateRange}
@@ -225,10 +230,10 @@ export default function AdminOrdersPage() {
             />
             <Flex gap={8}>
               <Button type="primary" onClick={handleSearch} block style={{ minHeight: 44 }}>
-                {t('common.search', 'Search')}
+                {tc('action.search', 'Search')}
               </Button>
               <Button onClick={handleReset} block style={{ minHeight: 44 }}>
-                {t('common.reset', 'Reset')}
+                {tc('action.reset', 'Reset')}
               </Button>
             </Flex>
           </Space>
@@ -250,7 +255,7 @@ export default function AdminOrdersPage() {
               onChange={(v) => { setStatus(v); setPage(1) }}
               allowClear
               style={{ width: 180 }}
-              options={STATUS_OPTIONS}
+              options={statusOptions}
             />
             <RangePicker
               value={dateRange}
@@ -258,8 +263,8 @@ export default function AdminOrdersPage() {
               style={{ width: 280 }}
             />
             <Space>
-              <Button type="primary" onClick={handleSearch}>{t('common.search', 'Search')}</Button>
-              <Button onClick={handleReset}>{t('common.reset', 'Reset')}</Button>
+              <Button type="primary" onClick={handleSearch}>{tc('action.search', 'Search')}</Button>
+              <Button onClick={handleReset}>{tc('action.reset', 'Reset')}</Button>
             </Space>
           </Flex>
         )}
@@ -278,7 +283,7 @@ export default function AdminOrdersPage() {
               pageSize,
               total,
               onChange: (p, ps) => { setPage(p); setPageSize(ps) },
-              showTotal: (total) => `${total} orders`,
+              showTotal: (total) => t('orders.pagination.total', '{{count}} orders', { count: total }),
               showSizeChanger: !isMobile,
               pageSizeOptions: ['10', '15', '25', '50'],
               simple: isMobile,

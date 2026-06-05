@@ -17,30 +17,34 @@ import type { ColumnsType } from 'antd/es/table'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 
 // ── Status color mapping ──────────────────────────────────────────────
-const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
-  draft:             { color: 'default',    label: 'Draft' },
-  pending:           { color: 'orange',     label: 'Pending' },
-  approved:          { color: 'cyan',       label: 'Approved' },
-  scheduled:         { color: 'blue',       label: 'Scheduled' },
-  active:            { color: 'green',      label: 'Active' },
-  ended:             { color: 'geekblue',   label: 'Ended' },
-  sold:              { color: 'success',    label: 'Sold' },
-  completed:         { color: 'purple',     label: 'Completed' },
-  payment_defaulted: { color: 'warning',    label: 'Payment Defaulted' },
-  cancelled:         { color: 'default',    label: 'Cancelled' },
-  failed:            { color: 'error',      label: 'Failed' },
-  terminated:        { color: 'volcano',    label: 'Terminated' },
+function useStatusConfig(t: (key: string, fallback: string) => string): Record<string, { color: string; label: string }> {
+  return {
+    draft:             { color: 'default',    label: t('auctions.statusConfig.draft', 'Draft') },
+    pending:           { color: 'orange',     label: t('auctions.statusConfig.pending', 'Pending') },
+    approved:          { color: 'cyan',       label: t('auctions.statusConfig.approved', 'Approved') },
+    scheduled:         { color: 'blue',       label: t('auctions.statusConfig.scheduled', 'Scheduled') },
+    active:            { color: 'green',      label: t('auctions.statusConfig.active', 'Active') },
+    ended:             { color: 'geekblue',   label: t('auctions.statusConfig.ended', 'Ended') },
+    sold:              { color: 'success',    label: t('auctions.statusConfig.sold', 'Sold') },
+    completed:         { color: 'purple',     label: t('auctions.statusConfig.completed', 'Completed') },
+    payment_defaulted: { color: 'warning',    label: t('auctions.statusConfig.payment_defaulted', 'Payment Defaulted') },
+    cancelled:         { color: 'default',    label: t('auctions.statusConfig.cancelled', 'Cancelled') },
+    failed:            { color: 'error',      label: t('auctions.statusConfig.failed', 'Failed') },
+    terminated:        { color: 'volcano',    label: t('auctions.statusConfig.terminated', 'Terminated') },
+  }
 }
 
 // ── Status group tabs ─────────────────────────────────────────────────
-const STATUS_TABS = [
-  { value: '',          label: 'All' },
-  { value: 'active',    label: 'Active' },
-  { value: 'scheduled', label: 'Scheduled' },
-  { value: 'pending',   label: 'Pending' },
-  { value: 'sold',      label: 'Sold' },
-  { value: 'failed',    label: 'Failed / Cancelled' },
-]
+function useStatusTabs(t: (key: string, fallback: string) => string) {
+  return [
+    { value: '',          label: t('auctions.statusTabs.all', 'All') },
+    { value: 'active',    label: t('auctions.statusTabs.active', 'Active') },
+    { value: 'scheduled', label: t('auctions.statusTabs.scheduled', 'Scheduled') },
+    { value: 'pending',   label: t('auctions.statusTabs.pending', 'Pending') },
+    { value: 'sold',      label: t('auctions.statusTabs.sold', 'Sold') },
+    { value: 'failed',    label: t('auctions.statusTabs.failedCancelled', 'Failed / Cancelled') },
+  ]
+}
 
 // ── Individual status filter ──────────────────────────────────────────
 const STATUS_OPTIONS = Object.entries(AuctionStatus).map(([key, value]) => ({
@@ -48,19 +52,26 @@ const STATUS_OPTIONS = Object.entries(AuctionStatus).map(([key, value]) => ({
   label: key.replace(/([A-Z])/g, ' $1').trim(),
 }))
 
-const SORT_OPTIONS = [
-  { value: 'CreatedAt Desc',    label: 'Newest First' },
-  { value: 'CreatedAt',     label: 'Oldest First' },
-  { value: '-CurrentPrice', label: 'Price: High → Low' },
-  { value: 'CurrentPrice',  label: 'Price: Low → High' },
-  { value: '-BidCount',     label: 'Most Bids' },
-  { value: 'EndTime',       label: 'Ending Soon' },
-]
+function useSortOptions(t: (key: string, fallback: string) => string) {
+  return [
+    { value: 'CreatedAt Desc',    label: t('auctions.sortOptions.newestFirst', 'Newest First') },
+    { value: 'CreatedAt',     label: t('auctions.sortOptions.oldestFirst', 'Oldest First') },
+    { value: '-CurrentPrice', label: t('auctions.sortOptions.priceHighLow', 'Price: High → Low') },
+    { value: 'CurrentPrice',  label: t('auctions.sortOptions.priceLowHigh', 'Price: Low → High') },
+    { value: '-BidCount',     label: t('auctions.sortOptions.mostBids', 'Most Bids') },
+    { value: 'EndTime',       label: t('auctions.sortOptions.endingSoon', 'Ending Soon') },
+  ]
+}
 
 export default function AdminAuctionsPage() {
   const { t } = useTranslation('admin')
+  const { t: tc } = useTranslation('common')
   const navigate = useNavigate()
   const { isMobile } = useBreakpoint()
+
+  const STATUS_CONFIG = useStatusConfig(t)
+  const STATUS_TABS = useStatusTabs(t)
+  const SORT_OPTIONS = useSortOptions(t)
 
   // ── Filter state ──
   const [page, setPage] = useState(1)
@@ -96,7 +107,7 @@ export default function AdminAuctionsPage() {
   // ── Table columns ──
   const columns: ColumnsType<AuctionListItemDto> = [
     {
-      title: 'Item',
+      title: t('auctions.columns.item', 'Item'),
       key: 'item',
       width: 260,
       render: (_, record) => (
@@ -112,14 +123,14 @@ export default function AdminAuctionsPage() {
               {record.itemTitle ?? '—'}
             </Typography.Text>
             <Typography.Text type="secondary" style={{ fontSize: 11 }}>
-              {record.auctionType === 'sealed' ? '🔒 Sealed' : '🔨 Regular'}
+              {record.auctionType === 'sealed' ? t('auctions.typeIcons.sealed', '🔒 Sealed') : t('auctions.typeIcons.regular', '🔨 Regular')}
             </Typography.Text>
           </div>
         </Flex>
       ),
     },
     {
-      title: 'Status',
+      title: t('auctions.columns.status', 'Status'),
       dataIndex: 'status',
       key: 'status',
       width: 140,
@@ -129,7 +140,7 @@ export default function AdminAuctionsPage() {
       },
     },
     {
-      title: 'Price',
+      title: t('auctions.columns.price', 'Price'),
       key: 'price',
       width: 130,
       align: 'right' as const,
@@ -141,7 +152,7 @@ export default function AdminAuctionsPage() {
           {record.buyNowPrice && (
             <div>
               <Typography.Text type="secondary" style={{ fontSize: 11 }}>
-                BIN: {formatCurrency(record.buyNowPrice.amount)}
+                {t('auctions.bin', 'BIN')}: {formatCurrency(record.buyNowPrice.amount)}
               </Typography.Text>
             </div>
           )}
@@ -149,7 +160,7 @@ export default function AdminAuctionsPage() {
       ),
     },
     {
-      title: 'Bids',
+      title: t('auctions.columns.bids', 'Bids'),
       key: 'bids',
       width: 80,
       align: 'center' as const,
@@ -163,7 +174,7 @@ export default function AdminAuctionsPage() {
       ),
     },
     {
-      title: 'Time',
+      title: t('auctions.columns.time', 'Time'),
       key: 'time',
       width: 170,
       render: (_, record) => {
@@ -181,12 +192,12 @@ export default function AdminAuctionsPage() {
           <div>
             {record.startTime && (
               <Typography.Text style={{ fontSize: 11, display: 'block' }}>
-                Start: {formatDateTime(record.startTime)}
+                {t('auctions.timeStart', 'Start')}: {formatDateTime(record.startTime)}
               </Typography.Text>
             )}
             {record.endTime && (
               <Typography.Text type="secondary" style={{ fontSize: 11, display: 'block' }}>
-                End: {formatDateTime(record.endTime)}
+                {t('auctions.timeEnd', 'End')}: {formatDateTime(record.endTime)}
               </Typography.Text>
             )}
           </div>
@@ -194,18 +205,18 @@ export default function AdminAuctionsPage() {
       },
     },
     {
-      title: 'Flags',
+      title: t('auctions.columns.flags', 'Flags'),
       key: 'flags',
       width: 80,
       render: (_, record) => (
         <Space size={4}>
-          {record.isFeatured && <FireOutlined style={{ color: '#fa8c16', fontSize: 14 }} title="Featured" />}
-          {record.isEndingSoon && <ThunderboltOutlined style={{ color: '#f5222d', fontSize: 14 }} title="Ending Soon" />}
+          {record.isFeatured && <FireOutlined style={{ color: '#fa8c16', fontSize: 14 }} title={t('auctions.flags.featured', 'Featured')} />}
+          {record.isEndingSoon && <ThunderboltOutlined style={{ color: '#f5222d', fontSize: 14 }} title={t('auctions.flags.endingSoon', 'Ending Soon')} />}
         </Space>
       ),
     },
     {
-      title: 'Actions',
+      title: t('auctions.columns.actions', 'Actions'),
       key: 'actions',
       width: 100,
       fixed: 'right' as const,
@@ -216,14 +227,14 @@ export default function AdminAuctionsPage() {
             size="small"
             icon={<ControlOutlined />}
             onClick={(e) => { e.stopPropagation(); navigate(`/admin/auctions/${record.id}`) }}
-            title="Admin Control"
+            title={t('auctions.actionTitles.adminControl', 'Admin Control')}
           />
           <Button
             type="link"
             size="small"
             icon={<EyeOutlined />}
             onClick={(e) => { e.stopPropagation(); window.open(`/auctions/${record.id}`, '_blank') }}
-            title="View Public"
+            title={t('auctions.actionTitles.viewPublic', 'View Public')}
           />
         </Space>
       ),
@@ -271,7 +282,7 @@ export default function AdminAuctionsPage() {
               onClear={() => { setSearchInput(''); setSearch(''); setPage(1) }}
             />
             <Select
-              placeholder="Exact Status"
+              placeholder={t('auctions.filters.exactStatus', 'Exact Status')}
               value={exactStatus}
               onChange={(v) => { setExactStatus(v); setStatusGroup(''); setPage(1) }}
               allowClear
@@ -279,7 +290,7 @@ export default function AdminAuctionsPage() {
               options={STATUS_OPTIONS}
             />
             <Select
-              placeholder="Sort By"
+              placeholder={t('auctions.filters.sortBy', 'Sort By')}
               value={sortBy}
               onChange={(v) => { setSortBy(v); setPage(1) }}
               style={{ width: '100%' }}
@@ -287,10 +298,10 @@ export default function AdminAuctionsPage() {
             />
             <Flex gap={8}>
               <Button type="primary" onClick={handleSearch} block style={{ minHeight: 44 }}>
-                {t('common.search', 'Search')}
+                {tc('action.search', 'Search')}
               </Button>
               <Button onClick={handleReset} block style={{ minHeight: 44 }}>
-                {t('common.reset', 'Reset')}
+                {tc('action.reset', 'Reset')}
               </Button>
             </Flex>
           </Space>
@@ -307,7 +318,7 @@ export default function AdminAuctionsPage() {
               onClear={() => { setSearchInput(''); setSearch(''); setPage(1) }}
             />
             <Select
-              placeholder="Exact Status"
+              placeholder={t('auctions.filters.exactStatus', 'Exact Status')}
               value={exactStatus}
               onChange={(v) => { setExactStatus(v); setStatusGroup(''); setPage(1) }}
               allowClear
@@ -315,15 +326,15 @@ export default function AdminAuctionsPage() {
               options={STATUS_OPTIONS}
             />
             <Select
-              placeholder="Sort By"
+              placeholder={t('auctions.filters.sortBy', 'Sort By')}
               value={sortBy}
               onChange={(v) => { setSortBy(v); setPage(1) }}
               style={{ width: 180 }}
               options={SORT_OPTIONS}
             />
             <Space>
-              <Button type="primary" onClick={handleSearch}>{t('common.search', 'Search')}</Button>
-              <Button onClick={handleReset}>{t('common.reset', 'Reset')}</Button>
+              <Button type="primary" onClick={handleSearch}>{tc('action.search', 'Search')}</Button>
+              <Button onClick={handleReset}>{tc('action.reset', 'Reset')}</Button>
             </Space>
           </Flex>
         )}
@@ -343,7 +354,7 @@ export default function AdminAuctionsPage() {
               pageSize,
               total,
               onChange: (p, ps) => { setPage(p); setPageSize(ps) },
-              showTotal: (total) => `${total} auctions`,
+              showTotal: (total) => t('auctions.pagination.total', '{{count}} auctions', { count: total }),
               showSizeChanger: !isMobile,
               pageSizeOptions: ['10', '15', '25', '50'],
               simple: isMobile,

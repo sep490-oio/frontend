@@ -215,58 +215,60 @@
   "walletPortion": "Thanh toán qua ví",
   "sellerFinance": {
     "title": "Tài chính người bán",
-    "subtitle": "Theo dõi số dư có thể rút, escrow đang giữ và phí",
+    "subtitle": "Theo dõi số dư có thể rút, ký quỹ đang giữ và phí",
     "cards": {
       "withdrawable": "Có thể rút",
       "withdrawableHelp": "Số tiền có thể rút về tài khoản ngân hàng.",
       "holding": "Sàn đang giữ",
-      "holdingHelp": "Buyer đã thanh toán nhưng chưa được release sang ví.",
-      "expected": "Dự kiến nhận (estimate)",
+      "holdingHelp": "Người mua đã thanh toán nhưng chưa được giải ngân sang ví.",
+      "expected": "Dự kiến nhận (ước tính)",
       "expectedHelp": "= gross − phí sàn 10% − phí kiểm định 3% (nếu có).",
       "pendingFees": "Phí/khấu trừ đang chờ",
       "pendingFeesHelp": "Tổng phí sàn + phí kiểm định + phí seller đang chờ."
     },
     "tooltip": {
-      "holding": "Buyer đã thanh toán nhưng escrow chưa release",
+      "holding": "Người mua đã thanh toán nhưng ký quỹ chưa giải ngân",
       "estimate": "Đây là số ước tính. Số thực tế sẽ được hiển thị sau khi giao dịch hoàn tất."
     },
     "tabs": {
-      "escrow": "Escrow & Pending Payout",
-      "fees": "Fees & Deductions",
-      "transactions": "Transactions"
+      "escrow": "Ký quỹ & Chờ chi trả",
+      "fees": "Phí & Khấu trừ",
+      "transactions": "Giao dịch",
+      "deposits": "Tiền cọc",
+      "flow": "Luồng tiền"
     },
     "col": {
       "orderNumber": "Mã đơn",
       "itemTitle": "Sản phẩm",
       "orderStatus": "Đơn hàng",
-      "escrowStatus": "Escrow",
+      "escrowStatus": "Trạng thái ký quỹ",
       "holdReason": "Lý do giữ",
-      "buyerPaidAt": "Buyer trả",
-      "expectedRelease": "Dự kiến release",
+      "buyerPaidAt": "Người mua đã trả",
+      "expectedRelease": "Dự kiến giải ngân",
       "netPayout": "Dự kiến nhận"
     },
     "label": {
-      "released": "Đã release",
-      "estimate": "(estimate)"
+      "released": "Đã giải ngân",
+      "estimate": "(ước tính)"
     },
     "action": {
       "viewBreakdown": "Chi tiết",
-      "viewDispute": "Xem dispute",
+      "viewDispute": "Xem tranh chấp",
       "openOrder": "Mở chi tiết đơn hàng"
     },
     "drawer": {
       "title": "Chi tiết tiền",
       "orderStatus": "Trạng thái đơn",
-      "escrowStatus": "Trạng thái escrow",
-      "grossPaid": "Buyer đã trả",
+      "escrowStatus": "Trạng thái ký quỹ",
+      "grossPaid": "Người mua đã trả",
       "platformCommission": "Phí sàn (10%)",
       "payoutBeforeInspection": "Trước phí kiểm định",
       "inspectionFee": "Phí kiểm định (3%)",
-      "netPayout": "Seller nhận cuối",
+      "netPayout": "Người bán nhận cuối",
       "holdReason": "Lý do giữ",
-      "buyerPaidAt": "Buyer thanh toán lúc",
-      "expectedRelease": "Dự kiến release",
-      "decisionWindow": "Kết thúc decision window"
+      "buyerPaidAt": "Người mua thanh toán lúc",
+      "expectedRelease": "Dự kiến giải ngân",
+      "decisionWindow": "Kết thúc thời hạn xác nhận"
     },
     "fees": {
       "explainTitle": "Cách tính phí",
@@ -276,7 +278,7 @@
       "inspectionNote": "Chỉ áp dụng cho item có \"Sàn xác minh\".",
       "pendingCharges": "Phí seller đang chờ",
       "disputed": "Đang tranh chấp",
-      "readyToRelease": "Sẵn sàng release"
+      "readyToRelease": "Sẵn sàng giải ngân"
     },
     "empty": {
       "noEscrowTitle": "Chưa có giao dịch escrow",
@@ -288,23 +290,23 @@
       "frozenByDispute": "Tạm khóa do tranh chấp",
       "inspectionInProgress": "Đang kiểm định"
     },
-    "disputeFrozen": "Frozen by dispute"
+    "disputeFrozen": "Tạm khóa do tranh chấp"
   },
   "finalPrice": "Giá chốt",
   "escrowCard": {
     "title": "Thanh toán & Escrow",
-    "notPaid": "Buyer chưa thanh toán đơn hàng này. Khi thanh toán hoàn tất, chi tiết escrow sẽ hiển thị tại đây.",
+    "notPaid": "Người mua chưa thanh toán đơn hàng này. Khi thanh toán hoàn tất, chi tiết ký quỹ sẽ hiển thị tại đây.",
     "disputeHeld": "Tiền đang bị giữ do có tranh chấp.",
-    "buyerPaid": "Buyer đã thanh toán?",
-    "escrowStatus": "Trạng thái escrow",
+    "buyerPaid": "Người mua đã thanh toán?",
+    "escrowStatus": "Trạng thái ký quỹ",
     "whyLocked": "Vì sao chưa rút được?",
-    "buyerGross": "Buyer trả (gross)",
-    "released": "Đã release",
-    "estimatedPayout": "Dự kiến seller nhận",
+    "buyerGross": "Người mua trả (gộp)",
+    "released": "Đã giải ngân",
+    "estimatedPayout": "Dự kiến người bán nhận",
     "platformFee": "Phí sàn 10%",
     "inspectionFee": "Phí kiểm định 3%",
-    "estimatedRelease": "Dự kiến release",
-    "decisionWindowEnds": "Kết thúc decision window"
+    "estimatedRelease": "Dự kiến giải ngân",
+    "decisionWindowEnds": "Kết thúc thời hạn xác nhận"
   },
   "deposits": {
     "auctionDeposit": "Đặt cọc đấu giá"

@@ -18,6 +18,7 @@ import { AdminErrorState } from '@/features/admin/components/AdminErrorState'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 
 function ModerationTimelineNode({ review, sellerId }: { review: ItemReviewDto, sellerId: string }) {
+  const { t } = useTranslation('admin')
   const { data: user } = useAdminUserDetail(review.reviewerId)
   const isSeller = review.reviewerId === sellerId
   const name = user?.profile?.fullName || user?.userName || (review as any).reviewerName || (review as any).adminName || 'System'
@@ -26,7 +27,12 @@ function ModerationTimelineNode({ review, sellerId }: { review: ItemReviewDto, s
     <div>
       <Flex gap={8} align="baseline" wrap="wrap">
         <Typography.Text strong>
-          {name} {isSeller ? <Tag color="green" style={{ marginLeft: 4 }}>Seller</Tag> : <Tag color="blue" style={{ marginLeft: 4 }}>Admin/Inspector</Tag>}
+          {name}{' '}
+          {isSeller ? (
+            <Tag color="green" style={{ marginLeft: 4 }}>{t('itemDetail.reviewerTag.seller', 'Seller')}</Tag>
+          ) : (
+            <Tag color="blue" style={{ marginLeft: 4 }}>{t('itemDetail.reviewerTag.adminInspector', 'Admin/Inspector')}</Tag>
+          )}
         </Typography.Text>
         <Typography.Text type="secondary" style={{ fontSize: 12 }}>
           {formatDateTime(review.createdAt)}
@@ -34,7 +40,7 @@ function ModerationTimelineNode({ review, sellerId }: { review: ItemReviewDto, s
       </Flex>
       <div style={{ marginTop: 4 }}>
         <Space wrap>
-          <Typography.Text>Performed action:</Typography.Text>
+          <Typography.Text>{t('itemDetail.performedAction', 'Performed action')}:</Typography.Text>
           <StatusBadge status={review.action} size="small" />
         </Space>
       </div>
@@ -125,7 +131,7 @@ export default function AdminItemDetailPage() {
                 {seller?.profile?.fullName || seller?.userName || item.sellerName || 'Unknown Seller'}
               </Button>
               <StatusBadge status={item.status} />
-              {item.hasInboundShipment && <Tag color="purple">🏠 WAREHOUSE</Tag>}
+              {item.hasInboundShipment && <Tag color="purple">🏠 {t('itemDetail.warehouseTag', 'WAREHOUSE')}</Tag>}
             </Space>
           </div>
           {item.status === ItemStatus.PendingReview && (
@@ -219,7 +225,7 @@ export default function AdminItemDetailPage() {
                     loading={isLoadingAuctions}
                     columns={[
                       {
-                        title: 'ID',
+                        title: t('itemDetail.auctionHistoryColumns.id', 'ID'),
                         dataIndex: 'id',
                         key: 'id',
                         render: (id) => (
@@ -232,19 +238,19 @@ export default function AdminItemDetailPage() {
                         ),
                       },
                       {
-                        title: 'Type',
+                        title: t('itemDetail.auctionHistoryColumns.type', 'Type'),
                         dataIndex: 'auctionType',
                         key: 'auctionType',
                         render: (type) => formatEnumText(type),
                       },
                       {
-                        title: 'Status',
+                        title: t('itemDetail.auctionHistoryColumns.status', 'Status'),
                         dataIndex: 'status',
                         key: 'status',
                         render: (status) => <StatusBadge status={status} size="small" />,
                       },
                       {
-                        title: 'Starting Price',
+                        title: t('itemDetail.auctionHistoryColumns.startingPrice', 'Starting Price'),
                         dataIndex: 'startingPrice',
                         key: 'startingPrice',
                         align: 'right',
@@ -255,7 +261,7 @@ export default function AdminItemDetailPage() {
                         ),
                       },
                       {
-                        title: 'Current Price',
+                        title: t('itemDetail.auctionHistoryColumns.currentPrice', 'Current Price'),
                         dataIndex: 'currentPrice',
                         key: 'currentPrice',
                         align: 'right',
@@ -266,20 +272,20 @@ export default function AdminItemDetailPage() {
                         ),
                       },
                       {
-                        title: 'Bids',
+                        title: t('itemDetail.auctionHistoryColumns.bids', 'Bids'),
                         dataIndex: 'bidCount',
                         key: 'bidCount',
                         align: 'center',
                         render: (val) => val ?? 0,
                       },
                       {
-                        title: 'Start Time',
+                        title: t('itemDetail.auctionHistoryColumns.startTime', 'Start Time'),
                         dataIndex: 'startTime',
                         key: 'startTime',
                         render: (val) => formatDateTime(val),
                       },
                       {
-                        title: 'End Time',
+                        title: t('itemDetail.auctionHistoryColumns.endTime', 'End Time'),
                         dataIndex: 'endTime',
                         key: 'endTime',
                         render: (val) => formatDateTime(val),
@@ -309,7 +315,7 @@ export default function AdminItemDetailPage() {
                   {timelineItems.length > 0 ? (
                     <Timeline items={timelineItems} />
                   ) : (
-                    <Typography.Text type="secondary">No moderation history available.</Typography.Text>
+                    <Typography.Text type="secondary">{t('itemDetail.noModerationHistory', 'No moderation history available.')}</Typography.Text>
                   )}
                 </div>
               ),

@@ -213,13 +213,26 @@
   "verifiedDesc": "Danh tính của bạn đã được xác minh. Bạn có thể tạo hồ sơ người bán và tham gia tất cả các phiên đấu giá.",
   "reVerifyAtStore": "Yêu cầu xác minh lại",
   "returns": {
+    "pageTitle": "Trả hàng",
+    "pageSubtitle": "Quản lý hàng trả về từ kho và từ người mua",
+    "receiptHint": "Chụp ảnh sản phẩm trả về để xác minh tình trạng, sau đó xác nhận nhận hàng.",
+    "tabs": {
+      "warehouse": "Trả về từ kho",
+      "order": "Trả hàng từ người mua"
+    },
+    "emptyOrder": "Chưa có đơn hàng trả nào.",
     "columns": {
       "item": "Sản phẩm",
       "reason": "Lý do",
       "carrier": "Đơn vị / Mã vận đơn",
       "status": "Trạng thái",
       "delivered": "Đã giao",
-      "action": "Thao tác"
+      "action": "Thao tác",
+      "orderNumber": "Mã đơn",
+      "buyer": "Người mua",
+      "returnStatus": "Trạng thái trả hàng",
+      "shippedAt": "Ngày gửi",
+      "tracking": "Mã vận đơn"
     },
     "confirmed": "Đã xác nhận",
     "scanQr": "Quét QR",
@@ -244,5 +257,37 @@
   "amount": "Số tiền",
   "orderNumber": "Mã đơn hàng",
   "noOrders": "Không có đơn hàng",
-  "recentOrders": "Đơn hàng gần đây"
+  "recentOrders": "Đơn hàng gần đây",
+  "trustScore": "Điểm tin cậy",
+  "auctionOverview": {
+    "title": "Tổng quan đấu giá",
+    "subtitle": "Tất cả sản phẩm và phiên đấu giá của bạn trong một nơi",
+    "searchPlaceholder": "Tìm kiếm sản phẩm...",
+    "empty": "Chưa có phiên đấu giá nào",
+    "createAuction": "Tạo phiên đấu giá",
+    "noAuction": "Chưa có đấu giá",
+    "stats": {
+      "totalItems": "Tổng sản phẩm",
+      "withAuctions": "Có đấu giá",
+      "active": "Đang diễn ra",
+      "sold": "Đã bán"
+    },
+    "columns": {
+      "item": "Sản phẩm",
+      "itemStatus": "Trạng thái sản phẩm",
+      "latestAuction": "Phiên đấu giá mới nhất",
+      "actions": "Thao tác",
+      "endTime": "Thời gian kết thúc",
+      "type": "Loại",
+      "status": "Trạng thái",
+      "currentPrice": "Giá hiện tại",
+      "bids": "Lượt đấu",
+      "start": "Bắt đầu",
+      "end": "Kết thúc"
+    },
+    "actionTitles": {
+      "view": "Xem",
+      "dashboard": "Bảng điều khiển"
+    }
+  }
 }

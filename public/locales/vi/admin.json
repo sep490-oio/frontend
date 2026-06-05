@@ -98,7 +98,14 @@
     "severityCritical": "Nghiêm trọng",
     "reasonLabel": "Lý do",
     "reasonRequired": "Vui lòng nhập lý do",
-    "reasonPlaceholder": "Nhập lý do gắn cờ..."
+    "reasonPlaceholder": "Nhập lý do gắn cờ...",
+    "emailConfirmed": "Email đã xác nhận",
+    "emailUnconfirmed": "Email chưa xác nhận",
+    "flag": "Gắn cờ",
+    "flagSuccess": "Đã gắn cờ người dùng",
+    "identityUnverified": "Chưa xác minh danh tính",
+    "identityVerified": "Đã xác minh danh tính",
+    "viewUser": "Xem người dùng"
   },
   "userDetail": {
     "title": "Chi tiết người dùng",
@@ -119,7 +126,8 @@
     "phoneConfirmed": "SĐT đã xác nhận",
     "twoFactor": "Xác thực 2 bước",
     "yes": "Có",
-    "no": "Không"
+    "no": "Không",
+    "createdAt": "Ngày tạo"
   },
   "verifications": {
     "title": "Xác minh danh tính",
@@ -135,7 +143,8 @@
     "filterStatus": "Lọc trạng thái",
     "allStatuses": "Tất cả trạng thái",
     "approveSuccess": "Duyệt xác minh thành công",
-    "rejectSuccess": "Từ chối xác minh thành công"
+    "rejectSuccess": "Từ chối xác minh thành công",
+    "approveConfirm": "Bạn có chắc muốn duyệt xác minh này?"
   },
   "verificationDetail": {
     "title": "Chi tiết xác minh",
@@ -164,7 +173,26 @@
     "rejectReason": "Lý do từ chối",
     "rejectReasonPlaceholder": "Nhập lý do từ chối...",
     "description": "Mô tả",
-    "trustScore": "Điểm uy tín"
+    "trustScore": "Điểm uy tín",
+    "availableBalance": "Số dư khả dụng",
+    "averageRating": "Đánh giá trung bình",
+    "detailBreadcrumb": "Chi tiết",
+    "detailTitle": "Chi tiết hồ sơ người bán",
+    "errorLoadingProfile": "Lỗi khi tải hồ sơ",
+    "financialOverview": "Số dư ví",
+    "invalidId": "ID không hợp lệ",
+    "lastUpdated": "Cập nhật lần cuối",
+    "noDescription": "Chưa có mô tả",
+    "pendingBalance": "Số dư chờ xử lý",
+    "rejectReasonPrompt": "Nhập lý do từ chối:",
+    "storeDescription": "Mô tả cửa hàng",
+    "storeInfo": "Thông tin cửa hàng",
+    "totalSales": "Tổng sản phẩm đã bán",
+    "totalSalesAmount": "Tổng doanh thu",
+    "trustScoreUpdated": "Cập nhật lần cuối: ",
+    "userIdentity": "Danh tính người dùng",
+    "verifiedAt": "Xác minh lúc",
+    "walletNotActivated": "Ví chưa được kích hoạt"
   },
   "reviewQueue": {
     "title": "Hàng đợi kiểm duyệt",
@@ -183,7 +211,8 @@
     "reviewerIdPlaceholder": "Nhập ID người kiểm duyệt...",
     "assignSuccess": "Phân công thành công",
     "approveSuccess": "Duyệt sản phẩm thành công",
-    "rejectSuccess": "Từ chối sản phẩm thành công"
+    "rejectSuccess": "Từ chối sản phẩm thành công",
+    "confirmApprove": "Bạn có chắc muốn duyệt sản phẩm này?"
   },
   "itemDetail": {
     "title": "Chi tiết sản phẩm",
@@ -197,7 +226,31 @@
     "rejectReasonPlaceholder": "Nhập lý do từ chối...",
     "condition": "Tình trạng",
     "quantity": "Số lượng",
-    "category": "Danh mục"
+    "category": "Danh mục",
+    "overview": "Tổng quan",
+    "qa": "Q&A",
+    "auctionHistory": "Lịch sử đấu giá",
+    "logistics": "Vận chuyển & Thực hiện",
+    "moderation": "Kiểm duyệt & Kiểm định",
+    "description": "Mô tả",
+    "gallery": "Thư viện ảnh",
+    "warehouseTag": "KHO",
+    "performedAction": "Hành động đã thực hiện",
+    "noModerationHistory": "Chưa có lịch sử kiểm duyệt.",
+    "reviewerTag": {
+      "seller": "Người bán",
+      "adminInspector": "Quản trị/Kiểm định"
+    },
+    "auctionHistoryColumns": {
+      "id": "ID",
+      "type": "Loại",
+      "status": "Trạng thái",
+      "startingPrice": "Giá khởi điểm",
+      "currentPrice": "Giá hiện tại",
+      "bids": "Lượt đấu",
+      "startTime": "Bắt đầu",
+      "endTime": "Kết thúc"
+    }
   },
   "auctionControl": {
     "title": "Quản lý phiên đấu giá",
@@ -254,7 +307,59 @@
       "dismissed": "Đã bác bỏ"
     },
     "cancelBidWarning": "Hành động này sẽ hủy bid và được ghi audit. Lý do hủy sẽ được lưu lại.",
-    "cancelBidPlaceholder": "Nhập lý do hủy bid (sẽ lưu vào audit log)…"
+    "cancelBidPlaceholder": "Nhập lý do hủy bid (sẽ lưu vào audit log)…",
+    "adminLifecycleActions": "Thao tác vòng đời (Admin)",
+    "auctionEnd": "Kết thúc đấu giá",
+    "auctionStart": "Bắt đầu đấu giá",
+    "confirmOverride": "Xác nhận ghi đè",
+    "createRelisted": "Tạo phiên đấu giá đăng lại",
+    "destructiveWarning": "Các thao tác này không thể hoàn tác và ảnh hưởng đến tất cả người đặt giá, tiền đặt cọc và đơn hàng.",
+    "extendAuctionTime": "Gia hạn thời gian đấu giá",
+    "extendReasonPlaceholder": "Lý do gia hạn...",
+    "extendSuccess": "Đã gia hạn thời gian đấu giá",
+    "extendTimeBtn": "Gia hạn",
+    "extensionMinutes": "Số phút gia hạn",
+    "forceCancelAlert": "Thao tác này sẽ hủy phiên đấu giá, hủy mọi lượt đặt giá, hoàn trả tiền đặt cọc và đưa sản phẩm về trạng thái hoạt động.",
+    "forceCancelBtn": "Hủy bắt buộc",
+    "forceCancelTitle": "Hủy bắt buộc phiên đấu giá",
+    "forceEndAlert": "Thao tác này sẽ kết thúc phiên đấu giá ngay lập tức và xác định người thắng (nếu có).",
+    "forceEndBtn": "Kết thúc bắt buộc",
+    "forceEndTitle": "Kết thúc bắt buộc phiên đấu giá",
+    "forceStartBiddingBtn": "Bắt buộc mở đấu giá",
+    "forceStartBiddingContent": "Bạn có chắc muốn bắt buộc mở giai đoạn đấu giá NGAY BÂY GIỜ?",
+    "forceStartBiddingSuccess": "Đã mở giai đoạn đấu giá",
+    "forceStartBiddingTitle": "Bắt buộc mở đấu giá",
+    "forceStartQualBtn": "Bắt buộc mở vòng xác minh",
+    "forceStartQualContent": "Bạn có chắc muốn bắt buộc mở vòng xác minh NGAY BÂY GIỜ?",
+    "forceStartQualSuccess": "Đã mở vòng xác minh",
+    "forceStartQualTitle": "Bắt buộc mở vòng xác minh",
+    "lifecycleProgression": "Tiến trình vòng đời",
+    "lifecycleReasonPlaceholder": "Nhập lý do thực hiện thao tác này...",
+    "lifecycleSuccess": "Thực hiện thao tác thành công",
+    "newStatus": "Trạng thái mới",
+    "openOverrideForm": "Mở form ghi đè",
+    "openRelistForm": "Mở form đăng lại",
+    "overrideReasonPlaceholder": "Lý do ghi đè trạng thái...",
+    "overrideStatusTitle": "Ghi đè trạng thái đấu giá",
+    "overrideSuccess": "Đã ghi đè trạng thái",
+    "overrideWarning": "Việc ghi đè trạng thái sẽ bỏ qua máy trạng thái thông thường. Không có sự kiện nghiệp vụ nào được phát ra.",
+    "priorityTooltip": "Giá trị càng cao sẽ được hiển thị càng nổi bật",
+    "qualEnd": "Kết thúc vòng xác minh",
+    "qualStart": "Bắt đầu vòng xác minh",
+    "reason": "Lý do",
+    "reasonOptional": "Lý do (không bắt buộc)",
+    "relistAuction": "Đăng lại phiên đấu giá",
+    "relistDesc": "Tạo phiên đấu giá mới từ phiên này (áp dụng cho phiên đã thất bại/hủy/chấm dứt).",
+    "relistReasonPlaceholder": "Lý do đăng lại...",
+    "relistSuccess": "Đã đăng lại phiên đấu giá",
+    "relistTitle": "Đăng lại phiên đấu giá",
+    "selectNewStatus": "Chọn trạng thái mới",
+    "tabDangerZone": "Vùng nguy hiểm",
+    "tabDisplayExtend": "Hiển thị & Gia hạn",
+    "tabModeration": "Kiểm duyệt & Khẩn cấp",
+    "terminateAlert": "Thao tác này sẽ chấm dứt vĩnh viễn phiên đấu giá. Mọi lượt đặt giá bị hủy, người thắng bị xóa, và sản phẩm không thể đăng lại từ phiên này.",
+    "terminateBtn": "Chấm dứt",
+    "terminateTitle": "Chấm dứt phiên đấu giá"
   },
   "reports": {
     "title": "Báo cáo vi phạm",
@@ -425,14 +530,189 @@
     "complete": "Hoàn tất",
     "completeConfirm": "Xác nhận đã chuyển khoản cho yêu cầu rút tiền này?",
     "completeSuccess": "Hoàn tất rút tiền thành công",
-    "totalSystemBalance": "Tổng số dư hệ thống",
-    "escrowHolding": "Đang giữ ký quỹ",
-    "refundedAmount": "Số tiền đã hoàn",
-    "transferProofRequired": "Vui lòng tải lên ảnh chụp minh chứng chuyển khoản",
-    "transferProof": "Minh chứng",
+    "activityStats": "Thống kê hoạt động",
+    "allTypes": "Tất cả loại",
+    "auditTimeline": "Dòng thời gian kiểm toán",
+    "auditTrail": "Nhật ký kiểm toán",
+    "bankDetails": "Thông tin ngân hàng",
+    "buyer": "Người mua",
+    "commission": "Hoa hồng",
+    "comparedToLastWeek": "so với tuần trước",
     "completeWithdrawal": "Hoàn tất rút tiền",
+    "completedPayments": "Thanh toán thành công",
     "confirmComplete": "Xác nhận chuyển khoản",
-    "revenueChart": "Biểu đồ dòng tiền"
+    "escrowAction": {
+      "actionFailed": "Thao tác thất bại",
+      "refund": "Hoàn tiền cho người mua",
+      "refundSuccess": "Đã hoàn ký quỹ cho người mua",
+      "release": "Giải ngân cho người bán",
+      "releaseSuccess": "Đã giải ngân ký quỹ cho người bán"
+    },
+    "escrowActionReasonPlaceholder": "Nhập lý do cho thao tác này...",
+    "escrowBreakdown": "Chi tiết ký quỹ",
+    "escrowDetails": "Chi tiết ký quỹ",
+    "escrowForceAction": {
+      "refundOk": "Hoàn tiền",
+      "refundTitle": "Hoàn ký quỹ bắt buộc cho người mua",
+      "releaseOk": "Giải ngân",
+      "releaseTitle": "Giải ngân ký quỹ bắt buộc cho người bán"
+    },
+    "escrowHolding": "Đang giữ ký quỹ",
+    "escrowSource": "Thông tin nguồn",
+    "escrowStatus": {
+      "forfeited": "Đã tịch thu",
+      "holding": "Đang giữ",
+      "refunded": "Đã hoàn",
+      "released": "Đã giải ngân"
+    },
+    "escrowTimeline": {
+      "actionBy": "Thực hiện bởi",
+      "adminAction": "Thao tác của Admin",
+      "forfeitedToPlatform": "Tịch thu về nền tảng",
+      "fundsHeld": "Tiền đã được giữ trong ký quỹ",
+      "refundedToBuyer": "Đã hoàn cho người mua",
+      "releasedToSeller": "Đã giải ngân cho người bán",
+      "systemLock": "Hệ thống tự động khóa cho đơn hàng"
+    },
+    "escrowTotal": "Tổng ký quỹ",
+    "failedPayments": "Thanh toán thất bại",
+    "filterType": "Lọc theo loại",
+    "forfeit": "Tịch thu",
+    "forfeitedToPlatform": "Tịch thu vào doanh thu nền tảng",
+    "holdingEscrowCount": "Đang giữ ký quỹ",
+    "holdingEscrowTooltip": "Tổng tiền đang được giữ trong ký quỹ ở tất cả đơn hàng đang xử lý.",
+    "incomeCategory": {
+      "commission": "Hoa hồng",
+      "forfeit": "Tịch thu",
+      "inspection_fee": "Phí kiểm định",
+      "other": "Khác",
+      "refund": "Hoàn tiền"
+    },
+    "incomeTable": {
+      "creditIncome": "Ghi có (Thu)",
+      "debitOutflow": "Ghi nợ (Chi)",
+      "filterByCategory": "Lọc theo danh mục",
+      "searchPlaceholder": "Tìm theo mô tả...",
+      "totalCredit": "Tổng ghi có",
+      "totalDebit": "Tổng ghi nợ"
+    },
+    "inspectionFees": "Phí kiểm định",
+    "item": "Sản phẩm",
+    "moneyDistribution": "Phân bổ dòng tiền",
+    "netAmount": "Số tiền ròng",
+    "netRevenue": "Doanh thu ròng",
+    "orderLabel": "Đơn hàng",
+    "pendingCount": "yêu cầu",
+    "platformBalanceTooltip": "Số dư ròng của nền tảng sau khi đối soát, hoàn tiền và các khoản giải ngân đang chờ.",
+    "platformCommission": "Hoa hồng nền tảng",
+    "refundedAmount": "Số tiền đã hoàn",
+    "refundedEscrow": "Ký quỹ đã hoàn",
+    "refundedLabel": "Hoàn tiền",
+    "refundedToBuyer": "Đã hoàn cho người mua",
+    "releasedEscrow": "Ký quỹ đã giải ngân",
+    "releasedLabel": "Giải ngân",
+    "revenueChart": {
+      "label": {
+        "commission": "Hoa hồng",
+        "forfeit": "Tịch thu",
+        "inspection": "Kiểm định",
+        "net": "Ròng",
+        "refunds": "Hoàn tiền"
+      },
+      "legend": {
+        "commission": "Hoa hồng 10%",
+        "forfeit": "Tịch thu",
+        "inspection": "Kiểm định 3%",
+        "netRevenue": "Doanh thu ròng",
+        "refunds": "Hoàn tiền"
+      }
+    },
+    "searchEscrow": "Tìm ký quỹ...",
+    "searchTransaction": "Tìm giao dịch...",
+    "searchWithdrawal": "Tìm yêu cầu rút tiền...",
+    "section": {
+      "noPendingWithdrawals": "Không có yêu cầu rút tiền chờ duyệt",
+      "pendingWithdrawals": "Yêu cầu rút tiền chờ duyệt",
+      "revenueChart": "Biểu đồ doanh thu",
+      "viewAll": "Xem tất cả"
+    },
+    "seller": "Người bán",
+    "systemAuto": "Hệ thống (Tự động)",
+    "totalSystemBalance": "Tổng số dư hệ thống",
+    "transferNotePlaceholder": "Tùy chọn: số tham chiếu hoặc ghi chú chuyển khoản",
+    "transferProof": "Minh chứng",
+    "transferProofLabel": "Tải lên ảnh chụp minh chứng chuyển khoản",
+    "transferProofRequired": "Vui lòng tải lên ảnh chụp minh chứng chuyển khoản",
+    "transferredToSeller": "Đã chuyển cho người bán",
+    "txnDetail": {
+      "label": {
+        "actions": "Thao tác",
+        "amount": "Số tiền",
+        "auctionItem": "Sản phẩm đấu giá",
+        "buyer": "Người mua",
+        "copied": "Đã sao chép!",
+        "copy": "Sao chép",
+        "copyOrderId": "Sao chép mã đơn",
+        "created": "Tạo lúc",
+        "description": "Mô tả",
+        "disputed": "TRANH CHẤP",
+        "escrowId": "Mã ký quỹ",
+        "fee": "Phí",
+        "gateway": "Cổng thanh toán",
+        "grossAmount": "Tổng tiền",
+        "held": "Đang giữ",
+        "id": "ID",
+        "item": "Sản phẩm",
+        "netAmount": "Số tiền ròng",
+        "order": "Đơn hàng",
+        "orderPrefix": "Đơn",
+        "paymentMethod": "Phương thức thanh toán",
+        "processed": "Xử lý lúc",
+        "reasonRequired": "Lý do *",
+        "reference": "Mã tham chiếu",
+        "refunded": "Đã hoàn",
+        "released": "Đã giải ngân",
+        "seller": "Người bán",
+        "status": "Trạng thái",
+        "timeline": "Dòng thời gian",
+        "transferProof": "Minh chứng chuyển khoản",
+        "txnNumber": "Mã giao dịch",
+        "type": "Loại",
+        "user": "Người dùng",
+        "viewDetails": "Xem chi tiết"
+      },
+      "title": "Chi tiết giao dịch"
+    },
+    "txnType": {
+      "deposit": "Đặt cọc",
+      "fee": "Phí",
+      "payment": "Thanh toán",
+      "payout": "Chi trả",
+      "refund": "Hoàn tiền",
+      "withdrawal": "Rút tiền"
+    },
+    "uploadProof": "Bấm để tải ảnh lên",
+    "walletDetails": "Chi tiết ví",
+    "walletTopUps": "Nạp ví",
+    "withdrawalDetails": "Chi tiết & nhật ký rút tiền",
+    "withdrawalStatus": {
+      "completed": "Đã hoàn tất",
+      "pending": "Chờ duyệt",
+      "rejected": "Đã từ chối"
+    },
+    "withdrawalTimeline": {
+      "byUser": "Bởi người dùng",
+      "completed": "Đã hoàn tất",
+      "note": "Ghi chú",
+      "processedBy": "Xử lý bởi",
+      "reason": "Lý do",
+      "rejected": "Đã từ chối",
+      "rejectedBy": "Từ chối bởi",
+      "requested": "Đã yêu cầu rút tiền",
+      "systemAdmin": "Hệ thống/Admin",
+      "unknown": "Không xác định",
+      "unknownTime": "Không rõ thời gian"
+    }
   },
   "terms": {
     "title": "Điều khoản sử dụng",
@@ -949,7 +1229,10 @@
     "back": "Quay lại",
     "save": "Lưu",
     "create": "Tạo mới",
-    "id": "ID"
+    "id": "ID",
+    "backToList": "Quay lại danh sách",
+    "no": "Không",
+    "yes": "Có"
   },
   "moderation": {
     "title": "Trung tâm kiểm duyệt",
@@ -1039,7 +1322,9 @@
       "on_delivering": "Đang giao",
       "delivered": "Đã giao",
       "shipping_overdue": "Quá hạn giao",
-      "escalated": "Đã chuyển xử lý"
+      "escalated": "Đã chuyển xử lý",
+      "noShippingData": "Không có dữ liệu vận chuyển",
+      "noShippingDataDesc": "Chưa có dữ liệu vận chuyển."
     },
     "escalationReason": {
       "seller_ship_sla_missed": "Người bán quá hạn giao 3 ngày"
@@ -1219,7 +1504,8 @@
       "relist": "Trả sản phẩm về trạng thái hoạt động để đấu giá mới",
       "cancel": "Hủy phiên đấu giá vĩnh viễn",
       "flagBuyer": "Đánh dấu tài khoản người mua để xem xét",
-      "flagSeller": "Đánh dấu tài khoản người bán để xem xét"
+      "flagSeller": "Đánh dấu tài khoản người bán để xem xét",
+      "forceReinspection": "Bắt buộc nhân viên kho kiểm định lại sản phẩm"
     },
     "summary": {
       "escrowReleaseToSeller": "Tiền ký quỹ sẽ được giải phóng cho người bán",
@@ -1239,7 +1525,8 @@
       "auctionRelist": "Sản phẩm sẽ được đăng lại đấu giá",
       "auctionCancel": "Phiên đấu giá sẽ bị hủy",
       "penaltyFlagBuyer": "Tài khoản người mua sẽ bị đánh dấu để xem xét",
-      "penaltyFlagSeller": "Tài khoản người bán sẽ bị đánh dấu để xem xét"
+      "penaltyFlagSeller": "Tài khoản người bán sẽ bị đánh dấu để xem xét",
+      "warehouseForceReinspection": "Sản phẩm sẽ được yêu cầu kiểm định lại bởi nhân viên kho"
     },
     "validation": {
       "refundAmountRequired": "Số tiền hoàn phải lớn hơn 0 khi chọn hoàn tiền một phần.",
@@ -1248,6 +1535,10 @@
       "noActionsWarning": "Chưa chọn hành động giải quyết nào. Bạn có chắc không?",
       "returnToSellerNeedsOpenReturn": "Mục \"Trả về người bán\" yêu cầu Vận chuyển \"Mở đơn trả hàng\" để kích hoạt quy trình trả hàng. Nếu không, việc trả hàng chỉ là thủ công.",
       "refundWithoutReturnWarning": "Hoàn tiền sẽ được thực hiện ngay lập tức mà không chờ người mua trả hàng. Chọn Vận chuyển \"Mở đơn trả hàng\" để hoãn hoàn tiền cho đến khi người bán xác nhận đã nhận hàng."
+    },
+    "warehouseInspectionOption": {
+      "noAction": "Không hành động",
+      "forceReinspection": "Bắt buộc kiểm định lại"
     }
   },
   "disputeList": {
@@ -1268,10 +1559,321 @@
     }
   },
   "revenue": {
-    "incomeTabTitle": "Doanh thu nền tảng"
+    "incomeTabTitle": "Doanh thu nền tảng",
+    "amount": "Số tiền",
+    "balanceAfter": "Số dư sau",
+    "category": "Danh mục",
+    "chartTitle": "Doanh thu theo thời gian",
+    "commission": "Hoa hồng",
+    "date": "Ngày",
+    "day": "Ngày",
+    "description": "Mô tả",
+    "filterType": "Lọc theo loại",
+    "forfeitIncome": "Tịch thu",
+    "inspectionFees": "Kiểm định",
+    "month": "Tháng",
+    "noData": "Không có dữ liệu doanh thu cho giai đoạn này",
+    "totalRevenue": "Doanh thu ròng",
+    "type": "Loại",
+    "week": "Tuần"
   },
   "actions": {
     "approve": "Phê duyệt",
     "reject": "Từ chối"
+  },
+  "auctions": {
+    "title": "Phiên đấu giá",
+    "subtitle": "Tất cả phiên đấu giá trên nền tảng — mọi trạng thái",
+    "statusConfig": {
+      "draft": "Nháp",
+      "pending": "Chờ duyệt",
+      "approved": "Đã duyệt",
+      "scheduled": "Đã lên lịch",
+      "active": "Đang diễn ra",
+      "ended": "Đã kết thúc",
+      "sold": "Đã bán",
+      "completed": "Hoàn thành",
+      "payment_defaulted": "Chưa thanh toán",
+      "cancelled": "Đã hủy",
+      "failed": "Thất bại",
+      "terminated": "Đã chấm dứt"
+    },
+    "statusTabs": {
+      "all": "Tất cả",
+      "active": "Đang diễn ra",
+      "scheduled": "Đã lên lịch",
+      "pending": "Chờ duyệt",
+      "sold": "Đã bán",
+      "failedCancelled": "Thất bại / Đã hủy"
+    },
+    "sortOptions": {
+      "newestFirst": "Mới nhất trước",
+      "oldestFirst": "Cũ nhất trước",
+      "priceHighLow": "Giá: Cao → Thấp",
+      "priceLowHigh": "Giá: Thấp → Cao",
+      "mostBids": "Nhiều lượt đấu nhất",
+      "endingSoon": "Sắp kết thúc"
+    },
+    "columns": {
+      "item": "Sản phẩm",
+      "status": "Trạng thái",
+      "price": "Giá",
+      "bids": "Lượt đấu",
+      "time": "Thời gian",
+      "flags": "Cờ",
+      "actions": "Thao tác"
+    },
+    "typeIcons": {
+      "sealed": "🔒 Kín",
+      "regular": "🔨 Thường"
+    },
+    "bin": "MNN",
+    "timeStart": "Bắt đầu",
+    "timeEnd": "Kết thúc",
+    "flags": {
+      "featured": "Nổi bật",
+      "endingSoon": "Sắp kết thúc"
+    },
+    "actionTitles": {
+      "adminControl": "Quản lý Admin",
+      "viewPublic": "Xem công khai"
+    },
+    "filters": {
+      "search": "Tìm theo tiêu đề hoặc ID...",
+      "exactStatus": "Trạng thái chính xác",
+      "sortBy": "Sắp xếp theo"
+    },
+    "pagination": {
+      "total": "{{count}} phiên đấu giá"
+    }
+  },
+  "items": {
+    "title": "Kho sản phẩm",
+    "empty": "Không tìm thấy sản phẩm phù hợp với tiêu chí đã chọn",
+    "columns": {
+      "item": "Sản phẩm",
+      "seller": "Người bán",
+      "category": "Danh mục",
+      "condition": "Tình trạng",
+      "status": "Trạng thái",
+      "location": "Vị trí",
+      "addedDate": "Ngày thêm",
+      "action": "Thao tác"
+    },
+    "filters": {
+      "search": "Tìm tiêu đề hoặc ID...",
+      "status": "Lọc trạng thái",
+      "location": "Lọc vị trí",
+      "apply": "Áp dụng bộ lọc"
+    },
+    "statusOptions": {
+      "pending_review": "Chờ duyệt",
+      "approved": "Đã duyệt",
+      "active": "Đang hoạt động",
+      "in_auction": "Đang đấu giá",
+      "sold": "Đã bán",
+      "rejected": "Từ chối"
+    },
+    "locationOptions": {
+      "warehouse": "Trong kho",
+      "withSeller": "Tại người bán"
+    },
+    "action": {
+      "viewDetails": "Xem chi tiết"
+    }
+  },
+  "orders": {
+    "title": "Đơn hàng",
+    "subtitle": "Tất cả đơn hàng trên nền tảng",
+    "statusOptions": {
+      "pendingPayment": "Chờ thanh toán",
+      "paid": "Đã thanh toán",
+      "processing": "Đang xử lý",
+      "pickedUp": "Đã lấy hàng",
+      "onDelivering": "Đang giao",
+      "delivered": "Đã giao",
+      "completed": "Hoàn thành",
+      "cancelled": "Đã hủy",
+      "refunded": "Đã hoàn tiền",
+      "disputed": "Đang tranh chấp"
+    },
+    "columns": {
+      "orderNumber": "Mã đơn",
+      "item": "Sản phẩm",
+      "buyer": "Người mua",
+      "seller": "Người bán",
+      "amount": "Số tiền",
+      "status": "Trạng thái",
+      "created": "Ngày tạo",
+      "action": "Thao tác"
+    },
+    "filters": {
+      "search": "Tìm theo mã đơn hoặc ID...",
+      "status": "Trạng thái"
+    },
+    "pagination": {
+      "total": "{{count}} đơn hàng"
+    }
+  },
+  "auctionDetail": {
+    "backToList": "Quay lại danh sách",
+    "header": {
+      "buyNow": "MUA NGAY",
+      "finalPrice": "Giá chốt",
+      "startPriceIncrement": "Giá khởi điểm / Bước giá",
+      "time": "Thời gian",
+      "totalBids": "Tổng lượt đặt giá",
+      "winner": "Người thắng"
+    },
+    "notFoundDesc": "Phiên đấu giá bạn đang tìm không tồn tại hoặc đã bị xóa.",
+    "notFoundTitle": "Không tìm thấy phiên đấu giá",
+    "statusOverride": {
+      "active": "Đang diễn ra",
+      "approved": "Đã duyệt",
+      "cancelled": "Đã hủy",
+      "completed": "Hoàn thành",
+      "draft": "Nháp",
+      "ended": "Đã kết thúc",
+      "failed": "Thất bại",
+      "payment_defaulted": "Chưa thanh toán",
+      "pending": "Chờ duyệt",
+      "scheduled": "Đã lên lịch",
+      "sold": "Đã bán",
+      "terminated": "Đã chấm dứt"
+    },
+    "summary": {
+      "action": {
+        "createOrder": "Tạo đơn hàng",
+        "viewOrder": "Xem chi tiết đơn hàng"
+      },
+      "bidType": {
+        "auto": "Tự động",
+        "manual": "Thủ công"
+      },
+      "col": {
+        "amount": "Số tiền",
+        "bidder": "NGƯỜI ĐẶT GIÁ",
+        "date": "Thời gian",
+        "status": "Trạng thái",
+        "type": "Loại"
+      },
+      "financialsEscrow": "Tài chính & Ký quỹ",
+      "financialsSummary": "Tổng quan tài chính",
+      "noBidHistory": "Chưa có lịch sử đặt giá.",
+      "stat": {
+        "amountPaidDeposit": "Tiền đã nộp (Đặt cọc)",
+        "finalBid": "Giá chốt cuối cùng",
+        "platformCommission": "Hoa hồng nền tảng",
+        "sellerPayout": "Tiền chi trả cho người bán",
+        "totalHeld": "Tổng đang giữ",
+        "totalRefunded": "Tổng đã hoàn",
+        "totalReleased": "Tổng đã giải ngân"
+      },
+      "tab": {
+        "bidHistory": "🔨 Lịch sử đặt giá",
+        "fulfillment": "📦 Vận chuyển & Bằng chứng",
+        "orderFinancials": "🧾 Đơn hàng & Tài chính"
+      },
+      "unknownBidder": "Người đặt giá ẩn danh"
+    }
+  },
+  "orderDetail": {
+    "action": {
+      "forceCancel": "Hủy bắt buộc",
+      "forceRefund": "Hoàn tiền bắt buộc",
+      "overrideStatus": "Ghi đè trạng thái"
+    },
+    "backToOrders": "Quay lại danh sách đơn",
+    "buyer": "Người mua",
+    "label": {
+      "address": "Địa chỉ",
+      "buyer": "Người mua",
+      "cancelledAt": "Hủy lúc",
+      "carrier": "Đơn vị vận chuyển",
+      "completedAt": "Hoàn thành lúc",
+      "created": "Tạo lúc",
+      "currency": "Đơn vị tiền",
+      "deliveredAt": "Giao lúc",
+      "depositApplied": "Đặt cọc đã áp dụng",
+      "description": "Mô tả",
+      "escrowStatus": "Trạng thái ký quỹ",
+      "final": "Tổng cuối",
+      "gatewayPaid": "Cổng thanh toán",
+      "held": "Đang giữ",
+      "orderNumber": "Mã đơn hàng",
+      "paidAt": "Thanh toán lúc",
+      "paymentDue": "Hạn thanh toán",
+      "phone": "Số điện thoại",
+      "reason": "Lý do",
+      "recipient": "Người nhận",
+      "refunded": "Đã hoàn",
+      "released": "Đã giải ngân",
+      "requested": "Yêu cầu lúc",
+      "seller": "Người bán",
+      "shipmentId": "Mã vận đơn",
+      "shippedAt": "Gửi lúc",
+      "status": "Trạng thái",
+      "totalAmount": "Tổng tiền",
+      "tracking": "Mã theo dõi",
+      "walletApplied": "Trả từ ví"
+    },
+    "modal": {
+      "confirmCancel": "Xác nhận hủy",
+      "confirmOverride": "Xác nhận ghi đè",
+      "confirmRefund": "Xác nhận hoàn tiền",
+      "financialWarning": "Thao tác này sẽ ảnh hưởng đến dòng tiền và không thể hoàn tác. Bạn có chắc không?",
+      "forceCancelDescription": "Thao tác này sẽ hủy đơn hàng từ bất kỳ trạng thái nào và hoàn lại toàn bộ ký quỹ đang giữ cho người mua.",
+      "forceCancelTitle": "Hủy bắt buộc đơn hàng",
+      "forceRefundDescription": "Thao tác này sẽ đánh dấu đơn hàng đã hoàn tiền và giải ngân toàn bộ ký quỹ về cho người mua.",
+      "forceRefundTitle": "Hoàn tiền bắt buộc đơn hàng",
+      "overrideStatusDescription": "Thao tác này sẽ thay đổi trực tiếp trạng thái đơn hàng. Hãy sử dụng hết sức thận trọng.",
+      "overrideStatusTitle": "Ghi đè trạng thái đơn hàng"
+    },
+    "placeholder": {
+      "cancelReason": "Lý do hủy bắt buộc...",
+      "overrideReason": "Lý do ghi đè trạng thái...",
+      "refundReason": "Lý do hoàn tiền bắt buộc...",
+      "selectNewStatus": "Chọn trạng thái mới"
+    },
+    "section": {
+      "buyerDeliveryPhotos": "Ảnh nhận hàng của người mua",
+      "directShipment": "Vận đơn người bán",
+      "escrowSummary": "Tổng quan ký quỹ",
+      "evidence": "Bằng chứng",
+      "item": "Sản phẩm",
+      "monitoringAlerts": "Cảnh báo giám sát",
+      "orderInformation": "Thông tin đơn hàng",
+      "outboundShipment": "Vận đơn xuất kho",
+      "parties": "Các bên liên quan",
+      "paymentBreakdown": "Chi tiết thanh toán",
+      "returnRequest": "Yêu cầu hoàn trả",
+      "sellerPackagePhotos": "Ảnh đóng gói của người bán",
+      "shippingAddress": "Địa chỉ giao hàng"
+    },
+    "seller": "Người bán",
+    "statusOptions": {
+      "cancelled": "Đã hủy",
+      "completed": "Hoàn thành",
+      "delivered": "Đã giao",
+      "disputed": "Đang tranh chấp",
+      "on_delivering": "Đang giao",
+      "paid": "Đã thanh toán",
+      "pending_payment": "Chờ thanh toán",
+      "picked_up": "Đã lấy hàng",
+      "processing": "Đang xử lý",
+      "refunded": "Đã hoàn tiền",
+      "shipped": "Đã gửi"
+    },
+    "title": "Đơn hàng",
+    "toast": {
+      "copied": "Đã sao chép!",
+      "forceCancelError": "Hủy bắt buộc đơn hàng thất bại",
+      "forceCancelSuccess": "Đã hủy bắt buộc đơn hàng",
+      "forceRefundError": "Hoàn tiền bắt buộc thất bại",
+      "forceRefundSuccess": "Đã hoàn tiền bắt buộc đơn hàng",
+      "overrideError": "Ghi đè trạng thái đơn hàng thất bại",
+      "overrideSuccess": "Đã ghi đè trạng thái đơn hàng"
+    },
+    "view": "Xem"
   }
 }

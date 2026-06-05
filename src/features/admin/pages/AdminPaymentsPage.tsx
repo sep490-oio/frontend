@@ -167,26 +167,26 @@ export default function AdminPaymentsPage() {
     try {
       if (type === 'release') {
         await forceReleaseEscrow.mutateAsync({ id: escrow.id, reason: escrowActionReason })
-        message.success('Escrow released to seller')
+        message.success(t('payments.escrowAction.releaseSuccess', 'Escrow released to seller'))
       } else {
         await forceRefundEscrow.mutateAsync({ id: escrow.id, reason: escrowActionReason })
-        message.success('Escrow refunded to buyer')
+        message.success(t('payments.escrowAction.refundSuccess', 'Escrow refunded to buyer'))
       }
       setEscrowActionModal({ open: false, type: 'release', escrow: null })
       setEscrowActionReason('')
     } catch {
-      message.error('Action failed')
+      message.error(t('payments.escrowAction.actionFailed', 'Action failed'))
     }
   }
 
   // ── Transaction type display helpers ──────────────────────────────
   const txnTypeConfig: Record<string, { color: string; label: string }> = {
-    payment: { color: 'green', label: 'Payment' },
-    deposit: { color: 'blue', label: 'Deposit' },
-    fee: { color: 'gold', label: 'Fee' },
-    refund: { color: 'red', label: 'Refund' },
-    payout: { color: 'purple', label: 'Payout' },
-    withdrawal: { color: 'default', label: 'Withdrawal' },
+    payment: { color: 'green', label: t('payments.txnType.payment', 'Payment') },
+    deposit: { color: 'blue', label: t('payments.txnType.deposit', 'Deposit') },
+    fee: { color: 'gold', label: t('payments.txnType.fee', 'Fee') },
+    refund: { color: 'red', label: t('payments.txnType.refund', 'Refund') },
+    payout: { color: 'purple', label: t('payments.txnType.payout', 'Payout') },
+    withdrawal: { color: 'default', label: t('payments.txnType.withdrawal', 'Withdrawal') },
   }
 
   const withdrawalColumns: ColumnsType<AdminWithdrawalDto> = [
@@ -303,12 +303,12 @@ export default function AdminPaymentsPage() {
 
   const transactionColumns: ColumnsType<PaymentTransactionDto> = [
     {
-      title: 'Txn #',
+      title: t('payments.txnDetail.label.txnNumber', 'Txn #'),
       dataIndex: 'transactionNumber',
       key: 'transactionNumber',
       width: 130,
       render: (val: string | undefined, record) => (
-        <Typography.Text copyable={{ text: val ?? record.id, tooltips: ['Copy', 'Copied!'] }} style={{ fontFamily: 'monospace', fontSize: 12 }}>
+        <Typography.Text copyable={{ text: val ?? record.id, tooltips: [t('payments.txnDetail.label.copy', 'Copy'), t('payments.txnDetail.label.copied', 'Copied!')] }} style={{ fontFamily: 'monospace', fontSize: 12 }}>
           {val ?? record.id.slice(0, 8)}
         </Typography.Text>
       ),
@@ -324,7 +324,7 @@ export default function AdminPaymentsPage() {
       },
     },
     {
-      title: 'User',
+      title: t('payments.txnDetail.label.user', 'User'),
       key: 'user',
       width: 160,
       render: (_, record) => record.userId ? (
@@ -346,7 +346,7 @@ export default function AdminPaymentsPage() {
           <Typography.Text strong>{formatCurrency(record.amount, record.currency)}</Typography.Text>
           {record.fee != null && record.fee > 0 && (
             <Typography.Text type="secondary" style={{ fontSize: 11 }}>
-              Fee: {formatCurrency(record.fee, record.currency)} → Net: {formatCurrency(record.netAmount ?? record.amount, record.currency)}
+              {t('payments.txnDetail.label.fee', 'Fee')}: {formatCurrency(record.fee, record.currency)} → {t('payments.revenueChart.label.net', 'Net')}: {formatCurrency(record.netAmount ?? record.amount, record.currency)}
             </Typography.Text>
           )}
         </Space>
@@ -366,14 +366,14 @@ export default function AdminPaymentsPage() {
       },
     },
     {
-      title: 'Reference',
+      title: t('payments.txnDetail.label.reference', 'Reference'),
       key: 'reference',
       width: 180,
       render: (_, record) => {
         if (record.orderId) {
           return (
             <Button type="link" size="small" onClick={(e) => { e.stopPropagation(); navigate(`/admin/orders/${record.orderId}`) }} style={{ padding: 0 }}>
-              Order {record.orderNumber ?? record.orderId?.slice(0, 8)}
+              {t('payments.txnDetail.label.orderPrefix', 'Order')} {record.orderNumber ?? record.orderId?.slice(0, 8)}
             </Button>
           )
         }
@@ -382,7 +382,7 @@ export default function AdminPaymentsPage() {
       },
     },
     {
-      title: 'Payment Method',
+      title: t('payments.txnDetail.label.paymentMethod', 'Payment Method'),
       dataIndex: 'gatewayProvider',
       key: 'gateway',
       width: 90,
@@ -400,7 +400,7 @@ export default function AdminPaymentsPage() {
       key: 'actions',
       width: 80,
       render: (_, record) => (
-        <Tooltip title="View Details">
+        <Tooltip title={t('payments.txnDetail.label.viewDetails', 'View Details')}>
           <Button size="small" type="text" icon={<EllipsisOutlined />} onClick={() => { setTxnDrawerRecord(record); setTxnDrawerOpen(true) }} />
         </Tooltip>
       ),
@@ -409,7 +409,7 @@ export default function AdminPaymentsPage() {
 
   const escrowColumns: ColumnsType<EscrowDto> = [
     {
-      title: 'Item',
+      title: t('payments.txnDetail.label.item', 'Item'),
       key: 'item',
       width: 200,
       render: (_, record) => (
@@ -418,10 +418,10 @@ export default function AdminPaymentsPage() {
             <Typography.Text strong ellipsis style={{ maxWidth: 180 }}>
               {record.auctionItemTitle ?? '—'}
             </Typography.Text>
-            {record.isDisputed && <Tag color="red">DISPUTED</Tag>}
+            {record.isDisputed && <Tag color="red">{t('payments.txnDetail.label.disputed', 'DISPUTED')}</Tag>}
           </Space>
-          <Typography.Text 
-            copyable={{ text: record.orderId, tooltips: ['Copy Order ID', 'Copied!'] }} 
+          <Typography.Text
+            copyable={{ text: record.orderId, tooltips: [t('payments.txnDetail.label.copyOrderId', 'Copy Order ID'), t('payments.txnDetail.label.copied', 'Copied!')] }}
             style={{ fontSize: 11, cursor: 'pointer', fontFamily: 'monospace' }}
             ellipsis
             onClick={(e) => { e.stopPropagation(); navigate(`/admin/orders/${record.orderId}`) }}
@@ -432,7 +432,7 @@ export default function AdminPaymentsPage() {
       ),
     },
     {
-      title: 'Buyer',
+      title: t('payments.txnDetail.label.buyer', 'Buyer'),
       key: 'buyer',
       width: 150,
       render: (_, record) => record.buyerId ? (
@@ -443,7 +443,7 @@ export default function AdminPaymentsPage() {
       ) : '-',
     },
     {
-      title: 'Seller',
+      title: t('payments.txnDetail.label.seller', 'Seller'),
       key: 'seller',
       width: 150,
       render: (_, record) => record.sellerId ? (
@@ -476,32 +476,32 @@ export default function AdminPaymentsPage() {
       },
     },
     {
-      title: 'Timeline',
+      title: t('payments.txnDetail.label.timeline', 'Timeline'),
       key: 'timeline',
       width: 150,
       render: (_, record) => (
         <Space direction="vertical" size={0}>
-          <Typography.Text style={{ fontSize: 11 }}>Held: {formatDateTime(record.createdAt)}</Typography.Text>
-          {record.releasedAt && <Typography.Text style={{ fontSize: 11 }} type="success">Released: {formatDateTime(record.releasedAt)}</Typography.Text>}
-          {record.refundedAt && <Typography.Text style={{ fontSize: 11 }} type="warning">Refunded: {formatDateTime(record.refundedAt)}</Typography.Text>}
+          <Typography.Text style={{ fontSize: 11 }}>{t('payments.txnDetail.label.held', 'Held')}: {formatDateTime(record.createdAt)}</Typography.Text>
+          {record.releasedAt && <Typography.Text style={{ fontSize: 11 }} type="success">{t('payments.txnDetail.label.released', 'Released')}: {formatDateTime(record.releasedAt)}</Typography.Text>}
+          {record.refundedAt && <Typography.Text style={{ fontSize: 11 }} type="warning">{t('payments.txnDetail.label.refunded', 'Refunded')}: {formatDateTime(record.refundedAt)}</Typography.Text>}
         </Space>
       ),
     },
     {
-      title: 'Actions',
+      title: t('payments.txnDetail.label.actions', 'Actions'),
       key: 'actions',
       width: 250,
       render: (_, record) => {
         const moreActions = [
           {
             key: 'release',
-            label: 'Release to seller',
+            label: t('payments.escrowAction.release', 'Release to seller'),
             icon: <SendOutlined />,
             onClick: () => { setEscrowActionModal({ open: true, type: 'release', escrow: record }); setEscrowActionReason('') }
           },
           {
             key: 'refund',
-            label: 'Refund to buyer',
+            label: t('payments.escrowAction.refund', 'Refund to buyer'),
             danger: true,
             icon: <UndoOutlined />,
             onClick: () => { setEscrowActionModal({ open: true, type: 'refund', escrow: record }); setEscrowActionReason('') }
@@ -511,7 +511,7 @@ export default function AdminPaymentsPage() {
         return (
           <Space size={4}>
             <Button size="small" type="default" onClick={() => { setEscrowAuditRecord(record); setEscrowAuditDrawerOpen(true) }}>
-              View Details
+              {t('payments.txnDetail.label.viewDetails', 'View Details')}
             </Button>
             {record.status === EscrowStatus.Holding && (
               <Dropdown menu={{ items: moreActions }} trigger={['click']}>
@@ -587,14 +587,14 @@ export default function AdminPaymentsPage() {
 
             {/* ── ROW 2: DATA & ACTIVITY ── */}
             <Col xs={24} lg={16}>
-              <Card title="Revenue Chart" style={{ borderRadius: 12, height: '100%' }} styles={{ body: { padding: 0 } }}>
+              <Card title={t('payments.section.revenueChart', 'Revenue Chart')} style={{ borderRadius: 12, height: '100%' }} styles={{ body: { padding: 0 } }}>
                 <div style={{ padding: 24 }}>
                   <PlatformRevenueChart />
                 </div>
               </Card>
             </Col>
             <Col xs={24} lg={8}>
-              <Card title="Pending Withdrawals" style={{ borderRadius: 12, height: '100%' }}>
+              <Card title={t('payments.section.pendingWithdrawals', 'Pending Withdrawals')} style={{ borderRadius: 12, height: '100%' }}>
                 {withdrawals?.items && withdrawals.items.length > 0 ? (
                   <Space direction="vertical" size={16} style={{ width: '100%' }}>
                     {withdrawals.items.filter((w: any) => w.status === WithdrawalStatus.Pending).slice(0, 5).map((w: any) => (
@@ -604,19 +604,19 @@ export default function AdminPaymentsPage() {
                           <Typography.Text type="secondary" style={{ fontSize: 12 }}>{w.accountHolder} - {w.bankName}</Typography.Text>
                         </div>
                         <Space size={4}>
-                          <Tooltip title="Approve">
+                          <Tooltip title={t('payments.approve')}>
                             <Button size="small" type="text" icon={<CheckOutlined />} onClick={() => handleApprove(w.id)} style={{ color: 'var(--color-success)' }} />
                           </Tooltip>
-                          <Tooltip title="Reject">
+                          <Tooltip title={t('payments.reject')}>
                             <Button size="small" type="text" danger icon={<CloseOutlined />} onClick={() => { setRejectId(w.id); setRejectModalOpen(true) }} />
                           </Tooltip>
                         </Space>
                       </Flex>
                     ))}
-                    <Button type="link" block onClick={() => setActiveTab('withdrawals')}>View All</Button>
+                    <Button type="link" block onClick={() => setActiveTab('withdrawals')}>{t('payments.section.viewAll', 'View All')}</Button>
                   </Space>
                 ) : (
-                  <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No pending withdrawals" />
+                  <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('payments.section.noPendingWithdrawals', 'No pending withdrawals')} />
                 )}
               </Card>
             </Col>
@@ -631,7 +631,7 @@ export default function AdminPaymentsPage() {
         <>
           <Flex justify="space-between" align="center" wrap="wrap" gap={16} style={{ marginBottom: 16 }}>
             <Input.Search
-              placeholder="Search withdrawal..."
+              placeholder={t('payments.searchWithdrawal', 'Search withdrawal...')}
               allowClear
               onSearch={(val) => { setWSearch(val); setWPage(1) }}
               style={{ width: isMobile ? '100%' : 250 }}
@@ -686,7 +686,7 @@ export default function AdminPaymentsPage() {
         <>
           <Flex justify="space-between" align="center" wrap="wrap" gap={16} style={{ marginBottom: 16 }}>
             <Input.Search
-              placeholder="Search transaction..."
+              placeholder={t('payments.searchTransaction', 'Search transaction...')}
               allowClear
               onSearch={(val) => { setTSearch(val); setTPage(1) }}
               style={{ width: isMobile ? '100%' : 250 }}
@@ -697,20 +697,20 @@ export default function AdminPaymentsPage() {
                 style={{ width: 250 }}
               />
               <Select
-                placeholder="Filter Type"
+                placeholder={t('payments.filterType', 'Filter Type')}
                 value={tType}
                 onChange={(val) => { setTType(val); setTPage(1) }}
                 style={filterSelectStyle}
                 allowClear
                 onClear={() => setTType('')}
                 options={[
-                  { value: '', label: 'All Types' },
-                  { value: 'payment', label: 'Payment' },
-                  { value: 'refund', label: 'Refund' },
-                  { value: 'deposit', label: 'Deposit' },
-                  { value: 'withdrawal', label: 'Withdrawal' },
-                  { value: 'fee', label: 'Fee' },
-                  { value: 'payout', label: 'Payout' },
+                  { value: '', label: t('payments.allTypes', 'All Types') },
+                  { value: 'payment', label: txnTypeConfig.payment.label },
+                  { value: 'refund', label: txnTypeConfig.refund.label },
+                  { value: 'deposit', label: txnTypeConfig.deposit.label },
+                  { value: 'withdrawal', label: txnTypeConfig.withdrawal.label },
+                  { value: 'fee', label: txnTypeConfig.fee.label },
+                  { value: 'payout', label: txnTypeConfig.payout.label },
                 ]}
               />
               <Select
@@ -757,7 +757,7 @@ export default function AdminPaymentsPage() {
         <>
           <Flex justify="space-between" align="center" wrap="wrap" gap={16} style={{ marginBottom: 16 }}>
             <Input.Search
-              placeholder="Search escrow..."
+              placeholder={t('payments.searchEscrow', 'Search escrow...')}
               allowClear
               onSearch={(val) => { setESearch(val); setEPage(1) }}
               style={{ width: isMobile ? '100%' : 250 }}
@@ -930,71 +930,75 @@ export default function AdminPaymentsPage() {
 
       {/* ── Transaction Detail Drawer ────────────────────────────────── */}
       <Drawer
-        title="Transaction Detail"
+        title={t('payments.txnDetail.title', 'Transaction Detail')}
         open={txnDrawerOpen}
         onClose={() => { setTxnDrawerOpen(false); setTxnDrawerRecord(null) }}
         width={480}
       >
         {txnDrawerRecord && (
           <Descriptions column={1} bordered size="small">
-            <Descriptions.Item label="Txn #">{txnDrawerRecord.transactionNumber ?? '—'}</Descriptions.Item>
-            <Descriptions.Item label="ID">
+            <Descriptions.Item label={t('payments.txnDetail.label.txnNumber', 'Txn #')}>{txnDrawerRecord.transactionNumber ?? '—'}</Descriptions.Item>
+            <Descriptions.Item label={t('payments.txnDetail.label.id', 'ID')}>
               <Typography.Text copyable style={{ fontFamily: 'monospace', fontSize: 11 }}>{txnDrawerRecord.id}</Typography.Text>
             </Descriptions.Item>
-            <Descriptions.Item label="Type">
+            <Descriptions.Item label={t('payments.txnDetail.label.type', 'Type')}>
               <Tag color={txnTypeConfig[txnDrawerRecord.type]?.color ?? 'default'}>{txnTypeConfig[txnDrawerRecord.type]?.label ?? txnDrawerRecord.type}</Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="Status"><StatusBadge status={txnDrawerRecord.status} /></Descriptions.Item>
-            <Descriptions.Item label="User">
+            <Descriptions.Item label={t('payments.txnDetail.label.status', 'Status')}><StatusBadge status={txnDrawerRecord.status} /></Descriptions.Item>
+            <Descriptions.Item label={t('payments.txnDetail.label.user', 'User')}>
               {txnDrawerRecord.userId ? (
                 <a onClick={() => navigate(`/admin/users/${txnDrawerRecord.userId}`)} style={{ cursor: 'pointer' }}>
                   {txnDrawerRecord.userDisplayName ?? txnDrawerRecord.userId}
                 </a>
               ) : '—'}
             </Descriptions.Item>
-            <Descriptions.Item label="Gross Amount">{formatCurrency(txnDrawerRecord.amount, txnDrawerRecord.currency)}</Descriptions.Item>
-            <Descriptions.Item label="Fee">{formatCurrency(txnDrawerRecord.fee ?? 0, txnDrawerRecord.currency)}</Descriptions.Item>
-            <Descriptions.Item label="Net Amount">{formatCurrency(txnDrawerRecord.netAmount ?? txnDrawerRecord.amount, txnDrawerRecord.currency)}</Descriptions.Item>
-            <Descriptions.Item label="Gateway">{txnDrawerRecord.gatewayProvider ?? '—'}</Descriptions.Item>
-            <Descriptions.Item label="Description">{txnDrawerRecord.description ?? '—'}</Descriptions.Item>
+            <Descriptions.Item label={t('payments.txnDetail.label.grossAmount', 'Gross Amount')}>{formatCurrency(txnDrawerRecord.amount, txnDrawerRecord.currency)}</Descriptions.Item>
+            <Descriptions.Item label={t('payments.txnDetail.label.fee', 'Fee')}>{formatCurrency(txnDrawerRecord.fee ?? 0, txnDrawerRecord.currency)}</Descriptions.Item>
+            <Descriptions.Item label={t('payments.txnDetail.label.netAmount', 'Net Amount')}>{formatCurrency(txnDrawerRecord.netAmount ?? txnDrawerRecord.amount, txnDrawerRecord.currency)}</Descriptions.Item>
+            <Descriptions.Item label={t('payments.txnDetail.label.gateway', 'Gateway')}>{txnDrawerRecord.gatewayProvider ?? '—'}</Descriptions.Item>
+            <Descriptions.Item label={t('payments.txnDetail.label.description', 'Description')}>{txnDrawerRecord.description ?? '—'}</Descriptions.Item>
             {txnDrawerRecord.orderId && (
-              <Descriptions.Item label="Order">
+              <Descriptions.Item label={t('payments.txnDetail.label.order', 'Order')}>
                 <a onClick={() => navigate(`/admin/orders/${txnDrawerRecord.orderId}`)} style={{ cursor: 'pointer' }}>
                   {txnDrawerRecord.orderNumber ?? txnDrawerRecord.orderId}
                 </a>
               </Descriptions.Item>
             )}
             {txnDrawerRecord.auctionItemTitle && (
-              <Descriptions.Item label="Auction Item">{txnDrawerRecord.auctionItemTitle}</Descriptions.Item>
+              <Descriptions.Item label={t('payments.txnDetail.label.auctionItem', 'Auction Item')}>{txnDrawerRecord.auctionItemTitle}</Descriptions.Item>
             )}
-            <Descriptions.Item label="Created">{formatDateTime(txnDrawerRecord.createdAt)}</Descriptions.Item>
-            <Descriptions.Item label="Processed">{txnDrawerRecord.processedAt ? formatDateTime(txnDrawerRecord.processedAt) : '—'}</Descriptions.Item>
+            <Descriptions.Item label={t('payments.txnDetail.label.created', 'Created')}>{formatDateTime(txnDrawerRecord.createdAt)}</Descriptions.Item>
+            <Descriptions.Item label={t('payments.txnDetail.label.processed', 'Processed')}>{txnDrawerRecord.processedAt ? formatDateTime(txnDrawerRecord.processedAt) : '—'}</Descriptions.Item>
           </Descriptions>
         )}
       </Drawer>
 
       {/* ── Escrow Action Modal ──────────────────────────────────────── */}
       <Modal
-        title={escrowActionModal.type === 'release' ? 'Force Release Escrow to Seller' : 'Force Refund Escrow to Buyer'}
+        title={escrowActionModal.type === 'release'
+          ? t('payments.escrowForceAction.releaseTitle', 'Force Release Escrow to Seller')
+          : t('payments.escrowForceAction.refundTitle', 'Force Refund Escrow to Buyer')}
         open={escrowActionModal.open}
         onOk={handleEscrowAction}
         onCancel={() => { setEscrowActionModal({ open: false, type: 'release', escrow: null }); setEscrowActionReason('') }}
-        okText={escrowActionModal.type === 'release' ? 'Release' : 'Refund'}
+        okText={escrowActionModal.type === 'release'
+          ? t('payments.escrowForceAction.releaseOk', 'Release')
+          : t('payments.escrowForceAction.refundOk', 'Refund')}
         okButtonProps={{ danger: escrowActionModal.type === 'refund', disabled: !escrowActionReason.trim(), loading: forceReleaseEscrow.isPending || forceRefundEscrow.isPending }}
       >
         {escrowActionModal.escrow && (
           <Descriptions column={1} size="small" style={{ marginBottom: 16 }}>
-            <Descriptions.Item label="Escrow ID">{escrowActionModal.escrow.id.slice(0, 12)}…</Descriptions.Item>
-            <Descriptions.Item label="Amount">{formatCurrency(escrowActionModal.escrow.amount, escrowActionModal.escrow.currency)}</Descriptions.Item>
-            <Descriptions.Item label="Item">{escrowActionModal.escrow.auctionItemTitle ?? '—'}</Descriptions.Item>
+            <Descriptions.Item label={t('payments.txnDetail.label.escrowId', 'Escrow ID')}>{escrowActionModal.escrow.id.slice(0, 12)}…</Descriptions.Item>
+            <Descriptions.Item label={t('payments.txnDetail.label.amount', 'Amount')}>{formatCurrency(escrowActionModal.escrow.amount, escrowActionModal.escrow.currency)}</Descriptions.Item>
+            <Descriptions.Item label={t('payments.txnDetail.label.item', 'Item')}>{escrowActionModal.escrow.auctionItemTitle ?? '—'}</Descriptions.Item>
           </Descriptions>
         )}
-        <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>Reason *</Typography.Text>
+        <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>{t('payments.txnDetail.label.reasonRequired', 'Reason *')}</Typography.Text>
         <Input.TextArea
           rows={3}
           value={escrowActionReason}
           onChange={(e) => setEscrowActionReason(e.target.value)}
-          placeholder="Provide a reason for this action..."
+          placeholder={t('payments.escrowActionReasonPlaceholder', 'Provide a reason for this action...')}
         />
       </Modal>
       {/* Escrow Audit Drawer */}

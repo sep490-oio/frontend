@@ -12,6 +12,7 @@ const SHIPMENT_VALUES = ['no_action', 'cancel_shipment', 'mark_lost', 'rebook_sh
 const ITEM_VALUES = ['no_action', 'return_to_active', 'hold_in_warehouse', 'return_to_seller', 'reject_listing'] as const
 const AUCTION_VALUES = ['no_action', 'relist', 'cancel'] as const
 const PENALTY_VALUES = ['no_action', 'flag_buyer', 'flag_seller'] as const
+const WAREHOUSE_INSPECTION_VALUES = ['no_action', 'force_reinspection'] as const
 
 // Maps snake_case option values to i18n key suffixes (camelCase)
 const VALUE_TO_KEY: Record<string, string> = {
@@ -34,6 +35,7 @@ const VALUE_TO_KEY: Record<string, string> = {
   cancel: 'cancel',
   flag_buyer: 'flagBuyer',
   flag_seller: 'flagSeller',
+  force_reinspection: 'forceReinspection',
 }
 
 const MANUAL_FOLLOWUP_SHIPMENT = new Set(['rebook_shipment', 'open_return'])
@@ -112,6 +114,9 @@ const SUMMARY_KEYS: Record<string, Record<string, string>> = {
   penaltyAction: {
     flag_buyer: 'penaltyFlagBuyer',
     flag_seller: 'penaltyFlagSeller',
+  },
+  warehouseInspectionAction: {
+    force_reinspection: 'warehouseForceReinspection',
   },
 }
 
@@ -211,6 +216,7 @@ export default function ResolutionActionBuilder({ value, onChange, domain: _doma
   const ITEM_OPTIONS = buildOpts(ITEM_VALUES, 'itemOption')
   const AUCTION_OPTIONS = buildOpts(AUCTION_VALUES, 'auctionOption')
   const PENALTY_OPTIONS = buildOpts(PENALTY_VALUES, 'penaltyOption')
+  const WAREHOUSE_INSPECTION_OPTIONS = buildOpts(WAREHOUSE_INSPECTION_VALUES, 'warehouseInspectionOption')
 
   const renderOptionLabel = (opt: { value: string; label: string }, manualSet?: Set<string>) => {
     const tooltipKey = VALUE_TO_KEY[opt.value]
@@ -417,6 +423,21 @@ export default function ResolutionActionBuilder({ value, onChange, domain: _doma
             style={{ marginTop: 4 }}
           />
         )}
+      </div>
+
+      {/* Warehouse Inspection */}
+      <div>
+        <Typography.Text strong style={{ display: 'block', marginBottom: 4 }}>
+          {t('warehouseInspectionAction', 'Warehouse Inspection')}
+        </Typography.Text>
+        <Select
+          value={value.warehouseInspectionAction || undefined}
+          onChange={(v) => update({ warehouseInspectionAction: v })}
+          options={buildOptions(WAREHOUSE_INSPECTION_OPTIONS)}
+          style={{ width: '100%' }}
+          placeholder={t('selectWarehouseInspectionAction', 'Select warehouse inspection action')}
+          allowClear
+        />
       </div>
 
       {/* Resolution Summary */}

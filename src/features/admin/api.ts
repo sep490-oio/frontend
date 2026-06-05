@@ -785,7 +785,7 @@ export function useAdminUserWallet(userId: string) {
   return useQuery({
     queryKey: ['admin', 'users', userId, 'wallet'],
     queryFn: async () => {
-      const res = await apiClient.get<WalletSummaryDto>(`/admin/users/${userId}/wallet`)
+      const res = await apiClient.get<WalletSummaryDto>(`/admin/payments/users/${userId}/wallet`)
       return res.data
     },
     enabled: !!userId,

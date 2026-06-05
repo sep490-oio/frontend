@@ -1,14 +1,17 @@
 import { useState } from 'react'
-import { Card, Table, Tag, Space, Input, Select, Button, Typography, Image, Empty } from 'antd'
+import { Card, Tag, Space, Input, Select, Button, Typography, Image, Empty } from 'antd'
 import { Link } from 'react-router'
+import { useTranslation } from 'react-i18next'
 import { useAdminItems } from '../api'
 import { useCategories } from '@/features/item/api'
 import { SearchOutlined, HomeOutlined, BankOutlined, CopyOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 
 const { Title, Text } = Typography
 
 export default function AdminItemsPage() {
+  const { t } = useTranslation('admin')
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [status, setStatus] = useState<string>()
@@ -23,14 +26,15 @@ export default function AdminItemsPage() {
     physicalLocation,
     searchTerm,
   })
-  
+
   const { data: categories } = useCategories()
 
   const columns = [
     {
-      title: 'Item',
+      title: t('items.columns.item', 'Item'),
       dataIndex: 'title',
       key: 'title',
+      ellipsis: true,
       render: (_: any, record: any) => (
         <Space>
           <Image
@@ -53,34 +57,42 @@ export default function AdminItemsPage() {
       ),
     },
     {
-      title: 'Seller',
+      title: t('items.columns.seller', 'Seller'),
       key: 'seller',
+      width: 180,
+      ellipsis: true,
+      responsive: ['md'] as any,
       render: (_: any, record: any) => (
         <Link to={`/admin/users/${record.sellerId}`}>{record.sellerName || record.sellerDisplayName || record.sellerId.substring(0,8) + '...'}</Link>
       ),
     },
     {
-      title: 'Category',
+      title: t('items.columns.category', 'Category'),
       dataIndex: 'categoryId',
       key: 'category',
+      width: 140,
+      responsive: ['lg'] as any,
       render: (categoryId: string) => {
         const cat = categories?.find(c => c.id === categoryId)
         return <Text>{cat ? cat.name : categoryId}</Text>
       }
     },
     {
-      title: 'Condition',
+      title: t('items.columns.condition', 'Condition'),
       dataIndex: 'condition',
       key: 'condition',
+      width: 120,
+      responsive: ['md'] as any,
       render: (cond: string) => {
         const titleCase = cond.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
         return <Tag color="blue">{titleCase}</Tag>
       },
     },
     {
-      title: 'Status',
+      title: t('items.columns.status', 'Status'),
       dataIndex: 'status',
       key: 'status',
+      width: 130,
       render: (status: string) => {
         const colors: Record<string, string> = {
           draft: 'default',
@@ -98,32 +110,41 @@ export default function AdminItemsPage() {
       },
     },
     {
-      title: 'Location',
+      title: t('items.columns.location', 'Location'),
       dataIndex: 'currentPhysicalLocation',
       key: 'physicalLocation',
+      width: 130,
+      responsive: ['lg'] as any,
       render: (loc: string) => {
         if (!loc) return <Text type="secondary">Unknown</Text>
         const isWarehouse = loc.toLowerCase().includes('warehouse')
         return (
           <Space>
             {isWarehouse ? <BankOutlined style={{ color: '#722ed1' }} /> : <HomeOutlined style={{ color: '#2f54eb' }} />}
-            <Text>{isWarehouse ? 'Warehouse' : 'With Seller'}</Text>
+            <Text>{isWarehouse ? t('items.locationOptions.warehouse', 'Warehouse') : t('items.locationOptions.withSeller', 'With Seller')}</Text>
           </Space>
         )
       },
     },
     {
-      title: 'Added Date',
+      title: t('items.columns.addedDate', 'Added Date'),
       dataIndex: 'createdAt',
       key: 'createdAt',
+      width: 160,
+      responsive: ['xl'] as any,
       render: (date: string) => dayjs(date).format('DD/MM/YYYY, HH:mm'),
     },
     {
-      title: 'Action',
+      title: t('items.columns.action', 'Action'),
       key: 'action',
+      width: 140,
+      fixed: 'right' as const,
+      align: 'center' as const,
       render: (_: any, record: any) => (
         <Link to={`/admin/items/${record.id}`}>
-          <Button type="link">View Details</Button>
+          <Button type="link" size="small" style={{ padding: 0 }}>
+            {t('items.action.viewDetails', 'View Details')}
+          </Button>
         </Link>
       ),
     },
@@ -132,13 +153,13 @@ export default function AdminItemsPage() {
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Title level={4} style={{ margin: 0 }}>Item Inventory</Title>
+        <Title level={4} style={{ margin: 0 }}>{t('items.title', 'Item Inventory')}</Title>
       </div>
 
       <Card>
         <Space style={{ marginBottom: 16, display: 'flex', flexWrap: 'wrap' }}>
           <Input
-            placeholder="Search Title or ID..."
+            placeholder={t('items.filters.search', 'Search Title or ID...')}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             onPressEnter={() => setSearchTerm(searchInput)}
@@ -146,40 +167,41 @@ export default function AdminItemsPage() {
             suffix={<SearchOutlined />}
           />
           <Select
-            placeholder="Filter Status"
+            placeholder={t('items.filters.status', 'Filter Status')}
             style={{ width: 150 }}
             allowClear
             onChange={setStatus}
             options={[
-              { value: 'pending_review', label: 'Pending Review' },
-              { value: 'approved', label: 'Approved' },
-              { value: 'active', label: 'Active' },
-              { value: 'in_auction', label: 'In Auction' },
-              { value: 'sold', label: 'Sold' },
-              { value: 'rejected', label: 'Rejected' },
+              { value: 'pending_review', label: t('items.statusOptions.pending_review', 'Pending Review') },
+              { value: 'approved', label: t('items.statusOptions.approved', 'Approved') },
+              { value: 'active', label: t('items.statusOptions.active', 'Active') },
+              { value: 'in_auction', label: t('items.statusOptions.in_auction', 'In Auction') },
+              { value: 'sold', label: t('items.statusOptions.sold', 'Sold') },
+              { value: 'rejected', label: t('items.statusOptions.rejected', 'Rejected') },
             ]}
           />
           <Select
-            placeholder="Filter Location"
+            placeholder={t('items.filters.location', 'Filter Location')}
             style={{ width: 180 }}
             allowClear
             onChange={setPhysicalLocation}
             options={[
-              { value: 'warehouse', label: 'Warehouse' },
-              { value: 'seller', label: 'With Seller' },
+              { value: 'warehouse', label: t('items.locationOptions.warehouse', 'Warehouse') },
+              { value: 'seller', label: t('items.locationOptions.withSeller', 'With Seller') },
             ]}
           />
           <Button onClick={() => setSearchTerm(searchInput)} type="primary">
-            Apply Filters
+            {t('items.filters.apply', 'Apply Filters')}
           </Button>
         </Space>
 
-        <Table
+        <ResponsiveTable
           columns={columns}
           dataSource={data?.items || []}
           rowKey="id"
           loading={isLoading}
-          locale={{ emptyText: <Empty description="No items found matching the selected criteria" /> }}
+          mobileMode="card"
+          locale={{ emptyText: <Empty description={t('items.empty', 'No items found matching the selected criteria')} /> }}
           pagination={{
             current: currentPage,
             pageSize: pageSize,

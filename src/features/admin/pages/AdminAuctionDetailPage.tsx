@@ -27,9 +27,13 @@ export default function AdminAuctionDetailPage() {
     return (
       <Result
         status="404"
-        title="Auction Not Found"
-        subTitle="The auction you are looking for does not exist or has been removed."
-        extra={<Button onClick={() => navigate('/admin/auctions')}>Back to List</Button>}
+        title={t('auctionDetail.notFoundTitle', 'Auction Not Found')}
+        subTitle={t('auctionDetail.notFoundDesc', 'The auction you are looking for does not exist or has been removed.')}
+        extra={
+          <Button onClick={() => navigate('/admin/auctions')}>
+            {t('auctionDetail.backToList', 'Back to List')}
+          </Button>
+        }
       />
     )
   }

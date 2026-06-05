@@ -155,12 +155,12 @@ export default function SellerOrdersPage() {
     if (sf?.fulfillmentFlow !== 'seller_self_ship' || !sf.shipByAt) return null
     const isOverdue = sf.isShippingOverdue || dayjs().isAfter(dayjs(sf.shipByAt))
     if (isOverdue) {
-      return <Tag color="red">{t('sla.overdue', 'Quá hạn')}</Tag>
+      return <Tag color="red">{t('sla.overdue', 'Overdue')}</Tag>
     }
     const daysLeft = dayjs(sf.shipByAt).diff(dayjs(), 'day')
     return (
       <Tag color={daysLeft <= 1 ? 'orange' : 'default'}>
-        {t('sla.remainingDays', '{{count}} ngày còn lại', { count: daysLeft })}
+        {t('sla.remainingDays', '{{count}} day(s) remaining', { count: daysLeft })}
       </Tag>
     )
   }

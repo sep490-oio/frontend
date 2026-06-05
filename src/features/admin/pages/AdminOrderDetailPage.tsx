@@ -43,22 +43,26 @@ const ALERT_SEVERITY_COLOR: Record<string, string> = {
   critical: 'error',
 }
 
-const ORDER_STATUS_OPTIONS = [
-  { value: 'pending_payment', label: 'Pending Payment' },
-  { value: 'paid', label: 'Paid' },
-  { value: 'processing', label: 'Processing' },
-  { value: 'picked_up', label: 'Picked Up' },
-  { value: 'on_delivering', label: 'On Delivering' },
-  { value: 'delivered', label: 'Delivered' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'cancelled', label: 'Cancelled' },
-  { value: 'refunded', label: 'Refunded' },
-  { value: 'disputed', label: 'Disputed' },
-]
+function useOrderStatusOptions() {
+  const { t } = useTranslation('admin')
+  return [
+    { value: 'pending_payment', label: t('orderDetail.statusOptions.pending_payment', 'Pending Payment') },
+    { value: 'paid', label: t('orderDetail.statusOptions.paid', 'Paid') },
+    { value: 'processing', label: t('orderDetail.statusOptions.processing', 'Processing') },
+    { value: 'picked_up', label: t('orderDetail.statusOptions.picked_up', 'Picked Up') },
+    { value: 'on_delivering', label: t('orderDetail.statusOptions.on_delivering', 'On Delivering') },
+    { value: 'delivered', label: t('orderDetail.statusOptions.delivered', 'Delivered') },
+    { value: 'completed', label: t('orderDetail.statusOptions.completed', 'Completed') },
+    { value: 'cancelled', label: t('orderDetail.statusOptions.cancelled', 'Cancelled') },
+    { value: 'refunded', label: t('orderDetail.statusOptions.refunded', 'Refunded') },
+    { value: 'disputed', label: t('orderDetail.statusOptions.disputed', 'Disputed') },
+  ]
+}
 
 export default function AdminOrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>()
   const { t } = useTranslation('admin')
+  const orderStatusOptions = useOrderStatusOptions()
   const navigate = useNavigate()
   const { message } = App.useApp()
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
@@ -98,12 +102,12 @@ export default function AdminOrderDetailPage() {
     if (!reason.trim()) return
     try {
       await forceCancel.mutateAsync({ orderId: orderId!, reason })
-      message.success('Order force-cancelled')
+      message.success(t('orderDetail.toast.forceCancelSuccess', 'Order force-cancelled'))
       setCancelModal(false)
       setReason('')
       refetch()
     } catch {
-      message.error('Failed to force-cancel order')
+      message.error(t('orderDetail.toast.forceCancelError', 'Failed to force-cancel order'))
     }
   }
 
@@ -111,12 +115,12 @@ export default function AdminOrderDetailPage() {
     if (!reason.trim()) return
     try {
       await forceRefund.mutateAsync({ orderId: orderId!, reason })
-      message.success('Order force-refunded')
+      message.success(t('orderDetail.toast.forceRefundSuccess', 'Order force-refunded'))
       setRefundModal(false)
       setReason('')
       refetch()
     } catch {
-      message.error('Failed to force-refund order')
+      message.error(t('orderDetail.toast.forceRefundError', 'Failed to force-refund order'))
     }
   }
 
@@ -124,19 +128,19 @@ export default function AdminOrderDetailPage() {
     if (!reason.trim() || !newStatus) return
     try {
       await overrideStatus.mutateAsync({ orderId: orderId!, newStatus, reason })
-      message.success('Order status overridden')
+      message.success(t('orderDetail.toast.overrideSuccess', 'Order status overridden'))
       setOverrideModal(false)
       setReason('')
       setNewStatus(undefined)
       refetch()
     } catch {
-      message.error('Failed to override order status')
+      message.error(t('orderDetail.toast.overrideError', 'Failed to override order status'))
     }
   }
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
-    message.success('Copied!')
+    message.success(t('orderDetail.toast.copied', 'Copied!'))
   }
 
   const isTerminal = order.status === 'cancelled' || order.status === 'refunded' || order.status === 'completed'
@@ -145,7 +149,7 @@ export default function AdminOrderDetailPage() {
     <div style={{ padding: isMobile ? '0 0 80px' : undefined }}>
       <Space style={{ marginBottom: 16 }}>
         <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/admin/orders')}>
-          Back to Orders
+          {t('orderDetail.backToOrders', 'Back to Orders')}
         </Button>
       </Space>
 
@@ -154,7 +158,7 @@ export default function AdminOrderDetailPage() {
         <div>
           <Typography.Title level={isMobile ? 3 : 2} style={{ margin: 0 }}>
             <ShoppingCartOutlined style={{ marginRight: 8 }} />
-            Order {order.orderNumber ?? order.id.slice(0, 8)}
+            {t('orderDetail.title', 'Order')} {order.orderNumber ?? order.id.slice(0, 8)}
             <Button type="text" icon={<CopyOutlined />} onClick={() => copyToClipboard(order.id)} />
           </Typography.Title>
           <Flex gap={12} align="center" wrap="wrap" style={{ marginTop: 8 }}>
@@ -165,7 +169,7 @@ export default function AdminOrderDetailPage() {
             <Divider type="vertical" />
             
             <Flex align="center" gap={4}>
-              <Typography.Text type="secondary" style={{ fontSize: 13 }}>Buyer:</Typography.Text>
+              <Typography.Text type="secondary" style={{ fontSize: 13 }}>{t('orderDetail.buyer', 'Buyer')}:</Typography.Text>
               <Button type="link" size="small" style={{ padding: 0 }} onClick={() => navigate(`/admin/users/${order.buyerId}`)}>
                 <UserOutlined /> {order.buyerDisplayName || order.buyerId.slice(0, 8)}
               </Button>
@@ -174,7 +178,7 @@ export default function AdminOrderDetailPage() {
             <Divider type="vertical" />
 
             <Flex align="center" gap={4}>
-              <Typography.Text type="secondary" style={{ fontSize: 13 }}>Seller:</Typography.Text>
+              <Typography.Text type="secondary" style={{ fontSize: 13 }}>{t('orderDetail.seller', 'Seller')}:</Typography.Text>
               <Button type="link" size="small" style={{ padding: 0 }} onClick={() => navigate(`/admin/users/${order.sellerId}`)}>
                 <UserOutlined /> {order.sellerDisplayName || order.sellerId.slice(0, 8)}
               </Button>
@@ -191,7 +195,7 @@ export default function AdminOrderDetailPage() {
               onClick={() => setCancelModal(true)}
               loading={forceCancel.isPending}
             >
-              Force Cancel
+              {t('orderDetail.action.forceCancel', 'Force Cancel')}
             </Button>
             <Button
               icon={<DollarOutlined />}
@@ -199,14 +203,14 @@ export default function AdminOrderDetailPage() {
               loading={forceRefund.isPending}
               style={{ borderColor: '#faad14', color: '#d48806' }}
             >
-              Force Refund
+              {t('orderDetail.action.forceRefund', 'Force Refund')}
             </Button>
             <Button
               icon={<SwapOutlined />}
               onClick={() => setOverrideModal(true)}
               loading={overrideStatus.isPending}
             >
-              Override Status
+              {t('orderDetail.action.overrideStatus', 'Override Status')}
             </Button>
           </Space>
         )}
@@ -216,26 +220,26 @@ export default function AdminOrderDetailPage() {
         {/* Order Info */}
         <Col xs={24} lg={14}>
           <Card
-            title={<><ShoppingCartOutlined style={{ marginRight: 8 }} />Order Information</>}
+            title={<><ShoppingCartOutlined style={{ marginRight: 8 }} />{t('orderDetail.section.orderInformation', 'Order Information')}</>}
             style={{ borderRadius: 12, marginBottom: 16 }}
           >
             <Descriptions column={isMobile ? 1 : 2} size="small" bordered>
-              <Descriptions.Item label="Order Number">{order.orderNumber}</Descriptions.Item>
-              <Descriptions.Item label="Status">
+              <Descriptions.Item label={t('orderDetail.label.orderNumber', 'Order Number')}>{order.orderNumber}</Descriptions.Item>
+              <Descriptions.Item label={t('orderDetail.label.status', 'Status')}>
                 <Tag color={STATUS_COLOR[order.status] ?? 'default'}>{order.status}</Tag>
               </Descriptions.Item>
-              <Descriptions.Item label="Total Amount">
+              <Descriptions.Item label={t('orderDetail.label.totalAmount', 'Total Amount')}>
                 <Typography.Text strong>{formatCurrency(order.totalAmount)}</Typography.Text>
               </Descriptions.Item>
-              <Descriptions.Item label="Currency">{order.currency}</Descriptions.Item>
-              <Descriptions.Item label="Created">{formatDateTime(order.createdAt)}</Descriptions.Item>
-              <Descriptions.Item label="Payment Due">{order.paymentDueAt ? formatDateTime(order.paymentDueAt) : '—'}</Descriptions.Item>
-              <Descriptions.Item label="Paid At">{order.paidAt ? formatDateTime(order.paidAt) : '—'}</Descriptions.Item>
-              <Descriptions.Item label="Shipped At">{order.shippedAt ? formatDateTime(order.shippedAt) : '—'}</Descriptions.Item>
-              <Descriptions.Item label="Delivered At">{order.deliveredAt ? formatDateTime(order.deliveredAt) : '—'}</Descriptions.Item>
-              <Descriptions.Item label="Completed At">{order.completedAt ? formatDateTime(order.completedAt) : '—'}</Descriptions.Item>
-              <Descriptions.Item label="Cancelled At">{order.cancelledAt ? formatDateTime(order.cancelledAt) : '—'}</Descriptions.Item>
-              <Descriptions.Item label="Escrow Status">
+              <Descriptions.Item label={t('orderDetail.label.currency', 'Currency')}>{order.currency}</Descriptions.Item>
+              <Descriptions.Item label={t('orderDetail.label.created', 'Created')}>{formatDateTime(order.createdAt)}</Descriptions.Item>
+              <Descriptions.Item label={t('orderDetail.label.paymentDue', 'Payment Due')}>{order.paymentDueAt ? formatDateTime(order.paymentDueAt) : '—'}</Descriptions.Item>
+              <Descriptions.Item label={t('orderDetail.label.paidAt', 'Paid At')}>{order.paidAt ? formatDateTime(order.paidAt) : '—'}</Descriptions.Item>
+              <Descriptions.Item label={t('orderDetail.label.shippedAt', 'Shipped At')}>{order.shippedAt ? formatDateTime(order.shippedAt) : '—'}</Descriptions.Item>
+              <Descriptions.Item label={t('orderDetail.label.deliveredAt', 'Delivered At')}>{order.deliveredAt ? formatDateTime(order.deliveredAt) : '—'}</Descriptions.Item>
+              <Descriptions.Item label={t('orderDetail.label.completedAt', 'Completed At')}>{order.completedAt ? formatDateTime(order.completedAt) : '—'}</Descriptions.Item>
+              <Descriptions.Item label={t('orderDetail.label.cancelledAt', 'Cancelled At')}>{order.cancelledAt ? formatDateTime(order.cancelledAt) : '—'}</Descriptions.Item>
+              <Descriptions.Item label={t('orderDetail.label.escrowStatus', 'Escrow Status')}>
                 {order.escrowStatus ? (
                   <Tag color={order.escrowStatus === 'holding' ? 'blue' : order.escrowStatus === 'released_to_seller' ? 'green' : 'orange'}>
                     {order.escrowStatus}
@@ -247,18 +251,18 @@ export default function AdminOrderDetailPage() {
 
           {/* Payment Breakdown */}
           <Card
-            title={<><DollarOutlined style={{ marginRight: 8 }} />Payment Breakdown</>}
+            title={<><DollarOutlined style={{ marginRight: 8 }} />{t('orderDetail.section.paymentBreakdown', 'Payment Breakdown')}</>}
             style={{ borderRadius: 12, marginBottom: 16 }}
           >
             <Row gutter={16}>
               <Col span={8}>
-                <Statistic title="Deposit Applied" value={order.depositAppliedAmount ?? 0} precision={0} suffix={order.currency} valueStyle={{ fontSize: 16 }} />
+                <Statistic title={t('orderDetail.label.depositApplied', 'Deposit Applied')} value={order.depositAppliedAmount ?? 0} precision={0} suffix={order.currency} valueStyle={{ fontSize: 16 }} />
               </Col>
               <Col span={8}>
-                <Statistic title="Wallet Applied" value={order.walletAppliedAmount ?? 0} precision={0} suffix={order.currency} valueStyle={{ fontSize: 16 }} />
+                <Statistic title={t('orderDetail.label.walletApplied', 'Wallet Applied')} value={order.walletAppliedAmount ?? 0} precision={0} suffix={order.currency} valueStyle={{ fontSize: 16 }} />
               </Col>
               <Col span={8}>
-                <Statistic title="Gateway Paid" value={order.gatewayPaidAmount ?? 0} precision={0} suffix={order.currency} valueStyle={{ fontSize: 16 }} />
+                <Statistic title={t('orderDetail.label.gatewayPaid', 'Gateway Paid')} value={order.gatewayPaidAmount ?? 0} precision={0} suffix={order.currency} valueStyle={{ fontSize: 16 }} />
               </Col>
             </Row>
           </Card>
@@ -266,13 +270,13 @@ export default function AdminOrderDetailPage() {
           {/* Shipping */}
           {order.shipping && (
             <Card
-              title={<><EnvironmentOutlined style={{ marginRight: 8 }} />Shipping Address</>}
+              title={<><EnvironmentOutlined style={{ marginRight: 8 }} />{t('orderDetail.section.shippingAddress', 'Shipping Address')}</>}
               style={{ borderRadius: 12, marginBottom: 16 }}
             >
               <Descriptions column={1} size="small">
-                <Descriptions.Item label="Recipient">{order.shipping.recipientName}</Descriptions.Item>
-                <Descriptions.Item label="Phone">{order.shipping.phoneNumber}</Descriptions.Item>
-                <Descriptions.Item label="Address">
+                <Descriptions.Item label={t('orderDetail.label.recipient', 'Recipient')}>{order.shipping.recipientName}</Descriptions.Item>
+                <Descriptions.Item label={t('orderDetail.label.phone', 'Phone')}>{order.shipping.phoneNumber}</Descriptions.Item>
+                <Descriptions.Item label={t('orderDetail.label.address', 'Address')}>
                   {order.shipping.composedAddress || [order.shipping.street, order.shipping.ward, order.shipping.district, order.shipping.city].filter(Boolean).join(', ')}
                 </Descriptions.Item>
               </Descriptions>
@@ -282,27 +286,27 @@ export default function AdminOrderDetailPage() {
           {/* Direct Shipment */}
           {order.directShipment && (
             <Card
-              title={<><TruckOutlined style={{ marginRight: 8 }} />Direct Shipment</>}
+              title={<><TruckOutlined style={{ marginRight: 8 }} />{t('orderDetail.section.directShipment', 'Direct Shipment')}</>}
               style={{ borderRadius: 12, marginBottom: 16 }}
             >
               <Descriptions column={isMobile ? 1 : 2} size="small">
-                <Descriptions.Item label="Shipment ID">{order.directShipment.shipmentIdDisplay}</Descriptions.Item>
-                <Descriptions.Item label="Status">
+                <Descriptions.Item label={t('orderDetail.label.shipmentId', 'Shipment ID')}>{order.directShipment.shipmentIdDisplay}</Descriptions.Item>
+                <Descriptions.Item label={t('orderDetail.label.status', 'Status')}>
                   <Tag>{order.directShipment.status}</Tag>
                 </Descriptions.Item>
-                <Descriptions.Item label="Carrier">{order.directShipment.externalCarrierName || '—'}</Descriptions.Item>
-                <Descriptions.Item label="Tracking">{order.directShipment.externalTrackingCode || '—'}</Descriptions.Item>
+                <Descriptions.Item label={t('orderDetail.label.carrier', 'Carrier')}>{order.directShipment.externalCarrierName || '—'}</Descriptions.Item>
+                <Descriptions.Item label={t('orderDetail.label.tracking', 'Tracking')}>{order.directShipment.externalTrackingCode || '—'}</Descriptions.Item>
               </Descriptions>
               {order.directShipment.sellerPackagePhotos?.length > 0 && (
                 <>
                   <Divider />
-                  <ShipmentEvidenceGallery title="Seller Package Photos" photos={order.directShipment.sellerPackagePhotos} />
+                  <ShipmentEvidenceGallery title={t('orderDetail.section.sellerPackagePhotos', 'Seller Package Photos')} photos={order.directShipment.sellerPackagePhotos} />
                 </>
               )}
               {order.directShipment.buyerDeliveryPhotos?.length > 0 && (
                 <>
                   <Divider />
-                  <ShipmentEvidenceGallery title="Buyer Delivery Photos" photos={order.directShipment.buyerDeliveryPhotos} />
+                  <ShipmentEvidenceGallery title={t('orderDetail.section.buyerDeliveryPhotos', 'Buyer Delivery Photos')} photos={order.directShipment.buyerDeliveryPhotos} />
                 </>
               )}
             </Card>
@@ -311,15 +315,15 @@ export default function AdminOrderDetailPage() {
           {/* Outbound Shipment */}
           {outboundShipment && (
             <Card
-              title={<><TruckOutlined style={{ marginRight: 8 }} />Outbound Shipment</>}
+              title={<><TruckOutlined style={{ marginRight: 8 }} />{t('orderDetail.section.outboundShipment', 'Outbound Shipment')}</>}
               style={{ borderRadius: 12, marginBottom: 16 }}
             >
               <Descriptions column={isMobile ? 1 : 2} size="small">
-                <Descriptions.Item label="Status">
+                <Descriptions.Item label={t('orderDetail.label.status', 'Status')}>
                   <Tag>{outboundShipment.status}</Tag>
                 </Descriptions.Item>
-                <Descriptions.Item label="Carrier">{outboundShipment.externalCarrierName || '—'}</Descriptions.Item>
-                <Descriptions.Item label="Tracking">{outboundShipment.carrierTrackingNumber || '—'}</Descriptions.Item>
+                <Descriptions.Item label={t('orderDetail.label.carrier', 'Carrier')}>{outboundShipment.externalCarrierName || '—'}</Descriptions.Item>
+                <Descriptions.Item label={t('orderDetail.label.tracking', 'Tracking')}>{outboundShipment.carrierTrackingNumber || '—'}</Descriptions.Item>
               </Descriptions>
             </Card>
           )}
@@ -327,23 +331,23 @@ export default function AdminOrderDetailPage() {
           {/* Return */}
           {order.return && (
             <Card
-              title="Return Request"
+              title={t('orderDetail.section.returnRequest', 'Return Request')}
               style={{ borderRadius: 12, marginBottom: 16, borderLeft: '3px solid #faad14' }}
             >
               <Descriptions column={isMobile ? 1 : 2} size="small">
-                <Descriptions.Item label="Status">
+                <Descriptions.Item label={t('orderDetail.label.status', 'Status')}>
                   <Tag color={order.return.status === 'approved' ? 'green' : order.return.status === 'rejected' ? 'red' : 'orange'}>
                     {order.return.status}
                   </Tag>
                 </Descriptions.Item>
-                <Descriptions.Item label="Reason">{order.return.reasonCode}</Descriptions.Item>
-                <Descriptions.Item label="Description" span={2}>{order.return.description || '—'}</Descriptions.Item>
-                <Descriptions.Item label="Requested">{order.return.requestedAt ? formatDateTime(order.return.requestedAt) : '—'}</Descriptions.Item>
+                <Descriptions.Item label={t('orderDetail.label.reason', 'Reason')}>{order.return.reasonCode}</Descriptions.Item>
+                <Descriptions.Item label={t('orderDetail.label.description', 'Description')} span={2}>{order.return.description || '—'}</Descriptions.Item>
+                <Descriptions.Item label={t('orderDetail.label.requested', 'Requested')}>{order.return.requestedAt ? formatDateTime(order.return.requestedAt) : '—'}</Descriptions.Item>
               </Descriptions>
               {order.return.evidence && order.return.evidence.length > 0 && (
                 <>
                   <Divider style={{ margin: '12px 0' }} />
-                  <Typography.Text strong style={{ fontSize: 13, display: 'block', marginBottom: 8 }}>Evidence</Typography.Text>
+                  <Typography.Text strong style={{ fontSize: 13, display: 'block', marginBottom: 8 }}>{t('orderDetail.section.evidence', 'Evidence')}</Typography.Text>
                   <Flex wrap="wrap" gap={8}>
                     {order.return.evidence.map(e => (
                       <img
@@ -364,12 +368,12 @@ export default function AdminOrderDetailPage() {
         <Col xs={24} lg={10}>
           {/* Parties */}
           <Card
-            title={<><UserOutlined style={{ marginRight: 8 }} />Parties</>}
+            title={<><UserOutlined style={{ marginRight: 8 }} />{t('orderDetail.section.parties', 'Parties')}</>}
             style={{ borderRadius: 12, marginBottom: 16 }}
           >
             <Flex vertical gap={12}>
               <div>
-                <Typography.Text type="secondary" style={{ fontSize: 12 }}>Buyer</Typography.Text>
+                <Typography.Text type="secondary" style={{ fontSize: 12 }}>{t('orderDetail.label.buyer', 'Buyer')}</Typography.Text>
                 <Flex align="center" gap={8}>
                   <Typography.Text strong>{order.buyerDisplayName || '—'}</Typography.Text>
                   <Button
@@ -377,13 +381,13 @@ export default function AdminOrderDetailPage() {
                     size="small"
                     onClick={() => navigate(`/admin/users/${order.buyerId}`)}
                   >
-                    View
+                    {t('orderDetail.view', 'View')}
                   </Button>
                 </Flex>
               </div>
               <Divider style={{ margin: 0 }} />
               <div>
-                <Typography.Text type="secondary" style={{ fontSize: 12 }}>Seller</Typography.Text>
+                <Typography.Text type="secondary" style={{ fontSize: 12 }}>{t('orderDetail.label.seller', 'Seller')}</Typography.Text>
                 <Flex align="center" gap={8}>
                   <Typography.Text strong>{order.sellerDisplayName || '—'}</Typography.Text>
                   <Button
@@ -391,7 +395,7 @@ export default function AdminOrderDetailPage() {
                     size="small"
                     onClick={() => navigate(`/admin/users/${order.sellerId}`)}
                   >
-                    View
+                    {t('orderDetail.view', 'View')}
                   </Button>
                 </Flex>
               </div>
@@ -401,7 +405,7 @@ export default function AdminOrderDetailPage() {
           {/* Item Summary */}
           {order.item && (
             <Card
-              title="Item"
+              title={t('orderDetail.section.item', 'Item')}
               style={{ borderRadius: 12, marginBottom: 16 }}
             >
               <Flex gap={12} align="start">
@@ -417,7 +421,7 @@ export default function AdminOrderDetailPage() {
                     {order.item.itemTitle}
                   </Typography.Text>
                   <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                    Final: {formatCurrency(order.item.finalPrice)} {order.item.currency}
+                    {t('orderDetail.label.final', 'Final')}: {formatCurrency(order.item.finalPrice)} {order.item.currency}
                   </Typography.Text>
                 </div>
               </Flex>
@@ -427,13 +431,13 @@ export default function AdminOrderDetailPage() {
           {/* Escrow Summary */}
           {escrowSummary && (
             <Card
-              title={<><SafetyCertificateOutlined style={{ marginRight: 8 }} />Escrow Summary</>}
+              title={<><SafetyCertificateOutlined style={{ marginRight: 8 }} />{t('orderDetail.section.escrowSummary', 'Escrow Summary')}</>}
               style={{ borderRadius: 12, marginBottom: 16 }}
             >
               <Row gutter={[12, 12]}>
                 <Col span={8}>
                   <Statistic
-                    title="Held"
+                    title={t('orderDetail.label.held', 'Held')}
                     value={escrowSummary.totalHeld}
                     precision={0}
                     valueStyle={{ fontSize: 16, color: '#1890ff' }}
@@ -441,7 +445,7 @@ export default function AdminOrderDetailPage() {
                 </Col>
                 <Col span={8}>
                   <Statistic
-                    title="Released"
+                    title={t('orderDetail.label.released', 'Released')}
                     value={escrowSummary.totalReleased}
                     precision={0}
                     valueStyle={{ fontSize: 16, color: '#52c41a' }}
@@ -449,7 +453,7 @@ export default function AdminOrderDetailPage() {
                 </Col>
                 <Col span={8}>
                   <Statistic
-                    title="Refunded"
+                    title={t('orderDetail.label.refunded', 'Refunded')}
                     value={escrowSummary.totalRefunded}
                     precision={0}
                     valueStyle={{ fontSize: 16, color: '#faad14' }}
@@ -462,7 +466,7 @@ export default function AdminOrderDetailPage() {
           {/* Monitoring Alerts */}
           {monitoringAlerts.length > 0 && (
             <Card
-              title={<><AlertOutlined style={{ marginRight: 8 }} />Monitoring Alerts ({monitoringAlerts.length})</>}
+              title={<><AlertOutlined style={{ marginRight: 8 }} />{t('orderDetail.section.monitoringAlerts', 'Monitoring Alerts')} ({monitoringAlerts.length})</>}
               style={{ borderRadius: 12, marginBottom: 16 }}
             >
               <Flex vertical gap={8}>
@@ -498,23 +502,23 @@ export default function AdminOrderDetailPage() {
         title={
           <Space>
             <AlertOutlined style={{ color: 'var(--color-error)' }} />
-            <span>Force Cancel Order</span>
+            <span>{t('orderDetail.modal.forceCancelTitle', 'Force Cancel Order')}</span>
           </Space>
         }
         open={cancelModal}
         onCancel={() => { setCancelModal(false); setReason('') }}
         onOk={handleForceCancel}
-        okText="Confirm Cancel"
+        okText={t('orderDetail.modal.confirmCancel', 'Confirm Cancel')}
         okButtonProps={{ danger: true, disabled: !reason.trim(), loading: forceCancel.isPending }}
       >
         <Typography.Paragraph strong style={{ color: 'var(--color-error, #cf1322)' }}>
-          Hành động này sẽ can thiệp vào luồng tài chính và không thể hoàn tác. Bạn có chắc chắn?
+          {t('orderDetail.modal.financialWarning', 'This action will affect financial flow and cannot be undone. Are you sure?')}
         </Typography.Paragraph>
         <Typography.Paragraph type="secondary">
-          This will cancel the order from any state and refund all held escrows to the buyer.
+          {t('orderDetail.modal.forceCancelDescription', 'This will cancel the order from any state and refund all held escrows to the buyer.')}
         </Typography.Paragraph>
         <Input.TextArea
-          placeholder="Reason for force cancellation..."
+          placeholder={t('orderDetail.placeholder.cancelReason', 'Reason for force cancellation...')}
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           rows={3}
@@ -526,23 +530,23 @@ export default function AdminOrderDetailPage() {
         title={
           <Space>
             <AlertOutlined style={{ color: 'var(--color-error)' }} />
-            <span>Force Refund Order</span>
+            <span>{t('orderDetail.modal.forceRefundTitle', 'Force Refund Order')}</span>
           </Space>
         }
         open={refundModal}
         onCancel={() => { setRefundModal(false); setReason('') }}
         onOk={handleForceRefund}
-        okText="Confirm Refund"
+        okText={t('orderDetail.modal.confirmRefund', 'Confirm Refund')}
         okButtonProps={{ danger: true, disabled: !reason.trim(), loading: forceRefund.isPending }}
       >
         <Typography.Paragraph strong style={{ color: 'var(--color-error, #cf1322)' }}>
-          Hành động này sẽ can thiệp vào luồng tài chính và không thể hoàn tác. Bạn có chắc chắn?
+          {t('orderDetail.modal.financialWarning', 'This action will affect financial flow and cannot be undone. Are you sure?')}
         </Typography.Paragraph>
         <Typography.Paragraph type="secondary">
-          This will mark the order as refunded and release all escrows back to the buyer.
+          {t('orderDetail.modal.forceRefundDescription', 'This will mark the order as refunded and release all escrows back to the buyer.')}
         </Typography.Paragraph>
         <Input.TextArea
-          placeholder="Reason for force refund..."
+          placeholder={t('orderDetail.placeholder.refundReason', 'Reason for force refund...')}
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           rows={3}
@@ -554,30 +558,30 @@ export default function AdminOrderDetailPage() {
         title={
           <Space>
             <AlertOutlined style={{ color: 'var(--color-error)' }} />
-            <span>Override Order Status</span>
+            <span>{t('orderDetail.modal.overrideStatusTitle', 'Override Order Status')}</span>
           </Space>
         }
         open={overrideModal}
         onCancel={() => { setOverrideModal(false); setReason(''); setNewStatus(undefined) }}
         onOk={handleOverrideStatus}
-        okText="Confirm Override"
+        okText={t('orderDetail.modal.confirmOverride', 'Confirm Override')}
         okButtonProps={{ danger: true, disabled: !reason.trim() || !newStatus, loading: overrideStatus.isPending }}
       >
         <Typography.Paragraph strong style={{ color: 'var(--color-error, #cf1322)' }}>
-          Hành động này sẽ can thiệp vào luồng tài chính và không thể hoàn tác. Bạn có chắc chắn?
+          {t('orderDetail.modal.financialWarning', 'This action will affect financial flow and cannot be undone. Are you sure?')}
         </Typography.Paragraph>
         <Typography.Paragraph type="secondary">
-          This will directly change the order status. Use with extreme caution.
+          {t('orderDetail.modal.overrideStatusDescription', 'This will directly change the order status. Use with extreme caution.')}
         </Typography.Paragraph>
         <Select
-          placeholder="Select new status"
+          placeholder={t('orderDetail.placeholder.selectNewStatus', 'Select new status')}
           value={newStatus}
           onChange={setNewStatus}
           style={{ width: '100%', marginBottom: 12 }}
-          options={ORDER_STATUS_OPTIONS}
+          options={orderStatusOptions}
         />
         <Input.TextArea
-          placeholder="Reason for status override..."
+          placeholder={t('orderDetail.placeholder.overrideReason', 'Reason for status override...')}
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           rows={3}

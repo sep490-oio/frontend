@@ -34,7 +34,7 @@ export default function AdminSellerProfileDetailPage() {
   const rejectMut = useRejectSellerProfile()
 
   if (!id) {
-    return <Result status="404" title="404" subTitle="Invalid ID" />
+    return <Result status="404" title="404" subTitle={t('sellers.invalidId', 'Invalid ID')} />
   }
 
   if (isLoading) {
@@ -48,8 +48,8 @@ export default function AdminSellerProfileDetailPage() {
   if (isError || !detail) {
     return (
       <Card>
-        <Typography.Text type="danger">{error?.message || 'Error loading profile'}</Typography.Text>
-        <Button onClick={() => refetch()} style={{ marginTop: 16 }}>Retry</Button>
+        <Typography.Text type="danger">{error?.message || t('sellers.errorLoadingProfile', 'Error loading profile')}</Typography.Text>
+        <Button onClick={() => refetch()} style={{ marginTop: 16 }}>{tc('action.retry', 'Retry')}</Button>
       </Card>
     )
   }
@@ -73,7 +73,7 @@ export default function AdminSellerProfileDetailPage() {
         items={[
           { title: <Link to="/admin">{tc('nav.admin', 'Admin')}</Link> },
           { title: <Link to="/admin/seller-profiles">{t('sellers.title', 'Sellers')}</Link> },
-          { title: profile.storeName || 'Detail' },
+          { title: profile.storeName || t('sellers.detailBreadcrumb', 'Detail') },
         ]}
       />
 

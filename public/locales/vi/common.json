@@ -34,7 +34,9 @@
       "buying": "Mua sắm & Đấu giá",
       "account": "Tài khoản & Ví",
       "settings": "Bảo mật & Cài đặt"
-    }
+    },
+    "myPurchases": "Đơn mua của tôi",
+    "settings": "Cài đặt"
   },
   "action": {
     "login": "Đăng nhập",
@@ -50,11 +52,15 @@
     "search": "Tìm kiếm",
     "filter": "Lọc",
     "reset": "Đặt lại",
+    "retry": "Thử lại",
     "clearFilters": "Xóa bộ lọc",
     "view": "Xem",
     "viewAll": "Xem tất cả",
     "upload": "Tải lên",
-    "download": "Tải xuống"
+    "download": "Tải xuống",
+    "viewDetail": "Xem chi tiết",
+    "viewDashboard": "Bảng điều khiển",
+    "viewPublicPage": "Xem trang công khai"
   },
   "status": {
     "loading": "Đang tải...",
@@ -211,6 +217,7 @@
     "darkMode": "Chế độ tối",
     "switchLanguage": "Đổi ngôn ngữ",
     "backToPlatform": "Quay lại nền tảng",
+    "warehousePortal": "Cổng kho vận",
     "skipToContent": "Chuyển đến nội dung chính",
     "openMenu": "Mở menu",
     "toggleSidebar": "Thu gọn thanh bên",

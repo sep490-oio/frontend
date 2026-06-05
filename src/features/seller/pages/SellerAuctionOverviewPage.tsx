@@ -42,6 +42,7 @@ const glassCard: React.CSSProperties = {
 function ItemAuctionRows({ item }: { item: ItemDto }) {
   const navigate = useNavigate()
   const { isMobile } = useBreakpoint()
+  const { t } = useTranslation('seller')
   const { data: auctions, isLoading } = useItemAuctions(item.id)
 
   const cols: ColumnsType<AuctionListItemDto> = [
@@ -56,21 +57,21 @@ function ItemAuctionRows({ item }: { item: ItemDto }) {
       ),
     },
     {
-      title: 'Type',
+      title: t('auctionOverview.columns.type', 'Type'),
       dataIndex: 'auctionType',
       key: 'type',
       width: 100,
       render: (val: string | undefined) => <Tag color="purple">{val ?? '—'}</Tag>,
     },
     {
-      title: 'Status',
+      title: t('auctionOverview.columns.status', 'Status'),
       dataIndex: 'status',
       key: 'status',
       width: 140,
       render: (status: string) => <StatusBadge status={status} />,
     },
     {
-      title: 'Current Price',
+      title: t('auctionOverview.columns.currentPrice', 'Current Price'),
       key: 'price',
       width: 150,
       render: (_, record) => {
@@ -82,7 +83,7 @@ function ItemAuctionRows({ item }: { item: ItemDto }) {
       },
     },
     {
-      title: 'Bids',
+      title: t('auctionOverview.columns.bids', 'Bids'),
       dataIndex: 'bidCount',
       key: 'bids',
       width: 70,
@@ -90,7 +91,7 @@ function ItemAuctionRows({ item }: { item: ItemDto }) {
       render: (val: number) => <Text style={{ fontFamily: MONO_FONT }}>{val ?? 0}</Text>,
     },
     {
-      title: 'Start',
+      title: t('auctionOverview.columns.start', 'Start'),
       dataIndex: 'startTime',
       key: 'start',
       width: 150,
@@ -98,7 +99,7 @@ function ItemAuctionRows({ item }: { item: ItemDto }) {
       render: (d: string | undefined) => d ? <Text type="secondary" style={{ fontSize: 12 }}>{formatDateTime(d)}</Text> : '—',
     },
     {
-      title: 'End',
+      title: t('auctionOverview.columns.end', 'End'),
       dataIndex: 'endTime',
       key: 'end',
       width: 160,
@@ -114,10 +115,10 @@ function ItemAuctionRows({ item }: { item: ItemDto }) {
       width: 100,
       render: (_, record) => (
         <Space size={4}>
-          <Tooltip title="View">
+          <Tooltip title={t('auctionOverview.actionTitles.view', 'View')}>
             <Button type="text" size="small" icon={<EyeOutlined />} onClick={() => navigate(`/auctions/${record.id}`)} />
           </Tooltip>
-          <Tooltip title="Dashboard">
+          <Tooltip title={t('auctionOverview.actionTitles.dashboard', 'Dashboard')}>
             <Button type="text" size="small" icon={<DashboardOutlined />} onClick={() => navigate(`/seller/auctions/${record.id}/dashboard`)} />
           </Tooltip>
         </Space>
@@ -134,7 +135,7 @@ function ItemAuctionRows({ item }: { item: ItemDto }) {
       <div style={{ padding: '16px 24px', textAlign: 'center' }}>
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
-          description="No auction sessions yet"
+          description={t('auctionOverview.empty', 'No auction sessions yet')}
         >
           <Button
             type="primary"
@@ -143,7 +144,7 @@ function ItemAuctionRows({ item }: { item: ItemDto }) {
             onClick={() => navigate(`/seller/items/${item.id}/create-auction`)}
             style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)', borderRadius: 8 }}
           >
-            Create Auction
+            {t('auctionOverview.createAuction', 'Create Auction')}
           </Button>
         </Empty>
       </div>
@@ -173,7 +174,7 @@ function ItemAuctionRows({ item }: { item: ItemDto }) {
 export default function SellerAuctionOverviewPage() {
   const navigate = useNavigate()
   const { isMobile } = useBreakpoint()
-  useTranslation('seller')
+  const { t } = useTranslation('seller')
   const { t: tc } = useTranslation('common')
 
   const [search, setSearch] = useState('')
@@ -206,7 +207,7 @@ export default function SellerAuctionOverviewPage() {
 
   const itemColumns: ColumnsType<ItemDto> = [
     {
-      title: 'Item',
+      title: t('auctionOverview.columns.item', 'Item'),
       key: 'item',
       ellipsis: true,
       render: (_, record) => (
@@ -238,19 +239,19 @@ export default function SellerAuctionOverviewPage() {
       ),
     },
     {
-      title: 'Item Status',
+      title: t('auctionOverview.columns.itemStatus', 'Item Status'),
       dataIndex: 'status',
       key: 'itemStatus',
       width: 140,
       render: (status: string) => <StatusBadge status={status} />,
     },
     {
-      title: 'Latest Auction',
+      title: t('auctionOverview.columns.latestAuction', 'Latest Auction'),
       key: 'latestAuction',
       width: 180,
       render: (_, record) => {
         if (!record.auction) {
-          return <Text type="secondary" style={{ fontSize: 12 }}>No auction</Text>
+          return <Text type="secondary" style={{ fontSize: 12 }}>{t('auctionOverview.noAuction', 'No auction')}</Text>
         }
         return (
           <Space direction="vertical" size={0}>
@@ -263,7 +264,7 @@ export default function SellerAuctionOverviewPage() {
       },
     },
     {
-      title: 'Actions',
+      title: t('auctionOverview.columns.actions', 'Actions'),
       key: 'actions',
       width: 130,
       align: 'center',
@@ -277,7 +278,7 @@ export default function SellerAuctionOverviewPage() {
               onClick={(e) => { e.stopPropagation(); navigate(`/seller/items/${record.id}/create-auction`) }}
               style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)', borderRadius: 8, fontSize: 12 }}
             >
-              Create
+              {t('auctionOverview.createAuction', 'Create Auction')}
             </Button>
           )
         }
@@ -295,7 +296,7 @@ export default function SellerAuctionOverviewPage() {
       },
     },
     {
-      title: 'End Time',
+      title: t('auctionOverview.columns.endTime', 'End Time'),
       key: 'endTime',
       width: 160,
       responsive: ['lg'] as any,
@@ -331,10 +332,10 @@ export default function SellerAuctionOverviewPage() {
             }}
           >
             <AppstoreOutlined style={{ marginRight: 12, color: 'var(--color-accent)' }} />
-            Auction Overview
+            {t('auctionOverview.title', 'Auction Overview')}
           </h1>
           <Text type="secondary" style={{ fontSize: 13, marginTop: 4, display: 'block' }}>
-            All your items and their auction sessions in one place
+            {t('auctionOverview.subtitle', 'All your items and their auction sessions in one place')}
           </Text>
         </div>
         <Button
@@ -350,10 +351,10 @@ export default function SellerAuctionOverviewPage() {
       {/* ── Stats ──────────────────────────────────────────────────────── */}
       <Row gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]} style={{ marginBottom: isMobile ? 16 : 24 }}>
         {[
-          { icon: <AppstoreOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />, label: 'Total Items', value: totalItems },
-          { icon: <ShoppingOutlined style={{ color: '#52c41a', fontSize: 16 }} />, label: 'With Auctions', value: itemsWithAuction },
-          { icon: <ThunderboltOutlined style={{ color: '#faad14', fontSize: 16 }} />, label: 'Active', value: activeAuctions },
-          { icon: <DollarOutlined style={{ color: '#722ed1', fontSize: 16 }} />, label: 'Sold', value: soldAuctions },
+          { icon: <AppstoreOutlined style={{ color: 'var(--color-accent)', fontSize: 16 }} />, label: t('auctionOverview.stats.totalItems', 'Total Items'), value: totalItems },
+          { icon: <ShoppingOutlined style={{ color: '#52c41a', fontSize: 16 }} />, label: t('auctionOverview.stats.withAuctions', 'With Auctions'), value: itemsWithAuction },
+          { icon: <ThunderboltOutlined style={{ color: '#faad14', fontSize: 16 }} />, label: t('auctionOverview.stats.active', 'Active'), value: activeAuctions },
+          { icon: <DollarOutlined style={{ color: '#722ed1', fontSize: 16 }} />, label: t('auctionOverview.stats.sold', 'Sold'), value: soldAuctions },
         ].map((stat) => (
           <Col key={stat.label} xs={12} sm={6}>
             <Card style={glassCard} styles={{ body: { padding: isMobile ? '12px 14px' : '18px 24px' } }}>
@@ -374,7 +375,7 @@ export default function SellerAuctionOverviewPage() {
       {/* ── Search ─────────────────────────────────────────────────────── */}
       <div style={{ marginBottom: 16 }}>
         <Input
-          placeholder="Search items..."
+          placeholder={t('auctionOverview.searchPlaceholder', 'Search items...')}
           prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
           value={search}
           onChange={(e) => setSearch(e.target.value)}

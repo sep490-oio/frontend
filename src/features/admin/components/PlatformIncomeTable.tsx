@@ -33,18 +33,22 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   refund: <RollbackOutlined />,
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  commission: 'Commission',
-  inspection_fee: 'Inspection Fee',
-  forfeit: 'Forfeit',
-  refund: 'Refund',
-  other: 'Other',
+function useCategoryLabels(): Record<string, string> {
+  const { t } = useTranslation('admin')
+  return {
+    commission: t('payments.incomeCategory.commission', 'Commission'),
+    inspection_fee: t('payments.incomeCategory.inspection_fee', 'Inspection Fee'),
+    forfeit: t('payments.incomeCategory.forfeit', 'Forfeit'),
+    refund: t('payments.incomeCategory.refund', 'Refund'),
+    other: t('payments.incomeCategory.other', 'Other'),
+  }
 }
 
 export function PlatformIncomeTable() {
   const { t } = useTranslation('admin')
   const { t: tc } = useTranslation('common')
   const { isMobile } = useBreakpoint()
+  const categoryLabels = useCategoryLabels()
 
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
@@ -95,7 +99,7 @@ export function PlatformIncomeTable() {
             icon={CATEGORY_ICONS[category]}
             style={{ borderRadius: 4, fontWeight: 500 }}
           >
-            {CATEGORY_LABELS[category] ?? category}
+            {categoryLabels[category] ?? category}
           </Tag>
         )
       },
@@ -187,7 +191,7 @@ export function PlatformIncomeTable() {
       <Flex justify="space-between" align="center" wrap="wrap" gap={16} style={{ marginBottom: 16 }}>
         <Flex gap={16} align="center" wrap="wrap">
           <Input.Search
-            placeholder="Search descriptions..."
+            placeholder={t('payments.incomeTable.searchPlaceholder', 'Search descriptions...')}
             allowClear
             onSearch={(val) => { setSearchTerm(val); setPage(1) }}
             style={{ width: isMobile ? '100%' : 250 }}
@@ -200,17 +204,17 @@ export function PlatformIncomeTable() {
         
         <Space wrap>
           <Select
-            placeholder="Filter by Category"
+            placeholder={t('payments.incomeTable.filterByCategory', 'Filter by Category')}
             value={categoryFilter}
             onChange={(val) => { setCategoryFilter(val); setPage(1) }}
             style={{ width: isMobile ? '100%' : 180 }}
             allowClear
             onClear={() => setCategoryFilter(undefined)}
             options={[
-              { value: 'commission', label: 'Commission' },
-              { value: 'inspection_fee', label: 'Inspection Fee' },
-              { value: 'forfeit', label: 'Forfeit' },
-              { value: 'refund', label: 'Refund' },
+              { value: 'commission', label: categoryLabels.commission },
+              { value: 'inspection_fee', label: categoryLabels.inspection_fee },
+              { value: 'forfeit', label: categoryLabels.forfeit },
+              { value: 'refund', label: categoryLabels.refund },
             ]}
           />
           <Select
@@ -221,8 +225,8 @@ export function PlatformIncomeTable() {
             allowClear
             onClear={() => setTypeFilter(undefined)}
             options={[
-              { value: 'credit', label: '📈 Credit (Income)' },
-              { value: 'debit', label: '📉 Debit (Outflow)' },
+              { value: 'credit', label: `📈 ${t('payments.incomeTable.creditIncome', 'Credit (Income)')}` },
+              { value: 'debit', label: `📉 ${t('payments.incomeTable.debitOutflow', 'Debit (Outflow)')}` },
             ]}
           />
         </Space>
@@ -233,7 +237,7 @@ export function PlatformIncomeTable() {
         <Flex gap={16} style={{ marginBottom: 16 }} wrap="wrap">
           <Card size="small" style={{ minWidth: 200, borderColor: 'var(--color-success, #52c41a)' }}>
             <Statistic
-              title={<span style={{ color: 'var(--color-text-secondary)' }}>Total Credit</span>}
+              title={<span style={{ color: 'var(--color-text-secondary)' }}>{t('payments.incomeTable.totalCredit', 'Total Credit')}</span>}
               value={data?.totalCreditAmount ?? 0}
               precision={0}
               valueStyle={{ color: 'var(--color-success, #52c41a)', fontWeight: 'bold' }}
@@ -243,7 +247,7 @@ export function PlatformIncomeTable() {
           </Card>
           <Card size="small" style={{ minWidth: 200, borderColor: 'var(--color-error, #ff4d4f)' }}>
             <Statistic
-              title={<span style={{ color: 'var(--color-text-secondary)' }}>Total Debit</span>}
+              title={<span style={{ color: 'var(--color-text-secondary)' }}>{t('payments.incomeTable.totalDebit', 'Total Debit')}</span>}
               value={data?.totalDebitAmount ?? 0}
               precision={0}
               valueStyle={{ color: 'var(--color-error, #ff4d4f)', fontWeight: 'bold' }}
