@@ -29,9 +29,10 @@ import {
   useSellerEscrowLedger,
   useWalletTransactions,
   useMyWithdrawals,
+  usePendingSellerFees,
 } from '@/features/payment/api'
 import { WalletTransactionType, WithdrawalStatus } from '@/types/enums'
-import type { SellerEscrowLedgerRowDto } from '@/types'
+import type { SellerEscrowLedgerRowDto, PendingSellerFee } from '@/types'
 import { formatDateTime, formatCurrency } from '@/utils/format'
 import { BalanceCard } from '@/features/payment/components/BalanceCard'
 import { TransactionTable } from '@/features/payment/components/TransactionTable'
@@ -114,6 +115,9 @@ export default function SellerWalletPage() {
     { refetchInterval: 30_000 },
   )
   const { data: withdrawals } = useMyWithdrawals({ pageNumber: 1, pageSize: 20 })
+  const { data: pendingSellerFeesList, isLoading: pendingSellerFeesLoading } = usePendingSellerFees({
+    refetchInterval: 30_000,
+  })
 
   const pendingWithdrawals = (withdrawals?.items ?? []).filter(
     (w) => w.status === WithdrawalStatus.Pending,
@@ -479,6 +483,9 @@ export default function SellerWalletPage() {
                       <span style={{ fontFamily: MONO_FONT, fontWeight: 600 }}>
                         {formatCurrency(overview.estimatedPlatformCommission, overview.currency)}
                       </span>
+                      <Typography.Text type="secondary" style={{ display: 'block', fontSize: 11, marginTop: 2 }}>
+                        {t('sellerFinance.fees.platformSource', 'Tạm tính từ các đơn hàng đang giao dịch (tab Escrow & Pending Payout).')}
+                      </Typography.Text>
                     </Descriptions.Item>
                     <Descriptions.Item label={t('sellerFinance.fees.inspection', 'Total 3% Inspection Fee')}>
                       <span style={{ fontFamily: MONO_FONT, fontWeight: 600 }}>
@@ -490,7 +497,7 @@ export default function SellerWalletPage() {
                       >
                         {t(
                           'sellerFinance.fees.inspectionNote',
-                          'Only applies to platform-verified items.',
+                          'Only applies to platform-verified items. Tạm tính từ các đơn hàng kiểm định đang giao dịch.',
                         )}
                       </Typography.Text>
                     </Descriptions.Item>
@@ -498,6 +505,9 @@ export default function SellerWalletPage() {
                       <span style={{ fontFamily: MONO_FONT, fontWeight: 600 }}>
                         {formatCurrency(overview.pendingSellerFeeCharges, overview.currency)}
                       </span>
+                      <Typography.Text type="secondary" style={{ display: 'block', fontSize: 11, marginTop: 2 }}>
+                        {t('sellerFinance.fees.pendingChargesSource', 'Các khoản phí phát sinh (như phí phạt) chưa thể trừ do số dư ví không đủ.')}
+                      </Typography.Text>
                     </Descriptions.Item>
                     <Descriptions.Item label={t('sellerFinance.fees.disputed', 'In Dispute')}>
                       <span style={{ fontFamily: MONO_FONT, fontWeight: 600 }}>
@@ -510,6 +520,121 @@ export default function SellerWalletPage() {
                       </span>
                     </Descriptions.Item>
                   </Descriptions>
+                  
+                  <div style={{ marginTop: 24 }}>
+                    <Typography.Title level={5} style={{ fontFamily: SERIF_FONT }}>
+                      {t('sellerFinance.fees.pendingFeesListTitle', 'Pending Fee Transactions')}
+                    </Typography.Title>
+                    <ResponsiveTable<PendingSellerFee>
+                      mobileMode="card"
+                      rowKey="transactionId"
+                      dataSource={pendingSellerFeesList ?? []}
+                      loading={pendingSellerFeesLoading}
+                      columns={[
+                        {
+                          title: t('sellerFinance.fees.col.createdAt', 'Date'),
+                          dataIndex: 'createdAt',
+                          key: 'createdAt',
+                          render: (d: string) => formatDateTime(d),
+                        },
+                        {
+                          title: t('sellerFinance.fees.col.transactionId', 'Transaction ID'),
+                          dataIndex: 'transactionNumber',
+                          key: 'transactionNumber',
+                          render: (num: string) => <Typography.Text copyable>{num}</Typography.Text>,
+                        },
+                        {
+                          title: t('sellerFinance.fees.col.description', 'Description'),
+                          dataIndex: 'description',
+                          key: 'description',
+                          render: (_, record) => {
+                            if (record.transactionNumber.startsWith('FEE-INSP-REJ-')) {
+                              const match = record.description?.match(/^(.*?) \(inspection [a-f0-9-]+\)\.?$/i)
+                              const text = match ? match[1] : record.description
+                              return (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                  <Typography.Text>{text}</Typography.Text>
+                                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                                    <Tag color="default" bordered={false} style={{ margin: 0 }}>
+                                      {t('sellerFinance.fees.inspectionRef', 'Warehouse Inspection')}
+                                    </Tag>
+                                  </Typography.Text>
+                                </div>
+                              )
+                            }
+                            return (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                <Typography.Text>{record.description || '—'}</Typography.Text>
+                                {record.orderId && (
+                                  <a onClick={() => navigate(`/seller/orders/${record.orderId}`)} style={{ fontSize: 12 }}>
+                                    {t('sellerFinance.fees.viewOrder', 'View Order')} →
+                                  </a>
+                                )}
+                                {record.auctionId && !record.orderId && (
+                                  <a onClick={() => navigate(`/seller/auctions/${record.auctionId}/dashboard`)} style={{ fontSize: 12 }}>
+                                    {t('sellerFinance.fees.viewAuction', 'View Auction')} →
+                                  </a>
+                                )}
+                              </div>
+                            )
+                          },
+                        },
+                        {
+                          title: t('sellerFinance.fees.col.amount', 'Amount'),
+                          dataIndex: 'amount',
+                          key: 'amount',
+                          align: 'right',
+                          render: (val: number, record) => (
+                            <span style={{ fontFamily: MONO_FONT, fontWeight: 600, color: 'var(--color-danger)' }}>
+                              -{formatCurrency(val, record.currency)}
+                            </span>
+                          ),
+                        },
+                      ]}
+                      mobileRender={(record) => {
+                        const isInsp = record.transactionNumber.startsWith('FEE-INSP-REJ-')
+                        const match = isInsp ? record.description?.match(/^(.*?) \(inspection [a-f0-9-]+\)\.?$/i) : null
+                        const descText = match ? match[1] : (record.description || '—')
+
+                        return (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                                {formatDateTime(record.createdAt)}
+                              </Typography.Text>
+                              <span style={{ fontFamily: MONO_FONT, fontWeight: 700, color: 'var(--color-danger)' }}>
+                                -{formatCurrency(record.amount, record.currency)}
+                              </span>
+                            </div>
+                            <Typography.Text copyable style={{ fontFamily: MONO_FONT, fontSize: 12 }}>
+                              {record.transactionNumber}
+                            </Typography.Text>
+                            <Typography.Text>
+                              {descText}
+                            </Typography.Text>
+                            
+                            {isInsp && (
+                              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                                <Tag color="default" bordered={false} style={{ margin: 0 }}>
+                                  {t('sellerFinance.fees.inspectionRef', 'Warehouse Inspection')}
+                                </Tag>
+                              </Typography.Text>
+                            )}
+                            {record.orderId && (
+                              <a onClick={() => navigate(`/seller/orders/${record.orderId}`)} style={{ fontSize: 12 }}>
+                                {t('sellerFinance.fees.viewOrder', 'View Order')} →
+                              </a>
+                            )}
+                            {record.auctionId && !record.orderId && (
+                              <a onClick={() => navigate(`/seller/auctions/${record.auctionId}/dashboard`)} style={{ fontSize: 12 }}>
+                                {t('sellerFinance.fees.viewAuction', 'View Auction')} →
+                              </a>
+                            )}
+                          </div>
+                        )
+                      }}
+                    />
+                  </div>
                 </div>
               ) : (
                 <EmptyState description={tc('emptyState.title', 'No data')} />

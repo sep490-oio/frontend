@@ -35,8 +35,8 @@
       "account": "Tài khoản & Ví",
       "settings": "Bảo mật & Cài đặt"
     },
-    "myPurchases": "Đơn mua của tôi",
-    "settings": "Cài đặt"
+    "myPurchases": "Đơn mua hàng",
+    "settings": "Cài đặt tài khoản"
   },
   "action": {
     "login": "Đăng nhập",

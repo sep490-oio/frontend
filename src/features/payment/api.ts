@@ -83,6 +83,18 @@ export function useSellerAuctionDeposits(options?: { refetchInterval?: number; e
   })
 }
 
+export function usePendingSellerFees(options?: { refetchInterval?: number; enabled?: boolean }) {
+  return useQuery({
+    queryKey: queryKeys.sellerFinance.pendingFees(),
+    queryFn: async () => {
+      const res = await apiClient.get<import('@/types').PendingSellerFee[]>('/seller/finance/pending-fees')
+      return extractArray<import('@/types').PendingSellerFee>(res.data)
+    },
+    staleTime: 30_000,
+    ...options,
+  })
+}
+
 export function useWalletTransactions(params?: PaginationParams & { type?: string }, options?: { refetchInterval?: number }) {
   return useQuery({
     queryKey: queryKeys.wallet.transactions(params),

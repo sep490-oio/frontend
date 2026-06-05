@@ -82,6 +82,17 @@ export interface SellerWalletOverviewDto {
   updatedAt: string
 }
 
+export interface PendingSellerFee {
+  transactionId: string
+  transactionNumber: string
+  amount: number
+  currency: string
+  description?: string
+  createdAt: string
+  orderId?: string
+  auctionId?: string
+}
+
 export interface PaymentMethodDto {
   id: string
   type: PaymentMethodType

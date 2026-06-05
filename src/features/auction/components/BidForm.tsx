@@ -188,7 +188,12 @@ export default function BidForm({
             onChange={(v) => onBidAmountChange(v)}
             addonAfter={currency}
             placeholder={formatCurrency(minBid, currency)}
-            formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+            formatter={(v) => {
+              if (!v) return ''
+              const parts = `${v}`.split('.')
+              parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+              return parts.join('.')
+            }}
             parser={(v) => {
               const parsed = (v ?? '').replace(/\$\s?|(,*)/g, '')
               return parsed ? Number(parsed) : (null as any)

@@ -274,11 +274,23 @@
       "explainTitle": "Cách tính phí",
       "explainBody": "Phí sàn 10% áp dụng cho mọi đơn hàng. Phí kiểm định 3% chỉ áp dụng cho item đã được sàn xác minh, và được giới hạn tối đa 625.000 VND/đơn.",
       "platform": "Tổng phí sàn 10% pending",
+      "platformSource": "Tạm tính từ các đơn hàng đang giao dịch (tab Escrow & Pending Payout).",
       "inspection": "Tổng phí kiểm định 3%",
-      "inspectionNote": "Chỉ áp dụng cho item có \"Sàn xác minh\".",
+      "inspectionNote": "Chỉ áp dụng cho item có \"Sàn xác minh\". Tạm tính từ các đơn hàng kiểm định đang giao dịch.",
       "pendingCharges": "Phí seller đang chờ",
+      "pendingChargesSource": "Các khoản phí phát sinh (như phí phạt) chưa thể trừ do số dư ví không đủ.",
       "disputed": "Đang tranh chấp",
-      "readyToRelease": "Sẵn sàng giải ngân"
+      "readyToRelease": "Sẵn sàng giải ngân",
+      "pendingFeesListTitle": "Các khoản phí đang chờ trừ",
+      "col": {
+        "createdAt": "Ngày",
+        "transactionId": "Mã giao dịch",
+        "description": "Mô tả",
+        "amount": "Số tiền"
+      },
+      "inspectionRef": "Kiểm định kho",
+      "viewOrder": "Xem đơn hàng",
+      "viewAuction": "Xem phiên đấu giá"
     },
     "empty": {
       "noEscrowTitle": "Chưa có giao dịch escrow",
@@ -318,5 +330,24 @@
     "step4Desc": "Thanh toán phần chênh lệch (giá cuối − deposit). Tiền được trừ từ ví hoặc qua VNPay. Toàn bộ tiền vào escrow.",
     "step5Desc": "Tiền thanh toán được giữ trong ký quỹ (escrow) — chưa chuyển cho seller. Bảo vệ buyer trong thời gian kiểm tra và khiếu nại.",
     "step6Desc": "Sau khi buyer xác nhận nhận hàng (hoặc hết hạn khiếu nại), tiền escrow được giải ngân cho seller, trừ phí sàn."
+  },
+  "depositStatus": {
+    "held": "Đang giữ",
+    "returned": "Đã hoàn trả",
+    "forfeited": "Bị tịch thu",
+    "converted_to_payment": "Đã chuyển thành thanh toán"
+  },
+  "sellerDeposits": {
+    "empty": "Không có tiền cọc đấu giá",
+    "emptyDesc": "Chưa có phiên đấu giá nào của bạn có tiền cọc.",
+    "bidder": "Người đặt cọc",
+    "amount": "Số tiền",
+    "status": "Trạng thái",
+    "date": "Ngày",
+    "summary": "{{auctions}} phiên đấu giá, {{deposits}} khoản cọc đang giữ",
+    "untitled": "Phiên đấu giá chưa có tên",
+    "activeCount": "{{count}} đang giữ",
+    "allReleased": "Đã giải phóng hết",
+    "totalCount": "{{count}} tổng cộng"
   }
 }

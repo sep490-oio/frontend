@@ -98,6 +98,7 @@ export const queryKeys = {
     overview: () => [...queryKeys.sellerFinance.all, 'overview'] as const,
     escrowLedger: () => [...queryKeys.sellerFinance.all, 'escrowLedger'] as const,
     auctionDeposits: () => [...queryKeys.sellerFinance.all, 'auctionDeposits'] as const,
+    pendingFees: () => [...queryKeys.sellerFinance.all, 'pendingFees'] as const,
   },
   paymentMethods: {
     all: ['paymentMethods'] as const,

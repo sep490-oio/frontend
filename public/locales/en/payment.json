@@ -233,7 +233,9 @@
     "tabs": {
       "escrow": "Escrow & Pending Payout",
       "fees": "Fees & Deductions",
-      "transactions": "Transactions"
+      "transactions": "Transactions",
+      "deposits": "Auction Deposits",
+      "flow": "Money Flow"
     },
     "col": {
       "orderNumber": "Order #",
@@ -272,11 +274,23 @@
       "explainTitle": "How fees are calculated",
       "explainBody": "The 10% platform fee applies to every order. The 3% inspection fee only applies to platform-verified items and is capped at 625,000 VND / $25 USD per order.",
       "platform": "Pending 10% platform fee",
+      "platformSource": "Estimated from active orders (Escrow & Pending Payout tab).",
       "inspection": "Pending 3% inspection fee",
-      "inspectionNote": "Only applies to items with platform verification.",
+      "inspectionNote": "Only applies to items with platform verification. Estimated from active inspected orders.",
       "pendingCharges": "Pending seller charges",
+      "pendingChargesSource": "Outstanding fee deductions (e.g. penalty) waiting for sufficient wallet balance.",
       "disputed": "Disputed",
-      "readyToRelease": "Ready to release"
+      "readyToRelease": "Ready to release",
+      "pendingFeesListTitle": "Pending Fee Transactions",
+      "col": {
+        "createdAt": "Date",
+        "transactionId": "Transaction ID",
+        "description": "Description",
+        "amount": "Amount"
+      },
+      "inspectionRef": "Warehouse Inspection",
+      "viewOrder": "View Order",
+      "viewAuction": "View Auction"
     },
     "empty": {
       "noEscrowTitle": "No escrow transactions yet",
@@ -316,5 +330,24 @@
     "step4Desc": "Pay the difference (final price − deposit). Funds are deducted from your wallet or paid via VNPay. The full amount enters escrow.",
     "step5Desc": "Payment is held in escrow — not transferred to the seller yet. This protects buyers during the inspection and dispute window.",
     "step6Desc": "After the buyer confirms receipt (or the dispute window expires), escrow funds are released to the seller, minus platform fees."
+  },
+  "depositStatus": {
+    "held": "Held",
+    "returned": "Returned",
+    "forfeited": "Forfeited",
+    "converted_to_payment": "Converted"
+  },
+  "sellerDeposits": {
+    "empty": "No auction deposits",
+    "emptyDesc": "None of your auctions have any deposits yet.",
+    "bidder": "Bidder",
+    "amount": "Amount",
+    "status": "Status",
+    "date": "Date",
+    "summary": "{{auctions}} auction(s), {{deposits}} active deposit(s)",
+    "untitled": "Untitled Auction",
+    "activeCount": "{{count}} active",
+    "allReleased": "All released",
+    "totalCount": "{{count}} total"
   }
 }
