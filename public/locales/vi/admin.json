@@ -1658,6 +1658,7 @@
       "status": "Trạng thái",
       "location": "Vị trí",
       "addedDate": "Ngày thêm",
+      "totalAuctions": "Tổng số phiên",
       "action": "Thao tác"
     },
     "filters": {

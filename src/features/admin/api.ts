@@ -38,6 +38,19 @@ import type {
   AdminSellerProfileDetailDto,
 } from '@/types'
 
+export interface AdminAuctionFinancial {
+  id: string
+  transactionId?: string
+  transactionNumber?: string
+  type: string
+  amount: number
+  currency: string
+  status: string
+  createdAt: string
+  userId?: string
+  userDisplayName?: string
+}
+
 // ── Users ────────────────────────────────────────────────────────────
 
 export function useAdminUsers(params?: PaginationParams & { search?: string; status?: string; role?: string }) {
@@ -94,6 +107,25 @@ export function useAdminDeleteUser() {
     onSuccess: async () => {
       await invalidateAndRefetchActive(qc, [queryKeys.admin.usersRoot()])
     },
+  })
+}
+
+
+// ── Auction Financials ───────────────────────────────────────────────
+
+export function useAdminAuctionFinancials(
+  auctionId: string,
+  params?: { type?: string; status?: string; sortBy?: string }
+) {
+  return useQuery({
+    queryKey: ['admin', 'auction', auctionId, 'financials', params],
+    queryFn: async () => {
+      const res = await apiClient.get<AdminAuctionFinancial[]>(`/admin/auctions/${auctionId}/financials`, {
+        params: stripEmpty((params || {}) as Record<string, unknown>),
+      })
+      return res.data
+    },
+    enabled: !!auctionId,
   })
 }
 
@@ -863,7 +895,7 @@ export function useCompleteWithdrawal() {
   })
 }
 
-export function useAdminTransactions(params?: PaginationParams & { status?: string; type?: string; fromDate?: string; toDate?: string; searchTerm?: string; sortBy?: string }) {
+export function useAdminTransactions(params?: PaginationParams & { status?: string; type?: string; fromDate?: string; toDate?: string; searchTerm?: string; sortBy?: string; auctionId?: string }) {
   return useQuery({
     queryKey: queryKeys.admin.transactions(params),
     queryFn: async () => {

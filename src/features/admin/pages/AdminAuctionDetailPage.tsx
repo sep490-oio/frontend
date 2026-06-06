@@ -1,9 +1,8 @@
 
 import { useParams, useNavigate } from 'react-router'
-import { Flex, Result, Button, Space } from 'antd'
+import { Flex, Result, Button, Space, Tabs, Spin, Card } from 'antd'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
-import { Spin } from 'antd'
 
 import { useAuctionDetail, useAuctionBids } from '@/features/auction/auctionApi'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
@@ -11,6 +10,7 @@ import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { ActiveAuctionControls as ActiveAuctionBody } from '@/features/admin/components/auctions/ActiveAuctionControls'
 import { CompletedAuctionSummary as CompletedAuctionBody } from '@/features/admin/components/auctions/CompletedAuctionSummary'
 import { AdminAuctionHeader } from '@/features/admin/components/auctions/AdminAuctionHeader'
+import { AdminAuctionFinancialsTable } from '@/features/admin/components/auctions/AdminAuctionFinancialsTable'
 
 export default function AdminAuctionDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -57,11 +57,28 @@ export default function AdminAuctionDetailPage() {
 
       <AdminAuctionHeader auction={auction} item={item} bids={bidsData?.items ?? []} />
 
-      {isCompleted ? (
-        <CompletedAuctionBody auctionId={id!} bidsData={bidsData} />
-      ) : (
-        <ActiveAuctionBody auction={auction} refetch={refetch} />
-      )}
+      <Card style={{ borderRadius: 12 }} styles={{ body: { padding: 0 } }}>
+        <Tabs
+          size="large"
+          tabBarStyle={{ padding: '0 24px', margin: 0 }}
+          items={[
+            {
+              key: 'overview',
+              label: t('auctionDetail.tabs.overview', 'Overview'),
+              children: isCompleted ? (
+                <CompletedAuctionBody auctionId={id!} bidsData={bidsData} />
+              ) : (
+                <ActiveAuctionBody auction={auction} refetch={refetch} />
+              ),
+            },
+            {
+              key: 'transactions',
+              label: t('auctionDetail.tabs.transactions', 'Transactions'),
+              children: <AdminAuctionFinancialsTable auctionId={id!} />,
+            },
+          ]}
+        />
+      </Card>
     </Flex>
   )
 }

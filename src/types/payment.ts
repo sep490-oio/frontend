@@ -91,6 +91,7 @@ export interface PendingSellerFee {
   createdAt: string
   orderId?: string
   auctionId?: string
+  itemId?: string
 }
 
 export interface PaymentMethodDto {

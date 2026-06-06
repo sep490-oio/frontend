@@ -559,6 +559,11 @@ export default function SellerWalletPage() {
                                       {t('sellerFinance.fees.inspectionRef', 'Warehouse Inspection')}
                                     </Tag>
                                   </Typography.Text>
+                                  {record.itemId && (
+                                    <a onClick={() => navigate(`/seller/items/${record.itemId}`)} style={{ fontSize: 12 }}>
+                                      {t('sellerFinance.fees.viewItem', 'View Item')} →
+                                    </a>
+                                  )}
                                 </div>
                               )
                             }
@@ -612,6 +617,21 @@ export default function SellerWalletPage() {
                             <Typography.Text>
                               {descText}
                             </Typography.Text>
+                            {record.itemId && isInsp && (
+                              <a onClick={() => navigate(`/seller/items/${record.itemId}`)} style={{ fontSize: 12 }}>
+                                {t('sellerFinance.fees.viewItem', 'View Item')} →
+                              </a>
+                            )}
+                            {record.orderId && !isInsp && (
+                              <a onClick={() => navigate(`/seller/orders/${record.orderId}`)} style={{ fontSize: 12 }}>
+                                {t('sellerFinance.fees.viewOrder', 'View Order')} →
+                              </a>
+                            )}
+                            {record.auctionId && !record.orderId && !isInsp && (
+                              <a onClick={() => navigate(`/seller/auctions/${record.auctionId}/dashboard`)} style={{ fontSize: 12 }}>
+                                {t('sellerFinance.fees.viewAuction', 'View Auction')} →
+                              </a>
+                            )}
                             
                             {isInsp && (
                               <Typography.Text type="secondary" style={{ fontSize: 12 }}>

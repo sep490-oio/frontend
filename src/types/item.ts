@@ -27,6 +27,7 @@ export interface ItemDto {
    * Use this to hide UI elements like "Send to floor".
    */
   hasInboundShipment?: boolean
+  totalAuctions?: number
   /** Set when the item is linked to a warehouse item (platform inspection flow). */
   warehouseItemId?: string | null
 }

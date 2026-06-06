@@ -1,15 +1,100 @@
-import { Breadcrumb, Button, Card, Col, Descriptions, Result, Row, Skeleton, Space, Tag, Typography, Avatar, Statistic, Tooltip, Empty } from 'antd'
+import { Breadcrumb, Button, Card, Col, Descriptions, Result, Row, Skeleton, Space, Tag, Typography, Avatar, Statistic, Tooltip, Tabs } from 'antd'
 import { Link, useNavigate, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { UserOutlined, MailOutlined, PhoneOutlined, SafetyCertificateOutlined, IdcardOutlined, InfoCircleOutlined } from '@ant-design/icons'
+import { UserOutlined, MailOutlined, PhoneOutlined, SafetyCertificateOutlined, IdcardOutlined, InfoCircleOutlined, CopyOutlined } from '@ant-design/icons'
 
 import { SellerProfileStatus } from '@/types'
 import { useAdminSellerProfileById, useVerifySellerProfile, useRejectSellerProfile, useAdminUserWallet } from '@/features/admin/api'
 import { formatCurrency, formatDateTime } from '@/utils/format'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { StatusBadge } from '@/components/ui/StatusBadge'
+import { useAdminItems } from '../api'
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
+import { useState } from 'react'
 
 const { Text } = Typography
+
+function SellerItemsList({ sellerId }: { sellerId: string }) {
+  const { t } = useTranslation('admin')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+
+  const { data, isLoading } = useAdminItems({
+    pageNumber: currentPage,
+    pageSize,
+    sellerId,
+  })
+
+  const columns = [
+    {
+      title: t('items.columns.item', 'Item'),
+      dataIndex: 'title',
+      key: 'title',
+      ellipsis: true,
+      render: (_: unknown, record: { id: string; title: string; primaryImageUrl?: string }) => (
+        <Space>
+          <img src={record.primaryImageUrl || '/placeholder.png'} alt={record.title} style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 6 }} />
+          <div>
+            <div style={{ fontWeight: 500 }}>{record.title}</div>
+            <Text type="secondary" style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
+              ID: {record.id.substring(0, 8)}...
+              <Typography.Text copyable={{ text: record.id, icon: [<CopyOutlined key="copy" style={{ fontSize: 12 }} />, <CopyOutlined key="copied" style={{ fontSize: 12, color: '#52c41a' }} />] }} />
+            </Text>
+          </div>
+        </Space>
+      ),
+    },
+    {
+      title: t('items.columns.status', 'Status'),
+      dataIndex: 'status',
+      key: 'status',
+      width: 130,
+      render: (status: string) => {
+        const titleCase = status.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
+        return <Tag color="blue">{titleCase}</Tag>
+      },
+    },
+    {
+      title: t('items.columns.totalAuctions', 'Total Auctions'),
+      dataIndex: 'totalAuctions',
+      key: 'totalAuctions',
+      width: 130,
+      align: 'center' as const,
+      render: (count: number) => count ?? 0,
+    },
+    {
+      title: t('items.columns.action', 'Action'),
+      key: 'action',
+      width: 140,
+      fixed: 'right' as const,
+      align: 'center' as const,
+      render: (_: unknown, record: { id: string }) => (
+        <Link to={`/admin/items/${record.id}`}>
+          <Button type="link" size="small" style={{ padding: 0 }}>
+            {t('items.action.viewDetails', 'View Details')}
+          </Button>
+        </Link>
+      ),
+    },
+  ]
+
+  return (
+    <ResponsiveTable
+      columns={columns}
+      dataSource={data?.items || []}
+      rowKey="id"
+      loading={isLoading}
+      mobileMode="card"
+      pagination={{
+        current: currentPage,
+        pageSize: pageSize,
+        total: data?.metadata?.totalCount || 0,
+        onChange: (p, ps) => { setCurrentPage(p); setPageSize(ps) },
+        showSizeChanger: true,
+      }}
+    />
+  )
+}
 
 export default function AdminSellerProfileDetailPage() {
   const { t } = useTranslation('admin')
@@ -98,8 +183,15 @@ export default function AdminSellerProfileDetailPage() {
         }
       />
 
-      <Row gutter={[24, 24]}>
-        <Col span={24}>
+      <Tabs
+        defaultActiveKey="overview"
+        items={[
+          {
+            key: 'overview',
+            label: t('sellers.tabOverview', 'Overview'),
+            children: (
+              <Row gutter={[24, 24]}>
+                <Col span={24}>
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
             {/* 4 Statistic Cards Row */}
             <Row gutter={[16, 16]}>
@@ -238,17 +330,23 @@ export default function AdminSellerProfileDetailPage() {
 
             {/* Full-width Description */}
             <Card title={t('sellers.storeDescription', 'Store Description')} bordered={false} style={{ boxShadow: 'var(--shadow-sm)' }}>
-              {profile.storeDescription ? (
-                <Typography.Paragraph style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
-                  {profile.storeDescription}
-                </Typography.Paragraph>
-              ) : (
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('sellers.noDescription', 'No description provided')} />
-              )}
-            </Card>
-          </Space>
-        </Col>
-      </Row>
+                    </Card>
+                  </Space>
+                </Col>
+              </Row>
+            )
+          },
+          {
+            key: 'items',
+            label: t('sellers.tabItems', 'Items'),
+            children: (
+              <Card bordered={false} style={{ boxShadow: 'var(--shadow-sm)' }}>
+                <SellerItemsList sellerId={user.id} />
+              </Card>
+            )
+          }
+        ]}
+      />
     </Space>
   )
 }

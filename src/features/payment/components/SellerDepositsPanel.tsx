@@ -17,10 +17,10 @@ import type { ColumnsType } from 'antd/es/table'
 const { Text } = Typography
 
 const DEPOSIT_STATUS_CONFIG: Record<string, { color: string; icon: React.ReactNode; label: string }> = {
-  held: { color: 'warning', icon: <LockOutlined />, label: 'Held' },
-  returned: { color: 'success', icon: <CheckCircleOutlined />, label: 'Returned' },
-  forfeited: { color: 'error', icon: <ExclamationCircleOutlined />, label: 'Forfeited' },
-  converted_to_payment: { color: 'processing', icon: <SwapOutlined />, label: 'Converted' },
+  Held: { color: 'warning', icon: <LockOutlined />, label: 'Held' },
+  Returned: { color: 'success', icon: <CheckCircleOutlined />, label: 'Returned' },
+  Forfeited: { color: 'error', icon: <ExclamationCircleOutlined />, label: 'Forfeited' },
+  ConvertedToPayment: { color: 'processing', icon: <SwapOutlined />, label: 'Converted' },
 }
 
 /**
@@ -103,9 +103,11 @@ export function SellerDepositsPanel() {
       key: 'status',
       render: (status: string) => {
         const cfg = DEPOSIT_STATUS_CONFIG[status] ?? { color: 'default', icon: null, label: status }
+        // Map PascalCase to camelCase/snake_case for translation keys
+        const transKey = status === 'ConvertedToPayment' ? 'converted_to_payment' : status.toLowerCase()
         return (
           <Tag color={cfg.color} bordered={false} icon={cfg.icon} style={{ borderRadius: 4 }}>
-            {t(`depositStatus.${status}`, cfg.label)}
+            {t(`depositStatus.${transKey}`, cfg.label)}
           </Tag>
         )
       },

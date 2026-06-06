@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Typography, Card, Button, Space, Switch, InputNumber, Input, App, Select, Modal, Alert, Row, Col, Tabs, Divider, DatePicker, Form } from 'antd'
+import dayjs from 'dayjs'
 import { ThunderboltOutlined, SwapOutlined, PoweroffOutlined, RedoOutlined, StopOutlined, ClockCircleOutlined, ForwardOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
@@ -214,6 +215,7 @@ export function ActiveAuctionControls({ auction, refetch }: { auction: any, refe
                         <Space wrap size={12}>
                           <Button
                             style={{ borderColor: '#13c2c2', color: '#13c2c2' }}
+                            disabled={auction.info?.qualificationStartAt && dayjs().isAfter(dayjs(auction.info.qualificationStartAt))}
                             onClick={() => {
                               Modal.confirm({
                                 title: t('auctionControl.forceStartQualTitle', 'Force Start Qualification'),

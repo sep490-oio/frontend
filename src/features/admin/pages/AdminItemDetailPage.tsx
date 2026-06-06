@@ -17,11 +17,12 @@ import { ItemStatus } from '@/types'
 import { AdminErrorState } from '@/features/admin/components/AdminErrorState'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 
+
 function ModerationTimelineNode({ review, sellerId }: { review: ItemReviewDto, sellerId: string }) {
   const { t } = useTranslation('admin')
   const { data: user } = useAdminUserDetail(review.reviewerId)
   const isSeller = review.reviewerId === sellerId
-  const name = user?.profile?.fullName || user?.userName || (review as any).reviewerName || (review as any).adminName || 'System'
+  const name = user?.profile?.fullName || user?.userName || (review as { reviewerName?: string }).reviewerName || (review as { adminName?: string }).adminName || 'System'
 
   return (
     <div>
@@ -154,9 +155,10 @@ export default function AdminItemDetailPage() {
         </Flex>
       </Card>
 
-      <Card style={{ borderRadius: 12 }} bodyStyle={{ padding: 0 }}>
+      <Card style={{ borderRadius: 12 }} styles={{ body: { padding: 0 } }}>
         <Tabs
           defaultActiveKey="overview"
+          tabBarStyle={{ padding: '0 24px', margin: 0 }}
           items={[
             {
               key: 'overview',

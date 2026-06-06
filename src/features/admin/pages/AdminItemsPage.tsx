@@ -127,6 +127,15 @@ export default function AdminItemsPage() {
       },
     },
     {
+      title: t('items.columns.totalAuctions', 'Total Auctions'),
+      dataIndex: 'totalAuctions',
+      key: 'totalAuctions',
+      width: 130,
+      align: 'center' as const,
+      responsive: ['lg'] as any,
+      render: (count: number) => count ?? 0,
+    },
+    {
       title: t('items.columns.addedDate', 'Added Date'),
       dataIndex: 'createdAt',
       key: 'createdAt',
@@ -200,6 +209,7 @@ export default function AdminItemsPage() {
           dataSource={data?.items || []}
           rowKey="id"
           loading={isLoading}
+          scroll={{ x: 1000 }}
           mobileMode="card"
           locale={{ emptyText: <Empty description={t('items.empty', 'No items found matching the selected criteria')} /> }}
           pagination={{
