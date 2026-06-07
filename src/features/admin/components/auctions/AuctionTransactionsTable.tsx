@@ -4,6 +4,7 @@ import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
 import { useTranslation } from 'react-i18next'
 import { useAdminTransactions } from '@/features/admin/api'
 import { formatDateTime, formatCurrency } from '@/utils/format'
+import { formatLedgerDescription } from '@/features/payment/utils/formatLedgerDescription'
 
 export function AuctionTransactionsTable({ auctionId }: { auctionId: string }) {
   const { t } = useTranslation('admin')
@@ -45,7 +46,7 @@ export function AuctionTransactionsTable({ auctionId }: { auctionId: string }) {
             { title: t('payments.time', 'Time'), dataIndex: 'createdAt', key: 'createdAt', render: (val) => formatDateTime(val) },
             { title: t('payments.type', 'Type'), dataIndex: 'type', key: 'type', render: (val) => <Tag color={val === 'credit' ? 'green' : 'red'}>{String(val).toUpperCase()}</Tag> },
             { title: t('payments.amount', 'Amount'), dataIndex: 'amount', key: 'amount', render: (val, record: any) => formatCurrency(val, record.currency ?? 'VND') },
-            { title: t('payments.description', 'Description'), dataIndex: 'description', key: 'description' }
+            { title: t('payments.description', 'Description'), dataIndex: 'description', key: 'description', render: (v: string | undefined) => formatLedgerDescription(v) || '—' }
           ]}
         />
       )}

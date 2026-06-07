@@ -351,7 +351,7 @@ export default function CreateItemPage() {
           styles={{ header: { borderBottom: '0px solid var(--color-border)' } }}
         >
           {/* AI suggest button */}
-          <div style={{ marginBottom: 12 }}>
+          <div style={{ marginBottom: 12, display: 'none' }}>
             <Tooltip title={t('aiSuggest.privacyHint')}>
               <Button
                 type="default"

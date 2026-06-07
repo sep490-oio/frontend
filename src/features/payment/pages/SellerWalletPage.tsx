@@ -39,6 +39,7 @@ import { TransactionTable } from '@/features/payment/components/TransactionTable
 import { WithdrawalSnapshot } from '@/features/payment/components/WithdrawalSnapshot'
 import { SellerDepositsPanel } from '@/features/payment/components/SellerDepositsPanel'
 import { MoneyFlowExplainer } from '@/features/payment/components/MoneyFlowExplainer'
+import { formatLedgerDescription } from '@/features/payment/utils/formatLedgerDescription'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
@@ -548,9 +549,10 @@ export default function SellerWalletPage() {
                           dataIndex: 'description',
                           key: 'description',
                           render: (_, record) => {
+                            const formattedDescription = formatLedgerDescription(record.description)
                             if (record.transactionNumber.startsWith('FEE-INSP-REJ-')) {
-                              const match = record.description?.match(/^(.*?) \(inspection [a-f0-9-]+\)\.?$/i)
-                              const text = match ? match[1] : record.description
+                              const match = formattedDescription.match(/^(.*?) \(inspection [a-f0-9-]+\)\.?$/i)
+                              const text = match ? match[1] : formattedDescription
                               return (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                                   <Typography.Text>{text}</Typography.Text>
@@ -569,7 +571,7 @@ export default function SellerWalletPage() {
                             }
                             return (
                               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                <Typography.Text>{record.description || '—'}</Typography.Text>
+                                <Typography.Text>{formattedDescription || '—'}</Typography.Text>
                                 {record.orderId && (
                                   <a onClick={() => navigate(`/seller/orders/${record.orderId}`)} style={{ fontSize: 12 }}>
                                     {t('sellerFinance.fees.viewOrder', 'View Order')} →

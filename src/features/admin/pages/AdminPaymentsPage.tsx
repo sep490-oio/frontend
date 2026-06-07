@@ -23,6 +23,7 @@ import {
 } from '@/features/admin/api'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDateTime, formatCurrency } from '@/utils/format'
+import { formatLedgerDescription } from '@/features/payment/utils/formatLedgerDescription'
 import { WithdrawalStatus, EscrowStatus } from '@/types/enums'
 import { useMediaUpload } from '@/hooks/useMediaUpload'
 import type { AdminWithdrawalDto, PaymentTransactionDto, EscrowDto } from '@/types'
@@ -956,7 +957,7 @@ export default function AdminPaymentsPage() {
             <Descriptions.Item label={t('payments.txnDetail.label.fee', 'Fee')}>{formatCurrency(txnDrawerRecord.fee ?? 0, txnDrawerRecord.currency)}</Descriptions.Item>
             <Descriptions.Item label={t('payments.txnDetail.label.netAmount', 'Net Amount')}>{formatCurrency(txnDrawerRecord.netAmount ?? txnDrawerRecord.amount, txnDrawerRecord.currency)}</Descriptions.Item>
             <Descriptions.Item label={t('payments.txnDetail.label.gateway', 'Gateway')}>{txnDrawerRecord.gatewayProvider ?? '—'}</Descriptions.Item>
-            <Descriptions.Item label={t('payments.txnDetail.label.description', 'Description')}>{txnDrawerRecord.description ?? '—'}</Descriptions.Item>
+            <Descriptions.Item label={t('payments.txnDetail.label.description', 'Description')}>{formatLedgerDescription(txnDrawerRecord.description) || '—'}</Descriptions.Item>
             {txnDrawerRecord.orderId && (
               <Descriptions.Item label={t('payments.txnDetail.label.order', 'Order')}>
                 <a onClick={() => navigate(`/admin/orders/${txnDrawerRecord.orderId}`)} style={{ cursor: 'pointer' }}>

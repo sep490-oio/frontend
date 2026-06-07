@@ -9,6 +9,7 @@ import { MONO_FONT } from '@/styles/tokens'
 import { useState, useMemo } from 'react'
 import { ReferenceTitle } from './ReferenceTitle'
 import { FilterOutlined } from '@ant-design/icons'
+import { formatLedgerDescription } from '../utils/formatLedgerDescription'
 
 const LEDGER_STATUS_CONFIG: Record<WalletLedgerStatus, { color: string; key: string; fallback: string }> = {
   posted: { color: 'success', key: 'ledgerStatus.posted', fallback: 'Posted' },
@@ -132,15 +133,18 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
             >
               {displayDescription}
             </Typography.Text>
-            {description && record.eventType && description !== label && (
-              <Typography.Text
-                type="secondary"
-                style={{ fontSize: 12, display: 'block', marginTop: 2 }}
-                ellipsis={{ tooltip: description }}
-              >
-                {description}
-              </Typography.Text>
-            )}
+            {(() => {
+              const formattedDescription = formatLedgerDescription(description)
+              return formattedDescription && record.eventType && formattedDescription !== label ? (
+                <Typography.Text
+                  type="secondary"
+                  style={{ fontSize: 12, display: 'block', marginTop: 2 }}
+                  ellipsis={{ tooltip: formattedDescription }}
+                >
+                  {formattedDescription}
+                </Typography.Text>
+              ) : null
+            })()}
               {record.referenceId && (
                 <Tooltip title={t('filterByThis', 'Filter by this reference')}>
                   <Tag
@@ -267,9 +271,9 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
                 <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--color-text-primary)', marginBottom: 2, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {record.eventType ? t(`event.${record.eventType}`, EVENT_TYPE_CONFIG[record.eventType]?.fallback ?? record.description ?? record.eventType) : (record.description || '-')}
                 </div>
-                {record.description && record.eventType && (
+                {formatLedgerDescription(record.description) && record.eventType && (
                   <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 2, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {record.description}
+                    {formatLedgerDescription(record.description)}
                   </div>
                 )}
                 <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)', fontFamily: MONO_FONT }}>
@@ -359,11 +363,11 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
             </Descriptions.Item>
           </Descriptions>
 
-          {selectedTx.description && (
+          {formatLedgerDescription(selectedTx.description) && (
             <div>
               <Typography.Text type="secondary" style={{ fontSize: 12 }}>{t('txDescription', 'Description')}</Typography.Text>
               <div style={{ marginTop: 4, padding: 12, background: 'var(--color-bg-surface)', borderRadius: 8, fontSize: 14 }}>
-                {selectedTx.description}
+                {formatLedgerDescription(selectedTx.description)}
               </div>
             </div>
           )}

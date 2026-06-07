@@ -6,6 +6,7 @@ import { formatDateTime, formatCurrency } from '@/utils/format'
 import { MONO_FONT } from '@/styles/tokens'
 import type { WalletLedgerStatus, WalletEventType } from '@/types'
 import { ReferenceTitle } from './ReferenceTitle'
+import { formatLedgerDescription } from '../utils/formatLedgerDescription'
 
 const { Text, Title } = Typography
 
@@ -108,9 +109,9 @@ export function TransactionDetailDrawer({ open, onClose, transaction }: Transact
             {eventLabel}
           </Descriptions.Item>
 
-          {transaction.description && transaction.description !== eventLabel && (
+          {formatLedgerDescription(transaction.description) && formatLedgerDescription(transaction.description) !== eventLabel && (
             <Descriptions.Item label={t('note', 'Note')}>
-              {transaction.description}
+              {formatLedgerDescription(transaction.description)}
             </Descriptions.Item>
           )}
 
