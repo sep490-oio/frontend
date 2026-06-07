@@ -53,9 +53,17 @@ export function TransactionTable({ data, loading, pagination }: TransactionTable
       return true;
     });
 
-    // Return the data sorted strictly by time descending, 
-    // without arbitrarily grouping items which ruins the pagination flow.
-    const result = filteredData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    // Sort newest-first, but break exact-timestamp ties deterministically. An atomic
+    // "fund-then-hold" auction deposit produces a Credit (wallet top-up) and a Hold
+    // (auction deposit) with the SAME createdAt; without a tie-break their order is
+    // non-deterministic and the deposit can render above the top-up. balanceBefore
+    // follows the ledger build-up (the funding credit starts from the lower running
+    // balance), so it surfaces the top-up above the deposit hold — mirroring the backend.
+    const result = filteredData.sort((a, b) => {
+      const byTime = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      if (byTime !== 0) return byTime;
+      return a.balanceBefore - b.balanceBefore;
+    });
 
     return result;
   }, [data]);

@@ -213,9 +213,13 @@ export function ActiveAuctionControls({ auction, refetch }: { auction: any, refe
                     {auction.status === 'scheduled' && (
                       <Card title={<><ForwardOutlined /> {t('auctionControl.lifecycleProgression', 'Lifecycle Progression')}</>} style={{ borderRadius: 12 }}>
                         <Space wrap size={12}>
+                          {/* "Force Start Qual" is disabled once the qualification (deposit) window has
+                              opened or is open. qualificationStartAt is top-level on the AuctionDto
+                              (there is no `info` object) and force-start rewrites it to "now", so
+                              `now >= start` covers both "already opened" and "currently open". */}
                           <Button
                             style={{ borderColor: '#13c2c2', color: '#13c2c2' }}
-                            disabled={auction.info?.qualificationStartAt && dayjs().isAfter(dayjs(auction.info.qualificationStartAt))}
+                            disabled={!!auction.qualificationStartAt && !dayjs().isBefore(dayjs(auction.qualificationStartAt))}
                             onClick={() => {
                               Modal.confirm({
                                 title: t('auctionControl.forceStartQualTitle', 'Force Start Qualification'),
