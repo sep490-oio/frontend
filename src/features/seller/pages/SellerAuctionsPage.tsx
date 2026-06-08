@@ -6,7 +6,6 @@ import {
   Space,
   Empty,
   Flex,
-  Tabs,
   Card,
   Row,
   Col,
@@ -40,16 +39,23 @@ export default function SellerAuctionsPage() {
   const [page, setPage] = useState(Number(searchParams.get('page')) || 1)
   const [pageSize, setPageSize] = useState(10)
   
-  const activeTab = searchParams.get('tab') || 'all'
+  const statusFilter = searchParams.get('status') || ''
   const [searchTerm, setSearchTerm] = useState('')
   const debouncedSearch = useDebounce(searchTerm, 500)
   const [sortBy, setSortBy] = useState('CreatedAt desc')
 
-  const getStatusFilter = (tab: string) => {
-    if (tab === 'active') return AuctionStatus.Active
-    if (tab === 'ended') return `${AuctionStatus.Ended},${AuctionStatus.Sold},${AuctionStatus.Failed},${AuctionStatus.Cancelled},${AuctionStatus.Completed}`
-    return undefined
-  }
+  const statusOptions = [
+    { value: '', label: t('statusFilterAll', 'All statuses') },
+    { value: AuctionStatus.Draft, label: tc('statusLabel.draft', 'Draft') },
+    { value: AuctionStatus.Pending, label: tc('statusLabel.pending', 'Pending') },
+    { value: AuctionStatus.Scheduled, label: tc('statusLabel.scheduled', 'Scheduled') },
+    { value: AuctionStatus.Active, label: tc('statusLabel.active', 'Active') },
+    { value: AuctionStatus.Ended, label: tc('statusLabel.ended', 'Ended') },
+    { value: AuctionStatus.Sold, label: tc('statusLabel.sold', 'Sold') },
+    { value: AuctionStatus.Completed, label: tc('statusLabel.completed', 'Completed') },
+    { value: AuctionStatus.Cancelled, label: tc('statusLabel.cancelled', 'Cancelled') },
+    { value: AuctionStatus.Failed, label: tc('statusLabel.failed', 'Failed') },
+  ]
 
   const { data: stats } = useMyAuctionStats()
 
@@ -57,15 +63,16 @@ export default function SellerAuctionsPage() {
     pageNumber: page,
     pageSize,
     sortBy: sortBy,
-    status: getStatusFilter(activeTab),
+    status: statusFilter || undefined,
     search: debouncedSearch || undefined,
   })
 
-  const handleTabChange = (key: string) => {
+  const handleStatusChange = (value: string) => {
     setPage(1)
     setSearchParams(prev => {
       const next = new URLSearchParams(prev)
-      next.set('tab', key)
+      if (value) next.set('status', value)
+      else next.delete('status')
       next.delete('page')
       return next
     })
@@ -106,7 +113,7 @@ export default function SellerAuctionsPage() {
       })
     }
 
-    if ([AuctionStatus.Sold, AuctionStatus.Ended, AuctionStatus.Completed].includes(record.status as any)) {
+    if (([AuctionStatus.Sold, AuctionStatus.Ended, AuctionStatus.Completed] as string[]).includes(record.status)) {
       items.push({
         key: 'order',
         icon: <ShoppingCartOutlined />,
@@ -243,6 +250,13 @@ export default function SellerAuctionsPage() {
           allowClear
         />
         <Select
+          value={statusFilter}
+          onChange={handleStatusChange}
+          style={{ width: 200 }}
+          options={statusOptions}
+          placeholder={ta('status', 'Status')}
+        />
+        <Select
           value={sortBy}
           onChange={(val) => { setSortBy(val); setPage(1); }}
           style={{ width: 200 }}
@@ -255,18 +269,7 @@ export default function SellerAuctionsPage() {
         />
       </Flex>
 
-      <Tabs
-        activeKey={activeTab}
-        onChange={handleTabChange}
-        items={[
-          { key: 'all', label: t('tabAll', 'All') },
-          { key: 'active', label: t('tabActive', 'Active') },
-          { key: 'ended', label: t('tabEnded', 'Ended / Sold') },
-        ]}
-        style={{ marginBottom: 16 }}
-      />
-
-      {!isLoading && data?.items.length === 0 && !debouncedSearch ? (
+      {!isLoading && data?.items.length === 0 && !debouncedSearch && !statusFilter ? (
         <Empty description={t('noAuctionsYet', "You haven't created any auctions yet.")} />
       ) : (
         <Table<AuctionListItemDto>
