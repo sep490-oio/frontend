@@ -353,7 +353,7 @@ export function InspectorLayout() {
               onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-secondary)' }}
             >
               <GlobalOutlined style={{ fontSize: 14 }} />
-              {!isMobile && (i18n.language === 'vi' ? 'EN' : 'VI')}
+              {!isMobile && (i18n.language === 'vi' ? 'VI' : 'EN')}
             </button>
           </Tooltip>
 

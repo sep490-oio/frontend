@@ -252,7 +252,8 @@ function MyBidsTab() {
 
   const STATUS_PILLS = [
     { value: '', label: t('bidStatusAll', 'All') },
-    { value: 'active', label: t('bidStatusActive', 'Active') },
+    { value: 'leading', label: t('bidStatusLeading', 'Leading') },
+    { value: 'outbid', label: t('bidStatusOutbid', 'Outbid') },
     { value: 'won', label: t('bidStatusWon', 'Won') },
     { value: 'lost', label: t('bidStatusLost', 'Lost') },
     { value: 'deposit_only', label: t('depositOnly', 'Deposit Only') },

@@ -98,6 +98,7 @@
   "ungroup": "Ungroup",
   "bidStatusAll": "All",
   "bidStatusActive": "Leading",
+  "bidStatusLeading": "Leading",
   "bidStatusOutbid": "Outbid",
   "bidStatusWon": "Won",
   "bidStatusCancelled": "Cancelled",
@@ -556,5 +557,10 @@
   "myAuctionActivity": "My Auction Activity",
   "myAuctionActivitySubtitle": "Track all auctions you have participated in — deposits, bids, and results",
   "depositOnly": "Deposit Only",
-  "depositHeld": "Held"
+  "depositHeld": "Held",
+  "myAuctionsSubtitle": "Manage your bids, deposits, and tracked items in one place.",
+  "tab": {
+    "myBids": "My Bids",
+    "watchlist": "Watchlist"
+  }
 }

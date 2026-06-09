@@ -4,9 +4,8 @@ import { TeamOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useAuctionParticipants } from '../auctionApi'
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable'
-import { formatCurrency, formatDateTime } from '@/utils/format'
+import { formatDateTime } from '@/utils/format'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
-import type { AuctionParticipantListItemDto } from '@/types'
 
 const { Text } = Typography
 
@@ -15,7 +14,7 @@ interface Props {
   currency: string
 }
 
-export function ParticipantsTable({ auctionId, currency }: Props) {
+export function ParticipantsTable({ auctionId }: Props) {
   const { t } = useTranslation('auction')
   const { isMobile } = useBreakpoint()
 
@@ -79,15 +78,6 @@ export function ParticipantsTable({ auctionId, currency }: Props) {
       dataIndex: 'joinStatus',
       key: 'JoinStatus',
       render: (status: string) => renderJoinStatus(status),
-    },
-    {
-      title: t('deposit', 'Deposit'),
-      dataIndex: 'depositAmount',
-      key: 'DepositAmount',
-      render: (amount: number, record: AuctionParticipantListItemDto) => {
-        if (!amount) return <Text type="secondary">-</Text>
-        return formatCurrency(amount, record.depositCurrency || currency)
-      },
     },
   ]
 

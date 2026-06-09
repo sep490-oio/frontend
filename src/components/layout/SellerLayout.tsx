@@ -475,7 +475,7 @@ export function SellerLayout() {
               onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-secondary)' }}
             >
               <GlobalOutlined style={{ fontSize: 14 }} />
-              {!isMobile && <span>{i18n.language === 'vi' ? 'EN' : 'VI'}</span>}
+              {!isMobile && <span>{i18n.language === 'vi' ? 'VI' : 'EN'}</span>}
             </button>
           </Tooltip>
 

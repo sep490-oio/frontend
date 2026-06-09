@@ -460,7 +460,7 @@ export function AdminLayout() {
                   onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-secondary)' }}
                 >
                   <GlobalOutlined style={{ fontSize: 14 }} />
-                  {i18n.language === 'vi' ? 'EN' : 'VI'}
+                  {i18n.language === 'vi' ? 'VI' : 'EN'}
                 </button>
               </Tooltip>
 

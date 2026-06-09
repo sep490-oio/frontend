@@ -237,7 +237,7 @@ export function AppLayout() {
                   minHeight: 44,
                 }}
               >
-                <span>{i18n.language === 'vi' ? 'EN' : 'VI'}</span>
+                <span>{i18n.language === 'vi' ? 'VI' : 'EN'}</span>
               </Button>
             )}
 
