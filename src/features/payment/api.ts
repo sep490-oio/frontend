@@ -130,6 +130,30 @@ export function useActiveDeposits(options?: { refetchInterval?: number; enabled?
   })
 }
 
+// ── Reserved-funds breakdown (deposits + auto-bid reservations, itemised) ────
+
+export interface ReservationItemDto {
+  type: string // 'auction_deposit' | 'auto_bid'
+  referenceId: string
+  title?: string | null
+  amount: number
+  currency: string
+  status: string
+  createdAt: string
+}
+
+export function useMyReservations(options?: { refetchInterval?: number; enabled?: boolean }) {
+  return useQuery({
+    queryKey: [...queryKeys.wallet.activeDeposits(), 'reservations'],
+    queryFn: async () => {
+      const res = await apiClient.get<ReservationItemDto[]>('/me/reservations')
+      return extractArray<ReservationItemDto>(res.data)
+    },
+    staleTime: 30_000,
+    ...options,
+  })
+}
+
 export function useWalletTransactionById(id: string) {
   return useQuery({
     queryKey: [...queryKeys.wallet.transactions(), 'detail', id],
