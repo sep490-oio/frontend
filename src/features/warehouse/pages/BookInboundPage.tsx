@@ -1,6 +1,6 @@
 import { Typography, Form, Input, Select, InputNumber, Button, Card, Space, App, Divider, Alert } from 'antd'
 import { ArrowLeftOutlined, PictureOutlined } from '@ant-design/icons'
-import { useNavigate } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import { useRoutePrefix } from '@/hooks/useRoutePrefix'
 import { useTranslation } from 'react-i18next'
 import { useBookInbound } from '@/features/warehouse/api'
@@ -28,6 +28,8 @@ export default function BookInboundPage() {
   ]
 
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const preselectItemId = searchParams.get('itemId')
   const prefix = useRoutePrefix()
   const { message } = App.useApp()
   const { isMobile } = useBreakpoint()
@@ -59,12 +61,24 @@ export default function BookInboundPage() {
     hasActiveInbound: false,
   })
 
-  const allItems = itemsData?.items ?? []
+  const allItems = useMemo(() => itemsData?.items ?? [], [itemsData])
   const itemOptions = allItems.map((item) => ({
     label: item.title,
     value: item.id,
   }))
   const hasEligibleItems = allItems.length > 0
+
+  // Preselect the item passed via ?itemId= (e.g. the "Ship to warehouse" link on
+  // /seller/items). Runs once after the eligible items load, and only if that
+  // item is actually in the eligible set; otherwise the field stays empty.
+  const itemPreselectedRef = useRef(false)
+  useEffect(() => {
+    if (itemPreselectedRef.current) return
+    if (!preselectItemId || itemsLoading) return
+    if (!allItems.some((i) => i.id === preselectItemId)) return
+    form.setFieldsValue({ itemIds: [preselectItemId] })
+    itemPreselectedRef.current = true
+  }, [preselectItemId, itemsLoading, allItems, form])
 
   const shipmentMode = Form.useWatch('shipmentMode', form)
   const isExternal = shipmentMode === 'external_carrier'

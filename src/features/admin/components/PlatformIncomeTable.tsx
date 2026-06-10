@@ -245,16 +245,6 @@ export function PlatformIncomeTable() {
               suffix={data?.currency ?? '₫'}
             />
           </Card>
-          <Card size="small" style={{ minWidth: 200, borderColor: 'var(--color-error, #ff4d4f)' }}>
-            <Statistic
-              title={<span style={{ color: 'var(--color-text-secondary)' }}>{t('payments.incomeTable.totalDebit', 'Total Debit')}</span>}
-              value={data?.totalDebitAmount ?? 0}
-              precision={0}
-              valueStyle={{ color: 'var(--color-error, #ff4d4f)', fontWeight: 'bold' }}
-              prefix={<ArrowDownOutlined />}
-              suffix={data?.currency ?? '₫'}
-            />
-          </Card>
         </Flex>
       )}
 

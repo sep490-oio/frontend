@@ -193,7 +193,7 @@ export default function MyItemsPage() {
             type="link"
             size="small"
             style={{ padding: 0 }}
-            onClick={() => navigate(`${prefix}/items/${record.id}`)}
+            onClick={() => navigate(`${prefix}/warehouse/inbound/book?itemId=${record.id}`)}
           >
             {t('waitingVerify', 'Ship to warehouse')}
           </Button>

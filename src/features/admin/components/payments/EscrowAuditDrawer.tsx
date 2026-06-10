@@ -27,6 +27,14 @@ interface EscrowAuditDrawerProps {
   escrow: EscrowDto | null
 }
 
+type ReleaseEvent = {
+  releaseType?: string
+  triggerSourceType?: string
+  amount?: number
+  createdAt?: string
+  createdByDisplayName?: string
+}
+
 export const EscrowAuditDrawer: React.FC<EscrowAuditDrawerProps> = ({ open, onClose, escrow }) => {
   const { t } = useTranslation('admin')
   const navigate = useNavigate()
@@ -34,6 +42,21 @@ export const EscrowAuditDrawer: React.FC<EscrowAuditDrawerProps> = ({ open, onCl
   if (!escrow) return null
 
   const fmt = (amount: number) => formatCurrency(amount, escrow.currency)
+
+  // Classify a release event by its money DIRECTION. The backend EscrowReleaseType
+  // encodes EXTENT (full/partial/adjustment/refund/forfeit) and TriggerSourceType
+  // encodes direction (SellerRelease/BuyerRefund/PlatformForfeit). The drawer previously
+  // compared against non-existent strings ('seller_release', ...), so seller releases
+  // (releaseType 'full') matched nothing — showing Transferred to Seller = 0 and
+  // mislabelling the whole amount as Platform Commission.
+  const classifyRelease = (e: ReleaseEvent): 'seller' | 'buyer' | 'platform' => {
+    const rt = String(e?.releaseType ?? '').toLowerCase()
+    const src = String(e?.triggerSourceType ?? '').toLowerCase()
+    if (rt === 'refund' || src === 'buyerrefund') return 'buyer'
+    if (rt === 'forfeit' || src === 'platformforfeit') return 'platform'
+    // full / partial / adjustment / SellerRelease
+    return 'seller'
+  }
 
   // ── Block 2: Build timeline items ──────────────────────────────────
   const timelineItems = []
@@ -67,18 +90,16 @@ export const EscrowAuditDrawer: React.FC<EscrowAuditDrawerProps> = ({ open, onCl
       let color: 'blue' | 'green' | 'orange' | 'red' = 'blue'
       let actionName = event.releaseType
 
-      if (event.releaseType === 'seller_release') {
+      const direction = classifyRelease(event)
+      if (direction === 'seller') {
         icon = <UnlockOutlined style={{ fontSize: 14 }} />
         color = 'green'
         actionName = t('payments.escrowTimeline.releasedToSeller', 'Released to Seller')
-      } else if (event.releaseType === 'buyer_refund') {
+      } else if (direction === 'buyer') {
         icon = <RollbackOutlined style={{ fontSize: 14 }} />
         color = 'orange'
         actionName = t('payments.escrowTimeline.refundedToBuyer', 'Refunded to Buyer')
-      } else if (
-        event.releaseType === 'platform_forfeit' ||
-        event.releaseType === 'forfeited'
-      ) {
+      } else if (direction === 'platform') {
         icon = <SafetyCertificateOutlined style={{ fontSize: 14 }} />
         color = 'red'
         actionName = t('payments.escrowTimeline.forfeitedToPlatform', 'Forfeited to Platform')
@@ -131,9 +152,14 @@ export const EscrowAuditDrawer: React.FC<EscrowAuditDrawerProps> = ({ open, onCl
   const distributionRows: { label: string; amount: number; color: string; icon: React.ReactNode }[] = []
 
   if (escrow.status === EscrowStatus.ReleasedToSeller) {
-    const totalReleased = escrow.releaseEvents
-      ?.filter((e: any) => e.releaseType === 'seller_release')
-      .reduce((sum: number, e: any) => sum + e.amount, 0) ?? escrow.amount
+    const sellerEvents = (escrow.releaseEvents ?? []).filter(
+      (e: ReleaseEvent) => classifyRelease(e) === 'seller',
+    )
+    // Sum the seller-direction releases; fall back to the full escrow amount when no
+    // matching event is present (a released_to_seller escrow without recorded events).
+    const totalReleased = sellerEvents.length > 0
+      ? sellerEvents.reduce((sum: number, e: ReleaseEvent) => sum + (e.amount ?? 0), 0)
+      : escrow.amount
     distributionRows.push({
       label: t('payments.transferredToSeller', 'Transferred to Seller'),
       amount: totalReleased,

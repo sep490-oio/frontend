@@ -38,7 +38,11 @@ export function getSellerActions({ status, canOfferRunnerUp, itemStatus, hasOrde
       actions.push('viewDetail', 'cancel')
       break
     case 'active':
-      actions.push('viewDetail', 'cancel')
+      // No 'cancel' here: a seller cannot cancel a live auction (the backend blocks
+      // cancelling an Active auction that has active/winning bids — CancelBlockedActiveBids).
+      // Showing the button on the analytics/dashboard page was misleading. Seller-initiated
+      // cancellation is only offered before bidding starts (approved/scheduled).
+      actions.push('viewDetail')
       break
     case 'sold':
     case 'completed':
